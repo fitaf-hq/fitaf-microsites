@@ -37,6 +37,13 @@ small inline script. Total transfer under 60 KB before images.
    wordmark "FIT AF" in text). ⛔ No offer, discount or contact capture in rung 1: those need the
    Owner's offer and consent wording (later rungs).
 
+> **Amended 2026-09-27 (branding pass, branch `boston/branding`).** "No web font request" now means *no
+> request to another host*: Poppins (600/700) and Open Sans (400/600) are **self-hosted** Latin WOFF2
+> subsets under `src/fonts/` (OFL, `font-display: swap`, ~53 KB), and the store's logo is served from
+> `src/assets/`. Both load from the page's own origin; T5 checks that every `url()` and `<img src>` is
+> same-origin or `data:`. The palette gains the store's plan colours and a darker button orange,
+> checked by `npm run contrast` (APCA) — see the README.
+
 ## 2. The plan table — `data/plans.json`
 
 Read 2026-09-27 off `https://fitafnutrition.com/meal-plans` (the store's public page):

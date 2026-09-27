@@ -11,6 +11,7 @@
     "build": "node build.mjs",
     "build:dev": "node build.mjs --env dev",
     "test": "node --test \"test/*.test.mjs\"",
+    "contrast": "node scripts/contrast.mjs",
     "predeploy": "npm run build",
     "deploy": "wrangler deploy",
     "predeploy:dev": "npm run build:dev",
@@ -25,6 +26,7 @@
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
+    "apca-w3": "^0.1.9",
     "esbuild": "0.28.1",
     "jsqr": "^1.4.0",
     "miniflare": "5.20260926.0-alpha",

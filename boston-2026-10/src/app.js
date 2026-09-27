@@ -54,6 +54,7 @@
     var plan = s.goal && findGoal(s.goal);
     var cell = plan && s.count && plan.cells[s.count];
     $("#result").hidden = !cell;
+    if (plan) $("#result").setAttribute("data-accent", plan.id);
     $("#hint").hidden = !!cell;
     if (cell) {
       $("#result-title").textContent = plan.name + " · " + s.count + " meals a week";

@@ -24,3 +24,13 @@ export function assertSignature14Is29(html) {
   assert.equal(cell.length, 1, "exactly one Signature 14 grid link");
   assert.equal(mpidOf(cell[0].href), 29, "Signature 14 must link to mpid=29 (not 28)");
 }
+
+/** A URL the page may load: a data: URI or a same-origin relative path (no scheme, no "//"). */
+export const isSameOrigin = (url) => url.startsWith("data:") || !/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(url);
+
+/** Everything the page's markup and CSS load: <img src> and CSS url(). */
+export function loadedUrls(html) {
+  const imgs = [...html.matchAll(/<img\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
+  const css = [...html.matchAll(/url\(\s*["']?([^"')]+)/g)].map((m) => m[1]);
+  return [...imgs, ...css];
+}

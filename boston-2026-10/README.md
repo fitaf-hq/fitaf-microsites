@@ -14,9 +14,13 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `data/events.json` | one entry per event URL that gets a QR code | INPUT |
 | `src/template.html` | the page: markup and inline CSS, with `{{SLOT}}` placeholders | INPUT |
 | `src/app.js` | the one small inline script: the two questions, tabs, "See all plans", URL fragment | INPUT |
+| `src/fonts/` | Poppins 600/700 and Open Sans 400/600, Latin WOFF2 subsets (Fontsource 5.3.0), with `OFL-*.txt` | INPUT, copied to `dist/fonts/` |
+| `src/assets/fitaf-logo.png` | the store's public logo, 330×210, byte-identical to the store's file | INPUT, copied to `dist/assets/` |
+| `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
+| `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, `node --test`, no network | tests |
-| `dist/` | `index.html` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, C1–C10 of rung 3, B1 (brand assets) and B2 (contrast, with mutants); `node --test`, no network | tests |
+| `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed | authority |
 | `consent/DRAFT.md` | the consent wording (v0.2, ⛔ not approved) the claim section shows | authority |
 | `data/claim.json` | the event id, the claim endpoint, the wording version the page sends and the versions the Worker accepts | INPUT |
@@ -32,7 +36,8 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7
+npm --prefix boston-2026-10 test        # T1–T7, C1–C10, B1–B2
+npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 npm --prefix boston-2026-10 run deploy  # builds, then wrangler deploy
 ```
@@ -42,7 +47,7 @@ npm --prefix boston-2026-10 run deploy  # builds, then wrangler deploy
 ⛔ **Nothing below touches production.** The top level of `wrangler.jsonc` is the production Worker and is
 unchanged: no script, no bindings. Rung 3 lives in its `dev` environment — Worker `fitaf-microsites-dev`,
 D1 `fitaf-leads-dev` (dummy data only), Cloudflare's published Turnstile **test** keys. The production build
-(`npm run build`) leaves every rung-3 slot empty and is byte-identical to rung 1's.
+(`npm run build`) leaves every rung-3 slot empty: no claim section, no Turnstile, no `/api/claim`.
 
 ```sh
 export CLOUDFLARE_ACCOUNT_ID=…            # never committed
@@ -69,7 +74,25 @@ the claim section).
 - **The mutant cases never write a committed file**: T7 swaps a copy of the data, C9 imports a mutated
   copy of `purge.js`. `PURGE_MODULE=<copy> node --test test/c08-purge.test.mjs` shows C8 failing on it.
 
-## What a reader would misread
+## Branding — the store's look, and where it departs
+
+The page echoes the store: a slim navy top bar over a white header with the logo, Poppins headings,
+Open Sans body, white plan cards with a hairline border and each plan's colour as its top bar (Lean
+`#48aeee`, Signature `#8cc63f`, Performance `#f7941d`, Family `#f5bb00`), and teal chips with navy digits.
+**Every colour is a token in `:root`**, and `npm run contrast` measures every pair in
+`src/contrast-pairs.json` with APCA (`apca-w3`): body text |Lc| ≥ 75, large or bold text (≥ 24px, or
+≥ 18.66px at 700) ≥ 60, UI components and large headings ≥ 45, non-text accents ≥ 30.
+
+Departures from the store, each for legibility:
+
+- **The button orange is darker.** The store's white-on-`#ff931e` measures Lc −48.1 — under 60 even at
+  19px bold (and the store's 14px label would need 75). Navy on `#ff931e` is 55.5, also under. The page
+  uses **`#d66400`** (hover `#c25a00`) with the store's white uppercase bold label, at 19px: Lc −69.3.
+  `#ff931e` survives as a non-text accent (the rule above the heading, the claim section's top bar).
+- **Muted text is `#5b5b5b` only** — the store's other grey, `#6c757d`, is Lc 72.6 on white (under 75).
+  `#6c757d` is kept for input borders, where 45 is the bar.
+- **Teal carries navy digits at 19px bold only** (Lc 65.7); the store's 11px navy-on-teal would need 75.
+- **Plan colours are never behind text** — accents only (bar, check disc; the check itself is navy).
 
 - **Money is integer cents.** Per-meal prices are stored; weekly totals are always computed
   (`meals_per_week × price_per_meal_cents`) in `build.mjs`. The inline script only displays strings the

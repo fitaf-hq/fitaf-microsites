@@ -1,0 +1,52 @@
+{
+  "about": "Every foreground/background colour pair the page draws, by token (src/template.html :root, and src/claim/style.css :root for the dev build). Measured by `npm run contrast` with APCA (apca-w3); a pair fails when |Lc| is under its role's minimum.",
+  "roles": {
+    "body": { "min_lc": 75, "means": "text under 24px, or under 18.66px when bold (700)" },
+    "large-text": { "min_lc": 60, "means": "text at 24px or more, or 18.66px or more at 700" },
+    "ui-or-heading": { "min_lc": 45, "means": "a UI component's boundary or state, or a large heading (30px+ at 700)" },
+    "non-text": { "min_lc": 30, "means": "a non-text accent: a plan's colour bar, the orange rule" }
+  },
+  "pairs": [
+    { "fg": "--white", "bg": "--navy", "role": "body", "where": "top bar, 12px/600 uppercase" },
+    { "fg": "--navy", "bg": "--ice", "role": "ui-or-heading", "where": "h1 \"Find your plan.\", 30-40px/700" },
+    { "fg": "--ink", "bg": "--ice", "role": "body", "where": "intro line, 17px" },
+    { "fg": "--navy", "bg": "--ice", "role": "body", "where": "flow: the current step 14px/600; fact chips 13px/600" },
+    { "fg": "--muted", "bg": "--ice", "role": "body", "where": "flow: the next step, 14px; unselected tab, 15px/600; figure labels, 13px" },
+    { "fg": "--navy", "bg": "--ice", "role": "ui-or-heading", "where": "flow step markers (ring and dot), focus ring on ice" },
+    { "fg": "--orange", "bg": "--ice", "role": "non-text", "where": "the orange rule above the h1" },
+    { "fg": "--white", "bg": "--navy", "role": "body", "where": "selected tab, 15px/600" },
+    { "fg": "--navy", "bg": "--teal", "role": "large-text", "where": "step numbers, 19px/700 in a teal chip (the store's countdown digits)" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "step questions 20px/600, plan names 19px/600, grid prices 17px/600, grid plan names, field names, See all plans" },
+    { "fg": "--muted", "bg": "--white", "role": "body", "where": "plan promises 15px, hint, result kicker, grid headers and per-week totals 13px, Family line, footer 13px" },
+    { "fg": "--ink", "bg": "--white", "role": "body", "where": "body text; form input text" },
+    { "fg": "--navy", "bg": "--white", "role": "large-text", "where": "meal counts 28px/700, result title and Family heading 24px/700" },
+    { "fg": "--navy", "bg": "--ice", "role": "large-text", "where": "result per-meal and weekly total, 24px/700 on ice tiles" },
+    { "fg": "--navy", "bg": "--white", "role": "ui-or-heading", "where": "selected card outline, See all plans border, focus ring, grid cell hover" },
+    { "fg": "--field", "bg": "--white", "role": "ui-or-heading", "where": "choice card hover border; form input borders (dev)" },
+    { "fg": "--lean", "bg": "--white", "role": "non-text", "where": "Lean: top bar, grid row bar, selected check disc" },
+    { "fg": "--signature", "bg": "--white", "role": "non-text", "where": "Signature: top bar, grid row bar, selected check disc" },
+    { "fg": "--performance", "bg": "--white", "role": "non-text", "where": "Performance: top bar, grid row bar, selected check disc" },
+    { "fg": "--family", "bg": "--white", "role": "non-text", "where": "Family: card top bar" },
+    { "fg": "--navy", "bg": "--lean", "role": "ui-or-heading", "where": "check mark on the Lean disc (selected state)" },
+    { "fg": "--navy", "bg": "--signature", "role": "ui-or-heading", "where": "check mark on the Signature disc" },
+    { "fg": "--navy", "bg": "--performance", "role": "ui-or-heading", "where": "check mark on the Performance disc" },
+    { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "check mark on the navy disc (meal-count cards)" },
+    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "Choose your meals / Claim my offer, 19px/700 uppercase" },
+    { "fg": "--on-cta", "bg": "--cta-hover", "role": "large-text", "where": "the same buttons on hover" },
+    { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the button's own shape against the card" },
+    { "fg": "--orange", "bg": "--white", "role": "non-text", "where": "claim section top bar (dev)", "build": "dev" },
+    { "fg": "--white", "bg": "--draft", "role": "body", "where": "DRAFT banner, 14px (dev)", "build": "dev" },
+    { "fg": "--draft", "bg": "--white", "role": "body", "where": "DRAFT tag 12px/600, claim error 16px/600 (dev)", "build": "dev" }
+  ],
+  "considered_not_drawn": [
+    { "fg": "#ffffff", "bg": "#ff931e", "role": "large-text", "why": "the store's own button (white on its orange): measured, and under 60 even at 19px/700" },
+    { "fg": "#1b2360", "bg": "#ff931e", "role": "large-text", "why": "option A, navy text on the store's orange: under 60" },
+    { "fg": "#060606", "bg": "#ff931e", "role": "large-text", "why": "near-black on the store's orange: passes by 0.6, and loses the store's white label" },
+    { "fg": "#ffffff", "bg": "#d66400", "role": "large-text", "why": "option B, chosen: the same orange family darkened (hsl 28 100% 42%) keeps the store's white uppercase label" }
+  ],
+  "not_measured": [
+    { "token": "--line", "why": "decorative hairline around cards and under the header; each card is identified by its text, and its state by the navy outline (measured above)" },
+    { "token": "--ice", "as": "tile on white", "why": "ice tiles and chips on a white card are grouping, not a boundary anyone must find" },
+    { "token": "--cta", "as": "disabled button", "why": "the submit button at 60% opacity while a claim is sending: a disabled control is exempt" }
+  ]
+}

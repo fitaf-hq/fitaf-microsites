@@ -1,6 +1,6 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
@@ -12,6 +12,11 @@ export const DIST = join(ROOT, "dist");
 export const DIST_DEV = join(ROOT, "dist-dev");
 export const CLAIM_PATH = join(ROOT, "data", "claim.json");
 export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
+/** Same-origin static files the page references, copied beside index.html: src/<dir> -> <out>/<dir>. */
+export const STATIC_DIRS = [
+  { dir: "fonts", match: /\.woff2$/ },
+  { dir: "assets", match: /\.png$/ },
+];
 export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 const CENTS_PER_DOLLAR = 100;
@@ -103,7 +108,7 @@ function gridRows(plans) {
             `<small>${money(c.total_cents)}/wk</small></a></td>`,
         )
         .join("");
-      return `          <tr><th scope="row">${esc(plan.name)}</th>${tds}</tr>`;
+      return `          <tr><th scope="row" data-accent="${esc(plan.id)}">${esc(plan.name)}</th>${tds}</tr>`;
     })
     .join("\n");
 }
@@ -207,6 +212,19 @@ export async function renderPage(plans, claim = NO_CLAIM) {
   });
 }
 
+/** Copy the fonts and the logo next to the page. Only files the page may reference are copied. */
+export async function copyStatic(outDir) {
+  const written = [];
+  for (const { dir, match } of STATIC_DIRS) {
+    await mkdir(join(outDir, dir), { recursive: true });
+    for (const name of (await readdir(join(ROOT, "src", dir))).filter((n) => match.test(n)).sort()) {
+      await copyFile(join(ROOT, "src", dir, name), join(outDir, dir, name));
+      written.push(join(outDir, dir, name));
+    }
+  }
+  return written;
+}
+
 export async function writeQrCodes(events, outDir) {
   const qrDir = join(outDir, "qr");
   await mkdir(qrDir, { recursive: true });
@@ -237,14 +255,15 @@ export async function build({ plansPath = PLANS_PATH, eventsPath = EVENTS_PATH, 
   const html = await renderPage(plans, slots);
   const indexPath = join(outDir, "index.html");
   await writeFile(indexPath, html);
+  const files = await copyStatic(outDir);
   // QR codes point at the production URL, so only the production build writes them.
   const qr = target === "prod" ? await writeQrCodes(events, outDir) : [];
-  return { indexPath, bytes: Buffer.byteLength(html), qr };
+  return { indexPath, bytes: Buffer.byteLength(html), files, qr };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const envFlag = process.argv.indexOf("--env");
   const out = await build({ target: envFlag === -1 ? "prod" : process.argv[envFlag + 1] });
   console.log(`wrote ${out.indexPath} (${out.bytes} bytes)`);
-  for (const f of out.qr) console.log(`wrote ${f}`);
+  for (const f of [...out.files, ...out.qr]) console.log(`wrote ${f}`);
 }

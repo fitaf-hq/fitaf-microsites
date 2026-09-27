@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { claimSlots, renderPage, ROOT, TURNSTILE_SCRIPT_URL } from "../build.mjs";
-import { loadPlans } from "./helpers.mjs";
+import { isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
 
 const claim = JSON.parse(await readFile(join(ROOT, "data", "claim.json"), "utf8"));
 const devHtml = await renderPage(await loadPlans(), await claimSlots(claim, "1x00000000000000000000BB"));
@@ -64,6 +64,7 @@ test("R3-page: the only external script is Turnstile, and the only fetch is the 
   const fetches = [...devHtml.matchAll(/\bfetch\s*\(([^,]+),/g)].map((m) => m[1]);
   assert.deepEqual(fetches, ["cfg.api"]);
   assert.match(devHtml, /"api":"\/api\/claim"/);
-  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|sendBeacon|@import|<img\b|<iframe\b/i);
+  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|sendBeacon|@import|<iframe\b/i);
+  for (const url of loadedUrls(devHtml)) assert.ok(isSameOrigin(url), `same-origin only, got ${url}`);
   assert.ok(Buffer.byteLength(devHtml) < 60 * 1024, "still under the 60 KB budget");
 });
