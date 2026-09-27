@@ -12,7 +12,9 @@
     "test": "node --test \"test/*.test.mjs\"",
     "predeploy": "npm run build",
     "deploy": "wrangler deploy",
-    "preview": "wrangler dev"
+    "preview": "wrangler dev",
+    "cf:whoami": "wrangler whoami",
+    "cf:versions": "wrangler versions list"
   },
   "dependencies": {
     "qrcode": "^1.5.4"

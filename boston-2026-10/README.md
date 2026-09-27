@@ -43,3 +43,12 @@ npm --prefix boston-2026-10 run deploy  # builds, then wrangler deploy
   test counting links counts the table, not a duplicate of it.
 - **Without JavaScript** the two questions are hidden and the grid and Family card are shown, so every
   link still works.
+
+## ⛔ Running wrangler — only through this package's scripts
+
+**Always** `npm --prefix boston-2026-10 run <script>` (`deploy`, `cf:whoami`, `cf:versions`, …) — `npm run`
+sets the working directory to this package, so wrangler reads `wrangler.jsonc` here. ⛔ **Never**
+`npm exec wrangler …` or `npx wrangler …` from any other directory: on 2026-09-27 a `pages project create`
+run that way from a private repository let wrangler's automatic setup pick that repository's own build
+folder and **upload it publicly**; it stayed reachable at a version preview URL until the Worker was
+deleted. If an operation has no script yet, add one here first.
