@@ -15,3 +15,7 @@ The committed INPUTS of the page. Both are public. Change these, then `npm run b
   now serves a Pages project as a static-assets Worker, so the default address is `workers.dev`, not
   `pages.dev`), because `eatfitaf.com` is not bought yet. **When the domain is live, replace the URL and
   rebuild**: every QR code printed before that points at the `workers.dev` address.
+- **`delivery-zips.json`**: ⛔ **a MOCK** (`"status": "mock"`) of greater Boston by three-digit ZIP prefix,
+  so the ZIP check of `flows/01-save-offer.md` § 6 can be built. It is **not** the store's delivery area.
+  Replace it with the official list (five-digit ZIPs, `"match": "exact"`, `"status": "official"`); a
+  production build must refuse a `mock` list.

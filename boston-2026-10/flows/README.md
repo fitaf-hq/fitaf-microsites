@@ -1,97 +1,92 @@
 # flows — the microsite's multi-step flows, documented before they are built
 
 **The rule of this directory**: each flow is written here **before** its code, **framework-neutral**:
-states, transitions, the data each step sends or keeps, and the consent points. The choice of how to
-build the page (plain script, or a small framework) **follows these documents**. Like everything in this
-repository, these files are public: no offer terms before they are approved, no internal figures, no
-pointer into a private repository.
+states, transitions, the data each step sends or keeps, and the consent points. Each flow carries a
+Mermaid diagram of its states. **The tables are the authority**, and the diagrams are drawn from them. Like
+everything in this repository, these files are public: no offer terms before they are approved, no
+internal figures, no pointer into a private repository.
 
 **Authority.** Where a flow and a contract (`../SPEC*.md`) disagree about something BUILT, the contract
 and the code win, and the flow is corrected. Where a flow PROPOSES a change, the contract is amended when
-the proposal is accepted, and not before.
+the proposal is accepted.
+
+## Ruled 2026-09-27
+
+- **The offer comes first**, as a dismissible **reminder**: one email with the code and a link back. Then
+  choose a plan.
+- **Email only for October**: texting is off.
+- **Choose a plan will be rewritten** around meal photography.
+- **ZIPs**: a whitelist, mocked for greater Boston until the official list replaces it.
+- **Plain JavaScript for now**, with a Svelte refactor expected.
+- **The deletion plan (Flow 6) is accepted.**
 
 ## The flows
 
 | | flow | status | its page or channel |
 |---|---|---|---|
-| [1](01-choose.md) | arrive and choose a plan | ✅ built (rung 1, live) | the microsite |
-| [2](02-claim.md) | claim the offer | 🟡 built on dev as one form; **streamlining proposed** | the microsite |
-| [3](03-confirm-email.md) | confirm the email and reveal the code (double opt-in) | ⬜ proposed | email → `/c/<token>` |
-| [4](04-text.md) | the code by text, and the text opt-in | ⬜ proposed; ⚠ needs a registered sender | text messages |
+| [1](01-save-offer.md) | save the offer (first, dismissible) | ⬜ proposed; replaces the claim form built on dev | the microsite |
+| [2](02-choose.md) | choose a plan | ✅ built (rung 1, live); ⬜ to be rewritten with photography | the microsite |
+| [3](03-follow-up-email.md) | the one-time email, and the marketing confirmation | ⬜ proposed | email → `/confirm/<token>` |
+| [4](04-text.md) | the code by text | ⛔ off for October | text messages |
 | [5](05-return-and-redeem.md) | come back, and use the code at the store | rung-1 links built; the rest proposed | microsite → store |
-| [6](06-lead-record.md) | the lead record, from claim to deletion | 🟡 partly built on dev | the Worker and its database |
+| [6](06-lead-record.md) | the lead record, from save to deletion | ✅ plan accepted; partly built on dev | the Worker and its database |
 | [7](07-calendar-cart.md) | the calendar cart | 💭 sketch, later | the microsite |
 
 ## The journey, end to end
 
 ```mermaid
 flowchart LR
-  QR[QR code at an event] --> F1[1 · choose a plan]
-  F1 -->|Continue to the store| STORE[the store's order page]
-  F1 -->|Claim your offer| F2[2 · claim]
-  F2 -->|email| F3[3 · confirm → code page]
-  F2 -->|mobile| F4[4 · code by text]
-  F3 --> F5[5 · continue to your plan]
-  F4 --> F5
-  F5 --> STORE
-  F2 -. every claim .-> F6[(6 · lead record)]
-  F6 -. forgets .-> END[claim row only: event · plan · code]
+  QR[QR code at an event] --> F1[1 · save the offer]
+  F1 -->|Save my offer| F2[2 · choose a plan]
+  F1 -->|Not now| F2
+  F2 --> STORE[the store's order page]
+  F1 -. schedules .-> F3[3 · one email: code + link back]
+  F3 -->|Choose your plan| F2
+  F3 -->|Yes, keep me posted| MKT[marketing, confirmed]
+  F1 -. every save .-> F6[(6 · lead record)]
+  F6 -. forgets .-> END[save row only: event · code · dates]
 ```
-
-Drawn from the transition tables in each flow; the tables are the authority.
 
 ## Consent points — the register
 
-Every place a person gives or withdraws permission, in one list. The id is used in every flow that refers
-to it.
-
 | id | where | the act | means |
 |---|---|---|---|
-| CP1 | Flow 2 | submitting a claim | send **this offer** and **one reminder** to the contact given (service, not marketing) |
-| CP2 | Flow 2 | the email box | marketing email: **pending** until CP4 |
-| CP3 | Flow 2 | the text box | written consent to marketing texts: pending CP5 under Flow 4 § 4 |
-| CP4 | Flow 3 | **Show my code** | the address is theirs; with CP2, marketing email confirmed |
-| CP5 | Flow 4 | replying YES | marketing texts confirmed |
-| CP-W1 | any email | unsubscribe | marketing email withdrawn |
-| CP-W2 | any text | STOP | all texts withdrawn |
-| CP-W3 | anywhere | asking us to delete | contact deleted (Flow 6 `ERASED`), forwarded to any conduit |
+| CP1 | Flow 1 | **Save my offer** | send **this code once**, at the chosen time, with a link back (a service, not marketing) |
+| CP2 | Flow 1 | the marketing box | marketing email, **pending** CP3 |
+| CP3 | Flow 3 | **Yes, keep me posted** | marketing email confirmed (double opt-in) |
+| CP-W1 | Flow 3 · any marketing email | **No thanks** · unsubscribe | marketing withdrawn, as easily as given |
+| CP-W2 | anywhere | asking us to delete | contact deleted (Flow 6 `ERASED`); an unsent email cancelled; forwarded to the conduit |
 
-⭐ **Symmetry, by construction**: each channel is **offered beside its own field** (CP2 · CP3),
-**confirmed by its owner** (CP4 · CP5), and **withdrawn in one step** (CP-W1 · CP-W2).
+Texting's own ids (`CP-T1`, `CP-T2`, `CP-TW`) are in Flow 4 and are off for October.
 
-## How much state there is — for the framework decision
+## How much state there is — plain now, Svelte expected
 
 | flow | where the state lives | named states |
 |---|---|---|
-| 1 | the URL fragment (3 values) + one toggle | 5 |
-| 2 | the page | 8 |
-| 3 | the Worker; the page renders one of 4 outcomes and has one button | 4 |
-| 4 | the Worker and the text provider; **no page** | 5 |
+| 1 | the page | 9 |
+| 2 | the URL fragment (3 values) + one toggle | 5 |
+| 3 | the Worker (E1: 5); the confirmation page (4, one button) | 9, server-side |
 | 5 | links only | 0 new |
-| 6 | the Worker and its database; **no page** | 6 |
-| 7 | the page: a 7 × 6 grid, a menu, drag state, and prices derived on every drop | many, and interdependent |
+| 6 | the Worker and its database | 7, server-side |
+| 7 | the page: a 7 × 6 grid, a menu, drag state, prices derived on every drop | many, interdependent |
 
-**Reading it**: flows 1–6 put **13 states on a page** (1 and 2), plus one server-rendered page with one
-button (3). Everything else is server-side, where no front-end framework applies. That is well within what
-the current plain script handles, and a framework would add a build step for a small gain. **Flow 7 is
-the first flow whose state is large and interdependent**, which is where a component framework earns its
-keep.
+**On a page for October: 14 states (flows 1 and 2).** Built plain, on the existing `build.mjs`. So that
+the expected move to Svelte is a translation rather than a rewrite, the plain code is written the way a
+component would be:
 
-⇒ **Recommendation**: build flows 2–6 plain for October, on the existing `build.mjs`, and take the
-framework decision when Flow 7 is scheduled. ⬜ The decision is the Advisor's.
+- **state as one plain object per flow**, the only thing that changes;
+- **one `render(state)` per flow**, which reads the state and writes the DOM, and nothing else does;
+- **transitions as named functions** that match the rows in each flow's table.
 
 ## Open across flows
 
 | where | question |
 |---|---|
-| Flow 1 § 5 | an entry path per event (`/<event-id>/`), so a claim records its event |
-| Flow 1 § 6 · Flow 2 § 2 | **Claim your offer** leads the card; the claim asks for one channel at a time |
-| Flow 2 § 6 | one claim per contact per event (a resend is a resubmission) |
-| Flow 2 § 7 | the ZIP check the form promises and does not make |
-| Flow 3 § 4 · Flow 4 § 3 | the 7-day confirmation windows |
-| Flow 3 § 8 | **which email sender**: nothing can confirm an address until one exists |
-| Flow 4 § 4 | marketing texts wait for YES |
-| Flow 4 § 5 | ⚠ carrier registration for texts, and its lead time; **email only for October** if no sender is ready |
-| Flow 5 § 4 | the reminder's timing; whether a text reminder is service or marketing (the consent draft's F3, for legal) |
-| Flow 6 § 4 | timers by a scheduled Worker; the purge for claims that are never exported |
+| Flow 1 § 5 | when E1 goes: ⭐ the visitor chooses (now · this evening · tomorrow morning) |
+| Flow 1 § 6 | what an out-of-area visitor may do (the Owner's) |
+| Flow 1 § 7 | whether the email reopens the plan chosen afterwards (⭐ not for October) |
+| Flow 2 § 5 | an entry path per event, so a save records its event |
+| Flow 2 § 7 | the rewrite, and the photograph set it needs |
+| Flow 3 § 6 | the sending domain and the sender account |
+| Flow 5 § 5 | a pool of unique codes the store accepts |
 | Flow 6 § 5 | the export, and the status a contact is created with at the conduit |

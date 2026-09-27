@@ -26,6 +26,18 @@ Ideas that come with it:
 | drag in progress | source, target, hover |
 | saved | the calendar, attached to a claim (Flow 6 would gain a field, **not** PII) |
 
+```mermaid
+flowchart LR
+  MENU[this week's menu] --> DRAG[drop a meal in a slot, or change a size]
+  DRAG --> WEEK[the week: 7 days x up to 6 slots]
+  WEEK --> COUNT[count of meals]
+  COUNT --> RUNG[the plan and its price rung]
+  RUNG --> PRICES[every price on the page]
+  RUNG --> METER[the meter: meals to the next rung]
+  WEEK --> SAVE[saved with the offer, optional]
+  WEEK --> HANDOFF[to the store, through rung 2 only]
+```
+
 The derived part is where the complexity sits: **the count decides the rung**, so every drop can change
 every price on the page.
 

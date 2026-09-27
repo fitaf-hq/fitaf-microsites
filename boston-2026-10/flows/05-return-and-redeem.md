@@ -6,59 +6,60 @@
 ## 1. Purpose
 
 **A lead may convert in 0 minutes or 3 weeks, and the offer holds either way.** This flow is every route
-back to the plan, and the step onto the store with the code in hand.
+back, and the step onto the store with the code in hand.
 
 ## 2. The ways back
 
+```mermaid
+flowchart TD
+  NOW[same visit: Flow 2, Choose your meals] --> STORE
+  E1[the one-time email E1: Choose your plan] --> EV[the event page, marked from-email: § 3]
+  EV --> F2[Flow 2: choose a plan]
+  QR[the QR code, scanned again] --> F1[Flow 1: the offer step]
+  F1 --> F2
+  F2 --> STORE[the store's order page for the plan]
+  STORE --> CODE[the visitor enters the code at checkout]
+  CODE --> ORDER[an order carrying the code]
+  ORDER -. the store's order report, by code .-> METRICS[new customers and their value, per event]
+```
+
 | from | lands on | carries |
 |---|---|---|
-| the code page (Flow 3, `REVEALED`) | the code page itself; **Continue to your plan** | the plan |
-| a text (S1, S2) | the microsite at `#<plan>-<count>` | the plan only; the code is in the text |
-| the reminder email (§ 4) | the code page (`/c/<token>`) | the plan and the code |
-| the same QR code, scanned again | Flow 1 `START` | nothing: the visitor chooses again |
+| the same visit | Flow 2 → the store | the plan (and the code, if they saved it and have it open) |
+| E1's **Choose your plan** | the event page, straight to Flow 2 (§ 3) | nothing personal; the code is in the email |
+| the QR code again | Flow 1 | nothing |
+| a marketing email (only after CP3) | wherever that email links | decided per campaign |
 
 ⭐ **The plan comes back; the meals are this week's.** When Chef's Choice exists, a returning visitor sees
-**the current week's picks** for their plan, not the week they claimed in: the menu rotates, and last
-week's meals may not be orderable.
+**the current week's picks**, not the week they saved in: the menu rotates.
 
-## 3. Onto the store
+## 3. The link back skips the offer step
 
-| rung | **Continue to your plan** goes to | the code |
+E1's link is the event page with a marker that says only *"from the email"* (`#from-email`), which opens
+at Flow 2 and shows no offer form, because they already saved it. The marker carries **no identity**.
+Anyone with the link sees the same page.
+
+## 4. Onto the store
+
+| rung | the button goes to | the code |
 |---|---|---|
-| **1 (now)** | `…/order?mpid=N` | shown with a **Copy** button; the visitor enters it at checkout |
-| **2 (planned)** | `…/order?mpid=N#fitaf=<payload>` | carried in the payload; the store-side tag enters it through the store's own coupon field (rung 2 § 2) |
+| **1 (now)** | the plan's order page | the visitor copies it from E1 and enters it at checkout |
+| **2 (planned)** | the order page plus a fragment the store-side tag reads | carried in the fragment; the tag enters it through the store's own coupon field |
 
-Rung 2's rule carries over: **without the tag, the link is exactly rung 1**, so this flow never depends on
-it.
-
-⚠ In rung 2 the fragment carries the offer code, and a fragment stays in the browser's history. That is
-acceptable (the code is the holder's own, and the tag removes the fragment once read), but the payload
-must carry **nothing else personal**: no name, no contact, no token.
-
-## 4. The reminder — one, before expiry
-
-| to | by | when |
-|---|---|---|
-| every **confirmed** email claimant (CP4) | email, **E3**: *"Your offer ends [date]"* → the code page | ⬜ a fixed time before expiry (e.g. 3 days) |
-| a text claimant | S2 (Flow 4), under the F3 caveat | the same |
-| an **unconfirmed** email | ⛔ nothing: an address never proven to be theirs gets no second message | — |
-
-The reminder is part of what CP1 asked for. ⛔ **It is one message**, and anything beyond it needs CP2,
-CP3 or CP5.
+Rung 2's rule carries over: **without the tag, the link is exactly rung 1.** In rung 2 the fragment may
+carry the code, which is the holder's own, and **nothing else personal**.
 
 ## 5. Redemption, and what it tells us
 
-- The store records the code on the order. **We do not see the order.** The success metrics (new
-  customers, their lifetime value) come from the store's order reports **by code**, and the code maps to
-  its event.
-- ⭐ **The code is the only link from an order back to the event**, and it is the one thing kept after the
-  contact is deleted (Flow 6). So it must be **unique per claim** (a pool of codes the store accepts) for
-  the trip's results to be countable per event. Whether the store accepts such a pool is being confirmed.
-- ⬜ **Not decided here**: whether the offer is tied to the plan claimed (the build records the plan; the
-  offer's terms are the Owner's).
+- The store records the code on the order. **We do not see the order.** The trip's metrics (new customers,
+  their lifetime value) come from the store's order reports **by code**, and each code maps to its event.
+- ⭐ **The code is the only link from an order back to the event**, and it is what is kept after the
+  contact is deleted (Flow 6). So it must be **unique per save**, drawn from a pool of codes the store
+  accepts. Whether the store accepts such a pool is being confirmed.
+- ⬜ Whether the offer is tied to a plan is the offer's terms, and those are the Owner's.
 
 ## 6. After the offer
 
-`EXPIRED` (Flow 3) shows "This offer has ended" and the store link. A **new** offer for a lead who did not
-convert (re-expressed later) is a **new message on a channel they consented to**. ⛔ It never reuses the
-expired page and never goes to someone who ticked nothing.
+An expired code is refused at the store's checkout, as any expired code is. A **new** offer for a lead who
+did not convert is a **new message**, sent **only** to someone who confirmed marketing (CP3). ⛔ It never
+goes to someone who only saved the offer.

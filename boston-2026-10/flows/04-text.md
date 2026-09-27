@@ -1,19 +1,19 @@
 # Flow 4 — the code by text, and the text opt-in
 
-**Status: PROPOSED, not built.** No text sender exists yet, and whether one can exist by the trip is
-open (§ 5).
+**Status: ⛔ OFF FOR OCTOBER — email only (ruled 2026-09-27).** Kept as the design for when texting
+returns. Its consent ids are prefixed `CP-T` so they cannot be confused with the email flow's.
 
 ## 1. Purpose
 
-A claimant who gave a mobile number gets their code **by text, straight away**, because the field said
-so. That is the service they asked for (CP1). Marketing texts come only with the text box (CP3), and
-under the proposal below only after they reply to confirm.
+A visitor who gave a mobile number gets their code **by text**, because the field said so. That is the
+service they asked for. Marketing texts come only with a text box (CP-T1), and under the proposal below
+only after they reply to confirm.
 
 ## 2. The messages
 
 | id | when | says | kind |
 |---|---|---|---|
-| **S1** | the claim is accepted | *"Fit AF: your offer code is XXXX-XXXX (until [date]). Your plan: <link>. Reply STOP to opt out."* | service (CP1) |
+| **S1** | the claim is accepted | *"Fit AF: your offer code is XXXX-XXXX (until [date]). Your plan: <link>. Reply STOP to opt out."* | service (the save) |
 | **S1+** | the same message, **only if the text box was ticked** | adds: *"Reply YES to get Fit AF menus & offers by text (about 4/mo). Msg & data rates may apply. HELP for help."* | ⬜ the confirmation request (§ 4) |
 | **S2** | one reminder before expiry | *"Fit AF: your offer XXXX-XXXX ends [date]. <link>"* | ⚠ service or marketing? **the consent draft leaves this to legal (F3).** Until it is answered, S2 goes only to claimants who confirmed marketing texts |
 | **R-STOP** | any STOP | one confirmation that they are opted out; nothing after it | required |
@@ -37,10 +37,22 @@ the text already says.**
 |---|---|---|---|
 | 4.1 | — | claim with mobile, box unticked | `CODE_SENT` |
 | 4.2 | — | claim with mobile, box ticked | `AWAITING_YES` |
-| 4.3 | `AWAITING_YES` | reply YES | `SUBSCRIBED` (CP5) |
+| 4.3 | `AWAITING_YES` | reply YES | `SUBSCRIBED` (CP-T2) |
 | 4.4 | `AWAITING_YES` | no reply within the window (⬜ 7 days) | `CODE_SENT`; the ticked box is recorded as **not confirmed** |
-| 4.5 | any | reply STOP (or any reasonable opt-out wording) | `STOPPED` (CP-W2) |
+| 4.5 | any | reply STOP (or any reasonable opt-out wording) | `STOPPED` (CP-TW) |
 | 4.6 | any | reply HELP | unchanged; R-HELP sent |
+
+```mermaid
+stateDiagram-v2
+  [*] --> CODE_SENT : save with a mobile, box unticked
+  [*] --> AWAITING_YES : save with a mobile, box ticked
+  AWAITING_YES --> SUBSCRIBED : reply YES
+  AWAITING_YES --> CODE_SENT : no reply within the window
+  CODE_SENT --> STOPPED : STOP
+  AWAITING_YES --> STOPPED : STOP
+  SUBSCRIBED --> STOPPED : STOP
+  STOPPED --> [*]
+```
 
 ## 4. ⬜ Fork: is the ticked box enough, or do texts wait for YES?
 
@@ -63,7 +75,7 @@ registration; a toll-free number has its own verification). ⚠ Its requirements
 been read from the provider's documents yet**, and they decide whether texting can exist by late October.
 A short code is already ruled out for October.
 
-⇒ **The form offers Text only once a registered sender exists** (Flow 2 § 2). If there is none by the
+⇒ **The form offers Text only once a registered sender exists** (Flow 1). If there is none by the
 trip, the October form is **email only**, and the page says nothing it cannot do.
 
 Also to confirm from the provider's documents: whether it handles STOP/HELP itself (most providers do for
@@ -73,9 +85,9 @@ standard opt-out words) or whether we must, and how an opt-out reaches our recor
 
 | id | the act | means | evidence stored |
 |---|---|---|---|
-| **CP3** | (Flow 2) the text box plus submit | written consent to marketing texts, pending YES under § 4 | `consent_sms = true`, time, wording version |
-| **CP5** | replying YES | marketing texts confirmed | `consent_sms_confirmed_at`, and the provider's message id as proof |
-| **CP-W2** | replying STOP (or equivalent), any time | all texts end; honoured at once | `sms_stopped_at`; forwarded to wherever the number was exported |
+| **CP-T1** | (Flow 1) a text box plus save | written consent to marketing texts, pending YES under § 4 | `consent_sms = true`, time, wording version |
+| **CP-T2** | replying YES | marketing texts confirmed | `consent_sms_confirmed_at`, and the provider's message id as proof |
+| **CP-TW** | replying STOP (or equivalent), any time | all texts end; honoured at once | `sms_stopped_at`; forwarded to wherever the number was exported |
 
 ## 7. Data
 

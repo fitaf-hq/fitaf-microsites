@@ -1,0 +1,16 @@
+{
+  "status": "mock",
+  "status_note": "A MOCK of greater Boston by three-digit ZIP prefix, written 2026-09-27 so the ZIP check can be built. NOT the store's delivery area. Replace with the official list (five-digit ZIPs) and set status to \"official\" before production; a production build must refuse status \"mock\".",
+  "region": "greater Boston, Massachusetts",
+  "match": "prefix",
+  "prefixes": [
+    { "prefix": "017", "area": "MetroWest (Framingham, Marlborough)" },
+    { "prefix": "018", "area": "north and northwest (Woburn, Burlington, Lowell)" },
+    { "prefix": "019", "area": "North Shore (Lynn, Salem, Peabody)" },
+    { "prefix": "020", "area": "south and southwest (Norwood, Dedham, Braintree)" },
+    { "prefix": "021", "area": "Boston, Cambridge, Somerville, Brookline, Quincy" },
+    { "prefix": "022", "area": "Boston (Seaport, Fenway, downtown)" },
+    { "prefix": "023", "area": "South Shore (Brockton, Weymouth)" },
+    { "prefix": "024", "area": "west (Newton, Waltham, Lexington)" }
+  ]
+}
