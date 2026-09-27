@@ -9,16 +9,25 @@
   },
   "scripts": {
     "build": "node build.mjs",
+    "build:dev": "node build.mjs --env dev",
     "test": "node --test \"test/*.test.mjs\"",
     "predeploy": "npm run build",
     "deploy": "wrangler deploy",
-    "preview": "wrangler dev"
+    "predeploy:dev": "npm run build:dev",
+    "deploy:dev": "wrangler deploy --env dev",
+    "db:migrate:dev": "wrangler d1 migrations apply fitaf-leads-dev --env dev --remote",
+    "seed:dev": "node scripts/seed-dummy.mjs --remote",
+    "purge:dev": "node scripts/purge.mjs --remote",
+    "preview": "wrangler dev",
+    "preview:dev": "npm run build:dev && wrangler dev --env dev"
   },
   "dependencies": {
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
+    "esbuild": "0.28.1",
     "jsqr": "^1.4.0",
+    "miniflare": "5.20260926.0-alpha",
     "pngjs": "^7.0.0",
     "wrangler": "^4.142.0"
   }

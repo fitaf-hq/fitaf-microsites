@@ -165,11 +165,11 @@ section.panel { padding-top: 28px; }
   main { margin-top: -44px; }
   .tabs { max-width: 420px; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{CLAIM_STYLE}}
 </style>
 <noscript><style>.js-only { display: none !important; } .all[hidden], .panel[hidden] { display: block; }</style></noscript>
 </head>
-<body>
+<body>{{DRAFT_BANNER}}
 <header class="masthead">
   <div class="masthead-inner">
     <div class="wordmark" aria-label="Fit AF">FIT <span>AF</span></div>
@@ -228,7 +228,7 @@ section.panel { padding-top: 28px; }
 
   <section class="panel" id="panel-family" role="tabpanel" aria-labelledby="tab-family" hidden>
 {{FAMILY}}
-  </section>
+  </section>{{CLAIM_SECTION}}
 </main>
 
 <footer class="foot">
@@ -238,6 +238,6 @@ section.panel { padding-top: 28px; }
 <script type="application/json" id="plan-data">{{DATA}}</script>
 <script>
 {{SCRIPT}}
-</script>
+</script>{{CLAIM_SCRIPT}}
 </body>
 </html>

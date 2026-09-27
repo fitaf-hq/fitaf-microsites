@@ -1,6 +1,6 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
@@ -9,6 +9,10 @@ export const ROOT = dirname(fileURLToPath(import.meta.url));
 export const PLANS_PATH = join(ROOT, "data", "plans.json");
 export const EVENTS_PATH = join(ROOT, "data", "events.json");
 export const DIST = join(ROOT, "dist");
+export const DIST_DEV = join(ROOT, "dist-dev");
+export const CLAIM_PATH = join(ROOT, "data", "claim.json");
+export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
+export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 const CENTS_PER_DOLLAR = 100;
 const QR_OPTIONS = {
@@ -154,7 +158,35 @@ function clientData(plans) {
 // JSON inside <script>: neutralise "<" so no "</script>" can close the element.
 const scriptJson = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
 
-export async function renderPage(plans) {
+/** The rung-3 slots. Production passes none, so every slot is "" and the page is rung 1's, byte for byte. */
+const NO_CLAIM = { CLAIM_STYLE: "", DRAFT_BANNER: "", CLAIM_SECTION: "", CLAIM_SCRIPT: "" };
+
+/**
+ * The development build's claim section (SPEC-rung3 § 1). `claim` is data/claim.json; `siteKey` is the
+ * dev environment's TURNSTILE_SITE_KEY from wrangler.jsonc (Cloudflare's published test key).
+ */
+export async function claimSlots(claim, siteKey) {
+  const read = (name) => readFile(join(ROOT, "src", "claim", name), "utf8");
+  const fill = (text) => text.replaceAll("{{WORDING_VERSION}}", esc(claim.wording_version));
+  const clientClaim = { api: claim.api_path, wording_version: claim.wording_version, site_key: siteKey };
+  return {
+    CLAIM_STYLE: (await read("style.css")).trimEnd(),
+    DRAFT_BANNER: "\n" + fill(await read("banner.html")).trimEnd(),
+    CLAIM_SECTION: "\n" + fill(await read("section.html")).trimEnd(),
+    CLAIM_SCRIPT:
+      `\n<script type="application/json" id="claim-data">${scriptJson(clientClaim)}</script>` +
+      `\n<script>\n${(await read("claim.js")).trim()}\n</script>` +
+      `\n<script src="${TURNSTILE_SCRIPT_URL}" async defer></script>`,
+  };
+}
+
+/** The dev environment's resolved config, read by wrangler itself (one source for bindings and keys). */
+export async function devConfig() {
+  const { unstable_readConfig } = await import("wrangler");
+  return unstable_readConfig({ config: WRANGLER_CONFIG, env: "dev" }, { hideWarnings: true });
+}
+
+export async function renderPage(plans, claim = NO_CLAIM) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
   const slots = {
@@ -167,6 +199,7 @@ export async function renderPage(plans) {
     READ_ON: esc(plans.read_on),
     DATA: scriptJson(clientData(plans)),
     SCRIPT: script.trim(),
+    ...claim,
   };
   return template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
     if (!(key in slots)) throw new Error(`template slot ${whole} has no value`);
@@ -189,19 +222,29 @@ export async function writeQrCodes(events, outDir) {
   return written;
 }
 
-export async function build({ plansPath = PLANS_PATH, eventsPath = EVENTS_PATH, outDir = DIST } = {}) {
+export async function build({ plansPath = PLANS_PATH, eventsPath = EVENTS_PATH, target = "prod", outDir } = {}) {
+  if (target !== "prod" && target !== "dev") throw new Error(`unknown build target: ${target}`);
+  outDir ??= target === "dev" ? DIST_DEV : DIST;
   const plans = await loadJson(plansPath);
   const events = await loadJson(eventsPath);
+  // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
+  if (target === "dev") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
-  const html = await renderPage(plans);
+  const slots =
+    target === "dev"
+      ? await claimSlots(await loadJson(CLAIM_PATH), (await devConfig()).vars.TURNSTILE_SITE_KEY)
+      : NO_CLAIM;
+  const html = await renderPage(plans, slots);
   const indexPath = join(outDir, "index.html");
   await writeFile(indexPath, html);
-  const qr = await writeQrCodes(events, outDir);
+  // QR codes point at the production URL, so only the production build writes them.
+  const qr = target === "prod" ? await writeQrCodes(events, outDir) : [];
   return { indexPath, bytes: Buffer.byteLength(html), qr };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const out = await build();
+  const envFlag = process.argv.indexOf("--env");
+  const out = await build({ target: envFlag === -1 ? "prod" : process.argv[envFlag + 1] });
   console.log(`wrote ${out.indexPath} (${out.bytes} bytes)`);
   for (const f of out.qr) console.log(`wrote ${f}`);
 }
