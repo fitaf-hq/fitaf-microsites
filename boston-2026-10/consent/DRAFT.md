@@ -1,4 +1,4 @@
-# Claim your offer — consent wording and contact capture. DRAFT v0.1, for legal review
+# Claim your offer — consent wording and contact capture. DRAFT v0.2, for legal review
 
 **Status**: ⛔ **DRAFT — not live.** Written 2026-09-27 for the Owner to route through legal. Nothing
 here is on the page until it is approved, and the approved text becomes `v1` with its date.
@@ -17,7 +17,9 @@ After choosing a plan, below the plan card:
 > **[date]**. Tell us where to send it.
 >
 > **First name** (optional)
-> **Email** ☐  **Mobile number** ☐ — *one is enough*
+> **Email** — *we'll email you a unique code*
+> **Mobile number** — *enter your number so we can text you a unique code*
+> *(one is enough)*
 > **Delivery ZIP code** — *so we can confirm we deliver to you*
 >
 > **How should we stay in touch?** *(optional — your offer doesn't depend on it)*
@@ -42,7 +44,7 @@ Both boxes start **unticked**. Neither is required to claim the offer.
 | they gave | we send | it is |
 |---|---|---|
 | an email | **one** email with the offer code and a link back to their plan · **one** reminder before it expires | the service they asked for — **not** marketing consent |
-| a mobile number | **one** text with the offer code and the link · **one** reminder before it expires | the same — ⚠ see § 5, fork F3 |
+| a mobile number | **one** text with the offer code and the link · ⚠ the reminder: see F3 | the service they asked for — the field's own label says a code will be texted (F3, ruled) |
 | a ticked box | ongoing marketing on **that channel only** | their consent, recorded (§ 3) |
 
 ## 3. What we store, and why — the minimum
@@ -65,7 +67,7 @@ they stay subscribed if they did. Deleted on request.
 
 ## 4. The privacy notice (linked from the form)
 
-> **Who we are.** Fit AF Nutrition, [postal address]. Contact: [email].
+> **Who we are.** Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407. Contact: [email].
 > **What we collect and why.** Your email and/or mobile number and ZIP code to send the offer you
 > claimed and one reminder; the plan you picked, to reopen it for you; and, only if you ticked a box,
 > your permission to send menus and offers by email or text.
@@ -76,10 +78,14 @@ they stay subscribed if they did. Deleted on request.
 > [30] days.
 > **How long we keep it.** Until your offer expires plus 30 days, unless you asked to stay in touch —
 > then until you unsubscribe.
-> **Where it's kept.** With our email and text providers ([Mailchimp] and [SMS provider]), who process it
-> on our behalf.
+> **Where it's kept.** In Fit AF's own records; our email and text providers ([Mailchimp] and [SMS
+> provider]) receive only what they need to send the messages, on our behalf.
 
-## 5. ⛔ The forks — each needs a decision before `v1`
+## 5. The forks — answered 2026-09-27 except where marked
+
+**F1 ✅** only a contact to deliver it · **F2** yes, UX and data processing to be thought through · **F3 ✅** the phone field's label says a code will be texted — ⚠ whether the **reminder** text is covered by that expectation is still for legal · **F4 ✅** leads go to **our own record first** (a spreadsheet or database in an account Fit AF owns); Mailchimp and the SMS provider are **output conduits only** · **F5** the Owner · **F6 ✅** 10 Enterprise, Carbondale, PA 18407
+
+The original table, kept for the reasoning:
 
 | | question | recommendation | why |
 |---|---|---|---|
