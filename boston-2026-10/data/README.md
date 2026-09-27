@@ -8,6 +8,7 @@ The committed INPUTS of the page. Both are public. Change these, then `npm run b
   ⚠ `mpid`s are HMP configuration and are **not in order** (Signature 14 is `29`, 21 is `28`). Re-read
   them from the store; never infer one from its neighbours.
 - **`events.json`**: one entry per QR code, `{ "id", "url" }`; `id` names `dist/qr/<id>.png` and `.svg`.
-  ⏳ The `demo` URL is the Cloudflare Pages default, `https://fitaf-microsites.pages.dev/`, because
-  `eatfitaf.com` is not bought yet. **When the domain is live, replace the URL and rebuild**: every QR
-  code printed before that points at the `pages.dev` address.
+  ⏳ The `demo` URL is the deployed default, `https://fitaf-microsites.fitaf.workers.dev/` (Cloudflare
+  now serves a Pages project as a static-assets Worker, so the default address is `workers.dev`, not
+  `pages.dev`), because `eatfitaf.com` is not bought yet. **When the domain is live, replace the URL and
+  rebuild**: every QR code printed before that points at the `workers.dev` address.
