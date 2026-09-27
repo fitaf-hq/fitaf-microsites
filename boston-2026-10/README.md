@@ -26,7 +26,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 npm --prefix boston-2026-10 install
 npm --prefix boston-2026-10 test        # T1–T7
 npm --prefix boston-2026-10 run build   # writes dist/
-npm --prefix boston-2026-10 run deploy  # builds, then wrangler pages deploy dist --project-name fitaf-microsites
+npm --prefix boston-2026-10 run deploy  # builds, then wrangler deploy
 ```
 
 ## What a reader would misread

@@ -11,7 +11,7 @@ will be a win."*
 | the plan table | INPUT, public | `data/plans.json` (§ 2) | a person re-reading `fitafnutrition.com/meal-plans` when the store's plans change |
 | the page | OUTPUT | `dist/` (git-ignored) | `npm run build` |
 | the QR code | OUTPUT | `dist/qr/*.png` + `.svg` | `npm run build`, one per event URL listed in `data/events.json` |
-| the deploy | OUTPUT | a Cloudflare Pages project | `npm run deploy` (`wrangler pages deploy dist`) |
+| the deploy | OUTPUT | a Cloudflare Pages project | `npm run deploy` (`wrangler deploy`, reading `wrangler.jsonc`: Cloudflare now serves a Pages project as a static-assets Worker) |
 
 ## 1. The page — two questions, with the grid behind them
 
