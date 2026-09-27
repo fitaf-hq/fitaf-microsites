@@ -4,5 +4,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fitaf-microsites",
   "compatibility_date": "2026-09-26",
-  "assets": { "directory": "./dist" }
+  "assets": { "directory": "./dist" },
+
+  // ⛔ No per-version preview URLs (<version>-<name>.<subdomain>.workers.dev). On 2026-09-27 a version
+  // uploaded by mistake stayed PUBLIC at its preview URL after later deploys replaced it on the main
+  // address; only deleting the Worker removed it. A replaced version must not stay reachable.
+  "preview_urls": false
 }
