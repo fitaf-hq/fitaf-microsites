@@ -1,102 +1,114 @@
-# Claim your offer — consent wording and contact capture. DRAFT v0.2, for legal review
+# Save your offer — consent wording and contact capture. DRAFT v0.3, for legal review
 
-**Status**: ⛔ **DRAFT — not live.** Written 2026-09-27 for the Owner to route through legal. Nothing
-here is on the page until it is approved, and the approved text becomes `v1` with its date.
-**The standard it is written to** (the Advisor, 2026-09-27): GDPR's principles as far as possible though
-Fit AF is US-based; the pending Massachusetts data privacy act's principles as if enacted; and the US
-rules that already apply — the TCPA for marketing texts, CAN-SPAM for marketing email.
+**Status**: ⛔ **DRAFT — not live.** v0.3 written 2026-09-27 for the Owner to route through legal; it replaces
+v0.2 (git history) after the flows were inverted (`../flows/`). Nothing here is on the public page until it
+is approved; the approved text becomes `v1` with its date. **Email only** — texting is off for October.
+**The standard it is written to**: GDPR's principles as far as possible though Fit AF is US-based; the pending
+Massachusetts data privacy act's principles as if enacted; CAN-SPAM for email.
+
+Placeholders in `[brackets]` are the Owner's (the offer, its dates, the contact address) and show literally
+on the development page.
 
 ---
 
-## 1. What the visitor sees
+## 1. What the visitor sees — the offer, first
 
-After choosing a plan, below the plan card:
-
-> ### Claim your Boston offer
-> **[The offer, e.g. "3 free meals on your first order of $X or more"]** — reserved for you until
-> **[date]**. Tell us where to send it.
+> ### Your Boston offer
+> **[The offer, e.g. "N free meals on your first order of $X or more"]**
 >
-> **First name** (optional)
-> **Email** — *we'll email you a unique code*
-> **Mobile number** — *enter your number so we can text you a unique code*
-> *(one is enough)*
-> **Delivery ZIP code** — *so we can confirm we deliver to you*
+> Not ready today? Save it — we'll email your code tomorrow morning, with a link back here. We'll send it once.
 >
-> **How should we stay in touch?** *(optional — your offer doesn't depend on it)*
+> **Email** — *we'll send your code here tomorrow*
+> **Delivery ZIP code** — *so we can check we deliver to you*
 >
-> ☐ **Email me** Fit AF menus, offers and news. About once a week; unsubscribe anytime.
+> ☐ **Also email me** Fit AF menus and offers. About once a week; unsubscribe anytime. We'll ask you to confirm.
 >
-> ☐ **Text me** Fit AF menus and offers at the number above. By checking this box, I agree to receive
-> recurring automated marketing text messages from Fit AF Nutrition at this number. Consent is not a
-> condition of any purchase. Message frequency varies (about 4 a month). Message and data rates may
-> apply. Reply STOP to cancel, HELP for help.
+> **[ Save my offer ]**
 >
-> **[ Claim my offer ]**
+> We'll use your email to send this code once, tomorrow. Only if you tick the box and then confirm it will we
+> send you anything else. We delete your details 30 days after the offer ends unless you've confirmed. We
+> don't sell your information. [Privacy notice]
+
+Below the form, without saving anything: **Build my plan →** (and **See this week's menu →** once a menu is
+published). The box starts **unticked** and is not required.
+
+## 2. Out of area
+
+> We don't deliver to **[ZIP]** yet.
 >
-> We'll use your details to send your offer, remind you once before it expires, and — only if you
-> ticked a box above — keep in touch that way. We save the plan you picked so your link opens it again.
-> We don't sell your information. [Privacy notice]
+> **[ Tell me when you deliver here ]**
+>
+> We'll email you once to confirm. After that, we'll only email you about delivery reaching your area. We keep
+> your email and ZIP for up to 12 months for this, then delete them.
 
-Both boxes start **unticked**. Neither is required to claim the offer.
+No offer code is issued for an out-of-area ZIP. ⬜ The 12 months is proposed.
 
-## 2. What happens after "Claim my offer"
+## 3. The emails
 
-| they gave | we send | it is |
-|---|---|---|
-| an email | **one** email with the offer code and a link back to their plan · **one** reminder before it expires | the service they asked for — **not** marketing consent |
-| a mobile number | **one** text with the offer code and the link · ⚠ the reminder: see F3 | the service they asked for — the field's own label says a code will be texted (F3, ruled) |
-| a ticked box | ongoing marketing on **that channel only** | their consent, recorded (§ 3) |
+**E1 — the next morning, to a saved offer.** Subject: *Your Fit AF offer, as promised*
 
-## 3. What we store, and why — the minimum
+> You saved this offer at **[event]** yesterday — here it is.
+> **Your code: XXXX-XXXX** · good until **[date]**
+> **[ See my offer ]**
+> *(only if the box was ticked)* You asked to hear about Fit AF menus and offers. **[ Yes, keep me posted ]**
+> Already ordered? Enjoy your meals!
+> You're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.
 
-| field | why it is needed |
+**E-X — at once, to an out-of-area request.** Subject: *Confirm: we'll tell you when Fit AF delivers near you*
+
+> You asked us to tell you when Fit AF delivers near **[ZIP]**. **[ Yes, tell me ]**
+> If this wasn't you, ignore this email — we'll delete your details within 7 days.
+> Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.
+
+## 4. The confirmation page (`/confirm/…`)
+
+> **Keep hearing from Fit AF?**
+> Menus and offers by email, about once a week. Unsubscribe from any email, anytime.
+> **[ Yes, keep me posted ]**   **[ No thanks ]**
+
+For an out-of-area request: *"We'll email you when Fit AF delivers near [ZIP] — nothing else. **[ Yes, tell
+me ]** **[ No thanks ]**"*. After **Yes**: *"You're on the list."* After **No thanks**: *"No problem — you won't
+hear from us again."*
+
+## 5. What we store, and why — the minimum
+
+| field | why |
 |---|---|
-| email and/or mobile | to deliver the offer they asked for |
-| first name (optional) | to address them; nothing breaks without it |
-| delivery ZIP | to tell them straight away if we don't deliver there |
-| the plan they picked | so the offer link reopens it — they can see it on screen |
-| the event (e.g. `boston-2026-10`) | which event the offer belongs to; how we count the trip's results |
-| **for each ticked box**: the channel, the date and time, and **the exact wording version** (`v1`) they saw | proof of consent — the TCPA requires a written, signed agreement for marketing texts, and a checkbox plus submit counts as an electronic signature |
+| email | to send the code, or the expansion news, they asked for |
+| delivery ZIP | to check delivery; for an out-of-area request, the whole purpose |
+| the event (e.g. `boston-2026-10`) | which event the offer belongs to; how the trip's results are counted |
+| for each consent: whether given, **when confirmed**, and **the exact wording version** | proof of consent |
 
-**Not collected**: date of birth, gender, address beyond ZIP, anything about health or diet. (Health and
-diet goals are sensitive data under both Massachusetts bills; "Lean / Signature / Performance" is a
-**portion size**, and it is stored as a plan, not as a goal.)
+**Not collected**: name, phone, plan choice, date of birth, address beyond ZIP, anything about health or diet.
+A daily protein or calorie target typed into the plan calculator **never leaves the browser**.
 
-**Kept for**: the offer data until the offer expires plus 30 days if they ticked nothing; for as long as
-they stay subscribed if they did. Deleted on request.
+**Kept for**: 30 days after the offer ends, unless marketing was confirmed; an out-of-area request 7 days if
+unconfirmed, up to 12 months if confirmed. After export to the email service, deleted from our records. The
+offer code and its event are kept without any contact details. Deleted on request at any time.
 
-## 4. The privacy notice (linked from the form)
+## 6. The privacy notice (linked from the form)
 
 > **Who we are.** Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407. Contact: [email].
-> **What we collect and why.** Your email and/or mobile number and ZIP code to send the offer you
-> claimed and one reminder; the plan you picked, to reopen it for you; and, only if you ticked a box,
-> your permission to send menus and offers by email or text.
+> **What we collect and why.** Your email and ZIP code, to send the offer you saved (once) and to check we
+> deliver to you — or, if we don't yet, to tell you when we do. Only if you tick the box and confirm, your
+> permission to send menus and offers by email.
 > **What we don't do.** We don't sell or share your information for others' advertising. We don't collect
 > health information.
-> **Your choices.** Unsubscribe from any email, or reply STOP to any text, at any time — it's as easy as
-> signing up. Ask us to see, correct or delete what we hold by emailing [email]; we'll answer within
-> [30] days.
-> **How long we keep it.** Until your offer expires plus 30 days, unless you asked to stay in touch —
-> then until you unsubscribe.
-> **Where it's kept.** In Fit AF's own records; our email and text providers ([Mailchimp] and [SMS
-> provider]) receive only what they need to send the messages, on our behalf.
+> **Your choices.** Unsubscribe from any email at any time — it's as easy as signing up. Ask us to see,
+> correct or delete what we hold by emailing [email]; we'll answer within [30] days.
+> **How long we keep it.** As in § 5.
+> **Where it's kept.** In Fit AF's own records; our email providers (Resend, to send; [Mailchimp], for those
+> who confirmed) receive only what they need, on our behalf.
 
-## 5. The forks — answered 2026-09-27 except where marked
+## 7. Open for legal and the Owner
 
-**F1 ✅** only a contact to deliver it · **F2** yes, UX and data processing to be thought through · **F3 ✅** the phone field's label says a code will be texted — ⚠ whether the **reminder** text is covered by that expectation is still for legal · **F4 ✅** leads go to **our own record first** (a spreadsheet or database in an account Fit AF owns); Mailchimp and the SMS provider are **output conduits only** · **F5** the Owner · **F6 ✅** 10 Enterprise, Carbondale, PA 18407
+- **The 12-month limit** for an out-of-area request.
+- **E1 as a service message**: it is the one email the person asked for, with one optional confirmation link
+  inside it. Legal to confirm that is not a marketing email.
+- **F5**: the stated email frequency must match what is sent (the Owner).
+- The texting forks of v0.2 (F3) are parked with texting.
 
-The original table, kept for the reasoning:
-
-| | question | recommendation | why |
-|---|---|---|---|
-| **F1** | Is the offer **conditional** on marketing consent, or only on a contact to deliver it? | ⭐ **Only on a contact.** Marketing boxes are separate and optional | GDPR and both MA bills: consent must be **freely given** and not bundled; the Senate bill bars bundling outright. ⭐ And the multi-touch still happens: the offer delivery and **one reminder before it expires** are the service they asked for, so every claimant gets two touches in the window; ongoing marketing needs the box |
-| **F2** | Double opt-in for email? | ⭐ **Yes** — the confirmation email **carries the code** | the code arriving only after they confirm is what "claim" means; it also proves the address is real and theirs (stronger evidence of consent; a cleaner list) |
-| **F3** | Can we text **the offer and one reminder** to someone who gave a number but did **not** tick "Text me"? | ⚠ **Legal to decide.** Conservative option: if they don't tick, send the offer to their **email** only, and ask for a number only alongside the "Text me" box | the TCPA's written-consent rule covers **marketing** texts; an offer code the person just requested is arguably not marketing, but a reminder to use it may be. This is the one line where the draft could be wrong |
-| **F4** | Where do leads live? | ⭐ **Fit AF's Mailchimp** (the storefront already uses it) as the record for email; the SMS provider for texts. ⛔ **Not** a database on the Advisor's personal Cloudflare account | customer contact data belongs in an account the enterprise owns; a separate record store can come with the CRM work |
-| **F5** | Is the frequency right? "About once a week" email, "about 4 a month" texts | the Owner sets it; the wording must match what is actually sent | a stated frequency the practice exceeds is a misleading statement — which the House bill excludes from valid consent |
-| **F6** | Is Fit AF's postal address public, and which address goes in emails? | the Owner | CAN-SPAM requires a physical postal address in every marketing email |
-
-## 6. Where these lines come from
+## 8. Where these lines come from
 
 Each read 2026-09-27; ⛔ this draft is the checking we could do, and legal review is what makes it right.
 
