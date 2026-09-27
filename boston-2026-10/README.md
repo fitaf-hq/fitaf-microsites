@@ -23,6 +23,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed | authority |
 | `consent/DRAFT.md` | the consent wording (v0.2, ⛔ not approved) the claim section shows | authority |
+| `flows/` | the multi-step flows (choose, claim, confirm, text, return, the lead record, the calendar cart): states, transitions, data, consent points, written **before** they are built | design; the contracts win where a flow and a contract disagree about something built |
 | `data/claim.json` | the event id, the claim endpoint, the wording version the page sends and the versions the Worker accepts | INPUT |
 | `src/claim/` | the claim section: `banner.html`, `section.html`, `style.css`, `claim.js` — **dev build only** | INPUT |
 | `src/worker/` | the Worker: `index.js` (`POST /api/claim`), `validate.js`, `claim-store.js`, `offer-code.js`, `turnstile.js`, `purge.js` | INPUT |
