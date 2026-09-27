@@ -20,7 +20,10 @@
     "seed:dev": "node scripts/seed-dummy.mjs --remote",
     "purge:dev": "node scripts/purge.mjs --remote",
     "preview": "wrangler dev",
-    "preview:dev": "npm run build:dev && wrangler dev --env dev"
+    "preview:dev": "npm run build:dev && wrangler dev --env dev",
+    "cf:whoami": "wrangler whoami",
+    "cf:versions": "wrangler versions list",
+    "cf:versions:dev": "wrangler versions list --env dev"
   },
   "dependencies": {
     "qrcode": "^1.5.4"

@@ -6,12 +6,19 @@
   "compatibility_date": "2026-09-26",
   "assets": { "directory": "./dist" },
 
+  // ⛔ No per-version preview URLs (<version>-<name>.<subdomain>.workers.dev). On 2026-09-27 a version
+  // uploaded by mistake stayed PUBLIC at its preview URL after later deploys replaced it on the main
+  // address; only deleting the Worker removed it. A replaced version must not stay reachable.
+  "preview_urls": false,
+
   // ⛔ The top level above is PRODUCTION and is deliberately unchanged by rung 3: no `main`, no
   // bindings, so `npm run deploy` still ships the rung-1 page and nothing else.
   "env": {
     // Rung 3 (SPEC-rung3-lead-capture.md § 8): development only, dummy data only.
     "dev": {
       "name": "fitaf-microsites-dev",
+      // No per-version preview URLs here either (see the top level).
+      "preview_urls": false,
       "main": "src/worker/index.js",
       // Assets first; a request no asset matches (i.e. /api/*) reaches the Worker script.
       "assets": { "directory": "./dist-dev", "binding": "ASSETS" },
