@@ -1,0 +1,8 @@
+{
+  // Cloudflare deploy config for this microsite: a static-assets Worker serving dist/.
+  // The account is chosen by CLOUDFLARE_ACCOUNT_ID at deploy time, never stored here (public repo).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fitaf-microsites",
+  "compatibility_date": "2026-09-26",
+  "assets": { "directory": "./dist" }
+}

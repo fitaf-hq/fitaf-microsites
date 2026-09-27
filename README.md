@@ -31,3 +31,18 @@ prospecting trip.
 - Commit messages carry **no** tool-attribution trailer; `scripts/git-hooks/commit-msg` rejects one
   (`bash scripts/setup-git-hooks.sh` once per clone).
 - `main` holds released work; changes land on topic branches and merge `--no-ff`.
+
+## Not on the family channel — by ruling
+
+This repository does **not** join the cross-project channel; **its parent team (Fit AF) speaks for it.**
+The Advisor, 2026-09-27: *"I agree about the Fit AF microsites – please record it."* — agreeing with
+Anodyne's channel convention (`4.1`, § 2 rule 11): *a public or content-only repository does not join the
+channel.* Nothing crosses in either direction, and a public member is where an internal pointer would
+become a publication. Revisited only if this repository takes on engineering or needs family protocols.
+
+## Hosting
+
+Deployed to Cloudflare as a static-assets Worker, `fitaf-microsites` (config in each microsite's
+`wrangler.jsonc`; the account comes from `CLOUDFLARE_ACCOUNT_ID` at deploy time and is never committed).
+⚠ **Temporarily on the Advisor's personal Cloudflare account** until a dedicated Fit AF account is
+provisioned (Advisor, 2026-09-27) — so moving it is a planned step, not a surprise.
