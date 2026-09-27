@@ -44,5 +44,7 @@ become a publication. Revisited only if this repository takes on engineering or 
 
 Deployed to Cloudflare as a static-assets Worker, `fitaf-microsites` (config in each microsite's
 `wrangler.jsonc`; the account comes from `CLOUDFLARE_ACCOUNT_ID` at deploy time and is never committed).
-⚠ **Temporarily on the Advisor's personal Cloudflare account** until a dedicated Fit AF account is
-provisioned (Advisor, 2026-09-27) — so moving it is a planned step, not a surprise.
+✅ **On Fit AF's own Cloudflare account since 2026-09-27** (it started on the Advisor's personal account
+as a stopgap; that copy is his to delete). The default address is
+`https://fitaf-microsites.fitaf-microsite-boston-2026-10.workers.dev/` — the account's `workers.dev`
+subdomain was named after an early deploy attempt; it is cosmetic, and `eatfitaf.com` replaces it.
