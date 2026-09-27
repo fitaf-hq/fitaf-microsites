@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# commit-msg hook — reject Claude Code attribution trailers.
+#
+# Activation:
+#   bash scripts/setup-git-hooks.sh   # sets core.hooksPath to scripts/git-hooks
+#
+# Rationale: see docs/meta/cc-issues/003-commit-message-trailer-injection/.
+# The Claude Code harness injects a marketing/attribution trailer into commit
+# messages even when the documented disable flag (~/.claude/settings.json
+# "includeCoAuthoredBy": false) is set. This hook is the project's per-commit
+# defense: it rejects any message carrying the trailer text or close variants,
+# so the agent (or any other authoring source) has to rewrite the message
+# without it. The patterns below are heuristic and designed to evolve as
+# variant trailers appear.
+
+set -uo pipefail
+
+msg_file="${1:-}"
+if [ -z "$msg_file" ] || [ ! -f "$msg_file" ]; then
+    # Git always passes the message file; if it didn't, something is very wrong.
+    echo "[commit-msg] internal error: no message file path passed" >&2
+    exit 1
+fi
+
+# Strip git's comment lines (everything starting with #) before pattern matching.
+# This avoids false positives if someone references the trailer in a comment line.
+content=$(grep -v '^#' "$msg_file" || true)
+
+# Heuristic patterns — any match rejects the commit. Each pattern targets a
+# different facet of the trailer so new variant phrasings are likely to trip
+# at least one anchor.
+#
+# Update this list when new variants are observed. The order is by anchor
+# specificity, not by likelihood.
+patterns=(
+    # Exact emoji + marketing line (literal, primary 2026-04-24 + 2026-05-11 form)
+    $'\xf0\x9f\xa4\x96 Generated with'
+
+    # Generic "Generated with [Claude Code]" anchor — catches reworded marketing
+    'Generated with \[Claude Code\]'
+
+    # URL anchor — catches any link to the product page
+    'claude\.com/claude-code'
+
+    # Attribution-line anchor — case-insensitive on Claude
+    '^Co-Authored-By:.*[Cc]laude'
+
+    # Anthropic noreply anchor — catches attribution under different display names
+    '^Co-Authored-By:.*<noreply@anthropic\.com>'
+)
+
+matched=()
+for pat in "${patterns[@]}"; do
+    if printf '%s' "$content" | grep -E -q "$pat"; then
+        matched+=("$pat")
+    fi
+done
+
+if [ "${#matched[@]}" -eq 0 ]; then
+    exit 0
+fi
+
+# Diagnostic output
+echo "" >&2
+echo "[commit-msg] REJECTED — Claude Code attribution trailer detected in commit message." >&2
+echo "" >&2
+echo "Matched ${#matched[@]} pattern(s):" >&2
+for pat in "${matched[@]}"; do
+    echo "  - $pat" >&2
+done
+echo "" >&2
+echo "Action: rewrite the commit message without the trailer. The trailer is" >&2
+echo "added by the Claude Code harness against the user's explicit setting" >&2
+echo "(\"includeCoAuthoredBy\": false in ~/.claude/settings.json). It must NOT" >&2
+echo "ship in this project's version control history." >&2
+echo "" >&2
+echo "See: docs/meta/cc-issues/003-commit-message-trailer-injection/" >&2
+echo "" >&2
+exit 1
