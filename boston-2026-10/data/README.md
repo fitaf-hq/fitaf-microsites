@@ -7,6 +7,9 @@ The committed INPUTS of the page. Both are public. Change these, then `npm run b
   stored. `order_base_url` is the one place the doors point; re-point it for a future store.
   ⚠ `mpid`s are HMP configuration and are **not in order** (Signature 14 is `29`, 21 is `28`). Re-read
   them from the store; never infer one from its neighbours.
+- **`claim.json`** (rung 3): the event id the Worker stamps on a claim, the claim endpoint, the wording
+  version the page sends (`v0.2-draft`) and the versions the Worker accepts. When the wording is approved,
+  add `v1` to `known_wording_versions` and point `wording_version` at it.
 - **`events.json`**: one entry per QR code, `{ "id", "url" }`; `id` names `dist/qr/<id>.png` and `.svg`.
   ⏳ The `demo` URL is the deployed default, `https://fitaf-microsites.fitaf-microsite-boston-2026-10.workers.dev/` (Cloudflare
   now serves a Pages project as a static-assets Worker, so the default address is `workers.dev`, not
