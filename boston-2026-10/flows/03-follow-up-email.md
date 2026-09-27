@@ -1,28 +1,30 @@
-# Flow 3 — the one-time email: the code, a link back, and the marketing confirmation
+# Flow 3 — the next-day email: the code, a link back, and the marketing confirmation
 
-**Status: PROPOSED, not built.** The sender is to be set up; the setup another team already runs well is
-the model.
+**Status: PROPOSED, not built.** Sent through **Resend**, from a dedicated Fit AF account on the vanity
+domain (both being set up).
 
 ## 1. Purpose
 
-Flow 1's save asked for **one** email: the code, sent at the chosen time, with a link back to the
-microsite. This flow is that email, and the only other thing it may do: let someone who ticked the
-marketing box **confirm** it (double opt-in).
+Flow 1's save asked for **one** email: the code, **the next day**, with a link back. The day's wait lets
+the day's orders come through first, so someone who already ordered can be left alone (§ 3). Apart from
+that, the email may do one other thing: let someone who ticked the marketing box **confirm** it (double
+opt-in).
 
-## 2. The message — E1, "Your Fit AF offer code"
+## 2. The message — E1, "Your Fit AF offer, as promised"
 
+- Framed as the **reminder they set yesterday**: *"You saved this offer at [event] yesterday. Here it is."*
 - **The code**, large and copyable, with its expiry date.
-- **Choose your plan →** a link to the microsite's event page (Flow 2). ⛔ It carries **no token and no
-  personal data**, so it can be forwarded without harm.
+- **See my offer →** `https://<site>/o/<code>` (Flow 5). The link carries the **offer code** and nothing
+  else, which is the holder's own and harmless to forward. ⭐ **It keeps working after the code expires**,
+  and then offers whatever is current (Flow 5 § 3).
 - **Only if the marketing box was ticked**: *"You asked to hear about menus and offers. **Yes, keep me
-  posted →**"* This links to `/confirm/<token>` (§ 4). Without that click, **no marketing email is sent,
+  posted →**"* This links to `/confirm/<token>` (§ 5). Without that click, **no marketing email is sent,
   ever**.
-- Why they are getting it (*"you saved this offer at [event] on [date]"*), the postal address, and a line
-  that makes it harmless to someone who already ordered (*"Already used it? Enjoy your meals!"*).
-- ⛔ **One message.** It is the reminder they set; there is no second one unless they confirmed the
-  marketing box.
+- The postal address, and a line that is harmless to someone who ordered anyway (*"Already ordered? Enjoy
+  your meals!"*).
+- ⛔ **One message.** There is no second one unless they confirmed the marketing box.
 
-## 3. Sending
+## 3. ⬜ Sending, and the suppression check
 
 ```mermaid
 sequenceDiagram
@@ -30,40 +32,60 @@ sequenceDiagram
   participant V as Visitor (page)
   participant W as Worker
   participant D as Lead record
-  participant C as Cron (every few minutes)
-  participant S as Email sender (conduit)
-  V->>W: Save my offer (email, ZIP, send time, box)
-  W->>D: write save + contact, send_at, code
+  participant C as Cron (next morning)
+  participant O as Order source (to be named)
+  participant S as Resend (conduit)
+  V->>W: Save my offer (email, ZIP, box)
+  W->>D: save + contact, code, send_at = next morning
   W-->>V: ok (nothing echoed)
-  C->>D: saves due (send_at <= now, not yet sent)
-  C->>S: E1 (address, code, links)
-  S-->>C: accepted / refused
+  C->>D: saves due
+  C->>O: which of these CODES were redeemed?
+  O-->>C: redeemed codes (codes only)
+  C->>D: redeemed: mark SUPPRESSED, send nothing
+  C->>S: E1 for the rest (address, code, links)
+  S-->>C: accepted or refused
   C->>D: sent_at, or a failure (retried, then given up)
-  Note over S,D: the sender is an output conduit — never the record
 ```
 
-| state of E1 | means |
-|---|---|
-| `SCHEDULED` | saved; `send_at` in the future |
-| `DUE` | `send_at` has passed; the next cron picks it up |
-| `SENT` | the sender accepted it |
-| `FAILED` | refused or bounced after retries. ⛔ **Never re-sent to a different address**, and never retried beyond the limit |
-| `CANCELLED` | deleted on request before it went (Flow 6) |
+**The check matches by offer code, never by email.** The order source is asked *"which of these codes were
+used?"*, so no personal data crosses in either direction. ⬜ **Which source the orders sync to, and how the
+Worker reads it, is open.** Until it exists, every save is sent, and the wording keeps that harmless.
+
+**Send time**: ⬜ a fixed morning hour, Eastern time (e.g. 09:00), the day after the save.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> SCHEDULED : save (send_at = chosen time)
+  [*] --> SCHEDULED : save (send_at = next morning)
   SCHEDULED --> DUE : send_at passes
   SCHEDULED --> CANCELLED : deletion request
-  DUE --> SENT : sender accepts
+  DUE --> SUPPRESSED : the code was already redeemed
+  DUE --> SENT : Resend accepts
   DUE --> DUE : temporary failure (retry)
   DUE --> FAILED : retries exhausted, or a hard bounce
   SENT --> [*]
+  SUPPRESSED --> [*]
   FAILED --> [*]
   CANCELLED --> [*]
 ```
 
-## 4. The marketing confirmation page — `/confirm/<token>`
+| state of E1 | means |
+|---|---|
+| `SCHEDULED` | saved; waiting for the next morning |
+| `DUE` | the send time has passed; the cron picks it up |
+| `SUPPRESSED` | the code was redeemed before the send: nothing sent |
+| `SENT` | Resend accepted it |
+| `FAILED` | refused or bounced after retries. ⛔ Never retried beyond the limit |
+| `CANCELLED` | deleted on request before it went (Flow 6) |
+
+## 4. Data given to Resend
+
+The address, the code, the two links, and the event's public name. Nothing else. Resend is an **output
+conduit**; the record is Flow 6's.
+
+⬜ **To set up**: the Fit AF Resend account; the sending domain `eatfitaf.com` with its authentication
+records (SPF, DKIM, DMARC); an API key scoped to sending, held as a Worker secret.
+
+## 5. The marketing confirmation page — `/confirm/<token>`
 
 `<token>` is random, used only for this, and expires with the offer. It is **not** the offer code.
 
@@ -81,28 +103,19 @@ stateDiagram-v2
 | state | the page shows | effect |
 |---|---|---|
 | `LANDING` | what they will get, how often, how to stop; **Yes, keep me posted** · **No thanks** | none |
-| `CONFIRMED` | *"You're on the list."* and **Choose your plan** | CP3: marketing confirmed; the contact becomes exportable (Flow 6) |
-| `DECLINED` | *"No problem — you won't hear from us again."* | the box is recorded as withdrawn |
+| `CONFIRMED` | *"You're on the list."*, and **See my offer** | CP3: marketing confirmed; the contact becomes exportable (Flow 6) |
+| `DECLINED` | *"No problem — you won't hear from us again."* | the box recorded as withdrawn |
 | `GONE` | *"This link is no longer active."*, the same for every cause | none: it reveals nothing about any address |
 
 ⭐ **A button, not the link**: many mail systems open every link in an incoming email to scan it, so a
-link that confirmed on opening would be confirmed by a machine. The GET only shows the page, and a person
-makes the POST.
+link that confirmed on opening would be confirmed by a machine.
 
 Security: the token is never logged; `Referrer-Policy: no-referrer`; `Cache-Control: no-store`; `noindex`;
 lookups are rate-limited per IP.
 
-## 5. Consent points
+## 6. Consent points
 
 | id | the act | means | evidence |
 |---|---|---|---|
-| **CP3** | **Yes, keep me posted** | marketing email confirmed (double opt-in: box ticked **and** confirmed from the inbox) | `consent_marketing_confirmed_at`, the wording version of the confirmation page |
-| **CP-W1** | the unsubscribe link in any later marketing email, or **No thanks** here | marketing withdrawn, as easily as given | the time; forwarded to the conduit if exported |
-
-## 6. Data given to the sender
-
-The address, the code, the two links, and the event's public name. Nothing else. The sender is an
-**output conduit**; the record is Flow 6's.
-
-⬜ **To set up**: a sending domain (the vanity domain, once bought) with its authentication records
-(SPF, DKIM, DMARC), and the sender account in the enterprise's name.
+| **CP3** | **Yes, keep me posted** | marketing email confirmed (box ticked **and** confirmed from the inbox) | `consent_marketing_confirmed_at`, the confirmation page's wording version |
+| **CP-W1** | **No thanks** here, or the unsubscribe link in any later marketing email | marketing withdrawn, as easily as given | the time; forwarded to the conduit if exported |

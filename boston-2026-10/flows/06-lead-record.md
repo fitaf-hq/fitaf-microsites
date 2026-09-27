@@ -15,7 +15,8 @@ code and dates. Nothing in it identifies a person.
 ```mermaid
 stateDiagram-v2
   [*] --> SAVED : Flow 1, Save my offer
-  SAVED --> MESSAGED : E1 sent (Flow 3)
+  SAVED --> MESSAGED : E1 sent next morning (Flow 3)
+  SAVED --> MESSAGED : E1 suppressed, code already redeemed
   SAVED --> ERASED : deletion request (E1 cancelled)
   MESSAGED --> CONFIRMED : Yes, keep me posted (CP3)
   MESSAGED --> LAPSED : the offer expires + 30 days, no CP3
@@ -31,8 +32,8 @@ stateDiagram-v2
 
 | state | means | the contact row |
 |---|---|---|
-| `SAVED` | accepted; E1 scheduled | present |
-| `MESSAGED` | E1 sent (or failed for good: § 3) | present |
+| `SAVED` | accepted; E1 scheduled for the next morning | present |
+| `MESSAGED` | E1 sent, suppressed (the code was redeemed) or failed for good | present |
 | `CONFIRMED` | the marketing box was ticked **and** confirmed from the inbox (CP3) | present |
 | `EXPORTED` | handed to the email conduit **with the consent evidence** | present until the purge |
 | `PURGED` | deleted after export | **gone** |
@@ -40,14 +41,15 @@ stateDiagram-v2
 | `ERASED` | deleted **on request** | **gone** |
 
 `PURGED`, `LAPSED` and `ERASED` are end states. The save row stays in all three, and which one it is stays
-recorded: it is how we count, not who.
+recorded: it is how we count, not who. ⭐ **The save row is also what keeps `/o/<code>` working a year
+later** (Flow 5 § 3): event, code and dates are enough, and none of them identifies anyone.
 
 ## 3. Transitions
 
 | # | from | event | to | effect |
 |---|---|---|---|---|
 | 6.1 | — | a save is accepted (Flow 1) | `SAVED` | save + contact written; code drawn; `send_at` set |
-| 6.2 | `SAVED` | the cron sends E1, or gives up after retries | `MESSAGED` | `sent_at` or `failed_at` |
+| 6.2 | `SAVED` | the next-morning cron sends E1, suppresses it (code redeemed), or gives up after retries | `MESSAGED` | `sent_at`, `suppressed_at` or `failed_at` |
 | 6.3 | `MESSAGED` | CP3 | `CONFIRMED` | `consent_marketing_confirmed_at` |
 | 6.4 | `CONFIRMED` | the export runs | `EXPORTED` | ⬜ the export (§ 5) |
 | 6.5 | `EXPORTED` | the purge runs | `PURGED` | contact deleted (**built**, `purge.js`) |
@@ -59,7 +61,7 @@ recorded: it is how we count, not who.
 
 | timer | value | source |
 |---|---|---|
-| when E1 goes | the visitor's choice (Flow 1 § 5) | the save |
+| when E1 goes | the next morning, at a fixed hour | ruled 2026-09-27 |
 | retention without marketing confirmation | offer expiry + 30 days | the consent draft |
 | the purge after export | as soon as the export is confirmed | the ruling: destroyed after export |
 

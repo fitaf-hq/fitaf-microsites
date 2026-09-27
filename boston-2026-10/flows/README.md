@@ -12,12 +12,17 @@ the proposal is accepted.
 
 ## Ruled 2026-09-27
 
-- **The offer comes first**, as a dismissible **reminder**: one email with the code and a link back. Then
-  choose a plan.
-- **Email only for October**: texting is off.
-- **Choose a plan will be rewritten** around meal photography.
+- **The offer comes first**, as a dismissible **reminder**: one email with the code and a link back, sent
+  **the next day** so the day's orders come through first. Then build a plan, or see this week's menu.
+- **Skipping says what the person wants**: *build my plan* (word open) or *see this week's menu*.
+- **Question 1 is a meal size, not a goal**: the page shows what each size provides, and at most does the
+  arithmetic on a daily target the person types in (kept in the browser).
+- **Redemption is permissive**: the email's link keeps working after the offer ends and offers whatever is
+  current.
+- **Email only for October**, sent through **Resend**; texting is off.
+- **Build a plan will be rewritten** around meal photography.
 - **ZIPs**: a whitelist, mocked for greater Boston until the official list replaces it.
-- **Plain JavaScript for now**, with a Svelte refactor expected.
+- **Plain JavaScript shaped like components** now, with a Svelte refactor expected.
 - **The deletion plan (Flow 6) is accepted.**
 
 ## The flows
@@ -25,33 +30,37 @@ the proposal is accepted.
 | | flow | status | its page or channel |
 |---|---|---|---|
 | [1](01-save-offer.md) | save the offer (first, dismissible) | ⬜ proposed; replaces the claim form built on dev | the microsite |
-| [2](02-choose.md) | choose a plan | ✅ built (rung 1, live); ⬜ to be rewritten with photography | the microsite |
-| [3](03-follow-up-email.md) | the one-time email, and the marketing confirmation | ⬜ proposed | email → `/confirm/<token>` |
+| [2](02-choose.md) | build a plan: meal size, then how many | ✅ built (rung 1) as goal + count; ⬜ to be rewritten | the microsite |
+| [3](03-follow-up-email.md) | the next-day email, and the marketing confirmation | ⬜ proposed | email → `/confirm/<token>` |
 | [4](04-text.md) | the code by text | ⛔ off for October | text messages |
-| [5](05-return-and-redeem.md) | come back, and use the code at the store | rung-1 links built; the rest proposed | microsite → store |
+| [5](05-return-and-redeem.md) | come back (even a year later), and use a code | rung-1 links built; the rest proposed | `/o/<code>` → store |
 | [6](06-lead-record.md) | the lead record, from save to deletion | ✅ plan accepted; partly built on dev | the Worker and its database |
 | [7](07-calendar-cart.md) | the calendar cart | 💭 sketch, later | the microsite |
+| [8](08-this-weeks-menu.md) | see this week's menu | ⬜ proposed; needs the menu and photo inputs | the microsite |
 
 ## The journey, end to end
 
 ```mermaid
 flowchart LR
   QR[QR code at an event] --> F1[1 · save the offer]
-  F1 -->|Save my offer| F2[2 · choose a plan]
-  F1 -->|Not now| F2
+  F1 -->|Build my plan| F2[2 · build a plan]
+  F1 -->|See this week's menu| F8[8 · this week's menu]
+  F8 --> F2
   F2 --> STORE[the store's order page]
-  F1 -. schedules .-> F3[3 · one email: code + link back]
-  F3 -->|Choose your plan| F2
+  F1 -. next morning .-> F3[3 · one email: code + link]
+  F3 -->|See my offer| F5["5 · /o/(code): never a dead end"]
+  F5 --> F2
+  F5 --> F8
   F3 -->|Yes, keep me posted| MKT[marketing, confirmed]
   F1 -. every save .-> F6[(6 · lead record)]
-  F6 -. forgets .-> END[save row only: event · code · dates]
+  F6 -. forgets the person, keeps .-> END[event · code · dates]
 ```
 
 ## Consent points — the register
 
 | id | where | the act | means |
 |---|---|---|---|
-| CP1 | Flow 1 | **Save my offer** | send **this code once**, at the chosen time, with a link back (a service, not marketing) |
+| CP1 | Flow 1 | **Save my offer** | send **this code once, the next day**, with a link back (a service, not marketing) |
 | CP2 | Flow 1 | the marketing box | marketing email, **pending** CP3 |
 | CP3 | Flow 3 | **Yes, keep me posted** | marketing email confirmed (double opt-in) |
 | CP-W1 | Flow 3 · any marketing email | **No thanks** · unsubscribe | marketing withdrawn, as easily as given |
@@ -63,16 +72,17 @@ Texting's own ids (`CP-T1`, `CP-T2`, `CP-TW`) are in Flow 4 and are off for Octo
 
 | flow | where the state lives | named states |
 |---|---|---|
-| 1 | the page | 9 |
-| 2 | the URL fragment (3 values) + one toggle | 5 |
-| 3 | the Worker (E1: 5); the confirmation page (4, one button) | 9, server-side |
-| 5 | links only | 0 new |
+| 1 | the page | 10 |
+| 2 | the URL fragment (3 values), one toggle, and the share panel (one number, browser only) | 5 |
+| 8 | the page; the size shares Flow 2's fragment | 3 |
+| 3 | the Worker (E1: 6); the confirmation page (4, one button) | 10, server-side |
+| 5 | `/o/<code>`: rendered by the Worker | 4, server-side |
 | 6 | the Worker and its database | 7, server-side |
 | 7 | the page: a 7 × 6 grid, a menu, drag state, prices derived on every drop | many, interdependent |
 
-**On a page for October: 14 states (flows 1 and 2).** Built plain, on the existing `build.mjs`. So that
-the expected move to Svelte is a translation rather than a rewrite, the plain code is written the way a
-component would be:
+**On a page for October: 18 states across flows 1, 2 and 8**, plus the share panel. Built plain, on the
+existing `build.mjs`, and written the way a component would be, so the expected move to Svelte is a
+translation rather than a rewrite:
 
 - **state as one plain object per flow**, the only thing that changes;
 - **one `render(state)` per flow**, which reads the state and writes the DOM, and nothing else does;
@@ -82,11 +92,12 @@ component would be:
 
 | where | question |
 |---|---|
-| Flow 1 § 5 | when E1 goes: ⭐ the visitor chooses (now · this evening · tomorrow morning) |
-| Flow 1 § 6 | what an out-of-area visitor may do (the Owner's) |
-| Flow 1 § 7 | whether the email reopens the plan chosen afterwards (⭐ not for October) |
-| Flow 2 § 5 | an entry path per event, so a save records its event |
-| Flow 2 § 7 | the rewrite, and the photograph set it needs |
-| Flow 3 § 6 | the sending domain and the sender account |
-| Flow 5 § 5 | a pool of unique codes the store accepts |
+| Flow 1 § 2 | the words for the two skip links (and whether two is too many) |
+| Flow 1 § 5 | what an out-of-area visitor may do (the Owner's) |
+| Flow 2 § 2 | whether to offer the share calculator at all, and protein, calories or both |
+| Flow 2 § 6 | an entry path per event, so a save records its event |
+| Flow 2 § 8 · Flow 8 § 2 | the photograph set and the weekly menu export (public fields only) |
+| Flow 3 § 3 | **which order source the next-day check reads**, by code; the send hour |
+| Flow 3 § 4 | the Fit AF Resend account, the sending domain, the scoped key |
+| Flow 5 § 4 | the dated list of current offers (the Owner's); a pool of unique codes the store accepts |
 | Flow 6 § 5 | the export, and the status a contact is created with at the conduit |
