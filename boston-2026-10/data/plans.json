@@ -1,0 +1,62 @@
+{
+  "read_on": "2026-09-27",
+  "read_from": "https://fitafnutrition.com/meal-plans",
+  "order_base_url": "https://fitafnutrition.com/order",
+  "shown_counts": [
+    { "meals_per_week": 7, "label": "Lunch or dinner" },
+    { "meals_per_week": 14, "label": "Lunch and dinner" }
+  ],
+  "individual": [
+    {
+      "id": "lean",
+      "name": "Lean",
+      "promise": "Built for cutting, dialing in & staying sharp",
+      "calories": { "min": 250, "max": 450 },
+      "protein_g": { "min": 25, "max": 35 },
+      "counts": [
+        { "meals_per_week": 4, "mpid": 20, "price_per_meal_cents": 1300 },
+        { "meals_per_week": 7, "mpid": 21, "price_per_meal_cents": 1250 },
+        { "meals_per_week": 10, "mpid": 22, "price_per_meal_cents": 1225 },
+        { "meals_per_week": 14, "mpid": 23, "price_per_meal_cents": 1200 },
+        { "meals_per_week": 21, "mpid": 24, "price_per_meal_cents": 1150 }
+      ]
+    },
+    {
+      "id": "signature",
+      "name": "Signature",
+      "promise": "Built for everyday health & performance",
+      "calories": { "min": 450, "max": 650 },
+      "protein_g": { "min": 35, "max": 60 },
+      "counts": [
+        { "meals_per_week": 4, "mpid": 25, "price_per_meal_cents": 1425 },
+        { "meals_per_week": 7, "mpid": 26, "price_per_meal_cents": 1400 },
+        { "meals_per_week": 10, "mpid": 27, "price_per_meal_cents": 1375 },
+        { "meals_per_week": 14, "mpid": 29, "price_per_meal_cents": 1350 },
+        { "meals_per_week": 21, "mpid": 28, "price_per_meal_cents": 1300 }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "promise": "Fuel for growth, strength & relentless output",
+      "calories": { "min": 650, "max": 850 },
+      "protein_g": { "min": 50, "max": 65 },
+      "counts": [
+        { "meals_per_week": 4, "mpid": 30, "price_per_meal_cents": 1525 },
+        { "meals_per_week": 7, "mpid": 31, "price_per_meal_cents": 1500 },
+        { "meals_per_week": 10, "mpid": 32, "price_per_meal_cents": 1475 },
+        { "meals_per_week": 14, "mpid": 33, "price_per_meal_cents": 1450 },
+        { "meals_per_week": 21, "mpid": 34, "price_per_meal_cents": 1400 }
+      ]
+    }
+  ],
+  "family": {
+    "id": "family",
+    "name": "Family",
+    "promise": "Healthy meals the whole family will actually eat",
+    "servings": { "min": 3, "max": 4 },
+    "counts": [
+      { "meals_per_week": 1, "mpid": 35, "price_per_meal_cents": 3800 }
+    ]
+  }
+}
