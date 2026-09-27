@@ -1,0 +1,24 @@
+{
+  "name": "fitaf-microsite-boston-2026-10",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Front door for the Boston 2026-10 trip: a static plan picker linking to the Fit AF store.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "predeploy": "npm run build",
+    "deploy": "wrangler pages deploy dist --project-name fitaf-microsites"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "jsqr": "^1.4.0",
+    "pngjs": "^7.0.0",
+    "wrangler": "^4"
+  }
+}
