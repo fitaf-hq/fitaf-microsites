@@ -24,6 +24,13 @@ opt-in).
   your meals!"*).
 - ⛔ **One message.** There is no second one unless they confirmed the marketing box.
 
+### E-X — the expansion confirmation (out-of-area visitors only)
+
+Someone who chose **Tell me when you deliver here** (Flow 1, CP-E) gets no offer code and no next-day
+email. They get **one confirmation email at once**: *"Confirm: we'll email you when Fit AF delivers near
+0xxxx."* It has a single **Yes, tell me** link to the same confirmation page (§ 5). Unconfirmed, the record
+lapses after 7 days (Flow 6).
+
 ## 3. ⬜ Sending, and the suppression check
 
 ```mermaid
@@ -103,7 +110,7 @@ stateDiagram-v2
 | state | the page shows | effect |
 |---|---|---|
 | `LANDING` | what they will get, how often, how to stop; **Yes, keep me posted** · **No thanks** | none |
-| `CONFIRMED` | *"You're on the list."*, and **See my offer** | CP3: marketing confirmed; the contact becomes exportable (Flow 6) |
+| `CONFIRMED` | *"You're on the list."*, and **See my offer** (or the menu, for an expansion confirmation) | CP3 confirms the marketing box; for E-X, it confirms CP-E. Either way the contact becomes exportable (Flow 6) |
 | `DECLINED` | *"No problem — you won't hear from us again."* | the box recorded as withdrawn |
 | `GONE` | *"This link is no longer active."*, the same for every cause | none: it reveals nothing about any address |
 

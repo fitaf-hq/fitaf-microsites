@@ -55,6 +55,8 @@ stateDiagram-v2
   CHECKING --> VERIFYING : clean
   OUT_OF_AREA --> EDITING : change ZIP
   OUT_OF_AREA --> MENU : See this week's menu
+  OUT_OF_AREA --> EXPANSION_SAVED : Tell me when you deliver here (CP-E)
+  EXPANSION_SAVED --> MENU : See this week's menu
   VERIFYING --> SENDING : bot check passes
   VERIFYING --> ERROR : bot check fails
   SENDING --> SAVED : accepted
@@ -71,7 +73,8 @@ stateDiagram-v2
 | `OFFER` | the offer, the empty form, the two skip links |
 | `EDITING` | the form being filled |
 | `CHECKING` | (instant) email syntax; a five-digit ZIP; the ZIP against the list (§ 5) |
-| `OUT_OF_AREA` | *"We don't deliver to 0xxxx yet."* ⬜ anything more is the Owner's (§ 5) |
+| `OUT_OF_AREA` | *"We don't deliver to 0xxxx yet."* and **Tell me when you deliver here** (§ 5) |
+| `EXPANSION_SAVED` | *"Thanks — check your email to confirm, and we'll let you know."* and the menu link |
 | `VERIFYING` · `SENDING` | the button disabled |
 | `ERROR(kind)` | the form, as filled, with one message. On weak gym wifi, **retry keeps everything typed** |
 | `SAVED` | *"Saved — look for it tomorrow at you@…"*, and the same two links |
@@ -99,8 +102,18 @@ response is `{ok:true}` either way, so it reveals nothing about whether the addr
 `status` field. ⛔ **It must be replaced by the store's official delivery list before production**; a
 production build refuses a list whose status is `mock`.
 
-⬜ **Out of area**: the visitor learns it before giving anything else. Whether they may still save the
-offer (a friend in range, a move) is the Owner's call.
+⭐ **Out of area — join the expansion list** (ruled 2026-09-27). The visitor learns it before giving anything
+else, and may ask to hear when delivery reaches them:
+
+- **Tell me when you deliver here** saves the email and ZIP **without an offer code**: the offer cannot be
+  used where there is no delivery.
+- It is **its own consent** (CP-E), scoped to expansion news for that area. It is not general marketing,
+  and it is confirmed from the inbox like marketing is (Flow 3 § 5).
+- ⭐ **The ring**: the Worker classifies the ZIP as `near` (the ring just outside today's reach,
+  `near_ring` in the same mock file) or `far`, so expansion can be aimed at the nearest areas first. The
+  class is derived from the ZIP and stored with it.
+- ⬜ **How long it is kept**: expansion may never reach them, so the record needs a limit. Proposed: 12
+  months, or until they are told, whichever comes first.
 
 ## 6. The email does not remember the plan chosen afterwards (October)
 
@@ -114,5 +127,6 @@ reopening a whole pre-filled week is worth more.
 |---|---|---|---|
 | **CP1** | **Save my offer** | send **this code once, the next day**, with a link back. A service they asked for, **not** marketing | the save, time, wording version |
 | **CP2** | the marketing box, then save | marketing email, **pending** until confirmed from the email (Flow 3) | `consent_marketing_email = true`, time, wording version |
+| **CP-E** | **Tell me when you deliver here** (out of area only) | expansion news for that area, **pending** confirmation from the inbox | `consent_expansion = true`, ZIP, ring, time, wording version |
 
 ⛔ **Nothing here is pre-ticked, and nothing here is required to reach the store.**

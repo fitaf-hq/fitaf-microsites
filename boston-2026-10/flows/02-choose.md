@@ -25,15 +25,19 @@ not interpret them.
 
 ### ⬜ Optional: "What share of my day is that?"
 
-A person who knows their own daily target **may** type it in: protein in grams, or calories. The page then
-does the arithmetic and nothing more:
+A person who knows their own daily targets **may** type in **protein, calories, or both**. The page then
+does the arithmetic and nothing more, for each number given, independently:
 
-> Your target: **150 g protein a day**
-> Lean: **17–23 %** per meal · Signature: **23–40 %** · Performance: **33–43 %**
-> At 14 meals a week (2 a day): Signature covers **47–80 %** of your day's protein.
+> Your targets: **150 g protein** · **2,600 cal** a day · Signature, 14 meals a week (2 a day)
+> Protein: each meal **23–40 %** · your 2 meals **47–80 %** of the day
+> Calories: each meal **17–25 %** · your 2 meals **35–50 %** · **1,300–1,700 cal** from the rest of your day
 
-- It is **arithmetic on the person's own number**: range ÷ target, rounded, shown as a range.
-- ⛔ **The number never leaves the browser**: not sent, not stored, not in the URL, not in the fragment.
+- ⭐ **The two numbers are independent.** A size can meet someone's protein while their calories need
+  more from elsewhere (a snack, other food), and the page shows exactly that: the remainder, as a range,
+  **"from the rest of your day"**. It does not say what to eat or whether the size is right.
+- It is **arithmetic on the person's own numbers**: range ÷ target, and target − meals, rounded, shown as
+  ranges.
+- ⛔ **The numbers never leave the browser**: not sent, not stored, not in the URL, not in the fragment.
   A daily need is health-adjacent data, and the page does not need to keep it.
 - ⛔ The page does not suggest a target, validate it against anything, or react to a high or low one.
   Anything more is expert territory.
@@ -68,8 +72,8 @@ stateDiagram-v2
   STORE --> [*] : leaves for the store's order page
 ```
 
-The share calculator is not a state of this machine. It is a separate panel, open or closed, whose one
-input changes only its own numbers.
+The share calculator is not a state of this machine. It is a separate panel, open or closed, whose two
+inputs change only its own numbers.
 
 | state | the page shows |
 |---|---|

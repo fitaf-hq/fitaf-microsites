@@ -18,4 +18,5 @@ The committed INPUTS of the page. Both are public. Change these, then `npm run b
 - **`delivery-zips.json`**: ⛔ **a MOCK** (`"status": "mock"`) of greater Boston by three-digit ZIP prefix,
   so the ZIP check of `flows/01-save-offer.md` § 6 can be built. It is **not** the store's delivery area.
   Replace it with the official list (five-digit ZIPs, `"match": "exact"`, `"status": "official"`); a
-  production build must refuse a `mock` list.
+  production build must refuse a `mock` list. Its `near_ring` (equally a mock) lists the areas just outside that reach,
+  so an out-of-area expansion request is classed `near` or `far` (`flows/01-save-offer.md` § 5).

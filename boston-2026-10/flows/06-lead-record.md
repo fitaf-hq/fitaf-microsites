@@ -57,12 +57,38 @@ later** (Flow 5 § 3): event, code and dates are enough, and none of them identi
 | 6.7 | any live state | a deletion request | `ERASED` | contact deleted; an unsent E1 cancelled; forwarded to the conduit if exported |
 | 6.8 | any live state | **No thanks** or an unsubscribe while the contact is ours | unchanged | the box recorded as withdrawn, with the time; it can no longer reach `EXPORTED` |
 
+### The expansion list (out-of-area visitors)
+
+A save made from `OUT_OF_AREA` (Flow 1, CP-E) has **no offer code**. It carries the ZIP and its ring
+(`near` · `far`), because the ZIP is the whole purpose. Its path:
+
+```mermaid
+stateDiagram-v2
+  [*] --> SAVED_X : Tell me when you deliver here
+  SAVED_X --> CONFIRMED_X : confirmed from the inbox (E-X)
+  SAVED_X --> LAPSED : unconfirmed after 7 days
+  CONFIRMED_X --> EXPORTED : export to the expansion segment (ZIP + ring)
+  EXPORTED --> PURGED : the purge
+  CONFIRMED_X --> LAPSED : the retention limit passes
+  SAVED_X --> ERASED : deletion request
+  CONFIRMED_X --> ERASED : deletion request
+  EXPORTED --> ERASED : deletion request (forwarded to the conduit)
+  PURGED --> [*]
+  LAPSED --> [*]
+  ERASED --> [*]
+```
+
+⬜ **The retention limit** (proposed: 12 months, or until they are told delivery has reached them). It
+applies at the conduit too, so the export carries the date the consent lapses.
+
 ## 4. Timers
 
 | timer | value | source |
 |---|---|---|
 | when E1 goes | the next morning, at a fixed hour | ruled 2026-09-27 |
 | retention without marketing confirmation | offer expiry + 30 days | the consent draft |
+| an unconfirmed expansion request | 7 days | proposed |
+| a confirmed expansion request | ⬜ 12 months, or until they are told | proposed; the Advisor's |
 | the purge after export | as soon as the export is confirmed | the ruling: destroyed after export |
 
 **How timers run**: one scheduled Worker (a cron trigger) sends what is due (Flow 3) and runs the purge

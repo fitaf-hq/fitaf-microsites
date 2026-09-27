@@ -23,6 +23,9 @@ the proposal is accepted.
 - **Build a plan will be rewritten** around meal photography.
 - **ZIPs**: a whitelist, mocked for greater Boston until the official list replaces it.
 - **Plain JavaScript shaped like components** now, with a Svelte refactor expected.
+- **The calculator takes protein and/or calories**, each independent, including a calorie remainder "from
+  the rest of your day".
+- **Out-of-area visitors may join an expansion list**, segmented by a ring just outside today's reach.
 - **The deletion plan (Flow 6) is accepted.**
 
 ## The flows
@@ -62,6 +65,7 @@ flowchart LR
 |---|---|---|---|
 | CP1 | Flow 1 | **Save my offer** | send **this code once, the next day**, with a link back (a service, not marketing) |
 | CP2 | Flow 1 | the marketing box | marketing email, **pending** CP3 |
+| CP-E | Flow 1, out of area | **Tell me when you deliver here** | expansion news for that area (ZIP + ring kept), **pending** confirmation from the inbox |
 | CP3 | Flow 3 | **Yes, keep me posted** | marketing email confirmed (double opt-in) |
 | CP-W1 | Flow 3 · any marketing email | **No thanks** · unsubscribe | marketing withdrawn, as easily as given |
 | CP-W2 | anywhere | asking us to delete | contact deleted (Flow 6 `ERASED`); an unsent email cancelled; forwarded to the conduit |
@@ -72,7 +76,7 @@ Texting's own ids (`CP-T1`, `CP-T2`, `CP-TW`) are in Flow 4 and are off for Octo
 
 | flow | where the state lives | named states |
 |---|---|---|
-| 1 | the page | 10 |
+| 1 | the page | 11 |
 | 2 | the URL fragment (3 values), one toggle, and the share panel (one number, browser only) | 5 |
 | 8 | the page; the size shares Flow 2's fragment | 3 |
 | 3 | the Worker (E1: 6); the confirmation page (4, one button) | 10, server-side |
@@ -80,7 +84,7 @@ Texting's own ids (`CP-T1`, `CP-T2`, `CP-TW`) are in Flow 4 and are off for Octo
 | 6 | the Worker and its database | 7, server-side |
 | 7 | the page: a 7 × 6 grid, a menu, drag state, prices derived on every drop | many, interdependent |
 
-**On a page for October: 18 states across flows 1, 2 and 8**, plus the share panel. Built plain, on the
+**On a page for October: 19 states across flows 1, 2 and 8**, plus the share panel. Built plain, on the
 existing `build.mjs`, and written the way a component would be, so the expected move to Svelte is a
 translation rather than a rewrite:
 
@@ -93,11 +97,11 @@ translation rather than a rewrite:
 | where | question |
 |---|---|
 | Flow 1 § 2 | the words for the two skip links (and whether two is too many) |
-| Flow 1 § 5 | what an out-of-area visitor may do (the Owner's) |
-| Flow 2 § 2 | whether to offer the share calculator at all, and protein, calories or both |
+| Flow 1 § 5 · Flow 6 | how long an expansion request is kept (⬜ proposed 12 months); the official ZIP list and ring |
+| Flow 2 § 2 | the calculator (protein and/or calories): the Owner's review |
 | Flow 2 § 6 | an entry path per event, so a save records its event |
 | Flow 2 § 8 · Flow 8 § 2 | the photograph set and the weekly menu export (public fields only) |
-| Flow 3 § 3 | **which order source the next-day check reads**, by code; the send hour |
+| Flow 3 § 3 | **which order source the next-day check reads**, by code (open until the Owner's order-handling walkthrough); the send hour |
 | Flow 3 § 4 | the Fit AF Resend account, the sending domain, the scoped key |
 | Flow 5 § 4 | the dated list of current offers (the Owner's); a pool of unique codes the store accepts |
 | Flow 6 § 5 | the export, and the status a contact is created with at the conduit |
