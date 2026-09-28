@@ -1,16 +1,23 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
+import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
+import { parseTarget, shareLines } from "./src/save/calculator.js";
+import { EMAIL_RE } from "./src/worker/validate-save.js";
+import { classifyZip } from "./src/worker/zip-class.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
 export const PLANS_PATH = join(ROOT, "data", "plans.json");
 export const EVENTS_PATH = join(ROOT, "data", "events.json");
 export const DIST = join(ROOT, "dist");
 export const DIST_DEV = join(ROOT, "dist-dev");
-export const CLAIM_PATH = join(ROOT, "data", "claim.json");
+export const SAVE_PATH = join(ROOT, "data", "save.json");
+export const ZIPS_PATH = join(ROOT, "data", "delivery-zips.json");
+/** The weekly menu input of Flow 8. It does not exist yet, so the "See this week's menu" link is absent. */
+export const MENU_PATH = join(ROOT, "data", "menu.json");
 export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
 /** Same-origin static files the page references, copied beside index.html: src/<dir> -> <out>/<dir>. */
 export const STATIC_DIRS = [
@@ -163,24 +170,74 @@ function clientData(plans) {
 // JSON inside <script>: neutralise "<" so no "</script>" can close the element.
 const scriptJson = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
 
-/** The rung-3 slots. Production passes none, so every slot is "" and the page is rung 1's, byte for byte. */
-const NO_CLAIM = { CLAIM_STYLE: "", DRAFT_BANNER: "", CLAIM_SECTION: "", CLAIM_SCRIPT: "" };
+/**
+ * The production slot values. Each is either "" (a development-only section) or the exact text the page
+ * carried before the slot existed, so the production page is byte-identical to rung 1's (test S20).
+ */
+export const PROD_SLOTS = {
+  ASSET_PREFIX: "",
+  QUESTION_ONE: "What's your goal?",
+  HINT: "Pick a goal and how many meals to see your price.",
+  DEV_STYLE: "",
+  DRAFT_BANNER: "",
+  SAVE_SECTION: "",
+  SHARE_PANEL: "",
+  DEV_SCRIPT: "",
+};
+
+/** Question 1 as a meal size (flows/02 § 2): what each size provides per meal, and no goal language. */
+function sizeButton(plan) {
+  const cal = `${plan.calories.min}–${plan.calories.max} cal`;
+  const pro = `${plan.protein_g.min}–${plan.protein_g.max} g protein`;
+  return `          <button type="button" class="choice" data-goal="${esc(plan.id)}" aria-pressed="false">
+            <span class="choice-name">${esc(plan.name)}</span>
+            <span class="choice-line">Per meal</span>
+            <span class="facts"><span class="fact">${cal}</span><span class="fact">${pro}</span></span>
+          </button>`;
+}
+
+const MENU_LINK = '<button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button>';
+
+/** What the development page's scripts read: the save endpoint, the ZIP list (mock), the sizes. */
+export function saveClientData(plans, { save, zips, siteKey, eventId }) {
+  const prefixesOnly = (list) => (list ?? []).map((z) => (z.zip ? { zip: z.zip } : { prefix: z.prefix }));
+  return {
+    api: save.api_path,
+    wording_version: save.wording_version,
+    event_id: eventId,
+    site_key: siteKey,
+    email_pattern: EMAIL_RE.source,
+    zips: { match: zips.match, prefixes: prefixesOnly(zips.prefixes), near_ring: prefixesOnly(zips.near_ring) },
+    sizes: plans.individual.map((p) => ({ id: p.id, name: p.name, calories: p.calories, protein_g: p.protein_g })),
+  };
+}
 
 /**
- * The development build's claim section (SPEC-rung3 § 1). `claim` is data/claim.json; `siteKey` is the
- * dev environment's TURNSTILE_SITE_KEY from wrangler.jsonc (Cloudflare's published test key).
+ * The development build's slots (SPEC-rung4 § 2): Flow 1 at the top, Flow 2 reframed as a meal size, the
+ * share panel, the DRAFT marking. `siteKey` is the dev environment's TURNSTILE_SITE_KEY (Cloudflare's
+ * published test key). Assets are addressed from the root, so /<event-id>/ pages find them.
  */
-export async function claimSlots(claim, siteKey) {
-  const read = (name) => readFile(join(ROOT, "src", "claim", name), "utf8");
-  const fill = (text) => text.replaceAll("{{WORDING_VERSION}}", esc(claim.wording_version));
-  const clientClaim = { api: claim.api_path, wording_version: claim.wording_version, site_key: siteKey };
+export async function devSlots(plans, { save, zips, siteKey, eventId, menu = existsSync(MENU_PATH) }) {
+  const read = (name) => readFile(join(ROOT, "src", "save", name), "utf8");
+  const fill = (text) =>
+    text.replaceAll("{{WORDING_VERSION}}", esc(save.wording_version)).replaceAll("{{MENU_LINK}}", menu ? MENU_LINK : "");
+  const client = saveClientData(plans, { save, zips, siteKey, eventId });
+  // One source each: the Worker's ZIP check and the calculator's arithmetic, inlined as written.
+  const shared = [classifyZip, shareLines, parseTarget].map((f) => f.toString()).join("\n");
   return {
-    CLAIM_STYLE: (await read("style.css")).trimEnd(),
+    ASSET_PREFIX: "/",
+    QUESTION_ONE: "Meal size",
+    HINT: "Pick a meal size and how many meals to see your price.",
+    GOALS: plans.individual.map(sizeButton).join("\n"),
+    DEV_STYLE: (await read("style.css")).trimEnd(),
     DRAFT_BANNER: "\n" + fill(await read("banner.html")).trimEnd(),
-    CLAIM_SECTION: "\n" + fill(await read("section.html")).trimEnd(),
-    CLAIM_SCRIPT:
-      `\n<script type="application/json" id="claim-data">${scriptJson(clientClaim)}</script>` +
-      `\n<script>\n${(await read("claim.js")).trim()}\n</script>` +
+    SAVE_SECTION: "\n" + fill(await read("section.html")).trimEnd(),
+    SHARE_PANEL: "\n" + (await read("share-panel.html")).trimEnd(),
+    DEV_SCRIPT:
+      `\n<script type="application/json" id="save-data">${scriptJson(client)}</script>` +
+      `\n<script>\n${shared}\n</script>` +
+      `\n<script>\n${(await read("flow1.js")).trim()}\n</script>` +
+      `\n<script>\n${(await read("share.js")).trim()}\n</script>` +
       `\n<script src="${TURNSTILE_SCRIPT_URL}" async defer></script>`,
   };
 }
@@ -191,7 +248,7 @@ export async function devConfig() {
   return unstable_readConfig({ config: WRANGLER_CONFIG, env: "dev" }, { hideWarnings: true });
 }
 
-export async function renderPage(plans, claim = NO_CLAIM) {
+export async function renderPage(plans, dev = PROD_SLOTS) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
   const slots = {
@@ -204,12 +261,16 @@ export async function renderPage(plans, claim = NO_CLAIM) {
     READ_ON: esc(plans.read_on),
     DATA: scriptJson(clientData(plans)),
     SCRIPT: script.trim(),
-    ...claim,
+    ...dev,
   };
-  return template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
+  const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
     if (!(key in slots)) throw new Error(`template slot ${whole} has no value`);
     return slots[key];
   });
+  // A slot name the pattern cannot match (a digit, a lower-case letter) would otherwise ship as text.
+  const left = /\{\{[^{}]*\}\}/.exec(template.replace(/\{\{([A-Z_]+)\}\}/g, ""));
+  if (left) throw new Error(`template slot ${left[0]} is not a valid slot name`);
+  return html;
 }
 
 /** Copy the fonts and the logo next to the page. Only files the page may reference are copied. */
@@ -240,6 +301,32 @@ export async function writeQrCodes(events, outDir) {
   return written;
 }
 
+const checkEventId = (id) => {
+  if (!/^[a-z0-9-]+$/.test(id)) throw new Error(`bad event id: ${id}`);
+  return id;
+};
+
+/**
+ * The development pages: dist-dev/<event-id>/index.html per event, each with its event id built in, and
+ * dist-dev/index.html = the first event's page (SPEC-rung4 § 2).
+ */
+async function writeDevPages(plans, events, outDir) {
+  const save = await loadJson(SAVE_PATH);
+  const zips = await loadJson(ZIPS_PATH);
+  const siteKey = (await devConfig()).vars.TURNSTILE_SITE_KEY;
+  const written = [];
+  for (const [i, event] of events.entries()) {
+    const html = await renderPage(plans, await devSlots(plans, { save, zips, siteKey, eventId: checkEventId(event.id) }));
+    await mkdir(join(outDir, event.id), { recursive: true });
+    const paths = [join(outDir, event.id, "index.html"), ...(i === 0 ? [join(outDir, "index.html")] : [])];
+    for (const path of paths) {
+      await writeFile(path, html);
+      written.push({ path, bytes: Buffer.byteLength(html) });
+    }
+  }
+  return written;
+}
+
 export async function build({ plansPath = PLANS_PATH, eventsPath = EVENTS_PATH, target = "prod", outDir } = {}) {
   if (target !== "prod" && target !== "dev") throw new Error(`unknown build target: ${target}`);
   outDir ??= target === "dev" ? DIST_DEV : DIST;
@@ -248,22 +335,24 @@ export async function build({ plansPath = PLANS_PATH, eventsPath = EVENTS_PATH, 
   // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
   if (target === "dev") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
-  const slots =
-    target === "dev"
-      ? await claimSlots(await loadJson(CLAIM_PATH), (await devConfig()).vars.TURNSTILE_SITE_KEY)
-      : NO_CLAIM;
-  const html = await renderPage(plans, slots);
-  const indexPath = join(outDir, "index.html");
-  await writeFile(indexPath, html);
+  let pages;
+  if (target === "dev") {
+    pages = await writeDevPages(plans, events, outDir);
+  } else {
+    const html = await renderPage(plans);
+    const path = join(outDir, "index.html");
+    await writeFile(path, html);
+    pages = [{ path, bytes: Buffer.byteLength(html) }];
+  }
   const files = await copyStatic(outDir);
   // QR codes point at the production URL, so only the production build writes them.
   const qr = target === "prod" ? await writeQrCodes(events, outDir) : [];
-  return { indexPath, bytes: Buffer.byteLength(html), files, qr };
+  return { indexPath: pages[0].path, bytes: pages[0].bytes, pages, files, qr };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const envFlag = process.argv.indexOf("--env");
   const out = await build({ target: envFlag === -1 ? "prod" : process.argv[envFlag + 1] });
-  console.log(`wrote ${out.indexPath} (${out.bytes} bytes)`);
+  for (const p of out.pages) console.log(`wrote ${p.path} (${p.bytes} bytes)`);
   for (const f of [...out.files, ...out.qr]) console.log(`wrote ${f}`);
 }

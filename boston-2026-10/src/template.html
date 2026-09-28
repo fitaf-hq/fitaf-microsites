@@ -30,10 +30,10 @@
   --head: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
-@font-face { font-family: "Open Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/open-sans-latin-400-normal.woff2") format("woff2"); }
-@font-face { font-family: "Open Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/open-sans-latin-600-normal.woff2") format("woff2"); }
-@font-face { font-family: Poppins; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/poppins-latin-600-normal.woff2") format("woff2"); }
-@font-face { font-family: Poppins; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/poppins-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Open Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("{{ASSET_PREFIX}}fonts/open-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Open Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("{{ASSET_PREFIX}}fonts/open-sans-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: Poppins; font-style: normal; font-weight: 600; font-display: swap; src: url("{{ASSET_PREFIX}}fonts/poppins-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: Poppins; font-style: normal; font-weight: 700; font-display: swap; src: url("{{ASSET_PREFIX}}fonts/poppins-latin-700-normal.woff2") format("woff2"); }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -173,15 +173,15 @@ section.panel { padding-top: 28px; }
   .intro { padding: 36px 0 40px; }
   .tabs { max-width: 420px; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{CLAIM_STYLE}}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{DEV_STYLE}}
 </style>
 <noscript><style>.js-only { display: none !important; } .all[hidden], .panel[hidden] { display: block; }</style></noscript>
 </head>
 <body>{{DRAFT_BANNER}}
 <div class="topbar"><div class="wrap">Fit AF in Boston &middot; October 2026</div></div>
 <header class="site-head">
-  <div class="wrap"><img class="logo" src="assets/fitaf-logo.png" alt="Fit AF" width="88" height="56"></div>
-</header>
+  <div class="wrap"><img class="logo" src="{{ASSET_PREFIX}}assets/fitaf-logo.png" alt="Fit AF" width="88" height="56"></div>
+</header>{{SAVE_SECTION}}
 
 <div class="intro">
   <div class="wrap">
@@ -203,7 +203,7 @@ section.panel { padding-top: 28px; }
   <section class="panel" id="panel-individual" role="tabpanel" aria-labelledby="tab-individual">
     <div class="js-only">
       <div class="step" role="group" aria-labelledby="q-goal">
-        <h2 class="step-label" id="q-goal"><span class="step-num" aria-hidden="true">1</span>What's your goal?</h2>
+        <h2 class="step-label" id="q-goal"><span class="step-num" aria-hidden="true">1</span>{{QUESTION_ONE}}</h2>
         <div class="choices goals">
 {{GOALS}}
         </div>
@@ -217,7 +217,7 @@ section.panel { padding-top: 28px; }
       </div>
 
       <div aria-live="polite">
-        <p class="hint" id="hint">Pick a goal and how many meals to see your price.</p>
+        <p class="hint" id="hint">{{HINT}}</p>
         <div class="result" id="result" hidden>
           <p class="result-kicker">Your plan</p>
           <p class="result-title" id="result-title"></p>
@@ -227,7 +227,7 @@ section.panel { padding-top: 28px; }
           </dl>
           <a class="cta" id="result-cta">Choose your meals</a>
         </div>
-      </div>
+      </div>{{SHARE_PANEL}}
     </div>
 
     <button class="all-toggle js-only" id="all-toggle" aria-expanded="false" aria-controls="all">See all plans</button>
@@ -244,7 +244,7 @@ section.panel { padding-top: 28px; }
 
   <section class="panel" id="panel-family" role="tabpanel" aria-labelledby="tab-family" hidden>
 {{FAMILY}}
-  </section>{{CLAIM_SECTION}}
+  </section>
 </main>
 
 <footer class="foot">
@@ -254,6 +254,6 @@ section.panel { padding-top: 28px; }
 <script type="application/json" id="plan-data">{{DATA}}</script>
 <script>
 {{SCRIPT}}
-</script>{{CLAIM_SCRIPT}}
+</script>{{DEV_SCRIPT}}
 </body>
 </html>

@@ -1,5 +1,5 @@
 {
-  "about": "Every foreground/background colour pair the page draws, by token (src/template.html :root, and src/claim/style.css :root for the dev build). Measured by `npm run contrast` with APCA (apca-w3); a pair fails when |Lc| is under its role's minimum.",
+  "about": "Every foreground/background colour pair the page draws, by token (src/template.html :root, and src/save/style.css :root for the dev build). Measured by `npm run contrast` with APCA (apca-w3); a pair fails when |Lc| is under its role's minimum.",
   "roles": {
     "body": { "min_lc": 75, "means": "text under 24px, or under 18.66px when bold (700)" },
     "large-text": { "min_lc": 60, "means": "text at 24px or more, or 18.66px or more at 700" },
@@ -31,12 +31,16 @@
     { "fg": "--navy", "bg": "--signature", "role": "ui-or-heading", "where": "check mark on the Signature disc" },
     { "fg": "--navy", "bg": "--performance", "role": "ui-or-heading", "where": "check mark on the Performance disc" },
     { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "check mark on the navy disc (meal-count cards)" },
-    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "Choose your meals / Claim my offer, 19px/700 uppercase" },
+    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "Choose your meals / Save my offer / Tell me when you deliver here, 19px/700 uppercase" },
     { "fg": "--on-cta", "bg": "--cta-hover", "role": "large-text", "where": "the same buttons on hover" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the button's own shape against the card" },
-    { "fg": "--orange", "bg": "--white", "role": "non-text", "where": "claim section top bar (dev)", "build": "dev" },
+    { "fg": "--orange", "bg": "--white", "role": "non-text", "where": "save-the-offer section top bar (dev)", "build": "dev" },
     { "fg": "--white", "bg": "--draft", "role": "body", "where": "DRAFT banner, 14px (dev)", "build": "dev" },
-    { "fg": "--draft", "bg": "--white", "role": "body", "where": "DRAFT tag 12px/600, claim error 16px/600 (dev)", "build": "dev" }
+    { "fg": "--draft", "bg": "--white", "role": "body", "where": "DRAFT tag 12px/600, save error 16px/600 (dev)", "build": "dev" },
+    { "fg": "--navy", "bg": "--ice", "role": "body", "where": "share panel title 18px/600 (dev)", "build": "dev" },
+    { "fg": "--ink", "bg": "--ice", "role": "body", "where": "share panel results 16px (dev)", "build": "dev" },
+    { "fg": "--muted", "bg": "--ice", "role": "body", "where": "share panel help and hint 14px (dev)", "build": "dev" },
+    { "fg": "--field", "bg": "--ice", "role": "ui-or-heading", "where": "share panel input borders on ice (dev)", "build": "dev" }
   ],
   "considered_not_drawn": [
     { "fg": "#ffffff", "bg": "#ff931e", "role": "large-text", "why": "the store's own button (white on its orange): measured, and under 60 even at 19px/700" },
@@ -47,6 +51,6 @@
   "not_measured": [
     { "token": "--line", "why": "decorative hairline around cards and under the header; each card is identified by its text, and its state by the navy outline (measured above)" },
     { "token": "--ice", "as": "tile on white", "why": "ice tiles and chips on a white card are grouping, not a boundary anyone must find" },
-    { "token": "--cta", "as": "disabled button", "why": "the submit button at 60% opacity while a claim is sending: a disabled control is exempt" }
+    { "token": "--cta", "as": "disabled button", "why": "the submit button at 60% opacity while a save is sending: a disabled control is exempt" }
   ]
 }
