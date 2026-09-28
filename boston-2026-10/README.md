@@ -19,11 +19,11 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`) and M1–M9 of rung 5 (`mNN-*.test.mjs`), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`) and M1–M13 of rung 5 (`mNN-*.test.mjs`), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S20 | authority |
-| `SPEC-rung5-sending.md` | rung 5's contract: the real sender (Resend), dev only, behind an allowlist; cases M1–M9 | authority |
+| `SPEC-rung5-sending.md` | rung 5's contract: the real sender (Resend), dev only, behind an allowlist; cases M1–M9, and § 8 (the derived token) M10–M13 | authority |
 | `consent/DRAFT.md` | the consent wording (v0.3, ⛔ not approved): the page (§§ 1–2), the emails (§ 3) and `/confirm` (§ 4) show it verbatim | authority |
 | `flows/` | the multi-step flows (save the offer, build a plan, the next-day email, text (off for October), return, the lead record, the calendar cart, this week's menu), each with a Mermaid diagram: states, transitions, data, consent points, written **before** they are built | design; the contracts win where a flow and a contract disagree about something built |
 | `data/save.json` | the save endpoint, the wording version the page sends and the versions the Worker accepts, the send hour and zone, the lapse periods | INPUT |
@@ -40,7 +40,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M9
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 npm --prefix boston-2026-10 run deploy  # builds, then wrangler deploy
@@ -57,7 +57,7 @@ before rung 4 (test S20 compares SHA-256s with `test/s20-production-golden.json`
 
 ```sh
 export CLOUDFLARE_ACCOUNT_ID=…            # never committed
-npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M9 (Miniflare, no network)
+npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M13 (Miniflare, no network)
 npm --prefix boston-2026-10 run db:migrate:dev        # D1 migrations -> fitaf-leads-dev (0003 drops rung 3's tables; 0004 adds sending)
 npm --prefix boston-2026-10 run seed:dev              # 20 dummy saves, 5 marked exported
 npm --prefix boston-2026-10 run purge:dev             # DRY RUN: counts only
@@ -90,7 +90,8 @@ script is still rung 1's `src/app.js`, unchanged so production stays byte-identi
   knows of no redemption: the order source is still open. Tests use a recording sender and a stubbed `fetch`.
 - **E1 goes at 09:00 America/New_York on the next calendar day** (`zoned-time.js`, with `Intl`: there is no
   `Temporal` in the Workers runtime or in Node 22). An expansion request's E-X goes at once.
-- **The `/confirm` token** is minted when its message is sent, 32 random bytes; only its SHA-256 is stored.
+- **The `/confirm` token** is made when its message is sent, 32 bytes; only its SHA-256 is stored. Since rung
+  5 it is derived from the save id with `CONFIRM_TOKEN_KEY` (below), so every attempt carries the same one.
 - **The lapse** (`lapse.js`): an offer save without confirmed marketing 30 days after its offer ends; an
   expansion request unconfirmed after 7 days; a confirmed one after `expansion_retention_days` (365,
   proposed). Each deletes the contact and sets `lapsed`; the save row stays.
@@ -110,15 +111,21 @@ The development database holds dummy `@example.com` addresses, which accept no m
 **bounce**, and bounces damage a new sending domain's reputation. So the real sender runs **only to
 addresses on an allowlist**.
 
-**The two secrets — set by the Advisor, never committed, never typed by anyone else:**
+**The three secrets — set by the Advisor, never committed, never typed by anyone else:**
 
 ```sh
 npm --prefix boston-2026-10 run secret:resend:dev     # wrangler secret put RESEND_API_KEY --env dev (prompts)
 npm --prefix boston-2026-10 run secret:allowlist:dev  # wrangler secret put SEND_ALLOWLIST --env dev (prompts)
+npm --prefix boston-2026-10 run secret:token-key:dev  # 32 random bytes, base64, piped into
+                                                      #   wrangler secret put CONFIRM_TOKEN_KEY --env dev
 ```
 
-Both prompt for the value, so it goes from the Advisor's keyboard to Cloudflare and nowhere else. The
-allowlist is a secret because it may name a real address.
+The first two prompt for the value, so it goes from the Advisor's keyboard to Cloudflare and nowhere else.
+The allowlist is a secret because it may name a real address. The third is never seen by anyone: `node`
+draws 32 random bytes and pipes them straight into `wrangler secret put`, which reads a piped value
+([Cloudflare: `secret put`](https://developers.cloudflare.com/workers/wrangler/commands/workers/)). Running it
+again replaces the key, and every `/confirm` link in an email not yet sent changes with it; links already
+sent keep working, because the database holds their hashes.
 
 - **`SEND_ALLOWLIST`**: a comma-separated list of exact addresses and `@domain` entries (a whole domain, not
   its subdomains; case does not matter). A message to anyone not on it is **held**: nothing is requested,
@@ -129,7 +136,11 @@ allowlist is a secret because it may name a real address.
   each also with a `+label` (`delivered+first@resend.dev`); an allowlist of `@resend.dev` admits exactly
   those.
 - **`RESEND_API_KEY`** present → `ResendSender` behind the allowlist; absent → `NullSender`, rung 4's
-  behaviour (`choose-sender.js`).
+  behaviour (`choose-sender.js`). With the Resend key, **`CONFIRM_TOKEN_KEY` is required**: without it (or
+  under 32 characters) the sender refuses to start and the cron run fails, sending nothing (M13).
+- **The `/confirm` token is derived, not drawn** (§ 8 of the contract): `base64url(HMAC-SHA-256(
+  CONFIRM_TOKEN_KEY, "<save_id>:confirm"))`, by Web Crypto (`confirm-token.js`). Only its SHA-256 is stored,
+  as in rung 4, and whether it still works is decided by the database, not by the token.
 - **`MAIL_FROM`** is public config in the `dev` vars of `wrangler.jsonc`: ⬜ the placeholder
   `Fit AF <offers@eatfitaf.com>` until the Owner names the sender. Its domain must be verified in Resend.
 
@@ -141,22 +152,28 @@ rendered from one list of lines (`messages.js`). Accepted → `sent` and Resend'
 network error or a 10 s timeout, and 409 `concurrent_idempotent_requests`) → stays `scheduled`,
 `send_attempts + 1`; the fifth → `failed`. A `sent` or `failed` message is never selected again.
 
+**Every attempt for one message sends a byte-identical body** (the token is derived), so Resend's
+idempotency key replays within its 24-hour window: an accepted send whose database write was lost is
+retried under the same key and comes back with the first request's id, and is marked `sent` without a
+second email (M10, M11). A 409 `invalid_idempotent_request` (the key reused with a different body) can then
+only mean a defect: it is `failed` and counted.
+
 **A send in flight is never requested twice**: each run first **claims** a due message
 (`send_lease_until`, 15 minutes) and every outcome clears the claim; a later run that finds the claim
-skips the message (`inflight`). The idempotency key cannot do this alone: each attempt mints a new
-`/confirm` token, so two attempts' bodies differ, and Resend answers a changed body under a used key with
-409 `invalid_idempotent_request` rather than replaying the first answer.
+skips the message (`inflight`). The idempotency key covers what the claim cannot, a send accepted and then
+forgotten; the claim covers what the key alone would answer with a 409, two runs at once.
 
 **The cron logs one line of counts** — `due · suppressed · sent · failed · deferred · held · retrying ·
 inflight` — and nothing else: no address, token, code or key (test M7).
 
-**The manual check on dev** (the orchestrator, after the Advisor has set both secrets): `db:migrate:dev`
+**The manual check on dev** (the orchestrator, after the Advisor has set the three secrets): `db:migrate:dev`
 (0004), `deploy:dev`, save an offer on the dev page to `delivered+<label>@resend.dev`, wait for the cron
 after its `send_at`, and look in Resend's dashboard. Every dummy `@example.com` save stays `scheduled`.
 
 **Mutants on copies**: M5 imports a copy of `allowlist.js` with the check removed and shows M4 failing;
 M9b copies `src/worker/` and `data/` to a temporary directory, removes the claim's lease condition from
-`send-due.js` there, and shows M9 failing.
+`send-due.js` there, and shows M9 failing; M12 imports a copy of `confirm-token.js` that draws a random
+token per attempt and shows M10 failing. Each runs its case on the real module first, as a control.
 
 ## Branding — the store's look, and where it departs
 
