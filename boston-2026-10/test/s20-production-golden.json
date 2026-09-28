@@ -1,0 +1,14 @@
+{
+  "about": "SHA-256 of every file `npm run build` writes to dist/, recorded from the production build at built_from, before rung 4. S20 rebuilds and compares. Regenerate only when production is MEANT to change, and say so in the commit.",
+  "built_from": "fa16765",
+  "files": {
+    "assets/fitaf-logo.png": "e51500f85fee09c3a5762e82cd3812ac824fa81378478035a94ab91e5de94ef0",
+    "fonts/open-sans-latin-400-normal.woff2": "0e44026ad31376af1b56593cd4acb4f353f8e8789c51759e18f64578e4ef296a",
+    "fonts/open-sans-latin-600-normal.woff2": "a97a6ed7ef9f75c495e9224f5c59b2271d826e4a4345b738b390b0c76cc9f412",
+    "fonts/poppins-latin-600-normal.woff2": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
+    "fonts/poppins-latin-700-normal.woff2": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
+    "index.html": "14b8571f94d38a762ec95cc3a5a868085341a26106d6944ce31e3e1642b3e177",
+    "qr/demo.png": "a2a7f03789e5c546213f5e39879679a60b16811db31e4f38136ca5f0c1c888c0",
+    "qr/demo.svg": "3a21a04c736e94ce992bbffb680b09cb67ea156d402efa9febb0db0c9bb49446"
+  }
+}
