@@ -9,5 +9,12 @@
   // ⛔ No per-version preview URLs (<version>-<name>.<subdomain>.workers.dev). On 2026-09-27 a version
   // uploaded by mistake stayed PUBLIC at its preview URL after later deploys replaced it on the main
   // address; only deleting the Worker removed it. A replaced version must not stay reachable.
-  "preview_urls": false
+  "preview_urls": false,
+
+  // The vanity domain (bought 2026-09-27, a zone in the same Fit AF account). Custom domains, so Cloudflare
+  // manages the DNS record and the certificate. The workers.dev address keeps working.
+  "routes": [
+    { "pattern": "eatfitaf.com", "custom_domain": true },
+    { "pattern": "www.eatfitaf.com", "custom_domain": true }
+  ]
 }
