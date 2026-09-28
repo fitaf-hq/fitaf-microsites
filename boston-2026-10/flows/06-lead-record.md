@@ -1,8 +1,8 @@
 # Flow 6 — the lead record, from save to deletion
 
-**Status: the deletion plan is ACCEPTED (2026-09-27); partly built on dev** (two tables, `export_state`
-`pending · exported · purged`, the purge of exported records: `SPEC-rung3-lead-capture.md` §§ 3–6). Email
-only for October.
+**Status: the deletion plan is ACCEPTED (2026-09-27) and BUILT on dev in rung 4** (`SPEC-rung4-save-offer.md`: the
+`saves`/`save_contacts` tables, the lapse and purge in the scheduled Worker, the erase CLI). The export is a
+later rung; sending waits on the Resend account. Email only for October.
 
 ## 1. Purpose
 

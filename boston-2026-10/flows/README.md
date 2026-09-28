@@ -32,12 +32,12 @@ the proposal is accepted.
 
 | | flow | status | its page or channel |
 |---|---|---|---|
-| [1](01-save-offer.md) | save the offer (first, dismissible) | ⬜ proposed; replaces the claim form built on dev | the microsite |
-| [2](02-choose.md) | build a plan: meal size, then how many | ✅ built (rung 1) as goal + count; ⬜ to be rewritten | the microsite |
-| [3](03-follow-up-email.md) | the next-day email, and the marketing confirmation | ⬜ proposed | email → `/confirm/<token>` |
+| [1](01-save-offer.md) | save the offer (first, dismissible) | ✅ built on dev (rung 4) | the microsite |
+| [2](02-choose.md) | build a plan: meal size, then how many | ✅ live (rung 1); meal size + calculator on dev (rung 4); ⬜ photography rewrite | the microsite |
+| [3](03-follow-up-email.md) | the next-day email, and the marketing confirmation | 🟡 `/confirm` and the schedule built on dev; sending waits on Resend | email → `/confirm/<token>` |
 | [4](04-text.md) | the code by text | ⛔ off for October | text messages |
-| [5](05-return-and-redeem.md) | come back (even a year later), and use a code | rung-1 links built; the rest proposed | `/o/<code>` → store |
-| [6](06-lead-record.md) | the lead record, from save to deletion | ✅ plan accepted; partly built on dev | the Worker and its database |
+| [5](05-return-and-redeem.md) | come back (even a year later), and use a code | ✅ `/o/<code>` built on dev; the redemption source open | `/o/<code>` → store |
+| [6](06-lead-record.md) | the lead record, from save to deletion | ✅ built on dev (rung 4); the export later | the Worker and its database |
 | [7](07-calendar-cart.md) | the calendar cart | 💭 sketch, later | the microsite |
 | [8](08-this-weeks-menu.md) | see this week's menu | ⬜ proposed; needs the menu and photo inputs | the microsite |
 
