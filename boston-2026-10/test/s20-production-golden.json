@@ -1,6 +1,6 @@
 {
   "about": "SHA-256 of every file `npm run build` writes to dist/, recorded from the production build at built_from, before rung 4. S20 rebuilds and compares. Regenerate only when production is MEANT to change, and say so in the commit.",
-  "built_from": "fa16765",
+  "built_from": "fa16765 + main 6764c24/93b8ca3 (eatfitaf.com: the demo QR re-encoded; only qr/demo.png and qr/demo.svg changed, verified by decoding)",
   "files": {
     "assets/fitaf-logo.png": "e51500f85fee09c3a5762e82cd3812ac824fa81378478035a94ab91e5de94ef0",
     "fonts/open-sans-latin-400-normal.woff2": "0e44026ad31376af1b56593cd4acb4f353f8e8789c51759e18f64578e4ef296a",
@@ -8,7 +8,7 @@
     "fonts/poppins-latin-600-normal.woff2": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
     "fonts/poppins-latin-700-normal.woff2": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
     "index.html": "14b8571f94d38a762ec95cc3a5a868085341a26106d6944ce31e3e1642b3e177",
-    "qr/demo.png": "a2a7f03789e5c546213f5e39879679a60b16811db31e4f38136ca5f0c1c888c0",
-    "qr/demo.svg": "3a21a04c736e94ce992bbffb680b09cb67ea156d402efa9febb0db0c9bb49446"
+    "qr/demo.png": "41c13c7d3960effe439e1ec8baa1f5f2ce2c7c9a57b4902a1c02d46bbddd4222",
+    "qr/demo.svg": "223d775bfe0ef32e6a6d0f6a03f2d7eb8b6920d3199a1f1360934a3447c22f1c"
   }
 }

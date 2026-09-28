@@ -11,12 +11,26 @@
   // address; only deleting the Worker removed it. A replaced version must not stay reachable.
   "preview_urls": false,
 
+  // ⛔ Explicit: with custom domains present, wrangler DISABLES the workers.dev address unless told otherwise
+  // (observed 2026-09-27 on the first domain deploy). It stays on, so QR codes printed before the domain work.
+  "workers_dev": true,
+
+  // The vanity domain (bought 2026-09-27, a zone in the same Fit AF account). Custom domains, so Cloudflare
+  // manages the DNS record and the certificate. The workers.dev address keeps working.
+  "routes": [
+    { "pattern": "eatfitaf.com", "custom_domain": true },
+    { "pattern": "www.eatfitaf.com", "custom_domain": true }
+  ],
+
   // ⛔ The top level above is PRODUCTION and is deliberately unchanged by rungs 3 and 4: no `main`, no
   // bindings, so `npm run deploy` still ships the rung-1 page and nothing else.
   "env": {
     // Rungs 3–4 (SPEC-rung4-save-offer.md): development only, dummy data only.
     "dev": {
       "name": "fitaf-microsites-dev",
+      // workers.dev on explicitly (see the top level); dev has NO routes: routes do not inherit, so dev never
+      // claims eatfitaf.com.
+      "workers_dev": true,
       // No per-version preview URLs here either (see the top level).
       "preview_urls": false,
       "main": "src/worker/index.js",
