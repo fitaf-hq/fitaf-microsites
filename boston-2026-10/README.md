@@ -19,17 +19,18 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), and S1–S20 of rung 4 (one file per case, `sNN-*.test.mjs`); `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`) and M1–M9 of rung 5 (`mNN-*.test.mjs`), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S20 | authority |
+| `SPEC-rung5-sending.md` | rung 5's contract: the real sender (Resend), dev only, behind an allowlist; cases M1–M9 | authority |
 | `consent/DRAFT.md` | the consent wording (v0.3, ⛔ not approved): the page (§§ 1–2), the emails (§ 3) and `/confirm` (§ 4) show it verbatim | authority |
 | `flows/` | the multi-step flows (save the offer, build a plan, the next-day email, text (off for October), return, the lead record, the calendar cart, this week's menu), each with a Mermaid diagram: states, transitions, data, consent points, written **before** they are built | design; the contracts win where a flow and a contract disagree about something built |
 | `data/save.json` | the save endpoint, the wording version the page sends and the versions the Worker accepts, the send hour and zone, the lapse periods | INPUT |
 | `data/offers.json` | the offers, ⛔ **placeholders** (`"status": "placeholder"`): which one a save gets, which is current | INPUT |
 | `src/save/` | **dev build only**: Flow 1 (`section.html`, `flow1.js`), the share panel (`share-panel.html`, `share.js`), the one arithmetic module (`calculator.js`), `banner.html`, `style.css` | INPUT |
 | `src/worker/` | the Worker (below) | INPUT |
-| `migrations/` | D1 schema, applied in order: `0001_claims.sql`, `0002_contacts.sql` (rung 3), `0003_saves.sql` (rung 4: drops rung 3's tables) | INPUT |
+| `migrations/` | D1 schema, applied in order: `0001_claims.sql`, `0002_contacts.sql` (rung 3), `0003_saves.sql` (rung 4: drops rung 3's tables), `0004_sending.sql` (rung 5: attempts, Resend's id, the send claim) | INPUT |
 | `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs` | tools |
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel) | OUTPUT, git-ignored |
 
@@ -39,7 +40,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M9
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 npm --prefix boston-2026-10 run deploy  # builds, then wrangler deploy
@@ -56,8 +57,8 @@ before rung 4 (test S20 compares SHA-256s with `test/s20-production-golden.json`
 
 ```sh
 export CLOUDFLARE_ACCOUNT_ID=…            # never committed
-npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20 (Miniflare, no network)
-npm --prefix boston-2026-10 run db:migrate:dev        # D1 migrations -> fitaf-leads-dev (0003 drops rung 3's tables)
+npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M9 (Miniflare, no network)
+npm --prefix boston-2026-10 run db:migrate:dev        # D1 migrations -> fitaf-leads-dev (0003 drops rung 3's tables; 0004 adds sending)
 npm --prefix boston-2026-10 run seed:dev              # 20 dummy saves, 5 marked exported
 npm --prefix boston-2026-10 run purge:dev             # DRY RUN: counts only
 npm --prefix boston-2026-10 run purge:dev -- --apply  # delete exported saves' contacts; mark them purged
@@ -84,9 +85,9 @@ script is still rung 1's `src/app.js`, unchanged so production stays byte-identi
 | `/o/<code>` | `redeem.js` | ORIGINAL · WELCOME_BACK (one reissued code per original per offer) · CURRENT |
 | cron, every 5 minutes | `scheduled.js` → `send-due.js`, `lapse.js`, `purge.js` | send what is due, then the lapse, then the purge; counts only |
 
-- **Nothing is sent yet.** The cron's `Sender` and `Redemptions` are the null implementations of
-  `senders.js`: `NullSender` sends nothing and leaves each message `scheduled`; `NullRedemptions` knows of no
-  redemption. Resend and the order source replace them in a later rung. Tests use a recording sender.
+- **Nothing is sent without the Resend key** (rung 5, below). Without `RESEND_API_KEY` the cron's `Sender`
+  is `NullSender` (`senders.js`), which sends nothing and leaves each message `scheduled`. `NullRedemptions`
+  knows of no redemption: the order source is still open. Tests use a recording sender and a stubbed `fetch`.
 - **E1 goes at 09:00 America/New_York on the next calendar day** (`zoned-time.js`, with `Intl`: there is no
   `Temporal` in the Workers runtime or in Node 22). An expansion request's E-X goes at once.
 - **The `/confirm` token** is minted when its message is sent, 32 random bytes; only its SHA-256 is stored.
@@ -101,6 +102,61 @@ script is still rung 1's `src/app.js`, unchanged so production stays byte-identi
 - **The mutant cases never write a committed file**: T7 swaps a copy of the data; S15 and S14b import a
   mutated copy of `lapse.js` / `purge.js`. `LAPSE_MODULE=<copy> node --test test/s14-lapse.test.mjs` shows
   S14 failing on a copy (and `PURGE_MODULE=<copy>` the purge case).
+
+## Rung 5 — sending through Resend, dev only, to an allowlist
+
+[`SPEC-rung5-sending.md`](SPEC-rung5-sending.md). ⛔ **Development Worker only**; production is unchanged.
+The development database holds dummy `@example.com` addresses, which accept no mail: sending to them would
+**bounce**, and bounces damage a new sending domain's reputation. So the real sender runs **only to
+addresses on an allowlist**.
+
+**The two secrets — set by the Advisor, never committed, never typed by anyone else:**
+
+```sh
+npm --prefix boston-2026-10 run secret:resend:dev     # wrangler secret put RESEND_API_KEY --env dev (prompts)
+npm --prefix boston-2026-10 run secret:allowlist:dev  # wrangler secret put SEND_ALLOWLIST --env dev (prompts)
+```
+
+Both prompt for the value, so it goes from the Advisor's keyboard to Cloudflare and nowhere else. The
+allowlist is a secret because it may name a real address.
+
+- **`SEND_ALLOWLIST`**: a comma-separated list of exact addresses and `@domain` entries (a whole domain, not
+  its subdomains; case does not matter). A message to anyone not on it is **held**: nothing is requested,
+  it stays `scheduled`, and it is neither sent nor failed. **Unset or empty sends nothing.** For a first
+  check, use Resend's published test addresses
+  ([Resend: send test emails](https://resend.com/docs/dashboard/emails/send-test-emails)):
+  `delivered@resend.dev` (accepted and delivered) and `bounced@resend.dev` (the receiving server refuses it),
+  each also with a `+label` (`delivered+first@resend.dev`); an allowlist of `@resend.dev` admits exactly
+  those.
+- **`RESEND_API_KEY`** present → `ResendSender` behind the allowlist; absent → `NullSender`, rung 4's
+  behaviour (`choose-sender.js`).
+- **`MAIL_FROM`** is public config in the `dev` vars of `wrangler.jsonc`: ⬜ the placeholder
+  `Fit AF <offers@eatfitaf.com>` until the Owner names the sender. Its domain must be verified in Resend.
+
+**The sender** (`resend-sender.js`, from Resend's documentation read 2026-09-27): `POST
+https://api.resend.com/emails` with `Authorization: Bearer`, a `User-Agent`, and an `Idempotency-Key` of
+`<save_id>:<E1|EX>`; the body is `{ from, to: [email], subject, html, text }`, the HTML and the text part
+rendered from one list of lines (`messages.js`). Accepted → `sent` and Resend's `id` stored in
+`provider_message_id`. A permanent refusal (a 4xx other than 429) → `failed` at once. Temporary (429, 5xx, a
+network error or a 10 s timeout, and 409 `concurrent_idempotent_requests`) → stays `scheduled`,
+`send_attempts + 1`; the fifth → `failed`. A `sent` or `failed` message is never selected again.
+
+**A send in flight is never requested twice**: each run first **claims** a due message
+(`send_lease_until`, 15 minutes) and every outcome clears the claim; a later run that finds the claim
+skips the message (`inflight`). The idempotency key cannot do this alone: each attempt mints a new
+`/confirm` token, so two attempts' bodies differ, and Resend answers a changed body under a used key with
+409 `invalid_idempotent_request` rather than replaying the first answer.
+
+**The cron logs one line of counts** — `due · suppressed · sent · failed · deferred · held · retrying ·
+inflight` — and nothing else: no address, token, code or key (test M7).
+
+**The manual check on dev** (the orchestrator, after the Advisor has set both secrets): `db:migrate:dev`
+(0004), `deploy:dev`, save an offer on the dev page to `delivered+<label>@resend.dev`, wait for the cron
+after its `send_at`, and look in Resend's dashboard. Every dummy `@example.com` save stays `scheduled`.
+
+**Mutants on copies**: M5 imports a copy of `allowlist.js` with the check removed and shows M4 failing;
+M9b copies `src/worker/` and `data/` to a temporary directory, removes the claim's lease condition from
+`send-due.js` there, and shows M9 failing.
 
 ## Branding — the store's look, and where it departs
 
