@@ -1,5 +1,30 @@
+# Build output
 node_modules/
 dist/
-.wrangler/
-.DS_Store
 dist-dev/
+
+# Wrangler / Miniflare local state (its cache holds request location data)
+.wrangler/
+
+# ⛔ Local secrets. This repository is PUBLIC. Wrangler reads a Worker's local secrets from .dev.vars
+# (or .env); neither may ever be committed. Worker secrets are set by the operator's scripts, never in a file here.
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+
+# Vite's config timestamp files
+vite.config.*.timestamp-*
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
