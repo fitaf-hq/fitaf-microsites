@@ -74,3 +74,23 @@ Everything in rungs 1–4 stays green; the production build stays byte-identical
 
 Production sending · bounce and complaint webhooks (so a bounce marks the save; next rung) · the
 Mailchimp export · the redemption source.
+
+## 8. Amendment, 2026-09-27 (after the build) — retries must send an IDENTICAL body
+
+**Found by the builder**: each attempt minted a new `/confirm` token, so a retry's body differed from the first
+attempt's, and Resend answers a reused `Idempotency-Key` with a different body with 409
+`invalid_idempotent_request` instead of replaying the first response. A lost database write after an accepted
+send would then end `failed` with a dead link, and a transient error could burn the attempts early.
+
+**Ruled (orchestrator)**: the token is **derived, not drawn**: `base64url(HMAC-SHA-256(CONFIRM_TOKEN_KEY,
+"<save_id>:confirm"))`, where `CONFIRM_TOKEN_KEY` is a Worker secret (dev: set by `npm run secret:token-key:dev`,
+which pipes 32 random bytes straight into `wrangler secret put`, so no person or agent ever sees the value). Its
+hash is stored as before; **validity is still decided by the database** (state, expiry), not by the token. Every
+attempt for a message now carries a byte-identical body, so the fixed key `<save_id>:<kind>` replays correctly
+within Resend's 24-hour window, and a 409 `invalid_idempotent_request` can only mean a real defect: it is
+`failed` and counted. The `send_lease_until` claim stays as the guard between overlapping runs.
+
+Cases: **M10** two attempts for one message produce byte-identical request bodies and the same key · **M11** an
+accepted send whose database write is lost, then a retry → the replayed response marks it `sent` (stubbed
+replay) · **M12** mutant: a random token per attempt → M10 fails · **M13** no `CONFIRM_TOKEN_KEY` → the sender
+refuses to start (like a missing `MAIL_FROM`).
