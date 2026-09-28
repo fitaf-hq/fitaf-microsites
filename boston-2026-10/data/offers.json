@@ -1,0 +1,39 @@
+{
+  "status": "placeholder",
+  "status_note": "PLACEHOLDERS until the Owner approves the offers: no terms, no codes. Dates are calendar dates in America/New_York, inclusive at both ends. Exactly one `general` offer is current on any date (test S11b checks the file). The past offer exists so the expired paths (WELCOME_BACK, an expired /confirm token, the lapse) are reachable in development.",
+  "offers": [
+    {
+      "id": "event-past-placeholder",
+      "label": "[The offer]",
+      "applies_to": "event",
+      "valid_from": "2026-01-01",
+      "valid_to": "2026-06-30",
+      "code_mode": "shared",
+      "shared_code": "PLACEHOLDER"
+    },
+    {
+      "id": "event-boston-2026-10-placeholder",
+      "label": "[The offer]",
+      "applies_to": "event",
+      "valid_from": "2026-10-01",
+      "valid_to": "2026-11-30",
+      "code_mode": "unique"
+    },
+    {
+      "id": "general-a-placeholder",
+      "label": "[The offer]",
+      "applies_to": "general",
+      "valid_from": "2000-01-01",
+      "valid_to": "2026-12-31",
+      "code_mode": "unique"
+    },
+    {
+      "id": "general-b-placeholder",
+      "label": "[The offer]",
+      "applies_to": "general",
+      "valid_from": "2027-01-01",
+      "valid_to": "9999-12-31",
+      "code_mode": "unique"
+    }
+  ]
+}

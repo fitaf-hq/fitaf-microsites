@@ -19,6 +19,7 @@
     "db:migrate:dev": "wrangler d1 migrations apply fitaf-leads-dev --env dev --remote",
     "seed:dev": "node scripts/seed-dummy.mjs --remote",
     "purge:dev": "node scripts/purge.mjs --remote",
+    "erase:dev": "node scripts/erase.mjs --remote",
     "preview": "wrangler dev",
     "preview:dev": "npm run build:dev && wrangler dev --env dev",
     "cf:whoami": "wrangler whoami",

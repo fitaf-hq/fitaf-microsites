@@ -11,16 +11,16 @@
   // address; only deleting the Worker removed it. A replaced version must not stay reachable.
   "preview_urls": false,
 
-  // ⛔ The top level above is PRODUCTION and is deliberately unchanged by rung 3: no `main`, no
+  // ⛔ The top level above is PRODUCTION and is deliberately unchanged by rungs 3 and 4: no `main`, no
   // bindings, so `npm run deploy` still ships the rung-1 page and nothing else.
   "env": {
-    // Rung 3 (SPEC-rung3-lead-capture.md § 8): development only, dummy data only.
+    // Rungs 3–4 (SPEC-rung4-save-offer.md): development only, dummy data only.
     "dev": {
       "name": "fitaf-microsites-dev",
       // No per-version preview URLs here either (see the top level).
       "preview_urls": false,
       "main": "src/worker/index.js",
-      // Assets first; a request no asset matches (i.e. /api/*) reaches the Worker script.
+      // Assets first; a request no asset matches (/api/save, /confirm/*, /o/*) reaches the Worker script.
       "assets": { "directory": "./dist-dev", "binding": "ASSETS" },
       "d1_databases": [
         {
@@ -30,13 +30,19 @@
           "migrations_dir": "migrations"
         }
       ],
-      // The binding's period can only be 10 or 60 seconds (§ 2 asks for "per hour"; see README).
+      // The binding's period can only be 10 or 60 seconds (rung 3 asked for "per hour"; see README).
+      // Saves, and lookups (/confirm, /o), are limited separately, each 5 per 60 s per IP.
       "ratelimits": [
-        { "name": "CLAIM_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } }
+        { "name": "SAVE_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } },
+        { "name": "LOOKUP_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 5, "period": 60 } }
       ],
+      // The scheduled Worker (SPEC-rung4 § 6): send what is due (a NULL sender this rung), lapse, purge.
+      "triggers": { "crons": ["*/5 * * * *"] },
       // Cloudflare's PUBLISHED Turnstile test keys (always pass, invisible widget). Not secrets.
       // Production will set TURNSTILE_SECRET_KEY with `wrangler secret put`, never here.
+      // SITE_URL: the dev Worker's public address, for the links inside E1 and E-X.
       "vars": {
+        "SITE_URL": "https://fitaf-microsites-dev.fitaf-microsite-boston-2026-10.workers.dev",
         "TURNSTILE_SITE_KEY": "1x00000000000000000000BB",
         "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA"
       },

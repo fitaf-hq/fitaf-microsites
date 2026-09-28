@@ -1,36 +1,31 @@
-// The purge (SPEC-rung3 § 4): for every claim whose export_state = 'exported', delete its `contacts`
-// row and set 'purged'. The claims row remains; the offer code is then the only link (§ 5).
+// Step 3 of the scheduled Worker: the purge (flows/06 6.5; rung 3's, on rung 4's tables). For every save
+// whose state is 'exported', delete its `save_contacts` row and set 'purged'. The save row remains; the
+// offer code is then the only link. (`exported` is reached only by the seeder until the export rung.)
 //
-// Self-contained on purpose (no imports), so the C9 mutant can be a COPY of this file.
-// `db` is an adapter: { all(sql) -> rows, batch(sqls) } — a D1 binding (d1Adapter) or the wrangler
-// CLI (scripts/purge.mjs). Idempotent: if the UPDATE were lost after the DELETE, a rerun finishes it.
+// Self-contained on purpose (no imports), so a mutant can be a COPY of this file. `db` is the
+// { all(sql), batch(sqls) } adapter. Dry run by default. Idempotent: if the UPDATE were lost after the
+// DELETE, a rerun finishes it.
+
+const q = (s) => `'${String(s).replaceAll("'", "''")}'`;
 
 export const COUNT_SQL =
   "SELECT " +
-  "(SELECT COUNT(*) FROM claims WHERE export_state = 'exported') AS exported_claims, " +
-  "(SELECT COUNT(*) FROM contacts WHERE claim_id IN " +
-  "(SELECT claim_id FROM claims WHERE export_state = 'exported')) AS contacts_to_delete";
+  "(SELECT COUNT(*) FROM saves WHERE state = 'exported') AS exported_saves, " +
+  "(SELECT COUNT(*) FROM save_contacts WHERE save_id IN " +
+  "(SELECT save_id FROM saves WHERE state = 'exported')) AS contacts_to_delete";
 
-export const PURGE_SQL = [
-  "DELETE FROM contacts WHERE claim_id IN (SELECT claim_id FROM claims WHERE export_state = 'exported')",
-  "UPDATE claims SET export_state = 'purged' WHERE export_state = 'exported'",
+export const purgeSql = (now) => [
+  "DELETE FROM save_contacts WHERE save_id IN (SELECT save_id FROM saves WHERE state = 'exported')",
+  `UPDATE saves SET state = 'purged', state_at = ${q(now)} WHERE state = 'exported'`,
 ];
 
-export async function purge(db, { dryRun = true } = {}) {
+export async function purge(db, { dryRun = true, now = new Date().toISOString() } = {}) {
   const [counts] = await db.all(COUNT_SQL);
   const result = {
     dry_run: dryRun,
-    exported_claims: Number(counts.exported_claims),
+    exported_saves: Number(counts.exported_saves),
     contacts_to_delete: Number(counts.contacts_to_delete),
   };
-  if (!dryRun) await db.batch(PURGE_SQL);
+  if (!dryRun) await db.batch(purgeSql(now));
   return result;
-}
-
-/** A D1 binding as a purge adapter (the Worker, later; the tests, now). */
-export function d1Adapter(d1) {
-  return {
-    all: async (sql) => (await d1.prepare(sql).all()).results,
-    batch: async (sqls) => d1.batch(sqls.map((s) => d1.prepare(s))),
-  };
 }

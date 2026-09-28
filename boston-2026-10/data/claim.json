@@ -1,7 +1,0 @@
-{
-  "event_id": "boston-2026-10",
-  "api_path": "/api/claim",
-  "wording_version": "v0.2-draft",
-  "known_wording_versions": ["v0.2-draft"],
-  "wording_source": "consent/DRAFT.md § 1"
-}

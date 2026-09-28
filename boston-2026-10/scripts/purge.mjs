@@ -1,8 +1,8 @@
-// The purge (SPEC-rung3 § 4) against the dev database, through the wrangler CLI.
+// The purge (SPEC-rung4 § 6 step 3; rung 3's, on rung 4's tables) against the dev database, via the wrangler CLI.
 //   node scripts/purge.mjs [--dry-run | --apply] [--local | --remote]
 // DRY RUN BY DEFAULT: it prints counts only and deletes nothing. `--apply` deletes the contacts of
-// every exported claim and marks those claims purged. The logic is src/worker/purge.js, the same
-// module the Worker can call later.
+// every exported save and marks those saves purged. The logic is src/worker/purge.js, the same
+// module the scheduled Worker runs.
 import { purge } from "../src/worker/purge.js";
 import { cliAdapter, devDatabaseName, parseTarget } from "./d1-cli.mjs";
 
