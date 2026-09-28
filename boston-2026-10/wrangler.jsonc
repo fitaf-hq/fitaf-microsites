@@ -11,6 +11,10 @@
   // address; only deleting the Worker removed it. A replaced version must not stay reachable.
   "preview_urls": false,
 
+  // ⛔ Explicit: with custom domains present, wrangler DISABLES the workers.dev address unless told otherwise
+  // (observed 2026-09-27 on the first domain deploy). It stays on, so QR codes printed before the domain work.
+  "workers_dev": true,
+
   // The vanity domain (bought 2026-09-27, a zone in the same Fit AF account). Custom domains, so Cloudflare
   // manages the DNS record and the certificate. The workers.dev address keeps working.
   "routes": [
