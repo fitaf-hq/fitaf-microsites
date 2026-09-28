@@ -11,6 +11,7 @@ import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import events from "../data/events.json" with { type: "json" };
 import saveConfig from "../data/save.json" with { type: "json" };
 import { devConfig, ROOT } from "../build.mjs";
+import { tokenMinter } from "../src/worker/confirm-token.js";
 import { d1Adapter } from "../src/worker/d1-adapter.js";
 import { OFFERS } from "../src/worker/offers.js";
 import { sendDue } from "../src/worker/send-due.js";
@@ -27,6 +28,8 @@ export const FAR_ZIP = "10001";
 export const CODE_RE = /^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 export const ISO_RE = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/;
 export const PAST_OFFER_ID = "event-past-placeholder";
+/** Rung 5 § 8: a CONFIRM_TOKEN_KEY for tests only — public, and nothing real is keyed with it. */
+export const TEST_CONFIRM_TOKEN_KEY = "test-only-confirm-token-key-0000000000000";
 
 async function bundleWorker(main) {
   const out = await esbuild({ entryPoints: [main], bundle: true, format: "esm", write: false, logLevel: "silent" });
@@ -177,7 +180,13 @@ export async function runSendDue(db, { nowMs, sender, redemptions }) {
     now: new Date(nowMs).toISOString(),
     sender,
     redemptions,
-    context: { offers: OFFERS, events, siteUrl: vars.SITE_URL, unconfirmedDays: saveConfig.unconfirmed_expansion_days },
+    context: {
+      offers: OFFERS,
+      events,
+      siteUrl: vars.SITE_URL,
+      unconfirmedDays: saveConfig.unconfirmed_expansion_days,
+      mintToken: tokenMinter(TEST_CONFIRM_TOKEN_KEY),
+    },
   });
 }
 

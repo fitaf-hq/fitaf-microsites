@@ -8,6 +8,8 @@
 // ⚠ One 4xx is temporary: 409 `concurrent_idempotent_requests` ("another request … with the same
 // idempotency key is in progress … try again later"). Resend documents the error NAMES but not the
 // error body's shape; the name is read from a `name` field, and any 409 without it stays permanent.
+// 409 `invalid_idempotent_request` (the key reused with a different body) is `failed`: since the token is
+// derived (SPEC-rung5 § 8), every attempt's body is identical, so it can only mean a defect.
 //
 // ⛔ Nothing here logs, and nothing it returns carries the address, the body, the key or Resend's error text.
 

@@ -1,6 +1,7 @@
 // The scheduled Worker (SPEC-rung4 § 6): send what is due, then the lapse, then the purge. Counts only.
 import events from "../../data/events.json" with { type: "json" };
 import saveConfig from "../../data/save.json" with { type: "json" };
+import { tokenMinter } from "./confirm-token.js";
 import { d1Adapter } from "./d1-adapter.js";
 import { lapse } from "./lapse.js";
 import { OFFERS } from "./offers.js";
@@ -26,6 +27,8 @@ export async function runSchedule(env, { nowMs, sender, redemptions }) {
     events,
     siteUrl: env.SITE_URL,
     unconfirmedDays: saveConfig.unconfirmed_expansion_days,
+    // SPEC-rung5 § 8: the derived /confirm token. Without the key only a Sender that sends nothing can run.
+    mintToken: env.CONFIRM_TOKEN_KEY ? tokenMinter(env.CONFIRM_TOKEN_KEY) : undefined,
   };
   return {
     send: await sendDue(env.DB, { now, sender, redemptions, context }),

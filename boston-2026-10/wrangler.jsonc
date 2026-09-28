@@ -57,8 +57,9 @@
       // Production will set TURNSTILE_SECRET_KEY with `wrangler secret put`, never here.
       // SITE_URL: the dev Worker's public address, for the links inside E1 and E-X.
       // MAIL_FROM (rung 5): the sender address, public; ⬜ a PLACEHOLDER until the Owner names one.
-      // ⛔ RESEND_API_KEY and SEND_ALLOWLIST are Worker SECRETS, never here: the Advisor sets them with
-      // `npm run secret:resend:dev` and `npm run secret:allowlist:dev`. Without the key nothing is sent.
+      // ⛔ RESEND_API_KEY, SEND_ALLOWLIST and CONFIRM_TOKEN_KEY are Worker SECRETS, never here: the Advisor
+      // sets them with `npm run secret:resend:dev`, `secret:allowlist:dev` and `secret:token-key:dev`.
+      // Without the Resend key nothing is sent.
       "vars": {
         "SITE_URL": "https://fitaf-microsites-dev.fitaf-microsite-boston-2026-10.workers.dev",
         "MAIL_FROM": "Fit AF <offers@eatfitaf.com>",

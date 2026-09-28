@@ -8,6 +8,8 @@
 // ⛔ NullSender sends nothing and says "deferred", so the message stays `scheduled`. NullRedemptions knows
 // of no redemption (the order source is open), so nothing is suppressed.
 export class NullSender {
+  sendsNothing = true; // send-due builds no message (and mints no token) for it
+
   async send() {
     return "deferred";
   }

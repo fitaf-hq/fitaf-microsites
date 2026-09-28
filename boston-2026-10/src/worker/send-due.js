@@ -1,6 +1,8 @@
 // Step 1 of the scheduled Worker (SPEC-rung4 § 6; the outcomes of SPEC-rung5 § 1): send what is due.
-// Codes already redeemed are suppressed; the rest go to the Sender. A /confirm token is minted per message
-// that carries a confirmation link, and its hash is stored only once the Sender accepts the message.
+// Codes already redeemed are suppressed; the rest go to the Sender. A message that carries a confirmation
+// link gets its /confirm token from `context.mintToken(save_id)` — DERIVED from the save id (SPEC-rung5 § 8,
+// confirm-token.js), so every attempt sends the same body — and its hash is stored only once the Sender
+// accepts the message. A Sender that `sendsNothing` (NullSender) is never handed a message.
 //
 // Each due message is first CLAIMED (a lease in `send_lease_until`), and every outcome clears the claim.
 // A run that finds a message already claimed skips it (`inflight`): a message whose request is in flight
@@ -11,7 +13,7 @@
 // deferred (NullSender) -> untouched, still `scheduled`. ⛔ A `failed` or `sent` message is never selected
 // again, so it can never be re-sent (to any address). Returns counts only.
 import { e1, ex } from "./messages.js";
-import { tokenHash, newToken } from "./token.js";
+import { tokenHash } from "./token.js";
 
 export const MAX_SEND_ATTEMPTS = 5;
 export const SEND_LEASE_MS = 15 * 60 * 1000; // longer than a cron interval (5 min) and a request's timeout
@@ -61,7 +63,13 @@ async function claim(db, row, now, nowMs) {
 
 /** Send one claimed message; returns the name of the count it adds to. */
 async function sendOne(db, row, { now, sender, context }) {
-  const token = row.kind === "expansion" || row.consent_marketing === 1 ? newToken() : null;
+  if (sender.sendsNothing) {
+    await db.prepare(RELEASE_SQL).bind(row.save_id).run(); // rung 4's NullSender: nothing changes
+    return "deferred";
+  }
+  const needsToken = row.kind === "expansion" || row.consent_marketing === 1;
+  if (needsToken && !context.mintToken) throw new Error("a message needs a /confirm token and no key is set");
+  const token = needsToken ? await context.mintToken(row.save_id) : null;
   const { outcome, providerMessageId } = normalise(
     await sender.send({ ...messageFor(row, token, context), saveId: row.save_id }),
   );
@@ -85,7 +93,8 @@ async function sendOne(db, row, { now, sender, context }) {
 }
 
 /**
- * `db` is a D1 binding; `now` an ISO UTC string. `context` = { offers, events, siteUrl, unconfirmedDays }.
+ * `db` is a D1 binding; `now` an ISO UTC string.
+ * `context` = { offers, events, siteUrl, unconfirmedDays, mintToken } (`mintToken`: confirm-token.js).
  */
 export async function sendDue(db, { now, sender, redemptions, context }) {
   const nowMs = Date.parse(now);

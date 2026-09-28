@@ -1,12 +1,15 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import * as allowlist from "../src/worker/allowlist.js";
-import { rows, startWorker } from "./worker-harness.mjs";
+import { rows, startWorker, TEST_CONFIRM_TOKEN_KEY } from "./worker-harness.mjs";
 import { assertHeld, DUMMY_KEY, MINUTE_MS, saveOffers } from "./rung5-fixture.mjs";
 
 const direct = await startWorker();
 // The real scheduled() handler with the key set and NO allowlist: nothing may be requested.
-const unset = await startWorker({ bindings: { RESEND_API_KEY: DUMMY_KEY }, resend: () => Response.json({ id: "x" }) });
+const unset = await startWorker({
+  bindings: { RESEND_API_KEY: DUMMY_KEY, CONFIRM_TOKEN_KEY: TEST_CONFIRM_TOKEN_KEY },
+  resend: () => Response.json({ id: "x" }),
+});
 after(() => Promise.all([direct.mf.dispose(), unset.mf.dispose()]));
 
 test("M4: a recipient not on the allowlist, or the allowlist unset or empty -> held: no request, stays `scheduled`", async () => {

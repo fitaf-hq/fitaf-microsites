@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { AllowlistSender } from "../src/worker/allowlist.js";
 import { chooseSender } from "../src/worker/choose-sender.js";
 import { NullSender } from "../src/worker/senders.js";
-import { dumpAllTables, startWorker } from "./worker-harness.mjs";
+import { dumpAllTables, startWorker, TEST_CONFIRM_TOKEN_KEY } from "./worker-harness.mjs";
 import { DUMMY_KEY, MAIL_FROM, MINUTE_MS, saveOffers } from "./rung5-fixture.mjs";
 
 // No RESEND_API_KEY — but an allowlist that would allow the recipient, so only the missing key stops it.
@@ -17,9 +17,10 @@ test("M6: no key -> NullSender is used; nothing requested", async () => {
   for (const env of [{}, { RESEND_API_KEY: "" }, { SEND_ALLOWLIST: "@example.com", MAIL_FROM }]) {
     assert.ok(chooseSender(env) instanceof NullSender, `no key in ${JSON.stringify(Object.keys(env))}`);
   }
-  const chosen = chooseSender({ RESEND_API_KEY: DUMMY_KEY, MAIL_FROM, SEND_ALLOWLIST: "" });
+  const withKey = { RESEND_API_KEY: DUMMY_KEY, CONFIRM_TOKEN_KEY: TEST_CONFIRM_TOKEN_KEY };
+  const chosen = chooseSender({ ...withKey, MAIL_FROM, SEND_ALLOWLIST: "" });
   assert.ok(chosen instanceof AllowlistSender, "control: a key chooses Resend, behind the allowlist");
-  assert.throws(() => chooseSender({ RESEND_API_KEY: DUMMY_KEY }), /MAIL_FROM/, "a key without a sender address fails loudly");
+  assert.throws(() => chooseSender(withKey), /MAIL_FROM/, "a key without a sender address fails loudly");
 
   const nowMs = await saveOffers(mf, db, ["dummy-m6@example.com"]);
   const before = await dumpAllTables(db);

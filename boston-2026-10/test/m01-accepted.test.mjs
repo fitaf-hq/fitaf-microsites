@@ -2,13 +2,13 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { RESEND_URL, USER_AGENT } from "../src/worker/resend-sender.js";
 import { tokenHash } from "../src/worker/token.js";
-import { linkIn, startWorker } from "./worker-harness.mjs";
+import { linkIn, startWorker, TEST_CONFIRM_TOKEN_KEY } from "./worker-harness.mjs";
 import { DELIVERED, DUMMY_KEY, MAIL_FROM, MINUTE_MS, saveOffers, saveRow } from "./rung5-fixture.mjs";
 
 const RESEND_ID = "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794"; // the id in Resend's documented example response
 const resendRequests = [];
 const { mf, db, outbound } = await startWorker({
-  bindings: { RESEND_API_KEY: DUMMY_KEY, SEND_ALLOWLIST: "@resend.dev" },
+  bindings: { RESEND_API_KEY: DUMMY_KEY, SEND_ALLOWLIST: "@resend.dev", CONFIRM_TOKEN_KEY: TEST_CONFIRM_TOKEN_KEY },
   resend: async (request) => {
     resendRequests.push({ method: request.method, headers: Object.fromEntries(request.headers), body: await request.json() });
     return Response.json({ id: RESEND_ID });

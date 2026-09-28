@@ -4,7 +4,7 @@ import worker from "../src/worker/index.js";
 import { chooseSender } from "../src/worker/choose-sender.js";
 import { runSchedule } from "../src/worker/scheduled.js";
 import { NullRedemptions } from "../src/worker/senders.js";
-import { NEAR_ZIP, postSave, rows, startWorker, validSave } from "./worker-harness.mjs";
+import { NEAR_ZIP, postSave, rows, startWorker, TEST_CONFIRM_TOKEN_KEY, validSave } from "./worker-harness.mjs";
 import { DUMMY_KEY, MAIL_FROM, MINUTE_MS, saveOffers } from "./rung5-fixture.mjs";
 
 const { mf, db, vars } = await startWorker();
@@ -45,7 +45,14 @@ test("M7: logs and the handler's return -> counts only: no address, token, code 
   const lines = [];
   const saved = Object.fromEntries(CONSOLE.map((m) => [m, console[m]]));
   for (const m of CONSOLE) console[m] = (...args) => lines.push(args.map(String).join(" "));
-  const env = { DB: db, SITE_URL: vars.SITE_URL, RESEND_API_KEY: DUMMY_KEY, SEND_ALLOWLIST: "@resend.dev", MAIL_FROM };
+  const env = {
+    DB: db,
+    SITE_URL: vars.SITE_URL,
+    RESEND_API_KEY: DUMMY_KEY,
+    SEND_ALLOWLIST: "@resend.dev",
+    MAIL_FROM,
+    CONFIRM_TOKEN_KEY: TEST_CONFIRM_TOKEN_KEY,
+  };
   let returned;
   try {
     // The real handler (index.js), in Node, with the key set: what it logs is what Cloudflare would keep.
@@ -75,7 +82,7 @@ test("M7: logs and the handler's return -> counts only: no address, token, code 
   assert.equal(tokens.length, requests.length, "control: every request carried a minted token");
   const codes = (await rows(db, "SELECT offer_code FROM saves WHERE offer_code IS NOT NULL")).map((r) => r.offer_code);
   const addresses = (await rows(db, "SELECT email FROM save_contacts")).map((r) => r.email);
-  const secrets = [DUMMY_KEY, ...tokens, ...codes, ...codes.map((c) => `${c.slice(0, 4)}-${c.slice(4)}`), ...addresses];
+  const secrets = [DUMMY_KEY, TEST_CONFIRM_TOKEN_KEY, ...tokens, ...codes, ...codes.map((c) => `${c.slice(0, 4)}-${c.slice(4)}`), ...addresses];
   assert.ok(codes.length === 4 && addresses.length === 5, "control: the forbidden values were collected");
   const said = [...lines, JSON.stringify(returned)].join("\n");
   for (const secret of secrets) assert.ok(!said.includes(secret), "a forbidden value appears in a log line or the return");

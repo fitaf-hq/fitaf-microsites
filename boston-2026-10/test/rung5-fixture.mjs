@@ -8,7 +8,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
 import { ResendSender } from "../src/worker/resend-sender.js";
-import { postSave, rows, runSendDue, validSave, FixedRedemptions } from "./worker-harness.mjs";
+import { tokenMinter } from "../src/worker/confirm-token.js";
+import { postSave, rows, runSendDue, validSave, FixedRedemptions, TEST_CONFIRM_TOKEN_KEY } from "./worker-harness.mjs";
 
 export const DUMMY_KEY = "re_DUMMY_KEY_FOR_TESTS_ONLY"; // not a key: nothing it is sent to exists
 export const MAIL_FROM = "Fit AF <offers@eatfitaf.com>"; // the committed placeholder
@@ -20,7 +21,7 @@ export const MINUTE_MS = 60_000;
 export function stubFetch(respond) {
   const calls = [];
   const fetch = async (url, init) => {
-    const call = { url, method: init.method, headers: { ...init.headers }, body: JSON.parse(init.body) };
+    const call = { url, method: init.method, headers: { ...init.headers }, raw: init.body, body: JSON.parse(init.body) };
     calls.push(call);
     return respond(call, calls.length);
   };
@@ -122,7 +123,7 @@ export async function writeTreeMutant(file, from, to) {
 // ---- M9: a run while a previous run's send is in flight ----
 
 /** Calls a `sendDue` (the real one, or a mutant's) as the cron would, at `nowMs`. */
-export async function callSendDue(sendDue, db, nowMs, sender) {
+export async function callSendDue(sendDue, db, nowMs, sender, mintToken = tokenMinter(TEST_CONFIRM_TOKEN_KEY)) {
   const { devConfig } = await import("../build.mjs");
   const { OFFERS } = await import("../src/worker/offers.js");
   const events = (await import("../data/events.json", { with: { type: "json" } })).default;
@@ -132,7 +133,13 @@ export async function callSendDue(sendDue, db, nowMs, sender) {
     now: new Date(nowMs).toISOString(),
     sender,
     redemptions: new FixedRedemptions(),
-    context: { offers: OFFERS, events, siteUrl: vars.SITE_URL, unconfirmedDays: saveConfig.unconfirmed_expansion_days },
+    context: {
+      offers: OFFERS,
+      events,
+      siteUrl: vars.SITE_URL,
+      unconfirmedDays: saveConfig.unconfirmed_expansion_days,
+      mintToken,
+    },
   });
 }
 
@@ -170,4 +177,57 @@ export async function assertOneRequestWhileInFlight(sendDue, { mf, db }) {
   assert.equal(row.send_attempts, 1);
   assert.equal(row.send_lease_until, null);
   assert.equal(stub.calls.length, 1, "one request in all");
+}
+
+// ---- M10 / M12: two attempts for one message, given a confirm-token module (the real one or a mutant) ----
+
+/**
+ * M10's assertions: a message's first attempt meets a 500 and its second is accepted; the two requests carry
+ * byte-identical bodies and the same Idempotency-Key — for a ticked E1 and an E-X, both of which carry a
+ * /confirm token. Throws AssertionError if not.
+ */
+export async function assertIdenticalAttempts(confirmTokenModule, { mf, db }) {
+  const { sendDue } = await import("../src/worker/send-due.js");
+  const { NEAR_ZIP } = await import("./worker-harness.mjs");
+  const e1To = DELIVERED.replace("@", "+m10-e1@");
+  const exTo = DELIVERED.replace("@", "+m10-ex@");
+  const nowMs = await saveOffers(mf, db, [e1To], { consent_marketing: true });
+  await postSave(mf, validSave({ kind: "expansion", email: exTo, zip: NEAR_ZIP }));
+  const firstFails = new Map();
+  const stub = stubFetch((call) => {
+    const to = call.body.to[0];
+    if (!firstFails.has(to)) {
+      firstFails.set(to, true);
+      return status(500, "application_error")();
+    }
+    return Response.json({ id: `m10-${to}` });
+  });
+  const sender = resendSender(stub.fetch);
+  const mintToken = confirmTokenModule.tokenMinter(TEST_CONFIRM_TOKEN_KEY);
+  assert.equal((await callSendDue(sendDue, db, nowMs, sender, mintToken)).retrying, 2, "control: both first attempts retry");
+  assert.equal((await callSendDue(sendDue, db, nowMs + 5 * MINUTE_MS, sender, mintToken)).sent, 2, "control: both second attempts are accepted");
+  for (const to of [e1To, exTo]) {
+    const attempts = stub.calls.filter((c) => c.body.to[0] === to);
+    assert.equal(attempts.length, 2, "control: two attempts");
+    assert.ok(/\/confirm\//.test(attempts[0].body.text), "control: the message carries a /confirm token");
+    assert.equal(attempts[1].headers["Idempotency-Key"], attempts[0].headers["Idempotency-Key"], "the same key");
+    assert.equal(attempts[1].raw, attempts[0].raw, "two attempts, byte-identical request bodies");
+  }
+}
+
+/** A stub of Resend's documented idempotency: same key + same body replays; a changed body is a 409. */
+export function idempotentResend() {
+  const seen = new Map();
+  let delivered = 0;
+  const stub = stubFetch((call) => {
+    const key = call.headers["Idempotency-Key"];
+    const earlier = seen.get(key);
+    if (earlier && earlier.raw !== call.raw) return status(409, "invalid_idempotent_request")();
+    if (earlier) return Response.json({ id: earlier.id }); // "the same response, without … sending the email again"
+    const id = `m11-${seen.size + 1}`;
+    seen.set(key, { raw: call.raw, id });
+    delivered++;
+    return Response.json({ id });
+  });
+  return { ...stub, delivered: () => delivered };
 }
