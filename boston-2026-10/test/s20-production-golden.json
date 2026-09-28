@@ -1,6 +1,6 @@
 {
   "about": "SHA-256 of every file `npm run build` writes to dist/, recorded from the production build at built_from, before rung 4. S20 rebuilds and compares. Regenerate only when production is MEANT to change, and say so in the commit.",
-  "built_from": "fa16765 + main 6764c24/93b8ca3 (eatfitaf.com: the demo QR re-encoded; only qr/demo.png and qr/demo.svg changed, verified by decoding)",
+  "built_from": "dd252ad + main d4bb74a/53ab88e (eatfitaf.com: the demo QR re-encoded; only qr/demo.png and qr/demo.svg changed, verified by decoding)",
   "files": {
     "assets/fitaf-logo.png": "e51500f85fee09c3a5762e82cd3812ac824fa81378478035a94ab91e5de94ef0",
     "fonts/open-sans-latin-400-normal.woff2": "0e44026ad31376af1b56593cd4acb4f353f8e8789c51759e18f64578e4ef296a",
