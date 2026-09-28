@@ -39,6 +39,6 @@ test("S12: the cron with NullSender -> nothing sent; each message stays `schedul
     redemptions: new NullRedemptions(),
   });
   assertCountsOnly(result);
-  assert.deepEqual(result.send, { due: 3, suppressed: 0, sent: 0, failed: 0, deferred: 3 });
+  assert.deepEqual(result.send, { due: 3, suppressed: 0, sent: 0, failed: 0, deferred: 3, held: 0, retrying: 0, inflight: 0 });
   assert.equal((await dumpAllTables(db)).text, before.text);
 });

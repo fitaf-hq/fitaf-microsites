@@ -42,7 +42,7 @@ test("S13: the cron with RecordingSender and one redeemed code -> that one suppr
   const sender = new RecordingSender();
   const redemptions = new FixedRedemptions([redeemedCode]);
   const counts = await runSendDue(db, { nowMs: latest + 1000, sender, redemptions });
-  assert.deepEqual(counts, { due: 4, suppressed: 1, sent: 3, failed: 0, deferred: 0 });
+  assert.deepEqual(counts, { due: 4, suppressed: 1, sent: 3, failed: 0, deferred: 0, held: 0, retrying: 0, inflight: 0 });
   assert.equal(redemptions.asked.length, 1, "one question to the order source");
   assert.equal(redemptions.asked[0].length, 3, "by code: the three offer codes, nothing else");
   assert.ok(redemptions.asked[0].every((c) => /^[A-Z0-9]{8}$/.test(c)), "codes only — no address crosses");

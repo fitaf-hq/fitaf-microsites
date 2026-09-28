@@ -1,18 +1,19 @@
-// The rung-4 Worker (SPEC-rung4-save-offer.md §§ 3, 5, 6). Static assets are served first; only a request
-// no asset matches reaches this script: POST /api/save, /confirm/<token>, /o/<code>. And one scheduled
-// handler (the cron): send what is due, the lapse, the purge.
+// The rung-4 Worker (SPEC-rung4-save-offer.md §§ 3, 5, 6; its sender, SPEC-rung5-sending.md). Static
+// assets are served first; only a request no asset matches reaches this script: POST /api/save,
+// /confirm/<token>, /o/<code>. And one scheduled handler (the cron): send what is due, the lapse, the purge.
 //
 // ⛔ /api/save returns { ok: true } only — never a code, a stored value or an id, new save or repeat.
 // ⛔ The IP (CF-Connecting-IP) is used as the rate-limit key and nothing else: not stored, not logged,
-//    not sent to Turnstile. The /confirm token is never logged.
+//    not sent to Turnstile. The /confirm token is never logged; the cron logs counts only (rung 5 M7).
 import saveConfig from "../../data/save.json" with { type: "json" };
 import { handleConfirm } from "./confirm.js";
 import { offerForSave } from "./offers.js";
 import { htmlResponse, TOO_MANY } from "./pages.js";
 import { handleOffer } from "./redeem.js";
 import { upsertSave } from "./save-store.js";
+import { chooseSender } from "./choose-sender.js";
 import { runSchedule } from "./scheduled.js";
-import { NullRedemptions, NullSender } from "./senders.js";
+import { NullRedemptions } from "./senders.js";
 import { turnstilePasses } from "./turnstile.js";
 import { SaveError, validateSave } from "./validate-save.js";
 import { nextDayAt, zonedDate } from "./zoned-time.js";
@@ -87,7 +88,7 @@ export default {
   async scheduled(controller, env, ctx) {
     const counts = await runSchedule(env, {
       nowMs: controller.scheduledTime,
-      sender: new NullSender(),
+      sender: chooseSender(env), // RESEND_API_KEY set -> Resend behind SEND_ALLOWLIST; else NullSender
       redemptions: new NullRedemptions(),
     });
     console.log(JSON.stringify(counts)); // counts only

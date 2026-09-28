@@ -20,6 +20,8 @@
     "seed:dev": "node scripts/seed-dummy.mjs --remote",
     "purge:dev": "node scripts/purge.mjs --remote",
     "erase:dev": "node scripts/erase.mjs --remote",
+    "secret:resend:dev": "wrangler secret put RESEND_API_KEY --env dev",
+    "secret:allowlist:dev": "wrangler secret put SEND_ALLOWLIST --env dev",
     "preview": "wrangler dev",
     "preview:dev": "npm run build:dev && wrangler dev --env dev",
     "cf:whoami": "wrangler whoami",

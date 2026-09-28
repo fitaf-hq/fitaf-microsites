@@ -14,6 +14,7 @@ import { devConfig, ROOT } from "../build.mjs";
 import { d1Adapter } from "../src/worker/d1-adapter.js";
 import { OFFERS } from "../src/worker/offers.js";
 import { sendDue } from "../src/worker/send-due.js";
+import { RESEND_URL } from "../src/worker/resend-sender.js";
 import { SITEVERIFY_URL } from "../src/worker/turnstile.js";
 
 export const WORKER_DIR = join(ROOT, "src", "worker");
@@ -49,8 +50,12 @@ export async function applyMigrations(db, dir) {
   return files;
 }
 
-/** A fresh Worker + empty migrated D1. `outbound` records every outbound request the Worker made. */
-export async function startWorker() {
+/**
+ * A fresh Worker + empty migrated D1. `outbound` records every outbound request the Worker made.
+ * Rung 5: `bindings` adds to (or overrides) the dev vars — e.g. a DUMMY RESEND_API_KEY, SEND_ALLOWLIST —
+ * and `resend(request)` answers requests to Resend's API in place of the network (else they get the 599).
+ */
+export async function startWorker({ bindings = {}, resend } = {}) {
   const cfg = await devConfig();
   const [d1] = cfg.d1_databases;
   const outbound = [];
@@ -63,10 +68,11 @@ export async function startWorker() {
     ratelimits: Object.fromEntries(
       cfg.ratelimits.map((r) => [r.name, { namespace_id: r.namespace_id, simple: r.simple }]),
     ),
-    bindings: cfg.vars,
+    bindings: { ...cfg.vars, ...bindings },
     outboundService: async (request) => {
       const body = await request.clone().text();
       outbound.push({ url: request.url, body, headers: Object.fromEntries(request.headers) });
+      if (resend && request.url === RESEND_URL) return resend(request);
       if (request.url !== SITEVERIFY_URL) return new Response("no outbound in tests", { status: 599 });
       const form = await request.formData();
       const success =

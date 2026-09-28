@@ -29,6 +29,8 @@ test("S1: a valid offer save -> 200 {ok:true}; one saves + one save_contacts row
       offer_id: offerForSave(zonedDate(Date.parse(save.created_at), ZONE)).id,
       ring: "in", reissued_from: null, created_at: "·", send_at: "·",
       message_state: "scheduled", state: "saved", state_at: "·",
+      // rung 5 (0004_sending.sql): nothing requested yet, no provider id, no claim
+      send_attempts: 0, provider_message_id: null, send_lease_until: null,
     },
   );
   assert.equal(save.state_at, save.created_at);
