@@ -1,6 +1,9 @@
 {
-  // Cloudflare deploy config for this microsite: a static-assets Worker serving dist/.
-  // The account is chosen by CLOUDFLARE_ACCOUNT_ID at deploy time, never stored here (public repo).
+  // Wrangler config for this microsite: a static-assets Worker serving dist/.
+  // ⛔ Since 2026-09-29 nothing here is DEPLOYED by wrangler: both Workers and their secrets are managed as
+  // infrastructure as code, applied by CI, which MIRRORS these settings (README, "Deploys are not run from
+  // here"). This file drives local preview and `db:migrate:dev` only; a change here reaches nothing live
+  // until it is mirrored there. The account is chosen by CLOUDFLARE_ACCOUNT_ID, never stored here (public repo).
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fitaf-microsites",
   "compatibility_date": "2026-09-26",
@@ -23,7 +26,7 @@
   ],
 
   // ⛔ The top level above is PRODUCTION and is deliberately unchanged by rungs 3 and 4: no `main`, no
-  // bindings, so `npm run deploy` still ships the rung-1 page and nothing else.
+  // bindings, so the production build is still the rung-1 page and nothing else.
   "env": {
     // Rungs 3–4 (SPEC-rung4-save-offer.md): development only, dummy data only.
     "dev": {
@@ -54,11 +57,11 @@
       // set, rung 5; otherwise the NULL sender), lapse, purge.
       "triggers": { "crons": ["*/5 * * * *"] },
       // Cloudflare's PUBLISHED Turnstile test keys (always pass, invisible widget). Not secrets.
-      // Production will set TURNSTILE_SECRET_KEY with `wrangler secret put`, never here.
+      // Production will set TURNSTILE_SECRET_KEY as a secret in the infrastructure code, never here.
       // SITE_URL: the dev Worker's public address, for the links inside E1 and E-X.
       // MAIL_FROM (rung 5): the sender address, public; ⬜ a PLACEHOLDER until the Owner names one.
-      // ⛔ RESEND_API_KEY, SEND_ALLOWLIST and CONFIRM_TOKEN_KEY are Worker SECRETS, never here: the Advisor
-      // sets them with `npm run secret:resend:dev`, `secret:allowlist:dev` and `secret:token-key:dev`.
+      // ⛔ RESEND_API_KEY, SEND_ALLOWLIST and CONFIRM_TOKEN_KEY are Worker SECRETS, never here: the
+      // infrastructure code sets them (the `secret:*` scripts that did are retired, 2026-09-29).
       // Without the Resend key nothing is sent.
       "vars": {
         "SITE_URL": "https://fitaf-microsites-dev.fitaf-microsite-boston-2026-10.workers.dev",
