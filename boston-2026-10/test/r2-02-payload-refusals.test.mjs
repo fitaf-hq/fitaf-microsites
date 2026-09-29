@@ -1,6 +1,6 @@
-// R2-02: every malformed payload is refused, by both fills, changing nothing: the fragment is removed, there is no
-// navigation, no press, no storage change, and the diagnostic names THIS case's reason (so each case proves its own
-// check, not a later one that happens to catch it too). The grammar is payload version 2 (SPEC-rung2 § 11 item 1):
+// R2-02: every malformed payload is refused by fill B, changing nothing: the fragment is removed, there is no
+// navigation, no press, and the diagnostic names THIS case's reason (so each case proves its own check, not a later
+// one that happens to catch it too). The grammar is payload version 2 (SPEC-rung2 § 11 item 1):
 // `2.<meal>[.<meal>…][.~<code>]`, each `<meal>` a 5-character base-36 key, or `<key>*<n>` with n from 2 to 21, the code
 // `[A-Za-z0-9-]{1,40}`. R2-27 is the contract's own short list of these; this is the whole grammar.
 import test from "node:test";
@@ -8,8 +8,6 @@ import assert from "node:assert/strict";
 import {
   assertCheckedOut,
   assertRefused,
-  CART_KEY,
-  FakeStorage,
   fakeWindow,
   orderPage,
   rawFragment,
@@ -58,18 +56,7 @@ const CASES = [
   ["two codes", rawFragment(`${valid}.~A.~B`), badMeal("~A")],
 ];
 
-const VISITOR_CART = JSON.stringify([{ localId: "36688", name: "a visitor's own line" }]);
-
 for (const [label, fragment, reason] of CASES) {
-  test(`R2-02 fill A refuses: ${label}`, async () => {
-    const storage = new FakeStorage({ [CART_KEY]: VISITOR_CART });
-    const before = storage.dump();
-    const h = fakeWindow({ fragment, storage });
-    run(await script("A"), h.window);
-    assertRefused(h, "/order?mpid=21", reason);
-    assert.equal(storage.dump(), before, "storage unchanged");
-  });
-
   test(`R2-02 fill B refuses: ${label}`, async () => {
     const page = await orderPage();
     const h = fakeWindow({ fragment, document: page.document });
@@ -80,12 +67,8 @@ for (const [label, fragment, reason] of CASES) {
   });
 }
 
-test("R2-02 control: the valid payload the cases are mutated from is read by both fills", async () => {
+test("R2-02 control: the valid payload the cases are mutated from is read by fill B", async () => {
   for (const fragment of [rawFragment(valid), rawFragment(`${valid}.~BOSTON-26`), rawFragment(`${valid}.~${"A".repeat(40)}`)]) {
-    // Fill A reads it, and stops only at its own product-id check (R2-06): the payload itself passed.
-    const a = fakeWindow({ fragment });
-    run(await script("A"), a.window);
-    assertRefused(a, "/order?mpid=21", new RegExp(`stopped: no product id: ${B}$`));
     const page = await orderPage();
     const b = fakeWindow({ fragment, page });
     run(await script("B"), b.window);

@@ -1,7 +1,7 @@
-// R2-11: the size rule, enforced BY THE BUILD on every file it writes: the Footer block, which carries ONLY the fill the
-// source's FILL names, and one console file per fill for the one-browser run. § 3's "under 5 KB" became, by the
-// Advisor's ruling (SPEC-rung2 § 11 item 5), a TARGET of 5,120 bytes the build warns above and a CEILING of 10,240 it
-// refuses above, over each whole file. Each file is self-contained and holds one fill's code, not both. The ceiling is
+// R2-11: the size rule, enforced BY THE BUILD on every file it writes: the Footer block and fill B's console file for
+// the one-browser run (fill B is the one fill: SPEC-rung2 § 12). § 3's "under 5 KB" became, by the Advisor's ruling
+// (§ 11 item 5), a TARGET of 5,120 bytes the build warns above and a CEILING of 10,240 it refuses above, over each whole
+// file. Each file is self-contained and carries none of retired fill A's code (R2-31 names the set). The ceiling is
 // shown to fire (R2-11c); R2-29 pins both limits at their edges.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -11,8 +11,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildStorefront, MAX_SHIPPED_BYTES, STOREFRONT_SOURCE, TARGET_SHIPPED_BYTES } from "../scripts/build-storefront.mjs";
 
-const FILES = ["fitaf-handoff.fill-A.console.js", "fitaf-handoff.fill-B.console.js", "fitaf-handoff.html"];
-/** Code that exists only in one fill: its presence in the other fill's file means the strip failed. */
+const FILES = ["fitaf-handoff.fill-B.console.js", "fitaf-handoff.html"];
+/** Code that exists only in one fill: B's must be in every file; A's (retired, § 12) in none. */
 const ONLY_IN = {
   A: [/hmp_local_cart/, /localStorage/, /function fillA/, /10538/, /productId/],
   B: [/app-product-card/, /\.click\(/, /setTimeout/, /function fillB/, /Add to Cart/, /function mealKey/],
@@ -29,7 +29,7 @@ async function withBuild(fn, options = {}) {
   }
 }
 
-test("R2-11a: build:storefront writes exactly three files, each within 10,240 bytes; a warning for each over 5,120", async () => {
+test("R2-11a: build:storefront writes exactly two files, each within 10,240 bytes; a warning for each over 5,120", async () => {
   assert.equal(TARGET_SHIPPED_BYTES, 5120);
   assert.equal(MAX_SHIPPED_BYTES, 10240);
   await withBuild(async ({ built, out }) => {
@@ -48,11 +48,10 @@ test("R2-11a: build:storefront writes exactly three files, each within 10,240 by
 test("R2-11b: each file holds one fill only, is self-contained, and names nothing that sends or loads", async () => {
   await withBuild(async ({ read }) => {
     const files = {
-      A: await read("fitaf-handoff.fill-A.console.js"),
       B: await read("fitaf-handoff.fill-B.console.js"),
       footer: await read("fitaf-handoff.html"),
     };
-    const fillOf = { A: "A", B: "B", footer: "B" }; // the committed source's FILL is B
+    const fillOf = { B: "B", footer: "B" }; // the committed source's FILL is B, the one fill
     for (const [label, text] of Object.entries(files)) {
       const own = fillOf[label];
       const other = own === "A" ? "B" : "A";

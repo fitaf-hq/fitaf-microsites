@@ -50,14 +50,12 @@ function throwingWindow(hash) {
 // Hashes an ordinary visitor (or the store itself) may carry; none begins "#fitaf=".
 const ORDINARY = ["", "#", "#lean-7", "#fitaf", "#FITAF=eyJ2IjoxfQ", "#xfitaf=eyJ2IjoxfQ", "#top#fitaf=eyJ2IjoxfQ"];
 
-for (const fill of ["A", "B"]) {
-  for (const hash of ORDINARY) {
-    test(`R2-04 fill ${fill}, hash ${JSON.stringify(hash)}: one read of location.hash, then return`, async () => {
-      const { window, touched } = throwingWindow(hash);
-      run(await script(fill), window);
-      assert.deepEqual(touched, ["location", "location.hash"]);
-    });
-  }
+for (const hash of ORDINARY) {
+  test(`R2-04 fill B, hash ${JSON.stringify(hash)}: one read of location.hash, then return`, async () => {
+    const { window, touched } = throwingWindow(hash);
+    run(await script("B"), window);
+    assert.deepEqual(touched, ["location", "location.hash"]);
+  });
 }
 
 for (const api of NAMED) {

@@ -1,9 +1,8 @@
 // R2-14: the full-plan rule. The store's order page will not check out short of the plan's weekly count
 // ("Please add at least 7 meals to continue" — the one-browser run, 2026-09-29, fill B, mpid 21: 2 of 7 were
 // added, /checkout opened, and the checkout failed). So the sum of the payload's counts must EQUAL the plan's
-// meals_per_week in data/plans.json, or the payload is refused before any press or write, by both fills. The plan is
-// the page's own ?mpid= (payload version 2, SPEC-rung2 § 11). Fill A then refuses every v2 link for its own reason, no
-// product id (R2-06): so where a count passes, A's stop is that one, never the count's.
+// meals_per_week in data/plans.json, or the payload is refused before any press, by fill B, and a visitor's own cart is
+// left as it was. The plan is the page's own ?mpid= (payload version 2, SPEC-rung2 § 11).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -19,7 +18,6 @@ import {
   fragmentFor,
   MEALS,
   orderPage,
-  refKey,
   run,
   script,
 } from "./r2-harness.mjs";
@@ -41,34 +39,27 @@ async function outcome(fill, p) {
   return { h, path, page, written: storage.dump() !== before };
 }
 
-for (const fill of ["A", "B"]) {
-  test(`R2-14a fill ${fill}: 2 of 7 (the one-browser run's link) is refused; nothing pressed or written`, async () => {
-    const { h, path, page, written } = await outcome(fill, payload(21, [1, 1]));
-    assertRefused(h, path, /the plan needs 7 meals; the link has 2/);
-    assert.equal(page.total(), 0, "nothing pressed");
-    assert.equal(written, false, "nothing written");
-  });
+test("R2-14a fill B: 2 of 7 (the one-browser run's link) is refused; nothing pressed or written", async () => {
+  const { h, path, page, written } = await outcome("B", payload(21, [1, 1]));
+  assertRefused(h, path, /the plan needs 7 meals; the link has 2/);
+  assert.equal(page.total(), 0, "nothing pressed");
+  assert.equal(written, false, "nothing written");
+});
 
-  test(`R2-14b fill ${fill}: 8 of 7 is refused too — the rule is EQUAL, not "at least"`, async () => {
-    const { h, path, page, written } = await outcome(fill, payload(21, [5, 3]));
-    assertRefused(h, path, /the plan needs 7 meals; the link has 8/);
-    assert.equal(page.total(), 0);
-    assert.equal(written, false);
-  });
+test(`R2-14b fill B: 8 of 7 is refused too — the rule is EQUAL, not "at least"`, async () => {
+  const { h, path, page, written } = await outcome("B", payload(21, [5, 3]));
+  assertRefused(h, path, /the plan needs 7 meals; the link has 8/);
+  assert.equal(page.total(), 0);
+  assert.equal(written, false);
+});
 
-  test(`R2-14c fill ${fill}: exactly 7 of 7 passes the rule (B fills the cart; A stops at its own product-id check)`, async () => {
-    const { h, path, page, written } = await outcome(fill, payload(21, [2, 5]));
-    assert.equal(h.url.hash, "");
-    assert.ok(!h.info.some((line) => /the plan needs/.test(line)), "not refused by the count");
-    if (fill === "A") {
-      assertRefused(h, path, new RegExp(`stopped: no product id: ${refKey(MEALS[0])}$`));
-      assert.equal(written, false);
-    } else {
-      assertCheckedOut(h, page, path);
-      assert.equal(page.total(), 7);
-    }
-  });
-}
+test("R2-14c fill B: exactly 7 of 7 passes the rule (B fills the cart)", async () => {
+  const { h, path, page } = await outcome("B", payload(21, [2, 5]));
+  assert.equal(h.url.hash, "");
+  assert.ok(!h.info.some((line) => /the plan needs/.test(line)), "not refused by the count");
+  assertCheckedOut(h, page, path);
+  assert.equal(page.total(), 7);
+});
 
 test("R2-14d: every plan's own count passes the rule, individual and Family, from data/plans.json", async () => {
   const plans = await loadPlans();
@@ -81,13 +72,9 @@ test("R2-14d: every plan's own count passes the rule, individual and Family, fro
   }
 });
 
-test("R2-14e: a Family payload of 1 passes the rule; fill A still refuses Family, for its own reason", async () => {
+test("R2-14e: a Family payload of 1 passes the rule", async () => {
   const b = await outcome("B", payload(35, [1]));
   assertCheckedOut(b.h, b.page, "/order?mpid=35");
-  const a = await outcome("A", payload(35, [1]));
-  assertRefused(a.h, "/order?mpid=35", /fill A has no portion plan for mpid 35/);
-  assert.ok(!a.h.info.some((line) => /the plan needs/.test(line)), "not refused by the count");
-  assert.equal(a.written, false);
 });
 
 test("R2-14f: Family with 2 is refused by the count", async () => {
