@@ -126,3 +126,30 @@ above is unchanged.
   fill B's poll constants from the built text and recomputes it.
 - **W9d** runs the 390 px failure in headless Chrome against the synthetic store, whose CHECKOUT now can open a
   "Sign in to continue" dialog that never routes; it waits out fill B's real 30 s (about 40 s in all).
+
+## 8. Amendment, 2026-09-29 — `accept` names the release it accepts, and refuses any other
+
+**Why**: HMP released at least eight times on 2026-09-29, twice within the hour after a release had passed the watch's
+checks. An `accept` run ~35 minutes after issue #2's checks passed recorded **whatever was live**, which was already the
+**next** release (`main-BW2QKUMF.js`, never checked); it was noticed from the printed name and reverted (`349adcb`). An
+operation named after a checked thing must take that thing's name.
+
+1. **`--release <entry>` is required**: the entry bundle's file name exactly as the issue's title names it
+   (`main-2HXLHIG7.js`). Without it, or with anything not of the form `main-<name>.js`, `accept` prints its usage,
+   writes nothing, and exits non-zero.
+2. **The live entry must be that one**: `accept` reads the page's entry first; if it is not the named release it
+   refuses, printing both names (*"the live entry is main-X.js, not main-Y.js: a newer release has landed; its own
+   checks run on the next flag"*), writes nothing, and exits non-zero. It reads the entry **again after** fetching the
+   release's files, and refuses the same way if it changed meanwhile.
+3. **What it prints on success** names the release, the issue's own words included: `accepted main-X.js`, then as
+   now.
+4. `--footer <file>` and `--footer null` are unchanged, and are refused like everything else when the release does not
+   match. The baseline file's shape is unchanged.
+
+| | case | expect |
+|---|---|---|
+| W7b | `accept --release <the synthetic entry>` | writes exactly W7's baseline; prints `accepted <entry>` |
+| W7c | `accept --release main-OTHER.js` on the synthetic store | refused, naming both; the baseline file byte-identical to before; exit non-zero |
+| W7d | `accept` with no `--release`, and with `--release chunk-X.js` | usage; nothing written; exit non-zero |
+| W7e | the synthetic store's entry changes between the first read and the second | refused; nothing written |
+| W7f | ⭐ mutant: the name check that always passes | W7c fails |
