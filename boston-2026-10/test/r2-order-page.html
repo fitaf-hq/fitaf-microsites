@@ -1,13 +1,16 @@
 <!doctype html>
 <!--
-  A MINIMAL SYNTHETIC order page for the rung 2 tests (R2-09, R2-10, R2-15 to R2-18). Written by hand: it is NOT the
-  store's markup and copies none of it. It reproduces only the structure fill B relies on (SPEC-rung2 § 6 and § 8):
+  A MINIMAL SYNTHETIC order page for the rung 2 tests (R2-09, R2-10, R2-14 to R2-23). Written by hand: it is NOT the
+  store's markup and copies none of it. It reproduces only the structure fill B relies on (SPEC-rung2 § 6, § 8, § 10):
   - each meal card is an <app-product-card>; its name is the text of .product__content-title (trimmed,
     whitespace collapsed); its add control is the <button> inside .product__actions whose text contains
     "Add to Cart". The irregular whitespace and the second button are deliberate.
   - § 8: the page's own checkout control is a <button> inside a .summary, which r2-harness.mjs renders from the
     meals pressed so far: a disabled "Add N more meals" until the plan's count is met, then an enabled CHECKOUT. The
     page has two layouts, as the store does; the first .summary is NOT displayed (display: none), the second is.
+  - § 10: the displayed .summary is the window's width's element, the cart bar (below 1025 px) or the cart sidebar
+    (1025 px and wider), and shows what the store shows for a plan that holds nothing (the bar hidden; the sidebar's
+    "Your cart is empty") or already holds meals (pending from an earlier load). r2-harness.mjs renders both.
   - Look-alikes § 8 must never press, each enabled, displayed, and AHEAD of the real control in document order: a
     "Checkout" button inside a meal card, and a " CHECKOUT " button inside an <app-product-card-mobile>.
 -->

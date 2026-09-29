@@ -1,4 +1,4 @@
-// Shared by the r2-*.test.mjs files (rung 2, the storefront hand-off, SPEC-rung2 § 6 and § 8). Not a test file itself.
+// Shared by the r2-*.test.mjs files (rung 2, the storefront hand-off, SPEC-rung2 § 6, § 8 and § 10). Not a test file itself.
 // The hand-off is tested AS IT SHIPS: the built text runs in a fresh V8 context whose only global is a fake
 // `window`, so a bare browser global in the script (localStorage, document, fetch, …) fails here.
 import assert from "node:assert/strict";
@@ -245,6 +245,32 @@ const DIALOG =
   `<div class="extras__item">${control("extra:add", "Add")} Cold Brew</div>` +
   `${control("continue", " CONTINUE TO CHECKOUT ")}</div>`;
 
+const plural = (n, s) => (n === 1 ? "" : s);
+
+/**
+ * What the store's checkout slot holds for a plan of `held` meals that needs `need` (short = need − held), in the two
+ * elements § 10's build note read from the store's public code. Both hold one control, or none:
+ * - the cart BAR (below 1025 px): a disabled " Add N more meal(s) ", " CHECKOUT " (+ an icon), or a disabled
+ *   " Limit Exceeded " over the maximum; the store HIDES the whole bar while the plan holds nothing, the control
+ *   still rendered inside it. `label` replaces CHECKOUT's text.
+ * - the cart SIDEBAR (1025 px and wider): nothing but "Your cart is empty" while the plan holds nothing; else the
+ *   item count and a "Clear cart" button (which B must never press), then a disabled " ADD N MORE MEAL(S) TO
+ *   CHECKOUT ", " CHECKOUT NOW ", or a disabled " REMOVE N MEAL(S) TO CHECKOUT ". `label` replaces CHECKOUT NOW's text.
+ * Written by hand from those labels; not the store's markup.
+ */
+function slot(width, layout, { held, short, busy, label }) {
+  if (width === "bar") {
+    if (short > 0) return control(`more:${layout}`, ` Add ${short} more meal${plural(short, "s")} `, true);
+    if (short < 0) return control(`limit:${layout}`, " Limit Exceeded ", true);
+    return control(`checkout:${layout}`, `${label}<i class="icon"></i>`, busy);
+  }
+  if (!held) return "<p>Your cart is empty</p> <p>Add some delicious meals to get started!</p>";
+  const header = `<div class="cart__items-header"><span>${held} item${plural(held, "s")}</span> ${control("clear", "Clear cart")}</div> `;
+  if (short > 0) return header + control(`more:${layout}`, ` ADD ${short} MORE MEAL${plural(short, "S")} TO CHECKOUT `, true);
+  if (short < 0) return header + control(`limit:${layout}`, ` REMOVE ${-short} MEAL${plural(-short, "S")} TO CHECKOUT `, true);
+  return header + control(`checkout:${layout}`, label, busy);
+}
+
 /**
  * The synthetic order page, with every press recorded: `presses.get(name)` lists the labels pressed on a meal's
  * cards, `log` every meal press in order ([meal, label]), `controls` every press outside the cards in order (a
@@ -252,50 +278,62 @@ const DIALOG =
  *
  * `afterFirstPress` is what a card's Add to Cart becomes once pressed: "stays" (unchanged), "stepper" (− 1 +),
  * "gone" (no button at all), or "decoys" (only look-alikes in the actions, and a real-looking increase button
- * OUTSIDE .product__actions, which the fallback must not reach).
+ * OUTSIDE .product__actions, which the fallback must not reach). A meal already in the plan when the page loads shows
+ * the same (the store renders its counter in place of Add to Cart for a meal already chosen: § 10's build note).
  *
- * Once bound to a window (fakeWindow({ page })), the page behaves as § 8 found the store's: each Add to Cart or
- * Increase press counts one meal; every .summary shows a DISABLED "Add N more meals" until the count reaches `need`
- * (default: the window's mpid's meals a week, from data/plans.json), then an enabled CHECKOUT (`shownLabel` replaces
- * its text in the displayed layout only), shown DISABLED for its first `loadingTicks` store ticks (the store's busy
- * state). A summary re-renders `late` store ticks after a press. Pressing CHECKOUT
- * opens the extras dialog `openTicks` ticks later if `extras`, else routes; pressing the dialog's CONTINUE routes.
- * Routing is history.pushState("/checkout") `syncTicks` ticks later, or never if `routes` is false. A page control
- * stays enabled after its press, so a second press would be seen. Unbound, the summaries stay empty.
+ * `store` is what outlives a page load, as the store's own storage does: `store.pending` is this plan's pending list,
+ * one meal name per meal. Two pages given one store are one visitor's two loads (R2-22's reload). Default: empty.
+ *
+ * `width` is the window's: "bar" (below 1025 px, the default) or "sidebar" (1025 px and wider). The displayed
+ * .summary (data-layout="shown") is that width's element; the other .summary is never displayed (display: none) and
+ * always holds the bar's control, so a control that is rendered but not displayed is on the page in every case.
+ *
+ * Once bound to a window (fakeWindow({ page })), the page behaves as § 8 and § 10 found the store's: each Add to Cart
+ * or Increase press adds one meal to `store.pending`; each .summary shows its width's slot (above) for the plan's
+ * count and `need` (default: the window's mpid's meals a week, from data/plans.json), CHECKOUT shown DISABLED for its
+ * first `loadingTicks` store ticks (the store's busy state). `shownLabel` replaces CHECKOUT's text in the displayed
+ * layout only (default: " CHECKOUT ", or " CHECKOUT NOW " at "sidebar"). A summary re-renders `late` store ticks
+ * after a press. Pressing CHECKOUT opens the extras dialog `openTicks` ticks later if `extras`, else routes; pressing
+ * the dialog's CONTINUE routes; pressing "Clear cart" empties the pending list. Routing is
+ * history.pushState("/checkout") `syncTicks` ticks later, or never if `routes` is false. A page control stays
+ * enabled after its press, so a second press would be seen. Unbound, the summaries stay empty.
  */
 export async function orderPage({
   afterFirstPress = "stays",
   need = undefined,
   late = 0,
   loadingTicks = 0,
-  shownLabel = " CHECKOUT ",
+  width = "bar",
+  shownLabel = width === "sidebar" ? " CHECKOUT NOW " : " CHECKOUT ",
+  store = { pending: [] },
   extras = false,
   openTicks = 2,
   syncTicks = 3,
   routes = true,
 } = {}) {
+  assert.ok(["bar", "sidebar"].includes(width), `width: ${width}`);
   const { document } = parseHTML(await readFile(FIXTURE, "utf8"));
   const counts = countTable(await loadJson(PLANS_PATH));
   const presses = new Map();
   const log = [];
   const controls = [];
   const all = [];
-  let counted = 0;
   let required = null;
   let bound = null;
   /** The store's own asynchrony: `fn` runs `n` store ticks from now, queued among the script's timers. */
   const tick = (n, fn) => (n > 0 ? bound.timers.later(() => tick(n - 1, fn)) : fn());
 
   function render() {
-    const short = required - counted;
+    const held = store.pending.length;
+    const short = required - held;
     const busy = short <= 0 && loadingTicks > 0;
     for (const summary of document.querySelectorAll(".summary")) {
       const layout = summary.getAttribute("data-layout");
-      const label = layout === "shown" ? shownLabel : " CHECKOUT ";
-      summary.innerHTML =
-        short > 0
-          ? control(`more:${layout}`, ` Add ${short} more meal${short === 1 ? "" : "s"} `, true)
-          : control(`checkout:${layout}`, `${label}<i class="icon"></i>`, busy);
+      const shown = layout === "shown";
+      const label = shown ? shownLabel : " CHECKOUT ";
+      summary.innerHTML = slot(shown ? width : "bar", layout, { held, short, busy, label });
+      // The store's bar is hidden while the plan holds nothing (its control still rendered inside it).
+      if (shown && width === "bar") summary.toggleAttribute("hidden", held === 0);
     }
     if (!busy) return;
     const ticks = loadingTicks;
@@ -322,18 +360,15 @@ export async function orderPage({
     bound?.events.push(["press", id]);
     if (id.startsWith("checkout:")) return extras ? openDialog() : route();
     if (id === "continue") route();
-  }
-  function pressMeal(button, card) {
-    const name = titleOf(card);
-    presses.set(name, [...(presses.get(name) ?? []), labelOf(button)]);
-    log.push([name, labelOf(button)]);
-    all.push([name, labelOf(button)]);
-    if (!button.disabled && (/Add to Cart/.test(button.textContent) || labelOf(button) === "Increase quantity")) {
-      counted++;
-      if (bound) tick(late, render);
+    if (id === "clear") {
+      store.pending.length = 0;
+      tick(late, render);
     }
+  }
+  /** A meal already chosen: its card's Add to Cart becomes what `afterFirstPress` says. */
+  function chosen(card) {
     const replacement = AFTER_FIRST_PRESS[afterFirstPress];
-    if (!/Add to Cart/.test(button.textContent) || replacement === null) return;
+    if (replacement === null) return;
     card.querySelector(".product__actions").innerHTML = replacement;
     if (afterFirstPress !== "decoys") return;
     const outside = document.createElement("button");
@@ -341,26 +376,44 @@ export async function orderPage({
     outside.textContent = "+";
     card.appendChild(outside);
   }
+  function pressMeal(button, card) {
+    const name = titleOf(card);
+    presses.set(name, [...(presses.get(name) ?? []), labelOf(button)]);
+    log.push([name, labelOf(button)]);
+    all.push([name, labelOf(button)]);
+    if (!button.disabled && (/Add to Cart/.test(button.textContent) || labelOf(button) === "Increase quantity")) {
+      store.pending.push(name);
+      if (bound) tick(late, render);
+    }
+    if (/Add to Cart/.test(button.textContent)) chosen(card);
+  }
   document.addEventListener("click", (event) => {
     const button = event.target.closest("button");
     const card = button.closest(CARDS);
     return card ? pressMeal(button, card) : pressControl(button);
   });
+  for (const card of document.querySelectorAll("app-product-card")) {
+    if (store.pending.includes(titleOf(card))) chosen(card);
+  }
   const main = document.querySelector("main");
   const cards = main.innerHTML;
+  const text = (b) => b.textContent.replace(/\s+/g, " ").trim() + (b.disabled ? " (disabled)" : "");
+  const slotButtons = () => [...document.querySelectorAll(".summary button")].filter((b) => b.getAttribute("data-id") !== "clear");
   return {
     document,
+    store,
     presses,
     /** Every meal press, in the order it happened: [meal, label]. */
     log,
     controls,
     all,
     total: () => [...presses.values()].reduce((n, list) => n + list.length, 0),
-    /** The text of each summary's control, in document order, with "(disabled)" when it is. */
-    summary: () =>
-      [...document.querySelectorAll(".summary button")].map(
-        (b) => b.textContent.replace(/\s+/g, " ").trim() + (b.disabled ? " (disabled)" : ""),
-      ),
+    /** The text of each summary's checkout-slot control, in document order, displayed or not, "(disabled)" when it is. */
+    summary: () => slotButtons().map(text),
+    /** The same, for the DISPLAYED controls only: what the store shows at this width. */
+    displayed: () => slotButtons().filter((b) => b.getClientRects().length).map(text),
+    /** The displayed layout's whole text (the sidebar's "Your cart is empty", its item count). */
+    shownText: () => document.querySelector('[data-layout="shown"]').textContent.replace(/\s+/g, " ").trim(),
     /** Take the cards off the page (the store has not rendered yet); `show()` puts them back. */
     hide: () => {
       main.innerHTML = "";
@@ -416,4 +469,30 @@ export async function checkoutCase(text) {
   assertCheckedOut(h, page, "/order?mpid=21");
   assert.ok(h.timers.delays.every((ms) => ms === POLL_MS), "only 200 ms polls");
   return { h, page };
+}
+
+/** § 10's stop line, exactly as fill B logs it. */
+export const HELD_LINE = `${LOG_PREFIX} stopped: the plan already holds meals`;
+
+/**
+ * R2-19 (§ 10): the plan already holds `pending` (default: 1 meal, so the store shows "Add 6 more" of 7) when
+ * `text` runs with CHECKOUT_PAYLOAD at `width`. Asserts the whole refusal: the fixture shows its non-empty state,
+ * then NOTHING is pressed (no meal, no page control, "Clear cart" included), the fragment is removed, the line is
+ * § 10's, the plan's pending list is exactly as it was, storage is never touched, and B did not wait out its
+ * 10 s budget first. R2-23 runs a mutant text through this and expects it to throw.
+ */
+export async function heldCase(text, { width = "bar", pending = [MEALS[0]], ...options } = {}) {
+  const store = { pending: [...pending] };
+  const page = await orderPage({ width, store, ...options });
+  const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page, storage: untouchableStorage() });
+  const before = page.displayed();
+  assert.equal(before.length, 1, `fixture control: the store shows its checkout slot: ${before}`);
+  run(text, h.window);
+  h.timers.drain();
+  assert.deepEqual(page.all, [], "no press at all: no meal, no page control");
+  assertRefused(h, "/order?mpid=21", /stopped: the plan already holds meals$/);
+  assert.ok(h.info.includes(HELD_LINE), JSON.stringify(h.info));
+  assert.deepEqual(store.pending, pending, "the plan's meals exactly as they were: none added, none removed");
+  assert.ok(h.timers.delays.length * POLL_MS < MAX_WAIT_MS, `stopped at once, not after the wait: ${h.timers.delays.length} polls`);
+  return { h, page, store, before };
 }
