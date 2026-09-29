@@ -14,7 +14,8 @@ import {
   script,
 } from "./r2-harness.mjs";
 
-const PAYLOAD = { v: 1, mpid: 21, items: MEALS.map((name) => ({ name, qty: 1 })) };
+const COUNTS = [1, 2, 4]; // 7 of mpid 21's 7
+const PAYLOAD = { v: 1, mpid: 21, items: MEALS.map((name, i) => ({ name, qty: COUNTS[i] })) };
 
 function rename(document, from, to) {
   const title = [...document.querySelectorAll(".product__content-title")].find(
@@ -33,7 +34,7 @@ async function runOn(page) {
 test("R2-10 control: on the unrenamed fixture the same payload presses every meal", async () => {
   const page = await orderPage();
   const h = await runOn(page);
-  assert.equal(page.total(), 3);
+  assert.equal(page.total(), 7);
   assert.deepEqual(h.events.at(-1), ["assign", "/checkout"]);
 });
 

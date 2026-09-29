@@ -15,7 +15,7 @@ import {
   script,
 } from "./r2-harness.mjs";
 
-const item = (over = {}) => ({ name: "Birria de Res Bowl", qty: 2, pid: 1353, ...over });
+const item = (over = {}) => ({ name: "Birria de Res Bowl", qty: 7, pid: 1353, ...over }); // 7 of mpid 21's 7
 const valid = (over = {}) => ({ v: 1, mpid: 21, items: [item()], ...over });
 const LONG_NAME = "x".repeat(1600);
 

@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CART_KEY, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
 
-const PAYLOAD = { v: 1, mpid: 21, items: [{ name: "Chicken Pesto Pasta", qty: 2, pid: 1400 }] };
+const PAYLOAD = { v: 1, mpid: 21, items: [{ name: "Chicken Pesto Pasta", qty: 7, pid: 1400 }] };
 
 test("R2-05a fill B: a second run while the first waits for the cards presses nothing more", async () => {
   const page = await orderPage();
@@ -16,7 +16,7 @@ test("R2-05a fill B: a second run while the first waits for the cards presses no
   run(text, h.window);
   page.show();
   h.timers.drain();
-  assert.deepEqual(page.presses.get("Chicken Pesto Pasta"), ["Add to Cart", "Add to Cart"]);
+  assert.deepEqual(page.presses.get("Chicken Pesto Pasta"), Array(7).fill("Add to Cart"));
   assert.deepEqual(
     h.events.filter(([kind]) => kind === "assign"),
     [["assign", "/checkout"]],

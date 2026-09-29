@@ -15,7 +15,7 @@ const PAYLOAD = {
   items: [
     { name: "Birria de Res Bowl", qty: 1 },
     { name: "Chicken Pesto Pasta", qty: 2 },
-    { name: "Jalapeño Lime Chicken", qty: 3 },
+    { name: "Jalapeño Lime Chicken", qty: 4 },
   ],
 };
 const ADD = "Add to Cart";
@@ -28,7 +28,7 @@ test("R2-09a: each meal's own Add to Cart pressed qty times, nothing else presse
   assert.deepEqual(Object.fromEntries(page.presses), {
     [MEALS[0]]: [ADD],
     [MEALS[1]]: [ADD, ADD],
-    [MEALS[2]]: [ADD, ADD, ADD],
+    [MEALS[2]]: [ADD, ADD, ADD, ADD],
   });
   assert.deepEqual(h.events, [
     ["replaceState", "/order?mpid=21"],
@@ -47,7 +47,7 @@ test("R2-09b: cards that render late are waited for; nothing is pressed before t
   assert.equal(h.events.length, 0, "the fragment stays while B waits");
   page.show();
   h.timers.drain();
-  assert.equal(page.total(), 6);
+  assert.equal(page.total(), 7);
   assert.deepEqual(h.events.at(-1), ["assign", "/checkout"]);
 });
 
@@ -60,7 +60,7 @@ test("R2-09c: if Add to Cart becomes a stepper, the card's Increase button makes
   assert.deepEqual(Object.fromEntries(page.presses), {
     [MEALS[0]]: [ADD],
     [MEALS[1]]: [ADD, INC],
-    [MEALS[2]]: [ADD, INC, INC],
+    [MEALS[2]]: [ADD, INC, INC, INC],
   });
   assert.deepEqual(h.events.at(-1), ["assign", "/checkout"]);
 });
@@ -99,6 +99,7 @@ test("R2-09f: every meal gets its first press before any meal gets a second", as
     [MEALS[1], ADD],
     [MEALS[2], ADD],
     [MEALS[1], INC],
+    [MEALS[2], INC],
     [MEALS[2], INC],
     [MEALS[2], INC],
   ]);

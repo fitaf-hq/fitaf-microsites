@@ -91,7 +91,8 @@ test("R2-06c: every Lean and Signature mpid gets data/plans.json's name and per-
     .flatMap((plan) => plan.counts.map((cell) => ({ plan, cell })));
   assert.equal(cells.length, 10);
   for (const { plan, cell } of cells) {
-    const { cart } = await fillA({ v: 1, mpid: cell.mpid, items: [{ name: "Birria de Res Bowl", qty: 1, pid: 1353 }] });
+    const items = [{ name: "Birria de Res Bowl", qty: cell.meals_per_week, pid: 1353 }];
+    const { cart } = await fillA({ v: 1, mpid: cell.mpid, items });
     const [line] = cart;
     const cents = cell.price_per_meal_cents;
     assert.deepEqual(

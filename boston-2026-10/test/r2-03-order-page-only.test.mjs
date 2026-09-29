@@ -12,7 +12,7 @@ import {
   untouchableStorage,
 } from "./r2-harness.mjs";
 
-const PAYLOAD = { v: 1, mpid: 21, items: [{ name: "Birria de Res Bowl", qty: 1, pid: 1353 }] };
+const PAYLOAD = { v: 1, mpid: 21, items: [{ name: "Birria de Res Bowl", qty: 7, pid: 1353 }] };
 const untouchableDocument = () => new Proxy({}, { get: (_, k) => assert.fail(`document touched: ${String(k)}`) });
 
 const REFUSED = [

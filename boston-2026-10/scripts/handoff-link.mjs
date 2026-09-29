@@ -5,6 +5,7 @@
 // The tool refuses what the shipped script would refuse, so it never prints a link that silently does nothing.
 import { fileURLToPath } from "node:url";
 import { loadJson, orderUrl, PLANS_PATH } from "../build.mjs";
+import { countTable } from "./build-storefront.mjs";
 
 export const PAYLOAD_VERSION = 1;
 export const MAX_QTY = 21;
@@ -28,8 +29,11 @@ function wholeNumber(text, what, min, max) {
   return n;
 }
 
-/** Command-line arguments -> the payload. Throws on anything the shipped script would refuse. */
-export function payloadFromArgs(argv, mpids) {
+/**
+ * Command-line arguments -> the payload. Throws on anything the shipped script would refuse. `counts` maps each
+ * mpid in data/plans.json to its meals a week: the counts must add up to exactly that (the full-plan rule).
+ */
+export function payloadFromArgs(argv, counts) {
   const flags = { "--mpid": [], "--item": [], "--pid-for": [], "--code": [] };
   for (let i = 0; i < argv.length; i += 2) {
     if (!(argv[i] in flags)) throw new Error(`unknown flag ${argv[i]}`);
@@ -38,7 +42,7 @@ export function payloadFromArgs(argv, mpids) {
   }
   if (flags["--mpid"].length !== 1) throw new Error("give exactly one --mpid");
   const mpid = wholeNumber(flags["--mpid"][0], "--mpid", 1, Number.MAX_SAFE_INTEGER);
-  if (!mpids.has(mpid)) throw new Error(`mpid ${mpid} is not in data/plans.json`);
+  if (!counts.has(mpid)) throw new Error(`mpid ${mpid} is not in data/plans.json`);
   if (!flags["--item"].length) throw new Error('give at least one --item "NAME:QTY"');
   const items = flags["--item"].map((arg) => {
     const [name, qty] = splitLast(arg, ":", `--item wants "NAME:QTY", got ${JSON.stringify(arg)}`);
@@ -46,6 +50,10 @@ export function payloadFromArgs(argv, mpids) {
   });
   const names = items.map((it) => it.name);
   if (new Set(names).size !== names.length) throw new Error("a meal is named twice; give its count once");
+  // The same rule and message as the shipped script: the store will not check out short of the plan.
+  const need = counts.get(mpid);
+  const total = items.reduce((sum, it) => sum + it.qty, 0);
+  if (total !== need) throw new Error(`the plan needs ${need} meals; the link has ${total}`);
   for (const arg of flags["--pid-for"]) {
     const [name, pid] = splitLast(arg, "=", `--pid-for wants "NAME=PRODUCT_ID", got ${JSON.stringify(arg)}`);
     const it = items.find((x) => x.name === name);
@@ -68,8 +76,8 @@ export const handoffLink = (plans, payload) => `${orderUrl(plans, payload.mpid)}
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
     const plans = await loadJson(PLANS_PATH);
-    const mpids = new Set([...plans.individual, plans.family].flatMap((plan) => plan.counts.map((c) => c.mpid)));
-    const payload = payloadFromArgs(process.argv.slice(2), mpids);
+    const counts = new Map(Object.entries(countTable(plans)).map(([mpid, n]) => [Number(mpid), n]));
+    const payload = payloadFromArgs(process.argv.slice(2), counts);
     console.log(handoffLink(plans, payload));
     if (payload.items.some((it) => it.pid === undefined)) {
       console.error("handoff:link: note: an item has no --pid-for, so fill A will refuse this link (B does not need it)");

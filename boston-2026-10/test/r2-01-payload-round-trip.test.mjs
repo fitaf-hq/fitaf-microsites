@@ -7,10 +7,10 @@ import { CART_KEY, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-
 
 const PAYLOAD = {
   v: 1,
-  mpid: 21,
+  mpid: 24,
   items: [
     { name: "Birria de Res Bowl", qty: 1, pid: 1353 },
-    { name: "Jalapeño Lime Chicken", qty: 21, pid: 1400 },
+    { name: "Jalapeño Lime Chicken", qty: 20, pid: 1400 },
   ],
   code: "BOSTON26",
 };
@@ -22,7 +22,7 @@ test("R2-01a: the encoder's own round trip (base64url of UTF-8 JSON, no padding)
 });
 
 test("R2-01b: fill A decodes it: one line per item, names, counts and product ids intact", async () => {
-  const h = fakeWindow({ fragment: fragmentFor(PAYLOAD) });
+  const h = fakeWindow({ path: "/order?mpid=24", fragment: fragmentFor(PAYLOAD) });
   run(await script("A"), h.window);
   const cart = JSON.parse(h.storage.getItem(CART_KEY));
   assert.deepEqual(
@@ -30,7 +30,7 @@ test("R2-01b: fill A decodes it: one line per item, names, counts and product id
     PAYLOAD.items.map((it) => [it.name, it.qty, it.pid]),
   );
   assert.deepEqual(h.events, [
-    ["replaceState", "/order?mpid=21"],
+    ["replaceState", "/order?mpid=24"],
     ["replace", "/checkout"],
   ]);
   assert.ok(h.info.some((line) => /code not applied/.test(line)), "the log says the code was not applied");
@@ -38,10 +38,10 @@ test("R2-01b: fill A decodes it: one line per item, names, counts and product id
 
 test("R2-01c: fill B decodes it: each named meal pressed its count", async () => {
   const page = await orderPage();
-  const h = fakeWindow({ fragment: fragmentFor(PAYLOAD), document: page.document });
+  const h = fakeWindow({ path: "/order?mpid=24", fragment: fragmentFor(PAYLOAD), document: page.document });
   run(await script("B"), h.window);
   h.timers.drain();
   assert.equal(page.presses.get("Birria de Res Bowl").length, 1);
-  assert.equal(page.presses.get("Jalapeño Lime Chicken").length, 21);
+  assert.equal(page.presses.get("Jalapeño Lime Chicken").length, 20);
   assert.deepEqual(h.events.at(-1), ["assign", "/checkout"]);
 });

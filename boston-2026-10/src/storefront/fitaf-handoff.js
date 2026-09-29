@@ -3,7 +3,7 @@
 // ── How this file ships ────────────────────────────────────────────────────────────────────────────────
 // `npm run build:storefront` writes ONE fill per file: the Footer block gets the fill FILL names below, and
 // each fill also gets a console file for the one-browser run. For a fill, the build removes the other fill's
-// `// <fill X>` … `// </fill X>` regions, inlines the plan table at the PLANS slot, and drops every FULL-LINE
+// `// <fill X>` … `// </fill X>` regions, inlines the tables at the COUNTS and PLANS slots, and drops every FULL-LINE
 // `//` comment, like this one: with both fills and every comment the text is ~8.7 KB, and SPEC-rung2 § 3
 // says "under 5 KB". `/* */` comments ship. The tests run the SHIPPED texts, so what they prove is what is pasted.
 //
@@ -23,6 +23,10 @@ if (w.__fitafHandoff) return;
 w.__fitafHandoff = true;
 // Set by fill A once it has written: puts the cart key back exactly as it was, absent included.
 var undo;
+// mpid: meals a week, from data/plans.json, individual plans and Family. The store's order page will not check out
+// short of the plan's count ("Please add at least 7 meals to continue": the one-browser run, 2026-09-29), so a
+// payload must add exactly that many — never a cart that stops at checkout.
+var COUNTS = /*COUNTS*/ {};
 
 function log(m) { w.console.info("[fitaf-handoff] " + m); }
 function fail(m) { throw new Error(m); }
@@ -56,16 +60,21 @@ function payload(s) {
   if (!whole(p.mpid, 1e9)) fail("bad mpid");
   if (!Array.isArray(p.items) || !p.items.length) fail("no items");
   var names = [];
+  var total = 0;
   p.items.forEach(function (it) {
     if (!it || typeof it.name !== "string" || !it.name) fail("bad meal name");
     // A meal named twice would be two meals to B, pressing one card twice over; its count belongs in one item.
     if (names.indexOf(it.name) >= 0) fail("named twice: " + it.name);
     names.push(it.name);
     if (!whole(it.qty, 21)) fail("bad qty: " + it.name);
+    total += it.qty;
     if (it.pid !== undefined && !whole(it.pid, 1e9)) fail("bad pid: " + it.name);
   });
   // The offer code is checked but NOT applied in this build: how the store takes one is not yet proven.
   if (p.code !== undefined && !(typeof p.code === "string" && /^[\w-]{1,40}$/.test(p.code))) fail("bad code");
+  // The full-plan rule, last, so every other fault above reports itself first.
+  var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
+  if (total !== need) fail("the plan needs " + need + " meals; the link has " + total);
   return p;
 }
 
@@ -81,7 +90,7 @@ var OPTION = { Lean: 10538, Signature: 10539 };
 // Fill A: append one line per meal to the store's cart storage (a visitor's own lines are kept), then load
 // /checkout afresh so the store reads them. One setItem, so no line is ever half-written.
 function fillA(p) {
-  var plan = PLANS[p.mpid] || fail("no plan for mpid " + p.mpid);
+  var plan = PLANS[p.mpid] || fail("fill A has no portion plan for mpid " + p.mpid);
   var option = OPTION[plan[0]] || fail(plan[0] + ": option not known");
   var ls = w.localStorage;
   var before = ls.getItem(CART_KEY);

@@ -35,30 +35,35 @@ test("R2-13a: the printed link is the plan's order page with the payload in the 
 });
 
 test("R2-13b: fill A accepts a link the tool printed", async () => {
-  const url = new URL(link("--mpid", "21", "--item", "Birria de Res Bowl:2", "--pid-for", "Birria de Res Bowl=1353"));
+  const url = new URL(link("--mpid", "21", "--item", "Birria de Res Bowl:7", "--pid-for", "Birria de Res Bowl=1353"));
   const h = fakeWindow({ path: url.pathname + url.search, fragment: url.hash });
   run(await script("A"), h.window);
   const [line] = JSON.parse(h.storage.getItem(CART_KEY));
-  assert.deepEqual([line.name, line.quantity, line.productId], ["Birria de Res Bowl", 2, 1353]);
+  assert.deepEqual([line.name, line.quantity, line.productId], ["Birria de Res Bowl", 7, 1353]);
 });
 
-for (const [label, args] of [
-  ["no --mpid", ["--item", "Birria de Res Bowl:2"]],
-  ["no --item", ["--mpid", "21"]],
-  ["an mpid not in data/plans.json", ["--mpid", "99", "--item", "Birria de Res Bowl:1"]],
-  ["qty 0", ["--mpid", "21", "--item", "Birria de Res Bowl:0"]],
-  ["qty 22", ["--mpid", "21", "--item", "Birria de Res Bowl:22"]],
-  ["no qty", ["--mpid", "21", "--item", "Birria de Res Bowl"]],
-  ["a meal twice", ["--mpid", "21", "--item", "Birria de Res Bowl:1", "--item", "Birria de Res Bowl:2"]],
-  ["--pid-for a meal not in the payload", ["--mpid", "21", "--item", "Birria de Res Bowl:1", "--pid-for", "Nope=1"]],
-  ["a bad code", ["--mpid", "21", "--item", "Birria de Res Bowl:1", "--code", "NO SPACES"]],
-  ["over 2 KB", ["--mpid", "21", "--item", `${"x".repeat(1600)}:1`]],
-  ["an unknown flag", ["--mpid", "21", "--item", "Birria de Res Bowl:1", "--qty", "3"]],
+// Every case but the one under test meets mpid 21's count of 7, and each names its own reason: otherwise the
+// full-plan rule (R2-14) would refuse them all and every case would pass for the same, wrong reason.
+const B7 = "Birria de Res Bowl:7";
+for (const [label, args, reason] of [
+  ["no --mpid", ["--item", B7], /exactly one --mpid/],
+  ["no --item", ["--mpid", "21"], /at least one --item/],
+  ["an mpid not in data/plans.json", ["--mpid", "99", "--item", B7], /mpid 99 is not in data\/plans\.json/],
+  ["qty 0", ["--mpid", "21", "--item", "Birria de Res Bowl:0"], /must be 1\.\.21, got 0/],
+  ["qty 22", ["--mpid", "21", "--item", "Birria de Res Bowl:22"], /must be 1\.\.21, got 22/],
+  ["no qty", ["--mpid", "21", "--item", "Birria de Res Bowl"], /NAME:QTY/],
+  ["a meal twice", ["--mpid", "21", "--item", "Birria de Res Bowl:3", "--item", "Birria de Res Bowl:4"], /named twice/],
+  ["--pid-for a meal not in the payload", ["--mpid", "21", "--item", B7, "--pid-for", "Nope=1"], /which no --item names/],
+  ["a bad code", ["--mpid", "21", "--item", B7, "--code", "NO SPACES"], /--code must match/],
+  ["over 2 KB", ["--mpid", "21", "--item", `${"x".repeat(1600)}:7`], /refuses over 2048/],
+  ["an unknown flag", ["--mpid", "21", "--item", B7, "--qty", "3"], /unknown flag --qty/],
+  ["a count short of the plan", ["--mpid", "21", "--item", "Birria de Res Bowl:6"], /the plan needs 7 meals; the link has 6/],
 ]) {
   test(`R2-13c: the tool refuses ${label}, printing no link`, () => {
     const r = refuses(...args);
     assert.notEqual(r.status, 0);
     assert.equal(r.stdout, "");
-    assert.match(r.stderr, /handoff:link/);
+    assert.match(r.stderr, /^handoff:link: /);
+    assert.match(r.stderr, reason);
   });
 }

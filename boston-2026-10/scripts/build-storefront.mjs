@@ -7,7 +7,7 @@
 // Every file must be under 5,120 bytes (SPEC-rung2 § 3); the build refuses, writing nothing, if one is not.
 // Its own directory and its own npm script, NOT `npm run build`: the production build stays byte-identical (S20).
 // The version line is `/* fitaf-handoff <commit> sha256:<hex of the text after it> */`, so what is live can be
-// compared with what is kept.
+// compared with what is kept. The texts are the source with two tables inlined from data/plans.json.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -22,6 +22,7 @@ export const MAX_SHIPPED_BYTES = 5120;
 export const FILLS = ["A", "B"];
 const FILL_LINE = /var FILL = "([AB])";/g;
 const PLANS_SLOT = "/*PLANS*/ {}";
+const COUNTS_SLOT = "/*COUNTS*/ {}";
 /** One fill's code: from a `// <fill X>` line to its `// </fill X>` line, both whole lines. Not nestable. */
 const FILL_REGION = /^[ \t]*\/\/ <fill ([AB])>\n[\s\S]*?^[ \t]*\/\/ <\/fill \1>\n/gm;
 /** A whole line that is only a `//` comment. The script has no template literal, so such a line is always one. */
@@ -36,6 +37,13 @@ export const versionLine = (text, commit) => `/* fitaf-handoff ${commit} sha256:
 export function planTable(plans) {
   return Object.fromEntries(
     plans.individual.flatMap((plan) => plan.counts.map((c) => [c.mpid, [plan.name, c.price_per_meal_cents]])),
+  );
+}
+
+/** mpid -> meals a week, every plan (Family too): the full-plan rule both fills apply. */
+export function countTable(plans) {
+  return Object.fromEntries(
+    [...plans.individual, plans.family].flatMap((plan) => plan.counts.map((c) => [c.mpid, c.meals_per_week])),
   );
 }
 
@@ -59,7 +67,7 @@ export async function sourceFill(sourcePath = STOREFRONT_SOURCE) {
 
 /**
  * One fill's shipped text: the source without the other fill's regions and without its full-line `//`
- * comments, FILL set to this fill, and the plan table inlined (fill A only has the slot). `fill` defaults to
+ * comments, FILL set to this fill, and the tables inlined: COUNTS for both, PLANS for A (only A has it). `fill` defaults to
  * the source's own FILL. The source's `//` lines explain it to a maintainer; they stay in the repository.
  */
 export async function storefrontText({ fill, sourcePath = STOREFRONT_SOURCE, plansPath = PLANS_PATH } = {}) {
@@ -67,14 +75,17 @@ export async function storefrontText({ fill, sourcePath = STOREFRONT_SOURCE, pla
   fill ??= await sourceFill(sourcePath);
   if (!FILLS.includes(fill)) throw new Error(`fill must be "A" or "B", got ${fill}`);
   checkRegions(source, sourcePath);
-  if (source.split(PLANS_SLOT).length !== 2) throw new Error(`${sourcePath}: expected one ${PLANS_SLOT}`);
+  for (const slot of [PLANS_SLOT, COUNTS_SLOT]) {
+    if (source.split(slot).length !== 2) throw new Error(`${sourcePath}: expected one ${slot}`);
+  }
   const plans = await loadJson(plansPath);
-  const table = `/* data/plans.json, read_on ${plans.read_on} */ ${JSON.stringify(planTable(plans))}`;
+  const table = (rows) => `/* data/plans.json, read_on ${plans.read_on} */ ${JSON.stringify(rows)}`;
   return source
     .replace(FILL_REGION, (region, regionFill) => (regionFill === fill ? region : ""))
     .replace(SOURCE_ONLY_COMMENT, "")
     .replace(FILL_LINE, `var FILL = "${fill}";`)
-    .replace(PLANS_SLOT, () => table);
+    .replace(COUNTS_SLOT, () => table(countTable(plans)))
+    .replace(PLANS_SLOT, () => table(planTable(plans)));
 }
 
 /** The commit the texts are built from, "-dirty" if any input differs from it: the line never overstates. */
