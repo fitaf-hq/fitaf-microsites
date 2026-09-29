@@ -5,7 +5,10 @@
 //                    "Add to Cart $12.50"; at 666 px and narrower app-product-card hides and app-product-card-mobile
 //                    shows), a cart bar (below 1025 px, " CHECKOUT ") and a sidebar (1025 px and wider,
 //                    " CHECKOUT NOW "), each disabled with "Add N more meals" until the plan is full; optionally the
-//                    extras dialog (" CONTINUE TO CHECKOUT "). Checkout routes in the app (pushState) to /checkout.
+//                    extras dialog (" CONTINUE TO CHECKOUT "), or a "Sign in to continue" dialog that never routes (as
+//                    the store's for a visitor not signed in, SPEC-rung2 § 8's build note). Checkout routes in the app
+//                    (pushState) to /checkout. The pending list is mirrored to localStorage (hmp_pending_plan_items,
+//                    { "21": [names] }), so a reader of its count has something to count.
 //   /checkout        the summary: each meal's name, "Plan Total (N items)" beside its total, "Subtotal | N items",
 //                    and a PLACE ORDER button that logs "[fixture] ORDER PLACED" if anything presses it.
 // Like the store, the app injects its Footer text at run time as a re-created <script> (the store's injectSlot).
@@ -15,7 +18,11 @@ export const MEALS = ["Birria de Res Bowl", "Chicken Pesto Pasta", "Jalapeño Li
   "Beef Bulgogi", "Chicken Tikka", "Shrimp Tacos", "Veggie Curry"];
 export const PRICE_CENTS = 1250;
 
-/** `cfg` is read by the app: footer (text or null), soldOut (names), extrasDialog, dropOnCheckout (a name), totalDeltaCents. */
+/**
+ * `cfg` is read by the app: footer (text or null), soldOut (names), extrasDialog, signIn (CHECKOUT opens a sign-in
+ * dialog and never routes), consoleNoise (lines the page logs at start, as a store's own code does), dropOnCheckout
+ * (a name), totalDeltaCents.
+ */
 function appHtml(cfg) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -48,9 +55,19 @@ function appHtml(cfg) {
     });
   }
   function goCheckout() { history.pushState({}, "", "/checkout"); renderCheckout(); }
+  function signIn() {
+    var d = el("dialog-box", "sign-in");
+    d.setAttribute("role", "dialog");
+    d.appendChild(el("p", null, "Sign in to continue"));
+    d.appendChild(el("button", null, "Sign in / Create account"));
+    d.appendChild(el("button", null, "Continue browsing"));
+    document.body.appendChild(d);
+  }
   function onCheckout() {
+    if (cfg.signIn) return signIn();
     if (!cfg.extrasDialog) return goCheckout();
     var d = el("dialog-box", "extras");
+    d.setAttribute("role", "dialog");
     var b = el("button", null, " CONTINUE TO CHECKOUT ");
     b.onclick = function () { d.remove(); goCheckout(); };
     d.appendChild(b); document.body.appendChild(d);
@@ -65,7 +82,11 @@ function appHtml(cfg) {
       b.appendChild(el("span", "product__actions-add_label", "Add to Cart"));
       b.appendChild(el("span", "product__actions-add_price", money(${PRICE_CENTS})));
       if (cfg.soldOut.indexOf(name) >= 0) b.disabled = true;
-      b.onclick = function () { pending.push(name); renderBar(); };
+      b.onclick = function () {
+        pending.push(name);
+        localStorage.setItem("hmp_pending_plan_items", JSON.stringify({ "21": pending }));
+        renderBar();
+      };
       actions.appendChild(b); card.appendChild(actions); root.appendChild(card);
       var mobile = el("app-product-card-mobile");
       mobile.appendChild(el("h2", "product-card-mobile__title", name)); // the real store's mobile title class
@@ -100,6 +121,7 @@ function appHtml(cfg) {
     place.onclick = function () { console.log("[fixture] ORDER PLACED"); };
     root.appendChild(place);
   }
+  (cfg.consoleNoise || []).forEach(function (line) { console.log(line); });
   if (location.pathname === "/checkout") { root.appendChild(el("p", null, "Your cart is empty")); return; }
   setTimeout(function () {
     if (cfg.footer !== null) { var s = document.createElement("script"); s.text = cfg.footer; document.body.appendChild(s); }
@@ -110,7 +132,7 @@ function appHtml(cfg) {
 `;
 }
 
-const DEFAULTS = { footer: null, soldOut: [], extrasDialog: false, dropOnCheckout: null, totalDeltaCents: 0 };
+const DEFAULTS = { footer: null, soldOut: [], extrasDialog: false, signIn: false, consoleNoise: [], dropOnCheckout: null, totalDeltaCents: 0 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */
 export async function startStore() {

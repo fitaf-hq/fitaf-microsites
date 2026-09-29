@@ -1,5 +1,5 @@
-// R2-09: fill B on the synthetic order page. Every named meal is found by its name as shown and its own
-// Add to Cart pressed `qty` times; no other meal control is pressed; then the fragment is removed and the store's own
+// R2-09: fill B on the synthetic order page. Every meal the link names is found by its key (SPEC-rung2 § 11: the key of
+// its name as shown, whitespace collapsed) and its own Add to Cart pressed `qty` times; no other meal control is pressed; then the fragment is removed and the store's own
 // CHECKOUT pressed (§ 8, whose own cases are R2-15 to R2-18). The cards may render late (the store's start-up): B
 // waits, polling every 200 ms.
 // Every meal gets its first press before any meal gets a second (R2-09f), so a missing increase control leaves
@@ -17,12 +17,12 @@ import {
   MEALS,
   orderPage,
   POLL_MS,
+  refKey,
   run,
   script,
 } from "./r2-harness.mjs";
 
 const PAYLOAD = {
-  v: 1,
   mpid: 21,
   items: [
     { name: "Birria de Res Bowl", qty: 1 },
@@ -82,7 +82,7 @@ test("R2-09d: no increase control after a press — B stops after the first pres
   // cannot be taken back. B presses each meal once BEFORE any second press, so this is the worst it leaves.
   assert.deepEqual(Object.fromEntries(page.presses), { [MEALS[0]]: [ADD], [MEALS[1]]: [ADD], [MEALS[2]]: [ADD] });
   assert.deepEqual(h.events, [["replaceState", "/order?mpid=21"]], "fragment removed; /checkout NOT opened");
-  assert.ok(h.info.some((line) => line.includes(MEALS[1])), JSON.stringify(h.info));
+  assert.ok(h.info.some((line) => line.endsWith(`stopped: no control to add ${refKey(MEALS[1])} after 1`)), JSON.stringify(h.info));
 });
 
 test("R2-09e: look-alikes are never pressed — favourites, wishlist, a bare 'add', or a control outside the actions", async () => {

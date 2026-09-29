@@ -1,47 +1,57 @@
-// R2-01: a payload encoded by the link tool is decoded by the shipped script, for both fills: every name
-// (including a non-ASCII one), count and product id arrives intact. The offer code is accepted but not applied.
+// R2-01: a payload version 2 (SPEC-rung2 § 11) as the link tool writes it is read by the shipped script: every meal
+// (including a non-ASCII name) and count arrives intact, and the plan is the page's own ?mpid=. The offer code is
+// accepted but not applied. Fill A reads the same payload and then refuses it: a v2 link carries no product id, which A
+// needs for every line it writes (§ 6; see R2-06).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { encodePayload } from "../scripts/handoff-link.mjs";
-import { assertCheckedOut, CART_KEY, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
+import {
+  assertCheckedOut,
+  assertRefused,
+  CART_KEY,
+  FakeStorage,
+  fakeWindow,
+  fragmentFor,
+  orderPage,
+  payloadText,
+  refKey,
+  run,
+  script,
+} from "./r2-harness.mjs";
 
+// mpid 24 is Lean 21: 1 + 20.
 const PAYLOAD = {
-  v: 1,
   mpid: 24,
   items: [
-    { name: "Birria de Res Bowl", qty: 1, pid: 1353 },
-    { name: "Jalapeño Lime Chicken", qty: 20, pid: 1400 },
+    { name: "Birria de Res Bowl", qty: 1 },
+    { name: "Jalapeño Lime Chicken", qty: 20 },
   ],
   code: "BOSTON26",
 };
 
-test("R2-01a: the encoder's own round trip (base64url of UTF-8 JSON, no padding)", () => {
-  const encoded = encodePayload(PAYLOAD);
-  assert.match(encoded, /^[A-Za-z0-9_-]+$/);
-  assert.deepEqual(JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")), PAYLOAD);
+test("R2-01a: the v2 form: \"2\", one key per meal (\"*n\" above 1), the code last; ASCII, dot-separated, no plan id", () => {
+  const text = payloadText(PAYLOAD);
+  assert.equal(text, `2.${refKey("Birria de Res Bowl")}.${refKey("Jalapeño Lime Chicken")}*20.~BOSTON26`);
+  assert.match(text, /^[\x21-\x7e]+$/, "printable ASCII");
+  assert.ok(!text.includes("24"), "the plan's id is not in the fragment");
 });
 
-test("R2-01b: fill A decodes it: one line per item, names, counts and product ids intact", async () => {
-  const h = fakeWindow({ path: "/order?mpid=24", fragment: fragmentFor(PAYLOAD) });
+test("R2-01b: fill A reads it (the log names the page's plan and the unapplied code), then refuses: no product id", async () => {
+  const storage = new FakeStorage({ [CART_KEY]: '[{"localId":"36688"}]' });
+  const before = storage.dump();
+  const h = fakeWindow({ path: "/order?mpid=24", fragment: fragmentFor(PAYLOAD), storage });
   run(await script("A"), h.window);
-  const cart = JSON.parse(h.storage.getItem(CART_KEY));
-  assert.deepEqual(
-    cart.map((line) => [line.name, line.quantity, line.productId]),
-    PAYLOAD.items.map((it) => [it.name, it.qty, it.pid]),
-  );
-  assert.deepEqual(h.events, [
-    ["replaceState", "/order?mpid=24"],
-    ["replace", "/checkout"],
-  ]);
-  assert.ok(h.info.some((line) => /code not applied/.test(line)), "the log says the code was not applied");
+  assert.ok(h.info.includes("[fitaf-handoff] fill A, mpid 24; offer code not applied"), JSON.stringify(h.info));
+  assertRefused(h, "/order?mpid=24", new RegExp(`stopped: no product id: ${refKey("Birria de Res Bowl")}$`));
+  assert.equal(storage.dump(), before, "storage byte-identical");
 });
 
-test("R2-01c: fill B decodes it: each named meal pressed its count, then the store's own CHECKOUT (§ 8)", async () => {
+test("R2-01c: fill B reads it: each meal pressed its count, then the store's own CHECKOUT (§ 8)", async () => {
   const page = await orderPage();
   const h = fakeWindow({ path: "/order?mpid=24", fragment: fragmentFor(PAYLOAD), page });
   run(await script("B"), h.window);
   h.timers.drain();
   assert.equal(page.presses.get("Birria de Res Bowl").length, 1);
   assert.equal(page.presses.get("Jalapeño Lime Chicken").length, 20);
+  assert.ok(h.info.includes("[fitaf-handoff] fill B, mpid 24; offer code not applied"), JSON.stringify(h.info));
   assertCheckedOut(h, page, "/order?mpid=24");
 });

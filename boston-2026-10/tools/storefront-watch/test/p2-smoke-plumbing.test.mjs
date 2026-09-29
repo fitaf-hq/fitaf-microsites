@@ -66,11 +66,13 @@ test("P2: fill B pasted at 1280 (CHECKOUT NOW) and at 390 ×3 (CHECKOUT): pass; 
   }
 });
 
-test("P2: the link is the site's own: its payload decodes to the 7 chosen meals, one each, mpid 21", { skip }, async () => {
+test("P2: the link is the site's own: payload version 2, the 7 chosen meals' keys, one each, on mpid 21's page", { skip }, async () => {
   store.set({});
   const { outcome } = await run(1280, paste());
-  const payload = JSON.parse(Buffer.from(new URL(outcome.link).hash.slice("#fitaf=".length), "base64url").toString("utf8"));
-  assert.deepEqual(payload, { v: 1, mpid: 21, items: MEALS.slice(0, 7).map((name) => ({ name, qty: 1 })) });
+  const link = new URL(outcome.link);
+  assert.equal(link.search, "?mpid=21");
+  // The keys from the site's own key function (src/storefront/meal-key.js, through handoff-link.mjs), never re-implemented.
+  assert.equal(link.hash, `#fitaf=2.${MEALS.slice(0, 7).map((name) => code.mealKey(name)).join(".")}`);
 });
 
 test("P2: the live block alone (the store runs our Footer block): pass", { skip }, async () => {

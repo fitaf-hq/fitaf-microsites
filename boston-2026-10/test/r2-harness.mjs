@@ -1,18 +1,23 @@
-// Shared by the r2-*.test.mjs files (rung 2, the storefront hand-off, SPEC-rung2 § 6, § 8 and § 10). Not a test file itself.
-// The hand-off is tested AS IT SHIPS: the built text runs in a fresh V8 context whose only global is a fake
+// Shared by the r2-*.test.mjs files (rung 2, the storefront hand-off, SPEC-rung2 § 6, § 8, § 10 and § 11). Not a test
+// file itself. The hand-off is tested AS IT SHIPS: the built text runs in a fresh V8 context whose only global is a fake
 // `window`, so a bare browser global in the script (localStorage, document, fetch, …) fails here.
+// The links here are payload VERSION 2 (§ 11), written from refKey() below, the contract's definition of a meal's key
+// implemented a second time, independently (Node's own UTF-8 bytes and BigInt arithmetic): so a test's link never
+// depends on the code under test. R2-25 pins that the shipped key function and this one agree.
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { parseHTML } from "linkedom";
 import { loadJson, PLANS_PATH } from "../build.mjs";
 import { countTable, storefrontText } from "../scripts/build-storefront.mjs";
-import { encodePayload } from "../scripts/handoff-link.mjs";
 
 export const ORIGIN = "https://fitafnutrition.com";
 export const CART_KEY = "hmp_local_cart";
 export const POLL_MS = 200;
+/** § 8 and § 10: every wait BEFORE a press (the meal cards, an enabled CHECKOUT) is at most 10 s. */
 export const MAX_WAIT_MS = 10_000;
+/** § 11 item 4: the wait AFTER the store's CHECKOUT is pressed (for its dialog, for /checkout) is at most 30 s. */
+export const MAX_WAIT_AFTER_CHECKOUT_MS = 30_000;
 export const LOG_PREFIX = "[fitaf-handoff]";
 export const FIXTURE = new URL("./r2-order-page.html", import.meta.url);
 export const MEALS = ["Birria de Res Bowl", "Chicken Pesto Pasta", "Jalapeño Lime Chicken"];
@@ -28,9 +33,39 @@ export function run(text, window) {
   vm.runInContext(text, vm.createContext({ window }));
 }
 
-export const fragmentFor = (payload) => `#fitaf=${encodePayload(payload)}`;
-/** A fragment carrying any text, for payloads the link tool would refuse to encode. */
-export const rawFragment = (text) => `#fitaf=${Buffer.from(text, "utf8").toString("base64url")}`;
+const FNV_OFFSET = 0x811c9dc5n;
+const FNV_PRIME = 0x01000193n;
+const U32 = 0xffffffffn;
+const KEY_SPACE = 36n ** 5n;
+
+/** 32-bit FNV-1a over the UTF-8 bytes of `text`, as a BigInt: the reference, checked against FNV's own vectors in R2-25. */
+export function refFnv1a(text) {
+  let h = FNV_OFFSET;
+  for (const byte of Buffer.from(text, "utf8")) h = ((h ^ BigInt(byte)) * FNV_PRIME) & U32;
+  return h;
+}
+
+/**
+ * SPEC-rung2 § 11 item 2, read the second way the contract states it: the hash of the name as the page shows it
+ * (whitespace collapsed and trimmed) MODULO 36^5, in base 36, five characters.
+ */
+export const refKey = (name) => (refFnv1a(name.replace(/\s+/g, " ").trim()) % KEY_SPACE).toString(36).padStart(5, "0");
+
+/** One item of a v2 payload: `<key>`, or `<key>*<n>` for a count above 1. */
+const itemToken = ({ name, qty }) => (qty === 1 ? refKey(name) : `${refKey(name)}*${qty}`);
+
+/**
+ * `{ items: [{ name, qty }], code? }` -> the text after `#fitaf=`: "2", each item, then "~<code>" if there is one,
+ * dot-separated (§ 11 item 1). Any `mpid` is ignored: v2 reads the plan's id from the page's own query. A count the
+ * script refuses (0, 22) is written all the same, so a test can show the refusal.
+ */
+export const payloadText = ({ items, code }) =>
+  ["2", ...items.map(itemToken), ...(code === undefined ? [] : [`~${code}`])].join(".");
+export const fragmentFor = (payload) => `#fitaf=${payloadText(payload)}`;
+/** A fragment carrying any text as it is, for payloads the link tool would never write. */
+export const rawFragment = (text) => `#fitaf=${text}`;
+/** A RETIRED version-1 link's fragment (§ 6: base64url of the JSON payload), which § 11 refuses. */
+export const v1Fragment = (payload) => `#fitaf=${Buffer.from(JSON.stringify(payload), "utf8").toString("base64url")}`;
 
 /** localStorage as a string map. `failSetItem` makes every write throw, as a full quota does. */
 export class FakeStorage {
@@ -430,9 +465,8 @@ export async function orderPage({
   };
 }
 
-/** R2-15's case, shared with R2-18's mutants: 1 + 2 + 4 = 7, mpid 21's count. */
+/** R2-15's case, shared with R2-18's mutants: 1 + 2 + 4 = 7, mpid 21's count (the page's own ?mpid=21). */
 export const CHECKOUT_PAYLOAD = {
-  v: 1,
   mpid: 21,
   items: [
     { name: MEALS[0], qty: 1 },
@@ -442,14 +476,14 @@ export const CHECKOUT_PAYLOAD = {
 };
 
 /**
- * R2-15 (§ 8): run `text` on the synthetic page with CHECKOUT_PAYLOAD and assert the whole finish: the seven meal
- * presses, THEN the displayed CHECKOUT exactly once, the fragment removed before that press, the store's in-app
- * route to /checkout, "done" logged, no navigation by the script, storage never touched, and only 200 ms polls.
- * R2-18 runs a mutant text through this and expects it to throw.
+ * R2-15 (§ 8): run `text` on the synthetic page with CHECKOUT_PAYLOAD (or `fragment`: R2-24 passes the link tool's own)
+ * and assert the whole finish: the seven meal presses, THEN the displayed CHECKOUT exactly once, the fragment removed
+ * before that press, the store's in-app route to /checkout, "done" logged, no navigation by the script, storage never
+ * touched, and only 200 ms polls. R2-18 runs a mutant text through this and expects it to throw.
  */
-export async function checkoutCase(text) {
+export async function checkoutCase(text, fragment = fragmentFor(CHECKOUT_PAYLOAD)) {
   const page = await orderPage();
-  const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page, storage: untouchableStorage() });
+  const h = fakeWindow({ fragment, page, storage: untouchableStorage() });
   run(text, h.window);
   h.timers.drain();
   assert.deepEqual(
@@ -532,4 +566,46 @@ export async function reloadCase(text, { width = "bar", afterFirstPress = "stepp
   assert.deepEqual(store.pending, pressed, "the pending meals stay exactly the first run's");
   assert.ok(h2.timers.delays.length * POLL_MS < MAX_WAIT_MS, `stopped at once: ${h2.timers.delays.length} polls`);
   return { second, pressed };
+}
+
+/**
+ * A planted collision (§ 11 item 3): two meal names whose keys are equal, found by a search over "Planted Meal <n>" with
+ * refKey (key "uayaw"). R2-26 asserts they collide before relying on it.
+ */
+export const COLLIDING = ["Planted Meal 40789", "Planted Meal 91224"];
+
+/** Add a meal card to the synthetic page, shaped as the fixture's own (a title and its Add to Cart). */
+export function addCard(document, name) {
+  const card = document.createElement("app-product-card");
+  card.innerHTML = `<div class="product__content-title">${name}</div><div class="product__actions"><button type="button">Add to Cart</button></div>`;
+  document.querySelector("main").appendChild(card);
+  return card;
+}
+
+/** R2-26's link: 1 + 2 of the fixture's own meals and 4 of COLLIDING[0], 7 of mpid 21's 7. */
+export const COLLISION_PAYLOAD = {
+  mpid: 21,
+  items: [
+    { name: MEALS[0], qty: 1 },
+    { name: MEALS[1], qty: 2 },
+    { name: COLLIDING[0], qty: 4 },
+  ],
+};
+
+/**
+ * R2-26 (§ 11 item 3): both COLLIDING cards on the page, the link naming ONE of them. Asserts the whole refusal: nothing
+ * pressed at all (not even the meals that were found), the fragment removed, the stop line naming the shared key, and
+ * no wait first. R2-30 runs a mutant text through this and expects it to throw.
+ */
+export async function collisionCase(text) {
+  const page = await orderPage();
+  for (const name of COLLIDING) addCard(page.document, name);
+  const h = fakeWindow({ fragment: fragmentFor(COLLISION_PAYLOAD), page, storage: untouchableStorage() });
+  run(text, h.window);
+  h.timers.drain();
+  assert.deepEqual(page.all, [], "no press at all: no meal, no page control");
+  assertRefused(h, "/order?mpid=21", new RegExp(`stopped: two meals share a key: ${refKey(COLLIDING[0])}$`));
+  assert.deepEqual(page.store.pending, [], "the plan holds nothing");
+  assert.ok(h.timers.delays.length * POLL_MS < MAX_WAIT_MS, `stopped at once: ${h.timers.delays.length} polls`);
+  return { h, page };
 }

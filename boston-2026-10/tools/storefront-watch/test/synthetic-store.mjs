@@ -73,19 +73,22 @@ export function w1Baseline(files = syntheticStore()) {
 export const baselineText = (baseline) => `${JSON.stringify(baseline, null, 2)}\n`;
 
 /**
- * A fetch function serving `files` under ORIGIN, recording every URL it is asked for. It answers any other host
- * with a network error, but the record is what the tests read: a request that should never be made is a failure
- * even if it failed.
+ * A fetch function serving `files` under ORIGIN, recording every URL it is asked for (and each request's method in
+ * `methods`). It answers any other host with a network error, but the record is what the tests read: a request that
+ * should never be made is a failure even if it failed. `headers` maps a path to response headers of its own (W8's
+ * Last-Modified).
  */
-export function fakeFetch(files) {
+export function fakeFetch(files, { headers = {} } = {}) {
   const calls = [];
-  const fetchImpl = async (url) => {
+  const methods = [];
+  const fetchImpl = async (url, init = {}) => {
     calls.push(String(url));
+    methods.push(init.method ?? "GET");
     const u = new URL(url);
     if (u.origin !== ORIGIN) throw new TypeError(`fetch failed (the test network has no ${u.host})`);
     const key = u.pathname + u.search;
     if (!files.has(key)) return new Response("not found", { status: 404 });
-    return new Response(files.get(key), { status: 200, headers: { "content-type": "text/plain" } });
+    return new Response(files.get(key), { status: 200, headers: { "content-type": "text/plain", ...(headers[key] ?? {}) } });
   };
-  return { fetchImpl, calls };
+  return { fetchImpl, calls, methods };
 }
