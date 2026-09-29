@@ -3,8 +3,14 @@
 // from and of the theme it was drawn in. Nothing here needs a browser (test F1 runs it on every `npm test`).
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
-import { basename, join } from "node:path";
-import { ROOT } from "../build.mjs";
+import { basename, dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/**
+ * The package root, found from this file rather than imported from ../build.mjs: build.mjs imports
+ * `qrcode`, and the renderer (tools/render-flows/) must run on its own install alone. Imports only node:.
+ */
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export const FLOWS_DIR = join(ROOT, "flows");
 export const RENDERED_DIR = join(FLOWS_DIR, "rendered");

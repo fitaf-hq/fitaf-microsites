@@ -32,8 +32,8 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/save/` | **dev build only**: Flow 1 (`section.html`, `flow1.js`), the share panel (`share-panel.html`, `share.js`), the one arithmetic module (`calculator.js`), `banner.html`, `style.css` | INPUT |
 | `src/worker/` | the Worker (below) | INPUT |
 | `migrations/` | D1 schema, applied in order: `0001_claims.sql`, `0002_contacts.sql` (rung 3), `0003_saves.sql` (rung 4: drops rung 3's tables), `0004_sending.sql` (rung 5: attempts, Resend's id, the send claim) | INPUT |
-| `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs`; `render-flows.mjs` (`npm run render:flows`) with `flow-sources.mjs` and `flow-theme.mjs` | tools |
-| `.puppeteerrc.cjs` | the browser `render:flows` drives: the installed Chrome, never a download | config |
+| `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs`; `flow-sources.mjs` + `flow-theme.mjs` (the flow diagrams' blocks, stamps and theme, browser-free: used by F1 and by the renderer) | tools |
+| `tools/render-flows/` | the flow-diagram renderer (`npm run render:flows` delegates to it): **its own npm package and lockfile**, so mermaid-cli and puppeteer are never in this package's install, which the deploy runs; see its README | tool, separate package |
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel) | OUTPUT, git-ignored |
 
 **Nothing in `dist/` is hand-edited.** To change the page, change `data/` or `src/` and rebuild.
@@ -45,6 +45,7 @@ npm --prefix boston-2026-10 install
 npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13, F1
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
+npm --prefix boston-2026-10/tools/render-flows ci  # the renderer's own install (not part of the one above)
 npm --prefix boston-2026-10 run render:flows  # flows/rendered/: every flow diagram as SVG + 2x PNG (installed Chrome)
 ```
 

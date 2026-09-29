@@ -12,13 +12,15 @@ edit a file here by hand.
 ## Rebuild
 
 ```sh
-npm --prefix boston-2026-10 install
+npm --prefix boston-2026-10/tools/render-flows ci
 npm --prefix boston-2026-10 run render:flows
 ```
 
-`render:flows` (`../../scripts/render-flows.mjs`) draws every block with `@mermaid-js/mermaid-cli` in the
-Chrome already installed on the machine (`../../.puppeteerrc.cjs`; set `PUPPETEER_EXECUTABLE_PATH` for
-another path). Nothing is downloaded. It rewrites every file here and removes any that no block draws.
+`render:flows` delegates to [`../../tools/render-flows/`](../../tools/render-flows/README.md), a separate
+npm package (the site's own install never contains mermaid-cli or puppeteer). It draws every block with
+`@mermaid-js/mermaid-cli` in the Chrome already installed on the machine (its `.puppeteerrc.cjs`; set
+`PUPPETEER_EXECUTABLE_PATH` for another path). Nothing is downloaded. It rewrites every file here and
+removes any that no block draws.
 
 ## What a reader would misread
 

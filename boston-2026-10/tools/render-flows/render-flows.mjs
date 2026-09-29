@@ -1,9 +1,10 @@
-// `npm run render:flows`: draws every mermaid block in flows/*.md to flows/rendered/<name>.svg
-// (committed, stamped with its source's hash) and <name>.png (at 2×, for screen sharing; git-ignored).
+// `npm run render:flows` (in boston-2026-10, which delegates to this package's `render`): draws every
+// mermaid block in flows/*.md to flows/rendered/<name>.svg (committed, stamped with its source's hash)
+// and <name>.png (at 2×, for screen sharing; git-ignored).
 //
-// The theme comes from the page's :root tokens and @font-face rules (scripts/flow-theme.mjs), read at
-// render time. Mermaid measures every label in the page's own fonts, loaded before it draws, and each
-// SVG carries the faces it uses, so it looks the same wherever it is opened.
+// The theme comes from the page's :root tokens and @font-face rules (../../scripts/flow-theme.mjs),
+// read at render time. Mermaid measures every label in the page's own fonts, loaded before it draws,
+// and each SVG carries the faces it uses, so it looks the same wherever it is opened.
 //
 // Chrome is the one already installed (.puppeteerrc.cjs, or PUPPETEER_EXECUTABLE_PATH); nothing is
 // downloaded. A block mermaid refuses is reported and the run exits 1 after drawing the others.
@@ -12,12 +13,12 @@ import { mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { renderMermaid } from "@mermaid-js/mermaid-cli";
 import puppeteer from "puppeteer";
-import { flowBlocks, RENDERED_DIR, stamp } from "./flow-sources.mjs";
-import { facesFor, flowTheme, fontFaceCss } from "./flow-theme.mjs";
+import { flowBlocks, RENDERED_DIR, stamp } from "../../scripts/flow-sources.mjs";
+import { facesFor, flowTheme, fontFaceCss } from "../../scripts/flow-theme.mjs";
 
 const require = createRequire(import.meta.url);
-const PUPPETEER_RC = require("../.puppeteerrc.cjs");
-const PACKAGE = require("../package.json");
+const PUPPETEER_RC = require("./.puppeteerrc.cjs");
+const PACKAGE = require("./package.json");
 
 /** Device pixels per CSS pixel in the PNG. */
 const PNG_SCALE = 2;

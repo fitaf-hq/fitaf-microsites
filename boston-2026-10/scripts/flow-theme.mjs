@@ -8,8 +8,11 @@
 // white (a non-text accent: the start and end dots).
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { ROOT } from "../build.mjs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/** The package root, found from this file (not ../build.mjs, whose `qrcode` import the renderer lacks). */
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export const TEMPLATE_PATH = join(ROOT, "src", "template.html");
 export const FONTS_DIR = join(ROOT, "src", "fonts");
