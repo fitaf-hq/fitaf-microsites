@@ -25,6 +25,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S26 | authority |
 | `SPEC-rung5-sending.md` | rung 5's contract: the real sender (Resend), dev only, behind an allowlist; cases M1–M9, § 8 (the derived token) M10–M13, and § 9 (the emails in the page's look) M14–M21 | authority |
+| `SPEC-photo-slots.md` | the photo slots (PROPOSED): a phone in portrait at 390 px ×3; `page-hero` 4:3, `square`, `slide`; the page photo's weight budget. The surface a photo is judged against; no photo is ever committed | authority |
 | `consent/DRAFT.md` | the consent wording (v0.3, ⛔ not approved): the page (§§ 1–2), the emails (§ 3) and `/confirm` (§ 4) show it verbatim | authority |
 | `flows/` | the multi-step flows (save the offer, build a plan, the next-day email, text (off for October), return, the lead record, the calendar cart, this week's menu), each with a Mermaid diagram: states, transitions, data, consent points, written **before** they are built | design; the contracts win where a flow and a contract disagree about something built |
 | `flows/rendered/` | each flow's diagram as an SVG (committed, stamped with its block's hash) and a 2× PNG (git-ignored), for a screen share; see its README | OUTPUT of `npm run render:flows` |
