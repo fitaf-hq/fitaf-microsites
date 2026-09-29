@@ -43,7 +43,7 @@ stateDiagram-v2
   LOOKUP --> ORIGINAL : code known, offer still live
   LOOKUP --> WELCOME_BACK : code known, offer expired
   LOOKUP --> CURRENT : code unknown or malformed
-  ORIGINAL --> [*] : show the code; Build my plan / See this week's menu
+  ORIGINAL --> [*] : show the code#59; Build my plan / See this week's menu
   WELCOME_BACK --> [*] : "That offer ended, but here's what we have now" + today's code
   CURRENT --> [*] : today's general offer (identical to any visitor's)
 ```

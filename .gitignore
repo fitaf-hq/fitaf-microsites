@@ -12,6 +12,9 @@ dist-mockups/
 # them from this folder, named by the committed mockups/photos.json, and none is ever committed.
 /boston-2026-10/mockups/photos/
 
+# The flow diagrams' PNGs (2x, for screen sharing) are rebuilt by `npm run render:flows`; the SVGs are committed
+boston-2026-10/flows/rendered/*.png
+
 # Wrangler / Miniflare local state (its cache holds request location data)
 .wrangler/
 

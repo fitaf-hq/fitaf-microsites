@@ -105,7 +105,7 @@ The QR code's own navy-on-white comes from `build.mjs`, not from CSS.
 
 | | case |
 |---|---|
-| P1 | git tracks no image but the store's logo; `mockups/photos/` and `dist-mockups/` are ignored (with controls) |
+| P1 | git tracks no image but the store's logo and the flow diagrams (each named by its flow block, never by folder); `mockups/photos/` and `dist-mockups/` are ignored (with controls) |
 | P2 | every text run sits in an element citing `data/` by JSON pointer; the letterless-marker render; one changed value (offer, headline, scan prompt, event URL) shows on all four; one changed phrase in `data/messages.json` changes the page and all four; a changed price reaches the flyer; no CSS `content` or script writes a word |
 | P3 | the manifest's slots are all used and no piece uses another; placeholders without photos, photos with them; one changed photo changes all four; a path in the manifest is refused |
 | P4 | the QR files are byte-identical to `writeQrCodes`', decode to the event URL, one per piece; no QR generator here |

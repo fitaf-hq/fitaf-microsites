@@ -6,19 +6,25 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
+import { flowBlocks } from "../scripts/flow-sources.mjs";
 
 const REPO = join(ROOT, "..");
 const PACKAGE = "boston-2026-10";
 const IMAGE = /\.(jpe?g|png|gif|webp|heic|heif|avif|tiff?|bmp|svg|raw|dng|cr2|nef)$/i;
-/** The only image the repository may hold: the store's public logo (B1), byte-identical to the store's file. */
-const ALLOWED_IMAGES = [`${PACKAGE}/src/assets/fitaf-logo.png`];
+/**
+ * The only images the repository may hold, and none is a photograph: the store's public logo (B1), byte-identical
+ * to the store's file, and the flow diagrams, each an SVG drawn from a mermaid block in committed text, named by
+ * the block (F1 keeps each current). Named one by one: a folder or an extension is never the exemption.
+ */
+const FLOW_DIAGRAMS = (await flowBlocks()).map((b) => `${PACKAGE}/flows/rendered/${b.name}.svg`);
+const ALLOWED_IMAGES = [`${PACKAGE}/src/assets/fitaf-logo.png`, ...FLOW_DIAGRAMS];
 
 const git = (...args) => spawnSync("git", ["-C", REPO, ...args], { encoding: "utf8" });
 
 /** Tracked image files other than the allowed brand asset. */
 export const trackedPhotos = (paths) => paths.filter((p) => IMAGE.test(p) && !ALLOWED_IMAGES.includes(p));
 
-test("P1: git tracks no image but the store's logo", () => {
+test("P1: git tracks no image but the store's logo and the flow diagrams", () => {
   const res = git("ls-files", "-z");
   assert.equal(res.status, 0, res.stderr);
   const tracked = res.stdout.split("\0").filter(Boolean);
@@ -40,6 +46,17 @@ test("P1 control: the check flags a photograph, whatever its case or folder", ()
     `${PACKAGE}/data/plans.json`,
   ];
   assert.deepEqual(trackedPhotos(listing), listing.slice(1, 4));
+});
+
+test("P1 control: beside the flow diagrams, a photograph or an SVG no flow block names is still flagged", () => {
+  assert.ok(FLOW_DIAGRAMS.length > 0, "the flows have blocks (control)");
+  const listing = [
+    ...FLOW_DIAGRAMS,
+    `${PACKAGE}/flows/rendered/hero.jpg`,
+    `${PACKAGE}/flows/rendered/01-save-offer.png`,
+    `${PACKAGE}/flows/rendered/not-a-flow.svg`,
+  ];
+  assert.deepEqual(trackedPhotos(listing), listing.slice(FLOW_DIAGRAMS.length));
 });
 
 test("P1: the photos folder and the rendered mock-ups are ignored; the manifest is not", () => {

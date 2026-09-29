@@ -1,0 +1,17 @@
+{
+  "name": "fitaf-microsite-boston-2026-10-render-flows",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Renders the Boston 2026-10 flow diagrams to SVG and PNG. A separate package so the site's own install never contains it.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "render": "node render-flows.mjs"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "12.0.0",
+    "puppeteer": "25.12.0"
+  }
+}
