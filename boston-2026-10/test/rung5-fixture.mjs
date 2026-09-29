@@ -10,6 +10,7 @@ import { ROOT } from "../build.mjs";
 import { ResendSender } from "../src/worker/resend-sender.js";
 import { tokenMinter } from "../src/worker/confirm-token.js";
 import { postSave, rows, runSendDue, validSave, FixedRedemptions, TEST_CONFIRM_TOKEN_KEY } from "./worker-harness.mjs";
+import { hrefsOf, lineTexts } from "./email-html.mjs";
 
 export const DUMMY_KEY = "re_DUMMY_KEY_FOR_TESTS_ONLY"; // not a key: nothing it is sent to exists
 export const MAIL_FROM = "Fit AF <offers@eatfitaf.com>"; // the committed placeholder
@@ -70,16 +71,12 @@ export async function draftMessage(heading) {
   return { subject, lines };
 }
 
-const ENTITIES = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
-
-/** An HTML part as its paragraphs' visible text, and its links. */
+/**
+ * An HTML part as its lines' visible text (`paragraphs`: one layout row per line of the draft, SPEC-rung5 § 9;
+ * the logo's row has no text) and its links, in order.
+ */
 export function readHtml(html) {
-  const body = /<body>([\s\S]*)<\/body>/.exec(html)[1];
-  const hrefs = [...body.matchAll(/<a href="([^"]*)">/g)].map((m) => m[1].replace(/&[a-z#0-9]+;/g, (e) => ENTITIES[e]));
-  const paragraphs = [...body.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) =>
-    m[1].replace(/<[^>]+>/g, "").replace(/&[a-z#0-9]+;/g, (e) => ENTITIES[e] ?? e),
-  );
-  return { paragraphs, hrefs };
+  return { paragraphs: lineTexts(html), hrefs: hrefsOf(html) };
 }
 
 // ---- M4 / M5: the allowlist case, run against the real allowlist.js or a mutated copy ----
