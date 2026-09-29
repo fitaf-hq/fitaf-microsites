@@ -12,6 +12,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `SPEC.md` | the contract, §§ 0–5 | authority |
 | `data/plans.json` | the plan table, read off the store's public plans page on a date | INPUT |
 | `data/events.json` | one entry per event URL that gets a QR code | INPUT |
+| `data/messages.json` | the campaign's phrases: the page's headline, intro line, tagline (meta description) and top bar, and the mock-ups' own; one place to change a phrase | INPUT |
 | `src/template.html` | the page: markup and inline CSS, with `{{SLOT}}` placeholders | INPUT |
 | `src/app.js` | the one small inline script: the two questions, tabs, "See all plans", URL fragment | INPUT |
 | `src/fonts/` | Poppins 600/700 and Open Sans 400/600, Latin WOFF2 subsets (Fontsource 5.3.0), with `OFL-*.txt` | INPUT, copied to `dist/fonts/` |
@@ -19,7 +20,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look) and R2-01–R2-14 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-14 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`) and P1–P6 of the mock-ups (`pN-*.test.mjs`), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S20 | authority |
@@ -33,6 +34,8 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/worker/email-tokens.json` | the emails' copy of `src/template.html`'s `:root` tokens, written by `npm run email:tokens` (a Worker cannot read the template at run time); M17 fails when it differs | DERIVED, committed, never hand-edited |
 | `migrations/` | D1 schema, applied in order: `0001_claims.sql`, `0002_contacts.sql` (rung 3), `0003_saves.sql` (rung 4: drops rung 3's tables), `0004_sending.sql` (rung 5: attempts, Resend's id, the send claim) | INPUT |
 | `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs`; `email-tokens.mjs` (`npm run email:tokens`) and `preview-emails.mjs` (`npm run preview:emails`) | tools |
+| `mockups/` | ⭐ **four marketing mock-ups for a screen share** (tent card, flyer, banner, slideshow), built from the page's own data, tokens, logo and QR code; photos by manifest, never committed. See [`mockups/README.md`](mockups/README.md) | INPUT + build |
+| `dist-mockups/` | the mock-ups: HTML, PNGs and the photos they show | OUTPUT, git-ignored |
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel); `email-preview/e1.html` and `ex.html` from `npm run preview:emails` | OUTPUT, git-ignored |
 | `SPEC-rung2-cart-handoff.md` | rung 2's contract: the cart hand-off, § 6 (the store's Custom Scripts Footer, fills A and B) governs | authority |
 | `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, both fills behind `FILL`; its `//` lines are for maintainers and do not ship | INPUT |
@@ -51,6 +54,7 @@ npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair i
 npm --prefix boston-2026-10 run build   # writes dist/
 npm --prefix boston-2026-10 run email:tokens    # after a :root token change: the emails' copy (M17 fails until then)
 npm --prefix boston-2026-10 run preview:emails  # dist-dev/email-preview/{e1,ex}.html, for a screen share
+npm --prefix boston-2026-10 run build:mockups  # the four mock-ups -> dist-mockups/ (mockups/README.md)
 ```
 
 ## Rung 2 — the cart hand-off in the store's Footer
@@ -124,7 +128,7 @@ before rung 4 (test S20 compares SHA-256s with `test/s20-production-golden.json`
 
 ```sh
 export CLOUDFLARE_ACCOUNT_ID=…            # never committed
-npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M21 (Miniflare, no network)
+npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M21, R2-01–R2-14, P1–P6 (Miniflare, no network)
 npm --prefix boston-2026-10 run db:migrate:dev        # D1 migrations -> fitaf-leads-dev (0003 drops rung 3's tables; 0004 adds sending)
 npm --prefix boston-2026-10 run seed:dev              # 20 dummy saves, 5 marked exported
 npm --prefix boston-2026-10 run purge:dev             # DRY RUN: counts only

@@ -1,0 +1,9 @@
+{
+  "about": "The campaign's MESSAGES (the M of POEMS): every phrase the page and the mock-ups share, and the mock-ups' own. Change a phrase here and rebuild: the page (`npm run build`) and all four mock-ups (`npm run build:mockups`) carry it. Public. The offer is not here: it is data/offers.json. `event_line` is a list of parts, joined with a middle dot. In `from_price`, {price} is replaced with the lowest price per meal of the plans the page shows (data/plans.json).",
+  "tagline": "Chef-prepared meal plans from Fit AF.",
+  "event_line": ["Fit AF in Boston", "October 2026"],
+  "headline": "Find your plan.",
+  "subhead": "Two questions, then choose your meals.",
+  "scan_prompt": "Scan to find your plan",
+  "from_price": "from {price} a meal"
+}

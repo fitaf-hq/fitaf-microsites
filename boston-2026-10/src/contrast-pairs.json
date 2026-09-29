@@ -47,7 +47,33 @@
     { "fg": "--muted", "bg": "--white", "role": "body", "where": "email: the footer (why this email came, the postal address), 13px", "build": "email" },
     { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "email: the buttons (E1 See my offer, E-X Yes, tell me), 19px/700 uppercase", "build": "email" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "email: the button's own shape on white", "build": "email" },
-    { "fg": "--navy", "bg": "--white", "role": "non-text", "where": "email: the navy bar above the logo (the page's top bar, without its text)", "build": "email" }
+    { "fg": "--navy", "bg": "--white", "role": "non-text", "where": "email: the navy bar above the logo (the page's top bar, without its text)", "build": "email" },
+    { "fg": "--white", "bg": "--navy", "role": "body", "where": "event bar: Fit AF in Boston \u00b7 October 2026, 13-20px/600 uppercase (tent card, flyer, banner, closing slide)", "build": "mockups" },
+    { "fg": "--navy", "bg": "--white", "role": "large-text", "where": "headline, 34-92px/700 (tent card, flyer, banner, closing slide)", "build": "mockups" },
+    { "fg": "--ink", "bg": "--white", "role": "body", "where": "subhead and tagline, 16-28px", "build": "mockups" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "scan prompt 19-40px/700, web address 15-30px/600, plan-name cards 14px/600, legend title, the bold part of each plain label and the file names 13-14px/600, legend button and the file-names switch 12.5-13px/600", "build": "mockups" },
+    { "fg": "--navy", "bg": "--white", "role": "ui-or-heading", "where": "the legend's file-names switch: a checkbox, ticked in navy (accent-color)", "build": "mockups" },
+    { "fg": "--muted", "bg": "--white", "role": "body", "where": "lowest price per meal on the flyer, 14px; legend note 12.5px", "build": "mockups" },
+    { "fg": "--ink", "bg": "--white", "role": "body", "where": "the legend's plain labels, 13px", "build": "mockups" },
+    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "the offer, 24-52px/700 on its solid panel (every piece)", "build": "mockups" },
+    { "fg": "--white", "bg": "--navy", "role": "large-text", "where": "slide line (a plan's promise), 26-64px/700, on the solid navy panel over the photo", "build": "mockups" },
+    { "fg": "--white", "bg": "--navy", "role": "body", "where": "slide kicker (the plan's name), 15-24px/600 uppercase, on the solid navy panel over the photo", "build": "mockups" },
+    { "fg": "--lean", "bg": "--navy", "role": "non-text", "where": "Lean: the colour bar on top of its slide's navy panel", "build": "mockups" },
+    { "fg": "--signature", "bg": "--navy", "role": "non-text", "where": "Signature: the colour bar on top of its slide's navy panel", "build": "mockups" },
+    { "fg": "--performance", "bg": "--navy", "role": "non-text", "where": "Performance: the colour bar on top of its slide's navy panel", "build": "mockups" },
+    { "fg": "--family", "bg": "--navy", "role": "non-text", "where": "Family: the colour bar on top of its slide's navy panel", "build": "mockups" },
+    { "fg": "--lean", "bg": "--white", "role": "non-text", "where": "Lean: the top bar of its plan-name card (flyer, banner)", "build": "mockups" },
+    { "fg": "--signature", "bg": "--white", "role": "non-text", "where": "Signature: the top bar of its plan-name card (flyer, banner)", "build": "mockups" },
+    { "fg": "--performance", "bg": "--white", "role": "non-text", "where": "Performance: the top bar of its plan-name card (flyer, banner)", "build": "mockups" },
+    { "fg": "--family", "bg": "--white", "role": "non-text", "where": "Family: the top bar of its plan-name card (flyer, banner)", "build": "mockups" },
+    { "fg": "--orange", "bg": "--white", "role": "non-text", "where": "the orange rule above the headline (tent card, flyer)", "build": "mockups" },
+    { "fg": "--muted", "bg": "--ice", "role": "body", "where": "photo placeholder label, 12px, on its solid ice chip", "build": "mockups" },
+    { "fg": "--navy", "bg": "--ice", "role": "body", "where": "photo placeholder heading 13px/600 uppercase; the sheet caption 14px; the index page's links", "build": "mockups" },
+    { "fg": "--ink", "bg": "--ice", "role": "body", "where": "the index page's list, 16px", "build": "mockups" },
+    { "fg": "--field", "bg": "--ice", "role": "ui-or-heading", "where": "photo placeholder's dashed outline", "build": "mockups" },
+    { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "slideshow dots: the ring, and the filled dot of the current slide, on their navy pill", "build": "mockups" },
+    { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the legend's hover outline: an orange ring on a white ring around a part", "build": "mockups" },
+    { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "the hover outline's white ring, where the part is on the navy event bar", "build": "mockups" }
   ],
   "considered_not_drawn": [
     { "fg": "#ffffff", "bg": "#ff931e", "role": "large-text", "why": "the store's own button (white on its orange): measured, and under 60 even at 19px/700" },
@@ -56,7 +82,7 @@
     { "fg": "#ffffff", "bg": "#d66400", "role": "large-text", "why": "option B, chosen: the same orange family darkened (hsl 28 100% 42%) keeps the store's white uppercase label" }
   ],
   "not_measured": [
-    { "token": "--line", "why": "decorative hairline around cards and under the header; each card is identified by its text, and its state by the navy outline (measured above)" },
+    { "token": "--line", "why": "decorative hairline around cards and under the header, and (mock-ups) the outline of a piece on its sheet and the stripes of a photo placeholder; each card is identified by its text, and its state by the navy outline (measured above)" },
     { "token": "--ice", "as": "tile on white", "why": "ice tiles and chips on a white card are grouping, not a boundary anyone must find" },
     { "token": "--cta", "as": "disabled button", "why": "the submit button at 60% opacity while a save is sending: a disabled control is exempt" }
   ]

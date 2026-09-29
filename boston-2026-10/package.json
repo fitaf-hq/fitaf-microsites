@@ -12,6 +12,7 @@
     "build:dev": "node build.mjs --env dev",
     "build:storefront": "node scripts/build-storefront.mjs",
     "handoff:link": "node scripts/handoff-link.mjs",
+    "build:mockups": "node mockups/build-mockups.mjs",
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",
     "email:tokens": "node scripts/email-tokens.mjs",

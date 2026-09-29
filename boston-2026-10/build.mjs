@@ -15,6 +15,8 @@ export const EVENTS_PATH = join(ROOT, "data", "events.json");
 export const DIST = join(ROOT, "dist");
 export const DIST_DEV = join(ROOT, "dist-dev");
 export const SAVE_PATH = join(ROOT, "data", "save.json");
+/** The campaign's phrases, shared by the page and the mock-ups (mockups/): one place to change a phrase. */
+export const MESSAGES_PATH = join(ROOT, "data", "messages.json");
 export const ZIPS_PATH = join(ROOT, "data", "delivery-zips.json");
 /** The weekly menu input of Flow 8. It does not exist yet, so the "See this week's menu" link is absent. */
 export const MENU_PATH = join(ROOT, "data", "menu.json");
@@ -248,10 +250,22 @@ export async function devConfig() {
   return unstable_readConfig({ config: WRANGLER_CONFIG, env: "dev" }, { hideWarnings: true });
 }
 
-export async function renderPage(plans, dev = PROD_SLOTS) {
+/** The page's phrases from data/messages.json. The event line's parts are joined as the page always wrote them. */
+export function messageSlots(messages) {
+  return {
+    TAGLINE: esc(messages.tagline),
+    EVENT_LINE: messages.event_line.map(esc).join(" &middot; "),
+    HEADLINE: esc(messages.headline),
+    SUBHEAD: esc(messages.subhead),
+  };
+}
+
+export async function renderPage(plans, dev = PROD_SLOTS, messages = null) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
+  messages ??= await loadJson(MESSAGES_PATH);
   const slots = {
+    ...messageSlots(messages),
     GOALS: plans.individual.map(goalButton).join("\n"),
     COUNTS: plans.shown_counts.map(countButton).join("\n"),
     GRID_HEAD: gridHead(plans),

@@ -1,0 +1,16 @@
+{
+  "about": "The words of each mock-up's legend, 'Where each part comes from'. The legend is for the Owner's screen share, so it shows PLAIN LABELS: one per source, as `what: from` (the Advisor, 2026-09-29). The file names stay behind a switch (`files_toggle`, or the N key), with `files_note`. `sources` must name every source the mock-ups read, and no other (test P5).",
+  "title": "Where each part comes from",
+  "note": "Change one of these, and every piece that uses it changes.",
+  "files_toggle": "Show file names (N)",
+  "files_note": "Change one of these files and run npm run build:mockups: every piece that uses it changes. data/ and src/ are the microsite's own inputs.",
+  "sources": {
+    "data/messages.json": { "what": "Words", "from": "the shared message list" },
+    "data/offers.json": { "what": "Offer", "from": "the offer list" },
+    "data/plans.json": { "what": "Plans and prices", "from": "the plan table" },
+    "data/events.json": { "what": "Event and QR code", "from": "the event list" },
+    "mockups/photos.json": { "what": "Photos", "from": "the week's picks" },
+    "src/assets/fitaf-logo.png": { "what": "Logo", "from": "the brand's logo" },
+    "src/template.html": { "what": "Colours and fonts", "from": "the brand" }
+  }
+}
