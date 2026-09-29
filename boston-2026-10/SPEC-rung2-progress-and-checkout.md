@@ -1,7 +1,7 @@
 # boston-2026-10 — rung 2's two faces: a progress screen while the cart fills, and a checkout with only the order and the payment. CONTRACT
 
-**Written 2026-09-29, before any code**, on the Advisor's design of that day. **Status: DRAFT.** § 7 lists his open
-choices, each with the default the build takes unless he rules otherwise. It extends the hand-off
+**Written 2026-09-29, before any code**, on the Advisor's design of that day. **Status: RULED 2026-09-29** (§ 7: his
+four answers the same evening). It extends the hand-off
 (`SPEC-rung2-cart-handoff.md`, fill B, §§ 8–12), which it does not change: every press, wait and stop there stands.
 
 **The Advisor's words**:
@@ -30,10 +30,14 @@ without `#fitaf=` still costs one read of `location.hash` and nothing more).
 
 1. **When**: at once after the checks in § 1 pass, before fill B's first poll. It covers the whole order page (fixed,
    the full viewport, above every layer of the store's, its dialogs included).
-2. **What**: a title; a progress bar; a step line; and a line that changes every 4 seconds. **Progress is fill B's
-   own**: presses made of (the plan's count + 1), the last step being the store's CHECKOUT. As each meal is pressed,
-   the step line names it as its card shows it (*"Added: Birria de Res Bowl"*). With `prefers-reduced-motion`, nothing
-   moves and the changing line stays on its first.
+2. **What** (§ 7, choice 1): the title *"Assembling your order"*; a progress bar; and **a carousel of the meals being
+   added**, one slide per meal as fill B presses it, **the meal as its own card shows it**: its name, and its photograph
+   when the page has already loaded that photograph (the card's `img` is `complete` with a `naturalWidth`; the slide
+   reuses its `currentSrc`, so nothing new is requested). Otherwise the slide is the name alone. **Progress is fill
+   B's own**: presses made of (the plan's count + 1), the last step being the store's CHECKOUT, with a count line
+   (*"3 of 7 meals"*) and, at CHECKOUT, *"Taking you to checkout"*. The carousel moves to each new meal as it is
+   added; once all are added it cycles through them every 2.5 s until `done`. With `prefers-reduced-motion`, nothing
+   slides and nothing cycles: the newest meal is shown.
 3. **It holds no control**: no button, link, input, or element with a role of one; nothing focusable. So a person cannot
    act on it, and fill B's own scan of the displayed controls outside the meal cards (§ 10) finds exactly what it found
    without it. The step line is `role="status"`, `aria-live="polite"`.
@@ -61,13 +65,17 @@ without `#fitaf=` still costs one read of `location.hash` and nothing more).
    | H3 | `a.checkout__guest-signin-banner` | *"Already have an account? Sign in for faster checkout"* |
    | H4 | `a.contact__sign-in` | the contact section's *"Sign in"* |
    | H5 | `app-storefront-popup-host` | the store's own pop-ups (§ 7, choice 2) |
+   | H6 | `.summary__plan-subscription-controls:not(:has(.summary__subscription-toggle--active))` | the offer to subscribe (*"Switch to subscription"*, *"Subscribe & save"*, and the sign-in prompt behind it), **only while it is off** (§ 7, choice 3) |
 
-   **Inside the checkout component (`app-checkout`), only H3 and H4 are hidden.** The order recap
-   (`.checkout__summary`), the form (`.checkout__form`), the pay button, every contact, delivery, schedule, tip,
-   discount and payment field, and the subscription switch all stay.
+   **Inside the checkout component (`app-checkout`), only H3, H4 and H6 are hidden.** The order recap
+   (`.checkout__summary`), the form (`.checkout__form`), the pay button, and every contact, delivery, schedule, tip,
+   discount and payment field all stay. ⭐ **A subscription that is on is never hidden**: if a plan's switch is active
+   (or a plan requires one), its controls stay, and so do the lines that only an active subscription shows
+   (`.summary__plan-group-renew`, *"Subscription — renews every …"*; `.summary__cart-frequency`, *"Subscription
+   delivery — every …"*; `.summary__subscription-note`). The style may hide an offer; it never hides a commitment.
 4. ⭐ **The payment is untouched, and it is measured**: the displayed controls inside `app-checkout` (`input`, `select`,
    `textarea`, `button`, `iframe` (the card field is the payment provider's frame), `a[href]`, `[role=switch]`,
-   `[role=radio]`) are **the same set with the style as without it, except exactly H3 and H4**.
+   `[role=radio]`) are **the same set with the style as without it, except exactly H3, H4 and H6**.
 
 ## 4. What an ordinary visitor gets
 
@@ -83,10 +91,12 @@ extended to say so, and the watch's F4 already fails on any line of ours in an o
 | R2-42 | `done` | `html.fitaf-deep`; one `style#fitaf-deep`; the screen gone; the style set **before** the screen went |
 | R2-43 | each stop after the checks (not on this page; the plan holds meals; two meals share a key; `/checkout` not reached) | the screen gone; no mark; no style; the stop's own line |
 | R2-44 | the screen's contents | no control and nothing focusable; § 10's scan finds the same controls with the screen as without |
-| R2-45 | the payment check (§ 3 item 4) on the synthetic checkout | equal, except H3 and H4 |
+| R2-45 | the payment check (§ 3 item 4) on the synthetic checkout | equal, except H3, H4 and H6 |
 | R2-46 | ⭐ mutant: a hide rule that also matches a field of `.checkout__form` | R2-45 fails |
+| R2-51 | the synthetic checkout with a plan's switch **active** | H6 hides nothing: the switch and the renewal and frequency lines are displayed; ⭐ mutant: H6 without its `:not(:has(…))`, R2-51 fails |
+| R2-52 | the carousel: a card whose photo is loaded, and one whose photo is not | a slide with the photo (the card's `currentSrc`) and a slide with the name alone; no `img` is created from an unloaded photo |
 | R2-47 | the checkout component gone from the page (the visitor navigated away in the app) | nothing hidden |
-| R2-48 | `prefers-reduced-motion` | no animation; the changing line never changes |
+| R2-48 | `prefers-reduced-motion` | no animation; the carousel shows the newest meal and never cycles |
 | R2-49 | fill B never reaches a verdict (a planted hang) | the screen gone at 90 s |
 | R2-50 | the words and colours | from `data/messages.json` and the page's tokens: change a phrase and the built block changes; no phrase in the source |
 
@@ -96,8 +106,9 @@ F5's pass:
 | | check | pass |
 |---|---|---|
 | W10 | the screen during the run | seen after the first press and gone at `done` |
-| W11 | ⭐ § 3 item 4 on the live `/checkout`: the displayed controls inside `app-checkout` with `style#fitaf-deep` enabled, then disabled | equal, except H3 and H4; the pay button displayed in both |
-| W12 | each of H1–H5 on the live checkout | found (a missing one fails open, showing; it is reported) |
+| W11 | ⭐ § 3 item 4 on the live `/checkout`: the displayed controls inside `app-checkout` with `style#fitaf-deep` enabled, then disabled | equal, except H3, H4 and H6; the pay button displayed in both |
+| W12 | each of H1–H6 on the live checkout | found (a missing one fails open, showing; it is reported) |
+| W13 | the order is one-time | no active subscription switch and no *"renews every"* line on the deep-carted `/checkout` (a store change that defaulted a plan to a subscription fails the smoke) |
 
 `storefront/dependencies.json` gains the hide list's names, so F2 flags a release that renames one. **Before the paste**,
 the Advisor runs the built console file in his own browser at both widths, as in the one-browser run, and looks.
@@ -108,11 +119,15 @@ Both add to the Footer block: an estimated 2 KB (the screen's markup, style and 
 **about 7 KB**: over the 5 KB target and under the 10 KB ceiling (the Advisor, 2026-09-29: *"We can go up to 10k for
 the footer. 5k is a good target, but it's OK if we're above it slightly."*). § 7, choice 4.
 
-## 7. The Advisor's choices (the default in bold is what the build takes unless he rules otherwise)
+## 7. Ruled by the Advisor, 2026-09-29 (the evening; in his words)
 
-1. **The words**: **a title and four to six short lines in `data/messages.json`, drafted from the page's own phrases,
-   for him to rewrite**; no claim about the food that the Owner has not made. **Each meal named as it is added: yes.**
-2. **H5, the store's pop-ups on this checkout: hide.**
-3. **The subscription switch** (*"Switch to subscription"*, which sends a guest to sign in): **keep**. It is the
-   Owner's offer, and hiding it changes what he sells, not only what distracts.
-4. **About 7 KB: accept** (under the ceiling).
+| | the question put | his answer |
+|---|---|---|
+| 1 | the words: a title and four to six short lines from the page's own phrases | *"I think "assembling your order" or similar and then a legitimate carousel of the items we're adding."* ⇒ § 2 item 2: the title, and a carousel of the meals as their cards show them, in place of changing lines |
+| 2 | hide the store's pop-ups on this checkout | *"Yes"* (H5) |
+| 3 | keep the subscription switch, as the Owner's offer | *"This is a bug on HMP's site. Subscriptions should not be shown. The Owner has just accepted it as something that cannot be disabled in this UI. If we can hide it in ours, that would be an improvement. Fit AF has no way to fulfill HMP-style subscriptions right now – meaning a customer who goes down that path ends up in a worse than dead end."* ⇒ H6, only while the switch is off; W13 |
+| 4 | the Footer at about 7 KB | *"Accept"* |
+
+⚠ **The build's reading, not his words**: *"a legitimate carousel"* is read as **the real meals being added, each as
+its own card shows it** (§ 2 item 2), with the card's photograph when the page already holds it; the Advisor sees it in
+his own browser before any paste.
