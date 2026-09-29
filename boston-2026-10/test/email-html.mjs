@@ -74,3 +74,22 @@ export const hrefsOf = (html) => tagsOf(bodyOf(html)).filter((t) => t.name === "
 /** A text part's wording: each link's ": URL" removed (renderText writes a button as "label: href"). */
 export const wordingOf = (text) => text.replace(/: https?:\/\/\S+/g, "");
 export const linksOfText = (text) => [...text.matchAll(/https?:\/\/\S+/g)].map((m) => m[0]);
+
+/**
+ * Every <a> in the body with the tag before it, and whether it is BUTTON-STYLED: set in a coloured table cell,
+ * or given a background, padding or inline-block of its own. Any one of them is enough, so a link cannot be
+ * made to look like a button in a way this misses (SPEC-rung5 § 9, M19 and M21).
+ */
+export function linksOf(html) {
+  const tags = tagsOf(bodyOf(html));
+  return tags
+    .map((t, i) => ({ a: t, before: tags[i - 1] }))
+    .filter(({ a }) => a.name === "a")
+    .map(({ a, before }) => {
+      const style = declarations(a.attrs.style);
+      const inColouredCell = before?.name === "td" && (before.attrs.bgcolor !== undefined || "background-color" in declarations(before.attrs.style));
+      const buttonStyled =
+        inColouredCell || "background-color" in style || "background" in style || "padding" in style || style.display === "inline-block";
+      return { a, before, style, buttonStyled };
+    });
+}

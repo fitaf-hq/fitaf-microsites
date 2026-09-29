@@ -112,8 +112,13 @@ exactly the text part's wording (DRAFT § 3 is a draft for legal review; this am
   `src/worker/email-tokens.json` (a JSON import, as `data/offers.json` already is). The file is DERIVED: M17
   fails when it differs from the template's `:root`, so a token change reaches the email through a
   regeneration, never by hand.
-- **Buttons**: every link of the draft (its `[ … ]`) is the page's button — `--cta` with the `--on-cta`
-  label, 19px/700 uppercase, as on the page — built as a bulletproof table-cell button.
+- **One button per email**: E1's *See my offer* and E-X's *Yes, tell me* are the page's button — `--cta` with the
+  `--on-cta` label, 19px/700 uppercase, as on the page — built as a bulletproof table-cell button.
+  ⭐ **Ruled (the Advisor, 2026-09-29)**: E1's marketing consent, *Yes, keep me posted*, is a **quiet text link**, as
+  easy to withhold as to give (GDPR's principle, which the draft follows): underlined, in its sentence, at the
+  sentence's size and weight, in `--navy` (a token that passes body contrast). E-X's confirmation stays a
+  button, because confirming is that email's only purpose. The draft marks both with `[ … ]`; the words and
+  the text part are unchanged.
 - **Footer**: the message's last line, muted 13px under a hairline — E1's *"You're getting this one email
   because you saved an offer."* with the postal address (one line in the draft), E-X's postal address.
   ⚠ The draft has **no unsubscribe line** in either email, and none is added.
@@ -134,5 +139,6 @@ Cases (`node --test`, no network; E1 ticked, E1 unticked and E-X each):
 | M16 | links | every `href` and `src` is absolute on `SITE_URL`; the `href`s are the text part's links, in order; the logo is the file the build copies into the Worker's assets |
 | M17 | colours | every colour in the HTML is a `:root` token value of `src/template.html`; `email-tokens.json` equals that `:root`; the renderer's source holds no colour and no font name; the check refuses a colour that is not a token (mutant, on a copy of the HTML) |
 | M18 | wording | the HTML's visible text, tags stripped, equals the text part's wording (each link's `: URL` removed), line for line and as a whole |
-| M19 | layout | one centred table at most 600 px, nothing wider; each link a bulletproof button on `--cta`; the font stacks are `--head` and `--body` |
+| M19 | layout | one centred table at most 600 px, nothing wider; each button-styled link a bulletproof button on `--cta`; the font stacks are `--head` and `--body` |
 | M20 | contrast | every text/background pair the renderer's styles draw is declared (`"build": "email"`) and passes |
+| M21 | one button in E1 (the ruling above) | E1, ticked or not, has exactly one button-styled link, *See my offer*; the consent link is not button-styled (no coloured cell, background, padding or inline-block), is underlined, inline, at body weight, in a token colour whose declared pair passes body; E-X's one link stays a button |

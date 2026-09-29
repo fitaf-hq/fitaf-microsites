@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bodyOf, declarations, tagsOf, topLevelTables } from "./email-html.mjs";
+import { bodyOf, declarations, linksOf, tagsOf, topLevelTables } from "./email-html.mjs";
 import { inlineStack, pageTokens, sampleMessages } from "./email-fixture.mjs";
 
 const MAX_WIDTH_PX = 600;
@@ -35,12 +35,11 @@ test("M19: one centred layout table, at most 600 px, and nothing wider", () => {
   }
 });
 
-test("M19: each link is a bulletproof button on --cta (the colour on its table cell, the padding on the link)", () => {
+test("M19: each button-styled link is a bulletproof button on --cta (the colour on its table cell, the padding on the link)", () => {
   for (const [name, message] of Object.entries(sampleMessages())) {
-    const tags = tagsOf(bodyOf(message.html));
-    const links = tags.map((t, i) => [t, tags[i - 1]]).filter(([t]) => t.name === "a");
-    assert.ok(links.length >= 1, `control: ${name} has a button`);
-    for (const [a, cell] of links) {
+    const buttons = linksOf(message.html).filter((l) => l.buttonStyled);
+    assert.ok(buttons.length >= 1, `control: ${name} has a button`);
+    for (const { a, before: cell } of buttons) {
       assert.equal(cell.name, "td", `${name}: ${a.attrs.href} sits alone in a table cell`);
       assert.equal(cell.attrs.bgcolor, colours["--cta"], `${name}: the cell's bgcolor is --cta (Outlook draws it)`);
       assert.equal(declarations(cell.attrs.style)["background-color"], colours["--cta"]);

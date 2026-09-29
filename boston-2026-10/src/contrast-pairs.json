@@ -43,8 +43,9 @@
     { "fg": "--field", "bg": "--ice", "role": "ui-or-heading", "where": "share panel input borders on ice (dev)", "build": "dev" },
     { "fg": "--ink", "bg": "--white", "role": "body", "where": "email: the lines, 16px/400", "build": "email" },
     { "fg": "--navy", "bg": "--white", "role": "body", "where": "email: the draft's bold (the event, the code, the date, the ZIP), 16px/600", "build": "email" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "email: E1's consent link (Yes, keep me posted), 16px/400 underlined, in its sentence", "build": "email" },
     { "fg": "--muted", "bg": "--white", "role": "body", "where": "email: the footer (why this email came, the postal address), 13px", "build": "email" },
-    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "email: the buttons (See my offer, Yes, keep me posted, Yes, tell me), 19px/700 uppercase", "build": "email" },
+    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "email: the buttons (E1 See my offer, E-X Yes, tell me), 19px/700 uppercase", "build": "email" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "email: the button's own shape on white", "build": "email" },
     { "fg": "--navy", "bg": "--white", "role": "non-text", "where": "email: the navy bar above the logo (the page's top bar, without its text)", "build": "email" }
   ],

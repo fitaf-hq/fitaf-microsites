@@ -43,6 +43,8 @@ export const LOGO = { path: "/assets/fitaf-logo.png", alt: "Fit AF", widthPx: 88
 const TEXT = {
   line: { fg: "--ink", bg: LAYOUT_BG, role: "body", font: "--body", sizePx: 16, weight: 400, lineHeight: 1.55 },
   strong: { fg: "--navy", bg: LAYOUT_BG, role: "body", weight: 600 },
+  // The marketing consent (E1): a quiet link in its sentence, as easy to withhold as to give (Advisor, 2026-09-29).
+  link: { fg: "--navy", bg: LAYOUT_BG, role: "body" },
   footer: { fg: "--muted", bg: LAYOUT_BG, role: "body", font: "--body", sizePx: 13, weight: 400, lineHeight: 1.55 },
   button: { fg: "--on-cta", bg: "--cta", role: "large-text", font: "--head", sizePx: 19, weight: 700, lineHeight: 1.2 },
 };
@@ -99,6 +101,8 @@ export const STYLE = {
   text: (beforeButton) => css({ margin: `0 0 ${px(beforeButton ? TEXT_BEFORE_BUTTON_PX : 0)}`, ...font(TEXT.line) }),
   footerText: (beforeButton) => css({ margin: `0 0 ${px(beforeButton ? TEXT_BEFORE_BUTTON_PX : 0)}`, ...font(TEXT.footer) }),
   strong: css({ "font-weight": String(TEXT.strong.weight), color: token(TEXT.strong.fg) }),
+  /** A text link: the sentence's own font, size and weight, in a token colour, underlined. Not a button. */
+  textLink: css({ color: token(TEXT.link.fg), "text-decoration": "underline" }),
   /** border-collapse is inherited, and the layout's `collapse` would drop the cell's rounded corners. */
   buttonTable: css({ "border-collapse": "separate" }),
   buttonCell: css({ "border-radius": px(BUTTON_RADIUS_PX), "background-color": BUTTON_BGCOLOR, "mso-padding-alt": BUTTON_PAD }),

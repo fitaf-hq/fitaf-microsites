@@ -2,8 +2,9 @@
 // out-of-area request), each as plain text AND as HTML, both rendered from ONE list of lines, so the two
 // parts cannot say different things. Placeholders are filled from offers.json and events.json.
 //
-// A line is a list of segments: a string, `{ strong }` (the draft's bold) or `{ label, href }` (a button).
-// Text renders a button as "label: href"; HTML as the page's button. A message's last line is its footer.
+// A line is a list of segments: a string, `{ strong }` (the draft's bold), `{ label, href }` (a button) or
+// `{ label, href, plain: true }` (a text link). Text renders both kinds of link as "label: href"; HTML draws a
+// button as the page's button and a text link underlined in its sentence. A message's last line is its footer.
 // The HTML is in the page's look (SPEC-rung5 § 9, styles in email-style.js); its words are the text's.
 import { BUTTON_BGCOLOR, LAYOUT_WIDTH_PX, LOGO, STYLE } from "./email-style.js";
 import { longDate } from "./offers.js";
@@ -17,6 +18,8 @@ export const displayCode = (code) => `${code.slice(0, 4)}-${code.slice(4)}`;
 
 const strong = (text) => ({ strong: text });
 const button = (label, href) => ({ label, href });
+/** The marketing consent: a quiet link, as easy to withhold as to give (SPEC-rung5 § 9; the Advisor, 2026-09-29). */
+const textLink = (label, href) => ({ label, href, plain: true });
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESCAPES[c]);
@@ -26,8 +29,13 @@ function segmentText(s) {
   return "href" in s ? `${s.label}: ${s.href}` : s.strong;
 }
 
-const isButton = (s) => typeof s === "object" && "href" in s;
-const segmentHtml = (s) => (typeof s === "string" ? esc(s) : `<strong style="${STYLE.strong}">${esc(s.strong)}</strong>`);
+const isButton = (s) => typeof s === "object" && "href" in s && !s.plain;
+
+function segmentHtml(s) {
+  if (typeof s === "string") return esc(s);
+  if ("href" in s) return `<a href="${esc(s.href)}" style="${STYLE.textLink}">${esc(s.label)}</a>`;
+  return `<strong style="${STYLE.strong}">${esc(s.strong)}</strong>`;
+}
 
 /** A bulletproof button: the colour on the table cell (Outlook draws that), the padding on the link. */
 const buttonHtml = ({ label, href }) =>
@@ -91,7 +99,7 @@ export function e1({ to, code, offer, event, siteUrl, token }) {
     [button("See my offer", `${siteUrl}/o/${code}`)],
   ];
   if (token) {
-    lines.push(["You asked to hear about Fit AF menus and offers. ", button("Yes, keep me posted", `${siteUrl}/confirm/${token}`)]);
+    lines.push(["You asked to hear about Fit AF menus and offers. ", textLink("Yes, keep me posted", `${siteUrl}/confirm/${token}`)]);
   }
   lines.push(["Already ordered? Enjoy your meals!"]);
   const footer = [[`You're getting this one email because you saved an offer. ${POSTAL_ADDRESS}`]];
