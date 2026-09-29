@@ -2,6 +2,8 @@
 node_modules/
 dist/
 dist-dev/
+# The storefront hand-off (npm run build:storefront): its own directory, so dist/ stays byte-identical (S20)
+dist-storefront/
 
 # Wrangler / Miniflare local state (its cache holds request location data)
 .wrangler/
