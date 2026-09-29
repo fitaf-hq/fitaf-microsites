@@ -72,9 +72,13 @@ container is needed**, and § 4's check 1 no longer applies. **Ruled by the Advi
    costs the first paint nothing.
 2. **Both fills are built, behind one switch** (`FILL = "A"` or `"B"` at the top of the script). A run in one browser
    picks which one ships (item 6 below). § 2's recommendation of B stands until that run.
-3. **The source lives here**: `src/storefront/fitaf-handoff.js`, built by `npm run build` to
-   `dist/storefront/fitaf-handoff.html`, a `<script>` block ready to paste, headed by a **version line**: the repository
-   commit and a SHA-256 of the script text, so what is live can be compared with what is kept.
+3. **The source lives here**: `src/storefront/fitaf-handoff.js`, built by **`npm run build:storefront`** to
+   **`dist-storefront/`** (git-ignored; the production build's `dist/` is untouched), headed by a **version line**: the
+   repository commit and a SHA-256 of the script text, so what is live can be compared with what is kept.
+   ⚠ **Amended at the build, 2026-09-29**: both fills in one pasted text measured 5,930 bytes, over § 3's 5 KB. So
+   **each built file carries ONE fill**: `fitaf-handoff.html` (the Footer block, the fill `FILL` names; B by default)
+   and `fitaf-handoff.fill-A.console.js` / `fitaf-handoff.fill-B.console.js` for the one-browser run. The source keeps
+   both fills and the switch; changing the shipped fill is a commit and a rebuild. The limit holds on every file.
 
 **Rules added to § 3**:
 
