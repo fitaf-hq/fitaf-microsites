@@ -131,3 +131,157 @@ whole plans. Built at `4fb0417` (R2-14, red first; two mutants caught).
 ⚠ **Seen at the same build, not caused by it**: S4 (rung 4's 5-per-minute rate limit) failed once in a full run (a
 400 where a 429 was expected) and passed on every re-run. Suspected: a request burst straddling a 60-second window.
 Not verified; treat it as intermittent.
+
+## 8. Amendment, 2026-09-29 — fill B ends by pressing the store's own CHECKOUT, never by loading `/checkout`
+
+**Found in the Advisor's second run** (the 7-meal link, fill B at `4fb0417`): the seven meals were added (he saw them go
+into the cart), and `/checkout` then showed **"Your cart is empty"** and *"Please add items to checkout"*. The same happened
+in the first run, so § 7's reading of that run's error was only half right: the plan's count was needed, and was not the
+whole cause.
+
+**Why, from the store's public code** (the bundle as served to every visitor, 2026-09-27): on a meal-plan page, *Add to
+Cart* puts a meal in that plan's **pending** list (`hmp_pending_plan_items`), not in the cart (`hmp_local_cart`). The
+store's own checkout control moves the pending meals into the cart (`commitPlanItems(mpid)`) and then routes to
+`/checkout` inside the app. Fill B's `location.assign("/checkout")` loaded a new page with nothing committed.
+
+⇒ **Fill B presses buttons only, start to finish**: after the last meal, it waits for the order page's own **CHECKOUT**
+control to be enabled (before the plan is full, the store shows a disabled *"Add N more meals"* in its place) and presses
+it. If the store then opens its extras dialog, fill B presses that dialog's **CONTINUE TO CHECKOUT**, once, and adds
+nothing. It never loads `/checkout` itself and never writes storage. The fragment is removed before the press.
+
+- **Found by its visible label**, like the meals: a button whose text, trimmed and compared case-insensitively, is exactly
+  `checkout` (or `continue to checkout` in the dialog), enabled, and not inside a meal card. Several may exist (the page
+  renders desktop and mobile layouts); the first that is displayed is pressed.
+- **Fail-safe**: no enabled control within the polling budget ⇒ `stopped: no checkout control`, and nothing more is
+  pressed. The meals already added stay in the visitor's pending list, as if they had pressed the buttons themselves;
+  the page is the store's own.
+- **Done** means `location.pathname === "/checkout"` after the press, observed by polling; fill B logs it and stops.
+- Fill A is unchanged (it still writes storage and is not the chosen fill).
+
+| | case | expect |
+|---|---|---|
+| R2-15 | fixture: meals added, then an enabled CHECKOUT | pressed exactly once, after the last meal; `location.assign` never called |
+| R2-16 | fixture: CHECKOUT still shows *"Add N more meals"* (disabled) | nothing pressed beyond the meals; `stopped: no checkout control` after the budget |
+| R2-17 | fixture: CHECKOUT opens the extras dialog | its CONTINUE TO CHECKOUT pressed once; nothing added from the dialog |
+| R2-18 | ⭐ mutant: fill B navigates by `location.assign("/checkout")` again | R2-15 fails |
+
+**Found at the build, 2026-09-29** (the store's public bundle as served that day, fetched as a visitor's browser loads
+`/order?mpid=21`: `main-FEK5K7ML.js` and the chunks it loads; file names change with every deploy). A reading of
+the code, not a live run and not a ruling; § 8's rule above is unchanged.
+
+- **The labels, as the 2026-09-27 reading had them.** The order page (`app-order`, `chunk-TJQZM744.js`) holds the
+  cart bar `app-mobile-cart-summary`, whose control is ` CHECKOUT ` once the plan's minimum is met, a disabled
+  ` Add N more meal(s) ` before it, and a disabled ` Limit Exceeded ` over the maximum. Its click runs
+  `proceedToCheckout({mpid})` (`chunk-F6KDHTUM.js`): `commitPlanItems(mpid)`, then either the extras dialog
+  (`app-extra-products-dialog`, `chunk-AVUS6FV3.js`: ` CONTINUE TO CHECKOUT `, disabled while it syncs, or a disabled
+  ` ADD N MORE MEAL(S) TO CHECKOUT `), or a sync and `router.navigate(["/checkout"])`. *Add to Cart* on a plan page
+  calls `addToPendingPlanItems` (`hmp_pending_plan_items`, `chunk-XDG7WTXR.js`). Each control is an `app-button`,
+  which renders a real `<button>` around the label, disabled while `disabled` or `loading`; the page listens for the
+  click on the `app-button`, so pressing the inner button reaches it. Fill B presses the inner `<button>`.
+- ⚠ **Width, which the reading above did not have.** The cart bar is shown only **below 1025 px**: the order page's
+  styles hide it from `min-width: 1025px` (the bar's own styles say so too), and show instead the cart sidebar
+  `app-cart` (`chunk-HY26AVJ5.js`), whose control reads ` CHECKOUT NOW ` (disabled alternatives
+  ` ADD N MORE MEAL(S) TO CHECKOUT ` and ` REMOVE N MEAL(S) TO CHECKOUT `); it calls the same
+  `proceedToCheckout({mpid})`. **So at 1025 px and wider, § 8's rule as first written (exactly `checkout`, displayed)
+  found no control and fill B stopped with `stopped: no checkout control`.** ⇒ **Amended the same day, below.** The header's cart button (`aria-label` "View cart") is there at every width;
+  § 8 does not use it.
+- **Meal cards and width.** At `max-width: 666px` (and short landscape screens up to 932 px wide) the page shows
+  `app-product-card-mobile` (or `app-product-card-classic-mobile`) and hides `app-product-card`, which stays in the
+  page; fill B presses `app-product-card`'s own *Add to Cart* at every width. `app-product-card-classic-mobile` is a
+  third card element § 8's "not inside a meal card" does not name; no card in the bundle carries a "checkout" label.
+- **A CHECKOUT that does not reach `/checkout`.** For a visitor not signed in whose cart holds a subscription plan,
+  the store commits the plan's meals and then opens *"Sign in to continue"* (*"Sign in / Create account"*,
+  *"Continue browsing"*); fill B presses neither. The build ends any press that has not reached `/checkout` within
+  its 10 s wait with `stopped: /checkout not reached` (R2-17c; § 8 names only `done` and `no checkout control`).
+
+**⭐ Amended 2026-09-29, after the build: two labels, exactly.** The control fill B presses is the store's checkout,
+whichever layout shows it: **`checkout`** (the cart bar, below 1025 px) **or `checkout now`** (the cart sidebar, 1025 px
+and wider), each matched exactly, trimmed and in any case, and still enabled, displayed and outside a meal card. A
+desktop visitor, and the Advisor's own test in a desktop window, would otherwise stop short of checkout. The dialog's
+label is unchanged. **R2-15g**: a displayed *CHECKOUT NOW* is pressed once and the store routes (red on `3e77498`, run
+in a mirror copy). **R2-16c** now pins exactness the other way: a displayed *CHECKOUT NOW PLEASE* is not pressed.
+⬜ Not yet seen live: a press on the hidden `app-product-card` at 666 px and narrower (a phone), which the build expects
+to work because a script's `click()` reaches a hidden button.
+
+## 10. Amendment, 2026-09-29 — "make it right": fill B starts only on an empty plan; the known stops, named
+
+**Why**: the Advisor's frame after the passing run, *"Make it work. Make it right. Make it fast"*, and *"make this as
+solid as possible"*. Fill B presses the plan's full count, so it is only right on a plan that holds **no** meals yet.
+
+1. **An empty plan, or nothing.** Before its first press, fill B looks at what the store itself shows for **this plan**
+   (the order page's cart bar below 1025 px, its cart sidebar at 1025 px and wider). If the store shows **any meal
+   already chosen for this plan** (a pending list from an earlier visit, a reload in the middle of a fill, a second tab),
+   fill B stops with `stopped: the plan already holds meals` and **presses nothing**. It **never removes** a visitor's
+   meals. Read by what the store displays (its labels and counts), like everything else fill B does; the builder
+   establishes from the store's public code **which** element states mean "empty" at each width and records them here.
+2. **A reload or a second run** of the same link therefore adds nothing: the first run's meals make the plan non-empty.
+3. **Known stops, each with its own line** (none leaves the page worse than the visitor's own presses would):
+   - `stopped: not on this page: …` (a meal not on this week's menu; § 6), before any press;
+   - `stopped: the plan needs N meals; the link has M` (§ 7), before any press;
+   - `stopped: the plan already holds meals` (this section), before any press;
+   - `stopped: no checkout control` (§ 8), after the meals;
+   - `stopped: /checkout not reached` (§ 8's build), after CHECKOUT: includes the store's *"Sign in to continue"* for a
+     visitor not signed in whose cart holds a **subscription** plan. The store's own dialog stays; fill B presses none
+     of it. ⬜ Whether the microsite's links ever point at a subscription is the microsite's question, not this script's.
+4. **Unchanged**: the version line, the guard, one check of `location.hash` for ordinary visitors, no storage written by
+   fill B, nothing loaded or sent, the size limit.
+
+| | case | expect |
+|---|---|---|
+| R2-19 | fixture: the plan already holds 1 meal (the store shows its "Add N−1 more" state) | `stopped: the plan already holds meals`; **no press at all**; fragment removed |
+| R2-20 | fixture: the plan already full (CHECKOUT / CHECKOUT NOW displayed before any press) | the same |
+| R2-21 | fixture: an empty plan, at both widths (whatever "empty" looks like, per item 1) | the normal fill (R2-15's case) |
+| R2-22 | a **reload** of the same link after a first run's meals were pressed (a new page load; the store shows them pending) | stops at item 1; the pending meals stay exactly the first run's |
+| R2-23 | ⭐ mutant: the emptiness check removed | R2-19 fails |
+
+**Found at the build, 2026-09-29** (the store's public bundle as served that day, fetched as a visitor's browser loads
+`/order?mpid=21`: `main-EIPLECQT.js`, a deploy newer than § 8's `main-FEK5K7ML.js`, and the 157 chunks it loads; the five
+chunks § 8's note names are byte-identical to a copy fetched earlier the same day, with `main-FEK5K7ML.js`). A reading
+of the code, not a live run and not a ruling; § 10's rule above is unchanged.
+
+- **What "empty" is, at each width.** The order page (`app-order`, `chunk-TJQZM744.js`) always renders both the cart bar
+  and the cart sidebar, and its styles display one per width.
+  - **Below 1025 px, the cart bar** (`app-mobile-cart-summary`, the same file). Its checkout slot always holds exactly one
+    control: ` Limit Exceeded ` (disabled) over the maximum, ` CHECKOUT ` once the minimum is met, else
+    ` Add N more meal(s) ` (disabled). But the whole bar is `display: none` (`mobile-cart-summary--hidden`) unless
+    `hasContent()`: this plan's items are not empty, or the plan has forced products. **Empty: the bar is not displayed,
+    so no control of it is.** (Before the plan's card loads, its minimum reads 0 and the hidden bar holds an enabled
+    CHECKOUT; hidden all the same.)
+  - **1025 px and wider, the cart sidebar** (`app-cart`, `chunk-HY26AVJ5.js`). Its checkout area (` REMOVE N MEAL(S) TO
+    CHECKOUT `, ` CHECKOUT NOW `, ` ADD N MORE MEAL(S) TO CHECKOUT `) is rendered only `@if (!isEmpty() ||
+    isForcedProductsPlan())`. **Empty: *"Your cart is empty"* / *"Add some delicious meals to get started!"*, and no
+    control.** Otherwise it also shows an item count (` N item(s) `) and a *Clear cart* button, which fill B never presses.
+  - **"This plan's items"** is one list at both widths, `orderPageVisibleItems(mpid)` (`chunk-XDG7WTXR.js`): the cart's
+    committed lines for this mpid (or, if it has none, its lines with no mpid), **plus this plan's pending list**
+    (`hmp_pending_plan_items`), plus forced-product previews. The pending list and the local cart are read from storage
+    synchronously when the store starts.
+  - ⇒ **The rule built**: the plan holds meals if any button outside a meal card, **displayed, enabled or not**, has a
+    label containing `checkout`, `more meal` or `limit exceeded` (any case). Loose on purpose: a false "holds meals" only
+    stops fill B, while a false "empty" would press a whole plan on top of the visitor's. Among the string literals of
+    the 158 files fetched, the only BUTTON labels on the order page that match are the six above and the extras dialog's,
+    which only the store's own checkout opens; the others that match (a plan card's *"More Meal Choices…"*, home-page
+    and how-it-works text, an order-history dialog) are not buttons on this page. Text the store receives from its
+    backend (plan descriptions, menus) is not in the bundle and was not checked.
+- **The check runs on every poll of fill B's wait, the last one immediately before the first press.** A meal already
+  chosen for this plan shows the store's quantity counter (`app-counter`, `chunk-MJYZCE2L.js`: *"Decrease value"* /
+  *"Increase value"*) in place of its *Add to Cart* (`app-product-card`, `chunk-CF5ZZ2TL.js`, whose `isInCart()` reads
+  the same per-plan list). So on a reload of the same link the payload's meals are never all found by their *Add to
+  Cart*: a check made only once they were would never run, and fill B would stop 10 s later as `not on this page`. That
+  is how R2-22's store-shaped case ("stepper") failed on the script before this build, and R2-23's third mutant pins it.
+- **The header's cart badge is not corroboration**: it is `cartService.itemCount` (`main-EIPLECQT.js`), the committed
+  cart's quantities across every plan, never a pending list. It reads 0 while this plan's meals are pending (a reload's
+  exact case) and more than 0 for another plan's meals. Not used.
+- **Known limits, none seen live.** A plan with **forced products** shows its bar and its sidebar's checkout area even
+  when empty, so fill B would stop on it (safe; whether any Fit AF plan has forced products is backend data, not in the
+  public code). A plan holding only **extras** reads as holding meals and stops fill B (safe). For a **signed-in**
+  visitor the store switches to its backend's cart once synced; this plan's committed lines arriving from the backend
+  after the meal cards render could be read as "empty" at the last check. When that sync lands is not established;
+  pending lists are local and not affected.
+- **§ 6's open question** ("what Add to Cart becomes once pressed") has the same answer from the code: that counter, whose
+  *"Increase value"* fill B's increase rule matches; consistent with the passing run § 10 opens with.
+- **Size.** The check costs about 95 shipped bytes, which the Footer block did not have (5,093 of 5,119). Recovered by
+  layout alone, no behaviour changed: the shipped comment in the guard became a maintainers' `//` line, neighbouring
+  `var` statements share one, and one blank line and one line break went. § 8's labels became anchored patterns
+  (`/^checkout( now)?$/i`, `/^continue to checkout$/i`): the same exact match, in any case. Built: the Footer block
+  5,111 bytes, `fitaf-handoff.fill-B.console.js` 5,092, `fitaf-handoff.fill-A.console.js` 4,660 (6 more each when built
+  from an uncommitted tree, still under 5,120).

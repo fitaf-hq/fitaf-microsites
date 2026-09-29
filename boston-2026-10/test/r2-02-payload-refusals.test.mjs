@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  assertCheckedOut,
   assertRefused,
   CART_KEY,
   FakeStorage,
@@ -77,8 +78,8 @@ test("R2-02 control: the valid payload the cases are mutated from is accepted by
   run(await script("A"), a.window);
   assert.deepEqual(a.events.at(-1), ["replace", "/checkout"]);
   const page = await orderPage();
-  const b = fakeWindow({ fragment: fragmentFor(valid()), document: page.document });
+  const b = fakeWindow({ fragment: fragmentFor(valid()), page });
   run(await script("B"), b.window);
   b.timers.drain();
-  assert.deepEqual(b.events.at(-1), ["assign", "/checkout"]);
+  assertCheckedOut(b, page, "/order?mpid=21");
 });

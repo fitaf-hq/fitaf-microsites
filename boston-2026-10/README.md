@@ -20,7 +20,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S26 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-14 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), P1–P6 of the mock-ups (`pN-*.test.mjs`) and F1 (the flow renders are current, with mutants), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S26 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-23 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), P1–P6 of the mock-ups (`pN-*.test.mjs`) and F1 (the flow renders are current, with mutants), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S26 | authority |
@@ -51,7 +51,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-14, P1–P6, F1
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-23, P1–P6, F1
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 npm --prefix boston-2026-10 run email:tokens    # after a :root token change: the emails' copy (M17 fails until then)
@@ -63,8 +63,8 @@ npm --prefix boston-2026-10 run render:flows  # flows/rendered/: every flow diag
 
 ## Rung 2 — the cart hand-off in the store's Footer
 
-[`SPEC-rung2-cart-handoff.md`](SPEC-rung2-cart-handoff.md) § 6. A link to
-`https://fitafnutrition.com/order?mpid=<N>#fitaf=<payload>` fills the visitor's cart and opens `/checkout`; the
+[`SPEC-rung2-cart-handoff.md`](SPEC-rung2-cart-handoff.md) § 6 (fill B's finish: § 8). A link to
+`https://fitafnutrition.com/order?mpid=<N>#fitaf=<payload>` fills the visitor's cart and goes to `/checkout`; the
 payload (base64url JSON: a plan, meal names and counts, an optional offer code) never leaves the browser. **Any
 failure removes the fragment and stops**, leaving the plan's order page exactly as rung 1 does. A visit without
 `#fitaf=` costs one read of `location.hash` and nothing else.
@@ -81,10 +81,29 @@ failure removes the fragment and stops**, leaving the plan's order page exactly 
   page — one missing means nothing is pressed — then presses each meal once, then the extra presses. ⚠ What Add to
   Cart becomes after a press is not known: B presses it again if it is still there, else an increase / plus / `+`
   button in the same card's actions (never a favourite or wishlist). If there is neither, B **stops after the
-  first press of each meal**, without opening `/checkout`.
+  first press of each meal**, without going on to checkout.
+- **Fill B's finish (§ 8): it presses the store's own CHECKOUT; it never loads `/checkout` itself.** On a
+  meal-plan page, Add to Cart puts a meal in the plan's *pending* list; only the store's checkout control commits
+  it and routes to `/checkout` in the app (loading `/checkout` found *"Your cart is empty"*). After the last meal
+  B waits (the same 200 ms polls, at most 10 s) for an enabled, displayed button reading exactly `checkout` or `checkout now`, not
+  inside a meal card; removes the fragment; presses it once; then waits for `/checkout` (logs `done: /checkout`),
+  pressing the extras dialog's `continue to checkout` once if the store opens it. None found:
+  `stopped: no checkout control`, the meals left in the visitor's pending list. B writes no storage.
+  **Two labels** (§ 8, amended): below 1025 px the store's CHECKOUT bar reads *"CHECKOUT"*; at 1025 px and wider
+  its cart sidebar reads *"CHECKOUT NOW"*. Both run the store's same checkout, and B takes whichever is displayed.
+- **Fill B starts only on an empty plan (§ 10).** Before its first press, if the store displays any control in its
+  checkout slot for this plan, enabled or not (below 1025 px the cart bar's *CHECKOUT*, *"Add N more meal(s)"*,
+  *"Limit Exceeded"*; at 1025 px and wider the sidebar's *CHECKOUT NOW*, *"ADD N MORE MEAL(S) TO CHECKOUT"*,
+  *"REMOVE N MEAL(S) TO CHECKOUT"*), B stops with `stopped: the plan already holds meals` and presses nothing: the
+  store shows none of them for an empty plan (its bar hidden, its sidebar reading *"Your cart is empty"*; § 10's
+  build note has the files). It never removes a visitor's meals, so a reload or a second run of a link adds nothing.
+  The check runs on every poll of B's wait, the last just before the first press: a meal already chosen shows the
+  store's counter instead of *Add to Cart*, so a reload never "finds" the link's meals. Every stop has its own line:
+  `not on this page: …`, `the plan needs N meals; the link has M`, `the plan already holds meals` (all before any
+  press), `no checkout control` (after the meals), `/checkout not reached` (after CHECKOUT).
 - **The offer code** is checked but not applied in this build.
-- ⛔ **Not yet run on the live store**: fill A, the full-plan rule, and fill B's second presses of a meal (the
-  2026-09-29 run pressed each of its two meals once).
+- ⛔ **Not yet run on the live store**: fill A, the full-plan rule, fill B's second presses of a meal (the
+  2026-09-29 run pressed each of its two meals once), fill B's § 8 finish, and fill B's § 10 check.
 
 ```sh
 npm --prefix boston-2026-10 run build:storefront   # writes dist-storefront/, prints each file's size and version line
