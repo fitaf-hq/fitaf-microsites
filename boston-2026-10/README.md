@@ -74,12 +74,12 @@ failure removes the fragment and stops**, leaving the plan's order page exactly 
 - **Fill B's finish (§ 8): it presses the store's own CHECKOUT; it never loads `/checkout` itself.** On a
   meal-plan page, Add to Cart puts a meal in the plan's *pending* list; only the store's checkout control commits
   it and routes to `/checkout` in the app (loading `/checkout` found *"Your cart is empty"*). After the last meal
-  B waits (the same 200 ms polls, at most 10 s) for an enabled, displayed button reading exactly `checkout`, not
+  B waits (the same 200 ms polls, at most 10 s) for an enabled, displayed button reading exactly `checkout` or `checkout now`, not
   inside a meal card; removes the fragment; presses it once; then waits for `/checkout` (logs `done: /checkout`),
   pressing the extras dialog's `continue to checkout` once if the store opens it. None found:
   `stopped: no checkout control`, the meals left in the visitor's pending list. B writes no storage.
-  ⚠ **At 1025 px and wider** the store shows its cart sidebar, whose control reads *"CHECKOUT NOW"*, and hides
-  the CHECKOUT bar, so B as § 8 states it stops there (§ 8's build note); below 1025 px the CHECKOUT bar is shown.
+  **Two labels** (§ 8, amended): below 1025 px the store's CHECKOUT bar reads *"CHECKOUT"*; at 1025 px and wider
+  its cart sidebar reads *"CHECKOUT NOW"*. Both run the store's same checkout, and B takes whichever is displayed.
 - **The offer code** is checked but not applied in this build.
 - ⛔ **Not yet run on the live store**: fill A, the full-plan rule, fill B's second presses of a meal (the
   2026-09-29 run pressed each of its two meals once), and fill B's § 8 finish.

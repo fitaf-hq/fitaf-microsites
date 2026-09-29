@@ -182,9 +182,8 @@ the code, not a live run and not a ruling; § 8's rule above is unchanged.
   styles hide it from `min-width: 1025px` (the bar's own styles say so too), and show instead the cart sidebar
   `app-cart` (`chunk-HY26AVJ5.js`), whose control reads ` CHECKOUT NOW ` (disabled alternatives
   ` ADD N MORE MEAL(S) TO CHECKOUT ` and ` REMOVE N MEAL(S) TO CHECKOUT `); it calls the same
-  `proceedToCheckout({mpid})`. **So at 1025 px and wider, § 8's rule (exactly `checkout`, displayed) finds no control
-  and fill B stops with `stopped: no checkout control`** — R2-16c pins this. Whether § 8 should also take
-  `checkout now` is not decided here. The header's cart button (`aria-label` "View cart") is there at every width;
+  `proceedToCheckout({mpid})`. **So at 1025 px and wider, § 8's rule as first written (exactly `checkout`, displayed)
+  found no control and fill B stopped with `stopped: no checkout control`.** ⇒ **Amended the same day, below.** The header's cart button (`aria-label` "View cart") is there at every width;
   § 8 does not use it.
 - **Meal cards and width.** At `max-width: 666px` (and short landscape screens up to 932 px wide) the page shows
   `app-product-card-mobile` (or `app-product-card-classic-mobile`) and hides `app-product-card`, which stays in the
@@ -194,3 +193,12 @@ the code, not a live run and not a ruling; § 8's rule above is unchanged.
   the store commits the plan's meals and then opens *"Sign in to continue"* (*"Sign in / Create account"*,
   *"Continue browsing"*); fill B presses neither. The build ends any press that has not reached `/checkout` within
   its 10 s wait with `stopped: /checkout not reached` (R2-17c; § 8 names only `done` and `no checkout control`).
+
+**⭐ Amended 2026-09-29, after the build: two labels, exactly.** The control fill B presses is the store's checkout,
+whichever layout shows it: **`checkout`** (the cart bar, below 1025 px) **or `checkout now`** (the cart sidebar, 1025 px
+and wider), each matched exactly, trimmed and in any case, and still enabled, displayed and outside a meal card. A
+desktop visitor, and the Advisor's own test in a desktop window, would otherwise stop short of checkout. The dialog's
+label is unchanged. **R2-15g**: a displayed *CHECKOUT NOW* is pressed once and the store routes (red on `3e77498`, run
+in a mirror copy). **R2-16c** now pins exactness the other way: a displayed *CHECKOUT NOW PLEASE* is not pressed.
+⬜ Not yet seen live: a press on the hidden `app-product-card` at 666 px and narrower (a phone), which the build expects
+to work because a script's `click()` reaches a hidden button.

@@ -42,9 +42,7 @@ test("R2-16b: the only enabled CHECKOUT is in a layout that is not displayed —
   assert.deepEqual(page.summary(), ["CHECKOUT", "CHECKOUT"], "fixture control: both enabled, neither displayed");
 });
 
-test("R2-16c: a displayed control reading \"CHECKOUT NOW\" is not \"checkout\" (§ 8 matches the label exactly)", async () => {
-  // The store's desktop layout, found at the build (2026-09-29): at 1025 px and wider its cart sidebar shows
-  // " CHECKOUT NOW ", and the CHECKOUT bar is not displayed. § 8 as written stops there; see § 8's build note.
-  const page = await stopped({ shownLabel: " CHECKOUT NOW " });
-  assert.deepEqual(page.summary(), ["CHECKOUT", "CHECKOUT NOW"], "fixture control");
+test("R2-16c: a displayed look-alike (\"CHECKOUT NOW PLEASE\") is neither label — not pressed (labels match exactly)", async () => {
+  const page = await stopped({ shownLabel: " CHECKOUT NOW PLEASE " });
+  assert.deepEqual(page.summary(), ["CHECKOUT", "CHECKOUT NOW PLEASE"], "fixture control");
 });

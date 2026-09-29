@@ -84,3 +84,16 @@ test("R2-15f: a CHECKOUT shown disabled at first (the store busy) is waited for,
   assert.deepEqual(page.controls, ["checkout:shown"], "pressed once, and only once it was enabled");
   assert.deepEqual(h.events.at(-1), ["pushState", "/checkout"]);
 });
+
+test("R2-15g: at desktop width the store's control reads \"CHECKOUT NOW\" (its cart sidebar) — pressed once; the store routes", async () => {
+  // Found at the build (2026-09-29): at 1025 px and wider the CHECKOUT bar is not displayed and the cart sidebar shows
+  // " CHECKOUT NOW ", which runs the same checkout. § 8, amended the same day, accepts both labels, exactly.
+  const page = await orderPage({ shownLabel: " CHECKOUT NOW " });
+  const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page, storage: untouchableStorage() });
+  run(await script("B"), h.window);
+  h.timers.drain();
+  assert.deepEqual(page.summary(), ["CHECKOUT", "CHECKOUT NOW"], "fixture control: only CHECKOUT NOW is displayed");
+  assert.deepEqual(page.controls, ["checkout:shown"], "pressed once");
+  assert.deepEqual(h.events.at(-1), ["pushState", "/checkout"]);
+  assert.ok(!h.events.some(([kind]) => kind === "assign" || kind === "replace"), "no navigation of B's own");
+});

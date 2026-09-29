@@ -188,11 +188,13 @@ function press(list, k) {
 // SPEC-rung2 § 8. On a meal-plan page the store's Add to Cart puts a meal in the plan's PENDING list, not the cart;
 // only the store's own checkout control commits that list and routes to /checkout inside the app. So B never loads
 // /checkout and never writes storage: it presses that control, found like the meals, by its visible label.
-// control(label): the first button whose text, whitespace collapsed and in any case, is exactly `label`; enabled;
-// displayed (the page renders a desktop and a mobile layout, one of them hidden); and not inside a meal card.
-function control(label) {
+// control(labels): the first button whose text, whitespace collapsed and in any case, is exactly one of `labels`;
+// enabled; displayed (the page renders a desktop and a mobile layout, one of them hidden); not inside a meal card.
+// CHECKOUT is the phone and tablet bar's label; CHECKOUT NOW the desktop sidebar's (1025 px and wider); both run
+// the store's same checkout (§ 8, amended 2026-09-29).
+function control(labels) {
   return first(w.document, "button", function (b) {
-    return !b.disabled && text(b).toLowerCase() === label && b.getClientRects().length &&
+    return !b.disabled && labels.indexOf(text(b).toLowerCase()) >= 0 && b.getClientRects().length &&
       !b.closest("app-product-card,app-product-card-mobile");
   });
 }
@@ -200,13 +202,14 @@ function control(label) {
 // fragment, press it once. Then wait for /checkout; if the store opens its extras dialog instead, press the dialog's
 // CONTINUE TO CHECKOUT, once, and add nothing from it. Each wait is at most 50 polls of 200 ms. No CHECKOUT: the meals
 // stay in the visitor's pending list, as if they had pressed the buttons themselves, and the page is the store's own.
-// k counts the presses made: 0, CHECKOUT not yet; 1, CHECKOUT; 2, the dialog's too (nothing more is looked for).
+// k counts the presses made: 0, CHECKOUT not yet; 1, CHECKOUT; 2, the dialog's too (nothing more is looked for:
+// its label list is empty, never missing, so the wait for /checkout goes on).
 function checkout() {
   var k = 0;
   var polls = 0;
   guard(function poll() {
     if (k && loc.pathname === "/checkout") return log("done: /checkout");
-    var b = control(["checkout", "continue to checkout"][k]);
+    var b = control([["checkout", "checkout now"], ["continue to checkout"], []][k]);
     if (b) { if (!k) drop(); b.click(); k++; polls = 0; }
     else if (++polls >= MAX_POLLS) return k ? log("stopped: /checkout not reached") : fail("no checkout control");
     w.setTimeout(guard(poll), POLL_MS);
