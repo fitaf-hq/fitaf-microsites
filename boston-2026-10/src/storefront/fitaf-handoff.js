@@ -1,22 +1,26 @@
 /* Fit AF cart hand-off. Source, comments and tests: fitaf-microsites, boston-2026-10/src/storefront.
    Kill switch: delete this block (never "Inject these scripts": that stops every vendor's). */
 // ── How this file ships ────────────────────────────────────────────────────────────────────────────────
-// `npm run build:storefront` writes ONE fill per file: the Footer block gets the fill FILL names below, and
-// each fill also gets a console file for the one-browser run. For a fill, the build removes the other fill's
-// `// <fill X>` … `// </fill X>` regions, inlines the tables at the COUNTS and PLANS slots and the meal-key function at
-// the KEY slot, and drops every FULL-LINE `//` comment, like this one: with both fills and every comment the text is
-// ~16 KB. SPEC-rung2 § 11 item 5: each built file should be at most 5,120 bytes (the build warns above) and must be at
-// most 10,240 (it refuses above). `/* */` comments ship. The tests run the SHIPPED texts, so what they prove is what
-// is pasted.
+// `npm run build:storefront` writes it twice: the Footer block (fitaf-handoff.html) and the same text as a console file
+// for the one-browser run (fitaf-handoff.fill-B.console.js). The build inlines the plan counts at the COUNTS slot and
+// the meal-key function at the KEY slot, and drops every FULL-LINE `//` comment, like this one. SPEC-rung2 § 11 item 5:
+// each built file should be at most 5,120 bytes (the build warns above) and must be at most 10,240 (it refuses above).
+// `/* */` comments ship. The tests run the SHIPPED text, so what they prove is what is pasted.
 //
-// What it does (SPEC-rung2 § 6, § 11): a link to /order?mpid=N#fitaf=2.<key>[*n]…[.~code] fills the cart, then goes
-// to /checkout: fill A loads it; fill B presses the store's own CHECKOUT (§ 8). Any failure removes the fragment and
-// stops: the visitor keeps the plan's order page, as rung 1 leaves it.
+// ⭐ SPEC-rung2 § 12: fill B is the one fill. Fill A, which wrote the store's cart storage, is retired; the history keeps
+// it. The shipped text is pinned BYTE FOR BYTE (R2-32: its SHA-256 is that of the block in the store's Footer), so every
+// line that ships stays as it was, `var FILL = "B"` and the dispatch at the bottom included: only these `//` lines may
+// change freely. A change to a shipped line is a separate amendment, with the live smoke before its paste.
+//
+// What it does (SPEC-rung2 § 6, § 8, § 11): a link to /order?mpid=N#fitaf=2.<key>[*n]…[.~code] presses each meal's own
+// Add to Cart on the plan's order page, then the store's own CHECKOUT (§ 8), which takes the visitor to /checkout. Any
+// failure removes the fragment and stops: the visitor keeps the plan's order page, as rung 1 leaves it.
 // The body of the one function below is not indented, to spend the 5 KB on code rather than spaces; for the same
 // reason, neighbouring declarations share one `var`.
 (function () {
 "use strict";
-// A writes the store's cart storage; B presses the page's own buttons. A built text holds one.
+// The fill, named in the log line a link writes ("fill B, mpid N"). It was once a switch between two fills; it ships,
+// so it stays (SPEC-rung2 § 12 item 3).
 var FILL = "B";
 var w = window, loc = w.location;
 // An ordinary visit costs this one read of location.hash: no storage, no timer, no listener, no request,
@@ -25,11 +29,6 @@ if (loc.hash.slice(0, 7) !== "#fitaf=") return;
 // Once per load: a second copy of this block, or a console paste on a page that has it, must not fill twice.
 if (w.__fitafHandoff) return;
 w.__fitafHandoff = true;
-// <fill A>
-// Set by fill A once it has written: puts the cart key back exactly as it was, absent included. Fill B writes
-// nothing, so its text carries neither this nor the guard's restore line.
-var undo;
-// </fill A>
 // mpid: meals a week, from data/plans.json, individual plans and Family. The store's order page will not check out
 // short of the plan's count ("Please add at least 7 meals to continue": the one-browser run, 2026-09-29), so a
 // payload must add exactly that many — never a cart that stops at checkout.
@@ -40,14 +39,11 @@ function fail(m) { throw new Error(m); }
 // Remove the fragment, keeping the path, the query and the router's own history state, so Back or a reload
 // does not run the hand-off again.
 function drop() { w.history.replaceState(w.history.state, "", loc.pathname + loc.search); }
-// The one guard, around the start and every timer callback: any exception undoes A's write, removes the
-// fragment and stops. Each clean-up step is tried on its own, so one failing cannot skip the other.
+// The one guard, around the start and every timer callback: any exception removes the fragment and stops. Removing
+// the fragment is tried on its own, so its failing cannot skip the stop line.
 function guard(fn) {
   return function () {
     try { fn(); } catch (e) {
-      // <fill A>
-      try { if (undo) undo(); } catch (e2) { log("restore failed: " + e2.message); }
-      // </fill A>
       // Removing the fragment can fail too; then the page stays as it is.
       try { drop(); } catch (e3) {}
       log("stopped: " + e.message);
@@ -81,56 +77,6 @@ function payload(s) {
   return { items: items, total: total, code: code };
 }
 
-// <fill A>
-var CART_KEY = "hmp_local_cart";
-// mpid: [plan, per-meal cents], from data/plans.json: the prices fill A writes. Whether the store recomputes
-// them when it syncs the cart is one of the things the one-browser run shows. Family is not a portion plan,
-// so it is not in the table and A refuses it.
-var PLANS = /*PLANS*/ {};
-// The portion add-on of a real cart line (2026-09-27): field 1297, option by plan. Performance's option id is
-// not known, so A refuses a Performance mpid.
-var OPTION = { Lean: 10538, Signature: 10539 };
-// Fill A: append one line per meal to the store's cart storage (a visitor's own lines are kept), then load
-// /checkout afresh so the store reads them. One setItem, so no line is ever half-written.
-function fillA(p) {
-  var plan = PLANS[p.mpid] || fail("fill A has no portion plan for mpid " + p.mpid);
-  var option = OPTION[plan[0]] || fail(plan[0] + ": option not known");
-  var ls = w.localStorage;
-  var before = ls.getItem(CART_KEY);
-  var cart;
-  try { cart = before === null ? [] : JSON.parse(before); } catch (e) { /* refused below */ }
-  if (!Array.isArray(cart)) fail("stored cart is not a list");
-  var ids = cart.map(function (l) { return l && String(l.localId); });
-  p.items.forEach(function (it) {
-    // A fresh localId in the real line's form, five digits as a string, unique in this cart.
-    var id;
-    do id = String(10000 + Math.floor(Math.random() * 90000)); while (ids.indexOf(id) >= 0);
-    ids.push(id);
-    // The shape of the real line, every field kept.
-    // ⚠ Payload v2 (SPEC-rung2 § 11) carries a key and a count per meal: no product id and no name. So every v2 link
-    // stops HERE, at its first item, after the plan and cart checks above and before the one setItem below: nothing
-    // is written. § 11 does not say what fill A does with v2; this line is unchanged, and so is the rest of A, kept
-    // for that ruling.
-    cart.push({
-      localId: id, productId: it.pid || fail("no product id: " + it.key), quantity: it.qty,
-      unitPriceCents: plan[1], baseUnitPriceCents: plan[1], regularPriceCents: plan[1],
-      name: it.name, images: [],
-      itemData: [{ name: "Portion", display: plan[0], value: plan[0], price: "0.00" }],
-      extensions: { mpid: p.mpid }, cartItemData: { mpid: p.mpid },
-      hmpAddons: [{ addon_field_id: 1297, addon_field_option_id: option, quantity: it.qty }],
-      includeAddonPrices: false, isFreeTreat: false, freeTreatTierId: null, freeTreatOrigin: null
-    });
-  });
-  ls.setItem(CART_KEY, JSON.stringify(cart));
-  undo = function () {
-    if (before === null) ls.removeItem(CART_KEY);
-    else ls.setItem(CART_KEY, before);
-  };
-  drop();
-  loc.replace("/checkout");
-}
-// </fill A>
-// <fill B>
 // B polls every 200 ms: for at most 10 s before a press (the meal cards render after the store's own start-up; the
 // store's CHECKOUT enables once the plan is full), and for at most 30 s after the store's CHECKOUT (SPEC-rung2 § 11
 // item 4: one live phone-width run of four stopped at 10 s with the store still committing).
@@ -231,7 +177,6 @@ function checkout() {
     w.setTimeout(guard(poll), POLL_MS);
   })();
 }
-// </fill B>
 
 // The plan is the page's own ?mpid= (SPEC-rung2 § 11 item 1), read once: a whole number with no leading zero. Then the
 // full-plan rule (§ 7), last, so every other fault above reports itself first.
@@ -242,12 +187,9 @@ guard(function () {
   var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
   if (p.total !== need) fail("the plan needs " + need + " meals; the link has " + p.total);
   log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
-  // <fill A>
-  if (FILL === "A") return fillA(p);
-  // </fill A>
-  // <fill B>
+  // The two-fill source's dispatch, kept because it ships (SPEC-rung2 § 12 item 3): FILL is "B", so the line after it
+  // never runs.
   if (FILL === "B") return fillB(p);
-  // </fill B>
   fail("fill " + FILL + " is not in this text");
 })();
 })();
