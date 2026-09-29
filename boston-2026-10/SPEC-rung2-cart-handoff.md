@@ -117,3 +117,17 @@ name as shown**, press the card's own add control `qty` times, check that the pa
 **§ 5's tests, added**: the no-fragment path against the throwing stub; the once-per-load marker; A's lines compared
 field by field with the supplied cart's shape; the guard (an exception mid-fill leaves storage exactly as it was); and
 the version line's hash, recomputed from the script text.
+
+## 7. Amendment, 2026-09-29 — the full-plan rule, from the first live run
+
+**Found in the Advisor's one-browser run** (fill B, a link naming 2 meals on `mpid 21`, Lean 7): **fill B worked**: both
+meals were found, their own *Add to Cart* buttons pressed, and the store's cart showed exactly those meals at the store's
+price. But the order page **requires the plan's count** (*"Please add at least 7 meals to continue"*), so the checkout it
+then opened errored. ⇒ **A payload's counts must add up to exactly the plan's meals a week** (from `data/plans.json`;
+Family is 1), checked in the shared part before any press or write, and by `handoff:link`; otherwise *"the plan needs N
+meals; the link has M"*. The store says *"at least"*; the rule is **equal**, because the microsite only ever offers
+whole plans. Built at `4fb0417` (R2-14, red first; two mutants caught).
+
+⚠ **Seen at the same build, not caused by it**: S4 (rung 4's 5-per-minute rate limit) failed once in a full run (a
+400 where a 429 was expected) and passed on every re-run. Suspected: a request burst straddling a 60-second window.
+Not verified; treat it as intermittent.
