@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { encodePayload } from "../scripts/handoff-link.mjs";
-import { CART_KEY, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
+import { assertCheckedOut, CART_KEY, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
 
 const PAYLOAD = {
   v: 1,
@@ -36,12 +36,12 @@ test("R2-01b: fill A decodes it: one line per item, names, counts and product id
   assert.ok(h.info.some((line) => /code not applied/.test(line)), "the log says the code was not applied");
 });
 
-test("R2-01c: fill B decodes it: each named meal pressed its count", async () => {
+test("R2-01c: fill B decodes it: each named meal pressed its count, then the store's own CHECKOUT (§ 8)", async () => {
   const page = await orderPage();
-  const h = fakeWindow({ path: "/order?mpid=24", fragment: fragmentFor(PAYLOAD), document: page.document });
+  const h = fakeWindow({ path: "/order?mpid=24", fragment: fragmentFor(PAYLOAD), page });
   run(await script("B"), h.window);
   h.timers.drain();
   assert.equal(page.presses.get("Birria de Res Bowl").length, 1);
   assert.equal(page.presses.get("Jalapeño Lime Chicken").length, 20);
-  assert.deepEqual(h.events.at(-1), ["assign", "/checkout"]);
+  assertCheckedOut(h, page, "/order?mpid=24");
 });

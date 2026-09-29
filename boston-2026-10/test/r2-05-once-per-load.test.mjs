@@ -2,14 +2,14 @@
 // in the Footer, or a console paste on a page that already has it — even while the first is still waiting.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CART_KEY, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
+import { assertCheckedOut, CART_KEY, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
 
 const PAYLOAD = { v: 1, mpid: 21, items: [{ name: "Chicken Pesto Pasta", qty: 7, pid: 1400 }] };
 
 test("R2-05a fill B: a second run while the first waits for the cards presses nothing more", async () => {
   const page = await orderPage();
   page.hide();
-  const h = fakeWindow({ fragment: fragmentFor(PAYLOAD), document: page.document });
+  const h = fakeWindow({ fragment: fragmentFor(PAYLOAD), page });
   const text = await script("B");
   run(text, h.window);
   assert.equal(h.url.hash.startsWith("#fitaf="), true, "still waiting: the fragment is still there");
@@ -17,10 +17,8 @@ test("R2-05a fill B: a second run while the first waits for the cards presses no
   page.show();
   h.timers.drain();
   assert.deepEqual(page.presses.get("Chicken Pesto Pasta"), Array(7).fill("Add to Cart"));
-  assert.deepEqual(
-    h.events.filter(([kind]) => kind === "assign"),
-    [["assign", "/checkout"]],
-  );
+  assert.deepEqual(page.controls, ["checkout:shown"], "the store's CHECKOUT pressed once, not twice (§ 8)");
+  assertCheckedOut(h, page, "/order?mpid=21");
 });
 
 test("R2-05b fill A: the fragment put back on the same page does not write a second time", async () => {

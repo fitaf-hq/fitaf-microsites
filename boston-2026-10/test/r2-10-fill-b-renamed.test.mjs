@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  assertCheckedOut,
   assertRefused,
   fakeWindow,
   fragmentFor,
@@ -25,7 +26,7 @@ function rename(document, from, to) {
 }
 
 async function runOn(page) {
-  const h = fakeWindow({ fragment: fragmentFor(PAYLOAD), document: page.document });
+  const h = fakeWindow({ fragment: fragmentFor(PAYLOAD), page });
   run(await script("B"), h.window);
   h.timers.drain();
   return h;
@@ -35,7 +36,7 @@ test("R2-10 control: on the unrenamed fixture the same payload presses every mea
   const page = await orderPage();
   const h = await runOn(page);
   assert.equal(page.total(), 7);
-  assert.deepEqual(h.events.at(-1), ["assign", "/checkout"]);
+  assertCheckedOut(h, page, "/order?mpid=21");
 });
 
 test("R2-10a: one meal renamed — refused, zero presses, the wait bounded to 10 s", async () => {

@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { ROOT } from "../build.mjs";
 import { loadPlans } from "./helpers.mjs";
 import {
+  assertCheckedOut,
   assertRefused,
   CART_KEY,
   FakeStorage,
@@ -32,7 +33,7 @@ async function outcome(fill, p) {
   const storage = new FakeStorage({ [CART_KEY]: VISITOR_CART });
   const before = storage.dump();
   const page = await orderPage();
-  const h = fakeWindow({ path, fragment: fragmentFor(p), storage, document: page.document });
+  const h = fakeWindow({ path, fragment: fragmentFor(p), storage, page });
   run(await script(fill), h.window);
   h.timers.drain();
   return { h, path, page, written: storage.dump() !== before, cart: JSON.parse(storage.getItem(CART_KEY)) };
@@ -54,13 +55,13 @@ for (const fill of ["A", "B"]) {
   });
 
   test(`R2-14c fill ${fill}: exactly 7 of 7 passes and fills the cart`, async () => {
-    const { h, page, cart } = await outcome(fill, payload(21, [2, 5]));
+    const { h, path, page, cart } = await outcome(fill, payload(21, [2, 5]));
     assert.equal(h.url.hash, "");
     if (fill === "A") {
       assert.deepEqual(h.events.at(-1), ["replace", "/checkout"]);
       assert.deepEqual(cart.slice(1).map((l) => l.quantity), [2, 5]);
     } else {
-      assert.deepEqual(h.events.at(-1), ["assign", "/checkout"]);
+      assertCheckedOut(h, page, path);
       assert.equal(page.total(), 7);
     }
   });
@@ -72,14 +73,14 @@ test("R2-14d: every plan's own count passes the rule, individual and Family, fro
   assert.equal(cells.length, 16);
   for (const cell of cells) {
     const { h, page } = await outcome("B", payload(cell.mpid, [cell.meals_per_week]));
-    assert.deepEqual(h.events.at(-1), ["assign", "/checkout"], `mpid ${cell.mpid}`);
+    assertCheckedOut(h, page, `/order?mpid=${cell.mpid}`);
     assert.equal(page.total(), cell.meals_per_week, `mpid ${cell.mpid}`);
   }
 });
 
 test("R2-14e: a Family payload of 1 passes the rule; fill A still refuses Family, for its own reason", async () => {
   const b = await outcome("B", payload(35, [1]));
-  assert.deepEqual(b.h.events.at(-1), ["assign", "/checkout"]);
+  assertCheckedOut(b.h, b.page, "/order?mpid=35");
   const a = await outcome("A", payload(35, [1]));
   assertRefused(a.h, "/order?mpid=35", /fill A has no portion plan for mpid 35/);
   assert.ok(!a.h.info.some((line) => /the plan needs/.test(line)), "not refused by the count");
