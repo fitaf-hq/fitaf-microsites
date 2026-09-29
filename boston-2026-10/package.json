@@ -10,6 +10,7 @@
   "scripts": {
     "build": "node build.mjs",
     "build:dev": "node build.mjs --env dev",
+    "build:mockups": "node mockups/build-mockups.mjs",
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",
     "db:migrate:dev": "wrangler d1 migrations apply fitaf-leads-dev --env dev --remote",
