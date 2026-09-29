@@ -14,6 +14,8 @@
     "handoff:link": "node scripts/handoff-link.mjs",
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",
+    "email:tokens": "node scripts/email-tokens.mjs",
+    "preview:emails": "node scripts/preview-emails.mjs",
     "db:migrate:dev": "wrangler d1 migrations apply fitaf-leads-dev --env dev --remote",
     "seed:dev": "node scripts/seed-dummy.mjs --remote",
     "purge:dev": "node scripts/purge.mjs --remote",

@@ -19,20 +19,21 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M13 of rung 5 (`mNN-*.test.mjs`) and R2-01–R2-14 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look) and R2-01–R2-14 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S20 | authority |
-| `SPEC-rung5-sending.md` | rung 5's contract: the real sender (Resend), dev only, behind an allowlist; cases M1–M9, and § 8 (the derived token) M10–M13 | authority |
+| `SPEC-rung5-sending.md` | rung 5's contract: the real sender (Resend), dev only, behind an allowlist; cases M1–M9, § 8 (the derived token) M10–M13, and § 9 (the emails in the page's look) M14–M21 | authority |
 | `consent/DRAFT.md` | the consent wording (v0.3, ⛔ not approved): the page (§§ 1–2), the emails (§ 3) and `/confirm` (§ 4) show it verbatim | authority |
 | `flows/` | the multi-step flows (save the offer, build a plan, the next-day email, text (off for October), return, the lead record, the calendar cart, this week's menu), each with a Mermaid diagram: states, transitions, data, consent points, written **before** they are built | design; the contracts win where a flow and a contract disagree about something built |
 | `data/save.json` | the save endpoint, the wording version the page sends and the versions the Worker accepts, the send hour and zone, the lapse periods | INPUT |
 | `data/offers.json` | the offers, ⛔ **placeholders** (`"status": "placeholder"`): which one a save gets, which is current | INPUT |
 | `src/save/` | **dev build only**: Flow 1 (`section.html`, `flow1.js`), the share panel (`share-panel.html`, `share.js`), the one arithmetic module (`calculator.js`), `banner.html`, `style.css` | INPUT |
 | `src/worker/` | the Worker (below) | INPUT |
+| `src/worker/email-tokens.json` | the emails' copy of `src/template.html`'s `:root` tokens, written by `npm run email:tokens` (a Worker cannot read the template at run time); M17 fails when it differs | DERIVED, committed, never hand-edited |
 | `migrations/` | D1 schema, applied in order: `0001_claims.sql`, `0002_contacts.sql` (rung 3), `0003_saves.sql` (rung 4: drops rung 3's tables), `0004_sending.sql` (rung 5: attempts, Resend's id, the send claim) | INPUT |
-| `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs` | tools |
-| `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel) | OUTPUT, git-ignored |
+| `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs`; `email-tokens.mjs` (`npm run email:tokens`) and `preview-emails.mjs` (`npm run preview:emails`) | tools |
+| `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel); `email-preview/e1.html` and `ex.html` from `npm run preview:emails` | OUTPUT, git-ignored |
 | `SPEC-rung2-cart-handoff.md` | rung 2's contract: the cart hand-off, § 6 (the store's Custom Scripts Footer, fills A and B) governs | authority |
 | `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, both fills behind `FILL`; its `//` lines are for maintainers and do not ship | INPUT |
 | `scripts/build-storefront.mjs` | `npm run build:storefront`: one fill per file, the plan table inlined, the version line; refuses a file of 5,120 bytes or more | build |
@@ -45,9 +46,11 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13, R2-01–R2-14
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M21, R2-01–R2-14
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
+npm --prefix boston-2026-10 run email:tokens    # after a :root token change: the emails' copy (M17 fails until then)
+npm --prefix boston-2026-10 run preview:emails  # dist-dev/email-preview/{e1,ex}.html, for a screen share
 ```
 
 ## Rung 2 — the cart hand-off in the store's Footer
@@ -121,7 +124,7 @@ before rung 4 (test S20 compares SHA-256s with `test/s20-production-golden.json`
 
 ```sh
 export CLOUDFLARE_ACCOUNT_ID=…            # never committed
-npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M13 (Miniflare, no network)
+npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M21 (Miniflare, no network)
 npm --prefix boston-2026-10 run db:migrate:dev        # D1 migrations -> fitaf-leads-dev (0003 drops rung 3's tables; 0004 adds sending)
 npm --prefix boston-2026-10 run seed:dev              # 20 dummy saves, 5 marked exported
 npm --prefix boston-2026-10 run purge:dev             # DRY RUN: counts only
@@ -164,6 +167,7 @@ script is still rung 1's `src/app.js`, unchanged so production stays byte-identi
 - **The rate limits are per IP per minute** (a Workers rate-limit binding counts over 10 or 60 seconds):
   saves, and lookups (`/confirm`, `/o`), 5 each. The IP is the limiter's key and nothing else.
 - **The Worker's pages draw no colour** (browser defaults), so `npm run contrast` has no pair to measure for them.
+  The emails do; see *Branding*.
 - **The mutant cases never write a committed file**: T7 swaps a copy of the data; S15 and S14b import a
   mutated copy of `lapse.js` / `purge.js`. `LAPSE_MODULE=<copy> node --test test/s14-lapse.test.mjs` shows
   S14 failing on a copy (and `PURGE_MODULE=<copy>` the purge case).
@@ -252,6 +256,21 @@ Departures from the store, each for legibility:
   `#6c757d` is kept for input borders, where 45 is the bar.
 - **Teal carries navy digits at 19px bold only** (Lc 65.7); the store's 11px navy-on-teal would need 75.
 - **Plan colours are never behind text** — accents only (bar, check disc; the check itself is navy).
+
+**The emails** (E1 and E-X, [SPEC-rung5 § 9](SPEC-rung5-sending.md)) wear the same look with only what email
+clients honour: one centred table at most 600 px, inline styles (no `<style>`, no web font: the page's own
+font stacks fall back to system fonts), the logo from `SITE_URL/assets/fitaf-logo.png` under a navy bar, the
+draft's bold in navy, one button per email (E1's *See my offer*, E-X's *Yes, tell me*: a bulletproof table-cell
+button on `--cta`), and the last line as a muted footer under a hairline. **E1's marketing consent is a quiet
+link**, underlined navy in its sentence, as easy to withhold as to give (the Advisor, 2026-09-29; M21); E-X's
+confirmation stays a button because it is that email's only purpose. ⛔ **Their words are the draft's, unchanged**: the text part is
+byte-identical to the one before (M14), and the HTML shows exactly its wording (M18). Colours and fonts come
+from `src/worker/email-tokens.json`, the template's `:root` copied by `npm run email:tokens`, because the
+Worker cannot read the template at run time; M17 fails when the copy drifts. Their pairs are in
+`src/contrast-pairs.json` as `"build": "email"`: body 16px Lc 102.4, the bold 100.9, the consent link 100.9,
+the footer 13px 83.5, the button label −69.3 (the page's own button), the button's shape 63.8, the navy bar 100.9.
+`npm run preview:emails` renders both for a screen share into `dist-dev/email-preview/` (git-ignored; run it
+after `build:dev`, which empties `dist-dev/`).
 
 - **Money is integer cents.** Per-meal prices are stored; weekly totals are always computed
   (`meals_per_week × price_per_meal_cents`) in `build.mjs`. The inline script only displays strings the

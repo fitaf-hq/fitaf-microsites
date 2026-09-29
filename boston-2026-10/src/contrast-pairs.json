@@ -1,5 +1,5 @@
 {
-  "about": "Every foreground/background colour pair the page draws, by token (src/template.html :root, and src/save/style.css :root for the dev build). Measured by `npm run contrast` with APCA (apca-w3); a pair fails when |Lc| is under its role's minimum.",
+  "about": "Every foreground/background colour pair the page draws, by token (src/template.html :root, and src/save/style.css :root for the dev build), and the pairs the emails draw (\"build\": \"email\", from src/worker/email-style.js's DRAWN_PAIRS; test M20). Measured by `npm run contrast` with APCA (apca-w3); a pair fails when |Lc| is under its role's minimum.",
   "roles": {
     "body": { "min_lc": 75, "means": "text under 24px, or under 18.66px when bold (700)" },
     "large-text": { "min_lc": 60, "means": "text at 24px or more, or 18.66px or more at 700" },
@@ -40,7 +40,14 @@
     { "fg": "--navy", "bg": "--ice", "role": "body", "where": "share panel title 18px/600 (dev)", "build": "dev" },
     { "fg": "--ink", "bg": "--ice", "role": "body", "where": "share panel results 16px (dev)", "build": "dev" },
     { "fg": "--muted", "bg": "--ice", "role": "body", "where": "share panel help and hint 14px (dev)", "build": "dev" },
-    { "fg": "--field", "bg": "--ice", "role": "ui-or-heading", "where": "share panel input borders on ice (dev)", "build": "dev" }
+    { "fg": "--field", "bg": "--ice", "role": "ui-or-heading", "where": "share panel input borders on ice (dev)", "build": "dev" },
+    { "fg": "--ink", "bg": "--white", "role": "body", "where": "email: the lines, 16px/400", "build": "email" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "email: the draft's bold (the event, the code, the date, the ZIP), 16px/600", "build": "email" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "email: E1's consent link (Yes, keep me posted), 16px/400 underlined, in its sentence", "build": "email" },
+    { "fg": "--muted", "bg": "--white", "role": "body", "where": "email: the footer (why this email came, the postal address), 13px", "build": "email" },
+    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "email: the buttons (E1 See my offer, E-X Yes, tell me), 19px/700 uppercase", "build": "email" },
+    { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "email: the button's own shape on white", "build": "email" },
+    { "fg": "--navy", "bg": "--white", "role": "non-text", "where": "email: the navy bar above the logo (the page's top bar, without its text)", "build": "email" }
   ],
   "considered_not_drawn": [
     { "fg": "#ffffff", "bg": "#ff931e", "role": "large-text", "why": "the store's own button (white on its orange): measured, and under 60 even at 19px/700" },

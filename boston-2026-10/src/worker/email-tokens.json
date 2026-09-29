@@ -1,0 +1,25 @@
+{
+  "about": "DERIVED: do not edit. The :root tokens of src/template.html, copied by `npm run email:tokens` so the Worker's emails draw the page's colours and fonts (a Worker cannot read the template at run time). Test M17 fails when this file differs from the template.",
+  "source": "src/template.html :root",
+  "tokens": {
+    "--navy": "#1b2360",
+    "--white": "#ffffff",
+    "--ink": "#212529",
+    "--muted": "#5b5b5b",
+    "--ice": "#eaf8ff",
+    "--line": "#d9e4ec",
+    "--field": "#6c757d",
+    "--teal": "#64d2d3",
+    "--orange": "#ff931e",
+    "--cta": "#d66400",
+    "--cta-hover": "#c25a00",
+    "--on-cta": "#ffffff",
+    "--lean": "#48aeee",
+    "--signature": "#8cc63f",
+    "--performance": "#f7941d",
+    "--family": "#f5bb00",
+    "--radius": "6px",
+    "--head": "Poppins, system-ui, -apple-system, \"Segoe UI\", Roboto, Arial, sans-serif",
+    "--body": "\"Open Sans\", system-ui, -apple-system, \"Segoe UI\", Roboto, Arial, sans-serif"
+  }
+}
