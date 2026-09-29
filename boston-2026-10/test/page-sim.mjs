@@ -10,7 +10,21 @@ function tagWithId(html, id) {
   return m ? { tag: m[1], open: m[0] } : null;
 }
 
-export function simulatePage(html, { hash = "", turnstile = "pass", fetchReply = { ok: true, json: { ok: true } } } = {}) {
+/** A `Date` whose clock reads `now` (ms since the epoch): `Date.now()` and `new Date()` both. The zone it is
+ *  read in is the process's (`TZ`), as a browser's is its own. */
+function clockAt(now) {
+  return class extends Date {
+    constructor(...args) {
+      super(...(args.length ? args : [now]));
+    }
+    static now() {
+      return now;
+    }
+  };
+}
+
+/** `now`: the browser's clock, fixed at that instant (ms); omitted, the real clock. */
+export function simulatePage(html, { hash = "", turnstile = "pass", fetchReply = { ok: true, json: { ok: true } }, now } = {}) {
   const record = { fetches: [], xhr: 0, beacons: [], hashWrites: [], history: [], storage: [], cookies: [], lookups: new Set() };
   const elements = new Map();
   const windowListeners = {};
@@ -108,6 +122,7 @@ export function simulatePage(html, { hash = "", turnstile = "pass", fetchReply =
       },
     },
   };
+  if (now !== undefined) g.Date = clockAt(now);
   g.window = g;
   const context = vm.createContext(g);
   const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);

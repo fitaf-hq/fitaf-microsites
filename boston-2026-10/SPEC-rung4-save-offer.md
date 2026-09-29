@@ -52,6 +52,38 @@ URL, the fragment and every request body are free of them.
 the DOM, and transitions as named functions matching the flow tables' rows. Numbers the page shows come from
 the build or from arithmetic in one module (the calculator), never duplicated.
 
+### 2a. Amendment, 2026-09-29: the offer box reads `data/offers.json`
+
+**Why**: `/o/<code>` and the emails already show an offer's `label` from `data/offers.json`, while the page's box
+carried its own literal text in `src/save/section.html`. Changing the offer then meant editing a template and a data
+file, and the two could disagree. **One place changes the offer, and the page, `/o` and the emails all follow.**
+
+- `section.html`'s literal offer line becomes a slot. **The page shows the `label` of the offer a save made now would
+  get**: the Worker's own `offerForSave(today)`, where `today` is the calendar date in the Worker's send time zone
+  (`America/New_York`). **One source**: the page runs the Worker's functions inlined as written (`isLive`,
+  `currentGeneral`, `offerForSave`, and the zoned-date function the Worker uses), the way the ZIP check and the
+  calculator already are; no second implementation of the choice or the date.
+- **What the page receives**: each offer's `id`, `label`, `applies_to`, `valid_from` and `valid_to`, in the page's
+  existing `save-data` JSON. ⛔ **Never `shared_code`, never `code_mode`**: no code reaches the page.
+- The label is written with `textContent`, never as markup.
+- ⚠ **The build stays date-independent**: the same commit builds byte-identical `dist-dev/` on any day (a test builds
+  it under two different clocks). The choice happens in the browser.
+- If no offer can be chosen (the file breaks its own one-general rule), the box shows nothing in place of a label and
+  the page still works; it never shows another offer's text.
+- **The consent draft is unchanged**: `consent/DRAFT.md` § 1's bracketed offer line is the Owner's placeholder, and on
+  the page that placeholder is now `offers.json`'s own (`[The offer]` today). S18 treats that one line as the slot and
+  still checks every other paragraph of §§ 1–2 as written.
+- ⛔ The production build is untouched: S20 holds.
+
+| | case | expect |
+|---|---|---|
+| S21 | the dev page on three dates: before the event offer, inside it, after it | the box shows the label `offerForSave` gives the Worker for that date (a fixture `offers.json` with distinct labels, so a wrong choice is visible) |
+| S22 | a copy of `offers.json` with one label changed, built | the built page carries the new label and not the old; no other file edited (the meeting's claim, made a test) |
+| S23 | `save-data` in the built page | no `shared_code`, no `code_mode`, no code of any kind |
+| S24 | `dist-dev/` built with the clock at two different dates | byte-identical |
+| S25 | ⭐ mutant: the page chooses with its own copy of the rule (first live offer of any kind) | S21 fails |
+| S26 | a 23:30 Eastern instant on the day before the event offer starts, seen from a browser clock in UTC (already the next day) | the box shows the **general** offer, as the Worker would give it |
+
 **Event from the entry path**: the dev build emits `dist-dev/<event-id>/index.html` for each entry in
 `data/events.json`, with that event id built in; `/` is the first event. A save sends its `event_id`, and the
 Worker accepts only ids in `events.json`.

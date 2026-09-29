@@ -8,6 +8,8 @@ import { join } from "node:path";
 import events from "../data/events.json" with { type: "json" };
 import saveConfig from "../data/save.json" with { type: "json" };
 import { build, renderPage, ROOT, TURNSTILE_SCRIPT_URL } from "../build.mjs";
+import { offerForSave } from "../src/worker/offers.js";
+import { zonedDate } from "../src/worker/zoned-time.js";
 import { isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
 import { devPage } from "./dev-page.mjs";
 import { simulatePage } from "./page-sim.mjs";
@@ -44,7 +46,10 @@ function pieces(paragraph) {
     .flatMap((part) => (/^(Email|Delivery ZIP code) — /.test(part) ? part.split(" — ") : [part]));
 }
 
-test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as written", async () => {
+/** DRAFT § 1's bracketed offer line is the Owner's placeholder; on the page it is the slot SPEC-rung4 § 2a fills. */
+const isOfferLine = (piece) => /^\[The offer\b/.test(piece);
+
+test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as written; the offer line is the slot", async () => {
   const text = visibleText(devHtml);
   const one = await draftParagraphs("## 1. What the visitor sees", "## 2.");
   const two = await draftParagraphs("## 2. Out of area", "## 3.");
@@ -52,8 +57,16 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   assert.equal(two.length, 3, "§ 2's blockquote has 3 paragraphs");
   const all = [...one, ...two].flatMap(pieces);
   assert.equal(all.length, 13, "9 paragraphs -> 2 + 1 + 4 + 1 + 1 + 1 + 3 = 13 pieces");
-  for (const piece of all) assert.ok(text.includes(piece), `missing from the page: ${piece}`);
+  assert.deepEqual(all.map(isOfferLine), [false, true, ...Array(11).fill(false)], "one piece is the offer line: the second, under the heading");
+  for (const piece of all.filter((p) => !isOfferLine(p))) assert.ok(text.includes(piece), `missing from the page: ${piece}`);
   assert.ok(text.includes("Build my plan →"), "the skip link below the form (DRAFT § 1)");
+
+  // The offer line (§ 2a): a slot under the heading, filled in the browser with offers.json's own label.
+  assert.ok(!text.includes(all[1]), "the draft's literal offer line is not on the page");
+  assert.match(devHtml, /<h2 id="save-title">Your Boston offer<\/h2>\s*<p class="save-offer"><strong id="save-offer-label"><\/strong><\/p>/);
+  const now = Date.now();
+  const label = offerForSave(zonedDate(now, saveConfig.send_time_zone)).label;
+  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, label, "offers.json's own label (`[The offer]` today)");
 });
 
 test("S18: marked `DRAFT — not for use · wording v0.3-draft`; the production page carries none of it", () => {

@@ -6,8 +6,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
 import { parseTarget, shareLines } from "./src/save/calculator.js";
+import { currentGeneral, isLive, offerForSave } from "./src/worker/offers.js";
 import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
+import { formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
 export const PLANS_PATH = join(ROOT, "data", "plans.json");
@@ -18,6 +20,7 @@ export const SAVE_PATH = join(ROOT, "data", "save.json");
 /** The campaign's phrases, shared by the page and the mock-ups (mockups/): one place to change a phrase. */
 export const MESSAGES_PATH = join(ROOT, "data", "messages.json");
 export const ZIPS_PATH = join(ROOT, "data", "delivery-zips.json");
+export const OFFERS_PATH = join(ROOT, "data", "offers.json");
 /** The weekly menu input of Flow 8. It does not exist yet, so the "See this week's menu" link is absent. */
 export const MENU_PATH = join(ROOT, "data", "menu.json");
 export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
@@ -200,8 +203,9 @@ function sizeButton(plan) {
 
 const MENU_LINK = '<button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button>';
 
-/** What the development page's scripts read: the save endpoint, the ZIP list (mock), the sizes. */
-export function saveClientData(plans, { save, zips, siteKey, eventId }) {
+/** What the development page's scripts read: the save endpoint, the ZIP list (mock), the sizes, and (§ 2a)
+ *  what the offer box needs to choose as the Worker does. ⛔ Never a code: no shared_code, no code_mode. */
+export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) {
   const prefixesOnly = (list) => (list ?? []).map((z) => (z.zip ? { zip: z.zip } : { prefix: z.prefix }));
   return {
     api: save.api_path,
@@ -211,21 +215,37 @@ export function saveClientData(plans, { save, zips, siteKey, eventId }) {
     email_pattern: EMAIL_RE.source,
     zips: { match: zips.match, prefixes: prefixesOnly(zips.prefixes), near_ring: prefixesOnly(zips.near_ring) },
     sizes: plans.individual.map((p) => ({ id: p.id, name: p.name, calories: p.calories, protein_g: p.protein_g })),
+    send_time_zone: save.send_time_zone,
+    offers: offers.offers.map((o) => ({
+      id: o.id,
+      label: o.label,
+      applies_to: o.applies_to,
+      valid_from: o.valid_from,
+      valid_to: o.valid_to,
+    })),
   };
 }
+
+/** A function's source as a declaration: a `function` as written; an arrow function bound to its own name. */
+const declaration = (f) => (/^function\b/.test(f.toString()) ? f.toString() : `const ${f.name} = ${f};`);
 
 /**
  * The development build's slots (SPEC-rung4 § 2): Flow 1 at the top, Flow 2 reframed as a meal size, the
  * share panel, the DRAFT marking. `siteKey` is the dev environment's TURNSTILE_SITE_KEY (Cloudflare's
  * published test key). Assets are addressed from the root, so /<event-id>/ pages find them.
  */
-export async function devSlots(plans, { save, zips, siteKey, eventId, menu = existsSync(MENU_PATH) }) {
+export async function devSlots(plans, { save, zips, siteKey, eventId, offers, menu = existsSync(MENU_PATH) }) {
   const read = (name) => readFile(join(ROOT, "src", "save", name), "utf8");
   const fill = (text) =>
     text.replaceAll("{{WORDING_VERSION}}", esc(save.wording_version)).replaceAll("{{MENU_LINK}}", menu ? MENU_LINK : "");
-  const client = saveClientData(plans, { save, zips, siteKey, eventId });
-  // One source each: the Worker's ZIP check and the calculator's arithmetic, inlined as written.
-  const shared = [classifyZip, shareLines, parseTarget].map((f) => f.toString()).join("\n");
+  const client = saveClientData(plans, { save, zips, siteKey, eventId, offers });
+  // One source each, inlined as written: the Worker's ZIP check, the calculator's arithmetic, and (§ 2a) the
+  // Worker's choice of offer with the zoned date it chooses on. FORMATTERS is zoned-time.js's cache, empty.
+  const shared = [
+    ...[classifyZip, shareLines, parseTarget].map(declaration),
+    "const FORMATTERS = new Map();",
+    ...[isLive, currentGeneral, offerForSave, formatter, zonedParts, pad, zonedDate].map(declaration),
+  ].join("\n");
   return {
     ASSET_PREFIX: "/",
     QUESTION_ONE: "Meal size",
@@ -324,13 +344,14 @@ const checkEventId = (id) => {
  * The development pages: dist-dev/<event-id>/index.html per event, each with its event id built in, and
  * dist-dev/index.html = the first event's page (SPEC-rung4 § 2).
  */
-async function writeDevPages(plans, events, outDir) {
+async function writeDevPages(plans, events, outDir, offersPath) {
   const save = await loadJson(SAVE_PATH);
   const zips = await loadJson(ZIPS_PATH);
+  const offers = await loadJson(offersPath);
   const siteKey = (await devConfig()).vars.TURNSTILE_SITE_KEY;
   const written = [];
   for (const [i, event] of events.entries()) {
-    const html = await renderPage(plans, await devSlots(plans, { save, zips, siteKey, eventId: checkEventId(event.id) }));
+    const html = await renderPage(plans, await devSlots(plans, { save, zips, siteKey, eventId: checkEventId(event.id), offers }));
     await mkdir(join(outDir, event.id), { recursive: true });
     const paths = [join(outDir, event.id, "index.html"), ...(i === 0 ? [join(outDir, "index.html")] : [])];
     for (const path of paths) {
@@ -341,7 +362,13 @@ async function writeDevPages(plans, events, outDir) {
   return written;
 }
 
-export async function build({ plansPath = PLANS_PATH, eventsPath = EVENTS_PATH, target = "prod", outDir } = {}) {
+export async function build({
+  plansPath = PLANS_PATH,
+  eventsPath = EVENTS_PATH,
+  offersPath = OFFERS_PATH,
+  target = "prod",
+  outDir,
+} = {}) {
   if (target !== "prod" && target !== "dev") throw new Error(`unknown build target: ${target}`);
   outDir ??= target === "dev" ? DIST_DEV : DIST;
   const plans = await loadJson(plansPath);
@@ -351,7 +378,7 @@ export async function build({ plansPath = PLANS_PATH, eventsPath = EVENTS_PATH, 
   await mkdir(outDir, { recursive: true });
   let pages;
   if (target === "dev") {
-    pages = await writeDevPages(plans, events, outDir);
+    pages = await writeDevPages(plans, events, outDir, offersPath);
   } else {
     const html = await renderPage(plans);
     const path = join(outDir, "index.html");
