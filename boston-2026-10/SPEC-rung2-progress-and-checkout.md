@@ -125,7 +125,7 @@ the footer. 5k is a good target, but it's OK if we're above it slightly."*). § 
 |---|---|---|
 | 1 | the words: a title and four to six short lines from the page's own phrases | *"I think "assembling your order" or similar and then a legitimate carousel of the items we're adding."* ⇒ § 2 item 2: the title, and a carousel of the meals as their cards show them, in place of changing lines |
 | 2 | hide the store's pop-ups on this checkout | *"Yes"* (H5) |
-| 3 | keep the subscription switch, as the Owner's offer | *"This is a bug on HMP's site. Subscriptions should not be shown. The Owner has just accepted it as something that cannot be disabled in this UI. If we can hide it in ours, that would be an improvement. Fit AF has no way to fulfill HMP-style subscriptions right now – meaning a customer who goes down that path ends up in a worse than dead end."* ⇒ H6, only while the switch is off; W13 |
+| 3 | keep the subscription switch, as the Owner's offer | *"Subscriptions should not be shown. … If we can hide it in ours, that would be an improvement. … a customer who goes down that path ends up in a worse than dead end."* ⇒ H6, only while the switch is off; W13 |
 | 4 | the Footer at about 7 KB | *"Accept"* |
 
 ⚠ **The build's reading, not his words**: *"a legitimate carousel"* is read as **the real meals being added, each as
