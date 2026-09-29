@@ -17,6 +17,11 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   York, inclusive. A save gets the live `event` offer, else the current `general` one; **exactly one
   `general` offer is current on every date** (test S11b). The past offer exists so the expired paths can be
   exercised in development.
+- **`messages.json`**: the campaign's phrases (the M of POEMS). The page's headline, intro line, tagline (the
+  first sentence of its meta description) and top bar come from here (`build.mjs` `messageSlots`), and so
+  do the same phrases on the four mock-ups (`mockups/`), plus the mock-ups' own (the scan prompt, the
+  "from {price} a meal" line). Change a phrase here and both change; `event_line` is a list of parts that
+  the page joins with `&middot;`.
 - **`events.json`**: one entry per QR code, `{ "id", "name", "url" }`; `id` names `dist/qr/<id>.png` and
   `.svg`, and (rung 4, dev) `dist-dev/<id>/index.html`, whose saves carry that `event_id`; `name` is the
   event as E1 names it. ⚠ An event id and name are public; neither may name a person.
