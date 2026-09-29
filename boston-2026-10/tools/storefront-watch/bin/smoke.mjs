@@ -11,25 +11,10 @@
 import { writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { STORE_ORIGIN, WIDTHS } from "../lib/config.mjs";
+import { renderSmokeReport } from "../lib/report.mjs";
 import { smoke } from "../lib/smoke.mjs";
 
 const LOCAL = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/;
-
-const money = (c) => (typeof c === "number" ? `$${(c / 100).toFixed(2)}` : "not shown");
-
-function render(result) {
-  const out = [`# storefront-watch smoke: ${result.flag ? "⛔ FAIL" : "PASS"}`, "", `${new Date().toISOString()} · script: ${result.script}`, ""];
-  for (const { width, verdict, outcome: o } of result.runs) {
-    out.push(`## ${width} px: ${verdict.pass ? "PASS" : "⛔ FAIL"}`, "");
-    for (const why of verdict.reasons) out.push(`- ${why}`);
-    out.push(`- chosen (${o.chosen.length} of ${o.need}; ${o.menu} meals listed): ${o.chosen.map((c) => `${c.name} (${money(c.priceCents)})`).join("; ")}`);
-    if (o.checkout) out.push(`- /checkout: ${o.checkout.path}; ${o.checkout.names.length} names; items ${o.checkout.itemCounts.join(", ") || "none"}; total ${money(o.checkout.totalCents)}${o.checkout.totalFrom ? ` (${o.checkout.totalFrom})` : ""}`);
-    out.push(`- console: ${o.console.filter((l) => l.startsWith("[fitaf-handoff]")).join(" · ") || "no [fitaf-handoff] line"}`);
-    if (o.errors.length) out.push(`- page errors: ${o.errors.slice(0, 5).join(" · ")}`);
-    out.push("");
-  }
-  return out.join("\n");
-}
 
 async function main() {
   const { values } = parseArgs({
@@ -47,7 +32,8 @@ async function main() {
   const widths = values.width ? values.width.map(Number) : WIDTHS;
   for (const w of widths) if (!WIDTHS.includes(w)) throw new Error(`--width must be one of ${WIDTHS.join(", ")}, got ${w}`);
   const result = await smoke({ scriptFile: values.script ?? null, live: values.live, widths, origin, why: "neither --script nor --live given" });
-  const report = render(result);
+  // For a width that failed, the report carries the page as text (SPEC-storefront-watch § 7 item 2), redacted.
+  const report = renderSmokeReport(result);
   process.stdout.write(`${report}\n`);
   if (values.report) await writeFile(values.report, report);
   return result.flag ? 1 : 0;

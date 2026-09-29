@@ -3,13 +3,15 @@
 // ── How this file ships ────────────────────────────────────────────────────────────────────────────────
 // `npm run build:storefront` writes ONE fill per file: the Footer block gets the fill FILL names below, and
 // each fill also gets a console file for the one-browser run. For a fill, the build removes the other fill's
-// `// <fill X>` … `// </fill X>` regions, inlines the tables at the COUNTS and PLANS slots, and drops every FULL-LINE
-// `//` comment, like this one: with both fills and every comment the text is ~8.7 KB, and SPEC-rung2 § 3
-// says "under 5 KB". `/* */` comments ship. The tests run the SHIPPED texts, so what they prove is what is pasted.
+// `// <fill X>` … `// </fill X>` regions, inlines the tables at the COUNTS and PLANS slots and the meal-key function at
+// the KEY slot, and drops every FULL-LINE `//` comment, like this one: with both fills and every comment the text is
+// ~16 KB. SPEC-rung2 § 11 item 5: each built file should be at most 5,120 bytes (the build warns above) and must be at
+// most 10,240 (it refuses above). `/* */` comments ship. The tests run the SHIPPED texts, so what they prove is what
+// is pasted.
 //
-// What it does (SPEC-rung2 § 6): a link to /order?mpid=N#fitaf=<payload> fills the cart, then goes to /checkout:
-// fill A loads it; fill B presses the store's own CHECKOUT (§ 8). Any failure removes the fragment and stops: the
-// visitor keeps the plan's order page, as rung 1 leaves it.
+// What it does (SPEC-rung2 § 6, § 11): a link to /order?mpid=N#fitaf=2.<key>[*n]…[.~code] fills the cart, then goes
+// to /checkout: fill A loads it; fill B presses the store's own CHECKOUT (§ 8). Any failure removes the fragment and
+// stops: the visitor keeps the plan's order page, as rung 1 leaves it.
 // The body of the one function below is not indented, to spend the 5 KB on code rather than spaces; for the same
 // reason, neighbouring declarations share one `var`.
 (function () {
@@ -53,36 +55,30 @@ function guard(fn) {
   };
 }
 
-function whole(n, max) { return typeof n === "number" && n % 1 === 0 && n >= 1 && n <= max; }
-// The payload: base64url of UTF-8 JSON, version 1. Checked whole, before anything is touched; any fault
-// refuses all of it. 2048 characters is SPEC-rung2's "over 2 KB"; 21 is the largest plan's weekly count.
+// The payload, VERSION 2 (SPEC-rung2 § 11 item 1; version 1, base64 JSON, is retired and refused as an unknown
+// version): ASCII, dot-separated, "2", then one item per meal, `<key>` or `<key>*<n>` (n from 2 to 21: a count of 1 is
+// the bare key; 21 is the largest plan's weekly count), then optionally `~<code>`. A key is 5 base-36 characters (§ 11
+// item 2, the KEY slot below). Checked whole, before anything is touched; any fault refuses all of it. 2048 characters
+// is § 6's "over 2 KB", kept: 21 items never come near it. The plan is NOT in the payload: the guard at the bottom
+// reads it from the page's own ?mpid=, and applies the full-plan rule (§ 7) there, last.
 function payload(s) {
   if (s.length > 2048) fail("payload over 2 KB");
-  if (!/^[\w-]+$/.test(s)) fail("not base64url");
-  var p;
-  // atob gives one character per byte; escape + decodeURIComponent reads those bytes as UTF-8 (meal names are
-  // not all ASCII). Both are in every browser.
-  try { p = JSON.parse(decodeURIComponent(escape(w.atob(s.replace(/-/g, "+").replace(/_/g, "/"))))); }
-  catch (e) { fail("not JSON"); }
-  if (!p || p.v !== 1) fail("unknown version");
-  if (!whole(p.mpid, 1e9)) fail("bad mpid");
-  if (!Array.isArray(p.items) || !p.items.length) fail("no items");
-  var names = [], total = 0;
-  p.items.forEach(function (it) {
-    if (!it || typeof it.name !== "string" || !it.name) fail("bad meal name");
+  var parts = s.split("."), items = [], keys = [], total = 0, code;
+  if (parts.shift() !== "2") fail("unknown version");
+  // The offer code is the last item, if any, and is checked but NOT applied in this build: how the store takes one is
+  // not yet proven.
+  if (/^~/.test(parts[parts.length - 1])) code = parts.pop().slice(1);
+  if (code !== undefined && !/^[A-Za-z0-9-]{1,40}$/.test(code)) fail("bad code");
+  if (!parts.length) fail("no items");
+  parts.forEach(function (part) {
+    var m = /^([0-9a-z]{5})(?:\*([2-9]|1\d|2[01]))?$/.exec(part) || fail("bad meal: " + part), n = +(m[2] || 1);
     // A meal named twice would be two meals to B, pressing one card twice over; its count belongs in one item.
-    if (names.indexOf(it.name) >= 0) fail("named twice: " + it.name);
-    names.push(it.name);
-    if (!whole(it.qty, 21)) fail("bad qty: " + it.name);
-    total += it.qty;
-    if (it.pid !== undefined && !whole(it.pid, 1e9)) fail("bad pid: " + it.name);
+    if (keys.indexOf(m[1]) >= 0) fail("named twice: " + m[1]);
+    keys.push(m[1]);
+    items.push({ key: m[1], qty: n });
+    total += n;
   });
-  // The offer code is checked but NOT applied in this build: how the store takes one is not yet proven.
-  if (p.code !== undefined && !(typeof p.code === "string" && /^[\w-]{1,40}$/.test(p.code))) fail("bad code");
-  // The full-plan rule, last, so every other fault above reports itself first.
-  var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
-  if (total !== need) fail("the plan needs " + need + " meals; the link has " + total);
-  return p;
+  return { items: items, total: total, code: code };
 }
 
 // <fill A>
@@ -111,8 +107,12 @@ function fillA(p) {
     do id = String(10000 + Math.floor(Math.random() * 90000)); while (ids.indexOf(id) >= 0);
     ids.push(id);
     // The shape of the real line, every field kept.
+    // ⚠ Payload v2 (SPEC-rung2 § 11) carries a key and a count per meal: no product id and no name. So every v2 link
+    // stops HERE, at its first item, after the plan and cart checks above and before the one setItem below: nothing
+    // is written. § 11 does not say what fill A does with v2; this line is unchanged, and so is the rest of A, kept
+    // for that ruling.
     cart.push({
-      localId: id, productId: it.pid || fail("no product id: " + it.name), quantity: it.qty,
+      localId: id, productId: it.pid || fail("no product id: " + it.key), quantity: it.qty,
       unitPriceCents: plan[1], baseUnitPriceCents: plan[1], regularPriceCents: plan[1],
       name: it.name, images: [],
       itemData: [{ name: "Portion", display: plan[0], value: plan[0], price: "0.00" }],
@@ -131,16 +131,24 @@ function fillA(p) {
 }
 // </fill A>
 // <fill B>
-// B polls every 200 ms for at most 10 s: the meal cards render after the store's own start-up.
-var POLL_MS = 200, MAX_POLLS = 50;
-// Fill B finds each meal by its name as the page shows it, and presses the card's own controls.
+// B polls every 200 ms: for at most 10 s before a press (the meal cards render after the store's own start-up; the
+// store's CHECKOUT enables once the plan is full), and for at most 30 s after the store's CHECKOUT (SPEC-rung2 § 11
+// item 4: one live phone-width run of four stopped at 10 s with the store still committing).
+var POLL_MS = 200, MAX_POLLS = 50, AFTER_CHECKOUT = 150;
+// A meal's key: src/storefront/meal-key.js, the one function the link tool also runs, inlined here by the build.
+var key = /*KEY*/ null;
+// Fill B keys each meal card's title as the page shows it, and presses the card whose key the link names.
 function text(el) { return el.textContent.replace(/\s+/g, " ").trim(); }
 function first(el, sel, ok) { return [].filter.call(el.querySelectorAll(sel), ok)[0]; }
-function card(name) {
-  return first(w.document, "app-product-card", function (c) {
-    var t = c.querySelector(".product__content-title");
-    return t && text(t) === name;
+// SPEC-rung2 § 11 item 3: two cards whose titles share a key the link names cannot be told apart, so the link is
+// refused, nothing pressed. It runs on every lookup, so on every poll before the first press.
+function card(k) {
+  var c = [].filter.call(w.document.querySelectorAll("app-product-card"), function (el) {
+    var t = el.querySelector(".product__content-title");
+    return t && key(text(t)) === k;
   });
+  if (c[1]) fail("two meals share a key: " + k);
+  return c[0];
 }
 function addButton(c) {
   return c && first(c, ".product__actions button", function (b) { return text(b).indexOf("Add to Cart") >= 0; });
@@ -163,32 +171,33 @@ function moreButton(c) {
 // only stops B, while a false "empty" would press a whole plan on top of the visitor's.
 var HELD = /checkout|more meal|limit exceeded/i;
 // Wait until EVERY meal's card and Add to Cart are on the page, then press; a meal still missing after 10 s
-// refuses the whole payload with nothing pressed. The § 10 check runs on every poll, the last one just before the
-// first press: a meal already chosen shows the store's quantity counter in place of its Add to Cart, so on a reload
-// the payload's meals are never all found, and a check made only once they were would never run.
+// refuses the whole payload with nothing pressed, naming its key (a v2 link carries no names). The § 10 check runs
+// on every poll, the last one just before the first press: a meal already chosen shows the store's quantity counter
+// in place of its Add to Cart, so on a reload the payload's meals are never all found, and a check made only once
+// they were would never run.
 function fillB(p) {
   var polls = 0;
   guard(function poll() {
     if (control(HELD, 1)) fail("the plan already holds meals");
-    var missing = p.items.filter(function (it) { return !addButton(card(it.name)); });
+    var missing = p.items.filter(function (it) { return !addButton(card(it.key)); });
     if (!missing.length) return press(steps(p.items), 0);
-    if (++polls >= MAX_POLLS) fail("not on this page: " + missing.map(function (it) { return it.name; }));
+    if (++polls >= MAX_POLLS) fail("not on this page: " + missing.map(function (it) { return it.key; }));
     w.setTimeout(guard(poll), POLL_MS);
   })();
 }
 // Every meal's first press comes before any meal's second: if a card then offers no way to add another, B
 // stops with each meal in the cart once, rather than some meals complete and others absent.
 function steps(items) {
-  var list = items.map(function (it) { return [it.name, 0]; });
-  items.forEach(function (it) { for (var n = 1; n < it.qty; n++) list.push([it.name, n]); });
+  var list = items.map(function (it) { return [it.key, 0]; });
+  items.forEach(function (it) { for (var n = 1; n < it.qty; n++) list.push([it.key, n]); });
   return list;
 }
 // One press per tick, so the store can re-render between presses. ⚠ A control missing after a press stops
 // here with part of the payload already in the cart: a press cannot be taken back.
 function press(list, k) {
   if (k === list.length) return checkout();
-  var name = list[k][0], n = list[k][1], c = card(name);
-  var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + name + " after " + n);
+  var meal = list[k][0], n = list[k][1], c = card(meal);
+  var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + meal + " after " + n);
   b.click();
   w.setTimeout(guard(function () { press(list, k + 1); }), POLL_MS);
 }
@@ -207,7 +216,8 @@ function control(re, any) {
 }
 // Wait for an enabled CHECKOUT (short of the plan's count the store shows a disabled "Add N more meals"), remove the
 // fragment, press it once. Then wait for /checkout; if the store opens its extras dialog instead, press the dialog's
-// CONTINUE TO CHECKOUT, once, and add nothing from it. Each wait is at most 50 polls of 200 ms. No CHECKOUT: the meals
+// CONTINUE TO CHECKOUT, once, and add nothing from it. The wait for CHECKOUT is at most 50 polls of 200 ms (10 s); each
+// wait after a press of the store's (CHECKOUT, then CONTINUE) at most 150 (30 s, § 11 item 4). No CHECKOUT: the meals
 // stay in the visitor's pending list, as if they had pressed the buttons themselves, and the page is the store's own.
 // k counts the presses made: 0, CHECKOUT not yet; 1, CHECKOUT; 2, the dialog's too (nothing more is looked for:
 // its pattern, (?!), matches no text at all, not even an empty one, so the wait for /checkout goes on).
@@ -217,16 +227,20 @@ function checkout() {
     if (k && loc.pathname === "/checkout") return log("done: /checkout");
     var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]);
     if (b) { if (!k) drop(); b.click(); k++; polls = 0; }
-    else if (++polls >= MAX_POLLS) return k ? log("stopped: /checkout not reached") : fail("no checkout control");
+    else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? log("stopped: /checkout not reached") : fail("no checkout control");
     w.setTimeout(guard(poll), POLL_MS);
   })();
 }
 // </fill B>
 
+// The plan is the page's own ?mpid= (SPEC-rung2 § 11 item 1), read once: a whole number with no leading zero. Then the
+// full-plan rule (§ 7), last, so every other fault above reports itself first.
 guard(function () {
   if (loc.pathname !== "/order") fail("not the order page");
-  var p = payload(loc.hash.slice(7)), m = /[?&]mpid=([^&]*)/.exec(loc.search);
-  if (!m || m[1] !== String(p.mpid)) fail("mpid " + p.mpid + " is not this page's");
+  var p = payload(loc.hash.slice(7)), m = /[?&]mpid=([1-9]\d{0,8})(&|$)/.exec(loc.search) || fail("no mpid on this page");
+  p.mpid = +m[1];
+  var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
+  if (p.total !== need) fail("the plan needs " + need + " meals; the link has " + p.total);
   log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
   // <fill A>
   if (FILL === "A") return fillA(p);

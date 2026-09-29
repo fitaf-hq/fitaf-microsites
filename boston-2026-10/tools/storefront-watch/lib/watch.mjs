@@ -38,8 +38,11 @@ export async function runWatch({ fetcher, baseline, dependencies, page, full = f
   const at = now().toISOString();
   const flags = new Set();
 
-  const { entryUrl, entryText, live } = await readEntry({ fetcher, page });
+  const { entryUrl, entryText, entryLastModified, live } = await readEntry({ fetcher, page });
   const cheap = compareCheap(baseline, live);
+  // § 7 item 1: a NEW entry bundle is a release; its Last-Modified, read while the file is live (the store deletes a
+  // release's files at the next one), is the release's publish time, for the report and the issue's body.
+  const release = live.entry && live.entry !== baseline.entry ? { entry: live.entry, lastModified: entryLastModified } : null;
   if (cheap.changed) flags.add("F1");
   const inDepth = cheap.changed || full;
 
@@ -97,6 +100,7 @@ export async function runWatch({ fetcher, baseline, dependencies, page, full = f
     entry: live.entry,
     fetches: fetcher.calls.length,
     refused: [...fetcher.refused].sort(),
+    release,
     live,
     cheap,
     f1,

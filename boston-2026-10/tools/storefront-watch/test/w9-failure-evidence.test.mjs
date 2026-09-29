@@ -22,6 +22,8 @@ import { startStore } from "./browser-store.mjs";
 const AIZA = ["AI", "za", "Sy", "D".repeat(20), "0123456789ABC"].join(""); // "AIza" and 35 more, a Google key's form
 const SK = ["sk", "_", "Fit", "Q".repeat(24)].join(""); // the storefront public key's form, sk_…
 const BASE64 = "eyJhbGciOiJIUzI1NiJ9" + "Qm9zdG9uMjAyNjEwU21va2VUZXN0VG9rZW4x" + "q7Z3";
+// A key with no digit in it: the long-run rule (which asks for a digit) cannot catch it, so only the AIza… rule can.
+const AIZA_NO_DIGIT = ["AI", "za", "Sy", "Q".repeat(33)].join("");
 
 test("W9a: the redaction — AIza…, sk_…, a long base64 run; ordinary text kept", () => {
   assert.equal(AIZA.length, 39);
@@ -32,6 +34,8 @@ test("W9a: the redaction — AIza…, sk_…, a long base64 run; ordinary text k
   assert.ok(out.endsWith("path /order?mpid=21 chunk-EDJZQK2L.js"), out);
   const words = "Supercalifragilisticexpialidocious-and-then-some-more-words";
   assert.equal(redact(words), words, "a long run with no digit is not a token");
+  assert.equal(AIZA_NO_DIGIT.length, 39);
+  assert.equal(redact(`key ${AIZA_NO_DIGIT} end`), "key [REDACTED] end", "an AIza… key, by its own rule");
 });
 
 test("W9b: each console line cut to 200 characters, AFTER redaction (a key across the cut is not half shown)", () => {
@@ -41,9 +45,10 @@ test("W9b: each console line cut to 200 characters, AFTER redaction (a key acros
   const straddling = `${"x ".repeat(95)}${AIZA} after`;
   assert.ok(straddling.indexOf(AIZA) < 200 && straddling.indexOf(AIZA) + AIZA.length > 200, "fixture control: across the cut");
   const cut = cutLine(straddling);
-  assert.ok(cut.length <= 200);
-  assert.ok(!cut.includes(AIZA.slice(0, 12)), cut);
-  assert.ok(cut.includes("[REDACTED]"), cut);
+  assert.equal(cut.length, 200);
+  // Cut first, the line would keep "AIzaSyDDDD", too short for any key pattern to catch: the prefix would leak.
+  assert.ok(!cut.includes(AIZA.slice(0, 6)), cut);
+  assert.ok(cut.includes("[REDACTED"), cut);
 });
 
 /** Evidence as the smoke records it at a width that failed (lib/smoke.mjs readEvidence), unredacted. */

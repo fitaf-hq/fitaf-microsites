@@ -12,7 +12,7 @@ const VISITOR_CART = JSON.stringify([{ localId: "36688", name: "a visitor's own 
 const item = (over = {}) => ({ name: "Birria de Res Bowl", qty: 7, ...over }); // 7 of mpid 21's 7
 
 async function refusedByA({ mpid, items = [item()], cart = VISITOR_CART, reason }) {
-  const storage = new FakeStorage(cart === undefined ? {} : { [CART_KEY]: cart });
+  const storage = new FakeStorage({ [CART_KEY]: cart });
   const before = storage.dump();
   const h = fakeWindow({ path: `/order?mpid=${mpid}`, fragment: fragmentFor({ items }), storage });
   run(await script("A"), h.window);
@@ -57,6 +57,9 @@ for (const [label, cart] of [
 }
 
 test("R2-07 control: with no cart key at all, A gets as far as its product id, and still writes nothing", async () => {
-  const h = await refusedByA({ mpid: 21, cart: undefined, reason: /no product id/ });
-  assert.equal(h.window.localStorage.getItem(CART_KEY), null);
+  const storage = new FakeStorage();
+  const h = fakeWindow({ fragment: fragmentFor({ items: [item()] }), storage });
+  run(await script("A"), h.window);
+  assertRefused(h, "/order?mpid=21", /no product id/);
+  assert.equal(storage.dump(), "[]", "still no key at all");
 });

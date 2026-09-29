@@ -15,7 +15,8 @@ export function storeName(url, origin) {
 
 /**
  * § 2.1–2.2, two requests: the page, then its entry. Scripts on other origins are listed and refused, never fetched.
- * Returns the names the baseline compares (`html` in document order, `imports` sorted) and the entry's text.
+ * Returns the names the baseline compares (`html` in document order, `imports` sorted), the entry's text, and the
+ * entry's Last-Modified from that same request (§ 7 item 1; null if the store sent none).
  */
 export async function readEntry({ fetcher, page }) {
   const name = (url) => storeName(url, fetcher.origin);
@@ -24,15 +25,19 @@ export async function readEntry({ fetcher, page }) {
   for (const s of scripts) if (!fetcher.isStore(s.url)) fetcher.refuse(s.url);
   const entryUrl = entryOf(scripts.filter((s) => fetcher.isStore(s.url)));
   let entryText = null;
+  let entryLastModified = null;
   let imports = [];
   if (entryUrl) {
-    entryText = (await fetcher.get(entryUrl)).text;
+    const entry = await fetcher.get(entryUrl);
+    entryText = entry.text;
+    entryLastModified = entry.lastModified ?? null;
     imports = bundleImports(entryText, entryUrl);
     for (const url of imports) if (!fetcher.isStore(url)) fetcher.refuse(url);
   }
   return {
     entryUrl,
     entryText,
+    entryLastModified,
     live: { html: scripts.map((s) => name(s.url)), entry: entryUrl && name(entryUrl), imports: imports.map(name).sort() },
   };
 }

@@ -24,7 +24,9 @@ function originOf(url) {
 
 /**
  * `fetchImpl` is injected by the tests (no network) and is `fetch` otherwise. `calls` lists every URL requested,
- * in order; `refused` every URL refused, requested or not.
+ * in order; `refused` every URL refused, requested or not. `get` returns the response's `Last-Modified` too (null if
+ * none): for the entry bundle it is the release's publish time (SPEC-storefront-watch § 7 item 1), read from the one
+ * request made anyway.
  */
 export function storeFetcher({ fetchImpl = globalThis.fetch, origin = STORE_ORIGIN } = {}) {
   const calls = [];
@@ -51,7 +53,7 @@ export function storeFetcher({ fetchImpl = globalThis.fetch, origin = STORE_ORIG
         continue;
       }
       if (!res.ok) throw new Error(`GET ${current}: HTTP ${res.status}`);
-      return { url: current, text: await res.text() };
+      return { url: current, text: await res.text(), lastModified: res.headers.get("last-modified") };
     }
     throw new Error(`GET ${url}: more than ${MAX_REDIRECTS} redirects`);
   }
