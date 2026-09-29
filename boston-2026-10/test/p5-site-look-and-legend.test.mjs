@@ -12,10 +12,10 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { renderPage, ROOT } from "../build.mjs";
-import { loadInputs, MOCKUPS_DIR, renderMockups, TOKENS_SOURCE } from "../mockups/build-mockups.mjs";
+import { LEGEND_PATH, LEGEND_SOURCES, loadInputs, MOCKUPS_DIR, renderMockups, TOKENS_SOURCE } from "../mockups/build-mockups.mjs";
 import { rawColours } from "../scripts/contrast.mjs";
 import { loadPlans } from "./helpers.mjs";
-import { dataSources, elements, hasClass, pieceRuns } from "./mockup-html.mjs";
+import { dataSources, elements, hasClass, pieceRuns, textRuns } from "./mockup-html.mjs";
 
 const TEMPLATE = join(ROOT, "src", "template.html");
 const template = await readFile(TEMPLATE, "utf8");
@@ -25,6 +25,8 @@ after(async () => {
   assert.equal(await readFile(TEMPLATE, "utf8"), template, "committed template untouched");
 });
 const noPhotos = join(tmp, "no-such-folder");
+const legend = JSON.parse(await readFile(LEGEND_PATH, "utf8"));
+const inFiles = (run) => run.path.some((el) => hasClass(el, "legend-files"));
 const pages = renderMockups(await loadInputs({ photosDir: noPhotos }));
 
 // The reference is the PRODUCTION PAGE as build.mjs renders it (its font prefix resolved by the build, not
@@ -125,4 +127,68 @@ test("P5: each legend lists exactly the files the piece cites, plus the template
       assert.ok(listed.includes(file), `${id} lists ${file}`);
     }
   }
+});
+
+// The Advisor, 2026-09-29: the legend is for the Owner's screen share, so it shows PLAIN LABELS ("Words: the
+// shared message list"); the file names stay behind a switch ("Show file names", or N). The plain labels are
+// data (mockups/legend.json), not markup.
+test("P5: mockups/legend.json has a plain label for every source, and for no other", () => {
+  assert.deepEqual(Object.keys(legend.sources).sort(), [...LEGEND_SOURCES].sort());
+  for (const [file, label] of Object.entries(legend.sources)) {
+    assert.ok(label.what && label.from, `${file}: a what and a from`);
+  }
+});
+
+test("P5: each legend row shows its plain label; file names appear only behind the switch", () => {
+  for (const [id, html] of Object.entries(pages)) {
+    const runs = textRuns(html);
+    const rows = elements(html).filter((e) => e.attrs["data-file"]).map((e) => e.attrs["data-file"]);
+    assert.ok(rows.length >= 6, `${id} has legend rows`);
+    for (const file of rows) {
+      const inRow = runs.filter((r) => r.path.some((el) => el.attrs["data-file"] === file));
+      const plain = inRow.filter((r) => r.path.some((el) => hasClass(el, "legend-plain"))).map((r) => r.text).join("");
+      assert.equal(plain, `${legend.sources[file].what}: ${legend.sources[file].from}`, `${id}: ${file}`);
+      assert.ok(inRow.some((r) => inFiles(r) && r.text === file), `${id}: ${file} is behind the switch`);
+    }
+    for (const r of runs) {
+      if (LEGEND_SOURCES.some((f) => r.text.includes(f)) || r.text.includes("npm run")) {
+        assert.ok(inFiles(r), `${id}: "${r.text}" names a file outside the switch`);
+      }
+    }
+    const shown = runs.filter((r) => !inFiles(r)).map((r) => r.text);
+    assert.ok(shown.includes(legend.title), `${id}: the title`);
+    assert.ok(shown.includes(legend.note), `${id}: the plain note`);
+    assert.ok(runs.some((r) => inFiles(r) && r.text === legend.files_note), `${id}: the files note, behind the switch`);
+    const box = elements(html).filter((e) => e.tag === "input" && e.attrs.type === "checkbox");
+    assert.equal(box.length, 1, `${id}: one switch`);
+    assert.ok(!("checked" in box[0].attrs), `${id}: the switch starts off`);
+    assert.ok(runs.some((r) => r.path.some((el) => hasClass(el, "files-toggle")) && r.text.includes(legend.files_toggle)), `${id}: the switch's label`);
+    assert.doesNotMatch(/<body\b[^>]*>/.exec(html)[0], /show-files/, `${id}: the page opens with the file names hidden`);
+  }
+});
+
+test("P5: the stylesheet hides the file names until the switch is on", async () => {
+  const css = await readFile(join(MOCKUPS_DIR, "mockups.css"), "utf8");
+  assert.match(css, /(^|\n)\.legend-files\s*\{[^}]*display:\s*none/);
+  assert.match(css, /body\.show-files \.legend-files\s*\{[^}]*display:\s*block/);
+});
+
+test("P5: a plain label changed in mockups/legend.json shows on all four pieces", async () => {
+  const path = join(tmp, "legend.json");
+  const changed = structuredClone(legend);
+  changed.sources["data/offers.json"] = { what: "P5 OFFER LABEL", from: "P5 FROM" };
+  changed.note = "P5 NOTE";
+  await writeFile(path, JSON.stringify(changed));
+  for (const [id, html] of Object.entries(renderMockups(await loadInputs({ legendPath: path, photosDir: noPhotos })))) {
+    const text = textRuns(html).map((r) => r.text).join(" ");
+    assert.ok(text.includes("P5 OFFER LABEL:") && text.includes("P5 FROM") && text.includes("P5 NOTE"), id);
+  }
+});
+
+test("P5: a legend file without a plain label for a source is refused", async () => {
+  const path = join(tmp, "legend-missing.json");
+  const missing = structuredClone(legend);
+  delete missing.sources["data/plans.json"];
+  await writeFile(path, JSON.stringify(missing));
+  await assert.rejects(loadInputs({ legendPath: path, photosDir: noPhotos }), /data\/plans\.json/);
 });

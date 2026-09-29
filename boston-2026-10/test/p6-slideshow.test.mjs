@@ -35,6 +35,8 @@ function run(n, { hash = "", width = 1600 } = {}) {
   const slides = Array.from({ length: n }, () => node(".slide"));
   const dots = Array.from({ length: n }, () => node(".dot"));
   const legendHit = { closest: (sel) => (sel.includes(".legend") ? {} : null) };
+  const boxListeners = {};
+  const filesBox = { checked: false, addEventListener: (type, fn) => ((boxListeners[type] ??= []).push(fn)) };
   const listeners = {};
   const location = { hash };
   const body = { classList: classList() };
@@ -43,7 +45,7 @@ function run(n, { hash = "", width = 1600 } = {}) {
     documentElement: { requestFullscreen: () => Promise.resolve() },
     fullscreenElement: null,
     querySelectorAll: (sel) => (sel === ".slide" ? slides : sel === ".dot" ? dots : []),
-    querySelector: () => null,
+    querySelector: (sel) => (sel === ".files-toggle input" ? filesBox : null),
   };
   const window = {
     document,
@@ -67,6 +69,8 @@ function run(n, { hash = "", width = 1600 } = {}) {
     body,
     location,
     dots,
+    filesBox,
+    tick: () => { filesBox.checked = !filesBox.checked; for (const fn of boxListeners.change ?? []) fn({}); },
   };
 }
 
@@ -130,4 +134,16 @@ test("P6: the URL fragment opens a slide; a bad one opens the first", () => {
 test("P6: the legend starts open on a wide screen and closed on a phone", () => {
   assert.equal(run(5, { width: 1600 }).body.classList.contains("legend-open"), true);
   assert.equal(run(5, { width: 390 }).body.classList.contains("legend-open"), false);
+});
+
+test("P6: N and the switch show and hide the file names, and agree with each other", () => {
+  const s = run(5);
+  assert.equal(s.body.classList.contains("show-files"), false, "starts with the plain labels");
+  const e = s.key("n");
+  assert.equal(e.defaultPrevented, true);
+  assert.equal(s.body.classList.contains("show-files"), true);
+  assert.equal(s.filesBox.checked, true, "the switch follows the key");
+  s.tick();
+  assert.equal(s.body.classList.contains("show-files"), false, "the switch turns them off");
+  assert.deepEqual(s.shown(), [0], "neither moves the slide");
 });

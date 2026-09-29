@@ -20,7 +20,7 @@ export const PIECES = [
     w: px(33, BANNER_PX_PER_INCH),
     h: px(80, BANNER_PX_PER_INCH),
   },
-  { id: "slideshow", file: "slideshow.html", png: null, title: "Slideshow", size: "full screen: ← → or click, L for the legend, F for full screen" },
+  { id: "slideshow", file: "slideshow.html", png: null, title: "Slideshow", size: "full screen: ← → or click, L for the legend, N for file names, F for full screen" },
 ];
 const piece = (id) => PIECES.find((p) => p.id === id);
 

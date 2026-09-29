@@ -30,6 +30,13 @@ body.stacked .aside { width: 100%; max-width: 480px; }
 .legend-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
 .legend-list li { display: grid; gap: 1px; }
 .legend-list span { color: var(--ink); }
+.legend-plain b { color: var(--navy); font-weight: 600; }
+/* The file names sit behind the switch ("Show file names", or N): the plain labels are what the Owner sees */
+.legend-files { display: none; }
+body.show-files .legend-files { display: block; }
+.legend-files code { display: block; }
+.files-toggle { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; color: var(--navy); font: 600 12.5px/1.3 var(--head); cursor: pointer; }
+.files-toggle input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--navy); cursor: pointer; }
 .legend-note { margin: 12px 0 0; color: var(--muted); font-size: 12.5px; }
 
 .index-main { max-width: 640px; margin: 0 auto; padding: 32px 24px; }

@@ -10,6 +10,8 @@ import { zonedDate } from "../src/worker/zoned-time.js";
 
 export const MOCKUPS_DIR = dirname(fileURLToPath(import.meta.url));
 export const MANIFEST_PATH = join(MOCKUPS_DIR, "photos.json");
+/** The legend's words: a plain label per source, for the Owner's screen share. */
+export const LEGEND_PATH = join(MOCKUPS_DIR, "legend.json");
 /** ⛔ git-ignored: photographs are never committed (test P1). */
 export const PHOTOS_DIR = join(MOCKUPS_DIR, "photos");
 export const OFFERS_PATH = join(ROOT, "data", "offers.json");
@@ -25,6 +27,8 @@ export const SOURCES = {
 export const MANIFEST_SOURCE = "mockups/photos.json";
 export const LOGO_SOURCE = "src/assets/fitaf-logo.png";
 export const TOKENS_SOURCE = "src/template.html";
+/** Every source a piece can cite, in the legend's order: the words first, then the pictures, then the look. */
+export const LEGEND_SOURCES = [...Object.values(SOURCES), MANIFEST_SOURCE, LOGO_SOURCE, TOKENS_SOURCE];
 
 /** A photo is named by a plain file name in the photos folder, never a path. */
 const PLAIN_FILE = /^[A-Za-z0-9][A-Za-z0-9 ._()&'-]*\.(jpe?g|png|webp)$/i;
@@ -57,6 +61,26 @@ export async function readManifest(path) {
   return manifest;
 }
 
+/** The legend's words. Every source must have a plain label and no unknown source may (test P5). */
+export async function readLegend(path) {
+  const legend = await loadJson(path);
+  for (const key of ["title", "note", "files_toggle", "files_note"]) {
+    if (typeof legend[key] !== "string" || !legend[key]) throw new Error(`${path}: "${key}" is missing`);
+  }
+  const named = Object.keys(legend.sources ?? {});
+  const missing = LEGEND_SOURCES.filter((f) => !named.includes(f));
+  const unknown = named.filter((f) => !LEGEND_SOURCES.includes(f));
+  if (missing.length || unknown.length) {
+    throw new Error(`${path}: no plain label for ${missing.join(", ") || "-"}; unknown source ${unknown.join(", ") || "-"}`);
+  }
+  for (const [file, label] of Object.entries(legend.sources)) {
+    if (typeof label.what !== "string" || typeof label.from !== "string" || !label.what || !label.from) {
+      throw new Error(`${path}: ${file} needs a "what" and a "from"`);
+    }
+  }
+  return legend;
+}
+
 /**
  * Read every input. `today` (YYYY-MM-DD in the send time zone of data/save.json) picks the offer by the
  * Worker's own rule, offerForSave: the live event offer, else the current general one. `eventId` picks
@@ -69,6 +93,7 @@ export async function loadInputs({
   messagesPath = MESSAGES_PATH,
   templatePath = TEMPLATE_PATH,
   manifestPath = MANIFEST_PATH,
+  legendPath = LEGEND_PATH,
   photosDir = PHOTOS_DIR,
   today,
   eventId,
@@ -95,6 +120,7 @@ export async function loadInputs({
     manifest,
     photos,
     photosDir,
+    legend: await readLegend(legendPath),
     site: siteStyle(await readFile(templatePath, "utf8")),
     css: await read("mockups.css"),
     scripts: { sheet: await read("sheet.js"), slideshow: await read("slideshow.js") },

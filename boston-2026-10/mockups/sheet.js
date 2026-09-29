@@ -1,6 +1,7 @@
 // A static mock-up's sheet. Scales the piece to fit the window (it keeps its proportions; beside the legend
 // when there is room, above it when there is not), and while the pointer is on a legend row outlines the
-// parts that come from that row's file. It writes no text (test P2).
+// parts that come from that row's file. The legend's switch, or N, shows the file names behind the plain
+// labels. It writes no text (test P2).
 (() => {
   const board = document.querySelector(".board");
   const aside = document.querySelector(".aside");
@@ -25,6 +26,19 @@
     row.addEventListener("mouseenter", () => mark(true));
     row.addEventListener("mouseleave", () => mark(false));
   }
+
+  const filesBox = document.querySelector(".files-toggle input");
+  function showFiles(on) {
+    document.body.classList.toggle("show-files", on);
+    filesBox.checked = on;
+    fit();
+  }
+  filesBox.addEventListener("change", () => showFiles(filesBox.checked));
+  addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.key.toLowerCase() !== "n") return;
+    e.preventDefault();
+    showFiles(!document.body.classList.contains("show-files"));
+  });
 
   addEventListener("resize", fit);
   fit();

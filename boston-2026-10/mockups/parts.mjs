@@ -3,15 +3,13 @@
 // built from those same records, so it cannot name a file the piece does not use, or miss one (test P5).
 import { money, shownCounts } from "../build.mjs";
 import { offerForSave } from "../src/worker/offers.js";
-import { LOGO_SOURCE, MANIFEST_SOURCE, SOURCES, TOKENS_SOURCE } from "./inputs.mjs";
+import { LEGEND_SOURCES, LOGO_SOURCE, MANIFEST_SOURCE, SOURCES, TOKENS_SOURCE } from "./inputs.mjs";
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 export const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ESCAPES[ch]);
 
 const at = (file, pointer) => `${file}#${pointer}`;
 const LOGO_PATH = "assets/fitaf-logo.png";
-/** The legend's order: the campaign's words first, then its pictures, then its look. */
-const LEGEND_ORDER = [...Object.values(SOURCES), MANIFEST_SOURCE, LOGO_SOURCE, TOKENS_SOURCE];
 
 /** The lowest price per meal among the cells the page shows (its 3 × 2 grid), with where it is. */
 function lowestShownPrice(plans) {
@@ -65,7 +63,7 @@ export function makeParts(inputs) {
   const note = (sources, label) => {
     for (const source of sources) {
       const file = source.split("#")[0];
-      if (!LEGEND_ORDER.includes(file)) throw new Error(`${file} is not a known source`);
+      if (!LEGEND_SOURCES.includes(file)) throw new Error(`${file} is not a known source`);
       if (!used.has(file)) used.set(file, []);
       if (!used.get(file).includes(label)) used.get(file).push(label);
     }
@@ -112,16 +110,26 @@ export function makeParts(inputs) {
         `<p class="slot-label" data-annotation><b>Photo to come</b><span>slot ${esc(slot)}</span><span>${esc(photo.file)}</span></p></div>`
       );
     },
-    /** Where each part comes from, for the viewer: one row per file, in a fixed order. */
+    /**
+     * Where each part comes from, one row per source in a fixed order. The viewer sees each source's plain
+     * label (mockups/legend.json); its file name and the parts it fills sit behind the switch (.legend-files).
+     */
     legend() {
-      const rows = LEGEND_ORDER.filter((file) => used.has(file)).map(
-        (file) => `<li data-file="${esc(file)}"><code>${esc(file)}</code><span>${esc(used.get(file).join(" · "))}</span></li>`,
-      );
+      const words = inputs.legend;
+      const rows = LEGEND_SOURCES.filter((file) => used.has(file)).map((file) => {
+        const { what, from } = words.sources[file];
+        return (
+          `<li data-file="${esc(file)}"><span class="legend-plain"><b>${esc(what)}:</b> ${esc(from)}</span>` +
+          `<span class="legend-files"><code>${esc(file)}</code><span>${esc(used.get(file).join(" · "))}</span></span></li>`
+        );
+      });
       return (
-        `<section class="legend" data-annotation aria-label="Where each part comes from">` +
-        `<p class="legend-title">Where each part comes from</p>` +
+        `<section class="legend" data-annotation aria-label="${esc(words.title)}">` +
+        `<p class="legend-title">${esc(words.title)}</p>` +
         `<ul class="legend-list">${rows.join("")}</ul>` +
-        `<p class="legend-note">Change one of these files and run <code>npm run build:mockups</code>: every piece that uses it changes. <code>data/</code> and <code>src/</code> are the microsite&#39;s own inputs.</p>` +
+        `<p class="legend-note">${esc(words.note)}</p>` +
+        `<p class="legend-note legend-files">${esc(words.files_note)}</p>` +
+        `<label class="files-toggle"><input type="checkbox"> ${esc(words.files_toggle)}</label>` +
         `</section>`
       );
     },

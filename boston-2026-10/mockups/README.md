@@ -9,8 +9,10 @@ messages:
    orange rule, plan colours), **one offer** and **one QR code**.
 2. **All of it is downstream of the knowledge base.** Every phrase, price, plan and colour on a piece
    comes from the same files the microsite is built from, so a change in one place changes every piece.
-   Each piece carries a small legend naming the file each part comes from; on the HTML, pointing at a
-   legend row outlines the parts that come from that file.
+   Each piece carries a small legend, **"Where each part comes from"**, in plain labels for the Owner
+   ("Words: the shared message list", "Offer: the offer list", …). The file names stay behind a switch
+   ("Show file names", or the **N** key). On the HTML, pointing at a legend row outlines the parts that
+   come from that source.
 
 ## Build
 
@@ -30,7 +32,12 @@ folder is wholly this build's output and starts empty on every run. **Never hand
   PNG, stops Chrome's process group and checks the PNG's size (see its header comment).
 - **The slideshow**: → ↓ PageDown or space forward, ← ↑ PageUp back, Home and End, and the ends wrap; a
   click goes forward, a click on the left quarter goes back; `#3` in the URL opens slide 3. **L** shows or
-  hides the legend (open by default on a wide screen, closed on a phone), **F** asks for full screen.
+  hides the legend (open by default on a wide screen, closed on a phone), **N** shows the file names behind
+  its plain labels, **F** asks for full screen.
+- **The legend's words** are data too: [`legend.json`](legend.json) holds its title, its note ("Change one
+  of these, and every piece that uses it changes."), the switch's label and a plain label per source
+  (`what: from`), as the Advisor set them on 2026-09-29. It must name every source and no other (the build
+  refuses it otherwise). The PNGs show the plain labels; the switch starts off.
 - **The offer** is chosen by the Worker's own rule, `offerForSave` (`src/worker/offers.js`): the live event
   offer, else the current general one, on `--on` (default today in the send time zone of
   `data/save.json`). ⛔ Every offer is still a placeholder (`[The offer]`): the Owner has not named it.
@@ -102,5 +109,5 @@ The QR code's own navy-on-white comes from `build.mjs`, not from CSS.
 | P2 | every text run sits in an element citing `data/` by JSON pointer; the letterless-marker render; one changed value (offer, headline, scan prompt, event URL) shows on all four; one changed phrase in `data/messages.json` changes the page and all four; a changed price reaches the flyer; no CSS `content` or script writes a word |
 | P3 | the manifest's slots are all used and no piece uses another; placeholders without photos, photos with them; one changed photo changes all four; a path in the manifest is refused |
 | P4 | the QR files are byte-identical to `writeQrCodes`', decode to the event URL, one per piece; no QR generator here |
-| P5 | the `:root` tokens and font faces are the shipped page's; a token changed in the template reaches all four; the stylesheet is well formed; every file a piece loads is written; no raw colour or translucency; no text inside a photo; the legend lists exactly the cited files |
-| P6 | 3–5 photo slides, each with one plan line, then the closing slide with the offer and the QR; keys, clicks, the fragment and the legend, run in a `vm` over a stand-in DOM |
+| P5 | the legend: a plain label per source from `legend.json` (and a changed one reaches all four), file names only behind the switch, hidden by default, a label missing is refused; the `:root` tokens and font faces are the shipped page's; a token changed in the template reaches all four; the stylesheet is well formed; every file a piece loads is written; no raw colour or translucency; no text inside a photo; the legend lists exactly the cited files |
+| P6 | 3–5 photo slides, each with one plan line, then the closing slide with the offer and the QR; keys, clicks, the fragment, the legend and N, run in a `vm` over a stand-in DOM |

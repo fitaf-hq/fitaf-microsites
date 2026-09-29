@@ -1,6 +1,7 @@
 // The slideshow's controls. → ↓ PageDown and space go forward, ← ↑ PageUp back, Home and End to the ends,
 // and the ends wrap. A click goes forward, a click on the left quarter goes back. The slide number is in
-// the URL fragment (#3), so a reload stays put. L shows or hides the legend; F asks for full screen.
+// the URL fragment (#3), so a reload stays put. L shows or hides the legend; N (or the legend's switch) shows
+// the file names behind its plain labels; F asks for full screen.
 // It only shows and hides slides; it writes no text (test P2).
 (() => {
   const slides = [...document.querySelectorAll(".slide")];
@@ -25,6 +26,12 @@
     history.replaceState(null, "", `#${i + 1}`);
   }
   const toggleLegend = () => document.body.classList.toggle("legend-open");
+  const filesBox = document.querySelector(".files-toggle input");
+  function showFiles(on) {
+    document.body.classList.toggle("show-files", on);
+    filesBox.checked = on;
+  }
+  filesBox.addEventListener("change", () => showFiles(filesBox.checked));
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen();
@@ -39,6 +46,7 @@
     else if (key === "Home") to = 0;
     else if (key === "End") to = slides.length - 1;
     else if (key === "l") toggleLegend();
+    else if (key === "n") showFiles(!document.body.classList.contains("show-files"));
     else if (key === "f") toggleFullscreen();
     else return;
     e.preventDefault();
