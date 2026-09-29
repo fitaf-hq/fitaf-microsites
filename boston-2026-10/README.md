@@ -34,6 +34,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs` | tools |
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel) | OUTPUT, git-ignored |
 | `SPEC-rung2-cart-handoff.md` | rung 2's contract: the cart hand-off, § 6 (the store's Custom Scripts Footer, fills A and B) governs | authority |
+| `SPEC-storefront-watch.md` | the storefront watch: an hourly GitHub Actions check of the store's public bundle, the dependencies the hand-off presses, Fit AF's Footer block, and a live smoke test of the hand-off on each flag (never submits); an issue per release | authority |
 | `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, both fills behind `FILL`; its `//` lines are for maintainers and do not ship | INPUT |
 | `scripts/build-storefront.mjs` | `npm run build:storefront`: one fill per file, the plan table inlined, the version line; refuses a file of 5,120 bytes or more | build |
 | `scripts/handoff-link.mjs` | `npm run handoff:link`: prints a test link carrying a payload | tool |
