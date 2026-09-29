@@ -1,0 +1,58 @@
+# The storefront watch (boston-2026-10/SPEC-storefront-watch.md). Each hour: has the store released a new build of
+# its public bundle? On a release (or a dispatch): check what the cart hand-off depends on, and smoke-test the
+# hand-off on the live store at two widths (never submitting anything). Once a day: check Fit AF's Footer block.
+# A flagged run fails and opens (or updates) an issue labelled storefront-watch.
+#
+# It is on main only because GitHub runs a schedule from the default branch alone. The code and its inputs are the
+# dev line's, checked out at run time: boston-2026-10/tools/storefront-watch/ (see its README) and
+# boston-2026-10/storefront/. No secret: the runner's own GITHUB_TOKEN, for the issue.
+name: storefront-watch
+
+on:
+  schedule:
+    - cron: "17 * * * *" # hourly, at 17 minutes past (UTC)
+    - cron: "17 7 * * *" # daily, 07:17 UTC (03:17 in Boston): also F3 and F4
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: The branch or commit whose tool and inputs to run
+        required: false
+        default: boston/rung-4-save-offer
+
+permissions:
+  contents: read
+  issues: write
+
+# At 07:17 both schedules fire; the second run waits for the first, so it sees the first's issue.
+concurrency:
+  group: storefront-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the dev line
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || 'boston/rung-4-save-offer' }}
+          persist-credentials: false
+
+      - name: Node 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      # The watch's own package and lockfile only (puppeteer-core, no browser download): the site's install never
+      # runs here. The browser is the runner's installed Google Chrome.
+      - name: Install the watch
+        run: npm ci --prefix boston-2026-10/tools/storefront-watch
+
+      - name: Watch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MODE: ${{ github.event_name == 'workflow_dispatch' && '--full' || (github.event.schedule == '17 7 * * *' && '--daily' || '') }}
+        run: npm --prefix boston-2026-10/tools/storefront-watch run watch -- --issue $MODE
