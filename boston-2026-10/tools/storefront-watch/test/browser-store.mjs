@@ -66,7 +66,7 @@ function appHtml(cfg) {
       b.onclick = function () { pending.push(name); renderBar(); };
       actions.appendChild(b); card.appendChild(actions); root.appendChild(card);
       var mobile = el("app-product-card-mobile");
-      mobile.appendChild(el("h2", "product__content-title", name));
+      mobile.appendChild(el("h2", "product-card-mobile__title", name)); // the real store's mobile title class
       mobile.appendChild(el("button", null, "+"));
       root.appendChild(mobile);
     });

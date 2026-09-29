@@ -34,9 +34,13 @@ function readMenu(need) {
     const m = /\$\s*([\d,]+)\.(\d{2})/.exec(text(el));
     return m ? Number(m[1].replace(/,/g, "")) * 100 + Number(m[2]) : null;
   };
-  // A meal is displayed if a title of that name is: at 666 px and narrower the page shows its mobile cards and hides
-  // app-product-card, which fill B presses at every width (SPEC-rung2 § 8).
-  const shown = new Set([...document.querySelectorAll(".product__content-title")].filter((t) => t.getClientRects().length > 0).map(text));
+  // A meal is displayed if a title of that name is, in any of the store's card layouts: at 666 px and narrower the page
+  // shows its mobile cards (their title is `.product-card-mobile__title`, found on the live store 2026-09-29) and hides
+  // app-product-card, which fill B presses at every width (SPEC-rung2 § 8). Choosing only from displayed
+  // app-product-card titles chose nothing at 390 px.
+  const TITLES = "app-product-card .product__content-title, app-product-card-mobile .product-card-mobile__title, " +
+    "app-product-card-classic-mobile [class*='title']";
+  const shown = new Set([...document.querySelectorAll(TITLES)].filter((t) => t.getClientRects().length > 0).map(text));
   const names = [];
   const chosen = [];
   for (const card of document.querySelectorAll("app-product-card")) {
