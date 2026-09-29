@@ -1,0 +1,79 @@
+{
+  "about": "The literal strings of the store's public code that the cart hand-off depends on (SPEC-storefront-watch.md § 3, F2). Each must be found, exactly and case-sensitively, in at least one JS file reachable from the order page's entry bundle. Each is quoted as the bundle has it, quotes and spaces included where they keep it exact (\" CHECKOUT \" is not found inside \" CHECKOUT NOW \"). Nothing else of the store's code is kept here.",
+  "read_on": "2026-09-29",
+  "read_from": "the store's public bundle as served for /order?mpid=21 (the entry main-FEK5K7ML.js and the chunks it loads)",
+  "literals": [
+    {
+      "id": "meal-card",
+      "literal": "\"app-product-card\"",
+      "use": "fill B finds each payload meal's card by this element (card()), and never presses a checkout control inside one (control())",
+      "spec": "SPEC-rung2-cart-handoff.md § 6 (B, what it does); § 8"
+    },
+    {
+      "id": "meal-card-mobile",
+      "literal": "\"app-product-card-mobile\"",
+      "use": "the phone layout's meal card: fill B never presses a checkout control inside one (control())",
+      "spec": "SPEC-rung2-cart-handoff.md § 8 (meal cards and width)"
+    },
+    {
+      "id": "title-class",
+      "literal": "\"product__content-title\"",
+      "use": "fill B matches a payload meal to a card by this element's text, the meal's name as the page shows it",
+      "spec": "SPEC-rung2-cart-handoff.md § 6 (B, what it does)"
+    },
+    {
+      "id": "actions-class",
+      "literal": "\"product__actions\"",
+      "use": "fill B looks for a card's Add to Cart (and a quantity control) only inside this element",
+      "spec": "SPEC-rung2-cart-handoff.md § 6 (B, what it does)"
+    },
+    {
+      "id": "add-to-cart",
+      "literal": "\"Add to Cart\"",
+      "use": "the label of the button fill B presses on each meal's card",
+      "spec": "SPEC-rung2-cart-handoff.md § 6 (B, what it does); § 7"
+    },
+    {
+      "id": "checkout",
+      "literal": "\" CHECKOUT \"",
+      "use": "the cart bar's checkout control (below 1025 px), which fill B presses after the last meal",
+      "spec": "SPEC-rung2-cart-handoff.md § 8 (two labels, exactly)"
+    },
+    {
+      "id": "checkout-now",
+      "literal": "\" CHECKOUT NOW \"",
+      "use": "the cart sidebar's checkout control (1025 px and wider), which fill B presses after the last meal",
+      "spec": "SPEC-rung2-cart-handoff.md § 8 (two labels, exactly)"
+    },
+    {
+      "id": "continue-to-checkout",
+      "literal": "\" CONTINUE TO CHECKOUT \"",
+      "use": "the extras dialog's control, which fill B presses once if the store opens the dialog",
+      "spec": "SPEC-rung2-cart-handoff.md § 8"
+    },
+    {
+      "id": "pending-list",
+      "literal": "\"hmp_pending_plan_items\"",
+      "use": "Add to Cart on a plan page puts a meal in this pending list, not the cart: why fill B must end on the store's own checkout",
+      "spec": "SPEC-rung2-cart-handoff.md § 8 (why, from the store's public code)"
+    },
+    {
+      "id": "commit",
+      "literal": "commitPlanItems(",
+      "use": "the store's checkout control commits the pending list to the cart with this, then routes to /checkout inside the app",
+      "spec": "SPEC-rung2-cart-handoff.md § 8 (why, from the store's public code)"
+    },
+    {
+      "id": "footer-field",
+      "literal": "footer_scripts",
+      "use": "the Custom Scripts Footer field of the store's settings, the text in which Fit AF's block is pasted",
+      "spec": "SPEC-rung2-cart-handoff.md § 6"
+    },
+    {
+      "id": "footer-injection",
+      "literal": "injectSlot(\"footer\"",
+      "use": "the app appends the Footer slot's scripts to <body> at run time, re-created so that they run: how the block reaches the page",
+      "spec": "SPEC-rung2-cart-handoff.md § 6; SPEC-storefront-watch.md § 3 (F3)"
+    }
+  ]
+}

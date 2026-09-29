@@ -1,0 +1,20 @@
+{
+  "name": "fitaf-microsite-boston-2026-10-storefront-watch",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Watches the store's public bundle for releases and smoke-tests the cart hand-off on each (SPEC-storefront-watch.md). A separate package so the site's own install never contains it.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "watch": "node bin/watch.mjs",
+    "smoke": "node bin/smoke.mjs",
+    "accept": "node bin/accept.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "puppeteer-core": "25.12.0",
+    "qrcode": "1.5.4"
+  }
+}
