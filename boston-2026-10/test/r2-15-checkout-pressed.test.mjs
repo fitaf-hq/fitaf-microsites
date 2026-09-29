@@ -73,3 +73,14 @@ test("R2-15e: after the press, B keeps polling until the store routes, and press
   assert.deepEqual(h.events.at(-1), ["pushState", "/checkout"]);
   assert.equal(h.info.filter((line) => / done: \/checkout$/.test(line)).length, 1);
 });
+
+test("R2-15f: a CHECKOUT shown disabled at first (the store busy) is waited for, never pressed while disabled", async () => {
+  const page = await orderPage({ loadingTicks: 6 });
+  const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
+  run(await script("B"), h.window);
+  while (page.log.length < 7) assert.ok(h.timers.step(), "still pressing meals");
+  assert.deepEqual(page.summary(), ["CHECKOUT (disabled)", "CHECKOUT (disabled)"], "fixture control: disabled first");
+  h.timers.drain();
+  assert.deepEqual(page.controls, ["checkout:shown"], "pressed once, and only once it was enabled");
+  assert.deepEqual(h.events.at(-1), ["pushState", "/checkout"]);
+});

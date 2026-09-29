@@ -7,12 +7,14 @@
 // `//` comment, like this one: with both fills and every comment the text is ~8.7 KB, and SPEC-rung2 § 3
 // says "under 5 KB". `/* */` comments ship. The tests run the SHIPPED texts, so what they prove is what is pasted.
 //
-// What it does (SPEC-rung2 § 6): a link to /order?mpid=N#fitaf=<payload> fills the cart, then opens /checkout.
-// Any failure removes the fragment and stops: the visitor keeps the plan's order page, as rung 1 leaves it.
+// What it does (SPEC-rung2 § 6): a link to /order?mpid=N#fitaf=<payload> fills the cart, then goes to /checkout:
+// fill A loads it; fill B presses the store's own CHECKOUT (§ 8). Any failure removes the fragment and stops: the
+// visitor keeps the plan's order page, as rung 1 leaves it.
 // The body of the one function below is not indented, to spend the 5 KB on code rather than spaces.
 (function () {
 "use strict";
-var FILL = "B"; /* A writes the store's cart storage; B presses the page's own buttons. A text holds one. */
+// A writes the store's cart storage; B presses the page's own buttons. A built text holds one.
+var FILL = "B";
 var w = window;
 var loc = w.location;
 // An ordinary visit costs this one read of location.hash: no storage, no timer, no listener, no request,
@@ -21,8 +23,11 @@ if (loc.hash.slice(0, 7) !== "#fitaf=") return;
 // Once per load: a second copy of this block, or a console paste on a page that has it, must not fill twice.
 if (w.__fitafHandoff) return;
 w.__fitafHandoff = true;
-// Set by fill A once it has written: puts the cart key back exactly as it was, absent included.
+// <fill A>
+// Set by fill A once it has written: puts the cart key back exactly as it was, absent included. Fill B writes
+// nothing, so its text carries neither this nor the guard's restore line.
 var undo;
+// </fill A>
 // mpid: meals a week, from data/plans.json, individual plans and Family. The store's order page will not check out
 // short of the plan's count ("Please add at least 7 meals to continue": the one-browser run, 2026-09-29), so a
 // payload must add exactly that many — never a cart that stops at checkout.
@@ -38,7 +43,9 @@ function drop() { w.history.replaceState(w.history.state, "", loc.pathname + loc
 function guard(fn) {
   return function () {
     try { fn(); } catch (e) {
+      // <fill A>
       try { if (undo) undo(); } catch (e2) { log("restore failed: " + e2.message); }
+      // </fill A>
       try { drop(); } catch (e3) { /* the page stays as it is */ }
       log("stopped: " + e.message);
     }
@@ -170,16 +177,40 @@ function steps(items) {
 // One press per tick, so the store can re-render between presses. ⚠ A control missing after a press stops
 // here with part of the payload already in the cart: a press cannot be taken back.
 function press(list, k) {
-  if (k === list.length) {
-    drop();
-    return loc.assign("/checkout");
-  }
+  if (k === list.length) return checkout();
   var name = list[k][0];
   var n = list[k][1];
   var c = card(name);
   var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + name + " after " + n);
   b.click();
   w.setTimeout(guard(function () { press(list, k + 1); }), POLL_MS);
+}
+// SPEC-rung2 § 8. On a meal-plan page the store's Add to Cart puts a meal in the plan's PENDING list, not the cart;
+// only the store's own checkout control commits that list and routes to /checkout inside the app. So B never loads
+// /checkout and never writes storage: it presses that control, found like the meals, by its visible label.
+// control(label): the first button whose text, whitespace collapsed and in any case, is exactly `label`; enabled;
+// displayed (the page renders a desktop and a mobile layout, one of them hidden); and not inside a meal card.
+function control(label) {
+  return first(w.document, "button", function (b) {
+    return !b.disabled && text(b).toLowerCase() === label && b.getClientRects().length &&
+      !b.closest("app-product-card,app-product-card-mobile");
+  });
+}
+// Wait for an enabled CHECKOUT (short of the plan's count the store shows a disabled "Add N more meals"), remove the
+// fragment, press it once. Then wait for /checkout; if the store opens its extras dialog instead, press the dialog's
+// CONTINUE TO CHECKOUT, once, and add nothing from it. Each wait is at most 50 polls of 200 ms. No CHECKOUT: the meals
+// stay in the visitor's pending list, as if they had pressed the buttons themselves, and the page is the store's own.
+// k counts the presses made: 0, CHECKOUT not yet; 1, CHECKOUT; 2, the dialog's too (nothing more is looked for).
+function checkout() {
+  var k = 0;
+  var polls = 0;
+  guard(function poll() {
+    if (k && loc.pathname === "/checkout") return log("done: /checkout");
+    var b = control(["checkout", "continue to checkout"][k]);
+    if (b) { if (!k) drop(); b.click(); k++; polls = 0; }
+    else if (++polls >= MAX_POLLS) return k ? log("stopped: /checkout not reached") : fail("no checkout control");
+    w.setTimeout(guard(poll), POLL_MS);
+  })();
 }
 // </fill B>
 

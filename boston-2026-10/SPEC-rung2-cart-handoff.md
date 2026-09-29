@@ -164,3 +164,33 @@ nothing. It never loads `/checkout` itself and never writes storage. The fragmen
 | R2-16 | fixture: CHECKOUT still shows *"Add N more meals"* (disabled) | nothing pressed beyond the meals; `stopped: no checkout control` after the budget |
 | R2-17 | fixture: CHECKOUT opens the extras dialog | its CONTINUE TO CHECKOUT pressed once; nothing added from the dialog |
 | R2-18 | ⭐ mutant: fill B navigates by `location.assign("/checkout")` again | R2-15 fails |
+
+**Found at the build, 2026-09-29** (the store's public bundle as served that day, fetched as a visitor's browser loads
+`/order?mpid=21`: `main-FEK5K7ML.js` and the chunks it loads; file names change with every deploy). A reading of
+the code, not a live run and not a ruling; § 8's rule above is unchanged.
+
+- **The labels, as the 2026-09-27 reading had them.** The order page (`app-order`, `chunk-TJQZM744.js`) holds the
+  cart bar `app-mobile-cart-summary`, whose control is ` CHECKOUT ` once the plan's minimum is met, a disabled
+  ` Add N more meal(s) ` before it, and a disabled ` Limit Exceeded ` over the maximum. Its click runs
+  `proceedToCheckout({mpid})` (`chunk-F6KDHTUM.js`): `commitPlanItems(mpid)`, then either the extras dialog
+  (`app-extra-products-dialog`, `chunk-AVUS6FV3.js`: ` CONTINUE TO CHECKOUT `, disabled while it syncs, or a disabled
+  ` ADD N MORE MEAL(S) TO CHECKOUT `), or a sync and `router.navigate(["/checkout"])`. *Add to Cart* on a plan page
+  calls `addToPendingPlanItems` (`hmp_pending_plan_items`, `chunk-XDG7WTXR.js`). Each control is an `app-button`,
+  which renders a real `<button>` around the label, disabled while `disabled` or `loading`; the page listens for the
+  click on the `app-button`, so pressing the inner button reaches it. Fill B presses the inner `<button>`.
+- ⚠ **Width, which the reading above did not have.** The cart bar is shown only **below 1025 px**: the order page's
+  styles hide it from `min-width: 1025px` (the bar's own styles say so too), and show instead the cart sidebar
+  `app-cart` (`chunk-HY26AVJ5.js`), whose control reads ` CHECKOUT NOW ` (disabled alternatives
+  ` ADD N MORE MEAL(S) TO CHECKOUT ` and ` REMOVE N MEAL(S) TO CHECKOUT `); it calls the same
+  `proceedToCheckout({mpid})`. **So at 1025 px and wider, § 8's rule (exactly `checkout`, displayed) finds no control
+  and fill B stops with `stopped: no checkout control`** — R2-16c pins this. Whether § 8 should also take
+  `checkout now` is not decided here. The header's cart button (`aria-label` "View cart") is there at every width;
+  § 8 does not use it.
+- **Meal cards and width.** At `max-width: 666px` (and short landscape screens up to 932 px wide) the page shows
+  `app-product-card-mobile` (or `app-product-card-classic-mobile`) and hides `app-product-card`, which stays in the
+  page; fill B presses `app-product-card`'s own *Add to Cart* at every width. `app-product-card-classic-mobile` is a
+  third card element § 8's "not inside a meal card" does not name; no card in the bundle carries a "checkout" label.
+- **A CHECKOUT that does not reach `/checkout`.** For a visitor not signed in whose cart holds a subscription plan,
+  the store commits the plan's meals and then opens *"Sign in to continue"* (*"Sign in / Create account"*,
+  *"Continue browsing"*); fill B presses neither. The build ends any press that has not reached `/checkout` within
+  its 10 s wait with `stopped: /checkout not reached` (R2-17c; § 8 names only `done` and `no checkout control`).

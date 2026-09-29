@@ -257,7 +257,8 @@ const DIALOG =
  * Once bound to a window (fakeWindow({ page })), the page behaves as § 8 found the store's: each Add to Cart or
  * Increase press counts one meal; every .summary shows a DISABLED "Add N more meals" until the count reaches `need`
  * (default: the window's mpid's meals a week, from data/plans.json), then an enabled CHECKOUT (`shownLabel` replaces
- * its text in the displayed layout only). A summary re-renders `late` store ticks after a press. Pressing CHECKOUT
+ * its text in the displayed layout only), shown DISABLED for its first `loadingTicks` store ticks (the store's busy
+ * state). A summary re-renders `late` store ticks after a press. Pressing CHECKOUT
  * opens the extras dialog `openTicks` ticks later if `extras`, else routes; pressing the dialog's CONTINUE routes.
  * Routing is history.pushState("/checkout") `syncTicks` ticks later, or never if `routes` is false. A page control
  * stays enabled after its press, so a second press would be seen. Unbound, the summaries stay empty.
@@ -266,6 +267,7 @@ export async function orderPage({
   afterFirstPress = "stays",
   need = undefined,
   late = 0,
+  loadingTicks = 0,
   shownLabel = " CHECKOUT ",
   extras = false,
   openTicks = 2,
@@ -286,14 +288,19 @@ export async function orderPage({
 
   function render() {
     const short = required - counted;
+    const busy = short <= 0 && loadingTicks > 0;
     for (const summary of document.querySelectorAll(".summary")) {
       const layout = summary.getAttribute("data-layout");
       const label = layout === "shown" ? shownLabel : " CHECKOUT ";
       summary.innerHTML =
         short > 0
           ? control(`more:${layout}`, ` Add ${short} more meal${short === 1 ? "" : "s"} `, true)
-          : control(`checkout:${layout}`, `${label}<i class="icon"></i>`);
+          : control(`checkout:${layout}`, `${label}<i class="icon"></i>`, busy);
     }
+    if (!busy) return;
+    const ticks = loadingTicks;
+    loadingTicks = 0;
+    tick(ticks, render);
   }
   function route() {
     if (routes && bound) tick(syncTicks, () => bound.window.history.pushState(null, "", "/checkout"));

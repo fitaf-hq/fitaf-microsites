@@ -19,7 +19,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M13 of rung 5 (`mNN-*.test.mjs`) and R2-01–R2-14 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M13 of rung 5 (`mNN-*.test.mjs`) and R2-01–R2-18 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S20 | authority |
@@ -45,15 +45,15 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13, R2-01–R2-14
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13, R2-01–R2-18
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 ```
 
 ## Rung 2 — the cart hand-off in the store's Footer
 
-[`SPEC-rung2-cart-handoff.md`](SPEC-rung2-cart-handoff.md) § 6. A link to
-`https://fitafnutrition.com/order?mpid=<N>#fitaf=<payload>` fills the visitor's cart and opens `/checkout`; the
+[`SPEC-rung2-cart-handoff.md`](SPEC-rung2-cart-handoff.md) § 6 (fill B's finish: § 8). A link to
+`https://fitafnutrition.com/order?mpid=<N>#fitaf=<payload>` fills the visitor's cart and goes to `/checkout`; the
 payload (base64url JSON: a plan, meal names and counts, an optional offer code) never leaves the browser. **Any
 failure removes the fragment and stops**, leaving the plan's order page exactly as rung 1 does. A visit without
 `#fitaf=` costs one read of `location.hash` and nothing else.
@@ -70,10 +70,19 @@ failure removes the fragment and stops**, leaving the plan's order page exactly 
   page — one missing means nothing is pressed — then presses each meal once, then the extra presses. ⚠ What Add to
   Cart becomes after a press is not known: B presses it again if it is still there, else an increase / plus / `+`
   button in the same card's actions (never a favourite or wishlist). If there is neither, B **stops after the
-  first press of each meal**, without opening `/checkout`.
+  first press of each meal**, without going on to checkout.
+- **Fill B's finish (§ 8): it presses the store's own CHECKOUT; it never loads `/checkout` itself.** On a
+  meal-plan page, Add to Cart puts a meal in the plan's *pending* list; only the store's checkout control commits
+  it and routes to `/checkout` in the app (loading `/checkout` found *"Your cart is empty"*). After the last meal
+  B waits (the same 200 ms polls, at most 10 s) for an enabled, displayed button reading exactly `checkout`, not
+  inside a meal card; removes the fragment; presses it once; then waits for `/checkout` (logs `done: /checkout`),
+  pressing the extras dialog's `continue to checkout` once if the store opens it. None found:
+  `stopped: no checkout control`, the meals left in the visitor's pending list. B writes no storage.
+  ⚠ **At 1025 px and wider** the store shows its cart sidebar, whose control reads *"CHECKOUT NOW"*, and hides
+  the CHECKOUT bar, so B as § 8 states it stops there (§ 8's build note); below 1025 px the CHECKOUT bar is shown.
 - **The offer code** is checked but not applied in this build.
-- ⛔ **Not yet run on the live store**: fill A, the full-plan rule, and fill B's second presses of a meal (the
-  2026-09-29 run pressed each of its two meals once).
+- ⛔ **Not yet run on the live store**: fill A, the full-plan rule, fill B's second presses of a meal (the
+  2026-09-29 run pressed each of its two meals once), and fill B's § 8 finish.
 
 ```sh
 npm --prefix boston-2026-10 run build:storefront   # writes dist-storefront/, prints each file's size and version line
