@@ -1,7 +1,8 @@
 # boston-2026-10 — the photo slots: the surface a photo is judged against. CONTRACT, PROPOSED
 
 **Written 2026-09-29, before any photo is chosen and before the page has a photo slot.** ⬜ **PROPOSED**: the numbers
-below are the agent's, for the Advisor to change; they stand until he does. **Who reads it**: the family's new image
+below are the agent's, for the Advisor to change; they stand until he does. ✅ **Sent to the family's image team for
+its first job with the Advisor's go** (2026-09-29: *"Yes please send"*, on a message naming these numbers). **Who reads it**: the family's new image
 team (its first job is ~10 of Fit AF's photos, for the Advisor to narrow to 3–5 winners **before the Owner meeting of
 2026-10-01**), and whoever builds the page's photo slot. It is the *"written surface"* the engine judges against; the
 engine applies it and owns none of it.
