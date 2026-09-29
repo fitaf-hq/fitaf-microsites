@@ -1,7 +1,36 @@
-// The report of one watch run, as Markdown: printed by the CLI, the body of the issue (§ 5), the job summary in CI.
-// It quotes file names, the dependency literals and our own console lines; never the store's code or config.
+// The report of one watch run, as Markdown: printed by the CLI, the body of the issue (§ 5), the job summary in CI; and
+// the smoke's own report (bin/smoke.mjs). It quotes file names, the dependency literals and our own console lines, and,
+// for a smoke width that FAILED, the page as text (§ 7 item 2): never the store's code or config, never a screenshot.
+import { cutLine, redact } from "./redact.mjs";
 
 const list = (items) => (items.length ? items.map((x) => `\`${x}\``).join(", ") : "none");
+/** Text quoted from the page, redacted, in a Markdown code span (a backtick in it cannot end the span). */
+const quote = (text) => `\`${redact(text).replace(/`/g, "'")}\``;
+const BOSTON = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZoneName: "short",
+});
+
+/** An HTTP date -> "<ISO, UTC>; Boston <local time>", or null if it does not parse. */
+function whenPublished(httpDate) {
+  const t = new Date(httpDate);
+  if (Number.isNaN(t.getTime())) return null;
+  const p = Object.fromEntries(BOSTON.formatToParts(t).map((x) => [x.type, x.value]));
+  return `${t.toISOString().replace(/\.000Z$/, "Z")}; Boston ${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute} ${p.timeZoneName}`;
+}
+
+/** § 7 item 1: a new entry's Last-Modified, the release's publish time. */
+function releaseLine(release) {
+  if (!release.lastModified) return `- ⭐ a new entry bundle, \`${release.entry}\`: the new entry sent no Last-Modified, so its publish time is not known`;
+  const when = whenPublished(release.lastModified);
+  return `- ⭐ a new entry bundle, \`${release.entry}\`, published (its Last-Modified) \`${release.lastModified}\`${when ? ` (${when})` : ""}`;
+}
 const money = (cents) => (typeof cents === "number" ? `$${(cents / 100).toFixed(2)}` : "not shown");
 /** The storefront's public key has the form sk_…; a page error could quote one. Never in an issue. */
 const scrub = (text) => String(text).replace(/\bsk_[A-Za-z0-9_-]+/g, "sk_[REDACTED]");
@@ -18,6 +47,7 @@ function f1Section(r) {
     "## F1 — the release",
     "",
     `- entry: \`${c.entry.live ?? "(none found)"}\`${c.entry.live === c.entry.baseline ? " (the baseline's)" : ` — baseline \`${c.entry.baseline}\``}`,
+    ...(r.release ? [releaseLine(r.release)] : []),
     `- the entry's imports: added ${list(c.imports.added)}; removed ${list(c.imports.removed)}`,
     `- the page's scripts and module preloads: added ${list(c.html.added)}; removed ${list(c.html.removed)}`,
   ];
@@ -57,6 +87,27 @@ function f4Section(r) {
   return out;
 }
 
+/**
+ * § 7 item 2: a failed width's page, as text. `e` is what lib/smoke.mjs recorded (unredacted): every quoted string is
+ * redacted here, and each console line cut to 200 characters after that.
+ */
+export function evidenceLines(e) {
+  if (!e) return ["- the page as text: not recorded"];
+  if (e.error) return [`- the page as text: could not be read (${redact(e.error)})`];
+  const buttons = e.buttons.map((b) => `${quote(b.label)} (${b.disabled ? "disabled" : "enabled"})`);
+  const lists = e.lists.map((l) => `${l.key}: ${l.state === "count" ? `${l.count} entr${l.count === 1 ? "y" : "ies"}` : l.state}`);
+  return [
+    `- the page as text (SPEC-storefront-watch § 7; never a screenshot), ${e.where}:`,
+    `  - path: \`${e.path}\``,
+    `  - displayed buttons outside meal cards: ${buttons.join("; ") || "none"}`,
+    `  - dialogs: ${e.dialogs.map(quote).join("; ") || "none"}`,
+    `  - the store's lists, counts only: ${lists.join("; ")}`,
+    `  - the page's console, every line (${e.console.length}), each cut to 200 characters, keys and tokens redacted:`,
+    ...e.console.map((line) => `    - \`${cutLine(line).replace(/`/g, "'")}\``),
+    ...(e.errors?.length ? [`  - page errors: ${e.errors.map((x) => `\`${cutLine(x).replace(/`/g, "'")}\``).join(" · ")}`] : []),
+  ];
+}
+
 function smokeRun(run) {
   const o = run.outcome;
   const out = [
@@ -71,8 +122,9 @@ function smokeRun(run) {
     );
   }
   const lines = o.console.filter((l) => l.startsWith("[fitaf-handoff]"));
-  out.push(`- console: ${lines.length ? lines.map((l) => `\`${scrub(l)}\``).join(" · ") : "no [fitaf-handoff] line"}`);
-  if (o.errors.length) out.push(`- page errors: ${o.errors.slice(0, 5).map((e) => `\`${scrub(e).slice(0, 200)}\``).join(" · ")}`);
+  out.push(`- console: ${lines.length ? lines.map((l) => `\`${cutLine(l)}\``).join(" · ") : "no [fitaf-handoff] line"}`);
+  if (o.errors.length) out.push(`- page errors: ${o.errors.slice(0, 5).map((e) => `\`${cutLine(e)}\``).join(" · ")}`);
+  if (!run.verdict.pass) out.push(...evidenceLines(o.evidence));
   return out;
 }
 
@@ -83,6 +135,13 @@ function f5Section(r) {
   out.push(`Script: ${r.f5.script}.`, "");
   for (const run of r.f5.runs) out.push(...smokeRun(run), "");
   return out;
+}
+
+/** The smoke's own report (bin/smoke.mjs): each width's verdict, and for a width that failed, the page as text. */
+export function renderSmokeReport(result, at = new Date().toISOString()) {
+  const out = [`# storefront-watch smoke: ${result.flag ? "⛔ FAIL" : "PASS"}`, "", `${at} · script: ${result.script}`, ""];
+  for (const run of result.runs) out.push(...smokeRun(run), "");
+  return scrub(out.join("\n"));
 }
 
 export function renderReport(r) {

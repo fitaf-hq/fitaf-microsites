@@ -1,6 +1,8 @@
-// R2-02: every malformed payload is refused, by both fills, changing nothing: the fragment is removed, there is
-// no navigation, no press, no storage change, and the diagnostic names THIS case's reason (so each case proves
-// its own check, not a later one that happens to catch it too).
+// R2-02: every malformed payload is refused, by both fills, changing nothing: the fragment is removed, there is no
+// navigation, no press, no storage change, and the diagnostic names THIS case's reason (so each case proves its own
+// check, not a later one that happens to catch it too). The grammar is payload version 2 (SPEC-rung2 § 11 item 1):
+// `2.<meal>[.<meal>…][.~<code>]`, each `<meal>` a 5-character base-36 key, or `<key>*<n>` with n from 2 to 21, the code
+// `[A-Za-z0-9-]{1,40}`. R2-27 is the contract's own short list of these; this is the whole grammar.
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -9,46 +11,51 @@ import {
   CART_KEY,
   FakeStorage,
   fakeWindow,
-  fragmentFor,
   orderPage,
   rawFragment,
+  refKey,
   run,
   script,
+  v1Fragment,
 } from "./r2-harness.mjs";
 
-const item = (over = {}) => ({ name: "Birria de Res Bowl", qty: 7, pid: 1353, ...over }); // 7 of mpid 21's 7
-const valid = (over = {}) => ({ v: 1, mpid: 21, items: [item()], ...over });
-const LONG_NAME = "x".repeat(1600);
+const B = refKey("Birria de Res Bowl"); // a real fixture meal, so a case's only fault is its own
+const C = refKey("Chicken Pesto Pasta");
+const valid = `2.${B}*7`; // 7 of mpid 21's 7
+const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const badMeal = (part) => new RegExp(`bad meal: ${escape(part)}$`);
 
 const CASES = [
-  ["not base64url", "#fitaf=@@not*base64", /base64url/],
-  ["base64url, but not JSON", rawFragment("{not json"), /JSON/],
-  ["JSON null", rawFragment("null"), /version/],
-  ["JSON array", rawFragment("[1,2]"), /version/],
-  ["JSON number", rawFragment("3"), /version/],
-  ["over 2 KB", fragmentFor(valid({ items: [item({ name: LONG_NAME })] })), /2 KB/],
-  ["v is 2", fragmentFor(valid({ v: 2 })), /version/],
-  ["v missing", fragmentFor({ mpid: 21, items: [item()] }), /version/],
-  ["v is the string 1", fragmentFor(valid({ v: "1" })), /version/],
-  ["mpid a string", fragmentFor(valid({ mpid: "21" })), /mpid/],
-  ["mpid missing", fragmentFor({ v: 1, items: [item()] }), /mpid/],
-  ["items missing", fragmentFor({ v: 1, mpid: 21 }), /no items/],
-  ["items empty", fragmentFor(valid({ items: [] })), /no items/],
-  ["items not a list", fragmentFor(valid({ items: { name: "x", qty: 1 } })), /no items/],
-  ["an item is null", fragmentFor(valid({ items: [item(), null] })), /name/],
-  ["name empty", fragmentFor(valid({ items: [item({ name: "" })] })), /name/],
-  ["name a number", fragmentFor(valid({ items: [item({ name: 5 })] })), /name/],
-  ["name twice", fragmentFor(valid({ items: [item(), item({ qty: 1 })] })), /twice/],
-  ["qty 0", fragmentFor(valid({ items: [item({ qty: 0 })] })), /qty/],
-  ["qty 22", fragmentFor(valid({ items: [item({ qty: 22 })] })), /qty/],
-  ["qty 1.5", fragmentFor(valid({ items: [item({ qty: 1.5 })] })), /qty/],
-  ["qty a string", fragmentFor(valid({ items: [item({ qty: "2" })] })), /qty/],
-  ["qty missing", fragmentFor(valid({ items: [{ name: "Birria de Res Bowl", pid: 1353 }] })), /qty/],
-  ["pid a string", fragmentFor(valid({ items: [item({ pid: "1353" })] })), /pid/],
-  ["pid 0", fragmentFor(valid({ items: [item({ pid: 0 })] })), /pid/],
-  ["code a number", fragmentFor(valid({ code: 123 })), /code/],
-  ["code with a space", fragmentFor(valid({ code: "BOSTON 26" })), /code/],
-  ["code empty", fragmentFor(valid({ code: "" })), /code/],
+  ["empty", rawFragment(""), /unknown version/],
+  ["version 1 (a retired base64 JSON link)", v1Fragment({ v: 1, mpid: 21, items: [{ name: "Birria de Res Bowl", qty: 7 }] }), /unknown version/],
+  ["version 3", rawFragment(`3.${B}*7`), /unknown version/],
+  ["version 02", rawFragment(`02.${B}*7`), /unknown version/],
+  ["version v2", rawFragment(`v2.${B}*7`), /unknown version/],
+  ["over 2 KB", rawFragment(`2.${`${B}.`.repeat(400)}${C}`), /payload over 2 KB/],
+  ["no item", rawFragment("2"), /no items/],
+  ["only a code", rawFragment("2.~BOSTON26"), /no items/],
+  ["an empty item in the middle", rawFragment(`2.${B}*6..${C}`), badMeal("")],
+  ["an empty item at the end", rawFragment(`2.${B}*7.`), badMeal("")],
+  ["a key of 4 characters", rawFragment("2.t1fk*7"), badMeal("t1fk*7")],
+  ["a key of 6 characters", rawFragment(`2.${B}x*7`), badMeal(`${B}x*7`)],
+  ["a key in capitals", rawFragment(`2.${B.toUpperCase()}*7`), badMeal(`${B.toUpperCase()}*7`)],
+  ["a key with a hyphen", rawFragment("2.t1-kl*7"), badMeal("t1-kl*7")],
+  // A browser's location.hash percent-encodes a non-ASCII character, and so does the test window's URL.
+  ["a non-ASCII key", rawFragment("2.t1fké*7"), badMeal("t1fk%C3%A9*7")],
+  ["*1 (a count of 1 is the bare key)", rawFragment(`2.${B}*1.${C}*6`), badMeal(`${B}*1`)],
+  ["*0", rawFragment(`2.${B}*0.${C}*7`), badMeal(`${B}*0`)],
+  ["*22", rawFragment(`2.${B}*22`), badMeal(`${B}*22`)],
+  ["*07 (a leading zero)", rawFragment(`2.${B}*07`), badMeal(`${B}*07`)],
+  ["* with no count", rawFragment(`2.${B}*`), badMeal(`${B}*`)],
+  ["*2.5 (the dot splits it: \"5\" is the bad item)", rawFragment(`2.${B}*2.5`), badMeal("5")],
+  ["a doubled *", rawFragment(`2.${B}**7`), badMeal(`${B}**7`)],
+  ["a key named twice", rawFragment(`2.${B}*6.${B}`), new RegExp(`named twice: ${B}$`)],
+  ["a code not last", rawFragment(`2.~BOSTON26.${B}*7`), badMeal("~BOSTON26")],
+  ["an empty code", rawFragment(`${valid}.~`), /bad code/],
+  ["a code with an underscore", rawFragment(`${valid}.~BOSTON_26`), /bad code/],
+  ["a code with a space", rawFragment(`${valid}.~BOSTON 26`), /bad code/],
+  ["a code of 41 characters", rawFragment(`${valid}.~${"A".repeat(41)}`), /bad code/],
+  ["two codes", rawFragment(`${valid}.~A.~B`), badMeal("~A")],
 ];
 
 const VISITOR_CART = JSON.stringify([{ localId: "36688", name: "a visitor's own line" }]);
@@ -73,13 +80,16 @@ for (const [label, fragment, reason] of CASES) {
   });
 }
 
-test("R2-02 control: the valid payload the cases are mutated from is accepted by both fills", async () => {
-  const a = fakeWindow({ fragment: fragmentFor(valid()) });
-  run(await script("A"), a.window);
-  assert.deepEqual(a.events.at(-1), ["replace", "/checkout"]);
-  const page = await orderPage();
-  const b = fakeWindow({ fragment: fragmentFor(valid()), page });
-  run(await script("B"), b.window);
-  b.timers.drain();
-  assertCheckedOut(b, page, "/order?mpid=21");
+test("R2-02 control: the valid payload the cases are mutated from is read by both fills", async () => {
+  for (const fragment of [rawFragment(valid), rawFragment(`${valid}.~BOSTON-26`), rawFragment(`${valid}.~${"A".repeat(40)}`)]) {
+    // Fill A reads it, and stops only at its own product-id check (R2-06): the payload itself passed.
+    const a = fakeWindow({ fragment });
+    run(await script("A"), a.window);
+    assertRefused(a, "/order?mpid=21", new RegExp(`stopped: no product id: ${B}$`));
+    const page = await orderPage();
+    const b = fakeWindow({ fragment, page });
+    run(await script("B"), b.window);
+    b.timers.drain();
+    assertCheckedOut(b, page, "/order?mpid=21");
+  }
 });

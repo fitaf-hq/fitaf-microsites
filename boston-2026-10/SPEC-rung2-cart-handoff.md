@@ -285,3 +285,78 @@ of the code, not a live run and not a ruling; § 10's rule above is unchanged.
   (`/^checkout( now)?$/i`, `/^continue to checkout$/i`): the same exact match, in any case. Built: the Footer block
   5,111 bytes, `fitaf-handoff.fill-B.console.js` 5,092, `fitaf-handoff.fill-A.console.js` 4,660 (6 more each when built
   from an uncommitted tree, still under 5,120).
+
+## 11. Amendment, 2026-09-29 — the short link, a longer wait after CHECKOUT, and the size ceiling (the Advisor's rulings)
+
+**Rulings** (the Advisor, 2026-09-29): the link shrinks by fingerprinting each meal (*"(A) is good."*); *"We can go up to
+10k for the footer. 5k is a good target, but it's OK if we're above it slightly."*; and hardening continues (*"The more
+we can harden, the better."*). **No link has been published**, so payload v1 (base64 JSON) is **retired, not kept
+alongside**: only the Advisor's test links used it.
+
+1. **The payload, version 2.** The fragment stays `#fitaf=` (an unambiguous key: a bare `#f=` could be another script's,
+   and fill B removes the fragment it reads). Its value is ASCII, dot-separated:
+   `2.<meal>[.<meal>…][.~<code>]`, where each `<meal>` is `<key>` or `<key>*<n>` (`n` 2–21, one item per meal as in v1),
+   and `~<code>` is the optional offer code (`[A-Za-z0-9-]{1,40}`, still checked and not applied). **The plan's id is
+   read from the page's own `?mpid=`**, once (v1 carried it twice). Example, the 7-meal Lean link:
+   `https://fitafnutrition.com/order?mpid=21#fitaf=2.t1fkl.8avab.ihshe.1i5s0.tyv72.rgr2m.6uf54` (the keys illustrative).
+2. **A meal's key**: 32-bit FNV-1a over the UTF-8 bytes of the meal's name **as the page shows it** (whitespace
+   collapsed and trimmed, exactly as fill B reads a card's title), written in base 36, and **its last 5 characters**
+   (the value modulo 36⁵). **One function, one source**: the link tool and the script use the same code (inlined in
+   the build, as the plan counts are).
+3. **Matching**: fill B keys every meal card's title and presses the card whose key matches. **Two cards on the page
+   sharing a key that the link names ⇒ refuse the link, nothing pressed** (`stopped: two meals share a key`); a key
+   matching no card ⇒ § 6's `not on this page`, naming the key. The full-plan rule (§ 7) and § 10 are unchanged.
+4. **The wait after CHECKOUT is 30 s** (150 polls of 200 ms), after one live phone-width run of four stopped at 10 s with
+   the store still committing (the live-test record § 12). The waits before a press stay at 10 s.
+5. **The size**: the build **warns** above 5,120 bytes and **refuses** above 10,240, over each whole built file.
+6. **The link tool** (`npm run handoff:link`) takes meal names as before and prints the v2 link, **with the names beside
+   their keys**, so a person can read a link.
+
+| | case | expect |
+|---|---|---|
+| R2-24 | a v2 link for the 7-meal fixture | the same presses and `done: /checkout` as R2-15 |
+| R2-25 | the key function: fixed names → fixed keys; whitespace-collapsed title equals the name's key | pinned vectors, shared by the link tool and the built script |
+| R2-26 | two fixture cards whose names share a key (a planted collision), one of them named by the link | `stopped: two meals share a key`; nothing pressed |
+| R2-27 | a v1 (base64 JSON) link, and malformed v2 values (a bad key, `*1`, `*22`, a bad code, an empty item) | refused, nothing pressed, fragment removed |
+| R2-28 | the store routes 25 s after CHECKOUT | `done: /checkout`; at 31 s, `stopped: /checkout not reached` |
+| R2-29 | a built file of 5,200 bytes / 10,300 bytes (a padded copy) | built with a warning / refused, writing nothing |
+| R2-30 | ⭐ mutant: fill B presses the first card whose key matches and ignores a second | R2-26 fails |
+
+**Found at the build, 2026-09-29** (red first at `a355eab`, built at `c1764c1`). The build's reading and its choices,
+not rulings; § 11's rules above are unchanged.
+
+- ⚠ **Fill A and v2.** Every line fill A writes needs the meal's product id (§ 6, "A, what it writes"), and a v2 link
+  carries none, nor a name. Fill A is unchanged, so it reads a v2 link, passes its own plan and cart checks, and stops
+  at its first item, `stopped: no product id: <key>`, before its one write: **it refuses every v2 link**. R2-06 to
+  R2-08 now pin that; the line-shape check and the restore of a write that landed have no v2 link that reaches them.
+  ⬜ What fill A does with v2 is not ruled here; B is the shipped fill.
+- **The keys are the example's.** The 7-meal Lean link item 1 gives as illustrative is exactly what `handoff:link`
+  prints: `https://fitafnutrition.com/order?mpid=21#fitaf=2.t1fkl.8avab.ihshe.1i5s0.tyv72.rgr2m.6uf54`, 90 characters.
+  R2-25 pins those seven keys, FNV-1a's published vectors, and a second, independent implementation of the key.
+- **Always five characters.** A hash below 36⁴ has four base-36 digits (about 1 name in 2,600; "Short Key 10" gives
+  `krtn`): its key is written with a leading zero, `0krtn`, the value modulo 36⁵ in five characters.
+- **"Two cards"** is two `app-product-card`s whose titles key alike, the same meal rendered twice included (R2-26c):
+  refused. A collision the link does not name is not a refusal. The stop names the key, `stopped: two meals share a
+  key: <key>`, and the check runs on every lookup, so on every poll before the first press. The tests' planted pair:
+  "Planted Meal 40789" and "Planted Meal 91224" (key `uayaw`).
+- **The 30 s wait applies after CONTINUE TO CHECKOUT too**: after CHECKOUT, fill B waits up to 150 polls for the extras
+  dialog or `/checkout`; after the dialog's CONTINUE, up to 150 more (R2-28d). Pinned: a route 25 s after CHECKOUT is
+  `done: /checkout`; none by 30 s is `stopped: /checkout not reached` at exactly the 150th poll; the wait for an
+  enabled CHECKOUT is still exactly 50 (R2-28).
+- **The grammar, as built**: a key is `[0-9a-z]{5}` (lower case only); a count is `*2` to `*21`, no leading zero; the
+  code is the last item only, `[A-Za-z0-9-]{1,40}` (v1 also allowed `_`, and `handoff:link` now refuses it); § 6's 2 KB
+  cap is kept. `?mpid=` must be the whole value, a whole number without a leading zero (`021` and `21x`: `no mpid on
+  this page`). Each malformed link names its reason: `unknown version` (every v1 link), `no items`, `bad meal:
+  <item>`, `named twice: <key>`, `bad code`. The tests' window parses its address with Node's URL (the WHATWG parser),
+  which percent-encodes a non-ASCII character in the fragment, so R2-02 expects such an item quoted encoded.
+- **`handoff:link`** prints the link, then one line per token beside its name, then the code; it collapses whitespace
+  in a name as the page's titles are read, and refuses a meal given twice and two names that share a key.
+  `--pid-for` went with v1.
+- **Size, built at `c1764c1`**: the Footer block 5,180 bytes and `fitaf-handoff.fill-B.console.js` 5,161, each
+  **warned** (60 and 41 bytes over the 5,120 target); `fitaf-handoff.fill-A.console.js` 4,322. The Footer grew 69 bytes
+  over § 10's build (5,111): the key function is 261 bytes, more than v1's base64/JSON reader saved. The texts'
+  SHA-256 (the version line's own, the same for any commit of these inputs): fill B
+  `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8`, fill A
+  `679e6aa6e4ca2299e647ec999b8997a74a96012715ebd2e81bb399dc7140a9d5`.
+- ⬜ **Not yet run on the live store**: any v2 link, matching by key, and the 30 s wait. They are proven on the
+  synthetic page (and the watch's headless synthetic store) only.

@@ -1,19 +1,21 @@
-// R2-11: the size rule (SPEC-rung2 § 3, "under 5 KB"), enforced BY THE BUILD on every file it writes: the Footer
-// block, which carries ONLY the fill the source's FILL names, and one console file per fill for the one-browser
-// run. Each file is self-contained and holds one fill's code, not both. The limit is shown to fire (R2-11c).
+// R2-11: the size rule, enforced BY THE BUILD on every file it writes: the Footer block, which carries ONLY the fill the
+// source's FILL names, and one console file per fill for the one-browser run. § 3's "under 5 KB" became, by the
+// Advisor's ruling (SPEC-rung2 § 11 item 5), a TARGET of 5,120 bytes the build warns above and a CEILING of 10,240 it
+// refuses above, over each whole file. Each file is self-contained and holds one fill's code, not both. The ceiling is
+// shown to fire (R2-11c); R2-29 pins both limits at their edges.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildStorefront, MAX_SHIPPED_BYTES, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
+import { buildStorefront, MAX_SHIPPED_BYTES, STOREFRONT_SOURCE, TARGET_SHIPPED_BYTES } from "../scripts/build-storefront.mjs";
 
 const FILES = ["fitaf-handoff.fill-A.console.js", "fitaf-handoff.fill-B.console.js", "fitaf-handoff.html"];
 /** Code that exists only in one fill: its presence in the other fill's file means the strip failed. */
 const ONLY_IN = {
   A: [/hmp_local_cart/, /localStorage/, /function fillA/, /10538/, /productId/],
-  B: [/app-product-card/, /\.click\(/, /setTimeout/, /function fillB/, /Add to Cart/],
+  B: [/app-product-card/, /\.click\(/, /setTimeout/, /function fillB/, /Add to Cart/, /function mealKey/],
 };
 
 async function withBuild(fn, options = {}) {
@@ -27,15 +29,19 @@ async function withBuild(fn, options = {}) {
   }
 }
 
-test("R2-11a: build:storefront writes exactly three files, each under 5,120 bytes", async () => {
-  assert.equal(MAX_SHIPPED_BYTES, 5120);
+test("R2-11a: build:storefront writes exactly three files, each within 10,240 bytes; a warning for each over 5,120", async () => {
+  assert.equal(TARGET_SHIPPED_BYTES, 5120);
+  assert.equal(MAX_SHIPPED_BYTES, 10240);
   await withBuild(async ({ built, out }) => {
     assert.deepEqual(built.files.map((f) => f.name).sort(), FILES);
+    const over = [];
     for (const f of built.files) {
       const bytes = (await readFile(join(out, f.name))).length;
       assert.equal(bytes, f.bytes);
-      assert.ok(bytes < MAX_SHIPPED_BYTES, `${f.name}: ${bytes} bytes`);
+      assert.ok(bytes <= MAX_SHIPPED_BYTES, `${f.name}: ${bytes} bytes`);
+      if (bytes > TARGET_SHIPPED_BYTES) over.push(f.name);
     }
+    assert.deepEqual(built.warnings.map((w) => w.split(":")[0]).sort(), over.sort(), "a warning for exactly the files over the target");
   });
 });
 
@@ -64,14 +70,14 @@ test("R2-11b: each file holds one fill only, is self-contained, and names nothin
   });
 });
 
-test("R2-11c: the limit fires — a source padded past it is refused, and nothing is written", async () => {
+test("R2-11c: the ceiling fires — a source padded past it is refused, and nothing is written", async () => {
   const dir = await mkdtemp(join(tmpdir(), "boston-storefront-src-"));
   try {
     const padded = join(dir, "fitaf-handoff.js");
     const pad = `/* ${"x".repeat(MAX_SHIPPED_BYTES)} */\n`;
     await writeFile(padded, pad + (await readFile(STOREFRONT_SOURCE, "utf8")));
     const out = join(dir, "never-written");
-    await assert.rejects(buildStorefront({ outDir: out, sourcePath: padded }), /must be under 5120/);
+    await assert.rejects(buildStorefront({ outDir: out, sourcePath: padded }), /bytes; the ceiling is 10,240/);
     assert.equal(existsSync(out), false, "nothing written");
   } finally {
     await rm(dir, { recursive: true, force: true });

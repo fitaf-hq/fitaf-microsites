@@ -2,9 +2,9 @@
 // in the Footer, or a console paste on a page that already has it — even while the first is still waiting.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { assertCheckedOut, CART_KEY, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
+import { assertCheckedOut, CART_KEY, FakeStorage, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
 
-const PAYLOAD = { v: 1, mpid: 21, items: [{ name: "Chicken Pesto Pasta", qty: 7, pid: 1400 }] };
+const PAYLOAD = { mpid: 21, items: [{ name: "Chicken Pesto Pasta", qty: 7 }] };
 
 test("R2-05a fill B: a second run while the first waits for the cards presses nothing more", async () => {
   const page = await orderPage();
@@ -21,14 +21,18 @@ test("R2-05a fill B: a second run while the first waits for the cards presses no
   assertCheckedOut(h, page, "/order?mpid=21");
 });
 
-test("R2-05b fill A: the fragment put back on the same page does not write a second time", async () => {
-  const h = fakeWindow({ fragment: fragmentFor(PAYLOAD) });
+test("R2-05b fill A: the fragment put back on the same page runs nothing a second time", async () => {
+  // Payload v2 carries no product id, so fill A's first run stops before its write (R2-06); the marker still stops
+  // the second run before it reads anything at all.
+  const storage = new FakeStorage({ [CART_KEY]: '[{"localId":"36688"}]' });
+  const before = storage.dump();
+  const h = fakeWindow({ fragment: fragmentFor(PAYLOAD), storage });
   const text = await script("A");
   run(text, h.window);
-  const once = h.storage.dump();
+  const lines = h.info.length;
   h.goto(`/order?mpid=21${fragmentFor(PAYLOAD)}`);
   run(text, h.window);
-  assert.equal(h.storage.dump(), once, "storage as after the first run");
-  assert.equal(JSON.parse(h.storage.getItem(CART_KEY)).length, 1);
-  assert.equal(h.events.length, 2, "the second run wrote no history and navigated nowhere");
+  assert.equal(storage.dump(), before, "storage unchanged");
+  assert.equal(h.events.length, 1, "the second run wrote no history and navigated nowhere");
+  assert.equal(h.info.length, lines, "the second run logged nothing");
 });

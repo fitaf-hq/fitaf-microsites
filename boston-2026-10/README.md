@@ -20,7 +20,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S26 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-23 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), P1–P6 of the mock-ups (`pN-*.test.mjs`) and F1 (the flow renders are current, with mutants), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S26 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-30 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), P1–P6 of the mock-ups (`pN-*.test.mjs`) and F1 (the flow renders are current, with mutants), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S26 | authority |
@@ -42,10 +42,11 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel); `email-preview/e1.html` and `ex.html` from `npm run preview:emails` | OUTPUT, git-ignored |
 | `SPEC-rung2-cart-handoff.md` | rung 2's contract: the cart hand-off, § 6 (the store's Custom Scripts Footer, fills A and B) governs | authority |
 | `SPEC-storefront-watch.md` | the storefront watch: an hourly GitHub Actions check of the store's public bundle, the dependencies the hand-off presses, Fit AF's Footer block, and a live smoke test of the hand-off on each flag (never submits); an issue per release | authority |
-| `tools/storefront-watch/`, `storefront/` | the watch itself, its own npm package (puppeteer-core; the site's install never gets it), and its committed inputs `storefront/dependencies.json` and `storefront/watch-baseline.json` (written by its `accept`) | tool; INPUT |
+| `tools/storefront-watch/`, `storefront/` | the watch itself, its own npm package (puppeteer-core; the site's install never gets it), and its committed inputs `storefront/dependencies.json` and `storefront/watch-baseline.json` (written by its `accept`). Its § 7: a new release's publish time (the entry's `Last-Modified`) in its report and issue, and a failed smoke width's page as text, redacted, never a screenshot | tool; INPUT |
 | `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, both fills behind `FILL`; its `//` lines are for maintainers and do not ship | INPUT |
-| `scripts/build-storefront.mjs` | `npm run build:storefront`: one fill per file, the plan table inlined, the version line; refuses a file of 5,120 bytes or more | build |
-| `scripts/handoff-link.mjs` | `npm run handoff:link`: prints a test link carrying a payload | tool |
+| `src/storefront/meal-key.js` | rung 2 § 11: a meal's key, ONE function: `handoff:link` imports it and the build inlines its text into fill B | INPUT |
+| `scripts/build-storefront.mjs` | `npm run build:storefront`: one fill per file, the plan table and the key function inlined, the version line; warns above 5,120 bytes and refuses above 10,240 (§ 11) | build |
+| `scripts/handoff-link.mjs` | `npm run handoff:link`: prints a test link (payload version 2) and each meal's key beside its name | tool |
 | `dist-storefront/` | `fitaf-handoff.html` (the Footer block) and `fitaf-handoff.fill-{A,B}.console.js` | OUTPUT, git-ignored |
 
 **Nothing in `dist/` is hand-edited.** To change the page, change `data/` or `src/` and rebuild.
@@ -54,7 +55,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-23, P1–P6, F1
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-30, P1–P6, F1
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 npm --prefix boston-2026-10 run email:tokens    # after a :root token change: the emails' copy (M17 fails until then)
@@ -66,11 +67,18 @@ npm --prefix boston-2026-10 run render:flows  # flows/rendered/: every flow diag
 
 ## Rung 2 — the cart hand-off in the store's Footer
 
-[`SPEC-rung2-cart-handoff.md`](SPEC-rung2-cart-handoff.md) § 6 (fill B's finish: § 8). A link to
-`https://fitafnutrition.com/order?mpid=<N>#fitaf=<payload>` fills the visitor's cart and goes to `/checkout`; the
-payload (base64url JSON: a plan, meal names and counts, an optional offer code) never leaves the browser. **Any
-failure removes the fragment and stops**, leaving the plan's order page exactly as rung 1 does. A visit without
-`#fitaf=` costs one read of `location.hash` and nothing else.
+[`SPEC-rung2-cart-handoff.md`](SPEC-rung2-cart-handoff.md) § 6 (fill B's finish: § 8; the short link: § 11). A link
+to `https://fitafnutrition.com/order?mpid=<N>#fitaf=<payload>` fills the visitor's cart and goes to `/checkout`; the
+payload never leaves the browser. **Any failure removes the fragment and stops**, leaving the plan's order page
+exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.hash` and nothing else.
+
+- **The link, payload version 2 (§ 11)**: `#fitaf=2.<key>[*n].<key>[*n]…[.~CODE]`, ASCII, dot-separated. Each meal
+  is its **key**, 5 base-36 characters: 32-bit FNV-1a over the UTF-8 bytes of its name as the page shows it
+  (whitespace collapsed and trimmed), the last 5 characters (`src/storefront/meal-key.js`, the one function
+  `handoff:link` and fill B share); `*n` is its count, 2 to 21 (a count of 1 is the bare key). The plan is **not**
+  in the fragment: the script reads the page's own `?mpid=`. The 7-meal Lean link is 90 characters:
+  `https://fitafnutrition.com/order?mpid=21#fitaf=2.t1fkl.8avab.ihshe.1i5s0.tyv72.rgr2m.6uf54`. **Version 1
+  (base64 JSON) is retired**: a v1 link is refused as an unknown version.
 
 - **The full-plan rule** (both fills, and `handoff:link`): the counts must add up to **exactly** the plan's
   `meals_per_week` in `data/plans.json` (7 for mpid 21; Family, mpid 35, is 1), else the payload is refused before
@@ -79,9 +87,14 @@ failure removes the fragment and stops**, leaving the plan's order page exactly 
   mpid 21) added 2 of 7 correctly at the store's own price, opened `/checkout`, and the checkout failed.
 - **Fill A** appends lines to the store's cart storage (`hmp_local_cart`) at `plans.json`'s per-meal prices and
   reloads into `/checkout`; any failure puts the storage back byte for byte. It refuses Performance (its portion
-  option id is not known) and Family.
-- **Fill B** waits (200 ms polls, at most 10 s) until every named meal's card and its **Add to Cart** are on the
-  page — one missing means nothing is pressed — then presses each meal once, then the extra presses. ⚠ What Add to
+  option id is not known) and Family. ⚠ **Found at the build (§ 11)**: every line needs a product id, and payload
+  v2 carries none, so fill A, unchanged, **refuses every v2 link** (`stopped: no product id: <key>`), after its plan
+  and cart checks and before its one write. § 11 does not say what fill A does with v2; it is not the shipped fill.
+- **Fill B** waits (200 ms polls, at most 10 s) until every meal's card and its **Add to Cart** are on the
+  page — one missing means nothing is pressed — then presses each meal once, then the extra presses. It finds a
+  meal's card by **key** (§ 11): it keys every card's title and presses the card whose key the link names. Two cards
+  sharing a key the link names: `stopped: two meals share a key: <key>`, nothing pressed (the same meal rendered in
+  two cards counts as two); a key no card has: `not on this page: <key>`. ⚠ What Add to
   Cart becomes after a press is not known: B presses it again if it is still there, else an increase / plus / `+`
   button in the same card's actions (never a favourite or wishlist). If there is neither, B **stops after the
   first press of each meal**, without going on to checkout.
@@ -90,7 +103,9 @@ failure removes the fragment and stops**, leaving the plan's order page exactly 
   it and routes to `/checkout` in the app (loading `/checkout` found *"Your cart is empty"*). After the last meal
   B waits (the same 200 ms polls, at most 10 s) for an enabled, displayed button reading exactly `checkout` or `checkout now`, not
   inside a meal card; removes the fragment; presses it once; then waits for `/checkout` (logs `done: /checkout`),
-  pressing the extras dialog's `continue to checkout` once if the store opens it. None found:
+  pressing the extras dialog's `continue to checkout` once if the store opens it. **Each wait after the store's
+  CHECKOUT (and after CONTINUE) is at most 30 s** (§ 11: one live phone-width run stopped at 10 s with the store
+  still committing). None found:
   `stopped: no checkout control`, the meals left in the visitor's pending list. B writes no storage.
   **Two labels** (§ 8, amended): below 1025 px the store's CHECKOUT bar reads *"CHECKOUT"*; at 1025 px and wider
   its cart sidebar reads *"CHECKOUT NOW"*. Both run the store's same checkout, and B takes whichever is displayed.
@@ -102,18 +117,21 @@ failure removes the fragment and stops**, leaving the plan's order page exactly 
   build note has the files). It never removes a visitor's meals, so a reload or a second run of a link adds nothing.
   The check runs on every poll of B's wait, the last just before the first press: a meal already chosen shows the
   store's counter instead of *Add to Cart*, so a reload never "finds" the link's meals. Every stop has its own line:
-  `not on this page: …`, `the plan needs N meals; the link has M`, `the plan already holds meals` (all before any
-  press), `no checkout control` (after the meals), `/checkout not reached` (after CHECKOUT).
+  `not on this page: …`, `two meals share a key: …`, `the plan needs N meals; the link has M`, `the plan already
+  holds meals` (all before any press), `no checkout control` (after the meals), `/checkout not reached` (after
+  CHECKOUT). A malformed link stops with its own reason (`unknown version`, `bad meal: …`, `bad code`, `named
+  twice: …`, `no mpid on this page`) before it looks at the page's content.
 - **The offer code** is checked but not applied in this build.
 - ⛔ **Not yet run on the live store**: fill A, the full-plan rule, fill B's second presses of a meal (the
-  2026-09-29 run pressed each of its two meals once), fill B's § 8 finish, and fill B's § 10 check.
+  2026-09-29 run pressed each of its two meals once), fill B's § 8 finish, and fill B's § 10 check. Nor any v2
+  link (§ 11): matching by key, the two-card refusal and the 30 s wait are proven here on the synthetic page only.
 
 ```sh
-npm --prefix boston-2026-10 run build:storefront   # writes dist-storefront/, prints each file's size and version line
+npm --prefix boston-2026-10 run build:storefront   # writes dist-storefront/, prints each file's size and version line,
+                                                   # and a warning for each file over 5,120 bytes
 npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res Bowl:2" --item "…:5" \
-    [--pid-for "Birria de Res Bowl=1353"] [--code CODE]   # prints a test link; the counts must make the plan's
-                                                         # weekly count (here 7: "Birria de Res Bowl:2" + …:5);
-                                                         # --pid-for is needed by fill A only
+    [--code CODE]   # prints the v2 link, then each meal's key (and count) beside its name; the counts must make the
+                    # plan's weekly count (here 7: "Birria de Res Bowl:2" + …:5). --pid-for is retired with v1.
 ```
 
 - **`dist-storefront/fitaf-handoff.html`** is the Footer block: `<script>`, a version line
@@ -122,8 +140,11 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   names** in the source (default `B`). To ship the other fill, change `FILL`, commit, rebuild.
 - **`fitaf-handoff.fill-A.console.js` and `fitaf-handoff.fill-B.console.js`** are the same texts per fill, for
   pasting into a browser console on the live order page with a test link (the one-browser run of § 6).
-- Every file is under 5,120 bytes (§ 3); the build refuses otherwise. It never touches `dist/`, so `npm run build`
-  stays byte-identical (S20).
+- **The size (§ 11, the Advisor's ruling)**: each whole file should be at most 5,120 bytes, which the build **warns**
+  above, and must be at most 10,240, which it **refuses** above, writing nothing. **Built 2026-09-29 at `c1764c1`**:
+  the Footer block 5,180 bytes and `fitaf-handoff.fill-B.console.js` 5,161 (both warned: the key function and the
+  v2 reader cost more than v1's reader saved), `fitaf-handoff.fill-A.console.js` 4,322; 6 more each from an
+  uncommitted tree. The build never touches `dist/`, so `npm run build` stays byte-identical (S20).
 - ⛔ **The kill switch is deleting our block from the Footer.** Never the store's *"Inject these scripts"* switch:
   it stops every vendor's script at once.
 

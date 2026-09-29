@@ -1,6 +1,6 @@
 // The site's own code the smoke uses, IMPORTED, never re-implemented (SPEC-storefront-watch § 4): the payload and
-// link code `npm run handoff:link` uses, the plan table, and the storefront build (for a fill-B console file when
-// the live page has no block of ours). See lib/site-deps-hook.mjs for how it resolves with this package's install.
+// link code `npm run handoff:link` uses (payload version 2, and its meal-key function, SPEC-rung2 § 11), the plan
+// table, and the storefront build (for a fill-B console file when the live page has no block of ours). See lib/site-deps-hook.mjs for how it resolves with this package's install.
 import { register } from "node:module";
 
 register("./site-deps-hook.mjs", import.meta.url);
@@ -18,6 +18,7 @@ export async function siteCode() {
     counts,
     payloadFromArgs: link.payloadFromArgs,
     handoffLink: link.handoffLink,
+    mealKey: link.mealKey,
     buildStorefront: storefront.buildStorefront,
   };
 }

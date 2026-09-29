@@ -1,7 +1,9 @@
 // R2-14: the full-plan rule. The store's order page will not check out short of the plan's weekly count
 // ("Please add at least 7 meals to continue" — the one-browser run, 2026-09-29, fill B, mpid 21: 2 of 7 were
 // added, /checkout opened, and the checkout failed). So the sum of the payload's counts must EQUAL the plan's
-// meals_per_week in data/plans.json, or the payload is refused before any press or write, by both fills.
+// meals_per_week in data/plans.json, or the payload is refused before any press or write, by both fills. The plan is
+// the page's own ?mpid= (payload version 2, SPEC-rung2 § 11). Fill A then refuses every v2 link for its own reason, no
+// product id (R2-06): so where a count passes, A's stop is that one, never the count's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -17,14 +19,14 @@ import {
   fragmentFor,
   MEALS,
   orderPage,
+  refKey,
   run,
   script,
 } from "./r2-harness.mjs";
 
-const payload = (mpid, counts, pid = 1353) => ({
-  v: 1,
+const payload = (mpid, counts) => ({
   mpid,
-  items: counts.map((qty, i) => ({ name: MEALS[i], qty, pid: pid + i })),
+  items: counts.map((qty, i) => ({ name: MEALS[i], qty })),
 });
 const VISITOR_CART = JSON.stringify([{ localId: "36688", name: "a visitor's own line" }]);
 
@@ -36,7 +38,7 @@ async function outcome(fill, p) {
   const h = fakeWindow({ path, fragment: fragmentFor(p), storage, page });
   run(await script(fill), h.window);
   h.timers.drain();
-  return { h, path, page, written: storage.dump() !== before, cart: JSON.parse(storage.getItem(CART_KEY)) };
+  return { h, path, page, written: storage.dump() !== before };
 }
 
 for (const fill of ["A", "B"]) {
@@ -54,12 +56,13 @@ for (const fill of ["A", "B"]) {
     assert.equal(written, false);
   });
 
-  test(`R2-14c fill ${fill}: exactly 7 of 7 passes and fills the cart`, async () => {
-    const { h, path, page, cart } = await outcome(fill, payload(21, [2, 5]));
+  test(`R2-14c fill ${fill}: exactly 7 of 7 passes the rule (B fills the cart; A stops at its own product-id check)`, async () => {
+    const { h, path, page, written } = await outcome(fill, payload(21, [2, 5]));
     assert.equal(h.url.hash, "");
+    assert.ok(!h.info.some((line) => /the plan needs/.test(line)), "not refused by the count");
     if (fill === "A") {
-      assert.deepEqual(h.events.at(-1), ["replace", "/checkout"]);
-      assert.deepEqual(cart.slice(1).map((l) => l.quantity), [2, 5]);
+      assertRefused(h, path, new RegExp(`stopped: no product id: ${refKey(MEALS[0])}$`));
+      assert.equal(written, false);
     } else {
       assertCheckedOut(h, page, path);
       assert.equal(page.total(), 7);

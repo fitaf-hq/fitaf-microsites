@@ -83,3 +83,46 @@ the customers' quietest hour), because someone with admin access can change the 
 | W5 | the issue logic: no open issue / an open one for the same entry with the same flags / with different flags | open / nothing / a comment |
 | W6 | the smoke's pass rule on recorded outcomes: done + exact names + total; a missing name; a wrong total; a `stopped:` line | pass / fail / fail / fail |
 | W7 | `accept` on the synthetic store | writes exactly the baseline W1 then passes |
+
+## 7. Amendment, 2026-09-29 — the release's time, and evidence when the smoke fails
+
+1. **Each release's publish time**: when the cheap check finds a new entry bundle, it reads the entry's `Last-Modified`
+   (one request, while the file is live: HMP **deletes** a release's files at the next release, measured 2026-09-29) and
+   puts it in the report and the issue's body. The Advisor asked for a record of HMP's releases for the Owner; the issues
+   are that record.
+2. **When a smoke width fails, it records the page as text** (never a screenshot: the watch runs in a public repository
+   and a screenshot shows the Owner's photographs): the path; every displayed button outside a meal card, with its
+   label and whether it is disabled; any dialog's text; the counts of the store's pending list and cart (counts only,
+   never their contents); and every console line of the page, not only ours, each cut to 200 characters, with anything
+   that looks like a key or token (`AIza…`, `sk_…`, a long base64 run) replaced by `[REDACTED]`.
+3. **The smoke waits for fill B's own verdict** (its `done` or `stopped` line) with a ceiling above fill B's longest wait
+   (§ 11 of the rung 2 contract: 30 s after CHECKOUT).
+
+| | case | expect |
+|---|---|---|
+| W8 | a synthetic release with a `Last-Modified` | the time appears in the report and the issue body |
+| W9 | a synthetic smoke failure at 390 px (the store never routes) | the report lists the displayed buttons, the dialog text, the counts and the console, with a planted `AIza…` key redacted |
+
+**Found at the build, 2026-09-29** (red first at `a355eab`, built at `c1764c1`). The build's choices, not rulings; § 7
+above is unchanged.
+
+- **The publish time** is read from the response to the entry request the hourly check already makes: no second
+  request and no other method (W8 counts them). It is reported only when the entry's name differs from the
+  baseline's, as the new entry's `Last-Modified` with the same instant in UTC and in Boston's time; an entry sent
+  without one is reported as such. ⬜ Whether the live store sends `Last-Modified` for `main-*.js` was not checked at
+  this build: it made no request to the store.
+- **The evidence** is read before each page closes, at every width, and shown only for a width that failed; if fewer
+  than 7 meals could be chosen, the menu page is the one recorded. A dialog is a displayed `[role=dialog]`,
+  `[role=alertdialog]`, `dialog[open]` or `[aria-modal=true]`, the outermost only, read text node by text node and
+  joined with spaces (on the synthetic store, W9d found `textContent` running a dialog's title into its buttons). The two lists are counted as
+  entries: a list's length, or for an object the lengths of its lists added up; otherwise `absent`, `unreadable` or
+  `not a list`. ⬜ The store's own shape of `hmp_pending_plan_items` was not established at this build.
+- **Redaction**: `AIza` and 10 or more key characters; `sk_…`; any run of 32 or more base64 or base64url characters
+  that holds a digit and a letter. It applies to every quoted string (button labels, dialog text, console lines, page
+  errors); then each console line is cut to 200 characters (199 and `…`), so a key across the cut is never half shown
+  (W9b). The tests' planted keys are assembled at run time: no key-shaped literal is committed.
+- **The smoke's ceiling** is 96.4 s: fill B's longest run on a 7-meal plan, 81.4 s (10 s for the cards, 7 presses of
+  200 ms, 10 s for an enabled CHECKOUT, 30 s after CHECKOUT, 30 s after CONTINUE TO CHECKOUT), plus 15 s. W9e reads
+  fill B's poll constants from the built text and recomputes it.
+- **W9d** runs the 390 px failure in headless Chrome against the synthetic store, whose CHECKOUT now can open a
+  "Sign in to continue" dialog that never routes; it waits out fill B's real 30 s (about 40 s in all).
