@@ -31,6 +31,7 @@ prospecting trip.
 - Commit messages carry **no** tool-attribution trailer; `scripts/git-hooks/commit-msg` rejects one
   (`bash scripts/setup-git-hooks.sh` once per clone).
 - `main` holds released work; changes land on topic branches and merge `--no-ff`.
+- `.github/workflows/storefront-watch.yml` is the storefront watch (`boston-2026-10/SPEC-storefront-watch.md`): it is here only because GitHub runs a schedule from the default branch, and it runs the dev line's `boston-2026-10/tools/storefront-watch/`.
 
 ## Not on the family channel — by ruling
 
