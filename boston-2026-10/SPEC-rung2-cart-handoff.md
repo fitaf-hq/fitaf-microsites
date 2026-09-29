@@ -61,3 +61,73 @@ checkout; write `hmp_order_cart_coupon_codes` only if not — to be proven (§ 4
 Payload encode/decode round trip; rejection of a malformed or oversized payload; for B, a fixture DOM of
 the order page (saved from a public render) in which the named meals are found, and a mutant fixture
 with one meal renamed, in which the tag refuses and changes nothing.
+
+## 6. Amendment, 2026-09-29 — the store's own Custom Scripts, not a tag container; both fills behind one switch
+
+**Found 2026-09-29**: the store's admin has a **Custom Scripts** page. It injects text into the storefront's `<head>`,
+right after `<body>`, or right before `</body>`, *"exactly as supplied"*, on every page. So **no Google Tag Manager
+container is needed**, and § 4's check 1 no longer applies. **Ruled by the Advisor the same day**:
+
+1. **The tag becomes a script pasted into the Footer slot** (before `</body>`), after the page's own content, so it
+   costs the first paint nothing.
+2. **Both fills are built, behind one switch** (`FILL = "A"` or `"B"` at the top of the script). A run in one browser
+   picks which one ships (item 6 below). § 2's recommendation of B stands until that run.
+3. **The source lives here**: `src/storefront/fitaf-handoff.js`, built by **`npm run build:storefront`** to
+   **`dist-storefront/`** (git-ignored; the production build's `dist/` is untouched), headed by a **version line**: the
+   repository commit and a SHA-256 of the script text, so what is live can be compared with what is kept.
+   ⚠ **Amended at the build, 2026-09-29**: both fills in one pasted text measured 5,930 bytes, over § 3's 5 KB. So
+   **each built file carries ONE fill**: `fitaf-handoff.html` (the Footer block, the fill `FILL` names; B by default)
+   and `fitaf-handoff.fill-A.console.js` / `fitaf-handoff.fill-B.console.js` for the one-browser run. The source keeps
+   both fills and the switch; changing the shipped fill is a commit and a rebuild. The limit holds on every file.
+
+**Rules added to § 3**:
+
+- **No fragment: one check, then return.** A page without `#fitaf=` costs one read of `location.hash`: no storage
+  read, no timer, no listener, no request. A test proves it with a stub window whose storage and timers throw if touched.
+- **Once per load**: a marker on `window` stops a second run (the store's single-page navigation must not re-trigger it).
+- **One guard around everything else**: any exception removes the fragment and stops, leaving the plan's order page as
+  rung 1 leaves it. Never a half-filled cart: a fill that cannot complete every line changes nothing.
+- ⛔ **The kill switch is deleting our block from the Footer.** It is never the store's *"Inject these scripts"*
+  switch, which stops every vendor's script at once.
+
+**The payload** (`#fitaf=` + base64url of JSON, version 1): `{ "v": 1, "mpid": <number>, "items": [{ "name": <meal
+name as the page shows it>, "qty": <number>, "pid": <product id, A only> }], "code": <offer code, optional> }`. Refused
+if it does not parse, is over 2 KB, has an unknown `v`, or has no items; an item's `qty` is a whole number from 1 to 21.
+
+**A, what it writes** (the shape of a real cart line, supplied by the Advisor on 2026-09-27): `localId` (fresh),
+`productId`, `quantity`, the three price fields in cents, `name`, `itemData` (the portion), `extensions.mpid` and
+`cartItemData.mpid`, and `hmpAddons` (`addon_field_id 1297`; option `10538` Lean, `10539` Signature, ⬜ Performance
+not yet known). ⚠ The prices written are the plan's per-meal price from the store's meal-plans page. Whether the store
+recomputes them when it syncs the cart is one of the things the one-browser run shows.
+
+**B, what it does**: on `/order?mpid=<N>`, wait (bounded) for the meal cards to render, find each payload meal **by its
+name as shown**, press the card's own add control `qty` times, check that the page's cart shows every line, then open
+`/checkout`. A meal not found means **no presses at all**: the check runs over every item before the first press.
+
+**§ 4 is superseded by the plan's two stages** (the Advisor's; recorded in Fit AF's own records):
+
+5. **One browser first**: the built script pasted into the browser's developer console on the live order page, with a
+   test fragment, in the Advisor's own browser. It affects nobody else, and it exercises the real store, cart and
+   checkout: A and B each fill a test cart; `/checkout` matches the payload; a bad payload and an unknown meal change
+   nothing; nothing is submitted.
+6. **Then live, in a low-traffic window**: pasted into the Footer; an ordinary visit (no fragment) shows no error, no
+   storage change and no new request; the test links fill `/checkout`; nothing is submitted. Lighthouse runs on five
+   pages before and after, five runs each, and a difference smaller than the before-runs' own spread is not a result.
+
+**§ 5's tests, added**: the no-fragment path against the throwing stub; the once-per-load marker; A's lines compared
+field by field with the supplied cart's shape; the guard (an exception mid-fill leaves storage exactly as it was); and
+the version line's hash, recomputed from the script text.
+
+## 7. Amendment, 2026-09-29 — the full-plan rule, from the first live run
+
+**Found in the Advisor's one-browser run** (fill B, a link naming 2 meals on `mpid 21`, Lean 7): **fill B worked**: both
+meals were found, their own *Add to Cart* buttons pressed, and the store's cart showed exactly those meals at the store's
+price. But the order page **requires the plan's count** (*"Please add at least 7 meals to continue"*), so the checkout it
+then opened errored. ⇒ **A payload's counts must add up to exactly the plan's meals a week** (from `data/plans.json`;
+Family is 1), checked in the shared part before any press or write, and by `handoff:link`; otherwise *"the plan needs N
+meals; the link has M"*. The store says *"at least"*; the rule is **equal**, because the microsite only ever offers
+whole plans. Built at `4fb0417` (R2-14, red first; two mutants caught).
+
+⚠ **Seen at the same build, not caused by it**: S4 (rung 4's 5-per-minute rate limit) failed once in a full run (a
+400 where a 429 was expected) and passed on every re-run. Suspected: a request burst straddling a 60-second window.
+Not verified; treat it as intermittent.

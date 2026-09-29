@@ -19,7 +19,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`) and M1–M13 of rung 5 (`mNN-*.test.mjs`), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M13 of rung 5 (`mNN-*.test.mjs`) and R2-01–R2-14 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S20 | authority |
@@ -33,6 +33,11 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `migrations/` | D1 schema, applied in order: `0001_claims.sql`, `0002_contacts.sql` (rung 3), `0003_saves.sql` (rung 4: drops rung 3's tables), `0004_sending.sql` (rung 5: attempts, Resend's id, the send claim) | INPUT |
 | `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs` | tools |
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel) | OUTPUT, git-ignored |
+| `SPEC-rung2-cart-handoff.md` | rung 2's contract: the cart hand-off, § 6 (the store's Custom Scripts Footer, fills A and B) governs | authority |
+| `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, both fills behind `FILL`; its `//` lines are for maintainers and do not ship | INPUT |
+| `scripts/build-storefront.mjs` | `npm run build:storefront`: one fill per file, the plan table inlined, the version line; refuses a file of 5,120 bytes or more | build |
+| `scripts/handoff-link.mjs` | `npm run handoff:link`: prints a test link carrying a payload | tool |
+| `dist-storefront/` | `fitaf-handoff.html` (the Footer block) and `fitaf-handoff.fill-{A,B}.console.js` | OUTPUT, git-ignored |
 
 **Nothing in `dist/` is hand-edited.** To change the page, change `data/` or `src/` and rebuild.
 
@@ -40,10 +45,54 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13, R2-01–R2-14
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 ```
+
+## Rung 2 — the cart hand-off in the store's Footer
+
+[`SPEC-rung2-cart-handoff.md`](SPEC-rung2-cart-handoff.md) § 6. A link to
+`https://fitafnutrition.com/order?mpid=<N>#fitaf=<payload>` fills the visitor's cart and opens `/checkout`; the
+payload (base64url JSON: a plan, meal names and counts, an optional offer code) never leaves the browser. **Any
+failure removes the fragment and stops**, leaving the plan's order page exactly as rung 1 does. A visit without
+`#fitaf=` costs one read of `location.hash` and nothing else.
+
+- **The full-plan rule** (both fills, and `handoff:link`): the counts must add up to **exactly** the plan's
+  `meals_per_week` in `data/plans.json` (7 for mpid 21; Family, mpid 35, is 1), else the payload is refused before
+  any press or write with *"the plan needs N meals; the link has M"*. The store's order page will not check out
+  short of the plan (*"Please add at least 7 meals to continue"*): the one-browser run of 2026-09-29 (fill B,
+  mpid 21) added 2 of 7 correctly at the store's own price, opened `/checkout`, and the checkout failed.
+- **Fill A** appends lines to the store's cart storage (`hmp_local_cart`) at `plans.json`'s per-meal prices and
+  reloads into `/checkout`; any failure puts the storage back byte for byte. It refuses Performance (its portion
+  option id is not known) and Family.
+- **Fill B** waits (200 ms polls, at most 10 s) until every named meal's card and its **Add to Cart** are on the
+  page — one missing means nothing is pressed — then presses each meal once, then the extra presses. ⚠ What Add to
+  Cart becomes after a press is not known: B presses it again if it is still there, else an increase / plus / `+`
+  button in the same card's actions (never a favourite or wishlist). If there is neither, B **stops after the
+  first press of each meal**, without opening `/checkout`.
+- **The offer code** is checked but not applied in this build.
+- ⛔ **Not yet run on the live store**: fill A, the full-plan rule, and fill B's second presses of a meal (the
+  2026-09-29 run pressed each of its two meals once).
+
+```sh
+npm --prefix boston-2026-10 run build:storefront   # writes dist-storefront/, prints each file's size and version line
+npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res Bowl:2" --item "…:5" \
+    [--pid-for "Birria de Res Bowl=1353"] [--code CODE]   # prints a test link; the counts must make the plan's
+                                                         # weekly count (here 7: "Birria de Res Bowl:2" + …:5);
+                                                         # --pid-for is needed by fill A only
+```
+
+- **`dist-storefront/fitaf-handoff.html`** is the Footer block: `<script>`, a version line
+  `/* fitaf-handoff <commit> sha256:<hex> */` (the hash of the text after it, so what is live can be compared with
+  what is kept; `-dirty` if an input was uncommitted), the script, `</script>`. It carries **only the fill `FILL`
+  names** in the source (default `B`). To ship the other fill, change `FILL`, commit, rebuild.
+- **`fitaf-handoff.fill-A.console.js` and `fitaf-handoff.fill-B.console.js`** are the same texts per fill, for
+  pasting into a browser console on the live order page with a test link (the one-browser run of § 6).
+- Every file is under 5,120 bytes (§ 3); the build refuses otherwise. It never touches `dist/`, so `npm run build`
+  stays byte-identical (S20).
+- ⛔ **The kill switch is deleting our block from the Footer.** Never the store's *"Inject these scripts"* switch:
+  it stops every vendor's script at once.
 
 ## ⛔ Deploys are not run from here (retired 2026-09-29)
 

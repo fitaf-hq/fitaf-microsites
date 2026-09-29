@@ -10,6 +10,8 @@
   "scripts": {
     "build": "node build.mjs",
     "build:dev": "node build.mjs --env dev",
+    "build:storefront": "node scripts/build-storefront.mjs",
+    "handoff:link": "node scripts/handoff-link.mjs",
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",
     "db:migrate:dev": "wrangler d1 migrations apply fitaf-leads-dev --env dev --remote",
@@ -29,6 +31,7 @@
     "apca-w3": "^0.1.9",
     "esbuild": "0.28.1",
     "jsqr": "^1.4.0",
+    "linkedom": "0.18.13",
     "miniflare": "5.20260926.0-alpha",
     "pngjs": "^7.0.0",
     "wrangler": "^4.142.0"

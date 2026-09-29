@@ -1,0 +1,36 @@
+<!doctype html>
+<!--
+  A MINIMAL SYNTHETIC order page for the rung 2 tests (R2-09, R2-10). Written by hand: it is NOT the store's
+  markup and copies none of it. It reproduces only the structure fill B relies on (SPEC-rung2 § 6):
+  each meal card is an <app-product-card>; its name is the text of .product__content-title (trimmed,
+  whitespace collapsed); its add control is the <button> inside .product__actions whose text contains
+  "Add to Cart". The irregular whitespace and the second button are deliberate.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>order page (synthetic test fixture)</title>
+  </head>
+  <body>
+    <main>
+      <app-product-card>
+        <div class="product__content-title">
+          Birria de Res Bowl
+        </div>
+        <div class="product__actions"><button type="button">Add to Cart</button></div>
+      </app-product-card>
+      <app-product-card>
+        <div class="product__content-title">Chicken   Pesto
+          Pasta</div>
+        <div class="product__actions">
+          <button type="button" aria-label="Save to favourites">&#9825;</button>
+          <button type="button"> Add to Cart </button>
+        </div>
+      </app-product-card>
+      <app-product-card>
+        <div class="product__content-title">Jalapeño Lime Chicken</div>
+        <div class="product__actions"><button type="button">Add to Cart</button></div>
+      </app-product-card>
+    </main>
+  </body>
+</html>
