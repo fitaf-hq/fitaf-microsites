@@ -1,0 +1,23 @@
+{
+  "about": "The plain-text part of E1 (ticked, unticked) and E-X, rendered by src/worker/messages.js from test/email-fixture.mjs's SAMPLE inputs at recorded_from, BEFORE the branding amendment (SPEC-rung5 § 9). M14 renders them again and compares byte for byte. The text part is the draft's wording: regenerate only when the WORDING is meant to change, and say so in the commit.",
+  "recorded_from": "4ddd5c4",
+  "inputs": {
+    "siteUrl": "https://email-sample.example.test",
+    "to": "delivered@resend.dev",
+    "code": "SAMPLE23",
+    "token": "SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPL",
+    "offer": {
+      "valid_to": "2026-11-30"
+    },
+    "event": {
+      "name": "the sample event"
+    },
+    "zip": "01602",
+    "unconfirmedDays": 7
+  },
+  "text": {
+    "e1_ticked": "You saved this offer at the sample event yesterday — here it is.\nYour code: SAMP-LE23 · good until November 30, 2026\nSee my offer: https://email-sample.example.test/o/SAMPLE23\nYou asked to hear about Fit AF menus and offers. Yes, keep me posted: https://email-sample.example.test/confirm/SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPL\nAlready ordered? Enjoy your meals!\nYou're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
+    "e1_unticked": "You saved this offer at the sample event yesterday — here it is.\nYour code: SAMP-LE23 · good until November 30, 2026\nSee my offer: https://email-sample.example.test/o/SAMPLE23\nAlready ordered? Enjoy your meals!\nYou're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
+    "ex": "You asked us to tell you when Fit AF delivers near 01602. Yes, tell me: https://email-sample.example.test/confirm/SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPL\nIf this wasn't you, ignore this email — we'll delete your details within 7 days.\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n"
+  }
+}
