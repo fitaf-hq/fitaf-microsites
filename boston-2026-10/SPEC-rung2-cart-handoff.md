@@ -202,3 +202,34 @@ label is unchanged. **R2-15g**: a displayed *CHECKOUT NOW* is pressed once and t
 in a mirror copy). **R2-16c** now pins exactness the other way: a displayed *CHECKOUT NOW PLEASE* is not pressed.
 ⬜ Not yet seen live: a press on the hidden `app-product-card` at 666 px and narrower (a phone), which the build expects
 to work because a script's `click()` reaches a hidden button.
+
+## 10. Amendment, 2026-09-29 — "make it right": fill B starts only on an empty plan; the known stops, named
+
+**Why**: the Advisor's frame after the passing run, *"Make it work. Make it right. Make it fast"*, and *"make this as
+solid as possible"*. Fill B presses the plan's full count, so it is only right on a plan that holds **no** meals yet.
+
+1. **An empty plan, or nothing.** Before its first press, fill B looks at what the store itself shows for **this plan**
+   (the order page's cart bar below 1025 px, its cart sidebar at 1025 px and wider). If the store shows **any meal
+   already chosen for this plan** (a pending list from an earlier visit, a reload in the middle of a fill, a second tab),
+   fill B stops with `stopped: the plan already holds meals` and **presses nothing**. It **never removes** a visitor's
+   meals. Read by what the store displays (its labels and counts), like everything else fill B does; the builder
+   establishes from the store's public code **which** element states mean "empty" at each width and records them here.
+2. **A reload or a second run** of the same link therefore adds nothing: the first run's meals make the plan non-empty.
+3. **Known stops, each with its own line** (none leaves the page worse than the visitor's own presses would):
+   - `stopped: not on this page: …` (a meal not on this week's menu; § 6), before any press;
+   - `stopped: the plan needs N meals; the link has M` (§ 7), before any press;
+   - `stopped: the plan already holds meals` (this section), before any press;
+   - `stopped: no checkout control` (§ 8), after the meals;
+   - `stopped: /checkout not reached` (§ 8's build), after CHECKOUT: includes the store's *"Sign in to continue"* for a
+     visitor not signed in whose cart holds a **subscription** plan. The store's own dialog stays; fill B presses none
+     of it. ⬜ Whether the microsite's links ever point at a subscription is the microsite's question, not this script's.
+4. **Unchanged**: the version line, the guard, one check of `location.hash` for ordinary visitors, no storage written by
+   fill B, nothing loaded or sent, the size limit.
+
+| | case | expect |
+|---|---|---|
+| R2-19 | fixture: the plan already holds 1 meal (the store shows its "Add N−1 more" state) | `stopped: the plan already holds meals`; **no press at all**; fragment removed |
+| R2-20 | fixture: the plan already full (CHECKOUT / CHECKOUT NOW displayed before any press) | the same |
+| R2-21 | fixture: an empty plan, at both widths (whatever "empty" looks like, per item 1) | the normal fill (R2-15's case) |
+| R2-22 | a **reload** of the same link after a first run's meals were pressed (a new page load; the store shows them pending) | stops at item 1; the pending meals stay exactly the first run's |
+| R2-23 | ⭐ mutant: the emptiness check removed | R2-19 fails |
