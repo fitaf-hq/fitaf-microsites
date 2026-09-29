@@ -1,11 +1,12 @@
 // Calendar arithmetic in a named time zone, with Intl only. `Temporal` exists in neither the Workers
 // runtime (compatibility date 2026-09-26) nor Node 22, and Intl.DateTimeFormat with an IANA zone runs
-// in both, so this one module serves the Worker and the tests.
+// in both, so this one module serves the Worker and the tests. build.mjs inlines zonedDate into the dev page
+// with the helpers it calls (zonedParts, formatter, pad; SPEC-rung4 § 2a), so they are exported too.
 const FORMATTERS = new Map();
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MS_PER_HOUR = 60 * 60 * 1000;
 
-function formatter(zone) {
+export function formatter(zone) {
   if (!FORMATTERS.has(zone)) {
     FORMATTERS.set(
       zone,
@@ -33,7 +34,7 @@ export function zonedParts(instant, zone) {
   return parts;
 }
 
-const pad = (n, w = 2) => String(n).padStart(w, "0");
+export const pad = (n, w = 2) => String(n).padStart(w, "0");
 
 /** The calendar date of `instant` in `zone`, as "YYYY-MM-DD". */
 export function zonedDate(instant, zone) {

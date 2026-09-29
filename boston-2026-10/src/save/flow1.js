@@ -2,7 +2,8 @@
   "use strict";
   // Flow 1 — save the offer (flows/01-save-offer.md § 3). Development build only.
   // One state object; one render(state), the only code that writes the DOM; transitions named after the
-  // rows of the flow's table. `classifyZip` is inlined by the build from src/worker/zip-class.js.
+  // rows of the flow's table. `classifyZip` is inlined by the build from src/worker/zip-class.js;
+  // `offerForSave` and `zonedDate` from src/worker/offers.js and zoned-time.js (SPEC-rung4 § 2a).
   var cfg = JSON.parse(document.getElementById("save-data").textContent);
   var el = function (id) { return document.getElementById(id); };
   var EMAIL_RE = new RegExp(cfg.email_pattern);
@@ -16,6 +17,17 @@
     other: "Something went wrong. Please try again."
   };
 
+  // The offer box: the label of the offer a save made now would get — the Worker's own choice, on the date in
+  // the Worker's send time zone. If none can be chosen (offers.json breaks its one-general rule), it stays empty.
+  function offerLabel() {
+    try {
+      return offerForSave(zonedDate(Date.now(), cfg.send_time_zone), cfg.offers).label;
+    } catch (e) {
+      return "";
+    }
+  }
+  var offer = offerLabel();
+
   // name: OFFER · EDITING · CHECKING · OUT_OF_AREA · EXPANSION_SAVED · VERIFYING · SENDING · ERROR · SAVED
   //       · PLAN · MENU.  kind: what is being saved ("offer" | "expansion"); error: ERROR's kind.
   var state = { name: "OFFER", kind: "offer", error: null, zip: "", email: "" };
@@ -25,6 +37,7 @@
     var busy = s.name === "CHECKING" || s.name === "VERIFYING" || s.name === "SENDING";
     var outOfArea = s.name === "OUT_OF_AREA" || s.name === "EXPANSION_SAVED" ||
       (s.kind === "expansion" && (busy || s.name === "ERROR"));
+    el("save-offer-label").textContent = offer;
     el("save-open").hidden = collapsed;
     el("save-collapsed").hidden = !collapsed;
     el("save-form").hidden = s.name === "SAVED" || s.name === "EXPANSION_SAVED";
