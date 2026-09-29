@@ -44,8 +44,8 @@ few literal strings the dependency list names, as the contracts already quote); 
 | F4 | **an ordinary visit costs nothing**: the same visit's console | any line from `[fitaf-handoff]`, or a page error from our block |
 | F5 | **the smoke test** (§ 4), at two widths | anything but a pass |
 
-**Run on F1** (and on dispatch): F2 to F5. F3 and F4 also run **once a day** (at 03:17 UTC, a quiet hour at the
-customers'), because someone with admin access can change the Footer without a release.
+**Run on F1** (and on dispatch): F2 to F5. F3 and F4 also run **once a day** (at 07:17 UTC, 03:17 in Boston:
+the customers' quietest hour), because someone with admin access can change the Footer without a release.
 
 ## 4. The smoke test
 
