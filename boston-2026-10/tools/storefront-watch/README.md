@@ -1,6 +1,6 @@
 # tools/storefront-watch — the storefront watch
 
-[`../../SPEC-storefront-watch.md`](../../SPEC-storefront-watch.md) is the contract (§§ 1–6, cases W1–W7). HMP
+[`../../SPEC-storefront-watch.md`](../../SPEC-storefront-watch.md) is the contract (§§ 1–7, cases W1–W9). HMP
 releases the store's app without notice; the cart hand-off ([`../../SPEC-rung2-cart-handoff.md`](../../SPEC-rung2-cart-handoff.md))
 presses the store's own buttons, so a release can break it. This package flags every release within the hour and
 smoke-tests the hand-off on the live store on each one.
@@ -15,8 +15,9 @@ never does. The site's install and the deploy never get it (the rule of [`../REA
 
 ```sh
 npm --prefix boston-2026-10/tools/storefront-watch ci          # once, and after this lockfile changes
-npm --prefix boston-2026-10/tools/storefront-watch test        # W1–W7 (no network), F3/F4 verdicts, E1, P1–P2 (a local
-                                                               # synthetic store in headless Chrome; skipped without Chrome)
+npm --prefix boston-2026-10/tools/storefront-watch test        # W1–W9 (no network), F3/F4 verdicts, E1, P1–P2 and W9d (a
+                                                               # local synthetic store in headless Chrome; skipped without
+                                                               # Chrome; W9d waits out fill B's real 30 s, ~40 s in all)
 npm --prefix boston-2026-10/tools/storefront-watch run watch                  # the hourly check (§ 2)
 npm --prefix boston-2026-10/tools/storefront-watch run watch -- --full        # F1–F5 regardless (as a dispatch)
 npm --prefix boston-2026-10/tools/storefront-watch run watch -- --daily       # plus F3 and F4 (as at 07:17 UTC)
@@ -42,11 +43,12 @@ npm --prefix boston-2026-10/tools/storefront-watch run accept -- --footer boston
 | `lib/dependencies-check.mjs` | F2 |
 | `lib/footer-check.mjs` | F3 (the block's version line and its text's SHA-256) and F4 (our console lines, our page errors) |
 | `lib/visit.mjs` | the one ordinary headless visit F3 and F4 judge |
-| `lib/smoke.mjs`, `lib/smoke-verdict.mjs` | F5: the run at each width, and its pass rule (W6) |
+| `lib/smoke.mjs`, `lib/smoke-verdict.mjs` | F5: the run at each width, and its pass rule (W6); before each page closes, the page read as text (§ 7, W9) |
+| `lib/redact.mjs` | § 7: every quoted page string redacted (`AIza…`, `sk_…`, a long base64 run → `[REDACTED]`), each console line then cut to 200 characters |
 | `lib/site-code.mjs`, `lib/site-deps-hook.mjs` | the site's payload code and storefront build, imported, never re-implemented |
 | `lib/issue.mjs` | § 5: one issue per release (a marker in each body and comment carries the entry and the flags) |
-| `lib/report.mjs` | the report: printed, the issue's body, the CI job summary |
-| `test/` | `w1`–`w7` (§ 6), `f3-f4-verdicts`, `e1` (a browser check that cannot run is a flag, not an abort), `p1`/`p2` (plumbing in a real browser, against `test/browser-store.mjs` on 127.0.0.1) |
+| `lib/report.mjs` | the report: printed, the issue's body, the CI job summary; a new entry's `Last-Modified` (§ 7, W8); a failed smoke width's page as text; the smoke's own report (`bin/smoke.mjs`) |
+| `test/` | `w1`–`w7` (§ 6), `w8`–`w9` (§ 7), `f3-f4-verdicts`, `e1` (a browser check that cannot run is a flag, not an abort), `p1`/`p2` and W9d (plumbing in a real browser, against `test/browser-store.mjs` on 127.0.0.1) |
 
 **Inputs** (committed, beside the script they protect): [`../../storefront/`](../../storefront/README.md),
 `dependencies.json` and `watch-baseline.json`.
@@ -65,6 +67,14 @@ npm --prefix boston-2026-10/tools/storefront-watch run accept -- --footer boston
   scripts run and removed just before the paste, so a block already on the page never runs instead.
 - **The smoke reads `/checkout`; it never presses or types anything anywhere.** Fill B presses the store's
   buttons on the order page, as its contract says; the smoke only picks the meals, opens the link and reads.
+- **A release's publish time (§ 7)** is the new entry file's `Last-Modified`, read from the one request the hourly
+  check already makes for the entry (no second request), and shown in UTC and in Boston's time. The store deletes a
+  release's files at its next release, so the time can only be read while the release is live: the issue keeps it.
+- **A failed width's evidence is text (§ 7), never a screenshot**: the path, the displayed buttons outside meal cards
+  (label, disabled or not), each dialog's text, the counts (never the contents) of `hmp_pending_plan_items` and
+  `hmp_local_cart`, and every console line of the page, redacted and cut to 200 characters. The smoke waits for fill
+  B's own verdict up to 96.4 s: fill B's longest run on a 7-meal plan (81.4 s: 10 s for the cards, 7 presses, 10 s for
+  CHECKOUT, 30 s after CHECKOUT and 30 s after the extras dialog's CONTINUE) plus 15 s.
 
 ## The workflow (on `main` only; its copy is kept here)
 
