@@ -12,6 +12,7 @@
     "build:dev": "node build.mjs --env dev",
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",
+    "render:flows": "node scripts/render-flows.mjs",
     "db:migrate:dev": "wrangler d1 migrations apply fitaf-leads-dev --env dev --remote",
     "seed:dev": "node scripts/seed-dummy.mjs --remote",
     "purge:dev": "node scripts/purge.mjs --remote",
@@ -26,11 +27,13 @@
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "12.0.0",
     "apca-w3": "^0.1.9",
     "esbuild": "0.28.1",
     "jsqr": "^1.4.0",
     "miniflare": "5.20260926.0-alpha",
     "pngjs": "^7.0.0",
+    "puppeteer": "25.12.0",
     "wrangler": "^4.142.0"
   }
 }

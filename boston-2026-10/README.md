@@ -19,19 +19,21 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`) and M1–M13 of rung 5 (`mNN-*.test.mjs`), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M13 of rung 5 (`mNN-*.test.mjs`) and F1 (the flow renders are current, with mutants), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S20 | authority |
 | `SPEC-rung5-sending.md` | rung 5's contract: the real sender (Resend), dev only, behind an allowlist; cases M1–M9, and § 8 (the derived token) M10–M13 | authority |
 | `consent/DRAFT.md` | the consent wording (v0.3, ⛔ not approved): the page (§§ 1–2), the emails (§ 3) and `/confirm` (§ 4) show it verbatim | authority |
 | `flows/` | the multi-step flows (save the offer, build a plan, the next-day email, text (off for October), return, the lead record, the calendar cart, this week's menu), each with a Mermaid diagram: states, transitions, data, consent points, written **before** they are built | design; the contracts win where a flow and a contract disagree about something built |
+| `flows/rendered/` | each flow's diagram as an SVG (committed, stamped with its block's hash) and a 2× PNG (git-ignored), for a screen share; see its README | OUTPUT of `npm run render:flows` |
 | `data/save.json` | the save endpoint, the wording version the page sends and the versions the Worker accepts, the send hour and zone, the lapse periods | INPUT |
 | `data/offers.json` | the offers, ⛔ **placeholders** (`"status": "placeholder"`): which one a save gets, which is current | INPUT |
 | `src/save/` | **dev build only**: Flow 1 (`section.html`, `flow1.js`), the share panel (`share-panel.html`, `share.js`), the one arithmetic module (`calculator.js`), `banner.html`, `style.css` | INPUT |
 | `src/worker/` | the Worker (below) | INPUT |
 | `migrations/` | D1 schema, applied in order: `0001_claims.sql`, `0002_contacts.sql` (rung 3), `0003_saves.sql` (rung 4: drops rung 3's tables), `0004_sending.sql` (rung 5: attempts, Resend's id, the send claim) | INPUT |
-| `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs` | tools |
+| `scripts/` | `seed-dummy.mjs` + `dummy-saves.mjs` (dummy data, dev only), `purge.mjs`, `erase.mjs`, `d1-cli.mjs`; `render-flows.mjs` (`npm run render:flows`) with `flow-sources.mjs` and `flow-theme.mjs` | tools |
+| `.puppeteerrc.cjs` | the browser `render:flows` drives: the installed Chrome, never a download | config |
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel) | OUTPUT, git-ignored |
 
 **Nothing in `dist/` is hand-edited.** To change the page, change `data/` or `src/` and rebuild.
@@ -40,9 +42,10 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13, F1
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
+npm --prefix boston-2026-10 run render:flows  # flows/rendered/: every flow diagram as SVG + 2x PNG (installed Chrome)
 ```
 
 ## ⛔ Deploys are not run from here (retired 2026-09-29)
@@ -72,7 +75,7 @@ before rung 4 (test S20 compares SHA-256s with `test/s20-production-golden.json`
 
 ```sh
 export CLOUDFLARE_ACCOUNT_ID=…            # never committed
-npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M13 (Miniflare, no network)
+npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S20, M1–M13, F1 (Miniflare, no network)
 npm --prefix boston-2026-10 run db:migrate:dev        # D1 migrations -> fitaf-leads-dev (0003 drops rung 3's tables; 0004 adds sending)
 npm --prefix boston-2026-10 run seed:dev              # 20 dummy saves, 5 marked exported
 npm --prefix boston-2026-10 run purge:dev             # DRY RUN: counts only

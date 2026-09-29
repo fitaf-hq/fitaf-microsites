@@ -6,6 +6,11 @@ Mermaid diagram of its states. **The tables are the authority**, and the diagram
 everything in this repository, these files are public: no offer terms before they are approved, no
 internal figures, no pointer into a private repository.
 
+**Pictures.** [`rendered/`](rendered/README.md) holds every diagram here as an SVG (committed) and a 2×
+PNG (for a screen share), drawn in the page's colours and fonts by `npm run render:flows`. They are
+outputs of these blocks: after changing a diagram, re-render and commit the SVG with it (test F1 fails
+on a stale one).
+
 **Authority.** Where a flow and a contract (`../SPEC*.md`) disagree about something BUILT, the contract
 and the code win, and the flow is corrected. Where a flow PROPOSES a change, the contract is amended when
 the proposal is accepted.

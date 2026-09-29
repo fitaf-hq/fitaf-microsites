@@ -2,6 +2,8 @@
 node_modules/
 dist/
 dist-dev/
+# The flow diagrams' PNGs (2x, for screen sharing) are rebuilt by `npm run render:flows`; the SVGs are committed
+boston-2026-10/flows/rendered/*.png
 
 # Wrangler / Miniflare local state (its cache holds request location data)
 .wrangler/
