@@ -4,8 +4,8 @@
 // Only the token's SHA-256 is stored (token.js), as before; whether a token still works is decided by the
 // database (state, expiry), never by the token.
 //
-// The key is used as the UTF-8 bytes of the secret's text (`npm run secret:token-key:dev` sets 32 random
-// bytes, base64: 44 characters). ⛔ Never logged. ⛔ Self-contained (no imports): M12 imports a mutated COPY.
+// The key is used as the UTF-8 bytes of the secret's text (the infrastructure code generates it: 44 random
+// characters; until 2026-09-28 a retired script set 32 random bytes, base64). ⛔ Never logged. ⛔ Self-contained (no imports): M12 imports a mutated COPY.
 export const MIN_TOKEN_KEY_LENGTH = 32;
 
 export function checkTokenKey(key) {

@@ -36,15 +36,30 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 **Nothing in `dist/` is hand-edited.** To change the page, change `data/` or `src/` and rebuild.
 
-## Rebuild, test, deploy
+## Rebuild and test
 
 ```sh
 npm --prefix boston-2026-10 install
 npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
-npm --prefix boston-2026-10 run deploy  # builds, then wrangler deploy
 ```
+
+## ⛔ Deploys are not run from here (retired 2026-09-29)
+
+Both Workers — production and `dev` — and the dev Worker's secrets are managed as **infrastructure as code,
+applied by CI**. CI checks out a **pinned commit** of this repository, runs `npm run build` (or `build:dev`)
+and uploads the result; for dev it first runs `npm run db:migrate:dev`. So a commit here changes nothing
+live until a pin moves to it, and **a release is a pin change**, reviewed where the pin lives.
+
+- **Retired**: `deploy`, `deploy:dev` (and their `predeploy` hooks), `secret:resend:dev`,
+  `secret:allowlist:dev`, `secret:token-key:dev`. ⛔ Do not add them back: a second path that writes the
+  same Worker would let the live Worker drift from the code that is supposed to describe it.
+- **Kept, because CI or a person still runs them**: `build`, `build:dev`, `db:migrate:dev`, and the dev
+  data scripts below; `preview` and `preview:dev` run locally only.
+- ⚠ `wrangler.jsonc` now drives only local preview and `db:migrate:dev`. The deployed Workers' settings
+  (vars, bindings, the cron, `workers.dev`, the custom domains) are **mirrored** in the infrastructure
+  code: a change to this file reaches nothing live until it is mirrored there too.
 
 ## Rungs 3–4 — development only
 
@@ -64,7 +79,7 @@ npm --prefix boston-2026-10 run purge:dev             # DRY RUN: counts only
 npm --prefix boston-2026-10 run purge:dev -- --apply  # delete exported saves' contacts; mark them purged
 npm --prefix boston-2026-10 run erase:dev -- --email dummy-0001@example.com          # DRY RUN: counts only
 npm --prefix boston-2026-10 run erase:dev -- --email dummy-0001@example.com --apply  # erase on request
-npm --prefix boston-2026-10 run deploy:dev            # builds dist-dev/, then wrangler deploy --env dev
+npm --prefix boston-2026-10 run build:dev             # writes dist-dev/ (CI builds and uploads it)
 ```
 
 Dev URL: `https://fitaf-microsites-dev.fitaf-microsite-boston-2026-10.workers.dev/` (`/<event-id>/` per event).
@@ -111,21 +126,12 @@ The development database holds dummy `@example.com` addresses, which accept no m
 **bounce**, and bounces damage a new sending domain's reputation. So the real sender runs **only to
 addresses on an allowlist**.
 
-**The three secrets — set by the Advisor, never committed, never typed by anyone else:**
-
-```sh
-npm --prefix boston-2026-10 run secret:resend:dev     # wrangler secret put RESEND_API_KEY --env dev (prompts)
-npm --prefix boston-2026-10 run secret:allowlist:dev  # wrangler secret put SEND_ALLOWLIST --env dev (prompts)
-npm --prefix boston-2026-10 run secret:token-key:dev  # 32 random bytes, base64, piped into
-                                                      #   wrangler secret put CONFIRM_TOKEN_KEY --env dev
-```
-
-The first two prompt for the value, so it goes from the Advisor's keyboard to Cloudflare and nowhere else.
-The allowlist is a secret because it may name a real address. The third is never seen by anyone: `node`
-draws 32 random bytes and pipes them straight into `wrangler secret put`, which reads a piped value
-([Cloudflare: `secret put`](https://developers.cloudflare.com/workers/wrangler/commands/workers/)). Running it
-again replaces the key, and every `/confirm` link in an email not yet sent changes with it; links already
-sent keep working, because the database holds their hashes.
+**The three secrets — set by the infrastructure code (since 2026-09-29), never committed here, never typed:**
+`RESEND_API_KEY` is a sending-only key, `SEND_ALLOWLIST` is configuration kept a secret binding because it
+may name a real address, and `CONFIRM_TOKEN_KEY` is generated (random, 44 characters) and seen by nobody.
+Until 2026-09-28 they were set with `wrangler secret put` scripts in this package; those are retired (see
+*Deploys are not run from here*). Replacing the token key changes every `/confirm` link in an email not yet
+sent; links already sent keep working, because the database holds their hashes.
 
 - **`SEND_ALLOWLIST`**: a comma-separated list of exact addresses and `@domain` entries (a whole domain, not
   its subdomains; case does not matter). A message to anyone not on it is **held**: nothing is requested,
@@ -141,8 +147,9 @@ sent keep working, because the database holds their hashes.
 - **The `/confirm` token is derived, not drawn** (§ 8 of the contract): `base64url(HMAC-SHA-256(
   CONFIRM_TOKEN_KEY, "<save_id>:confirm"))`, by Web Crypto (`confirm-token.js`). Only its SHA-256 is stored,
   as in rung 4, and whether it still works is decided by the database, not by the token.
-- **`MAIL_FROM`** is public config in the `dev` vars of `wrangler.jsonc`: ⬜ the placeholder
-  `Fit AF <offers@eatfitaf.com>` until the Owner names the sender. Its domain must be verified in Resend.
+- **`MAIL_FROM`** is public config in the `dev` vars of `wrangler.jsonc` (mirrored in the infrastructure
+  code, which is what the deployed Worker uses): ⬜ the placeholder `Fit AF <offers@eatfitaf.com>` until the
+  Owner names the sender. Its domain must be verified in Resend; `eatfitaf.com` was, on 2026-09-29.
 
 **The sender** (`resend-sender.js`, from Resend's documentation read 2026-09-27): `POST
 https://api.resend.com/emails` with `Authorization: Bearer`, a `User-Agent`, and an `Idempotency-Key` of
@@ -166,9 +173,11 @@ forgotten; the claim covers what the key alone would answer with a 409, two runs
 **The cron logs one line of counts** — `due · suppressed · sent · failed · deferred · held · retrying ·
 inflight` — and nothing else: no address, token, code or key (test M7).
 
-**The manual check on dev** (the orchestrator, after the Advisor has set the three secrets): `db:migrate:dev`
-(0004), `deploy:dev`, save an offer on the dev page to `delivered+<label>@resend.dev`, wait for the cron
-after its `send_at`, and look in Resend's dashboard. Every dummy `@example.com` save stays `scheduled`.
+**The manual check on dev**: save to `delivered+<label>@resend.dev` (an offer's E1 goes at 09:00
+America/New_York on the next day; an expansion request's E-X on the next cron), then open the email in
+Resend's dashboard and follow its `/confirm` link. Every dummy `@example.com` save must stay `scheduled`.
+✅ **Run 2026-09-29**: an E-X saved at 02:57Z was delivered to its `@resend.dev` test address, and its
+`/confirm` link rendered the landing page for that save (its ZIP, both buttons).
 
 **Mutants on copies**: M5 imports a copy of `allowlist.js` with the check removed and shows M4 failing;
 M9b copies `src/worker/` and `data/` to a temporary directory, removes the claim's lease condition from
@@ -210,9 +219,10 @@ Departures from the store, each for legibility:
 
 ## ⛔ Running wrangler — only through this package's scripts
 
-**Always** `npm --prefix boston-2026-10 run <script>` (`deploy`, `cf:whoami`, `cf:versions`, …) — `npm run`
-sets the working directory to this package, so wrangler reads `wrangler.jsonc` here. ⛔ **Never**
+**Always** `npm --prefix boston-2026-10 run <script>` (`db:migrate:dev`, `cf:whoami`, `cf:versions`, …) —
+`npm run` sets the working directory to this package, so wrangler reads `wrangler.jsonc` here. ⛔ **Never**
 `npm exec wrangler …` or `npx wrangler …` from any other directory: on 2026-09-27 a `pages project create`
 run that way from a private repository let wrangler's automatic setup pick that repository's own build
 folder and **upload it publicly**; it stayed reachable at a version preview URL until the Worker was
-deleted. If an operation has no script yet, add one here first.
+deleted. If an operation has no script yet, add one here first — **except a deploy or a secret**, which
+belong to the infrastructure code (see *Deploys are not run from here*).
