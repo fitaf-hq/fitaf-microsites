@@ -131,3 +131,36 @@ whole plans. Built at `4fb0417` (R2-14, red first; two mutants caught).
 ⚠ **Seen at the same build, not caused by it**: S4 (rung 4's 5-per-minute rate limit) failed once in a full run (a
 400 where a 429 was expected) and passed on every re-run. Suspected: a request burst straddling a 60-second window.
 Not verified; treat it as intermittent.
+
+## 8. Amendment, 2026-09-29 — fill B ends by pressing the store's own CHECKOUT, never by loading `/checkout`
+
+**Found in the Advisor's second run** (the 7-meal link, fill B at `4fb0417`): the seven meals were added (he saw them go
+into the cart), and `/checkout` then showed **"Your cart is empty"** and *"Please add items to checkout"*. The same happened
+in the first run, so § 7's reading of that run's error was only half right: the plan's count was needed, and was not the
+whole cause.
+
+**Why, from the store's public code** (the bundle as served to every visitor, 2026-09-27): on a meal-plan page, *Add to
+Cart* puts a meal in that plan's **pending** list (`hmp_pending_plan_items`), not in the cart (`hmp_local_cart`). The
+store's own checkout control moves the pending meals into the cart (`commitPlanItems(mpid)`) and then routes to
+`/checkout` inside the app. Fill B's `location.assign("/checkout")` loaded a new page with nothing committed.
+
+⇒ **Fill B presses buttons only, start to finish**: after the last meal, it waits for the order page's own **CHECKOUT**
+control to be enabled (before the plan is full, the store shows a disabled *"Add N more meals"* in its place) and presses
+it. If the store then opens its extras dialog, fill B presses that dialog's **CONTINUE TO CHECKOUT**, once, and adds
+nothing. It never loads `/checkout` itself and never writes storage. The fragment is removed before the press.
+
+- **Found by its visible label**, like the meals: a button whose text, trimmed and compared case-insensitively, is exactly
+  `checkout` (or `continue to checkout` in the dialog), enabled, and not inside a meal card. Several may exist (the page
+  renders desktop and mobile layouts); the first that is displayed is pressed.
+- **Fail-safe**: no enabled control within the polling budget ⇒ `stopped: no checkout control`, and nothing more is
+  pressed. The meals already added stay in the visitor's pending list, as if they had pressed the buttons themselves;
+  the page is the store's own.
+- **Done** means `location.pathname === "/checkout"` after the press, observed by polling; fill B logs it and stops.
+- Fill A is unchanged (it still writes storage and is not the chosen fill).
+
+| | case | expect |
+|---|---|---|
+| R2-15 | fixture: meals added, then an enabled CHECKOUT | pressed exactly once, after the last meal; `location.assign` never called |
+| R2-16 | fixture: CHECKOUT still shows *"Add N more meals"* (disabled) | nothing pressed beyond the meals; `stopped: no checkout control` after the budget |
+| R2-17 | fixture: CHECKOUT opens the extras dialog | its CONTINUE TO CHECKOUT pressed once; nothing added from the dialog |
+| R2-18 | ⭐ mutant: fill B navigates by `location.assign("/checkout")` again | R2-15 fails |
