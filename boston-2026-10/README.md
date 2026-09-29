@@ -19,7 +19,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M13 of rung 5 (`mNN-*.test.mjs`) and R2-01–R2-18 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S20 of rung 4 (`sNN-*.test.mjs`), M1–M13 of rung 5 (`mNN-*.test.mjs`) and R2-01–R2-23 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S20 | authority |
@@ -45,7 +45,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13, R2-01–R2-18
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S20, M1–M13, R2-01–R2-23
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 ```
@@ -80,9 +80,19 @@ failure removes the fragment and stops**, leaving the plan's order page exactly 
   `stopped: no checkout control`, the meals left in the visitor's pending list. B writes no storage.
   **Two labels** (§ 8, amended): below 1025 px the store's CHECKOUT bar reads *"CHECKOUT"*; at 1025 px and wider
   its cart sidebar reads *"CHECKOUT NOW"*. Both run the store's same checkout, and B takes whichever is displayed.
+- **Fill B starts only on an empty plan (§ 10).** Before its first press, if the store displays any control in its
+  checkout slot for this plan, enabled or not (below 1025 px the cart bar's *CHECKOUT*, *"Add N more meal(s)"*,
+  *"Limit Exceeded"*; at 1025 px and wider the sidebar's *CHECKOUT NOW*, *"ADD N MORE MEAL(S) TO CHECKOUT"*,
+  *"REMOVE N MEAL(S) TO CHECKOUT"*), B stops with `stopped: the plan already holds meals` and presses nothing: the
+  store shows none of them for an empty plan (its bar hidden, its sidebar reading *"Your cart is empty"*; § 10's
+  build note has the files). It never removes a visitor's meals, so a reload or a second run of a link adds nothing.
+  The check runs on every poll of B's wait, the last just before the first press: a meal already chosen shows the
+  store's counter instead of *Add to Cart*, so a reload never "finds" the link's meals. Every stop has its own line:
+  `not on this page: …`, `the plan needs N meals; the link has M`, `the plan already holds meals` (all before any
+  press), `no checkout control` (after the meals), `/checkout not reached` (after CHECKOUT).
 - **The offer code** is checked but not applied in this build.
 - ⛔ **Not yet run on the live store**: fill A, the full-plan rule, fill B's second presses of a meal (the
-  2026-09-29 run pressed each of its two meals once), and fill B's § 8 finish.
+  2026-09-29 run pressed each of its two meals once), fill B's § 8 finish, and fill B's § 10 check.
 
 ```sh
 npm --prefix boston-2026-10 run build:storefront   # writes dist-storefront/, prints each file's size and version line

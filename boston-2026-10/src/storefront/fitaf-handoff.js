@@ -10,13 +10,13 @@
 // What it does (SPEC-rung2 § 6): a link to /order?mpid=N#fitaf=<payload> fills the cart, then goes to /checkout:
 // fill A loads it; fill B presses the store's own CHECKOUT (§ 8). Any failure removes the fragment and stops: the
 // visitor keeps the plan's order page, as rung 1 leaves it.
-// The body of the one function below is not indented, to spend the 5 KB on code rather than spaces.
+// The body of the one function below is not indented, to spend the 5 KB on code rather than spaces; for the same
+// reason, neighbouring declarations share one `var`.
 (function () {
 "use strict";
 // A writes the store's cart storage; B presses the page's own buttons. A built text holds one.
 var FILL = "B";
-var w = window;
-var loc = w.location;
+var w = window, loc = w.location;
 // An ordinary visit costs this one read of location.hash: no storage, no timer, no listener, no request,
 // no log. Everything below runs only on a #fitaf= link.
 if (loc.hash.slice(0, 7) !== "#fitaf=") return;
@@ -46,7 +46,8 @@ function guard(fn) {
       // <fill A>
       try { if (undo) undo(); } catch (e2) { log("restore failed: " + e2.message); }
       // </fill A>
-      try { drop(); } catch (e3) { /* the page stays as it is */ }
+      // Removing the fragment can fail too; then the page stays as it is.
+      try { drop(); } catch (e3) {}
       log("stopped: " + e.message);
     }
   };
@@ -66,8 +67,7 @@ function payload(s) {
   if (!p || p.v !== 1) fail("unknown version");
   if (!whole(p.mpid, 1e9)) fail("bad mpid");
   if (!Array.isArray(p.items) || !p.items.length) fail("no items");
-  var names = [];
-  var total = 0;
+  var names = [], total = 0;
   p.items.forEach(function (it) {
     if (!it || typeof it.name !== "string" || !it.name) fail("bad meal name");
     // A meal named twice would be two meals to B, pressing one card twice over; its count belongs in one item.
@@ -130,11 +130,9 @@ function fillA(p) {
   loc.replace("/checkout");
 }
 // </fill A>
-
 // <fill B>
 // B polls every 200 ms for at most 10 s: the meal cards render after the store's own start-up.
-var POLL_MS = 200;
-var MAX_POLLS = 50;
+var POLL_MS = 200, MAX_POLLS = 50;
 // Fill B finds each meal by its name as the page shows it, and presses the card's own controls.
 function text(el) { return el.textContent.replace(/\s+/g, " ").trim(); }
 function first(el, sel, ok) { return [].filter.call(el.querySelectorAll(sel), ok)[0]; }
@@ -156,11 +154,22 @@ function moreButton(c) {
     return /increase|plus|\+/i.test(label) && !/favo|wish/i.test(label);
   });
 }
+// SPEC-rung2 § 10: B presses the plan's whole count, so it starts only on a plan that holds NOTHING yet, and never
+// removes a visitor's meals. Read from the store's public code (§ 10's build note): the store displays a control in its
+// checkout slot only while this plan holds something. Below 1025 px its cart bar, hidden while the plan is empty, holds
+// CHECKOUT, "Add N more meal(s)" or "Limit Exceeded"; at 1025 px and wider its cart sidebar, which shows "Your cart is
+// empty" instead, holds CHECKOUT NOW, "ADD N MORE MEAL(S) TO CHECKOUT" or "REMOVE N MEAL(S) TO CHECKOUT". Any of them
+// displayed, enabled or not, outside a meal card: stop, pressing nothing. Matched loosely, because a false "held"
+// only stops B, while a false "empty" would press a whole plan on top of the visitor's.
+var HELD = /checkout|more meal|limit exceeded/i;
 // Wait until EVERY meal's card and Add to Cart are on the page, then press; a meal still missing after 10 s
-// refuses the whole payload with nothing pressed.
+// refuses the whole payload with nothing pressed. The § 10 check runs on every poll, the last one just before the
+// first press: a meal already chosen shows the store's quantity counter in place of its Add to Cart, so on a reload
+// the payload's meals are never all found, and a check made only once they were would never run.
 function fillB(p) {
   var polls = 0;
   guard(function poll() {
+    if (control(HELD, 1)) fail("the plan already holds meals");
     var missing = p.items.filter(function (it) { return !addButton(card(it.name)); });
     if (!missing.length) return press(steps(p.items), 0);
     if (++polls >= MAX_POLLS) fail("not on this page: " + missing.map(function (it) { return it.name; }));
@@ -178,9 +187,7 @@ function steps(items) {
 // here with part of the payload already in the cart: a press cannot be taken back.
 function press(list, k) {
   if (k === list.length) return checkout();
-  var name = list[k][0];
-  var n = list[k][1];
-  var c = card(name);
+  var name = list[k][0], n = list[k][1], c = card(name);
   var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + name + " after " + n);
   b.click();
   w.setTimeout(guard(function () { press(list, k + 1); }), POLL_MS);
@@ -188,14 +195,14 @@ function press(list, k) {
 // SPEC-rung2 § 8. On a meal-plan page the store's Add to Cart puts a meal in the plan's PENDING list, not the cart;
 // only the store's own checkout control commits that list and routes to /checkout inside the app. So B never loads
 // /checkout and never writes storage: it presses that control, found like the meals, by its visible label.
-// control(labels): the first button whose text, whitespace collapsed and in any case, is exactly one of `labels`;
-// enabled; displayed (the page renders a desktop and a mobile layout, one of them hidden); not inside a meal card.
-// CHECKOUT is the phone and tablet bar's label; CHECKOUT NOW the desktop sidebar's (1025 px and wider); both run
-// the store's same checkout (§ 8, amended 2026-09-29).
-function control(labels) {
+// control(re, any): the first button whose text, whitespace collapsed, matches `re`; enabled, unless `any` (§ 10's
+// check reads the store's disabled states too); displayed (the page renders a desktop and a mobile layout, one of them
+// hidden); not inside a meal card. § 8's labels are anchored, so each is matched exactly and in any case: CHECKOUT is
+// the phone and tablet bar's; CHECKOUT NOW the desktop sidebar's (1025 px and wider); both run the store's same
+// checkout (§ 8, amended 2026-09-29).
+function control(re, any) {
   return first(w.document, "button", function (b) {
-    return !b.disabled && labels.indexOf(text(b).toLowerCase()) >= 0 && b.getClientRects().length &&
-      !b.closest("app-product-card,app-product-card-mobile");
+    return (any || !b.disabled) && re.test(text(b)) && b.getClientRects().length && !b.closest("app-product-card,app-product-card-mobile");
   });
 }
 // Wait for an enabled CHECKOUT (short of the plan's count the store shows a disabled "Add N more meals"), remove the
@@ -203,13 +210,12 @@ function control(labels) {
 // CONTINUE TO CHECKOUT, once, and add nothing from it. Each wait is at most 50 polls of 200 ms. No CHECKOUT: the meals
 // stay in the visitor's pending list, as if they had pressed the buttons themselves, and the page is the store's own.
 // k counts the presses made: 0, CHECKOUT not yet; 1, CHECKOUT; 2, the dialog's too (nothing more is looked for:
-// its label list is empty, never missing, so the wait for /checkout goes on).
+// its pattern, (?!), matches no text at all, not even an empty one, so the wait for /checkout goes on).
 function checkout() {
-  var k = 0;
-  var polls = 0;
+  var k = 0, polls = 0;
   guard(function poll() {
     if (k && loc.pathname === "/checkout") return log("done: /checkout");
-    var b = control([["checkout", "checkout now"], ["continue to checkout"], []][k]);
+    var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]);
     if (b) { if (!k) drop(); b.click(); k++; polls = 0; }
     else if (++polls >= MAX_POLLS) return k ? log("stopped: /checkout not reached") : fail("no checkout control");
     w.setTimeout(guard(poll), POLL_MS);
@@ -219,8 +225,7 @@ function checkout() {
 
 guard(function () {
   if (loc.pathname !== "/order") fail("not the order page");
-  var p = payload(loc.hash.slice(7));
-  var m = /[?&]mpid=([^&]*)/.exec(loc.search);
+  var p = payload(loc.hash.slice(7)), m = /[?&]mpid=([^&]*)/.exec(loc.search);
   if (!m || m[1] !== String(p.mpid)) fail("mpid " + p.mpid + " is not this page's");
   log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
   // <fill A>

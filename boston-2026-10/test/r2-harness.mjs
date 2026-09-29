@@ -496,3 +496,40 @@ export async function heldCase(text, { width = "bar", pending = [MEALS[0]], ...o
   assert.ok(h.timers.delays.length * POLL_MS < MAX_WAIT_MS, `stopped at once, not after the wait: ${h.timers.delays.length} polls`);
   return { h, page, store, before };
 }
+
+/**
+ * R2-22 (§ 10): a first run of `text` on a page at `width` until `after` meals are pressed; then the page reloads — a
+ * new page over the same store (the pending list outlives the load, as the store's storage does) and a fresh window
+ * on the same address, the fragment still in it — and `text` runs again. Asserts: the second run presses nothing,
+ * stops with § 10's line at once (not after its 10 s wait), removes the fragment, and the pending meals stay exactly
+ * the first run's. `afterFirstPress` "stepper" is the store's own case: a meal already chosen shows its counter in
+ * place of Add to Cart. R2-23 runs a mutant text through this and expects it to throw.
+ */
+export async function reloadCase(text, { width = "bar", afterFirstPress = "stepper", after = 7 } = {}) {
+  const store = { pending: [] };
+  const fragment = fragmentFor(CHECKOUT_PAYLOAD);
+  const first = await orderPage({ width, afterFirstPress, store });
+  const h1 = fakeWindow({ fragment, page: first, storage: untouchableStorage() });
+  run(text, h1.window);
+  while (first.log.length < after) assert.ok(h1.timers.step(), "the first run still pressing");
+  // The page reloads here: the first window's timers never run again.
+  assert.equal(h1.url.hash, fragment, "fixture control: the link is still in the address when the page reloads");
+  assert.equal(store.pending.length, after, "fixture control: the first run's meals are pending");
+  const pressed = [...store.pending];
+  const second = await orderPage({ width, afterFirstPress, store });
+  const h2 = fakeWindow({
+    path: h1.url.pathname + h1.url.search,
+    fragment: h1.url.hash,
+    page: second,
+    storage: untouchableStorage(),
+  });
+  assert.equal(second.displayed().length, 1, "fixture control: the store shows the pending meals");
+  run(text, h2.window);
+  h2.timers.drain();
+  assert.deepEqual(second.all, [], "the reload presses nothing");
+  assertRefused(h2, "/order?mpid=21", /stopped: the plan already holds meals$/);
+  assert.ok(h2.info.includes(HELD_LINE), JSON.stringify(h2.info));
+  assert.deepEqual(store.pending, pressed, "the pending meals stay exactly the first run's");
+  assert.ok(h2.timers.delays.length * POLL_MS < MAX_WAIT_MS, `stopped at once: ${h2.timers.delays.length} polls`);
+  return { second, pressed };
+}
