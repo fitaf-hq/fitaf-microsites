@@ -461,3 +461,31 @@ And most slides are names alone because the page had loaded only the first cards
 **Two constraints any contract for it must settle** (the orchestrator's): a sprite sheet sent down is **a request our
 block makes** (the first exception to *nothing is fetched*, § 1) and puts photographs on Fit AF's host; and the
 animation's clean exit keys on fill B's `done`, which already exists.
+
+## 13a. Measured, 2026-09-30 07:03–07:05 PDT: the live link on Chrome's 4G network profiles
+
+**The run**: the live smoke in `--live` mode (the link alone; the store's Footer block `ace775b` did the work), once on
+Chrome's *Fast 4G* profile (about 8 Mbit/s down, 165 ms latency) and once on *Slow 4G* (about 1.4 Mbit/s, 563 ms), at
+1280 and 390 px, with a page-relative clock on the screen's step line and the checkout's arrival (the Advisor's go
+for this one throttled run; release `main-6F2NMA4I.js`). **All four passed.** ⚠ The network only: the CPU was this
+Mac's, so a phone is slower.
+
+| seconds from opening the link | Fast 4G 1280 | Fast 4G 390 | Slow 4G 1280 | Slow 4G 390 |
+|---|---|---|---|---|
+| **A.** the screen appears (fill B's checks passed; no meal card on the page yet) | 2.4 | 1.6 | 6.0 | 6.0 |
+| the first meal card exists | 3.5 | 2.8 | 11.4 | 11.5 |
+| **B.** the 7 meals added (fill B's presses, 0.21 s apart) | 3.5 → 4.8 | 2.9 → 4.2 | 11.5 → 12.7 | 11.6 → 12.9 |
+| **C.** CHECKOUT pressed → `/checkout` arrives (`done`; the screen goes) | 5.1 → 10.2 | 4.4 → 9.5 | 12.9 → 21.5 | 13.1 → 20.0 |
+| the checkout's Total appears | 11.0 | 10.2 | 22.2 | 20.8 |
+
+**What it says for the design** (the orchestrator's reading, not a ruling):
+1. **Three waits, not one.** **A** (the screen up, no meal to show yet) lasts 1.1–5.6 s; **B** (the meals) lasts **1.3 s
+   on every profile**, because adding a meal is the page's own and asks the network for nothing; **C** (the store
+   opening its checkout) lasts **5.0–5.1 s on Fast 4G and 6.9–8.5 s on Slow 4G** (unthrottled, 4.1–4.5 s). ⇒ The
+   Advisor's *"roughly 2 to 10 seconds"* is **C**, and **A** is a second one of the same size on a slow connection.
+2. **The meals fly by because they must**: seven slides in 1.3 s. A carousel paced to the presses cannot be read; one
+   paced to its own clock outlives **B** and runs into **C**.
+3. **`done` comes before the page is ready**: the Total appears 0.7–0.8 s after the checkout component. An exit on
+   *"the page reports back that it's ready"* can key on the Total displayed rather than on `done`.
+4. On Slow 4G, the step line was **empty for 5.5–5.6 s** (A), the longest single stretch of the screen: the part the next
+   design most needs to fill.
