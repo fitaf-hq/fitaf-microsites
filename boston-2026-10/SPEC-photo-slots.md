@@ -36,6 +36,23 @@ never a criterion.**
   rule). So no photo is judged for text legibility, only for leaving the panel's region free (`slide`).
 - The same photo may win in one shape and lose in another; the Advisor's pipeline runs the crops per shape.
 
+## 2a. Amendment, 2026-09-30 — the screen slide's panel at the side
+
+**Proposed by the image team** (after its first job: of all the shapes, the 16:9 screen slide *"needs the most help ...
+it's really like 16:5"*, the Advisor's words to it), and **ruled by the Advisor** (2026-09-30 ~00:50 PDT, *"Yes, the
+right side"*): on a **screen** (16:9) the navy panel is the **right 40%, full height**, and the photo fills the **left
+60%**, a window of **1152 × 1080** px at 1920 × 1080, nearly square. The lower-40% band left a 1920 × 648 strip, a
+slice across a round plate.
+
+| slide | panel | the photo's window | pixels needed |
+|---|---|---|---|
+| **screen** (16:9) | the right 40%, full height | the left 60% | **1152 × 1080** (replaces 1920 × 1080 above) |
+| **phone** (9:16) | the lower 40% band, unchanged | above the band | **1170 × 2080**, unchanged |
+
+⚠ **Found at the change**: the mock-ups' landscape slide never drew the lower-40% band this file described; its panel
+was a box floating at the bottom left. Both shapes now draw what this file says. The mock-ups apply it by orientation
+(`mockups/mockups.css`), so a screen share at another landscape size keeps the same proportions.
+
 ## 3. The weight budget (the page only)
 
 | file | budget | format |

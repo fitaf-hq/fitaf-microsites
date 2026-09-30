@@ -33,7 +33,9 @@ folder is wholly this build's output and starts empty on every run. **Never hand
 - **The slideshow**: → ↓ PageDown or space forward, ← ↑ PageUp back, Home and End, and the ends wrap; a
   click goes forward, a click on the left quarter goes back; `#3` in the URL opens slide 3. **L** shows or
   hides the legend (open by default on a wide screen, closed on a phone), **N** shows the file names behind
-  its plain labels, **F** asks for full screen.
+  its plain labels, **F** asks for full screen. **On a screen (landscape) a photo slide's navy panel is the
+  right 40%, full height, and the photo fills the left 60%; on a phone (portrait) the panel is a band along
+  the bottom** (`SPEC-photo-slots.md` § 2a, the Advisor's ruling of 2026-09-30).
 - **The legend's words** are data too: [`legend.json`](legend.json) holds its title, its note ("Change one
   of these, and every piece that uses it changes."), the switch's label and a plain label per source
   (`what: from`), as the Advisor set them on 2026-09-29. It must name every source and no other (the build

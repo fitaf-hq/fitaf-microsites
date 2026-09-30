@@ -134,10 +134,14 @@ body.legend-open .deck { right: 320px; }
 .slide-bg .slot-label b { font-size: clamp(13px, 2vmin, 20px); }
 .slide-logo { position: absolute; top: 4vmin; left: 4vmin; padding: 1.2vmin 1.6vmin; background: var(--white); border-radius: var(--radius); }
 .slide-logo .logo { width: clamp(80px, 13vmin, 170px); }
+/* A screen (landscape): the photo fills the left 60% and the panel is the right 40%, full height, so the dish shows
+   in a nearly square window (SPEC-photo-slots § 2a). A phone (portrait): the panel is the lower 40% band (below). */
+.slide-photo .slide-bg { right: 40%; }
 .slide-panel {
-  position: absolute; left: 5vmin; bottom: 6vmin; max-width: min(64%, 1000px); padding: 3.4vmin 4vmin 3.6vmin;
-  background: linear-gradient(var(--accent), var(--accent)) top / 100% 1vmin no-repeat, var(--navy);
-  border-radius: var(--radius); color: var(--white);
+  position: absolute; top: 0; right: 0; bottom: 0; width: 40%; padding: 6vmin 5vmin;
+  display: flex; flex-direction: column; justify-content: center;
+  background: linear-gradient(var(--accent), var(--accent)) left / 1vmin 100% no-repeat, var(--navy);
+  color: var(--white);
 }
 .slide-kicker { margin: 0 0 1vmin; font: 600 clamp(15px, 2.2vmin, 24px)/1.2 var(--head); letter-spacing: .1em; text-transform: uppercase; }
 .slide-line { margin: 0; font: 700 clamp(26px, 6vmin, 64px)/1.12 var(--head); letter-spacing: -.01em; }
@@ -171,7 +175,11 @@ body.legend-open .legend-float { display: block; }
 }
 
 @media (orientation: portrait) {
-  .slide-panel { left: 0; right: 0; bottom: 0; max-width: none; border-radius: 0; padding: 4.5vmin 6vmin 9vmin; }
+  .slide-photo .slide-bg { right: 0; }
+  .slide-panel {
+    top: auto; left: 0; right: 0; bottom: 0; width: auto; display: block; padding: 4.5vmin 6vmin 9vmin;
+    background: linear-gradient(var(--accent), var(--accent)) top / 100% 1vmin no-repeat, var(--navy);
+  }
   .slide-line { font-size: clamp(24px, 7.4vmin, 56px); }
   .slide-close { grid-template-columns: minmax(0, 1fr); align-content: center; justify-items: center; gap: 5vmin; padding: 8vmin 6vmin 16vmin; text-align: center; }
   .close-text { justify-items: center; }
