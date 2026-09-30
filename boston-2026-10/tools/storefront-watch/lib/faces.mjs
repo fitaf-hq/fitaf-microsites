@@ -14,7 +14,11 @@
 //        exactly H3, H4, H6, H7, H8 and H10's;
 //   W15  (§ 12, a report, not a pass rule) whether the store's extras pop-up opened (expected: not, since fill B sets the
 //        store's own key before CHECKOUT) and the seconds from fill B's press of CHECKOUT to /checkout: from the last
-//        step line (written just after that press) to the store's app-checkout arriving.
+//        step line (written just after that press) to the store's app-checkout arriving;
+//   W16  (§ 15.3, § 15.5) the Fit AF logo, the store's own header image in an img of ours, alt "Fit AF": on the progress
+//        screen (the recorder notes it arriving there) and on the deep-carted checkout (first in app-checkout, found and
+//        displayed), each reported found or absent; ABSENT FAILS THE WIDTH. Its own rule, logoVerdict, beside
+//        facesVerdict (lib/smoke.mjs runs both), judged only once fill B reached done, as W11–W14.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -73,12 +77,14 @@ export const CONTROLS = "input, select, textarea, button, iframe, a[href], [role
 export const PAY = [".checkout__submit", ".summary__pay-button"];
 /** How long W12 waits for each of H1–H6 to render on /checkout (the store renders its pop-up host deferred). */
 export const FACES_MS = 10_000;
+/** § 15.3 (W16): a Fit AF logo of ours, on the screen or in app-checkout. The store's own header logo is neither. */
+export const LOGO = 'img[alt="Fit AF"]';
 
 /**
  * In the page, from before its own scripts (page.evaluateOnNewDocument): record, in order, the screen arriving, each
  * text its step line shows, the style arriving, the mark, and the screen going. Into window.__fitafFaces.
  */
-export function recordFaces({ screen, style }) {
+export function recordFaces({ screen, style, logo }) {
   const events = [];
   window.__fitafFaces = events;
   let last = null;
@@ -104,6 +110,9 @@ export function recordFaces({ screen, style }) {
         push("step", { text: line });
       }
     }
+    // W16: the Fit AF logo arriving on the screen, once.
+    const mark = document.getElementById(screen)?.querySelector(logo);
+    if (mark && !events.some((x) => x.e === "logo")) push("logo", { src: mark.getAttribute("src") });
   }).observe(document, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] });
 }
 
@@ -117,7 +126,7 @@ export function readRecorded(screen) {
  * and label, so a report can name it; the sets are compared by element. The style is disabled only for W11's second
  * reading, and enabled again before anything else is read.
  */
-export function readFaces({ hide, controls, pay, total: totalSel, style: styleId }) {
+export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo }) {
   const style = document.getElementById(styleId);
   const checkout = document.querySelector("app-checkout");
   const shown = (el) => el.getClientRects().length > 0;
@@ -160,6 +169,10 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
   } else {
     out.hide = hide.flatMap((h) => h.selectors.map((selector) => ({ id: h.id, selector, found: document.querySelectorAll(selector).length, displayed: null })));
   }
+  // W16: the Fit AF logo in the checkout component, found and displayed: a CHILD of app-checkout, where the block puts it,
+  // so an image of the store's own inside the checkout, whatever its alt, is never read as ours.
+  const logos = checkout ? [...checkout.querySelectorAll(`:scope > ${logo}`)] : [];
+  out.logo = { found: logos.length, displayed: logos.filter(shown).length };
   const scope = checkout || document.body;
   const renews = [];
   const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
@@ -181,7 +194,7 @@ const REQUIRED_FOUND = (faces) => faces.hide.every((h) => h.found > 0 || CONDITI
  * passed. The conditional ones are reported as they are at that reading.
  */
 export async function readCheckoutFaces(page, poll) {
-  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID };
+  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO };
   return poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f) && f.total?.found > 0, { timeoutMs: FACES_MS, everyMs: 500 });
 }
 
@@ -243,6 +256,30 @@ export function extrasReport(events = []) {
     opened: events.some((e) => e.e === "extras+"),
     checkoutSeconds: arrived && pressed ? Math.round(arrived.t - pressed.t) / 1000 : null,
   };
+}
+
+/**
+ * W16 (§ 15.3): the Fit AF logo on the screen (a "logo" event recorded) and on the checkout (readFaces's `logo`: found
+ * and displayed). Returns { reasons }: none is a pass. Judged only once fill B reached done, as W11–W14; a run that did
+ * not is failed by the smoke's own rule.
+ */
+export function logoVerdict(faces) {
+  const reasons = [];
+  if (!faces?.done) return { reasons };
+  if (!(faces.events ?? []).some((e) => e.e === "logo")) reasons.push("W16: no Fit AF logo on the progress screen (absent)");
+  const l = faces.checkout?.logo;
+  if (!l) reasons.push("W16: the checkout's logo was not read (/checkout not read)");
+  else if (!l.found) reasons.push("W16: no Fit AF logo on the deep-carted checkout (absent)");
+  else if (!l.displayed) reasons.push("W16: the Fit AF logo on the deep-carted checkout is there but not displayed");
+  return { reasons };
+}
+
+/** W16's line for the report: each logo found or ABSENT. */
+export function logoLine(faces) {
+  const screen = (faces?.events ?? []).some((e) => e.e === "logo") ? "found" : "ABSENT";
+  const l = faces?.checkout?.logo;
+  const checkout = !l ? "not read" : !l.found ? "ABSENT" : l.displayed ? "found" : "found, NOT displayed";
+  return `W16: the Fit AF logo on the screen: ${screen}; on the checkout: ${checkout}`;
 }
 
 /** W15's line for the report. */

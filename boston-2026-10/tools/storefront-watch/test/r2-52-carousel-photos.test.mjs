@@ -54,7 +54,9 @@ test("R2-52: a loaded photo on its slide (the card's currentSrc); no src yet, or
       { name: MEALS[3], img: `${origin}/img/meal-3.svg` },
     ]);
     assert.ok(screen.slides.slice(4).every((s) => s.img === null), "cards with no photo: the name alone");
-    const imgs = await run.page.evaluate(() => [...document.querySelectorAll("#fitaf-screen img")].map((i) => ({ complete: i.complete, width: i.naturalWidth })));
+    // The slides' imgs (the carousel's, .c): since SPEC-rung2-progress-and-checkout § 15.3 the screen also carries the
+    // Fit AF logo, the store's header image, which is W16's to check.
+    const imgs = await run.page.evaluate(() => [...document.querySelectorAll("#fitaf-screen .c img")].map((i) => ({ complete: i.complete, width: i.naturalWidth })));
     assert.deepEqual(imgs, [{ complete: true, width: 320 }, { complete: true, width: 320 }], "two imgs, each already drawn from the page's own copy");
     assert.equal(await run.verdict(10_000), DONE);
     assert.deepEqual({ a: store.hits("/img/meal-0.svg"), b: store.hits("/img/meal-3.svg"), c: store.hits("/img/pending-2.svg") }, before, "not one new request");

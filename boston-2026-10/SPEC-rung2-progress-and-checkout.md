@@ -461,3 +461,165 @@ And most slides are names alone because the page had loaded only the first cards
 **Two constraints any contract for it must settle** (the orchestrator's): a sprite sheet sent down is **a request our
 block makes** (the first exception to *nothing is fetched*, § 1) and puts photographs on Fit AF's host; and the
 animation's clean exit keys on fill B's `done`, which already exists.
+
+## 15. Amendment, 2026-09-30 — for the Advisor's 21:00 paste: the key ignores the store's tag, fill B waits for the cards, and the Fit AF logo
+
+**Ruled by the Advisor** (2026-09-30): *"Please build and rehearse"* (the first two, proposed after the day's live
+check) and *"We also want to make sure that the Fit AF logo appears on the interstitial and checkout pages."* The paste
+is his, at a deployment session he set for 21:00 PDT. **Base**: the dev line at `56ef62e`, whose Footer block text is
+the live block's (`ace775b`, `c4ceb682…`). ⚠ **Not** the Storybook branch (`boston/rung-2-screen-next`, the screen in
+its own module, 236 bytes more): it is rebased on this after the paste.
+
+**What the live check found** (2026-09-30, the test address's *Continue to checkout*): (1) the store dropped a `🟠NEW:`
+tag from two meal names mid-week, so their keys stopped matching and fill B refused them; (2) in 2 of 7 runs the store
+drew no meal card within fill B's 10 s, so fill B refused every meal of the link with no card on the page. Both failed
+safe (nothing pressed, the plain order page).
+
+### 15.1 The key ignores a leading marketing tag
+
+`mealKey` (`src/storefront/meal-key.js`, the one function both the link tool and fill B carry) removes **a leading tag**
+before it collapses whitespace and hashes: an emoji (a UTF-16 surrogate pair, or a character in U+2600–U+27BF), then
+optional space, an uppercase word of 2 to 12 letters, optional space, a colon, and the space after it. So
+*"🟠NEW: Blackened Chicken Caesar Salad"* and *"Blackened Chicken Caesar Salad"* share one key, and a name with no tag
+keys **exactly** as today (every link built today still works). *"Smart Oats: Almond Joy"* is not a tag (no emoji).
+⛔ **The shipped text stays ASCII**: the pattern is written with `\u` escapes, since the store's admin reads the block
+as HTML. (The KMS's own badge rule, `N2`, names `🟠NEW:` alone; this is its generalisation to a future tag.)
+
+### 15.2 Fill B waits for the cards before its 10 s
+
+Today fill B's 10 s (50 polls of 200 ms) starts when it does. **Now it starts at the first poll that finds a titled
+`app-product-card`.** Before that, fill B waits for the page's cards **up to 30 s**, then stops with `stopped: no meal
+cards on this page`, pressing nothing. Every other rule is unchanged (§ 10's check that the plan is empty runs on every
+poll; a meal still missing 10 s after the first card refuses the whole link, naming its key). The screen's 90 s clock is
+unchanged. The watch's longest-run sum (`FILL_B_LONGEST_MS`, `SPEC-storefront-watch.md` W9e) moves with it.
+
+### 15.3 The Fit AF logo on the screen and the checkout
+
+The block shows **the store's own logo**: the `src` of the page's `img.header__logo-image` (the image the store's
+header already loads, from its own image host), in an `img` the block creates with the DOM (no markup), `alt="Fit AF"`,
+not a link and not focusable.
+- **On the screen**: centred above the step line, about 48 px high.
+  **Ruled by the Advisor, 2026-09-30, after seeing it: top, on a white plate** (*"Top, on a white plate"*; the mock-ups'
+  logo plate, since the logo's grey tagline was faint on navy): the first thing on the screen, above the title, on a
+  white rounded plate. The plate is the image's own padding and background (the screen's `--white` token): a separate
+  plate element measured 10,308–10,309 bytes, over the 10,240 ceiling. The checkout's logo is unchanged.
+- **On the deep-carted checkout**: centred above the checkout, about 40 px high, while the store's header stays hidden
+  (H1). Only for a deep-carted visit (the page's mark, as every H rule).
+- ⛔ **No image URL is written into the shipped text**: the `src` is read from the page, so no new host, no new file, and
+  nothing of ours to host. **No header logo on the page: no logo, and nothing else changes.**
+
+### 15.4 Size and text
+
+The Footer block at most **10,240 bytes** (today 9,614; the build reports the new count); **every character ASCII**; no
+`<` but the block's own two (§ 11).
+
+### 15.5 Cases (`node --test`, no network; the site's and the watch's suites)
+
+| | case | expect |
+|---|---|---|
+| R2-66 | the key and a tag | `🟠NEW: X` and `X` share a key; a name without a tag keys as before (R2-25's vectors unchanged); `Smart Oats: Almond Joy` keeps its words; the link tool and the shipped script agree |
+| R2-67 | ⭐ fill B, cards late | the fixture page draws its cards 12 s after fill B starts: `done: /checkout` (today: refused); ⭐ mutant: the window counted from fill B's start, fails |
+| R2-68 | fill B, no cards | none for 30 s: `stopped: no meal cards on this page`, nothing pressed |
+| R2-69 | fill B, a meal missing | the cards drawn, one meal absent: refused 10 s after the first card, naming its key (unchanged) |
+| R2-70 | the logo | with a header logo: the screen and the deep-carted checkout each show one `img` with its `src` and `alt="Fit AF"`, nothing focusable added; without one: none, and the fill unchanged |
+| R2-71 | the text | every character of the Footer block and the console file is ASCII; no URL in them that the live block lacks; at most 10,240 bytes |
+| W16 | the watch, live | the smoke reports the logo on the screen and on the checkout (found or absent); absent fails the width |
+
+### 15.6 After the build, before the paste (the orchestrator's)
+
+A clean-clone re-run; then **the rehearsal on the live store**: the watch's smoke with `--script` (this build's fill-B
+console file, pasted into the live page by the smoke), at both widths, the standing rule's *"before a paste"*. After the
+Advisor's paste: the smoke on the live block, and the watch's expected Footer moved by its accept command.
+
+## 16. Built, 2026-09-30 — found at the build, not ruled
+
+Red at `4657335` (R2-66–R2-71, W16, W9e's new sum) and `428e25a` (red (2): the tests' own reference key, below), built
+at `d57a273`; the screen's logo moved to the top on a white plate by the Advisor's ruling after the rehearsal (§ 15.3),
+red at `fad9947`, built at `ac6c8e8`. §§ 15.1–15.6 above are unchanged; this section says what the build chose where they left a choice, and
+what it found.
+
+- **The tag (15.1), as built**: `mealKey` first removes
+  `/^\s*([\ud800-\udbff][\udc00-\udfff]|[☀-➿])\s*[A-Z]{2,12}\s*:\s/` (written with `\u` escapes; a pattern
+  without the `u` flag reads a surrogate pair as two code units, which its first alternative matches), then collapses
+  and trims as before. *"Optional space"* is read as any run of whitespace, or none, before the emoji, after it and
+  before the colon, so a card's title keys alike before and after its whitespace is collapsed (R2-25c's rule). *"The
+  space after it"* is required: `🟠NEW:X` is not a tag and keys as before; the rest of the space goes with the
+  collapse and trim. **Not covered, by the contract's definition of an emoji**, and so keyed as before: a single
+  character outside U+2600–U+27BF (`⭐`, U+2B50, pinned in R2-66b), an emoji followed by a variation selector (U+FE0F)
+  before the word, and a flag (two surrogate pairs). The link tool and fill B carry the one function (R2-66c); it
+  costs 88 bytes.
+- ⚠ **Found running the whole suite after the first red commit: the tests' reference key hashed the tag.** The Chef's
+  Choice fixture week (`test/fixtures/picks/2026-10-04.json`, invented names) names `🟠NEW: Maple Dijon Pork
+  Tenderloin`, and CC-2a and CC-2c compute their expected links with `r2-harness.mjs`'s `refKey`. So a second red commit
+  (`428e25a`) gives `refKey` the rule too, read independently (`refUntagged`: by code point, a first code point past 16
+  bits or in U+2600–U+27BF), and CC-2c's changed-key model with it; R2-66 then checks every tagged form against it, and
+  "keys as before" against § 11's key alone. That meal's links now carry `fi73q` (was `h2dau`). The committed week
+  (`data/picks/2026-10-04.json`, `56ef62e`) names no tagged meal, so the page's links do not change.
+- **"A titled `app-product-card`" (15.2)**: one whose `.product__content-title` has text, whitespace collapsed. The
+  poll that first finds one is the first of the 50, so a page whose cards are there at once is refused at the 50th poll,
+  9.8 s in, exactly as R2-10a has always counted; a meal missing is refused at the 50th poll counting the first card's
+  (R2-69). Once started, the 10 s runs on whatever the page does after (cards removed and redrawn do not restart it).
+- **How the 30 s is counted**: `NO_CARDS = 150` polls, counted as R2-28 counts the wait after CHECKOUT: the first poll at
+  0 s, the 150th at 29.8 s the last; with no titled card by it, fill B stops there with `stopped: no meal cards on this
+  page`, having set 149 timers (R2-68); cards drawn before the 150th poll are found by it (R2-68b). Its own constant
+  rather than `AFTER_CHECKOUT`'s 150, so the two waits can change apart; W9e reads it from the built text. The § 10
+  check runs on every poll of both waits.
+- ⚠ **Fill B's longest run is now 111.4 s** (30 s for the first card, 10 s for the meals, 7 presses, 10 s for CHECKOUT,
+  30 s and 30 s after it), **past the screen's 90 s clock**, which § 15.2 leaves unchanged: in the worst case the screen
+  goes at 90 s before fill B's verdict, and the visitor sees the order page as fill B has it, as at a stop. The watch's
+  `FILL_B_LONGEST_MS` is 111.4 s and its ceiling (`HANDOFF_MS`) 126.4 s (W9e).
+- **The logo's source (15.3)**: *"the `src` of the page's `img.header__logo-image` (the image the store's header already
+  loads)"* is read as the image the header **has loaded**: an img is made only once that image is `complete` with a
+  `naturalWidth`, and its `src` is the header image's `currentSrc` (its `src`, when it has no `srcset`), as the carousel
+  reuses a card's photo (§ 2 item 2) and for the same reason, § 1's *nothing is fetched*. W16b counts the requests on
+  the synthetic store (`no-store`): one per page load, none by either logo of ours. A header image still loading gives no
+  logo and no img until it has loaded (R2-70b); no header image, no logo, and the fill's presses, history writes, lines
+  and timers are the same (R2-70).
+- **On the screen** (as ruled after the rehearsal, § 15.3): the **first element of the screen's box, directly above
+  the title** (the `h2`), inline style
+  `display:block;margin:0 auto 16px;height:48px;padding:8px 10px;border-radius:8px;background:var(--white)`: the
+  image's own padding, rounded corners and background make the white plate (the mock-ups' plate is 8px 10px of padding
+  on `--white`); a plate element around it measured 10,308 bytes (a rule for it) and 10,309 (styled inline), over the
+  ceiling. R2-70 reads it: first, above the title, a white background (the token, not a raw colour), a radius and
+  padding. At `d57a273` it sat directly above the step line, as § 15.3 first read. Tried at every poll of fill B's wait
+  and at every press until it is placed, once: on the live page the block runs when the store injects it, likely before
+  its header's logo has loaded, so ⚠ **the logo can appear after the screen does**, pushing the title down as it
+  arrives. The carousel's photo rule is `#fitaf-screen .c img` (the same slides), so the logo is not drawn as a slide.
+- **On the checkout**: at done, after the mark and the style, the **first child of `app-checkout`**, inline style
+  `display:block;margin:16px auto;height:40px`. Inside the component, so it goes when the component does, as every H rule
+  stops applying (by construction: no case routes back and reads the logo); placed at done only, never on a stop (R2-70c); and with no rule in
+  `style#fitaf-deep`, which still only hides (R2-42b unchanged). ⚠ Not placed again if the visitor leaves the checkout in
+  the app and comes back (the H rules apply again; the logo does not). ⚠ If the store lays `app-checkout` out as a row,
+  the logo sits beside the checkout rather than above it: the rehearsal at both widths shows which. It needs
+  `app-checkout` on the page at done (on the synthetic store it is there when the address changes; on the live store,
+  the rehearsal shows); without it, no logo, and W16 fails the width.
+- **Not a link, nothing focusable**: an `img`, no `tabindex`, inside no link (R2-70 reads both).
+- **W16, as built** (`SPEC-storefront-watch.md` § 10): the screen's logo is an `img[alt="Fit AF"]` the recorder sees in
+  `#fitaf-screen`; the checkout's, one that is a child of `app-checkout`, found **and displayed**. Its own rule
+  (`logoVerdict`) beside `facesVerdict`, judged only once fill B reached done, so W10a–W14a's recorded outcomes are
+  unchanged. The synthetic store's header gains a generated logo; the watch's R2-52 counts the slides as `.c img`.
+- **The size (15.4)**: the text **10,105** bytes, the Footer block **10,224**, the console file **10,205** at
+  `ac6c8e8` (10,045, 10,164 and 10,145 at `d57a273`, before the plate's 60 bytes; 9,495, 9,614 and 9,595 at
+  `d5a371e`); every character ASCII; no `<` but the Footer block's own two; no URL but the live
+  block's `"/checkout"` and `"/order"` (R2-71). The three changes cost 750 bytes (about 88 for the key's tag, 181 for
+  the wait, 477 for the logo), which took the Footer block to 10,395, **155 over the ceiling**. **Recovered by layout
+  alone, no behaviour changed**: every line inside the block's function is indented one level less (a function's body
+  starts at the left edge), 200 bytes; `git diff -w d57a273~ d57a273` shows the logic alone. The source's `//` lines say
+  so.
+- **The pins**: R2-32's moved from `c4ceb682…` to `adf6024c…` (`d57a273`), then, with the plate, to
+  `914668ded95f6a8913e7ae0010661d26780700bd7443cbf93f9e4e8a875b41f6` (`ac6c8e8`). CC-8's golden (`test/cc-08-unchanged-golden.json`)
+  pinned the text too: its `footer_text_sha256` moved the same way, both times, and its `watch_expected_footer` did not, since it
+  names the block **live** in the store's Footer (`ace775b`, `c4ceb682…`), which this text replaces only at the paste;
+  the golden now names that text as `replaces`, and CC-8a's control reads it. `storefront/watch-baseline.json` is
+  untouched; after the paste, `accept --footer` moves it, and the golden's `watch_expected_footer` is regenerated and
+  `replaces` removed in the same commit.
+- **R2-71's "the live block"** is rebuilt from the commit the watch baseline's `expectedFooter` names, by this build,
+  and checked against that SHA-256 before its addresses are read; it needs the repository's history (a shallow clone
+  cannot rebuild it, and R2-71 then fails, saying so). R2-66b, R2-71 and R2-71b pass on the old text, as invariants
+  must; every other new case was red for its own reason.
+- ⬜ **`header__logo-image` is not in `storefront/dependencies.json`**: § 15 does not ask for it, and whether that
+  literal is in the release's files was not checked (no request to the store). A rename shows as W16's absent at the
+  next smoke; F2 would name it at the release if it were added.
+- ⬜ **The Storybook branch** (`boston/rung-2-screen-next`, 236 bytes more than the block it was built on) does not fit on
+  this text as it stands: 10,224 + 236 is over 10,240.
+- ⬜ **Not run on the live store**: any of it. The rehearsal (§ 15.6) is the orchestrator's.

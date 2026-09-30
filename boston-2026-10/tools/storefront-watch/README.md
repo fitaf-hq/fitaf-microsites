@@ -1,7 +1,8 @@
 # tools/storefront-watch — the storefront watch
 
 [`../../SPEC-storefront-watch.md`](../../SPEC-storefront-watch.md) is the contract (§§ 1–8, cases W1–W9 and W7b–W7f), with
-W10–W13 from [`../../SPEC-rung2-progress-and-checkout.md`](../../SPEC-rung2-progress-and-checkout.md) § 5. HMP
+W10–W13 from [`../../SPEC-rung2-progress-and-checkout.md`](../../SPEC-rung2-progress-and-checkout.md) § 5 (W14, W15 and
+W16 from its §§ 10, 12 and 15; the watch contract's §§ 9 and 10 are the build's notes). HMP
 releases the store's app without notice; the cart hand-off ([`../../SPEC-rung2-cart-handoff.md`](../../SPEC-rung2-cart-handoff.md))
 presses the store's own buttons, so a release can break it. This package flags every release within the hour and
 smoke-tests the hand-off on the live store on each one.
@@ -16,8 +17,8 @@ never does. The site's install and the deploy never get it (the rule of [`../REA
 
 ```sh
 npm --prefix boston-2026-10/tools/storefront-watch ci          # once, and after this lockfile changes
-npm --prefix boston-2026-10/tools/storefront-watch test        # W1–W13 (no network), F3/F4 verdicts, E1, P1–P2, W9d,
-                                                               # W10b–W13b, rung 2's browser cases R2-41c, R2-45–R2-52 (a local
+npm --prefix boston-2026-10/tools/storefront-watch test        # W1–W16 (no network), F3/F4 verdicts, E1, P1–P2, W9d,
+                                                               # W10b–W16b, rung 2's browser cases R2-41c, R2-45–R2-61 (a local
                                                                # synthetic store in headless Chrome; skipped without Chrome;
                                                                # W9d waits out fill B's real 30 s; about 2 minutes in all)
 npm --prefix boston-2026-10/tools/storefront-watch run watch                  # the hourly check (§ 2)
@@ -56,9 +57,9 @@ failure; it writes nothing unless it exits 0. Chrome: `CHROME_PATH` (or
 | `lib/site-code.mjs`, `lib/site-deps-hook.mjs` | the site's payload code and storefront build, imported, never re-implemented |
 | `lib/issue.mjs` | § 5: one issue per release (a marker in each body and comment carries the entry and the flags) |
 | `lib/report.mjs` | the report: printed, the issue's body, the CI job summary; a new entry's `Last-Modified` (§ 7, W8); a failed smoke width's page as text; the smoke's own report (`bin/smoke.mjs`) |
-| `test/` | `w1`–`w7` (§ 6), `w8`–`w9` (§ 7), `w7-accept-release` (§ 8: W7b–W7f, W7f a mutant), `w10-w13-faces` (W10a–W13a on recorded outcomes, W10b–W13b in Chrome, and F2 carrying the hide list's names), `f3-f4-verdicts`, `e1` (a browser check that cannot run is a flag, not an abort), `p1`/`p2` and W9d (plumbing in a real browser, against `test/browser-store.mjs` on 127.0.0.1) |
+| `test/` | `w1`–`w7` (§ 6), `w8`–`w9` (§ 7), `w7-accept-release` (§ 8: W7b–W7f, W7f a mutant), `w10-w13-faces` (W10a–W13a on recorded outcomes, W10b–W13b in Chrome, and F2 carrying the hide list's names), `w14`, `w15`, `w16-logo` (W16a on recorded outcomes, W16b in Chrome: the Fit AF logo on the screen and the checkout, and the header's image never fetched again), `f3-f4-verdicts`, `e1` (a browser check that cannot run is a flag, not an abort), `p1`/`p2` and W9d (plumbing in a real browser, against `test/browser-store.mjs` on 127.0.0.1) |
 | `test/r2-*.test.mjs`, `test/r2-browser.mjs` | ⭐ **the SITE's rung 2 cases that need a browser** (SPEC-rung2-progress-and-checkout § 5 and its § 8: R2-41c, the screen above a pop-up in the top layer, with its mutant; R2-45 and its mutant R2-46, R2-47, R2-48, R2-49, R2-51 with its mutants and R2-51b, R2-52 with real images): here because this package drives Chrome and the site's install never gets puppeteer-core. They run the site's own built text on the synthetic store, with their own readers (not `lib/faces.mjs`); the site's suite has the rest |
-| `test/browser-store.mjs` | the synthetic store on 127.0.0.1: the order page, the app's shell (H1, H2, H5: links and text only), and a synthetic `app-checkout` with the contract's names only (none of the store's code or markup); options for the subscription's state, a missing shell part, generated card images (loaded, no src, still loading), a route delay, a planted hang and a pop-up in the browser's top layer |
+| `test/browser-store.mjs` | the synthetic store on 127.0.0.1: the order page, the app's shell (H1, H2, H5: links and text only), and a synthetic `app-checkout` with the contract's names only (none of the store's code or markup); options for the subscription's state, a missing shell part, generated card images (loaded, no src, still loading), a route delay, a planted hang and a pop-up in the browser's top layer; and in its header the store's logo, `img.header__logo-image`, a generated rectangle at `/img/logo.svg` (`missing: ["logo"]` leaves it out) |
 
 **Inputs** (committed, beside the script they protect): [`../../storefront/`](../../storefront/README.md),
 `dependencies.json` and `watch-baseline.json`.
@@ -91,13 +92,16 @@ failure; it writes nothing unless it exits 0. Chrome: `CHROME_PATH` (or
   the order is one-time (W13), and, by § 10, reports H7–H10 (the discounts, the app banner, the price rows, the tip;
   each conditional) and requires the Total (`.summary__total`) displayed (W14), W11 allowing exactly H3, H4, H6, H7,
   H8 and H10's controls to be hidden. By § 12 it reports (W15, not a pass rule) whether the store's extras pop-up opened
-  (expected: not) and the seconds from fill B's press of CHECKOUT to `/checkout`. It presses and types nothing.
+  (expected: not) and the seconds from fill B's press of CHECKOUT to `/checkout`. By § 15 it requires the Fit AF logo
+  (W16): seen on the progress screen, and a child `img[alt="Fit AF"]` of `app-checkout` displayed; absent fails the
+  width. It presses and types nothing.
   A run that never reached done is judged by W10 alone (the screen must be gone); the smoke's own rule has failed it.
 - **A failed width's evidence is text (§ 7), never a screenshot**: the path, the displayed buttons outside meal cards
   (label, disabled or not), each dialog's text, the counts (never the contents) of `hmp_pending_plan_items` and
   `hmp_local_cart`, and every console line of the page, redacted and cut to 200 characters. The smoke waits for fill
-  B's own verdict up to 96.4 s: fill B's longest run on a 7-meal plan (81.4 s: 10 s for the cards, 7 presses, 10 s for
-  CHECKOUT, 30 s after CHECKOUT and 30 s after the extras dialog's CONTINUE) plus 15 s.
+  B's own verdict up to 126.4 s: fill B's longest run on a 7-meal plan (111.4 s since the two faces' § 15.2: up to
+  30 s for the first card, 10 s for the meals, 7 presses, 10 s for CHECKOUT, 30 s after CHECKOUT and 30 s after the
+  extras dialog's CONTINUE) plus 15 s.
 
 ## The workflow (on `main` only; its copy is kept here)
 

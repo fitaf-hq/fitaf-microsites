@@ -20,7 +20,10 @@ test("CC-8a: the Footer block's text and the watch's expected Footer are unchang
   assert.equal(sha256(Buffer.from(text, "utf8")), golden.footer_text_sha256, "fill B's shipped text");
   const baseline = JSON.parse(await readFile(join(ROOT, "storefront", "watch-baseline.json"), "utf8"));
   assert.equal(baseline.expectedFooter, golden.watch_expected_footer, "the watch's expectedFooter");
-  assert.ok(baseline.expectedFooter.endsWith(`sha256:${golden.footer_text_sha256}`), "control: the watch expects that text");
+  // The watch expects the block LIVE in the store's Footer: this text, or, between a build that changes the text and its
+  // paste (SPEC-rung2-progress-and-checkout § 15.6), the live text it replaces (the golden's `replaces`).
+  const live = golden.replaces ?? golden.footer_text_sha256;
+  assert.ok(baseline.expectedFooter.endsWith(`sha256:${live}`), "control: the watch expects the live text");
 });
 
 test("CC-8b: the Worker, every file its entry reaches, is unchanged", async () => {
