@@ -3,7 +3,7 @@
   "page": "https://fitafnutrition.com/order?mpid=21",
   "html": [
     "runtime-config.js",
-    "chunk-4VYOVCBQ.js",
+    "chunk-3LJNLUMN.js",
     "chunk-HPX7VAYC.js",
     "chunk-LEEO6LXQ.js",
     "chunk-F7D4OKRK.js",
@@ -13,20 +13,19 @@
     "chunk-VTBXYRC7.js",
     "chunk-2Q6PBBHN.js",
     "chunk-EEV35ETP.js",
-    "main-2UUGV2PH.js"
+    "main-2HXLHIG7.js"
   ],
-  "entry": "main-2UUGV2PH.js",
+  "entry": "main-2HXLHIG7.js",
   "imports": [
     "chunk-23TJEEK3.js",
-    "chunk-2C4QN3TJ.js",
     "chunk-2Q6PBBHN.js",
     "chunk-2SGJWJKD.js",
     "chunk-37DXNMAB.js",
+    "chunk-3LJNLUMN.js",
     "chunk-3RCXL76E.js",
     "chunk-3UM4HKKT.js",
     "chunk-4DNXJ5BE.js",
     "chunk-4JYELCUW.js",
-    "chunk-4VYOVCBQ.js",
     "chunk-4WVSHDVO.js",
     "chunk-5EZFOTT4.js",
     "chunk-5KB5YZ5R.js",
@@ -45,6 +44,7 @@
     "chunk-CEQ2UXRQ.js",
     "chunk-CETET7GC.js",
     "chunk-DCSYHIWD.js",
+    "chunk-DSDA3TOQ.js",
     "chunk-DU3INNTD.js",
     "chunk-DZKTNCYS.js",
     "chunk-DZYLQYW6.js",
@@ -96,7 +96,6 @@
   ],
   "files": {
     "chunk-23TJEEK3.js": "9be3e7f557e1834039cf84f421c67d6cac285fe904e457b336fe51b99f9488fe",
-    "chunk-2C4QN3TJ.js": "2966bbf4dc8119d9e673bfca51e539c0ba16a2b08dbb0cdc9b8c68fd7d4581fe",
     "chunk-2ELNDHLL.js": "f0c04049b18e9c646c460b01b8ab603e47484c2f3a4527ccf5f83ebfb77962ae",
     "chunk-2Q6PBBHN.js": "6866ef736fc1306417063b75aeb1ba51f77f01478f471910d8e4e6baaca13253",
     "chunk-2SGJWJKD.js": "e55656c241689763ffe79d7596bf53df0dcfc9672eb31cd604625a479f02e124",
@@ -105,13 +104,13 @@
     "chunk-3CGN5YJ2.js": "c8a74eee682d0ff57cf2b857330f35311cde45395813c9e88593757697d0f782",
     "chunk-3DHK6RCG.js": "a9d7e914a7ae18dfebb68de042ee5f41becc63d425689c4ccbf222ef9ef293ae",
     "chunk-3J6GJA2Y.js": "69ca2d04d55aeb130e13e50d38c4e56baea835030276cb5c265ea56f3799c622",
+    "chunk-3LJNLUMN.js": "518780357748757c7c0c78b2d226d0684531f74cbdc6394a2966a171eb6654e3",
     "chunk-3RCXL76E.js": "44a252a57a7e6a88b082355cf98869053122c702ba1c0610258dfe5b9be1c927",
     "chunk-3SNCVPH2.js": "70ae6b83ffa945e462def6378b741c3cc433b7a16ff3dcfc97ba17be54fc9a25",
     "chunk-3UM4HKKT.js": "fc457c0b5f364e8be0df68181aa1fd2e90c17252a54bcd40be1b49b355da0202",
     "chunk-3X75LKN6.js": "be7b2e494160f8da0246fa9e373b3ba61fe642c00dc7b685c142b3d37900704d",
     "chunk-4DNXJ5BE.js": "201910abd38f30aef5ed0c15a9c3b919d18c4dc2b84b7d8f77cf8719d8d593db",
     "chunk-4JYELCUW.js": "824a6399206db058246652871ce0eacf207f3789b68ce6e7cc43628e679f9026",
-    "chunk-4VYOVCBQ.js": "2aaafd3253b7fa69b727d911b79bc8b638d4733a032543651545d84f6e0fbe1f",
     "chunk-4WVSHDVO.js": "abec419615b34fb1b7fa12b2e734b11204a4728fc2845fc78f10a604920b060f",
     "chunk-522IF5RY.js": "fa8c2cdc80543e91185eddcdadadb90201085f6ce9b491d1daf9921267438c5c",
     "chunk-5EZFOTT4.js": "08ab00b3ce26bb767a09cccad54dcca0cbec01dd20fe3a35514605f35b8b0a6b",
@@ -149,6 +148,7 @@
     "chunk-CY2J3GIN.js": "647b1e5d5364b4193f47d2929d4137efc54ac9484fb7e72bb3afb2dfab67bd4a",
     "chunk-D2YWBK6A.js": "abfa1deed6b46cf66ea0d313e247d8bcbb4bfe40d5c09b43b4c8fee489465f36",
     "chunk-DCSYHIWD.js": "b23fada4b736297c8145208291e4a1f1cd40da25ae4157756d6a232690a2d1a0",
+    "chunk-DSDA3TOQ.js": "e81f47123e39e1297f1bf62a9e8c0d5fee739de8506e16afab75dd81b3a23ec3",
     "chunk-DU3INNTD.js": "f007dbb86a48a68414ebe4edde201c46712c32e7d33341075edfd21f1bd23cfd",
     "chunk-DUZGOJU5.js": "27c65c99a0c6e81cf74c668423a0e7d7e2593b74cd53d51565d520cd7acc35fe",
     "chunk-DZKTNCYS.js": "eeab6115ee5983e4a3b7ec026be9a9bb5a2eaaeaa2cb403f66864801c03255ed",
@@ -250,7 +250,7 @@
     "chunk-YXLRQ7YS.js": "22e7fd126a86f0e2148e173edd2328a8f6ae355b045433b1df3ec35f6252c4c7",
     "chunk-ZSKOB7NA.js": "ae8781a55bdf2ab66d0bd4a25d2c8cc5a13aa97290da8194a11cbac0dc71ec14",
     "chunk-ZXPTPBS5.js": "2d2efd6e23b6fc3f98bf41d44fb853a99f100e69ed5fdfcacc538b6bfd2165cc",
-    "main-2UUGV2PH.js": "512bd44e4021ddaa89033c36a419706d2b98994f7408ee8156c7bb8b5d67a51c"
+    "main-2HXLHIG7.js": "ed503ba0900fc3d22c119dec784928764e921e2288fd8e06d1ff99118adb4a49"
   },
   "expectedFooter": null
 }
