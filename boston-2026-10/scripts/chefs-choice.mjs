@@ -1,0 +1,202 @@
+// This week's Chef's Choice on the plan page (SPEC-chefs-choice.md), the build's side. build.mjs imports this module only
+// when data/picks/ exists. It reads every data/picks/<sunday>.json, checks each (§ 1), and turns the weeks still open on
+// the build's date (§ 2) into the page's three slots: PICKS_STYLE (src/chefs-choice/style.css), PICKS_CARD
+// (src/chefs-choice/card.html, its words from data/messages.json) and PICKS_SCRIPT (the week's data as JSON, then the
+// offer's zoned-date helpers inlined as the offer box inlines them, then src/chefs-choice/chefs-choice.js).
+//
+// ⛔ The menus are checked by the LINK TOOL'S OWN RULES, by importing it: each menu, for each size, goes through
+// payloadFromArgs (qty 1..MAX_QTY, names distinct and no two sharing a key, the counts making the plan's count) exactly
+// as `npm run handoff:link` takes it, and its link is the tool's handoffLink, whose keys are the one mealKey
+// (src/storefront/meal-key.js). No key function and no encoder live here (CC-2).
+import { readdir, readFile } from "node:fs/promises";
+import { basename, join, relative, sep } from "node:path";
+import { declaration, esc, NO_PICKS, ROOT, scriptJson, shownCounts, ZONED_DATE_HELPERS } from "../build.mjs";
+import { isLive, longDate } from "../src/worker/offers.js";
+import { addDays, daysBetween } from "../src/worker/zoned-time.js";
+import { countTable } from "./build-storefront.mjs";
+import { handoffLink, payloadFromArgs } from "./handoff-link.mjs";
+
+export const CHEFS_CHOICE_SRC = join(ROOT, "src", "chefs-choice");
+/** § 2: delivery Sunday S is open to order from S − 9 (a Friday: the store's switch) through S − 3 (a Thursday). */
+export const OPENS_DAYS_BEFORE = 9;
+export const CLOSES_DAYS_BEFORE = 3;
+/** A picks file is named by its delivery Sunday: 2026-10-04.json. Only `.json` files in the directory are picks. */
+const PICKS_FILE = /^(\d{4}-\d{2}-\d{2})\.json$/;
+const SUNDAY = 0;
+/** § 1: the only fields, each required: a file's, and a meal's. Anything else refuses the build. */
+const FILE_FIELDS = ["delivery", "menus"];
+const MEAL_FIELDS = ["name", "qty"];
+/** § 3's phrases in data/messages.json's `chefs_choice`, and the placeholders each must carry. */
+const PHRASES = { open: [], heading: ["{count}", "{date}"], meal_qty: ["{meal}", "{n}"], note: [], checkout: [], own: [] };
+
+/** A path as a person finds it: from the package when it is inside it. */
+const shown = (path) => (path.startsWith(ROOT + sep) ? relative(ROOT, path) : path);
+
+/** `{name}` placeholders filled in one pass, so a value is never read again as a placeholder. */
+const fill = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (whole, key) => (key in values ? String(values[key]) : whole));
+
+/** "YYYY-MM-DD" that is a real calendar date and a Sunday. */
+export function isSunday(ymd) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd) || addDays(ymd, 0) !== ymd) return false;
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === SUNDAY;
+}
+
+/** § 2: the dates a delivery Sunday is open to order, inclusive, in the shape the offer's isLive reads. */
+export const windowOf = (delivery) => ({
+  valid_from: addDays(delivery, -OPENS_DAYS_BEFORE),
+  valid_to: addDays(delivery, -CLOSES_DAYS_BEFORE),
+});
+
+/** data/messages.json's `chefs_choice` phrases, checked: a missing phrase or placeholder refuses the build. */
+export function chefsChoiceWords(messages) {
+  const words = messages.chefs_choice ?? {};
+  for (const [key, placeholders] of Object.entries(PHRASES)) {
+    if (typeof words[key] !== "string" || !words[key].trim()) throw new Error(`data/messages.json: chefs_choice.${key} is missing`);
+    for (const p of placeholders) {
+      if (!words[key].includes(p)) throw new Error(`data/messages.json: chefs_choice.${key} has no ${p}`);
+    }
+  }
+  return Object.fromEntries(Object.keys(PHRASES).map((key) => [key, words[key]]));
+}
+
+const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+/** Refuse any field but `allowed`, and a missing one. `where` names the object in the message. */
+function onlyFields(value, allowed, where) {
+  if (!isObject(value)) throw new Error(`${where} must be an object`);
+  for (const key of Object.keys(value)) if (!allowed.includes(key)) throw new Error(`${where}: unknown field ${JSON.stringify(key)}`);
+  for (const key of allowed) if (!(key in value)) throw new Error(`${where}: missing field ${JSON.stringify(key)}`);
+}
+
+/** One menu's meals, their shape checked; the link tool checks the rest. */
+function mealsOf(menu, where) {
+  if (!Array.isArray(menu) || !menu.length) throw new Error(`${where} must be a list of meals`);
+  return menu.map((meal, i) => {
+    onlyFields(meal, MEAL_FIELDS, `${where}[${i}]`);
+    if (typeof meal.name !== "string") throw new Error(`${where}[${i}]: name must be text`);
+    if (typeof meal.qty !== "number" || !Number.isInteger(meal.qty)) {
+      throw new Error(`${where}[${i}]: qty must be a whole number, got ${JSON.stringify(meal.qty)}`);
+    }
+    return meal;
+  });
+}
+
+/**
+ * One picks file (already parsed), checked against § 1: the file's name is its delivery Sunday; the fields are exactly
+ * `delivery` and `menus`; each menu is for a count the page shows, and for each size of that count the link tool takes
+ * it. Returns { delivery, menus: { count: { meals: [{ name, qty }], links: { mpid: url } } } }, the names as the page
+ * shows them (whitespace collapsed, as the tool keys them).
+ */
+export function checkPicks(json, fileName, plans) {
+  const date = PICKS_FILE.exec(fileName)?.[1];
+  if (!date || !isSunday(date)) throw new Error(`the file name is not a Sunday's date (YYYY-MM-DD.json)`);
+  onlyFields(json, FILE_FIELDS, "the file");
+  if (json.delivery !== date) throw new Error(`delivery ${JSON.stringify(json.delivery)} is not the file's date (${date})`);
+  if (!isObject(json.menus)) throw new Error(`menus must be an object, a list of meals per count`);
+  if (!Object.keys(json.menus).length) throw new Error(`no menu: "menus" names no count`);
+  const counts = shownCounts(plans).map(String);
+  const needs = new Map(Object.entries(countTable(plans)).map(([mpid, n]) => [Number(mpid), n]));
+  const menus = {};
+  for (const [count, menu] of Object.entries(json.menus)) {
+    if (!counts.includes(count)) throw new Error(`count ${JSON.stringify(count)} is not a count the page shows (${counts.join(", ")})`);
+    const meals = mealsOf(menu, `menus.${count}`);
+    const links = {};
+    let items = null;
+    for (const plan of plans.individual) {
+      const { mpid } = plan.counts.find((c) => c.meals_per_week === Number(count));
+      const argv = ["--mpid", String(mpid), ...meals.flatMap((m) => ["--item", `${m.name}:${m.qty}`])];
+      let payload;
+      try {
+        payload = payloadFromArgs(argv, needs);
+      } catch (err) {
+        throw new Error(`menus.${count}: ${err.message}`);
+      }
+      links[mpid] = handoffLink(plans, payload);
+      items ??= payload.items.map(({ name, qty }) => ({ name, qty }));
+    }
+    menus[count] = { meals: items, links };
+  }
+  return { delivery: date, menus };
+}
+
+/** Every picks file in `dir`, each checked; a file breaking a rule throws, naming it. Sorted by delivery. */
+export async function readPicks(dir, plans) {
+  const names = (await readdir(dir)).filter((name) => name.endsWith(".json")).sort();
+  const weeks = [];
+  for (const name of names) {
+    const path = join(dir, name);
+    try {
+      let json;
+      try {
+        json = JSON.parse(await readFile(path, "utf8"));
+      } catch (err) {
+        throw new Error(`not JSON: ${err.message}`);
+      }
+      weeks.push(checkPicks(json, basename(path), plans));
+    } catch (err) {
+      throw new Error(`${shown(path)}: ${err.message}`);
+    }
+  }
+  return weeks;
+}
+
+/** § 2: the weeks whose window has not ended on `on` (the build's date). A page built early carries next week's. */
+export const openOn = (weeks, on) => weeks.filter((w) => daysBetween(on, windowOf(w.delivery).valid_to) >= 0);
+
+/** What the page's script reads: the zone, and per open week its window and, per count, the heading, the list, and
+ *  one checkout link per size (by mpid). Every word is a phrase of data/messages.json filled here. */
+export function pageData(weeks, { words, zone }) {
+  return {
+    zone,
+    weeks: weeks.map((w) => ({
+      delivery: w.delivery,
+      ...windowOf(w.delivery),
+      counts: Object.fromEntries(
+        Object.entries(w.menus).map(([count, menu]) => [
+          count,
+          {
+            heading: fill(words.heading, { count, date: longDate(w.delivery) }),
+            meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.name, n: m.qty }) : m.name)),
+            links: menu.links,
+          },
+        ]),
+      ),
+    })),
+  };
+}
+
+/** The card's markup (src/chefs-choice/card.html) with its words; a `{{…}}` left over refuses the build. */
+function cardHtml(template, words) {
+  const values = { OPEN: words.open, NOTE: words.note, CHECKOUT: words.checkout, OWN: words.own };
+  const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
+    if (!(key in values)) throw new Error(`src/chefs-choice/card.html: ${whole} has no value`);
+    return esc(values[key]);
+  });
+  if (/\{\{|\}\}/.test(html)) throw new Error("src/chefs-choice/card.html: a {{…}} is not a valid slot name");
+  return html;
+}
+
+/**
+ * The page's slots for the weeks open on `on`, or none (the page as before: CC-4). The script is one function scope, so
+ * its copies of the helpers never meet the offer box's (the development page declares the same names at the top level).
+ */
+export async function chefsChoice({ plans, messages, dir, on, zone }) {
+  const all = await readPicks(dir, plans);
+  const weeks = openOn(all, on);
+  const summary = weeks.map((w) => ({ delivery: w.delivery, ...windowOf(w.delivery), counts: Object.keys(w.menus) }));
+  if (!weeks.length) return { slots: NO_PICKS, weeks: summary };
+  const words = chefsChoiceWords(messages);
+  const read = (name) => readFile(join(CHEFS_CHOICE_SRC, name), "utf8");
+  const helpers = ["const FORMATTERS = new Map();", ...[...ZONED_DATE_HELPERS, isLive].map(declaration)].join("\n");
+  return {
+    slots: {
+      PICKS_STYLE: "\n" + (await read("style.css")).trim(),
+      PICKS_CARD: "\n" + cardHtml(await read("card.html"), words).trimEnd(),
+      PICKS_SCRIPT:
+        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone }))}</script>` +
+        `\n<script>\n(function () {\n"use strict";\n${helpers}\n${(await read("chefs-choice.js")).trim()}\n})();\n</script>`,
+    },
+    weeks: summary,
+  };
+}

@@ -1,0 +1,11 @@
+/* This week's Chef's Choice on the result card (SPEC-chefs-choice § 3). Tokens only: npm run contrast reads this file. */
+.result .cta[hidden], .cc-list[hidden], .cc-own[hidden] { display: none; }
+button.cta { width: 100%; border: 0; cursor: pointer; }
+.cc-toggle::after { content: "+"; font-size: 24px; }
+.cc-toggle[aria-expanded="true"]::after { content: "\2212"; }
+.cc-list { margin: 12px 0 0; padding: 16px 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+.cc-heading { margin: 0 0 10px; font: 600 17px/1.3 var(--head); color: var(--navy); }
+.cc-meals { margin: 0 0 12px; padding-left: 20px; color: var(--ink); }
+.cc-meals li { margin: 4px 0; }
+.cc-note { margin: 0 0 14px; font-size: 15px; color: var(--muted); }
+.cc-own { display: block; margin-top: 12px; padding: 10px 0; text-align: center; font: 600 16px/1.3 var(--head); color: var(--navy); }

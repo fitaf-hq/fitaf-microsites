@@ -1,15 +1,15 @@
 // `npm run contrast`: APCA contrast for every colour pair the page draws (src/contrast-pairs.json).
 //
 // Colours are read from the CSS itself — the :root tokens of src/template.html and src/save/style.css, and
-// the mock-ups' stylesheet mockups/mockups.css (which uses the template's tokens) — so a changed token is
-// measured as it ships. Three refusals, each exiting 1:
+// the mock-ups' stylesheet mockups/mockups.css and the Chef's Choice card's src/chefs-choice/style.css (which
+// use the template's tokens) — so a changed token is measured as it ships. Three refusals, each exiting 1:
 //   1. a pair whose |Lc| is under its role's minimum;
 //   2. a raw colour (#hex, rgb(), hsl()) in the CSS outside a :root block — it would bypass this check;
 //   3. a colour token that no pair measures and no `not_measured` entry explains, or a pair naming a
 //      token that does not exist.
 //
 // Options (for the mutant cases; the committed files are never written):
-//   --template <path>  --save-style <path>  --mockup-style <path>  --pairs <path>
+//   --template <path>  --save-style <path>  --mockup-style <path>  --picks-style <path>  --pairs <path>
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +20,7 @@ export const DEFAULTS = {
   template: join(ROOT, "src", "template.html"),
   saveStyle: join(ROOT, "src", "save", "style.css"),
   mockupStyle: join(ROOT, "mockups", "mockups.css"),
+  picksStyle: join(ROOT, "src", "chefs-choice", "style.css"),
   pairs: join(ROOT, "src", "contrast-pairs.json"),
 };
 
@@ -27,11 +28,13 @@ const HEX_TOKEN = /(--[a-z0-9-]+)\s*:\s*(#[0-9a-f]{6})\s*;/gi;
 const ROOT_BLOCK = /:root\s*\{([^{}]*)\}/g;
 const RAW_COLOUR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(/i;
 
-/** The CSS drawn: the template's <style> blocks, the dev build's stylesheet and the mock-ups' stylesheet. */
-async function readCss({ template, saveStyle, mockupStyle }) {
+/** The CSS drawn: the template's <style> blocks, the dev build's stylesheet, the mock-ups' stylesheet and the Chef's
+ *  Choice card's (SPEC-chefs-choice § 3, inlined by the build when a week is open). */
+async function readCss({ template, saveStyle, mockupStyle, picksStyle }) {
   const html = await readFile(template, "utf8");
   const inline = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]);
-  return [...inline, await readFile(saveStyle, "utf8"), await readFile(mockupStyle, "utf8")].join("\n");
+  const files = [saveStyle, mockupStyle, picksStyle];
+  return [...inline, ...(await Promise.all(files.map((f) => readFile(f, "utf8"))))].join("\n");
 }
 
 export function tokensOf(css) {
@@ -111,7 +114,13 @@ function table(rows) {
 
 function argsOf(argv) {
   const out = {};
-  const names = { "--template": "template", "--save-style": "saveStyle", "--mockup-style": "mockupStyle", "--pairs": "pairs" };
+  const names = {
+    "--template": "template",
+    "--save-style": "saveStyle",
+    "--mockup-style": "mockupStyle",
+    "--picks-style": "picksStyle",
+    "--pairs": "pairs",
+  };
   for (let i = 0; i < argv.length; i += 2) {
     if (!(argv[i] in names)) throw new Error(`unknown option ${argv[i]}`);
     out[names[argv[i]]] = argv[i + 1];
