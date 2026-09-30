@@ -39,7 +39,7 @@ never a criterion.**
 ## 2a. Amendment, 2026-09-30 — the screen slide's panel at the side
 
 **Proposed by the image team** (after its first job: of all the shapes, the 16:9 screen slide *"needs the most help ...
-it's really like 16:5"*, the Advisor's words to it), and **ruled by the Advisor** (2026-09-30 ~00:50 PDT, *"Yes, the
+it's really like 16:5"*, the Advisor's words to it), and **ruled by the Advisor** (2026-09-30 00:34:51 PDT (07:34:51Z), *"Yes, the
 right side"*): on a **screen** (16:9) the navy panel is the **right 40%, full height**, and the photo fills the **left
 60%**, a window of **1152 × 1080** px at 1920 × 1080, nearly square. The lower-40% band left a 1920 × 648 strip, a
 slice across a round plate.
