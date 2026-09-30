@@ -136,7 +136,7 @@ body.legend-open .deck { right: 320px; }
 .slide-logo .logo { width: clamp(80px, 13vmin, 170px); }
 /* A screen (landscape): the photo fills the left 60% and the panel is the right 40%, full height, so the dish shows
    in a nearly square window (SPEC-photo-slots § 2a). A phone (portrait): the panel is the lower 40% band (below). */
-.slide-photo .slide-bg { right: 40%; }
+.slide-photo .slide-bg { right: auto; width: 60%; } /* a width, not right: 40% (.photo is an img, whose width: 100% or auto wins over right) */
 .slide-panel {
   position: absolute; top: 0; right: 0; bottom: 0; width: 40%; padding: 6vmin 5vmin;
   display: flex; flex-direction: column; justify-content: center;
@@ -175,7 +175,7 @@ body.legend-open .legend-float { display: block; }
 }
 
 @media (orientation: portrait) {
-  .slide-photo .slide-bg { right: 0; }
+  .slide-photo .slide-bg { width: 100%; }
   .slide-panel {
     top: auto; left: 0; right: 0; bottom: 0; width: auto; display: block; padding: 4.5vmin 6vmin 9vmin;
     background: linear-gradient(var(--accent), var(--accent)) top / 100% 1vmin no-repeat, var(--navy);
