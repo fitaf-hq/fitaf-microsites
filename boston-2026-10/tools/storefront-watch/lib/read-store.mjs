@@ -42,6 +42,13 @@ export async function readEntry({ fetcher, page }) {
   };
 }
 
+/** § 8 item 2, accept's second read: the page alone (one request), and the name of the entry it names now, or null. */
+export async function readEntryName({ fetcher, page }) {
+  const html = await fetcher.get(page);
+  const entryUrl = entryOf(pageScripts(html.text, html.url).filter((s) => fetcher.isStore(s.url)));
+  return entryUrl && storeName(entryUrl, fetcher.origin);
+}
+
 /**
  * F1: every JS file reachable from the entry, statically or dynamically, each fetched once (the entry's text is
  * reused). Returns Map(name -> text). An import on another origin is refused and not followed.

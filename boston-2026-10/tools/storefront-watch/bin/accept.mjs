@@ -1,29 +1,27 @@
-// `npm run accept -- [--footer <built block> | --footer null]` (SPEC-storefront-watch § 5): after the smoke passes (or
-// the script is fixed), rewrite ../../storefront/watch-baseline.json from the live store's public files. Static only:
-// requests to the store's origin, no browser. The commit that lands the new baseline names the issue, which closes it.
-//   --footer <file>  set expectedFooter from a built block's version line (dist-storefront/fitaf-handoff.html), once
-//                    that block is pasted in the Footer; the block's text must match its line, and not be -dirty
-//   --footer null    clear it (no block expected: F3 informational)
-//   (neither)        keep the baseline's expectedFooter as it is
-import { readFile } from "node:fs/promises";
-import { parseArgs } from "node:util";
-import { acceptBaseline } from "../lib/baseline.mjs";
+// `npm run accept -- --release main-<name>.js [--footer <built block> | --footer null]` (SPEC-storefront-watch § 5,
+// § 8): after the smoke passes on a release (or the script is fixed), rewrite ../../storefront/watch-baseline.json from
+// the live store's public files, for THAT release only. `--release` names it exactly as the watch's issue title does,
+// and accept refuses, writing nothing, unless it is the live entry both before and after its files are read. Static
+// only: requests to the store's origin, no browser. The commit that lands the new baseline names the issue, which
+// closes it.
+//   --release <entry>  required: `main-<name>.js`
+//   --footer <file>    set expectedFooter from a built block's version line (dist-storefront/fitaf-handoff.html), once
+//                      that block is pasted in the Footer; the block's text must match its line, and not be -dirty
+//   --footer null      clear it (no block expected: F3 informational)
+//   (no --footer)      keep the baseline's expectedFooter as it is
+// Exit 0 accepted (the first line printed: `accepted <entry>`), 1 refused (not the live release), 2 a usage error or
+// accept itself failed. The command is lib/accept-command.mjs, which the tests run against a synthetic store.
+import { acceptCommand } from "../lib/accept-command.mjs";
 import { BASELINE_PATH, STORE_PAGE } from "../lib/config.mjs";
 import { storeFetcher } from "../lib/store-fetch.mjs";
 
-async function main() {
-  const { values } = parseArgs({ options: { footer: { type: "string" } } });
-  const footer = values.footer === undefined ? undefined : values.footer === "null" ? null : await readFile(values.footer, "utf8");
-  const fetcher = storeFetcher();
-  const b = await acceptBaseline({ fetcher, path: BASELINE_PATH, page: STORE_PAGE, footer });
-  console.log(`wrote ${BASELINE_PATH}`);
-  console.log(`  entry ${b.entry}; ${b.imports.length} imports; ${Object.keys(b.files).length} JS files hashed; ${b.html.length} page scripts`);
-  console.log(`  expectedFooter: ${b.expectedFooter ?? "null"}`);
-  console.log(`  ${fetcher.calls.length} requests, every one to ${fetcher.origin}; refused, never fetched: ${fetcher.refused.join(", ") || "none"}`);
-  return 0;
-}
-
-main().then(
+acceptCommand(process.argv.slice(2), {
+  fetcher: storeFetcher(),
+  path: BASELINE_PATH,
+  page: STORE_PAGE,
+  out: (line) => console.log(line),
+  err: (line) => console.error(line),
+}).then(
   (code) => process.stdout.write("", () => process.exit(code)),
   (err) => {
     console.error(`storefront-watch accept: ${err.stack ?? err}`);
