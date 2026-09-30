@@ -8,8 +8,9 @@ hashes and a few literal strings of the store's public bundle, never its code or
   (the meal card element, the title and actions classes, *Add to Cart*, *CHECKOUT*, *CHECKOUT NOW*, *CONTINUE TO
   CHECKOUT*, the pending list and its commit, the Custom Scripts injection; and, for rung 2's two faces, the checkout
   component `app-checkout`, the hide list's names H1–H6 and the pay buttons' containers `checkout__submit` and, on a
-  phone, `summary__pay-button`), with what the hand-off uses it for and the contract section that says so. 24
-  literals since 2026-09-29. **Edited by a person**, when the hand-off comes to depend on something
+  phone, `summary__pay-button`; and § 10's: the extras dialog and its overlay, the discounts, the app banner and the
+  margin it reserves, the price rows, the Total, the tip), with what the hand-off uses it for and the contract section
+  that says so. 35 literals since 2026-09-29. **Edited by a person**, when the hand-off comes to depend on something
   new, or a release renames something it depends on (and the hand-off is changed to match).
 - **`watch-baseline.json`** (§§ 2, 3, 5): the release the watch compares with: the order page's script list, the
   entry bundle's name, its imports, every JS file reachable from it with its SHA-256, and `expectedFooter`, the

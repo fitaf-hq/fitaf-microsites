@@ -169,6 +169,9 @@ Red first at `5acc962`, built at `7b0d74f`. § 4's pass rule (W6) is unchanged; 
   H2's `.footer`, H3 and H4 found and the conditional ones reported (W12, § 9), each found one hidden while the style
   is on, waiting up to 10 s for the required ones; no active subscription switch (class `…--active` or `aria-checked="true"`) and no *"renews every"*
   inside `app-checkout` (W13). Nothing is typed or pressed. The report gives each width one line for them.
+- **W14** (SPEC-rung2-progress-and-checkout § 10): H7–H10 reported under W14, each conditional, a found one still
+  displayed with our style failing; the Total found and displayed with it; W11's allowed controls re-stated (H3, H4,
+  H6, H7, H8, H10). The reading also waits for the Total. `dependencies.json` gains § 10's 11 names (35 in all).
 - **`dependencies.json` gains 11 literals** (23 in all; 24 with § 9's `"summary__pay-button"`): `"app-checkout"`, the hide list's names, and
   `"checkout__submit"`, each found in the accepted release's files (checked over a local copy whose 156 files match the
   baseline's hashes; no request made). H2's footer is `[1,"footer"]`, since `"footer"` alone is in 23 files.

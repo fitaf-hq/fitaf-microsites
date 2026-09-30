@@ -305,3 +305,31 @@ phones only; the tip section only where the store enables tips).
 
 **The size**: the block is 8,768 bytes and the ceiling 10,240. If these push it past about 9.8 KB, the build reports
 what costs the bytes before it trims anything.
+
+**Built** (found at the build, not ruled; § 10 above governs). Red at `a2bdea8`, built at `9e67484`.
+
+- **Item 1's mark is the screen itself.** The rule that makes the extras overlay invisible (the pane holding
+  `app-extra-products-dialog`, and the backdrop just before it: `:has(+ * app-extra-products-dialog)`, which covers the
+  store's overlays shown as popovers and the older layout alike) is in the screen's own `<style>`, not behind a class
+  on `<html>`: it goes with the screen at done, at every stop, and at the 90 s clock, with no second thing to remove.
+  The store's wait is unchanged (R2-53 opens the synthetic dialog late and holds its CONTINUE disabled for 2 s).
+- **H7's mark**: `fitaf-code`, set at done beside `fitaf-deep` for a link that carries `~<code>`, never on a stop.
+  The rule is `.checkout-discounts:not(.fitaf-code *)` inside the one scoped rule, so every selector still begins
+  `html.fitaf-deep:has(app-checkout) ` (R2-42b).
+- **H8's margin** is the style's one rule that does not hide:
+  `html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}`. The banner's
+  library (read from the release's code) sets `<html>`'s `margin-top` inline to the banner's height and keeps the
+  original in that attribute; the rule applies only where it did, and sets 0, which is what this store's original is
+  (the library records 0; CSS cannot read the attribute's value). R2-42b allows exactly this rule.
+- **H9 never hides a row holding the Total**: `.summary__row:not(.summary__row--discount, :has(.summary__total))`, so
+  the Total stays even if a release nests it in a row. H10 is `:is(section.checkout__section.tip, app-tip-selector)`
+  without `.tip-selector__remove-btn` inside (its section and a bare selector alike).
+- **The payment check** (R2-45, W11), as § 10 re-states it: on the synthetic checkout the style hides 19 controls,
+  exactly H3's, H4's, H6's (4), H7's (12: three placements of a gift-card field, a code field and two Apply buttons)
+  and H10's (3); H8's links are outside `app-checkout`. **W14** reports H7–H10 found or absent (each conditional; a
+  found one still displayed with our style fails), and requires `.summary__total` found and displayed; the smoke's
+  links carry no code and choose no tip, so on the live checkout it expects H7 and H10, where present, hidden.
+- **The size**: the Footer block **9,299** bytes and the console file **9,280** at `9e67484` (531 more than `ed422ad`),
+  under the ~9.8 KB this section set as the point to report the costs, and the 10,240 ceiling. R2-32's pin moved from
+  `aa773aec…` to `c87cb754d9b7a07260795cf0619950401ad1a2b3f6347e641f36586c9e5334fc`.
+- `dependencies.json` gains 11 literals (35 in all), each found in the release's files over the same local copy.

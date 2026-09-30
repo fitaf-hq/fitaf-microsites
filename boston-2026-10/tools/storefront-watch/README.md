@@ -87,8 +87,10 @@ failure; it writes nothing unless it exits 0. Chrome: `CHROME_PATH` (or
   one of `.checkout__submit button` and, at 1024 px and narrower, the summary's mobile bar's `.summary__pay-button`,
   PAY NOW), reads each of H1–H6 (W12, § 9 of the two faces' contract: H1, H2's `.footer`, H3 and H4 must be found;
   H2's `.app-hmp-credit`, H5 and H6 are conditional, reported found or absent and never a failure for being absent;
-  any found one must be hidden while our style is on; it waits up to 10 s for the required ones), and checks the order
-  is one-time (W13). It presses and types nothing.
+  any found one must be hidden while our style is on; it waits up to 10 s for the required ones and the Total), checks
+  the order is one-time (W13), and, by § 10, reports H7–H10 (the discounts, the app banner, the price rows, the tip;
+  each conditional) and requires the Total (`.summary__total`) displayed (W14), W11 allowing exactly H3, H4, H6, H7,
+  H8 and H10's controls to be hidden. It presses and types nothing.
   A run that never reached done is judged by W10 alone (the screen must be gone); the smoke's own rule has failed it.
 - **A failed width's evidence is text (§ 7), never a screenshot**: the path, the displayed buttons outside meal cards
   (label, disabled or not), each dialog's text, the counts (never the contents) of `hmp_pending_plan_items` and

@@ -142,7 +142,10 @@ exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.ha
   one `style#fitaf-deep` hide, only while the store's `app-checkout` is on the page, the header, footer, credit line and
   pop-ups (H1, H2, H5), and inside the checkout only the two sign-in links (H3, H4) and the offer to subscribe while its
   switch is off (H6). Never storage: a reload of `/checkout` is the store's full checkout. **An ordinary visit gets
-  nothing** (R2-04, R2-40).
+  nothing** (R2-04, R2-40). **§ 10** (the Advisor's first look): the store's extras pop-up is made invisible, never
+  removed, while the screen is up; and the checkout also hides the discounts unless the link carries an offer code (H7),
+  the app banner with the top margin it reserves (H8), the Subtotal, Shipping and Tax rows but never a discount row or
+  the Total (H9), and the tip while none is chosen (H10).
   **Where its cases run**: R2-40–R2-44, R2-50 and R2-52's first half here (linkedom, the shipped text); the ones that
   need a browser (`:has()`, what is displayed, the top layer, motion, the 90 s clock, real images: R2-41c,
   R2-45–R2-49, R2-51, R2-52 in Chrome) in `tools/storefront-watch/test/r2-*.test.mjs`, because that package is the one that drives Chrome and this
@@ -168,7 +171,8 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   with a test link (the one-browser run of § 6); it keeps its name, so a runbook that names it still works. There is no
   fill-A file.
 - ⭐ **The shipped text is pinned (§ 12 item 3, R2-32)**: its SHA-256, the one in each version line, is
-  `aa773aec65270cc4210e2ec64fe52a94865eb5676c764f826598d7eaf42caf08` since rung 2's two faces (`ed422ad`). It was
+  `c87cb754d9b7a07260795cf0619950401ad1a2b3f6347e641f36586c9e5334fc` since the two faces' § 10 (`9e67484`; before it
+  `aa773aec…` at `ed422ad`, and `28ce3983…` at `7b0d74f`). It was
   `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8` (`8945de1`'s text), **the block placed in the
   Footer on 2026-09-29, which is still the live one until the new text passes the live smoke and is pasted**.
   Changing a shipped line is a separate amendment, with the live smoke before its paste, and moves the pin in the same
@@ -179,7 +183,8 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   v2 reader cost more than v1's reader saved); 6 more each from an uncommitted tree. The same two sizes since § 12:
   the text did not change. **With the two faces (`ed422ad`)**: the Footer block **8,768** bytes and the console file
   **8,749**, both warned, under the ceiling; the Advisor accepted *about 7 KB*, and the two faces cost 3,588 bytes, not
-  the 2 KB the contract estimated (SPEC-rung2-progress-and-checkout § 8 has the breakdown). R2-29 reaches the target's
+  the 2 KB the contract estimated (SPEC-rung2-progress-and-checkout § 8 has the breakdown). **With its § 10
+  (`9e67484`)**: **9,299** and **9,280**. R2-29 reaches the target's
   edges from a small source since then (a pad only adds). The build never touches `dist/`, so `npm run build` stays
   byte-identical (S20).
 - ⛔ **The kill switch is deleting our block from the Footer.** Never the store's *"Inject these scripts"* switch:
