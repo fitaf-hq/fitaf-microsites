@@ -2,8 +2,11 @@
 // them at each width; lib/smoke-verdict.mjs's rule is unchanged, and a width passes only if both pass).
 //   W10  the progress screen during the run: seen after the first press, and gone at done;
 //   W11  ⭐ § 3 item 4 on /checkout: the displayed controls inside app-checkout with style#fitaf-deep enabled, then
-//        disabled (then enabled again), equal except H3, H4 and H6; the pay button displayed in both;
-//   W12  each of H1–H6 on the checkout: found, and hidden while the style is on (a missing one fails open: it shows);
+//        disabled (then enabled again), equal except H3, H4 and H6; a pay button displayed in both (§ 9: the displayed
+//        one of `.checkout__submit button` and the summary's mobile bar's `.summary__pay-button`, the phone's PAY NOW);
+//   W12  each of H1–H6 on the checkout: found, and hidden while the style is on (a missing one fails open: it shows).
+//        § 9: H1, H2's .footer, H3 and H4 are REQUIRED; H2's .app-hmp-credit, H5 and H6 are CONDITIONAL, reported
+//        found or absent, and their absence is never a failure (a rename of one is F2's to catch, in the bundle);
 //   W13  the order is one-time: no active subscription switch and no "renews every" line on the deep-carted checkout.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
@@ -31,10 +34,22 @@ export const HIDE = [
     inCheckout: true,
   },
 ];
+/**
+ * § 9: the targets the store renders only in some cases (its credit line is its footer's fallback; a plan may offer no
+ * subscription; a pop-up host may not be there): reported found or absent, never a failure for being absent.
+ */
+export const CONDITIONAL = [
+  ".app-hmp-credit",
+  "app-storefront-popup-host",
+  ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
+];
 /** § 3 item 4: the controls that are measured. */
 export const CONTROLS = "input, select, textarea, button, iframe, a[href], [role=switch], [role=radio]";
-/** The pay button: a button inside the store's .checkout__submit (its label varies with the payment method). */
-export const PAY = ".checkout__submit button";
+/**
+ * § 9: the pay button is a displayed button in one of these: the form's .checkout__submit (above 1024 px) or the
+ * summary's mobile bar's .summary__pay-button (1024 px and narrower, "PAY NOW"). Its label varies with the payment.
+ */
+export const PAY = [".checkout__submit", ".summary__pay-button"];
 /** How long W12 waits for each of H1–H6 to render on /checkout (the store renders its pop-up host deferred). */
 export const FACES_MS = 10_000;
 
@@ -98,6 +113,7 @@ export function readFaces({ hide, controls, pay, style: styleId }) {
   };
   if (checkout && style) {
     const measure = () => [...checkout.querySelectorAll(controls)].filter(shown);
+    const isPay = (el) => el.tagName === "BUTTON" && Boolean(el.closest(pay.join(",")));
     const withStyle = measure();
     style.disabled = true;
     const without = measure();
@@ -109,8 +125,9 @@ export function readFaces({ hide, controls, pay, style: styleId }) {
       hidden: without.filter((el) => !withStyle.includes(el)).map(describe).sort(),
       allowed: allowed.map(describe).sort(),
       added: withStyle.filter((el) => !without.includes(el)).map(describe).sort(),
-      payWith: withStyle.some((el) => el.matches(pay)),
-      payWithout: without.some((el) => el.matches(pay)),
+      payWith: withStyle.some(isPay),
+      payWithout: without.some(isPay),
+      payShown: withStyle.filter(isPay).map(describe),
       counts: { with: withStyle.length, without: without.length },
     };
     out.hide = hideCounts.map((h) => ({ ...h, displayed: [...document.querySelectorAll(h.selector)].filter(shown).length }));
@@ -131,12 +148,15 @@ export function readFaces({ hide, controls, pay, style: styleId }) {
   return out;
 }
 
-const ALL_FOUND = (faces) => faces.hide.every((h) => h.found > 0);
+const REQUIRED_FOUND = (faces) => faces.hide.every((h) => h.found > 0 || CONDITIONAL.includes(h.selector));
 
-/** W11–W13's readings, read again until every one of H1–H6 is found or FACES_MS has passed. */
+/**
+ * W11–W13's readings, read again until every REQUIRED target of H1–H6 is found or FACES_MS has passed. The conditional
+ * ones are reported as they are at that reading.
+ */
 export async function readCheckoutFaces(page, poll) {
   const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, style: STYLE_ID };
-  return poll(page, readFaces, arg, (f) => f.payment !== null && ALL_FOUND(f), { timeoutMs: FACES_MS, everyMs: 500 });
+  return poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f), { timeoutMs: FACES_MS, everyMs: 500 });
 }
 
 /**
@@ -169,8 +189,12 @@ export function facesVerdict(faces) {
     }
   }
   for (const h of c.hide ?? []) {
-    if (!h.found) reasons.push(`W12: ${h.id} ${h.selector} not found on /checkout: nothing there to hide, so a renamed one shows (fails open)`);
-    else if (h.displayed) reasons.push(`W12: ${h.id} ${h.selector} found and still displayed with the style (${h.displayed})`);
+    // § 9: a conditional target's absence is reported (facesSummary), never a failure.
+    if (!h.found && !CONDITIONAL.includes(h.selector)) {
+      reasons.push(`W12: ${h.id} ${h.selector} not found on /checkout: nothing there to hide, so a renamed one shows (fails open)`);
+    } else if (h.found && h.displayed) {
+      reasons.push(`W12: ${h.id} ${h.selector} found and still displayed with the style (${h.displayed})`);
+    }
   }
   if (c.oneTime?.activeSwitches) reasons.push(`W13: an active subscription switch on /checkout (${c.oneTime.activeSwitches}): the order is not one-time`);
   if (c.oneTime?.renews?.length) reasons.push(`W13: a "renews every" line on /checkout: ${c.oneTime.renews.join("; ")}`);
@@ -186,8 +210,15 @@ export function facesSummary(faces) {
   const c = faces.checkout;
   if (!c) return `${screen}; /checkout not read`;
   const p = c.payment;
-  const pay = p ? `${p.counts.without} controls in app-checkout, ${p.hidden.length} hidden by the style (H3, H4, H6: ${p.allowed.length}), pay button ${p.payWith && p.payWithout ? "displayed" : "NOT displayed"}` : "no measure";
-  const found = (c.hide ?? []).map((h) => `${h.id}${h.found ? (h.displayed ? " shown" : "") : " missing"}`).join(" ");
+  const pay = p ? `${p.counts.without} controls in app-checkout, ${p.hidden.length} hidden by the style (H3, H4, H6: ${p.allowed.length}), pay button ${p.payWith && p.payWithout ? `displayed (${(p.payShown ?? []).join(", ")})` : "NOT displayed"}` : "no measure";
+  const many = (id) => (c.hide ?? []).filter((h) => h.id === id).length > 1;
+  const found = (c.hide ?? [])
+    .map((h) => {
+      const name = many(h.id) ? `${h.id} ${h.selector}` : h.id;
+      if (!h.found) return `${name} ${CONDITIONAL.includes(h.selector) ? "absent" : "MISSING"}`;
+      return h.displayed ? `${name} SHOWN` : name;
+    })
+    .join(", ");
   const once = c.oneTime && !c.oneTime.activeSwitches && !c.oneTime.renews.length ? "one-time" : "NOT one-time";
   return `${screen}; ${pay}; hide list: ${found}; ${once}`;
 }

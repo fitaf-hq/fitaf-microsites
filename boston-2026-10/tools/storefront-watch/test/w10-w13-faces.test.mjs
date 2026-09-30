@@ -156,7 +156,7 @@ test("the hide list W11 and W12 read is the contract's H1–H6, with H6 only whi
 test("F2 carries the hide list's names (and the checkout's, and the pay button's): a release that renames one is flagged", async () => {
   const deps = JSON.parse(await readFile(DEPENDENCIES_PATH, "utf8"));
   const literals = deps.literals.map((d) => d.literal);
-  const NAMES = ["app-checkout", "checkout__submit", "sticky-header", "footer", "app-hmp-credit", "checkout__guest-signin-banner", "contact__sign-in",
+  const NAMES = ["app-checkout", "checkout__submit", "summary__pay-button", "sticky-header", "footer", "app-hmp-credit", "checkout__guest-signin-banner", "contact__sign-in",
     "app-storefront-popup-host", "summary__plan-subscription-controls", "summary__subscription-toggle", "summary__subscription-toggle--active"];
   for (const name of NAMES) {
     assert.ok(literals.some((l) => new RegExp(`(^|[^\\w-])${name.replace(/[-_]/g, (c) => `\\${c}`)}([^\\w-]|$)`).test(l)), `a literal names ${name}`);

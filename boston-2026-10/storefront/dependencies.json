@@ -140,6 +140,12 @@
       "literal": "\"checkout__submit\"",
       "use": "the pay button's container: W11 requires the pay button in it displayed with the checkout's style and without it",
       "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 4; § 5 (W11)"
+    },
+    {
+      "id": "pay-button-mobile",
+      "literal": "\"summary__pay-button\"",
+      "use": "the phone's pay button, PAY NOW in the order summary's mobile bar (the form's .checkout__submit is not displayed at 1024 px and narrower): W11 requires a pay button displayed with the checkout's style and without it",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 9; § 5 (W11)"
     }
   ]
 }
