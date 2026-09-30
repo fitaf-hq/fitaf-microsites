@@ -399,7 +399,9 @@ its § 8 has the build's notes). Not a ruling; §§ 8–12 above are unchanged.
   `aa773aec65270cc4210e2ec64fe52a94865eb5676c764f826598d7eaf42caf08` (`ed422ad`; `28ce3983…` at `7b0d74f` before the
   screen moved to the browser's top layer); then, by that contract's § 10, to
   `c87cb754d9b7a07260795cf0619950401ad1a2b3f6347e641f36586c9e5334fc` (`9e67484`), and by its § 11 to
-  `5eb8416e34809b9c1ccca6fc3bb422c3e3179114145eb4bc3669ba5db8644037` (`4697f19`). Every press, wait, stop, key and link
+  `5eb8416e34809b9c1ccca6fc3bb422c3e3179114145eb4bc3669ba5db8644037` (`4697f19`), and as amended to
+  `c67754610077710b8e194ec5605daee5b357baa9fe9bd7eee6fc5685075e3744` (`d1f0e36`: the key function's and fill B's `<`
+  comparisons written the other way round; the keys unchanged, R2-25). Every press, wait, stop, key and link
   refusal of fill B is as these sections
   left it: R2-01 to R2-28, R2-30, R2-31 and R2-33 pass unchanged, and fill B still sets only its 200 ms timers (the
   screen's clocks are CSS animations).

@@ -46,7 +46,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `tools/storefront-watch/`, `storefront/` | the watch itself, its own npm package (puppeteer-core; the site's install never gets it), and its committed inputs `storefront/dependencies.json` and `storefront/watch-baseline.json` (written by its `accept`, which since § 8 names the release it accepts, `--release main-<name>.js`, and refuses when another is live). Its § 7: a new release's publish time (the entry's `Last-Modified`) in its report and issue, and a failed smoke width's page as text, redacted, never a screenshot. Its smoke also checks rung 2's two faces live (W10–W13), and its suite runs this package's rung 2 cases that need Chrome | tool; INPUT |
 | `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, fill B, the one fill (§ 12), with its two faces (the progress screen, the stripped checkout); its `//` lines are for maintainers and do not ship, and every line that ships is pinned byte for byte (R2-32) | INPUT |
 | `src/storefront/meal-key.js` | rung 2 § 11: a meal's key, ONE function: `handoff:link` imports it and the build inlines its text into fill B | INPUT |
-| `scripts/build-storefront.mjs` | `npm run build:storefront`: two files of one text, the plan counts, the key function, the screen's words (`data/messages.json`) and colours (`src/template.html`'s tokens) inlined, the version line; warns above 5,120 bytes and refuses above 10,240 (§ 11) | build |
+| `scripts/build-storefront.mjs` | `npm run build:storefront`: two files of one text, the plan counts, the key function, the screen's words (`data/messages.json`) and colours (`src/template.html`'s tokens) inlined, the version line; warns above 5,120 bytes and refuses above 10,240 (§ 11), and refuses any `<` but the Footer block's own script tags (the two faces' § 11) | build |
 | `scripts/handoff-link.mjs` | `npm run handoff:link`: prints a test link (payload version 2) and each meal's key beside its name | tool |
 | `dist-storefront/` | `fitaf-handoff.html` (the Footer block) and `fitaf-handoff.fill-B.console.js` (the same text, for a browser console) | OUTPUT, git-ignored |
 
@@ -171,9 +171,9 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   with a test link (the one-browser run of § 6); it keeps its name, so a runbook that names it still works. There is no
   fill-A file.
 - ⭐ **The shipped text is pinned (§ 12 item 3, R2-32)**: its SHA-256, the one in each version line, is
-  `5eb8416e34809b9c1ccca6fc3bb422c3e3179114145eb4bc3669ba5db8644037` since the two faces' § 11 (`4697f19`: no markup
-  in the text, which the store's admin reads as HTML; before it `c87cb754…` at `9e67484`, `aa773aec…` at `ed422ad`,
-  and `28ce3983…` at `7b0d74f`). It was
+  `c67754610077710b8e194ec5605daee5b357baa9fe9bd7eee6fc5685075e3744` since the two faces' § 11 as amended (`d1f0e36`:
+  no `<` in the text, which the store's admin reads as HTML; before it `5eb8416e…` at `4697f19`, `c87cb754…` at
+  `9e67484`, `aa773aec…` at `ed422ad`, and `28ce3983…` at `7b0d74f`). It was
   `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8` (`8945de1`'s text), **the block placed in the
   Footer on 2026-09-29, which is still the live one until the new text passes the live smoke and is pasted**.
   Changing a shipped line is a separate amendment, with the live smoke before its paste, and moves the pin in the same
@@ -185,9 +185,10 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   the text did not change. **With the two faces (`ed422ad`)**: the Footer block **8,768** bytes and the console file
   **8,749**, both warned, under the ceiling; the Advisor accepted *about 7 KB*, and the two faces cost 3,588 bytes, not
   the 2 KB the contract estimated (SPEC-rung2-progress-and-checkout § 8 has the breakdown). **With its § 10
-  (`9e67484`)**: **9,299** and **9,280**; **with § 11 (`4697f19`)**: **9,523** and **9,504**. ⛔ **The shipped text
-  holds no `<` before a letter, `/` or `!`** but the Footer block's own `<script>` and `</script>`: the store's admin
-  reads the text inside the block as HTML and rejects a tag (R2-58). R2-29 reaches the target's
+  (`9e67484`)**: **9,299** and **9,280**; **with § 11 (`4697f19`, `d1f0e36`)**: **9,523** and **9,504**. ⛔ **The
+  shipped text holds no `<` at all** but the Footer block's own `<script>` and `</script>`: the store's admin reads the
+  text inside the block as HTML and `<` before a letter, even across a space, as a tag. The build **refuses** such a
+  text, writing nothing (R2-58, R2-58b); write a comparison the other way round (`s.length > i`). R2-29 reaches the target's
   edges from a small source since then (a pad only adds). The build never touches `dist/`, so `npm run build` stays
   byte-identical (S20).
 - ⛔ **The kill switch is deleting our block from the Footer.** Never the store's *"Inject these scripts"* switch:
