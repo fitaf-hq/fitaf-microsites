@@ -257,3 +257,51 @@ untouched (text sha256 `aa773aec…`, 8,768 and 8,749 bytes; R2-32's pin unmoved
 - **The case names**: the smoke's own cases of the first build, which used W11b and W12b for other checks, are renamed
   "in the smoke", so that W11b, W11c, W12b and W12c are § 9's. The earlier case "a release without the pop-up host
   fails on W12" now passes, reporting H5 absent. W12c passed on the red commit too: H4 is required under both rules.
+
+## 10. Amendment, 2026-09-29 (evening) — the Advisor's first look: the pop-up under the screen, and five more on the checkout
+
+**His look** (his own browser, the console file of `1179afd`): *"The progress bar looks great."* Then: *"Is there any way
+to get rid of the upsell interstitial? It pops up over our progress bar and adds a pointless wait time."* And for the
+checkout: *"Get rid of gift cards and discount codes … the app banner … all of this [the subtotal, shipping, tax and
+total] since shipping and tax should be included (I'll double-check with the Owner) … Tip Our Team … the second gift
+cards and discount codes"*, with *"I'll have more edits after this"*. The store's names below are read from its public
+code (release `main-2HXLHIG7.js`).
+
+1. **The extras pop-up, while the screen is up**: made **invisible, never removed**: `visibility: hidden` on the
+   overlay pane that holds `app-extra-products-dialog` and on that overlay's backdrop, only while the progress screen
+   is shown (a class fill B sets on `<html>` when the screen appears and removes with it). Fill B's own test for a
+   displayed control (`getClientRects().length`) still finds CONTINUE TO CHECKOUT, so it presses it as before. ⚠ **The
+   wait is the store's** (it fetches the extras before it opens the pop-up); this hides the interruption and does not
+   shorten the wait. On any stop, the class goes with the screen, so a store dialog that stopped fill B is seen.
+2. **H7, the discounts** (three placements: `.checkout-discounts`, in the payment section, as its own section, and in
+   the summary): hidden **only when the link carries no offer code**. A link with a code (`~code`) keeps them, so the
+   visitor can enter the offer (fill B still never types into `/checkout`). Fill B marks a coded link with a second
+   class on `<html>`.
+3. **H8, the app banner** (`.smartbanner`, a third-party app-install banner the store shows on phones): hidden, and the
+   top margin the banner's library reserves on `<html>` is undone with it (the one exception to *hiding only*, because
+   the space is the banner's).
+4. **H9, the price breakdown**: the `.summary__row`s of the summary (Subtotal, Shipping, Tax) hidden, **except a
+   discount row** (`.summary__row--discount`). ⭐ **The Total (`.summary__total`) is never hidden**: on a phone the pay
+   button reads *PAY NOW* with no amount, so the Total is the only place the visitor sees what they will pay. ⬜ The
+   Advisor is confirming with the Owner that shipping and tax are included; until then this item is built but its paste
+   is his call.
+5. **H10, the tip** (`section.checkout__section.tip`, and a bare `app-tip-selector` where the store places one): hidden
+   **only while no tip is chosen** (the store shows `.tip-selector__remove-btn` once one is): the style may hide an
+   offer, never a charge.
+
+**The payment check (§ 3 item 4, W11) is re-stated**: the controls hidden are exactly H3, H4, H6 and now H7, H8 and
+H10's (the discount and gift-card fields and their Apply buttons, the banner's links, the tip buttons); **every other
+control is unchanged, and the pay button and the Total are displayed**. H8 and H10 are conditional (the banner shows on
+phones only; the tip section only where the store enables tips).
+
+| | case | expect |
+|---|---|---|
+| R2-53 | the extras pop-up opens while the screen is up | invisible; fill B presses CONTINUE TO CHECKOUT as before; after a stop it is visible |
+| R2-54 | a coded link / a link without a code | the discounts displayed / hidden |
+| R2-55 | the summary with a discount row | Subtotal, Shipping and Tax hidden; the discount row and the Total displayed; ⭐ mutant: a rule that also hides `.summary__total`, fails |
+| R2-56 | a tip chosen (the remove button shown) | the tip section displayed; ⭐ mutant: H10 without its guard, fails |
+| R2-57 | the banner and its reserved margin | hidden, and the page's top margin back to the store's own |
+| W14 | live, both widths | H7–H10 reported (found or absent); the Total displayed; the payment check as re-stated |
+
+**The size**: the block is 8,768 bytes and the ceiling 10,240. If these push it past about 9.8 KB, the build reports
+what costs the bytes before it trims anything.
