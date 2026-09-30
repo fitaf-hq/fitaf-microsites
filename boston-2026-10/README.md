@@ -159,7 +159,8 @@ exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.ha
   one never installs it. The live checks W10–W16 are in the watch's smoke. **§ 15** (for the 21:00 paste): a leading
   marketing tag (`🟠NEW: `) is not part of a meal's key (R2-66); fill B's 10 s for the meals starts at the first poll
   that finds a titled card, and with none for 30 s it stops, `no meal cards on this page`, pressing nothing (R2-67–R2-69);
-  the Fit AF logo, the store's own loaded header image, is shown above the step line and at the top of the checkout
+  the Fit AF logo, the store's own loaded header image, is shown at the top of the screen on a white plate (ruled after
+  the rehearsal) and at the top of the checkout
   component (R2-70, W16); the text stays ASCII, within 10,240 bytes and names no new address (R2-71).
 - ⛔ **Not yet run on the live store**: the full-plan rule, fill B's second presses of a meal (the
   2026-09-29 run pressed each of its two meals once), fill B's § 8 finish, and fill B's § 10 check. Nor any v2
@@ -182,8 +183,9 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   with a test link (the one-browser run of § 6); it keeps its name, so a runbook that names it still works. There is no
   fill-A file.
 - ⭐ **The shipped text is pinned (§ 12 item 3, R2-32)**: its SHA-256, the one in each version line, is
-  `adf6024cffda4d99d1d53f7d23c174a628c25340c364ac1f9ba05ff3d8d4058f` since the two faces' § 15 (`d57a273`: the key's
-  marketing tag, the wait for the cards, the Fit AF logo), **not yet pasted**. ⭐ **The block live in the store's Footer
+  `914668ded95f6a8913e7ae0010661d26780700bd7443cbf93f9e4e8a875b41f6` since the two faces' § 15 (`d57a273`: the key's
+  marketing tag, the wait for the cards, the Fit AF logo; `ac6c8e8`: the screen's logo at the top on a white plate, as
+  the Advisor ruled after the rehearsal; `adf6024c…` between them), **not yet pasted**. ⭐ **The block live in the store's Footer
   since 2026-09-29 ~23:45 PDT is `c4ceb682…`** (`ace775b`, the two faces' § 12: the store's own extras key set just
   before CHECKOUT; the watch's baseline expects it, and CC-8's golden names it as the text § 15's `replaces`). Before
   it: `c6775461…` (`8f5ee58`, live from ~22:04 PDT, § 11 as amended: no `<` in the text, which the store's admin reads
@@ -199,9 +201,9 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   **8,749**, both warned, under the ceiling; the Advisor accepted *about 7 KB*, and the two faces cost 3,588 bytes, not
   the 2 KB the contract estimated (SPEC-rung2-progress-and-checkout § 8 has the breakdown). **With its § 10
   (`9e67484`)**: **9,299** and **9,280**; **with § 11 (`4697f19`, `d1f0e36`)**: **9,523** and **9,504**; **with § 12
-  (`d5a371e`)**: **9,614** and **9,595**; **with § 15 (`d57a273`)**: **10,164** and **10,145**, under the ceiling only
+  (`d5a371e`)**: **9,614** and **9,595**; **with § 15 (`d57a273`, `ac6c8e8`)**: **10,224** and **10,205**, under the ceiling only
   once every line inside the block's function was indented one level less (the three changes cost 750 bytes; the
-  layout gave back 200; SPEC-rung2-progress-and-checkout § 16). ⛔ **The
+  layout gave back 200; the white plate cost 60 more; SPEC-rung2-progress-and-checkout § 16). ⛔ **The
   shipped text holds no `<` at all** but the Footer block's own `<script>` and `</script>`: the store's admin reads the
   text inside the block as HTML and `<` before a letter, even across a space, as a tag. The build **refuses** such a
   text, writing nothing (R2-58, R2-58b); write a comparison the other way round (`s.length > i`). R2-29 reaches the target's

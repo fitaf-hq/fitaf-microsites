@@ -499,6 +499,10 @@ The block shows **the store's own logo**: the `src` of the page's `img.header__l
 header already loads, from its own image host), in an `img` the block creates with the DOM (no markup), `alt="Fit AF"`,
 not a link and not focusable.
 - **On the screen**: centred above the step line, about 48 px high.
+  **Ruled by the Advisor, 2026-09-30, after seeing it: top, on a white plate** (*"Top, on a white plate"*; the mock-ups'
+  logo plate, since the logo's grey tagline was faint on navy): the first thing on the screen, above the title, on a
+  white rounded plate. The plate is the image's own padding and background (the screen's `--white` token): a separate
+  plate element measured 10,308–10,309 bytes, over the 10,240 ceiling. The checkout's logo is unchanged.
 - **On the deep-carted checkout**: centred above the checkout, about 40 px high, while the store's header stays hidden
   (H1). Only for a deep-carted visit (the page's mark, as every H rule).
 - ⛔ **No image URL is written into the shipped text**: the `src` is read from the page, so no new host, no new file, and
@@ -530,7 +534,8 @@ Advisor's paste: the smoke on the live block, and the watch's expected Footer mo
 ## 16. Built, 2026-09-30 — found at the build, not ruled
 
 Red at `4657335` (R2-66–R2-71, W16, W9e's new sum) and `428e25a` (red (2): the tests' own reference key, below), built
-at `d57a273`. §§ 15.1–15.6 above are unchanged; this section says what the build chose where they left a choice, and
+at `d57a273`; the screen's logo moved to the top on a white plate by the Advisor's ruling after the rehearsal (§ 15.3),
+red at `fad9947`, built at `ac6c8e8`. §§ 15.1–15.6 above are unchanged; this section says what the build chose where they left a choice, and
 what it found.
 
 - **The tag (15.1), as built**: `mealKey` first removes
@@ -570,12 +575,16 @@ what it found.
   the synthetic store (`no-store`): one per page load, none by either logo of ours. A header image still loading gives no
   logo and no img until it has loaded (R2-70b); no header image, no logo, and the fill's presses, history writes, lines
   and timers are the same (R2-70).
-- **On the screen**: directly above the step line (the `p[role=status]`), inline style
-  `display:block;margin:0 auto 12px;height:48px`. Tried at every poll of fill B's wait and at every press until it is
-  placed, once: on the live page the block runs when the store injects it, likely before its header's logo has loaded,
-  so ⚠ **the logo can appear after the screen does**. The carousel's photo rule is now `#fitaf-screen .c img` (the same
-  slides), so the logo is not drawn as a slide. ⬜ *"Above the step line"* is read literally: between the carousel and
-  the step line. If the top of the screen was meant, it is one call (`box.prepend`).
+- **On the screen** (as ruled after the rehearsal, § 15.3): the **first element of the screen's box, directly above
+  the title** (the `h2`), inline style
+  `display:block;margin:0 auto 16px;height:48px;padding:8px 10px;border-radius:8px;background:var(--white)`: the
+  image's own padding, rounded corners and background make the white plate (the mock-ups' plate is 8px 10px of padding
+  on `--white`); a plate element around it measured 10,308 bytes (a rule for it) and 10,309 (styled inline), over the
+  ceiling. R2-70 reads it: first, above the title, a white background (the token, not a raw colour), a radius and
+  padding. At `d57a273` it sat directly above the step line, as § 15.3 first read. Tried at every poll of fill B's wait
+  and at every press until it is placed, once: on the live page the block runs when the store injects it, likely before
+  its header's logo has loaded, so ⚠ **the logo can appear after the screen does**, pushing the title down as it
+  arrives. The carousel's photo rule is `#fitaf-screen .c img` (the same slides), so the logo is not drawn as a slide.
 - **On the checkout**: at done, after the mark and the style, the **first child of `app-checkout`**, inline style
   `display:block;margin:16px auto;height:40px`. Inside the component, so it goes when the component does, as every H rule
   stops applying (by construction: no case routes back and reads the logo); placed at done only, never on a stop (R2-70c); and with no rule in
@@ -589,16 +598,17 @@ what it found.
   `#fitaf-screen`; the checkout's, one that is a child of `app-checkout`, found **and displayed**. Its own rule
   (`logoVerdict`) beside `facesVerdict`, judged only once fill B reached done, so W10a–W14a's recorded outcomes are
   unchanged. The synthetic store's header gains a generated logo; the watch's R2-52 counts the slides as `.c img`.
-- **The size (15.4)**: the text **10,045** bytes, the Footer block **10,164**, the console file **10,145** (9,495,
-  9,614 and 9,595 at `d5a371e`); every character ASCII; no `<` but the Footer block's own two; no URL but the live
+- **The size (15.4)**: the text **10,105** bytes, the Footer block **10,224**, the console file **10,205** at
+  `ac6c8e8` (10,045, 10,164 and 10,145 at `d57a273`, before the plate's 60 bytes; 9,495, 9,614 and 9,595 at
+  `d5a371e`); every character ASCII; no `<` but the Footer block's own two; no URL but the live
   block's `"/checkout"` and `"/order"` (R2-71). The three changes cost 750 bytes (about 88 for the key's tag, 181 for
   the wait, 477 for the logo), which took the Footer block to 10,395, **155 over the ceiling**. **Recovered by layout
   alone, no behaviour changed**: every line inside the block's function is indented one level less (a function's body
   starts at the left edge), 200 bytes; `git diff -w d57a273~ d57a273` shows the logic alone. The source's `//` lines say
   so.
-- **The pins**: R2-32's moved from `c4ceb682…` to
-  `adf6024cffda4d99d1d53f7d23c174a628c25340c364ac1f9ba05ff3d8d4058f`. CC-8's golden (`test/cc-08-unchanged-golden.json`)
-  pinned the text too: its `footer_text_sha256` moved the same way, and its `watch_expected_footer` did not, since it
+- **The pins**: R2-32's moved from `c4ceb682…` to `adf6024c…` (`d57a273`), then, with the plate, to
+  `914668ded95f6a8913e7ae0010661d26780700bd7443cbf93f9e4e8a875b41f6` (`ac6c8e8`). CC-8's golden (`test/cc-08-unchanged-golden.json`)
+  pinned the text too: its `footer_text_sha256` moved the same way, both times, and its `watch_expected_footer` did not, since it
   names the block **live** in the store's Footer (`ace775b`, `c4ceb682…`), which this text replaces only at the paste;
   the golden now names that text as `replaces`, and CC-8a's control reads it. `storefront/watch-baseline.json` is
   untouched; after the paste, `accept --footer` moves it, and the golden's `watch_expected_footer` is regenerated and
@@ -611,5 +621,5 @@ what it found.
   literal is in the release's files was not checked (no request to the store). A rename shows as W16's absent at the
   next smoke; F2 would name it at the release if it were added.
 - ⬜ **The Storybook branch** (`boston/rung-2-screen-next`, 236 bytes more than the block it was built on) does not fit on
-  this text as it stands: 10,164 + 236 is over 10,240.
+  this text as it stands: 10,224 + 236 is over 10,240.
 - ⬜ **Not run on the live store**: any of it. The rehearsal (§ 15.6) is the orchestrator's.
