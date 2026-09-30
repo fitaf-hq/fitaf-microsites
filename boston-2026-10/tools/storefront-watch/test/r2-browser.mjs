@@ -97,7 +97,9 @@ export async function openDeep(browser, { origin, code, text, width = 1280, redu
 /**
  * In the page: SPEC-rung2-progress-and-checkout § 3 item 4's measure. The displayed controls inside app-checkout
  * (input, select, textarea, button, iframe, a[href], [role=switch], [role=radio]) with style#fitaf-deep enabled, then
- * disabled (and enabled again): each described, and the two sets compared by element. Reads; presses nothing.
+ * disabled (and enabled again): each described, and the two sets compared by element. The pay button (§ 9) is the
+ * displayed one of `.checkout__submit button` and the summary's mobile bar's `.summary__pay-button`: the store shows
+ * the first above 1024 px and the second at 1024 px and narrower. Reads; presses nothing.
  */
 export function paymentMeasure() {
   const LIST = "input, select, textarea, button, iframe, a[href], [role=switch], [role=radio]";
@@ -116,7 +118,8 @@ export function paymentMeasure() {
   const without = displayed();
   style.disabled = false;
   const again = displayed();
-  const pay = (set) => set.some((el) => el.closest(".checkout__submit") && el.tagName === "BUTTON");
+  const isPay = (el) => el.tagName === "BUTTON" && el.closest(".checkout__submit, .summary__pay-button");
+  const pay = (set) => set.some(isPay);
   return {
     checkout: true,
     style: true,
@@ -126,6 +129,7 @@ export function paymentMeasure() {
     counts: { with: withStyle.length, without: without.length },
     payWith: pay(withStyle),
     payWithout: pay(without),
+    payShown: withStyle.filter(isPay).map(describe),
   };
 }
 

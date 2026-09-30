@@ -4,9 +4,12 @@
 //        disabled: equal, except H3, H4 and H6; the pay button displayed in both;
 //   W12  each of H1–H6 on the checkout: found (a missing one fails open, showing, and is reported);
 //   W13  the order is one-time: no active subscription switch and no "renews every" line on the deep-carted checkout.
-// W10a–W13a: the pass rule on recorded outcomes (lib/faces.mjs facesVerdict), no browser. W10b–W13b: the smoke itself
-// (lib/smoke.mjs) in headless Chrome against the synthetic store on 127.0.0.1, never the live store: a pass, then each
-// check made to fail by the store (a missing pop-up host, a subscription on) or by a mutant of the shipped text.
+// § 9 (the first live smoke): the pay button is the displayed one of `.checkout__submit button` and the summary's mobile
+// bar's `.summary__pay-button`; W12's targets are REQUIRED (H1, H2's .footer, H3, H4) or CONDITIONAL (H2's
+// .app-hmp-credit, H5, H6: reported found or absent, never a failure for being absent).
+// W10a–W13a: the pass rule on recorded outcomes (lib/faces.mjs facesVerdict), no browser. In Chrome, against the
+// synthetic store on 127.0.0.1, never the live store: the smoke itself (lib/smoke.mjs) passing, then each check made to
+// fail by the store or by a mutant of the shipped text; and § 9's W11b, W11c, W12b and W12c.
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -14,11 +17,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromePath } from "../lib/browser.mjs";
 import { DEPENDENCIES_PATH } from "../lib/config.mjs";
-import { facesVerdict, HIDE } from "../lib/faces.mjs";
+import * as faces from "../lib/faces.mjs";
 import { renderSmokeReport } from "../lib/report.mjs";
 import { siteCode } from "../lib/site-code.mjs";
 import { smokeRun } from "../lib/smoke.mjs";
 import { startStore } from "./browser-store.mjs";
+
+const { facesVerdict, HIDE } = faces;
+/** § 9's conditional targets (read from the module, so a module without them fails a case, not the file's load). */
+const CONDITIONAL = faces.CONDITIONAL ?? [];
 
 // ── W10a–W13a: the rule, on recorded outcomes ─────────────────────────────────────────────────────────────────────────
 
@@ -89,13 +96,24 @@ test("W11a: a hidden control that is not H3, H4 or H6; one of theirs left displa
   assert.match(why(noStyle), /W11: .*style#fitaf-deep/);
 });
 
-test("W12a: one of H1–H6 missing from the checkout, or found but still displayed: fail, naming it", () => {
-  const missing = passing();
-  missing.checkout.hide.find((h) => h.id === "H5").found = 0;
-  assert.match(why(missing), /W12: H5 app-storefront-popup-host not found/);
+test("W12a: a REQUIRED target missing (H1, H2's .footer, H3, H4), or any found one still displayed: fail, naming it", () => {
+  for (const selector of [".sticky-header", ".footer", "a.checkout__guest-signin-banner", "a.contact__sign-in"]) {
+    const missing = passing();
+    missing.checkout.hide.find((h) => h.selector === selector).found = 0;
+    const reasons = facesVerdict(missing).reasons;
+    assert.equal(reasons.length, 1, reasons.join(" · "));
+    assert.match(reasons[0], new RegExp(`^W12: H\\d ${selector.replace(/[.]/g, "\\.")} not found`));
+  }
   const shown = passing();
   shown.checkout.hide.find((h) => h.id === "H1").displayed = 1;
   assert.match(why(shown), /W12: H1 \.sticky-header .*displayed/);
+});
+
+test("W12a (§ 9): a CONDITIONAL target absent (H2's .app-hmp-credit, H5, H6) is reported, never a failure", () => {
+  const absent = passing();
+  for (const h of absent.checkout.hide) if (CONDITIONAL.includes(h.selector)) h.found = 0;
+  assert.deepEqual(facesVerdict(absent).reasons, []);
+  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 3, "fixture control: three targets absent");
 });
 
 test("W13a: an active subscription switch, or a \"renews every\" line, on the checkout: fail", () => {
@@ -128,6 +146,11 @@ test("the hide list W11 and W12 read is the contract's H1–H6, with H6 only whi
     ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
   ]);
   assert.deepEqual(HIDE.filter((h) => h.inCheckout).map((h) => h.id), ["H3", "H4", "H6"]);
+  assert.deepEqual(CONDITIONAL, [
+    ".app-hmp-credit",
+    "app-storefront-popup-host",
+    ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
+  ], "§ 9: the conditional targets");
 });
 
 test("F2 carries the hide list's names (and the checkout's, and the pay button's): a release that renames one is flagged", async () => {
@@ -179,7 +202,7 @@ function once(haystack, needle) {
   return haystack.replace(needle, "");
 }
 
-test("W10b–W13b: the smoke on the synthetic store — the screen seen then gone, the payment untouched, H1–H6 found, one-time: pass", { skip, timeout: 120_000 }, async () => {
+test("W10–W13 in the smoke, on the synthetic store — the screen seen then gone, the payment untouched, H1–H6 found, one-time: pass", { skip, timeout: 120_000 }, async () => {
   store.set({});
   for (const width of [1280, 390]) {
     const { verdict, outcome } = await smoke(width);
@@ -196,14 +219,14 @@ test("W10b–W13b: the smoke on the synthetic store — the screen seen then gon
   }
 });
 
-test("W10b: a text that never shows the screen: the smoke fails on W10", { skip, timeout: 60_000 }, async () => {
+test("W10 in the smoke: a text that never shows the screen: the smoke fails on W10", { skip, timeout: 60_000 }, async () => {
   store.set({});
   const { verdict } = await smoke(1280, once(text, "ui(screen);"));
   assert.equal(verdict.pass, false);
   assert.ok(verdict.reasons.some((r) => /^W10: .*never/.test(r)), verdict.reasons.join("; "));
 });
 
-test("W11b: a text whose hide rule also takes the email field (R2-46's mutant): the smoke fails on W11, naming it", { skip, timeout: 60_000 }, async () => {
+test("W11 in the smoke: a text whose hide rule also takes the email field (R2-46's mutant): the smoke fails on W11, naming it", { skip, timeout: 60_000 }, async () => {
   store.set({});
   const mutant = text.replace("a.contact__sign-in", "a.contact__sign-in,.checkout__form input[type=email]");
   assert.notEqual(mutant, text);
@@ -212,14 +235,51 @@ test("W11b: a text whose hide rule also takes the email field (R2-46's mutant): 
   assert.ok(verdict.reasons.some((r) => /^W11: .*email/i.test(r)), verdict.reasons.join("; "));
 });
 
-test("W12b: a release without the pop-up host: the smoke fails on W12, naming H5", { skip, timeout: 60_000 }, async () => {
+test("W12 in the smoke (§ 9): a release without the pop-up host passes, reporting H5 absent (conditional)", { skip, timeout: 60_000 }, async () => {
   store.set({ missing: ["popup"] });
-  const { verdict } = await smoke(1280);
-  assert.equal(verdict.pass, false);
-  assert.ok(verdict.reasons.some((r) => /^W12: H5 app-storefront-popup-host not found/.test(r)), verdict.reasons.join("; "));
+  const { verdict, outcome } = await smoke(1280);
+  assert.deepEqual(verdict, { pass: true, reasons: [] }, verdict.reasons.join("; "));
+  assert.equal(outcome.faces.checkout.hide.find((h) => h.id === "H5").found, 0, "reported absent");
 });
 
-test("W13b: a store that defaults the plan to a subscription: the smoke fails on W13", { skip, timeout: 60_000 }, async () => {
+test("W11b (§ 9): the synthetic checkout at 390 px, only the mobile bar's pay button displayed: W11 passes", { skip, timeout: 60_000 }, async () => {
+  store.set({});
+  const { verdict, outcome } = await smoke(390);
+  assert.deepEqual(verdict, { pass: true, reasons: [] }, verdict.reasons.join("; "));
+  const p = outcome.faces.checkout.payment;
+  assert.deepEqual(p.payShown, ['button.checkout__pay-mobile "PAY NOW"'], "the mobile bar's PAY NOW, and not .checkout__submit's");
+  assert.ok(p.payWith && p.payWithout);
+});
+
+test("W11c (§ 9, mutant): the style also hides .summary__pay-button — W11 fails at 390 px", { skip, timeout: 60_000 }, async () => {
+  store.set({});
+  const mutant = text.replace("a.contact__sign-in", "a.contact__sign-in,.summary__pay-button");
+  assert.notEqual(mutant, text);
+  const { verdict } = await smoke(390, mutant);
+  assert.equal(verdict.pass, false);
+  assert.ok(verdict.reasons.some((r) => /^W11: the pay button is not displayed with the style$/.test(r)), verdict.reasons.join("; "));
+});
+
+test("W12b (§ 9): the checkout without .app-hmp-credit and without subscription controls: W12 passes, reporting both absent", { skip, timeout: 60_000 }, async () => {
+  store.set({ missing: ["credit"], subscription: "none" });
+  const { verdict, outcome } = await smoke(1280);
+  assert.deepEqual(verdict, { pass: true, reasons: [] }, verdict.reasons.join("; "));
+  const hide = outcome.faces.checkout.hide;
+  assert.equal(hide.find((h) => h.selector === ".app-hmp-credit").found, 0, "the credit line reported absent");
+  assert.equal(hide.find((h) => h.id === "H6").found, 0, "H6 reported absent");
+  const report = renderSmokeReport({ flag: false, script: "fill B", runs: [{ width: 1280, verdict, outcome }] }, "t");
+  assert.match(report, /\.app-hmp-credit absent/);
+  assert.match(report, /H6 absent/);
+});
+
+test("W12c (§ 9): the checkout without a.contact__sign-in — W12 fails, a required target missing", { skip, timeout: 60_000 }, async () => {
+  store.set({ missing: ["contact-sign-in"] });
+  const { verdict } = await smoke(1280);
+  assert.equal(verdict.pass, false);
+  assert.ok(verdict.reasons.some((r) => /^W12: H4 a\.contact__sign-in not found/.test(r)), verdict.reasons.join("; "));
+});
+
+test("W13 in the smoke: a store that defaults the plan to a subscription: the smoke fails on W13", { skip, timeout: 60_000 }, async () => {
   store.set({ subscription: "active" });
   const { verdict } = await smoke(1280);
   assert.equal(verdict.pass, false);

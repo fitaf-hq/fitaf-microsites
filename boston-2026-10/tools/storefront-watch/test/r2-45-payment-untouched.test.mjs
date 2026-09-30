@@ -3,6 +3,8 @@
 // style#fitaf-deep as without it, EXCEPT exactly H3, H4 and H6: the guest sign-in banner, the contact section's
 // "Sign in", and the subscription offer (its switch and the sign-in link behind it). The pay button is displayed in both.
 // The expected difference is the fixture's own four controls, named here, not derived from the hide list's selectors.
+// The pay button is the one the store displays at each width (§ 9): .checkout__submit's at 1280, the summary's mobile
+// bar's PAY NOW at 390, where .checkout__submit is not displayed.
 // Also here: H1, H2 and H5 (the header, the footer and credit line, the pop-up host) hidden on the checkout.
 // R2-46 (⭐ mutant, in the suite): a text whose hide rule also matches a field of .checkout__form; R2-45's check fails.
 // Headless Chrome against the synthetic store on 127.0.0.1; skipped without Chrome.
@@ -19,6 +21,8 @@ const H346 = [
   'button.summary__subscription-toggle "Switch to subscription"',
 ].sort();
 const SHELL = [".sticky-header", ".footer", ".app-hmp-credit", "app-storefront-popup-host"];
+/** The pay button displayed at each width (§ 9). */
+const PAY_SHOWN = { 1280: ['button.checkout__pay "Place order"'], 390: ['button.checkout__pay-mobile "PAY NOW"'] };
 /** R2-46's rule: the contact section's "Sign in" rule broadened to take the email field with it. */
 const H4 = "a.contact__sign-in";
 
@@ -48,6 +52,7 @@ async function paymentCase(text, width = 1280) {
     assert.deepEqual(m.added, [], "the style shows nothing that was not shown");
     assert.deepEqual(m.hidden, H346, "the style hides exactly H3, H4 and H6's controls");
     assert.ok(m.payWith && m.payWithout, "the pay button displayed with the style and without it");
+    assert.deepEqual(m.payShown, PAY_SHOWN[width], `the pay button the store shows at ${width} px`);
     assert.equal(m.restored, true, "the page is left as it was read");
     assert.ok(m.counts.without > 15, `fixture control: the form's fields were measured (${m.counts.without})`);
     return { run, m };

@@ -15,7 +15,10 @@
 //                    contact, delivery, schedule, tip, discount and payment fields, an iframe standing in for the card
 //                    field, the pay button in .checkout__submit) and the summary (.checkout__summary: each meal's name,
 //                    the subscription offer or commitment, "Plan Total (N items)" beside its total, "Subtotal | N
-//                    items"). The pay button logs "[fixture] ORDER PLACED" if anything presses it.
+//                    items", and its mobile bar). As the store's (SPEC-rung2-progress-and-checkout § 9, the first live
+//                    smoke): at 1024 px and narrower .checkout__submit is not displayed and the summary's mobile bar
+//                    is, with its own pay button, " PAY NOW " in .summary__pay-button. Either pay button logs
+//                    "[fixture] ORDER PLACED" if anything presses it.
 // Around both, the app's shell: the sticky header, the footer, the platform's credit line and the pop-up host (H1, H2,
 // H5), links and text only (no button, so the smoke's evidence of the order page is what it was).
 // Like the store, the app injects its Footer text at run time as a re-created <script> (the store's injectSlot).
@@ -71,7 +74,7 @@ function checkoutHtml(cfg) {
   return `<app-checkout><div class="checkout">
 <form class="checkout__form" onsubmit="return false">
 <a class="checkout__guest-signin-banner" href="/login?returnUrl=%2Fcheckout">Already have an account? Sign in for faster checkout</a>
-<section class="contact"><h2>Contact</h2><a class="contact__sign-in" href="/login?returnUrl=%2Fcheckout">Sign in</a>
+<section class="contact"><h2>Contact</h2>${cfg.missing.includes("contact-sign-in") ? "" : '<a class="contact__sign-in" href="/login?returnUrl=%2Fcheckout">Sign in</a>'}
 <input type="email" name="email" aria-label="Email"><input type="tel" name="phone" aria-label="Phone">
 <input name="firstName" aria-label="First name"><input name="lastName" aria-label="Last name"><input type="hidden" name="token" value="synthetic"></section>
 <section class="delivery"><h2>Delivery</h2><div role="radiogroup" aria-label="Order type"><div role="radio" aria-checked="true" tabindex="0">Delivery</div><div role="radio" aria-checked="false" tabindex="-1">Pickup</div></div>
@@ -87,11 +90,15 @@ function checkoutHtml(cfg) {
 <aside class="checkout__summary"><div class="summary">
 <div class="summary__plan-group"><div class="summary__plan-group-label">Lean 7</div>${sub.head}${sub.controls}
 <a class="summary__plan-return" href="/order?mpid=21">Edit plan</a><div class="summary__items"></div></div>
-${sub.tail}<div class="summary__totals"></div></div></aside>
+${sub.tail}<div class="summary__totals"></div>
+<div class="summary__mobile-bar"><div class="summary__bar-row"><span class="summary__stat">Order total</span>
+<app-button class="summary__pay-button"><button type="button" class="checkout__pay-mobile"> PAY NOW </button></app-button></div></div>
+</div></aside>
 </div></app-checkout>`;
 }
 
-/** The app's shell around the router outlet (H1, H2, H5), each part omitted if named in `cfg.missing`. */
+/** The app's shell around the router outlet (H1, H2, H5), each part omitted if named in `cfg.missing` (which may also
+ * name "contact-sign-in", the checkout's H4). */
 function shellParts(cfg) {
   const part = (name, html) => (cfg.missing.includes(name) ? "" : html);
   return {
@@ -106,7 +113,8 @@ function shellParts(cfg) {
  * `cfg` is read by the app: footer (text or null), soldOut (names), extrasDialog, signIn (CHECKOUT opens a sign-in
  * dialog and never routes), consoleNoise (lines the page logs at start, as a store's own code does), dropOnCheckout
  * (a name), totalDeltaCents; and for rung 2's two faces: subscription ("off", "active", "forced" or "none"; see
- * subscriptionParts), missing (shell parts to leave out: "header", "footer", "credit", "popup"), photos ({ name:
+ * subscriptionParts), missing (parts to leave out: "header", "footer", "credit", "popup" of the shell, and
+ * "contact-sign-in" of the checkout), photos ({ name:
  * "loaded" | "none" | "pending" }: the card's img loaded, with no src yet, or still loading), routeDelayMs (the store
  * takes this long to route after CHECKOUT), hangAfter (after this many meals are added, the page's setTimeout runs
  * nothing any more: a hang planted under fill B), topLayerPopup (at load, a pop-up shown in the browser's top layer,
@@ -125,6 +133,12 @@ function appHtml(cfg) {
   @media (min-width: 1025px) { .bar { display: none; } .side { display: block; } }
   dialog-box { display: block; }
   .product__header-image img { width: 160px; height: 100px; }
+  app-button { display: inline-block; }
+  .summary__mobile-bar { display: none; }
+  @media (max-width: 1024px) {
+    .checkout__submit { display: none; }
+    .summary__mobile-bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; background: #fff; }
+  }
 </style></head>
 <body><app-root>${shell.before}<main class="outlet"></main>${shell.after}</app-root>
 <script type="application/json" id="cfg">${JSON.stringify(cfg).replace(/</g, "\\u003c")}</script>
@@ -228,6 +242,7 @@ function appHtml(cfg) {
     sub.appendChild(el("span", null, "Subtotal | " + n + " items")); sub.appendChild(el("span", null, money(total)));
     totals.appendChild(sub);
     root.querySelector(".checkout__pay").onclick = function () { console.log("[fixture] ORDER PLACED"); };
+    root.querySelector(".checkout__pay-mobile").onclick = function () { console.log("[fixture] ORDER PLACED"); };
     // "Edit plan" routes back to the order page inside the app, as the store's own link does: the checkout component
     // leaves the page (SPEC-rung2-progress-and-checkout § 3 item 2, R2-47).
     root.querySelector(".summary__plan-return").onclick = function (e) {
