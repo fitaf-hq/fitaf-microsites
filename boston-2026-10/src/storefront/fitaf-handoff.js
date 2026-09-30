@@ -240,10 +240,11 @@ function fillB(p) {
   })();
 }
 // Every meal's first press comes before any meal's second: if a card then offers no way to add another, B
-// stops with each meal in the cart once, rather than some meals complete and others absent.
+// stops with each meal in the cart once, rather than some meals complete and others absent. (No `<` in the shipped
+// text, SPEC-rung2-progress-and-checkout § 11: the loop's test is written the other way round.)
 function steps(items) {
   var list = items.map(function (it) { return [it.key, 0]; });
-  items.forEach(function (it) { for (var n = 1; n < it.qty; n++) list.push([it.key, n]); });
+  items.forEach(function (it) { for (var n = 1; it.qty > n; n++) list.push([it.key, n]); });
   return list;
 }
 // One press per tick, so the store can re-render between presses. ⚠ A control missing after a press stops

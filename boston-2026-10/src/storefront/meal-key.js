@@ -7,9 +7,10 @@
 // what a visitor's browser runs: plain script (no module syntax inside it), no global but the language's own
 // (encodeURIComponent and unescape turn the name into one character per UTF-8 byte; Math.imul multiplies modulo 2^32),
 // and no `//` line inside it, which the shipped text would keep. R2-25 pins it against a second, independent
-// implementation and FNV-1a's published vectors.
+// implementation and FNV-1a's published vectors. SPEC-rung2-progress-and-checkout § 11: no `<` in it (the store's admin
+// reads `<` and a letter as a tag), so the loop's test is written the other way round.
 export function mealKey(name) {
   var s = unescape(encodeURIComponent(String(name).replace(/\s+/g, " ").trim())), h = 0x811c9dc5;
-  for (var i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  for (var i = 0; s.length > i; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
   return ("0000" + (h >>> 0).toString(36)).slice(-5);
 }

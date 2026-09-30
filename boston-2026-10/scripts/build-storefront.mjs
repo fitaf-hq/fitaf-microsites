@@ -5,7 +5,9 @@
 //   fitaf-handoff.fill-B.console.js  version line and text, for a browser console (the one-browser run; the name is
 //                                    kept, so a runbook that names it still works)
 // The size (SPEC-rung2 § 11 item 5, the Advisor's ruling), over each whole file: the build WARNS above 5,120 bytes (the
-// target) and REFUSES above 10,240 (the ceiling), writing nothing.
+// target) and REFUSES above 10,240 (the ceiling), writing nothing. And it REFUSES, writing nothing, any `<` in a file
+// but the Footer block's own opening <script> and closing </script> (SPEC-rung2-progress-and-checkout § 11, amended:
+// the store's admin reads the text inside the block as HTML, and `<` before a letter, even across a space, as a tag).
 // Its own directory and its own npm script, NOT `npm run build`: the production build stays byte-identical (S20).
 // The version line is `/* fitaf-handoff <commit> sha256:<hex of the text after it> */`, so what is live can be
 // compared with what is kept. The text is the source without its full-line `//` comments, with the plan counts inlined
@@ -121,16 +123,29 @@ export function gitCommit() {
   return git("status", "--porcelain", "--", ...INPUTS) ? `${head}-dirty` : head;
 }
 
-export async function buildStorefront({ outDir = DIST_STOREFRONT, sourcePath = STOREFRONT_SOURCE, commit = gitCommit() } = {}) {
+/** The two files of one text, as the build writes them, not yet checked or written (R2-58 scans them). */
+export async function storefrontFiles({ sourcePath = STOREFRONT_SOURCE, commit = gitCommit() } = {}) {
   const text = await storefrontText({ sourcePath });
   const consoleFile = versionLine(text, commit) + text;
-  const files = [
+  return [
     [FOOTER_FILE, `<script>\n${consoleFile}</script>\n`],
     [CONSOLE_FILE, consoleFile],
   ].map(([name, content]) => ({ name, content, bytes: Buffer.byteLength(content) }));
-  // Refuse before writing anything: a text that could close its own <script> tag, or a file over the limit.
-  if (files.some((f) => /<\/script/i.test(f.content.replace(/<\/script>\n$/, "")))) {
-    throw new Error("a script text contains </script");
+}
+
+/** A file's text without the Footer block's own wrapper: what must hold no `<` at all. */
+const unwrapped = (f) => (f.name === FOOTER_FILE ? f.content.slice("<script>\n".length, -"</script>\n".length) : f.content);
+
+export async function buildStorefront({ outDir = DIST_STOREFRONT, sourcePath = STOREFRONT_SOURCE, commit = gitCommit() } = {}) {
+  const files = await storefrontFiles({ sourcePath, commit });
+  // Refuse before writing anything: a `<` in the text (the store's admin would read a tag in it; nor can the text then
+  // close its own <script> early), or a file over the limit.
+  for (const f of files) {
+    const at = unwrapped(f).indexOf("<");
+    if (at >= 0) {
+      const near = unwrapped(f).slice(Math.max(0, at - 20), at + 20).replace(/\s+/g, " ");
+      throw new Error(`${f.name}: a '<' in the text, near "${near}" (SPEC-rung2-progress-and-checkout § 11: none but the block's own <script> and </script>)`);
+    }
   }
   for (const f of files) {
     if (f.bytes > MAX_SHIPPED_BYTES) {
