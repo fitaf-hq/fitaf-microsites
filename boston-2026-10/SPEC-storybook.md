@@ -68,3 +68,26 @@ screen's own module (rung 2 § 14); nothing of `tools/storybook/` is ever inline
 - **The size**: the Footer block is 9,614 bytes of 10,240 (`ace775b`); a richer screen may not fit, which is a question
   for that contract (a hosted script would be the first request the block makes), not for this one.
 - **Publishing a static build** (for the Advisor to look at away from this machine): later, and his word.
+
+## 7. Built, 2026-09-30 — found at the build, not ruled
+
+Red at `c8979f0`, built at `4b87deb`. `storybook`, `@storybook/html-vite`, `@storybook/addon-a11y` and
+`@storybook/addon-docs` at **10.6.1** (what `^10.2.1`, OurFans's range, resolves to), `vite` 7.3.6, in the tool's
+lockfile.
+
+- **The readers reach the stories through Node**: a browser story cannot run `scripts/build-storefront.mjs`, so
+  `.storybook/main.js` runs `screenWords` and `screenTokens` when Storybook builds and serves their output to the
+  stories as a virtual module, `virtual:fitaf-screen-inputs`. They come from `scripts/screen-inputs.mjs`, where the
+  build now takes them from (rung 2 § 14's build note): importing the build itself would need the site's install.
+- **The development server may read this package and the site's `src/storefront/`, nothing else of the site**; setting
+  only the latter first shut out the stories themselves (a 403, seen on the first run and fixed before the commit).
+  Telemetry and "what's new" are off; `storybook` serves on `localhost:6016` without opening a browser.
+- **The Timeline's unthrottled profile is partly assumed**: § 13 measured only its checkout wait (4.1–4.5 s; the story
+  plays 4.3), so A is shown as 0 s and B as § 13a's 1.3 s, and its caption says the source. The four 4G columns are
+  § 13a's table exactly (SB-5 reads the table from the contract).
+- **The placeholders are tiles in the screen's navy** with the meal's initial in white: the plan's own colour is not
+  among the build's readers, and a second reader of the template is what § 3 item 2 rules out.
+- **`beforeEach` clears a story's timers and removes its screen** before the next story renders, so one screen is up at
+  a time; the Timeline replays on a remount or with its `loop` control.
+- ⬜ **Not tested by a case**: that the development server renders a story (checked by hand at the build, in headless
+  Chrome); SB-2 proves the static build only.

@@ -520,3 +520,28 @@ extensively for UI development"*; and, asked how the stories get the screen, *"E
 | R2-63 | the built block and console file | the module's text inlined; no `import`/`export` in either; no `<` but the two (R2-58) |
 | R2-64 | the module imported alone (no `#fitaf=` page, no store) | it makes the screen, adds meals from stand-in cards, shows the last step, and removes it, with the same elements, classes and step lines as the block's screen |
 | R2-65 | ⭐ one source | a change to the module (a rule of its style, say) changes both the built block and what R2-64 renders; a copy of the screen's code left in `fitaf-handoff.js` fails the case |
+
+**Built** (found at the build, not ruled; § 14 above governs). Red at `c8979f0`, built at `14acc5d`, two fixtures at
+`4d037a5`.
+
+- **The interface**: `progressScreen(document, words, tokens)` makes the screen (appended to the document's body, shown as
+  a manual popover) and returns `{ added(meal, card, k, t), last(), remove() }`. Fill B calls it at the same moments:
+  `screen()` makes it, `S.added()` after each press, `last()` after CHECKOUT, and `S.remove()` in `end()`. The 90 s
+  clock's removal stays inside the module. The build inlines `progressScreen.toString()` at a fifth slot, `SCREEN`,
+  which it requires as it requires the other four. The page's colours reach the module as an argument (the `TOKENS`
+  slot now fills a variable of fill B's). The function's body is not indented, as fill B's is not, because it ships;
+  it holds no comment, since one would ship.
+- **The readers moved**: `screenWords` and `screenTokens` now live in `scripts/screen-inputs.mjs` (node's own modules
+  and `flow-theme.mjs` only), and `scripts/build-storefront.mjs` takes them from there and re-exports them. So
+  Storybook imports the build's own readers without the site's install (the build imports `qrcode` through
+  `build.mjs`).
+- **The cost**: the Footer block **9,850** bytes and the console file **9,831** at `14acc5d`, 236 more than `ace775b`'s
+  text (the module's wrapper, its returned methods, its own whitespace collapse, and fill B's three small callers), no
+  `<` but the block's two. R2-32's pin moved from `c4ceb682…` to
+  `b11f8fa64c8e25a8d065551737d6e4b6c68c5d92927efb05e444e297dfa25a35`. **Not pasted**; the watch's expected Footer is
+  unchanged. ⚠ 390 bytes remain under the 10,240 ceiling for the next design.
+- ⚠ **Two fixtures followed the screen, their rules unchanged** (`4d037a5`, to revert alone if not wanted): R2-29's small
+  source carries the fifth slot, and R2-58's markup mutant is made in a copy of the module, where the screen's anchor now
+  is, and handed to the build as `screenPath`. Every other case of §§ 5, 9–12 passes unchanged on the new text, the
+  watch's 121 with it (its mutants' targets, `S.setAttribute("popover", "manual");`, `if (S.showPopover)
+  S.showPopover();` and `ui(screen);`, are kept word for word).
