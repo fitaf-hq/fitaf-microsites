@@ -22,6 +22,6 @@
   "devDependencies": {
     "jsqr": "^1.4.0",
     "pngjs": "^7.0.0",
-    "wrangler": "^4.142.0"
+    "wrangler": "^4.144.0"
   }
 }
