@@ -93,14 +93,24 @@ function ui(f) { try { f(); } catch (e) {} }
 // Every verdict line (done, stopped) is written through end(): the screen is gone before the line (§ 2 item 4).
 function end(m) { ui(function () { S.remove(); }); log(m); }
 function $(q) { return S.querySelector(q); }
+// SPEC-rung2-progress-and-checkout § 11: the store's admin reads the text inside this <script> as HTML and rejects a
+// tag in it, so the screen is built element by element (its style's rules as textContent): no markup string, no
+// innerHTML, and no `<` before a letter, `/` or `!` anywhere in the shipped text (R2-58). The same elements as before:
+// #fitaf-screen > style, div > (h2, div.b > i, div.c, p[role=status][aria-live=polite]).
+function make(tag, parent, cls) { var e = w.document.createElement(tag); if (cls) e.className = cls; return parent.appendChild(e); }
 function screen() {
   S = w.document.createElement("div");
   S.id = "fitaf-screen";
   S.setAttribute("popover", "manual");
-  S.innerHTML = "<style>" + CSS + "</style><div><h2></h2><div class=b><i></i></div><div class=c></div><p role=status aria-live=polite></p></div>";
-  $("h2").textContent = UI.title;
+  make("style", S).textContent = CSS;
+  var box = make("div", S), line;
+  make("h2", box).textContent = UI.title;
+  make("i", make("div", box, "b"));
+  make("div", box, "c").onanimationiteration = function () { show(NOW.nextElementSibling || this.firstElementChild); };
+  line = make("p", box);
+  line.setAttribute("role", "status");
+  line.setAttribute("aria-live", "polite");
   S.onanimationend = function (e) { if (e.target === S) S.remove(); };
-  $(".c").onanimationiteration = function () { show(NOW.nextElementSibling || this.firstElementChild); };
   w.document.body.appendChild(S);
   if (S.showPopover) S.showPopover();
 }
