@@ -461,3 +461,68 @@ And most slides are names alone because the page had loaded only the first cards
 **Two constraints any contract for it must settle** (the orchestrator's): a sprite sheet sent down is **a request our
 block makes** (the first exception to *nothing is fetched*, § 1) and puts photographs on Fit AF's host; and the
 animation's clean exit keys on fill B's `done`, which already exists.
+
+## 15. Amendment, 2026-09-30 — for the Advisor's 21:00 paste: the key ignores the store's tag, fill B waits for the cards, and the Fit AF logo
+
+**Ruled by the Advisor** (2026-09-30): *"Please build and rehearse"* (the first two, proposed after the day's live
+check) and *"We also want to make sure that the Fit AF logo appears on the interstitial and checkout pages."* The paste
+is his, at a deployment session he set for 21:00 PDT. **Base**: the dev line at `56ef62e`, whose Footer block text is
+the live block's (`ace775b`, `c4ceb682…`). ⚠ **Not** the Storybook branch (`boston/rung-2-screen-next`, the screen in
+its own module, 236 bytes more): it is rebased on this after the paste.
+
+**What the live check found** (2026-09-30, the test address's *Continue to checkout*): (1) the store dropped a `🟠NEW:`
+tag from two meal names mid-week, so their keys stopped matching and fill B refused them; (2) in 2 of 7 runs the store
+drew no meal card within fill B's 10 s, so fill B refused every meal of the link with no card on the page. Both failed
+safe (nothing pressed, the plain order page).
+
+### 15.1 The key ignores a leading marketing tag
+
+`mealKey` (`src/storefront/meal-key.js`, the one function both the link tool and fill B carry) removes **a leading tag**
+before it collapses whitespace and hashes: an emoji (a UTF-16 surrogate pair, or a character in U+2600–U+27BF), then
+optional space, an uppercase word of 2 to 12 letters, optional space, a colon, and the space after it. So
+*"🟠NEW: Blackened Chicken Caesar Salad"* and *"Blackened Chicken Caesar Salad"* share one key, and a name with no tag
+keys **exactly** as today (every link built today still works). *"Smart Oats: Almond Joy"* is not a tag (no emoji).
+⛔ **The shipped text stays ASCII**: the pattern is written with `\u` escapes, since the store's admin reads the block
+as HTML. (The KMS's own badge rule, `N2`, names `🟠NEW:` alone; this is its generalisation to a future tag.)
+
+### 15.2 Fill B waits for the cards before its 10 s
+
+Today fill B's 10 s (50 polls of 200 ms) starts when it does. **Now it starts at the first poll that finds a titled
+`app-product-card`.** Before that, fill B waits for the page's cards **up to 30 s**, then stops with `stopped: no meal
+cards on this page`, pressing nothing. Every other rule is unchanged (§ 10's check that the plan is empty runs on every
+poll; a meal still missing 10 s after the first card refuses the whole link, naming its key). The screen's 90 s clock is
+unchanged. The watch's longest-run sum (`FILL_B_LONGEST_MS`, `SPEC-storefront-watch.md` W9e) moves with it.
+
+### 15.3 The Fit AF logo on the screen and the checkout
+
+The block shows **the store's own logo**: the `src` of the page's `img.header__logo-image` (the image the store's
+header already loads, from its own image host), in an `img` the block creates with the DOM (no markup), `alt="Fit AF"`,
+not a link and not focusable.
+- **On the screen**: centred above the step line, about 48 px high.
+- **On the deep-carted checkout**: centred above the checkout, about 40 px high, while the store's header stays hidden
+  (H1). Only for a deep-carted visit (the page's mark, as every H rule).
+- ⛔ **No image URL is written into the shipped text**: the `src` is read from the page, so no new host, no new file, and
+  nothing of ours to host. **No header logo on the page: no logo, and nothing else changes.**
+
+### 15.4 Size and text
+
+The Footer block at most **10,240 bytes** (today 9,614; the build reports the new count); **every character ASCII**; no
+`<` but the block's own two (§ 11).
+
+### 15.5 Cases (`node --test`, no network; the site's and the watch's suites)
+
+| | case | expect |
+|---|---|---|
+| R2-66 | the key and a tag | `🟠NEW: X` and `X` share a key; a name without a tag keys as before (R2-25's vectors unchanged); `Smart Oats: Almond Joy` keeps its words; the link tool and the shipped script agree |
+| R2-67 | ⭐ fill B, cards late | the fixture page draws its cards 12 s after fill B starts: `done: /checkout` (today: refused); ⭐ mutant: the window counted from fill B's start, fails |
+| R2-68 | fill B, no cards | none for 30 s: `stopped: no meal cards on this page`, nothing pressed |
+| R2-69 | fill B, a meal missing | the cards drawn, one meal absent: refused 10 s after the first card, naming its key (unchanged) |
+| R2-70 | the logo | with a header logo: the screen and the deep-carted checkout each show one `img` with its `src` and `alt="Fit AF"`, nothing focusable added; without one: none, and the fill unchanged |
+| R2-71 | the text | every character of the Footer block and the console file is ASCII; no URL in them that the live block lacks; at most 10,240 bytes |
+| W16 | the watch, live | the smoke reports the logo on the screen and on the checkout (found or absent); absent fails the width |
+
+### 15.6 After the build, before the paste (the orchestrator's)
+
+A clean-clone re-run; then **the rehearsal on the live store**: the watch's smoke with `--script` (this build's fill-B
+console file, pasted into the live page by the smoke), at both widths, the standing rule's *"before a paste"*. After the
+Advisor's paste: the smoke on the live block, and the watch's expected Footer moved by its accept command.
