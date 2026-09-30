@@ -20,7 +20,9 @@
 //                    is, with its own pay button, " PAY NOW " in .summary__pay-button. Either pay button logs
 //                    "[fixture] ORDER PLACED" if anything presses it.
 // Around both, the app's shell: the sticky header, the footer, the platform's credit line and the pop-up host (H1, H2,
-// H5), links and text only (no button, so the smoke's evidence of the order page is what it was).
+// H5), links and text only (no button, so the smoke's evidence of the order page is what it was); and in the header the
+// store's logo, img.header__logo-image (SPEC-rung2-progress-and-checkout § 15.3: the block shows it as the Fit AF logo),
+// a generated image served here, like the cards' (W16).
 // § 10 (the Advisor's first look), with the store's names read from its public code: the discounts in their three
 // placements (.checkout-discounts: the payment section's, its own section, the summary's), each with a gift-card and a
 // discount-code field and their Apply buttons; the summary's price rows (.summary__row: Subtotal, Shipping, Tax, and on
@@ -38,6 +40,10 @@ export const MEALS = ["Birria de Res Bowl", "Chicken Pesto Pasta", "Jalapeño Li
 export const PRICE_CENTS = 1250;
 /** A generated image: a flat rectangle in the page's --lean blue. Not a photograph. */
 const SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200"><rect width="320" height="200" fill="#48aeee"/></svg>';
+/** The header's logo (§ 15.3), generated too: a flat rectangle in the page's --navy. Not the store's, not a photograph. */
+const LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40"><rect width="120" height="40" fill="#1b2360"/></svg>';
+/** Where the store's header logo is served: W16 counts its requests (nothing of ours may fetch it again). */
+export const LOGO_PATH = "/img/logo.svg";
 /** How long the server holds a "pending" image before answering: longer than any run that reads it. */
 const PENDING_MS = 20_000;
 
@@ -128,11 +134,12 @@ ${cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Disc
 }
 
 /** The app's shell around the router outlet (H1, H2, H5), each part omitted if named in `cfg.missing` (which may also
- * name "contact-sign-in", the checkout's H4). */
+ * name "contact-sign-in", the checkout's H4, and "logo", the header's logo). */
 function shellParts(cfg) {
   const part = (name, html) => (cfg.missing.includes(name) ? "" : html);
+  const logo = part("logo", `<img class="header__logo-image" src="${LOGO_PATH}" alt="Synthetic store">`);
   return {
-    before: part("header", '<div class="sticky-header"><a href="/">Synthetic store</a> <a href="/order?mpid=21">Order</a></div>'),
+    before: part("header", `<div class="sticky-header">${logo}<a href="/">Synthetic store</a> <a href="/order?mpid=21">Order</a></div>`),
     after: part("footer", '<div class="footer"><p>Synthetic footer</p><a href="/about">About</a></div>') +
       part("credit", '<p class="app-hmp-credit">Synthetic credit line</p>') +
       part("popup", '<app-storefront-popup-host><p class="popup">A synthetic pop-up</p></app-storefront-popup-host>'),
@@ -144,7 +151,7 @@ function shellParts(cfg) {
  * dialog and never routes), consoleNoise (lines the page logs at start, as a store's own code does), dropOnCheckout
  * (a name), totalDeltaCents; and for rung 2's two faces: subscription ("off", "active", "forced" or "none"; see
  * subscriptionParts), missing (parts to leave out: "header", "footer", "credit", "popup" of the shell, and
- * "contact-sign-in" of the checkout), photos ({ name:
+ * "contact-sign-in" of the checkout, and "logo", the header's logo, § 15.3), photos ({ name:
  * "loaded" | "none" | "pending" }: the card's img loaded, with no src yet, or still loading), routeDelayMs (the store
  * takes this long to route after CHECKOUT), hangAfter (after this many meals are added, the page's setTimeout runs
  * nothing any more: a hang planted under fill B), topLayerPopup (at load, a pop-up shown in the browser's top layer,
@@ -379,6 +386,10 @@ export async function startStore() {
     if (path === "/order" || path === "/checkout") {
       res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
       res.end(appHtml(cfg));
+    } else if (path === LOGO_PATH) {
+      // no-store, as the cards' images: a second request for it would reach the server (W16 counts them).
+      res.writeHead(200, { "content-type": "image/svg+xml", "cache-control": "no-store" });
+      res.end(LOGO_SVG);
     } else if (/^\/img\/meal-\d+\.svg$/.test(path)) {
       // no-store: a second request for it would reach the server, so a count of one proves the page reused its image.
       res.writeHead(200, { "content-type": "image/svg+xml", "cache-control": "no-store" });
