@@ -409,3 +409,28 @@ but this is very, very good!"*
 | R2-61 | the store's pop-up opened as a top-layer popover while the screen is up | the screen stays shown throughout; its progress never decreases; ⭐ mutant: the screen as an *auto* popover, R2-61 fails (if the reproduction shows another cause, the mutant is that cause) |
 | R2-62 | an ordinary visit, and a link refused before CHECKOUT | no storage written (R2-04's list, and the refused link's) |
 | W15 | live, both widths | the smoke reports whether the extras pop-up opened (expected: not) and the seconds from CHECKOUT to `/checkout` |
+
+**Built** (found at the build, not ruled; § 12 above governs). Red at `3406b59`, built at `d5a371e`.
+
+- ⚠ **The reproduction did not reproduce.** The screen has been a **manual** popover since `ed422ad` (and so at
+  `8f5ee58`, the block live), and the store opens its overlays as manual popovers (its CDK: `popover="manual"`); a
+  manual popover is closed by no other. R2-61 reads the screen every frame while the synthetic store's pop-up opens in
+  the top layer, as a manual popover and as an auto one: on the live text it passes both, one screen, never closed,
+  bar and count only rising. Its mutant (the screen made **auto**) is light-dismissed only by an **auto** pop-up, and
+  then it closes and nothing shows it again: no restart either. **So the orchestrator's lead describes the mutant, not
+  the live text, and the screen is unchanged.** ⬜ What the Advisor saw restart is not established here. One thing the
+  screen does that looks like starting over, by § 2 item 2's design: once all meals are added its carousel cycles every
+  2.5 s, and its first turn goes from the last meal back to the first, about 2.5 s after the seventh press, which is
+  about when the store's extras pop-up would open. With the key below the pop-up no longer opens, and the carousel still
+  cycles until done; whether it should stop on the newest meal is the Advisor's to rule.
+- **The key**: `sessionStorage.setItem("ecc_additions_prompt_handled", "true")` after the fragment is removed and before
+  the click on CHECKOUT, inside the screen's `try` (a storage that throws changes nothing). R2-59 on the synthetic page
+  pins the order (the fragment removed, the key, the press) and that it is the only touch of storage; in Chrome, the key
+  absent at every Add to Cart (the store clears it when its order page starts), `"true"` at CHECKOUT, no pop-up. R2-62:
+  every link refused before CHECKOUT touches neither storage. The store's reading of the key is from its public code,
+  release `main-2HXLHIG7.js` (`isHandled()` before it opens the pop-up; `clear()` in the order page's `ngOnInit`).
+- **W15** is a report per width, not a pass rule: the recorder notes the extras dialog and `app-checkout` arriving; the
+  seconds are from the last step line (written just after the press of CHECKOUT) to the checkout arriving.
+- **The size**: the Footer block **9,614** bytes and the console file **9,595** (91 more than `d1f0e36`), no `<` but the
+  block's own two. R2-32's pin moved from `c6775461…` (the block live) to
+  `c4ceb682960ea0b048001f2babb9b1d4c75609f32c84fb17dd74a94bf9be12b8`.
