@@ -22,7 +22,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
 import { LOG_PREFIX, MPID, STORE_ORIGIN, VIEWPORTS, WIDTHS } from "./config.mjs";
-import { facesVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
+import { extrasReport, facesVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
 import { parseBlock } from "./footer-check.mjs";
 import { siteCode } from "./site-code.mjs";
 import { DONE_LINE, smokeVerdict } from "./smoke-verdict.mjs";
@@ -179,7 +179,7 @@ async function facesOf(page, outcome) {
       checkout = null;
     }
   }
-  return { done, ...recorded, checkout };
+  return { done, ...recorded, checkout, extras: extrasReport(recorded.events) };
 }
 
 /** A Footer block file (<script>…</script>) gives the text between its tags; a console file is used as it is. */

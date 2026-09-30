@@ -378,3 +378,86 @@ extra-press loop `it.qty > n`; those were the text's only two `<`. `npm run buil
 restored) are scanned as the build composes them, and R2-58b has the build refuse both. The Footer block is **9,523**
 bytes and the console file **9,504**, holding **2** and **0** `<`. R2-32's pin moved from `5eb8416e…` to
 `c67754610077710b8e194ec5605daee5b357baa9fe9bd7eee6fc5685075e3744`.
+
+## 12. Amendment, 2026-09-29 (late) — LIVE since ~22:04 PDT; the progress bar must not restart, and the upsell is skipped
+
+**The state**: `8f5ee58` is the store's Footer block (saved by the Advisor, verified 15 of 15 visits). His test of the
+7-meal link: *"It worked! We need to refine the progress bar a little bit (it restarts when I think the pop-up fires),
+but this is very, very good!"*
+
+1. **The progress screen never goes back and never re-opens.** The lead (the orchestrator's, **unverified**): the screen
+   is shown as an *auto* popover, and the store's own pop-up, shown in the top layer as a popover too, **light-dismisses**
+   an auto popover; fill B then shows the screen again and its bar starts over. ⇒ **First reproduce it** on the
+   synthetic store (its extras pop-up opened the way the store opens it), red; then the fix (a *manual* popover, which
+   another popover cannot dismiss, is the expected one, but the test decides). **The screen is shown once per run; its
+   progress only rises; it goes only at `done`, at a stop, or at the 90 s clock.**
+2. **The upsell is skipped** (**ruled by the Advisor**, `AskUserQuestion`, 2026-09-29 ~23:05 PDT: *"Yes, that one key"*).
+   The store opens its extras pop-up after CHECKOUT only if `sessionStorage['ecc_additions_prompt_handled']` is not
+   `"true"`; it sets that key itself when a visitor dismisses the pop-up (read from its public code, release
+   `main-6F2NMA4I.js`). ⇒ **Fill B sets exactly that key to `"true"`, in `sessionStorage` only, immediately before it
+   presses the store's CHECKOUT, and at no other moment**; nothing else is ever written, and an ordinary visit still
+   touches no storage (R2-04). **The pop-up handling stays** as the fallback: if the store ignores the key (a renamed
+   flag), the pop-up opens under the screen, invisible, and fill B presses CONTINUE TO CHECKOUT as before.
+   ⚠ This is the one exception to *fill B writes nothing* (§§ 6, 10 of the rung 2 contract), and it is the store's own
+   key with the store's own meaning.
+3. `storefront/dependencies.json` gains `ecc_additions_prompt_handled`, so F2 flags a release that drops it.
+
+| | case | expect |
+|---|---|---|
+| R2-59 | the synthetic store honouring the key | the key is `"true"` only from the CHECKOUT press on (absent before it); no pop-up opens; `done: /checkout` |
+| R2-60 | the synthetic store ignoring the key | the pop-up opens, invisible under the screen; fill B presses CONTINUE; `done: /checkout` (the § 10 path, unchanged) |
+| R2-61 | the store's pop-up opened as a top-layer popover while the screen is up | the screen stays shown throughout; its progress never decreases; ⭐ mutant: the screen as an *auto* popover, R2-61 fails (if the reproduction shows another cause, the mutant is that cause) |
+| R2-62 | an ordinary visit, and a link refused before CHECKOUT | no storage written (R2-04's list, and the refused link's) |
+| W15 | live, both widths | the smoke reports whether the extras pop-up opened (expected: not) and the seconds from CHECKOUT to `/checkout` |
+
+**Built** (found at the build, not ruled; § 12 above governs). Red at `3406b59`, built at `d5a371e`.
+
+- ⚠ **The reproduction did not reproduce.** The screen has been a **manual** popover since `ed422ad` (and so at
+  `8f5ee58`, the block live), and the store opens its overlays as manual popovers (its CDK: `popover="manual"`); a
+  manual popover is closed by no other. R2-61 reads the screen every frame while the synthetic store's pop-up opens in
+  the top layer, as a manual popover and as an auto one: on the live text it passes both, one screen, never closed,
+  bar and count only rising. Its mutant (the screen made **auto**) is light-dismissed only by an **auto** pop-up, and
+  then it closes and nothing shows it again: no restart either. **So the orchestrator's lead describes the mutant, not
+  the live text, and the screen is unchanged.** ⬜ What the Advisor saw restart is not established here. One thing the
+  screen does that looks like starting over, by § 2 item 2's design: once all meals are added its carousel cycles every
+  2.5 s, and its first turn goes from the last meal back to the first, about 2.5 s after the seventh press, which is
+  about when the store's extras pop-up would open. With the key below the pop-up no longer opens, and the carousel still
+  cycles until done; whether it should stop on the newest meal is the Advisor's to rule.
+- **The key**: `sessionStorage.setItem("ecc_additions_prompt_handled", "true")` after the fragment is removed and before
+  the click on CHECKOUT, inside the screen's `try` (a storage that throws changes nothing). R2-59 on the synthetic page
+  pins the order (the fragment removed, the key, the press) and that it is the only touch of storage; in Chrome, the key
+  absent at every Add to Cart (the store clears it when its order page starts), `"true"` at CHECKOUT, no pop-up. R2-62:
+  every link refused before CHECKOUT touches neither storage. The store's reading of the key is from its public code,
+  release `main-2HXLHIG7.js` (`isHandled()` before it opens the pop-up; `clear()` in the order page's `ngOnInit`).
+- **W15** is a report per width, not a pass rule: the recorder notes the extras dialog and `app-checkout` arriving; the
+  seconds are from the last step line (written just after the press of CHECKOUT) to the checkout arriving.
+- **The size**: the Footer block **9,614** bytes and the console file **9,595** (91 more than `d1f0e36`), no `<` but the
+  block's own two. R2-32's pin moved from `c6775461…` (the block live) to
+  `c4ceb682960ea0b048001f2babb9b1d4c75609f32c84fb17dd74a94bf9be12b8`.
+
+## 13. Placed, and the Advisor's direction for the screen's next design (2026-09-30 ~00:10 PDT) — NOT YET CONTRACTED FOR BUILD
+
+**Placed**: `ace775b` (§ 12: the upsell skipped by the store's own key) is the store's Footer block since 2026-09-29
+~23:45 PDT, verified on 15 of 15 visits; the live smoke: the extras pop-up never opened, CHECKOUT to `/checkout` in
+4.1–4.5 s. The Advisor's test: *"It looks almost perfect."*
+
+**The "restart" explained** (his screen recording, 8 s, read frame by frame and kept off every repository): **the bar
+never restarts**; after the seventh meal the carousel holds, then cycles back to the first meal (§ 2's 2.5 s cycle).
+And most slides are names alone because the page had loaded only the first cards' photos (§ 2 item 2, as specified).
+
+**His direction** (in his words; design to iterate, not a ruled build):
+- *"This is where I think we're more deliberate with our animation. So, let's figure out what timing would look like of a
+  4G network (i.e., decent but not great), and figure that we'll need to fill (roughly) 2 to 10 seconds. We want to have
+  a smooth animation, and if the page reports back that it's ready before the animation is done, we can cleanly exit
+  it."* ⇒ a *"wrapping up"* animation after the last meal, designed to be cut short by fill B's own `done`.
+- *"The product images are maybe a placeholder. We might replace with this (totally making this up): 'Ensuring
+  freshness', 'Aligning to goals', 'Planning delivery', etc."* (an example of what might be on the screen).
+- *"I think we should generate a sprite sheet. That adds tooling to our pipeline, but we could send down thumbnails. This
+  gets to a broader discussion about how photography works in the microsite and deep carting."*
+- *"For now, let's consider some sort of morphing line animation – possibly in lieu of the progress bar altogether.
+  Android boot screens have some nice approaches to this. Let's assume we're going to iterate on several different
+  aspects of this."*
+
+**Two constraints any contract for it must settle** (the orchestrator's): a sprite sheet sent down is **a request our
+block makes** (the first exception to *nothing is fetched*, § 1) and puts photographs on Fit AF's host; and the
+animation's clean exit keys on fill B's `done`, which already exists.

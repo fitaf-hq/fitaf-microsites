@@ -279,13 +279,17 @@ function control(re, any) {
 // its pattern, (?!), matches no text at all, not even an empty one, so the wait for /checkout goes on).
 // Rung 2's two faces: after the press of CHECKOUT, the screen's last step (last(): the bar full, the checkout line); at
 // done, the mark and the style first, then the screen goes (§ 2 item 4: the first thing the visitor sees is the
-// stripped checkout).
+// stripped checkout). § 12 item 2 (the Advisor's ruling): IMMEDIATELY BEFORE the press of CHECKOUT, and at no other
+// moment, the store's own key sessionStorage['ecc_additions_prompt_handled'] = "true", its mark for "the extras pop-up
+// has been dealt with", so the store goes straight to /checkout. The one thing fill B ever writes. The store clears it
+// itself when its order page starts; a store that ignores it opens its pop-up, invisible under the screen, and fill B
+// presses its CONTINUE TO CHECKOUT as before (§ 10). A storage that throws changes nothing (ui()).
 function checkout() {
   var k = 0, polls = 0;
   guard(function poll() {
     if (k && loc.pathname === "/checkout") { ui(mark); return end("done: /checkout"); }
     var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]);
-    if (b) { if (!k) drop(); b.click(); if (!k) ui(last); k++; polls = 0; }
+    if (b) { if (!k) { drop(); ui(function () { w.sessionStorage.setItem("ecc_additions_prompt_handled", "true"); }); } b.click(); if (!k) ui(last); k++; polls = 0; }
     else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? end("stopped: /checkout not reached") : fail("no checkout control");
     w.setTimeout(guard(poll), POLL_MS);
   })();

@@ -401,7 +401,11 @@ its § 8 has the build's notes). Not a ruling; §§ 8–12 above are unchanged.
   `c87cb754d9b7a07260795cf0619950401ad1a2b3f6347e641f36586c9e5334fc` (`9e67484`), and by its § 11 to
   `5eb8416e34809b9c1ccca6fc3bb422c3e3179114145eb4bc3669ba5db8644037` (`4697f19`), and as amended to
   `c67754610077710b8e194ec5605daee5b357baa9fe9bd7eee6fc5685075e3744` (`d1f0e36`: the key function's and fill B's `<`
-  comparisons written the other way round; the keys unchanged, R2-25). Every press, wait, stop, key and link
+  comparisons written the other way round; the keys unchanged, R2-25), and by its § 12 to
+  `c4ceb682960ea0b048001f2babb9b1d4c75609f32c84fb17dd74a94bf9be12b8` (`d5a371e`), which adds the **one write** fill B
+  makes, by the Advisor's ruling: the store's own `sessionStorage['ecc_additions_prompt_handled'] = "true"`,
+  immediately before the press of CHECKOUT (the exception to § 10 item 4's *no storage written by fill B*). Every press,
+  wait, stop, key and link
   refusal of fill B is as these sections
   left it: R2-01 to R2-28, R2-30, R2-31 and R2-33 pass unchanged, and fill B still sets only its 200 ms timers (the
   screen's clocks are CSS animations).

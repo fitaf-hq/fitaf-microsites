@@ -145,7 +145,10 @@ exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.ha
   nothing** (R2-04, R2-40). **§ 10** (the Advisor's first look): the store's extras pop-up is made invisible, never
   removed, while the screen is up; and the checkout also hides the discounts unless the link carries an offer code (H7),
   the app banner with the top margin it reserves (H8), the Subtotal, Shipping and Tax rows but never a discount row or
-  the Total (H9), and the tip while none is chosen (H10).
+  the Total (H9), and the tip while none is chosen (H10). **§ 12** (the Advisor's ruling): immediately before it
+  presses CHECKOUT, and at no other moment, fill B sets the store's own `sessionStorage['ecc_additions_prompt_handled']`
+  to `"true"`, so the store skips its extras pop-up; the one thing fill B writes. A store that ignores it gets the § 10
+  handling, the pop-up invisible and its CONTINUE pressed.
   **Where its cases run**: R2-40–R2-44, R2-50 and R2-52's first half here (linkedom, the shipped text); the ones that
   need a browser (`:has()`, what is displayed, the top layer, motion, the 90 s clock, real images: R2-41c,
   R2-45–R2-49, R2-51, R2-52 in Chrome) in `tools/storefront-watch/test/r2-*.test.mjs`, because that package is the one that drives Chrome and this
@@ -171,13 +174,13 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   with a test link (the one-browser run of § 6); it keeps its name, so a runbook that names it still works. There is no
   fill-A file.
 - ⭐ **The shipped text is pinned (§ 12 item 3, R2-32)**: its SHA-256, the one in each version line, is
-  `c67754610077710b8e194ec5605daee5b357baa9fe9bd7eee6fc5685075e3744` since the two faces' § 11 as amended (`d1f0e36`:
-  no `<` in the text, which the store's admin reads as HTML; before it `5eb8416e…` at `4697f19`, `c87cb754…` at
-  `9e67484`, `aa773aec…` at `ed422ad`, and `28ce3983…` at `7b0d74f`). It was
-  `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8` (`8945de1`'s text), **the block placed in the
-  Footer on 2026-09-29, which is still the live one until the new text passes the live smoke and is pasted**.
-  Changing a shipped line is a separate amendment, with the live smoke before its paste, and moves the pin in the same
-  commit; only the source's `//` lines change freely.
+  `c4ceb682960ea0b048001f2babb9b1d4c75609f32c84fb17dd74a94bf9be12b8` since the two faces' § 12 (`d5a371e`: the store's
+  own extras key set just before CHECKOUT). ⭐ **The block live in the store's Footer since 2026-09-29 ~22:04 PDT is
+  `c6775461…`** (`8f5ee58`, § 11 as amended: no `<` in the text, which the store's admin reads as HTML). Before it:
+  `5eb8416e…` (`4697f19`), `c87cb754…` (`9e67484`), `aa773aec…` (`ed422ad`), `28ce3983…` (`7b0d74f`), and
+  `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8` (`8945de1`'s text, the first block placed in the
+  Footer, 2026-09-29). Changing a shipped line is a separate amendment, with the live smoke before its paste, and moves
+  the pin in the same commit; only the source's `//` lines change freely.
 - **The size (§ 11, the Advisor's ruling)**: each whole file should be at most 5,120 bytes, which the build **warns**
   above, and must be at most 10,240, which it **refuses** above, writing nothing. **Built 2026-09-29 at `c1764c1`**:
   the Footer block 5,180 bytes and `fitaf-handoff.fill-B.console.js` 5,161 (both warned: the key function and the
@@ -185,7 +188,8 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   the text did not change. **With the two faces (`ed422ad`)**: the Footer block **8,768** bytes and the console file
   **8,749**, both warned, under the ceiling; the Advisor accepted *about 7 KB*, and the two faces cost 3,588 bytes, not
   the 2 KB the contract estimated (SPEC-rung2-progress-and-checkout § 8 has the breakdown). **With its § 10
-  (`9e67484`)**: **9,299** and **9,280**; **with § 11 (`4697f19`, `d1f0e36`)**: **9,523** and **9,504**. ⛔ **The
+  (`9e67484`)**: **9,299** and **9,280**; **with § 11 (`4697f19`, `d1f0e36`)**: **9,523** and **9,504**; **with § 12
+  (`d5a371e`)**: **9,614** and **9,595**. ⛔ **The
   shipped text holds no `<` at all** but the Footer block's own `<script>` and `</script>`: the store's admin reads the
   text inside the block as HTML and `<` before a letter, even across a space, as a tag. The build **refuses** such a
   text, writing nothing (R2-58, R2-58b); write a comparison the other way round (`s.length > i`). R2-29 reaches the target's

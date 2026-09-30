@@ -11,7 +11,10 @@
 //   W14  (§ 10) H7–H10 reported, found or absent (the discounts, the app banner, the price rows, the tip: each
 //        conditional, each found one hidden while our style is on; the smoke's links carry no offer code and choose no
 //        tip); the Total (.summary__total) displayed; W11's payment check as § 10 re-states it: the controls hidden are
-//        exactly H3, H4, H6, H7, H8 and H10's.
+//        exactly H3, H4, H6, H7, H8 and H10's;
+//   W15  (§ 12, a report, not a pass rule) whether the store's extras pop-up opened (expected: not, since fill B sets the
+//        store's own key before CHECKOUT) and the seconds from fill B's press of CHECKOUT to /checkout: from the last
+//        step line (written just after that press) to the store's app-checkout arriving.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -86,6 +89,9 @@ export function recordFaces({ screen, style }) {
       for (const n of r.addedNodes) {
         if (n.id === screen) push("screen+");
         if (n.id === style) push("style+");
+        const has = (tag) => n.nodeType === 1 && (n.localName === tag || n.querySelector(tag));
+        if (has("app-extra-products-dialog") && !events.some((x) => x.e === "extras+")) push("extras+");
+        if (has("app-checkout") && !events.some((x) => x.e === "checkout+")) push("checkout+");
       }
       for (const n of r.removedNodes) if (n.id === screen) push("screen-");
       if (r.type === "attributes" && r.target === document.documentElement && document.documentElement.classList.contains(style)) {
@@ -224,6 +230,26 @@ export function facesVerdict(faces) {
   if (c.oneTime?.activeSwitches) reasons.push(`W13: an active subscription switch on /checkout (${c.oneTime.activeSwitches}): the order is not one-time`);
   if (c.oneTime?.renews?.length) reasons.push(`W13: a "renews every" line on /checkout: ${c.oneTime.renews.join("; ")}`);
   return { reasons };
+}
+
+/**
+ * W15 (§ 12): from the recorded events, whether the extras pop-up opened, and the seconds from the press of CHECKOUT
+ * (the last step line before the checkout arrived) to the store's app-checkout arriving; null when either is not seen.
+ */
+export function extrasReport(events = []) {
+  const arrived = events.find((e) => e.e === "checkout+");
+  const pressed = arrived ? events.filter((e) => e.e === "step" && e.t <= arrived.t).at(-1) : null;
+  return {
+    opened: events.some((e) => e.e === "extras+"),
+    checkoutSeconds: arrived && pressed ? Math.round(arrived.t - pressed.t) / 1000 : null,
+  };
+}
+
+/** W15's line for the report. */
+export function extrasLine(x) {
+  if (!x) return "W15: not recorded";
+  const wait = typeof x.checkoutSeconds === "number" ? `CHECKOUT to /checkout in ${x.checkoutSeconds.toFixed(1)} s` : "CHECKOUT to /checkout not seen";
+  return `W15: the extras pop-up ${x.opened ? "OPENED (expected: not)" : "did not open"}; ${wait}`;
 }
 
 /** A one-line summary of the faces for the report. */

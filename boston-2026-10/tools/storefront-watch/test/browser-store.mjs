@@ -150,7 +150,12 @@ function shellParts(cfg) {
  * nothing any more: a hang planted under fill B), topLayerPopup (at load, a pop-up shown in the browser's top layer,
  * as the store's own overlays are: a manual popover). § 10: tip ("section", the default; "bare"; "none"), tipChosen,
  * discountRow, banner (the app banner and its reserved margin), extrasOpenMs (the store fetching its extras before it
- * opens the dialog), continueDelayMs (its CONTINUE disabled that long), continueNever (disabled for good).
+ * opens the dialog), continueDelayMs (its CONTINUE disabled that long), continueNever (disabled for good). § 12:
+ * honoursKey (as the store: the order page clears sessionStorage's ecc_additions_prompt_handled when it starts, CHECKOUT
+ * skips the extras dialog when the key is "true", and the dialog's CONTINUE sets it; otherwise the key is ignored, as a
+ * release that renamed it would), extrasPopover ("manual", as the store's overlays open; or "auto").
+ * The page notes the key's value at each Add to Cart and at CHECKOUT (window.__fixtureKey), and whether the extras
+ * dialog opened (window.__fixtureExtras).
  */
 function appHtml(cfg) {
   const shell = shellParts(cfg);
@@ -207,13 +212,19 @@ function appHtml(cfg) {
     d.appendChild(el("button", null, "Continue browsing"));
     document.body.appendChild(d);
   }
+  var KEY = "ecc_additions_prompt_handled";
+  window.__fixtureKey = [];
+  window.__fixtureExtras = false;
   function onCheckout() {
+    window.__fixtureKey.push(["checkout", sessionStorage.getItem(KEY)]);
     if (cfg.signIn) return signIn();
     if (!cfg.extrasDialog) return route();
+    if (cfg.honoursKey && sessionStorage.getItem(KEY) === "true") return route();
     // As the store's overlays (§ 10): a manual popover in the top layer, its backdrop, its pane, the dialog.
     setTimeout(function () {
       var host = el("div", "cdk-overlay-popover");
-      host.setAttribute("popover", "manual");
+      host.setAttribute("popover", cfg.extrasPopover);
+      window.__fixtureExtras = true;
       var pane = el("div", "cdk-overlay-pane");
       var d = el("app-extra-products-dialog", "extras");
       d.setAttribute("role", "dialog");
@@ -221,7 +232,7 @@ function appHtml(cfg) {
       var b = el("button", null, " CONTINUE TO CHECKOUT ");
       b.disabled = Boolean(cfg.continueDelayMs || cfg.continueNever);
       if (cfg.continueDelayMs && !cfg.continueNever) setTimeout(function () { b.disabled = false; }, cfg.continueDelayMs);
-      b.onclick = function () { host.remove(); route(); };
+      b.onclick = function () { if (cfg.honoursKey) sessionStorage.setItem(KEY, "true"); host.remove(); route(); };
       d.appendChild(b); pane.appendChild(d);
       host.appendChild(el("div", "cdk-overlay-backdrop")); host.appendChild(pane);
       document.body.appendChild(host);
@@ -240,6 +251,7 @@ function appHtml(cfg) {
   }
   function renderOrder() {
     root.innerHTML = "";
+    if (cfg.honoursKey) sessionStorage.removeItem(KEY); // as the store's order page does when it starts
     ${JSON.stringify(MEALS)}.forEach(function (name, i) {
       var card = el("app-product-card");
       var pic = photo(name, i);
@@ -252,6 +264,7 @@ function appHtml(cfg) {
       b.appendChild(el("span", "product__actions-add_price", money(${PRICE_CENTS})));
       if (cfg.soldOut.indexOf(name) >= 0) b.disabled = true;
       b.onclick = function () {
+        window.__fixtureKey.push(["add", sessionStorage.getItem(KEY)]);
         pending.push(name);
         localStorage.setItem("hmp_pending_plan_items", JSON.stringify({ "21": pending }));
         renderBar();
@@ -351,6 +364,8 @@ const DEFAULTS = {
   extrasOpenMs: 0,
   continueDelayMs: 0,
   continueNever: false,
+  honoursKey: false,
+  extrasPopover: "manual",
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */
