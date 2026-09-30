@@ -434,3 +434,30 @@ but this is very, very good!"*
 - **The size**: the Footer block **9,614** bytes and the console file **9,595** (91 more than `d1f0e36`), no `<` but the
   block's own two. R2-32's pin moved from `c6775461…` (the block live) to
   `c4ceb682960ea0b048001f2babb9b1d4c75609f32c84fb17dd74a94bf9be12b8`.
+
+## 13. Placed, and the Advisor's direction for the screen's next design (2026-09-30 ~00:10 PDT) — NOT YET CONTRACTED FOR BUILD
+
+**Placed**: `ace775b` (§ 12: the upsell skipped by the store's own key) is the store's Footer block since 2026-09-29
+~23:45 PDT, verified on 15 of 15 visits; the live smoke: the extras pop-up never opened, CHECKOUT to `/checkout` in
+4.1–4.5 s. The Advisor's test: *"It looks almost perfect."*
+
+**The "restart" explained** (his screen recording, 8 s, read frame by frame and kept off every repository): **the bar
+never restarts**; after the seventh meal the carousel holds, then cycles back to the first meal (§ 2's 2.5 s cycle).
+And most slides are names alone because the page had loaded only the first cards' photos (§ 2 item 2, as specified).
+
+**His direction** (in his words; design to iterate, not a ruled build):
+- *"This is where I think we're more deliberate with our animation. So, let's figure out what timing would look like of a
+  4G network (i.e., decent but not great), and figure that we'll need to fill (roughly) 2 to 10 seconds. We want to have
+  a smooth animation, and if the page reports back that it's ready before the animation is done, we can cleanly exit
+  it."* ⇒ a *"wrapping up"* animation after the last meal, designed to be cut short by fill B's own `done`.
+- *"The product images are maybe a placeholder. We might replace with this (totally making this up): 'Ensuring
+  freshness', 'Aligning to goals', 'Planning delivery', etc."* (an example of what might be on the screen).
+- *"I think we should generate a sprite sheet. That adds tooling to our pipeline, but we could send down thumbnails. This
+  gets to a broader discussion about how photography works in the microsite and deep carting."*
+- *"For now, let's consider some sort of morphing line animation – possibly in lieu of the progress bar altogether.
+  Android boot screens have some nice approaches to this. Let's assume we're going to iterate on several different
+  aspects of this."*
+
+**Two constraints any contract for it must settle** (the orchestrator's): a sprite sheet sent down is **a request our
+block makes** (the first exception to *nothing is fetched*, § 1) and puts photographs on Fit AF's host; and the
+animation's clean exit keys on fill B's `done`, which already exists.
