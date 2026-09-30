@@ -220,10 +220,9 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
 - **Without a picks file** (or none open, or none for the count) the page is exactly as before: the template's
   three `PICKS_*` slots are empty (CC-4, S20). The grid's links, the Family tab, the Footer block and the Worker are
   unchanged (CC-6, CC-8).
-- ⚠ **Committing a picks file changes the production page until its week's window ends**, and S20 compares the
-  page with its golden on the day the suite runs: S20 fails until then, or until its golden is re-recorded. S24 (the
-  dev build on two fixed dates) fails for a week whose window ends between 2026-09-15 and 2026-10-15 (week B's does).
-  See `SPEC-chefs-choice.md` § 6.
+- ⚠ **Committing a picks file changes the production page until its week's window ends.** S20, S24 and S18's build
+  case build with an empty picks directory (their subject is the page without picks; `SPEC-chefs-choice.md` § 6,
+  ruled 2026-09-30), so a committed week moves none of them; Chef's Choice is CC-1–CC-8's.
 
 ```sh
 npm --prefix boston-2026-10 run build -- --on 2026-09-30   # prints "picks: 2026-10-04 (open 2026-09-25 to 2026-10-01; …)"

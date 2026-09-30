@@ -113,6 +113,7 @@ a file). So:
   and not the second, and S24 fails.
 - The choices: let S20 and S24 build without picks (`build()` takes `picksDir`), or keep the production build without
   picks until the Advisor's go (a switch), or re-record S20 per week. Nothing here decides it.
+- **Ruled 2026-09-30 (the coordinator, an engineering choice):** S20's and S24's subject is the page without a week's picks, so both build with an empty picks directory through `build()`'s `picksDir`, their goldens unchanged; Chef's Choice stays covered by CC-1–CC-8. So does S18's build case (it compares `build:dev` with the page the tests read, which has no picks), found failing by this ruling's mirror proof.
 
 **§ 1, the file**
 

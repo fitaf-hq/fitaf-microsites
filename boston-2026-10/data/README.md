@@ -34,7 +34,7 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   store's cards show them, public fields only. Only `.json` files here are read, each named by its Sunday; every
   one is checked by the link tool's own rules and a broken one fails the build. The page carries each week whose
   window (the Friday nine days before to the Thursday three days before) has not ended on the build's `--on`.
-  ⚠ Until its window ends, a committed file changes the production page (S20; `SPEC-chefs-choice.md` § 6).
+  ⚠ Until its window ends, a committed file changes the production page (`SPEC-chefs-choice.md` § 6).
 - **`events.json`**: one entry per QR code, `{ "id", "name", "url" }`; `id` names `dist/qr/<id>.png` and
   `.svg`, and (rung 4, dev) `dist-dev/<id>/index.html`, whose saves carry that `event_id`; `name` is the
   event as E1 names it. ⚠ An event id and name are public; neither may name a person.
