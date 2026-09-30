@@ -5,7 +5,9 @@
 // ⭐ The mutants, in the suite, each in a copy of the source in a temporary directory (nothing in the repository is
 // edited), each scanned as the build composes the files (storefrontFiles): a `<` comparison restored, and the screen's
 // markup string restored (§ 11 as first written). R2-58b: the build itself refuses such a text and writes nothing, as it
-// refuses a size above the ceiling. The control: an unmutated copy passes.
+// refuses a size above the ceiling. The control: an unmutated copy passes. Since § 14 the screen is its own module
+// (src/storefront/progress-screen.js), so the markup mutant is made in a copy of THAT file, where the screen's anchor
+// now is, and handed to the build as its screenPath; the comparison mutant is still made in fill B's own source.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
@@ -14,7 +16,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as build from "../scripts/build-storefront.mjs";
 
-const { buildStorefront, STOREFRONT_SOURCE } = build;
+const { buildStorefront, SCREEN_MODULE, STOREFRONT_SOURCE } = build;
 const FOOTER = "fitaf-handoff.html";
 const CONSOLE = "fitaf-handoff.fill-B.console.js";
 /** A comparison as fill B wrote it until the amendment, and as it is written now (the other way round). */
@@ -33,19 +35,21 @@ function scan({ footer, consoleFile }) {
   assert.deepEqual(consoleFile.match(/.{0,12}<.{0,12}/g) ?? [], [], "no '<' in the console file");
 }
 
-/** The files the build composes from `sourcePath`, not written (the build's own storefrontFiles). */
-async function composed(sourcePath) {
-  const files = await build.storefrontFiles({ sourcePath, commit: "0000000" });
+/** The files the build composes from `paths` ({ sourcePath, screenPath }), not written (the build's own storefrontFiles). */
+async function composed(paths) {
+  const files = await build.storefrontFiles({ ...paths, commit: "0000000" });
   const content = (name) => files.find((f) => f.name === name).content;
   return { footer: content(FOOTER), consoleFile: content(CONSOLE) };
 }
 
+/** A copy of the file `edit` names (fill B's source, or the screen's module), edited, as the build's paths to it. */
 async function withCopy(edit, fn) {
   const dir = await mkdtemp(join(tmpdir(), "boston-storefront-r2-58-src-"));
   try {
-    const copy = join(dir, "fitaf-handoff.js");
-    await writeFile(copy, edit(await readFile(STOREFRONT_SOURCE, "utf8")));
-    return await fn(copy, dir);
+    const original = edit.file ?? STOREFRONT_SOURCE;
+    const copy = join(dir, original === SCREEN_MODULE ? "progress-screen.js" : "fitaf-handoff.js");
+    await writeFile(copy, edit(await readFile(original, "utf8")));
+    return await fn(original === SCREEN_MODULE ? { screenPath: copy } : { sourcePath: copy }, dir);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -55,10 +59,13 @@ const restoreComparison = (source) => {
   assert.equal(source.split(COMPARISON.now).length, 2, `"${COMPARISON.now}" appears exactly once`);
   return source.replace(COMPARISON.now, COMPARISON.was);
 };
-const restoreMarkup = (source) => {
-  assert.equal(source.split(ANCHOR).length, 2, "the anchor appears exactly once");
-  return source.replace(ANCHOR, `${ANCHOR}\n  ${MARKUP}`);
-};
+const restoreMarkup = Object.assign(
+  (source) => {
+    assert.equal(source.split(ANCHOR).length, 2, "the anchor appears exactly once");
+    return source.replace(ANCHOR, `${ANCHOR}\n  ${MARKUP}`);
+  },
+  { file: SCREEN_MODULE },
+);
 const failsTheScan = (err) => {
   assert.ok(err instanceof assert.AssertionError, String(err));
   assert.match(err.message, /'<'/);
@@ -88,7 +95,7 @@ test("R2-58b: the build refuses a text with a '<' (a comparison, or markup), nam
   for (const edit of [restoreComparison, restoreMarkup]) {
     await withCopy(edit, async (copy, dir) => {
       const out = join(dir, "never-written");
-      await assert.rejects(buildStorefront({ outDir: out, sourcePath: copy, commit: "0000000" }), /a '<' in the text/);
+      await assert.rejects(buildStorefront({ outDir: out, ...copy, commit: "0000000" }), /a '<' in the text/);
       assert.equal(existsSync(out), false, "nothing written");
     });
   }
