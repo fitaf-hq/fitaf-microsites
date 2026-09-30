@@ -378,3 +378,34 @@ extra-press loop `it.qty > n`; those were the text's only two `<`. `npm run buil
 restored) are scanned as the build composes them, and R2-58b has the build refuse both. The Footer block is **9,523**
 bytes and the console file **9,504**, holding **2** and **0** `<`. R2-32's pin moved from `5eb8416e…` to
 `c67754610077710b8e194ec5605daee5b357baa9fe9bd7eee6fc5685075e3744`.
+
+## 12. Amendment, 2026-09-29 (late) — LIVE since ~22:04 PDT; the progress bar must not restart, and the upsell is skipped
+
+**The state**: `8f5ee58` is the store's Footer block (saved by the Advisor, verified 15 of 15 visits). His test of the
+7-meal link: *"It worked! We need to refine the progress bar a little bit (it restarts when I think the pop-up fires),
+but this is very, very good!"*
+
+1. **The progress screen never goes back and never re-opens.** The lead (the orchestrator's, **unverified**): the screen
+   is shown as an *auto* popover, and the store's own pop-up, shown in the top layer as a popover too, **light-dismisses**
+   an auto popover; fill B then shows the screen again and its bar starts over. ⇒ **First reproduce it** on the
+   synthetic store (its extras pop-up opened the way the store opens it), red; then the fix (a *manual* popover, which
+   another popover cannot dismiss, is the expected one, but the test decides). **The screen is shown once per run; its
+   progress only rises; it goes only at `done`, at a stop, or at the 90 s clock.**
+2. **The upsell is skipped** (**ruled by the Advisor**, `AskUserQuestion`, 2026-09-29 ~23:05 PDT: *"Yes, that one key"*).
+   The store opens its extras pop-up after CHECKOUT only if `sessionStorage['ecc_additions_prompt_handled']` is not
+   `"true"`; it sets that key itself when a visitor dismisses the pop-up (read from its public code, release
+   `main-6F2NMA4I.js`). ⇒ **Fill B sets exactly that key to `"true"`, in `sessionStorage` only, immediately before it
+   presses the store's CHECKOUT, and at no other moment**; nothing else is ever written, and an ordinary visit still
+   touches no storage (R2-04). **The pop-up handling stays** as the fallback: if the store ignores the key (a renamed
+   flag), the pop-up opens under the screen, invisible, and fill B presses CONTINUE TO CHECKOUT as before.
+   ⚠ This is the one exception to *fill B writes nothing* (§§ 6, 10 of the rung 2 contract), and it is the store's own
+   key with the store's own meaning.
+3. `storefront/dependencies.json` gains `ecc_additions_prompt_handled`, so F2 flags a release that drops it.
+
+| | case | expect |
+|---|---|---|
+| R2-59 | the synthetic store honouring the key | the key is `"true"` only from the CHECKOUT press on (absent before it); no pop-up opens; `done: /checkout` |
+| R2-60 | the synthetic store ignoring the key | the pop-up opens, invisible under the screen; fill B presses CONTINUE; `done: /checkout` (the § 10 path, unchanged) |
+| R2-61 | the store's pop-up opened as a top-layer popover while the screen is up | the screen stays shown throughout; its progress never decreases; ⭐ mutant: the screen as an *auto* popover, R2-61 fails (if the reproduction shows another cause, the mutant is that cause) |
+| R2-62 | an ordinary visit, and a link refused before CHECKOUT | no storage written (R2-04's list, and the refused link's) |
+| W15 | live, both widths | the smoke reports whether the extras pop-up opened (expected: not) and the seconds from CHECKOUT to `/checkout` |
