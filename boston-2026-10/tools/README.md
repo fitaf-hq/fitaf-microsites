@@ -7,4 +7,4 @@ deploy runs). A tool whose dependencies the site or its tests need does not belo
 | directory | what |
 |---|---|
 | [`render-flows/`](render-flows/README.md) | `npm run render:flows`: the flow diagrams as SVG + PNG (mermaid-cli, puppeteer) |
-| [`storefront-watch/`](storefront-watch/README.md) | the storefront watch (SPEC-storefront-watch.md): an hourly check of the store's public bundle, and a headless smoke test of the cart hand-off on each release (puppeteer-core) |
+| [`storefront-watch/`](storefront-watch/README.md) | the storefront watch (SPEC-storefront-watch.md): an hourly check of the store's public bundle, and a headless smoke test of the cart hand-off on each release (puppeteer-core); `accept --release main-<name>.js` takes a checked release into the baseline, and refuses if another is live (§ 8) |

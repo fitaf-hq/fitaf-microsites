@@ -1,6 +1,6 @@
 # tools/storefront-watch — the storefront watch
 
-[`../../SPEC-storefront-watch.md`](../../SPEC-storefront-watch.md) is the contract (§§ 1–7, cases W1–W9). HMP
+[`../../SPEC-storefront-watch.md`](../../SPEC-storefront-watch.md) is the contract (§§ 1–8, cases W1–W9 and W7b–W7f). HMP
 releases the store's app without notice; the cart hand-off ([`../../SPEC-rung2-cart-handoff.md`](../../SPEC-rung2-cart-handoff.md))
 presses the store's own buttons, so a release can break it. This package flags every release within the hour and
 smoke-tests the hand-off on the live store on each one.
@@ -24,19 +24,24 @@ npm --prefix boston-2026-10/tools/storefront-watch run watch -- --daily       # 
 npm --prefix boston-2026-10/tools/storefront-watch run watch -- --full --no-browser   # F1 and F2 only: static
 npm --prefix boston-2026-10/tools/storefront-watch run smoke -- --script <built file>  # § 4: a build before it is pasted
 npm --prefix boston-2026-10/tools/storefront-watch run smoke -- --live --width 1280   # the store's own Footer block
-npm --prefix boston-2026-10/tools/storefront-watch run accept                 # § 5: rewrite the baseline from the store
-npm --prefix boston-2026-10/tools/storefront-watch run accept -- --footer boston-2026-10/dist-storefront/fitaf-handoff.html
+npm --prefix boston-2026-10/tools/storefront-watch run accept -- --release main-<name>.js   # §§ 5, 8: the baseline, for that release
+npm --prefix boston-2026-10/tools/storefront-watch run accept -- --release main-<name>.js \
+    --footer boston-2026-10/dist-storefront/fitaf-handoff.html                               # and the Footer block pasted
 ```
 
 `watch` exits 0 green, 1 flagged, 2 if it failed itself; `--issue` (CI) opens or updates the issue with `gh`,
-`--report <file>` writes the report. `smoke` exits 0 if every width passed. Chrome: `CHROME_PATH` (or
+`--report <file>` writes the report. `smoke` exits 0 if every width passed. `accept` exits 0 once it has written the
+baseline (its first line: `accepted <entry>`), 1 when it refuses because the release named is not the live entry (on
+its first read, or on a second read after the release's files), 2 on a usage error (no request made) or its own
+failure; it writes nothing unless it exits 0. Chrome: `CHROME_PATH` (or
 `PUPPETEER_EXECUTABLE_PATH`, or `CHROME_BIN`), else the usual install path.
 
 | path | what |
 |---|---|
 | `bin/watch.mjs` | §§ 2–3 and 5: the hourly check; on a flag, F1–F5; the report; the issue |
 | `bin/smoke.mjs` | § 4 on its own: `--script`, `--live`, `--width`, `--report` (`--origin` accepts only a local fixture) |
-| `bin/accept.mjs` | § 5: the baseline from the live store's public files (static only); `--footer <file>` / `--footer null` |
+| `bin/accept.mjs` | § 5, § 8: the baseline from the live store's public files (static only), for the release `--release main-<name>.js` names and only while it is live; `--footer <file>` / `--footer null` |
+| `lib/accept-command.mjs`, `lib/baseline.mjs` | `accept` itself (its arguments, lines and exit code; the tests run it against the synthetic store), and the baseline it writes, with § 8's name check before and after the release's files are read |
 | `lib/store-fetch.mjs` | every request the watch makes: to `https://fitafnutrition.com`, nothing else, redirects included |
 | `lib/page-scripts.mjs`, `lib/bundle-imports.mjs`, `lib/read-store.mjs` | the page's scripts, the entry, the import closure, the hashes |
 | `lib/watch.mjs` | one run: which checks run when, and what flags |
@@ -48,7 +53,7 @@ npm --prefix boston-2026-10/tools/storefront-watch run accept -- --footer boston
 | `lib/site-code.mjs`, `lib/site-deps-hook.mjs` | the site's payload code and storefront build, imported, never re-implemented |
 | `lib/issue.mjs` | § 5: one issue per release (a marker in each body and comment carries the entry and the flags) |
 | `lib/report.mjs` | the report: printed, the issue's body, the CI job summary; a new entry's `Last-Modified` (§ 7, W8); a failed smoke width's page as text; the smoke's own report (`bin/smoke.mjs`) |
-| `test/` | `w1`–`w7` (§ 6), `w8`–`w9` (§ 7), `f3-f4-verdicts`, `e1` (a browser check that cannot run is a flag, not an abort), `p1`/`p2` and W9d (plumbing in a real browser, against `test/browser-store.mjs` on 127.0.0.1) |
+| `test/` | `w1`–`w7` (§ 6), `w8`–`w9` (§ 7), `w7-accept-release` (§ 8: W7b–W7f, W7f a mutant), `f3-f4-verdicts`, `e1` (a browser check that cannot run is a flag, not an abort), `p1`/`p2` and W9d (plumbing in a real browser, against `test/browser-store.mjs` on 127.0.0.1) |
 
 **Inputs** (committed, beside the script they protect): [`../../storefront/`](../../storefront/README.md),
 `dependencies.json` and `watch-baseline.json`.
@@ -146,6 +151,10 @@ jobs:
 
 - **Green means "the release we accepted", not "the hand-off works".** Only the smoke test runs the hand-off, and
   only on a flag or a dispatch. Accept a release after its smoke passes.
+- **`accept` takes the release by name, and refuses any other (§ 8).** HMP released eight times on 2026-09-29, twice
+  within the hour after a release had passed; an accept that recorded whatever was live once took a release nobody had
+  checked (reverted, `349adcb`). Name the entry the issue's title names; if another is live by then, accept writes
+  nothing and says which is, and that release's own checks run on the next flag.
 - **The hourly check reads names, not bytes.** Every file name in the store's bundle is a content hash, so any
   change renames the files up to the entry, and a new entry name is a release. F1 in depth compares bytes.
 - **`runtime-config.js` is listed, not hashed.** It is in the page's script list the hourly check compares, but it

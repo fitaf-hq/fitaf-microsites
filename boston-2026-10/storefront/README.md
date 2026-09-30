@@ -12,9 +12,10 @@ hashes and a few literal strings of the store's public bundle, never its code or
 - **`watch-baseline.json`** (§§ 2, 3, 5): the release the watch compares with: the order page's script list, the
   entry bundle's name, its imports, every JS file reachable from it with its SHA-256, and `expectedFooter`, the
   version line of the Footer block Fit AF has pasted (`null` until one is). **Written by a program only**:
-  `npm --prefix boston-2026-10/tools/storefront-watch run accept` (from the live store's public files), with
-  `-- --footer <dist-storefront/fitaf-handoff.html>` once a build is pasted in the Footer. The commit that lands a
-  new baseline names the watch's issue.
+  `npm --prefix boston-2026-10/tools/storefront-watch run accept -- --release main-<name>.js` (from the live store's
+  public files, for the release the watch's issue names, and only while it is the live one: SPEC § 8), with
+  `--footer <dist-storefront/fitaf-handoff.html>` once a build is pasted in the Footer. The commit that lands a new
+  baseline names the watch's issue.
 
 ## What a reader would misread
 
