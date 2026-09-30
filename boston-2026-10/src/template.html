@@ -173,7 +173,7 @@ section.panel { padding-top: 28px; }
   .intro { padding: 36px 0 40px; }
   .tabs { max-width: 420px; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{DEV_STYLE}}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{DEV_STYLE}}{{PICKS_STYLE}}
 </style>
 <noscript><style>.js-only { display: none !important; } .all[hidden], .panel[hidden] { display: block; }</style></noscript>
 </head>
@@ -225,7 +225,7 @@ section.panel { padding-top: 28px; }
             <div><dt>Per meal</dt><dd id="result-per-meal"></dd></div>
             <div><dt>Weekly total</dt><dd id="result-total"></dd></div>
           </dl>
-          <a class="cta" id="result-cta">Choose your meals</a>
+          <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CARD}}
         </div>
       </div>{{SHARE_PANEL}}
     </div>
@@ -254,6 +254,6 @@ section.panel { padding-top: 28px; }
 <script type="application/json" id="plan-data">{{DATA}}</script>
 <script>
 {{SCRIPT}}
-</script>{{DEV_SCRIPT}}
+</script>{{DEV_SCRIPT}}{{PICKS_SCRIPT}}
 </body>
 </html>

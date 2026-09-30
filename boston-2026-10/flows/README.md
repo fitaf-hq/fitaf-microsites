@@ -38,7 +38,7 @@ the proposal is accepted.
 | | flow | status | its page or channel |
 |---|---|---|---|
 | [1](01-save-offer.md) | save the offer (first, dismissible) | ✅ built on dev (rung 4) | the microsite |
-| [2](02-choose.md) | build a plan: meal size, then how many | ✅ live (rung 1); meal size + calculator on dev (rung 4); ⬜ photography rewrite | the microsite |
+| [2](02-choose.md) | build a plan: meal size, then how many | ✅ live (rung 1); meal size + calculator on dev (rung 4); this week's Chef's Choice and *Choose my own meals* on the result card built, not live (§ 7); ⬜ photography rewrite | the microsite |
 | [3](03-follow-up-email.md) | the next-day email, and the marketing confirmation | 🟡 `/confirm` and the schedule built on dev; sending waits on Resend | email → `/confirm/<token>` |
 | [4](04-text.md) | the code by text | ⛔ off for October | text messages |
 | [5](05-return-and-redeem.md) | come back (even a year later), and use a code | ✅ `/o/<code>` built on dev; the redemption source open | `/o/<code>` → store |

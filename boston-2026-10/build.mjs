@@ -1,5 +1,11 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
+//
+//   node build.mjs [--env dev] [--on YYYY-MM-DD]
+//
+// --on is the build's date for this week's Chef's Choice (SPEC-chefs-choice § 2): every data/picks/<sunday>.json whose
+// window has not ended on it is embedded, and the page chooses among them in the browser. Default: today in the send
+// time zone (data/save.json). Without data/picks/, or with no week open on --on, the page is exactly as before.
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -9,7 +15,7 @@ import { parseTarget, shareLines } from "./src/save/calculator.js";
 import { currentGeneral, isLive, offerForSave } from "./src/worker/offers.js";
 import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
-import { formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
+import { addDays, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
 export const PLANS_PATH = join(ROOT, "data", "plans.json");
@@ -23,6 +29,8 @@ export const ZIPS_PATH = join(ROOT, "data", "delivery-zips.json");
 export const OFFERS_PATH = join(ROOT, "data", "offers.json");
 /** The weekly menu input of Flow 8. It does not exist yet, so the "See this week's menu" link is absent. */
 export const MENU_PATH = join(ROOT, "data", "menu.json");
+/** The week's Chef's Choice, one file per delivery Sunday (SPEC-chefs-choice § 1): read by scripts/chefs-choice.mjs. */
+export const PICKS_DIR = join(ROOT, "data", "picks");
 export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
 /** Same-origin static files the page references, copied beside index.html: src/<dir> -> <out>/<dir>. */
 export const STATIC_DIRS = [
@@ -87,7 +95,7 @@ export function gridCells(plans) {
 }
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ESCAPES[ch]);
+export const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ESCAPES[ch]);
 
 function goalButton(plan) {
   const cal = `${plan.calories.min}–${plan.calories.max} cal`;
@@ -173,7 +181,7 @@ function clientData(plans) {
 }
 
 // JSON inside <script>: neutralise "<" so no "</script>" can close the element.
-const scriptJson = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
+export const scriptJson = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
 
 /**
  * The production slot values. Each is either "" (a development-only section) or the exact text the page
@@ -189,6 +197,10 @@ export const PROD_SLOTS = {
   SHARE_PANEL: "",
   DEV_SCRIPT: "",
 };
+
+/** The page without this week's Chef's Choice (SPEC-chefs-choice § 3: no picks for the week, or no file): every slot
+ *  empty, so the page is byte-identical to the one before the slots existed (CC-4, S20). */
+export const NO_PICKS = { PICKS_STYLE: "", PICKS_CARD: "", PICKS_SCRIPT: "" };
 
 /** Question 1 as a meal size (flows/02 § 2): what each size provides per meal, and no goal language. */
 function sizeButton(plan) {
@@ -227,7 +239,11 @@ export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) 
 }
 
 /** A function's source as a declaration: a `function` as written; an arrow function bound to its own name. */
-const declaration = (f) => (/^function\b/.test(f.toString()) ? f.toString() : `const ${f.name} = ${f};`);
+export const declaration = (f) => (/^function\b/.test(f.toString()) ? f.toString() : `const ${f.name} = ${f};`);
+
+/** The zoned-date helpers the offer box inlines to choose on the send time zone's date (§ 2a), in its order, after
+ *  "const FORMATTERS = new Map();". The Chef's Choice script inlines the same ones, the same way. */
+export const ZONED_DATE_HELPERS = [formatter, zonedParts, pad, zonedDate];
 
 /**
  * The development build's slots (SPEC-rung4 § 2): Flow 1 at the top, Flow 2 reframed as a meal size, the
@@ -244,7 +260,7 @@ export async function devSlots(plans, { save, zips, siteKey, eventId, offers, me
   const shared = [
     ...[classifyZip, shareLines, parseTarget].map(declaration),
     "const FORMATTERS = new Map();",
-    ...[isLive, currentGeneral, offerForSave, formatter, zonedParts, pad, zonedDate].map(declaration),
+    ...[isLive, currentGeneral, offerForSave, ...ZONED_DATE_HELPERS].map(declaration),
   ].join("\n");
   return {
     ASSET_PREFIX: "/",
@@ -280,7 +296,8 @@ export function messageSlots(messages) {
   };
 }
 
-export async function renderPage(plans, dev = PROD_SLOTS, messages = null) {
+/** `picks`: this week's Chef's Choice slots (scripts/chefs-choice.mjs), or none. */
+export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
   messages ??= await loadJson(MESSAGES_PATH);
@@ -296,6 +313,7 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null) {
     DATA: scriptJson(clientData(plans)),
     SCRIPT: script.trim(),
     ...dev,
+    ...picks,
   };
   const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
     if (!(key in slots)) throw new Error(`template slot ${whole} has no value`);
@@ -344,14 +362,15 @@ const checkEventId = (id) => {
  * The development pages: dist-dev/<event-id>/index.html per event, each with its event id built in, and
  * dist-dev/index.html = the first event's page (SPEC-rung4 § 2).
  */
-async function writeDevPages(plans, events, outDir, offersPath) {
+async function writeDevPages(plans, events, outDir, offersPath, messages, picks) {
   const save = await loadJson(SAVE_PATH);
   const zips = await loadJson(ZIPS_PATH);
   const offers = await loadJson(offersPath);
   const siteKey = (await devConfig()).vars.TURNSTILE_SITE_KEY;
   const written = [];
   for (const [i, event] of events.entries()) {
-    const html = await renderPage(plans, await devSlots(plans, { save, zips, siteKey, eventId: checkEventId(event.id), offers }));
+    const dev = await devSlots(plans, { save, zips, siteKey, eventId: checkEventId(event.id), offers });
+    const html = await renderPage(plans, dev, messages, picks);
     await mkdir(join(outDir, event.id), { recursive: true });
     const paths = [join(outDir, event.id, "index.html"), ...(i === 0 ? [join(outDir, "index.html")] : [])];
     for (const path of paths) {
@@ -362,10 +381,29 @@ async function writeDevPages(plans, events, outDir, offersPath) {
   return written;
 }
 
+const YMD = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * This week's Chef's Choice for the page (SPEC-chefs-choice): none without a picks directory; otherwise every file in it
+ * checked (a file breaking a rule throws, naming it) and the weeks still open on `on` made into the page's slots.
+ * Loaded only when the directory exists, so a build without it reads nothing more.
+ */
+async function picksFor({ plans, messages, picksDir, on }) {
+  if (on !== undefined && !(YMD.test(on) && addDays(on, 0) === on)) throw new Error(`--on must be a date, YYYY-MM-DD; got ${on}`);
+  if (!existsSync(picksDir)) return { slots: NO_PICKS, weeks: [], on };
+  const zone = (await loadJson(SAVE_PATH)).send_time_zone;
+  on ??= zonedDate(Date.now(), zone);
+  const { chefsChoice } = await import("./scripts/chefs-choice.mjs");
+  return { ...(await chefsChoice({ plans, messages, dir: picksDir, on, zone })), on };
+}
+
 export async function build({
   plansPath = PLANS_PATH,
   eventsPath = EVENTS_PATH,
   offersPath = OFFERS_PATH,
+  messagesPath = MESSAGES_PATH,
+  picksDir = PICKS_DIR,
+  on = undefined,
   target = "prod",
   outDir,
 } = {}) {
@@ -373,14 +411,17 @@ export async function build({
   outDir ??= target === "dev" ? DIST_DEV : DIST;
   const plans = await loadJson(plansPath);
   const events = await loadJson(eventsPath);
+  const messages = await loadJson(messagesPath);
+  // Before anything is written: a picks file that breaks a rule stops the build here (a wrong list never ships).
+  const picks = await picksFor({ plans, messages, picksDir, on });
   // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
   if (target === "dev") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
   let pages;
   if (target === "dev") {
-    pages = await writeDevPages(plans, events, outDir, offersPath);
+    pages = await writeDevPages(plans, events, outDir, offersPath, messages, picks.slots);
   } else {
-    const html = await renderPage(plans);
+    const html = await renderPage(plans, PROD_SLOTS, messages, picks.slots);
     const path = join(outDir, "index.html");
     await writeFile(path, html);
     pages = [{ path, bytes: Buffer.byteLength(html) }];
@@ -388,12 +429,27 @@ export async function build({
   const files = await copyStatic(outDir);
   // QR codes point at the production URL, so only the production build writes them.
   const qr = target === "prod" ? await writeQrCodes(events, outDir) : [];
-  return { indexPath: pages[0].path, bytes: pages[0].bytes, pages, files, qr };
+  return { indexPath: pages[0].path, bytes: pages[0].bytes, pages, files, qr, picks: { on: picks.on, weeks: picks.weeks } };
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const envFlag = process.argv.indexOf("--env");
-  const out = await build({ target: envFlag === -1 ? "prod" : process.argv[envFlag + 1] });
+/** What `node build.mjs` prints: every file written, then each Chef's Choice week the page carries. */
+function report(out) {
   for (const p of out.pages) console.log(`wrote ${p.path} (${p.bytes} bytes)`);
   for (const f of [...out.files, ...out.qr]) console.log(`wrote ${f}`);
+  for (const w of out.picks.weeks) {
+    console.log(`picks: ${w.delivery} (open ${w.valid_from} to ${w.valid_to}; counts ${w.counts.join(", ")}), built on ${out.picks.on}`);
+  }
+}
+
+// Run as a program. NOT a top-level await: scripts/chefs-choice.mjs (imported by build() when data/picks/ exists)
+// imports this module, which must have finished evaluating first, or the two wait on each other and Node exits.
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const flag = (name) => {
+    const at = process.argv.indexOf(name);
+    return at === -1 ? undefined : process.argv[at + 1];
+  };
+  build({ target: flag("--env") ?? "prod", on: flag("--on") }).then(report, (err) => {
+    console.error(err);
+    process.exitCode = 1;
+  });
 }

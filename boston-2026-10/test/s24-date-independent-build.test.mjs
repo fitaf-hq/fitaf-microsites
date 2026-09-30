@@ -1,5 +1,8 @@
 // S24 (SPEC-rung4 § 2a): the build stays date-independent. dist-dev/ built with the clock at two different
 // dates is byte-identical: the choice of offer happens in the browser, never at build time.
+// Its subject is the page WITHOUT a week's Chef's Choice (whose embedding does depend on the build's date, by § 2 of
+// SPEC-chefs-choice), so it builds with an EMPTY picks directory (build()'s `picksDir`; SPEC-chefs-choice § 6, ruled
+// 2026-09-30). Chef's Choice is CC-1–CC-8's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -20,6 +23,7 @@ test("S24: dist-dev/ built with the clock at two different dates is byte-identic
     "control: the two dates get different offers",
   );
   const dir = await mkdtemp(join(tmpdir(), "boston-s24-"));
+  const noPicks = await mkdtemp(join(tmpdir(), "boston-s24-no-picks-"));
   try {
     const fixturePath = join(dir, "offers.fixture.json");
     await writeFile(fixturePath, JSON.stringify(FIXTURE_OFFERS));
@@ -34,7 +38,7 @@ test("S24: dist-dev/ built with the clock at two different dates is byte-identic
         try {
           assert.equal(zonedDate(Date.now(), ZONE), ymd, "control: the build runs with the clock at this date");
           assert.equal(new Date().toISOString().slice(0, 10), ymd);
-          await build({ target: "dev", outDir, offersPath });
+          await build({ target: "dev", outDir, offersPath, picksDir: noPicks });
         } finally {
           t.mock.timers.reset();
         }
@@ -49,5 +53,6 @@ test("S24: dist-dev/ built with the clock at two different dates is byte-identic
     }
   } finally {
     await rm(dir, { recursive: true, force: true });
+    await rm(noPicks, { recursive: true, force: true });
   }
 });
