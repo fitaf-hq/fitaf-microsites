@@ -153,3 +153,33 @@ operation named after a checked thing must take that thing's name.
 | W7d | `accept` with no `--release`, and with `--release chunk-X.js` | usage; nothing written; exit non-zero |
 | W7e | the synthetic store's entry changes between the first read and the second | refused; nothing written |
 | W7f | ⭐ mutant: the name check that always passes | W7c fails |
+
+## 9. Found at the build, 2026-09-29 — W10–W13 in the smoke (SPEC-rung2-progress-and-checkout § 5), not ruled
+
+Red first at `5acc962`, built at `7b0d74f`. § 4's pass rule (W6) is unchanged; a width passes only if it and W10–W13
+(`lib/faces.mjs`) both pass.
+
+- **W10** is read by a recorder installed before the page's own scripts (`evaluateOnNewDocument`, in both the paste
+  and the live mode): a MutationObserver noting the screen's arrival and going, each text of its step line, our style
+  and our mark. Pass: the screen appeared, showed a meal added, and was gone at done. A run that never reached done is
+  judged by W10 alone (the screen must be gone at the end); the smoke's own rule has already failed it.
+- **W11–W13** are read on `/checkout` after done: our `style#fitaf-deep` disabled, the displayed controls in
+  `app-checkout` read, the style enabled again (W11; since the first live smoke, SPEC-rung2-progress-and-checkout § 9,
+  the pay button is the displayed one of `.checkout__submit button` and the mobile bar's `.summary__pay-button`); H1,
+  H2's `.footer`, H3 and H4 found and the conditional ones reported (W12, § 9), each found one hidden while the style
+  is on, waiting up to 10 s for the required ones; no active subscription switch (class `…--active` or `aria-checked="true"`) and no *"renews every"*
+  inside `app-checkout` (W13). Nothing is typed or pressed. The report gives each width one line for them.
+- **W14** (SPEC-rung2-progress-and-checkout § 10): H7–H10 reported under W14, each conditional, a found one still
+  displayed with our style failing; the Total found and displayed with it; W11's allowed controls re-stated (H3, H4,
+  H6, H7, H8, H10). The reading also waits for the Total. `dependencies.json` gains § 10's 11 names (35 in all).
+- **`dependencies.json` gains 11 literals** (23 in all; 24 with § 9's `"summary__pay-button"`): `"app-checkout"`, the hide list's names, and
+  `"checkout__submit"`, each found in the accepted release's files (checked over a local copy whose 156 files match the
+  baseline's hashes; no request made). H2's footer is `[1,"footer"]`, since `"footer"` alone is in 23 files.
+- **Cases**: W10a–W13a on recorded outcomes; W10b–W13b in Chrome against the synthetic store (a pass at both widths,
+  then each made to fail: a text with no screen, R2-46's mutant, a store with no pop-up host, a plan defaulted to a
+  subscription); and a check that F2 carries every name. The synthetic store gains the app's shell (H1, H2, H5), a
+  synthetic `app-checkout` with the contract's names only, generated card images, a route delay, a planted hang and a
+  top-layer pop-up. This package's suite also runs the site's rung 2 cases that need Chrome (R2-41c, R2-45–R2-52's
+  browser half), because the site's install never gets puppeteer-core.
+- ⬜ **Not run against the live store**: no request to it was made at this build. The first live smoke with W10–W13 is
+  the orchestrator's, before any paste.

@@ -1,6 +1,7 @@
 // The report of one watch run, as Markdown: printed by the CLI, the body of the issue (§ 5), the job summary in CI; and
 // the smoke's own report (bin/smoke.mjs). It quotes file names, the dependency literals and our own console lines, and,
 // for a smoke width that FAILED, the page as text (§ 7 item 2): never the store's code or config, never a screenshot.
+import { facesSummary } from "./faces.mjs";
 import { cutLine, redact } from "./redact.mjs";
 
 const list = (items) => (items.length ? items.map((x) => `\`${x}\``).join(", ") : "none");
@@ -123,6 +124,7 @@ function smokeRun(run) {
   }
   const lines = o.console.filter((l) => l.startsWith("[fitaf-handoff]"));
   out.push(`- console: ${lines.length ? lines.map((l) => `\`${cutLine(l)}\``).join(" · ") : "no [fitaf-handoff] line"}`);
+  if (o.faces) out.push(`- the two faces (W10–W13, SPEC-rung2-progress-and-checkout § 5): ${redact(facesSummary(o.faces))}`);
   if (o.errors.length) out.push(`- page errors: ${o.errors.slice(0, 5).map((e) => `\`${cutLine(e)}\``).join(" · ")}`);
   if (!run.verdict.pass) out.push(...evidenceLines(o.evidence));
   return out;

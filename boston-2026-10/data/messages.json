@@ -1,9 +1,14 @@
 {
-  "about": "The campaign's MESSAGES (the M of POEMS): every phrase the page and the mock-ups share, and the mock-ups' own. Change a phrase here and rebuild: the page (`npm run build`) and all four mock-ups (`npm run build:mockups`) carry it. Public. The offer is not here: it is data/offers.json. `event_line` is a list of parts, joined with a middle dot. In `from_price`, {price} is replaced with the lowest price per meal of the plans the page shows (data/plans.json).",
+  "about": "The campaign's MESSAGES (the M of POEMS): every phrase the page and the mock-ups share, and the mock-ups' own. Change a phrase here and rebuild: the page (`npm run build`) and all four mock-ups (`npm run build:mockups`) carry it. Public. The offer is not here: it is data/offers.json. `event_line` is a list of parts, joined with a middle dot. In `from_price`, {price} is replaced with the lowest price per meal of the plans the page shows (data/plans.json). `handoff` is the cart hand-off's progress screen on the store's order page (SPEC-rung2-progress-and-checkout.md § 2), inlined by `npm run build:storefront` (never by `npm run build`): its title, the step line after each meal is added ({meal} the meal as its card shows it, {n} the meals added so far, {total} the plan's meals), and the line at the store's CHECKOUT.",
   "tagline": "Chef-prepared meal plans from Fit AF.",
   "event_line": ["Fit AF in Boston", "October 2026"],
   "headline": "Find your plan.",
   "subhead": "Two questions, then choose your meals.",
   "scan_prompt": "Scan to find your plan",
-  "from_price": "from {price} a meal"
+  "from_price": "from {price} a meal",
+  "handoff": {
+    "title": "Assembling your order",
+    "step": "{meal} · {n} of {total} meals",
+    "checkout": "Taking you to checkout"
+  }
 }

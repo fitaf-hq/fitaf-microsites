@@ -1,9 +1,12 @@
 // R2-29 (SPEC-rung2 § 11 item 5, the Advisor's ruling: "We can go up to 10k for the footer. 5k is a good target"): over
 // each WHOLE built file, the build WARNS above 5,120 bytes and REFUSES above 10,240, writing nothing. Padded copies of
-// the source (a `/* */` comment at its top, which ships, so every file grows by the same bytes) are built to exact
-// sizes: 5,200 and 10,300 as the contract names them, and each limit's edge. Fill B's files are over the target
-// unpadded, and a pad only adds, so the target's edges are reached from a TRIMMED copy: the source's shipped header
-// comment removed, then padded. (The file padded to them before SPEC-rung2 § 12 was fill A's, which is retired.)
+// a source (a `/* */` comment at its top, which ships, so every file grows by the same bytes) are built to exact sizes:
+// 5,200 and 10,300 as the contract names them, and each limit's edge. The ceiling's are reached from the source itself.
+// A pad only adds, and fill B's files are well over the target unpadded (8,631 bytes since rung 2's two faces,
+// SPEC-rung2-progress-and-checkout), so the target's (5,120, 5,121 and 5,200) are reached from a SMALL source: only the
+// build's four slots (the plan counts, the screen's words and colours, the meal-key function), which the build fills
+// as it fills the real one. (Until the two faces, a copy with the shipped header comment trimmed was small enough; and
+// before SPEC-rung2 § 12 the file padded to the target was fill A's, which is retired.)
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
@@ -15,8 +18,8 @@ import { buildStorefront, MAX_SHIPPED_BYTES, STOREFRONT_SOURCE, TARGET_SHIPPED_B
 const COMMIT = "0000000"; // fixed, so the version line's length does not depend on the checkout
 const B = "fitaf-handoff.fill-B.console.js";
 const FOOTER = "fitaf-handoff.html";
-// The source's first lines: the block comment every built file carries, which a trimmed copy drops.
-const HEADER = /^\/\*[\s\S]*?\*\/\n/;
+/** A source with nothing but the build's four slots, each filled as in the real one: small enough to pad to 5,120. */
+const SMALL = '(function () {\nvar COUNTS = /*COUNTS*/ {}, UI = /*UI*/ {}, key = /*KEY*/ null, CSS = "/*TOKENS*/";\n})();\n';
 
 /** A comment of exactly `bytes` bytes, its newline included: at least 5 (the two delimiters and the newline). */
 function pad(bytes) {
@@ -24,17 +27,12 @@ function pad(bytes) {
   return `/*${"x".repeat(bytes - 5)}*/\n`;
 }
 
-/** A copy of the source, `trim`med of its header comment or not, then padded by `padBytes`. */
-async function withCopy({ padBytes = 0, trim = false }, fn) {
+/** A copy of the source (or, if `small`, the SMALL source), padded by `padBytes`. */
+async function withCopy({ padBytes = 0, small = false }, fn) {
   const dir = await mkdtemp(join(tmpdir(), "boston-storefront-r2-29-"));
   try {
     const source = join(dir, "fitaf-handoff.js");
-    let text = await readFile(STOREFRONT_SOURCE, "utf8");
-    if (trim) {
-      const trimmed = text.replace(HEADER, "");
-      assert.ok(trimmed.length < text.length, "the header comment was there to trim");
-      text = trimmed;
-    }
+    const text = small ? SMALL : await readFile(STOREFRONT_SOURCE, "utf8");
     await writeFile(source, (padBytes ? pad(padBytes) : "") + text);
     return await fn({ source, out: join(dir, "out") });
   } finally {
@@ -44,15 +42,15 @@ async function withCopy({ padBytes = 0, trim = false }, fn) {
 
 const build = (source, out) => buildStorefront({ outDir: out, sourcePath: source, commit: COMMIT });
 
-/** Each file's size, unpadded (from a trimmed copy if `trim`). */
-async function sizes({ trim = false } = {}) {
-  return withCopy({ trim }, async ({ source, out }) => Object.fromEntries((await build(source, out)).files.map((f) => [f.name, f.bytes])));
+/** Each file's size, unpadded (from the SMALL source if `small`). */
+async function sizes({ small = false } = {}) {
+  return withCopy({ small }, async ({ source, out }) => Object.fromEntries((await build(source, out)).files.map((f) => [f.name, f.bytes])));
 }
 
 /** Built with `file` at exactly `bytes`: every file, its size on disk, and the warnings. */
-async function builtWith(file, bytes, { trim = false } = {}) {
-  const base = await sizes({ trim });
-  return withCopy({ padBytes: bytes - base[file], trim }, async ({ source, out }) => {
+async function builtWith(file, bytes, { small = false } = {}) {
+  const base = await sizes({ small });
+  return withCopy({ padBytes: bytes - base[file], small }, async ({ source, out }) => {
     const built = await build(source, out);
     const onDisk = {};
     for (const f of built.files) onDisk[f.name] = (await stat(join(out, f.name))).size;
@@ -76,16 +74,21 @@ async function refusedWith(file, bytes) {
 
 const warned = (built) => built.warnings.map((w) => w.split(":")[0]);
 
-test("R2-29 fixture control: the limits; a pad can reach 5,200 from fill B's file, and 5,120 from a trimmed copy", async () => {
+test("R2-29 fixture control: the limits; a pad can reach 10,240 from fill B's file, and 5,120 from the small source", async () => {
   assert.deepEqual([TARGET_SHIPPED_BYTES, MAX_SHIPPED_BYTES], [5120, 10240]);
   const base = await sizes();
-  assert.ok(base[B] <= 5200 - 5, `fill B's console file: ${base[B]} bytes`);
-  const trimmed = await sizes({ trim: true });
-  assert.ok(trimmed[B] <= TARGET_SHIPPED_BYTES - 5, `fill B's console file, trimmed: ${trimmed[B]} bytes`);
+  assert.ok(base[FOOTER] <= MAX_SHIPPED_BYTES - 5, `the Footer block: ${base[FOOTER]} bytes`);
+  assert.ok(base[B] > TARGET_SHIPPED_BYTES, `fill B's console file is over the target unpadded: ${base[B]} bytes`);
+  const small = await sizes({ small: true });
+  assert.ok(small[B] <= TARGET_SHIPPED_BYTES - 5, `the small source's console file: ${small[B]} bytes`);
+  const text = await readFile(STOREFRONT_SOURCE, "utf8");
+  for (const slot of ["/*COUNTS*/ {}", "/*UI*/ {}", "/*KEY*/ null", "/*TOKENS*/"]) {
+    assert.ok(text.includes(slot) && SMALL.includes(slot), `the small source carries the real one's ${slot}`);
+  }
 });
 
 test("R2-29a: a built file of 5,200 bytes — built, with a warning naming it; every file written", async () => {
-  const { built, onDisk } = await builtWith(B, 5200);
+  const { built, onDisk } = await builtWith(B, 5200, { small: true });
   assert.equal(onDisk[B], 5200);
   assert.ok(warned(built).includes(B), JSON.stringify(built.warnings));
   assert.match(built.warnings.find((w) => w.startsWith(B)), /^fitaf-handoff\.fill-B\.console\.js: 5,200 bytes, over the 5,120-byte target/);
@@ -100,10 +103,10 @@ test("R2-29b: a built file of 10,300 bytes — refused, naming it, and nothing w
 });
 
 test("R2-29c: the edges — 5,120 bytes is no warning and 5,121 is one; 10,240 is built and 10,241 refused", async () => {
-  const onTarget = await builtWith(B, 5120, { trim: true });
+  const onTarget = await builtWith(B, 5120, { small: true });
   assert.equal(onTarget.onDisk[B], 5120, "5,120: built");
   assert.ok(!warned(onTarget.built).includes(B), "5,120: on the target, no warning");
-  assert.ok(warned((await builtWith(B, 5121, { trim: true })).built).includes(B), "5,121: a warning");
+  assert.ok(warned((await builtWith(B, 5121, { small: true })).built).includes(B), "5,121: a warning");
   const top = await builtWith(FOOTER, 10240);
   assert.equal(top.onDisk[FOOTER], 10240, "10,240: built");
   const over = await refusedWith(FOOTER, 10241);

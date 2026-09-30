@@ -21,7 +21,11 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   first sentence of its meta description) and top bar come from here (`build.mjs` `messageSlots`), and so
   do the same phrases on the four mock-ups (`mockups/`), plus the mock-ups' own (the scan prompt, the
   "from {price} a meal" line). Change a phrase here and both change; `event_line` is a list of parts that
-  the page joins with `&middot;`.
+  the page joins with `&middot;`. **`handoff`** is the cart hand-off's progress screen on the store's order
+  page (`SPEC-rung2-progress-and-checkout.md` § 2): `title`, `step` (after each meal: `{meal}` as its card
+  shows it, `{n}` added so far, `{total}` the plan's meals; the build refuses a `step` missing one) and
+  `checkout`. Only `npm run build:storefront` reads it (inlined into the Footer block, non-ASCII as `\u`
+  escapes); `npm run build`'s page does not change with it (S20).
 - **`events.json`**: one entry per QR code, `{ "id", "name", "url" }`; `id` names `dist/qr/<id>.png` and
   `.svg`, and (rung 4, dev) `dist-dev/<id>/index.html`, whose saves carry that `event_id`; `name` is the
   event as E1 names it. ⚠ An event id and name are public; neither may name a person.

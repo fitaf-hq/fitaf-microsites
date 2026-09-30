@@ -12,12 +12,17 @@
 //   5. before the page closes, READ it as text (§ 7 item 2), which the report shows only for a width that failed: the
 //      path, the displayed buttons outside meal cards, any dialog's text, the COUNTS of the store's pending list and
 //      cart, and every console line of the page. Never a screenshot. (lib/report.mjs redacts and cuts it.)
-// The pass rule is lib/smoke-verdict.mjs (W6).
+//   Rung 2's two faces (SPEC-rung2-progress-and-checkout § 5, "Live"): from before the page's own scripts, a recorder
+//   notes the progress screen and the checkout's style as they come and go (W10); after done, on /checkout, W11–W13
+//   read the payment with our style enabled and disabled, the hide list, and whether the order is one-time
+//   (lib/faces.mjs). Our style is toggled and restored; nothing is typed or pressed.
+// The pass rule is lib/smoke-verdict.mjs (W6), AND lib/faces.mjs's (W10–W13): a width passes only if both do.
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
 import { LOG_PREFIX, MPID, STORE_ORIGIN, VIEWPORTS, WIDTHS } from "./config.mjs";
+import { facesVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
 import { parseBlock } from "./footer-check.mjs";
 import { siteCode } from "./site-code.mjs";
 import { DONE_LINE, smokeVerdict } from "./smoke-verdict.mjs";
@@ -154,6 +159,29 @@ async function evidenceOf(page, where, consoleLines, errors) {
   }
 }
 
+/**
+ * W10–W13's readings of the link's page: what the recorder saw, and, when fill B reached done on /checkout, the payment,
+ * the hide list and the one-time check. A reading that fails is recorded as not read, and so fails the width.
+ */
+async function facesOf(page, outcome) {
+  const done = outcome.console.includes(DONE_LINE);
+  let recorded = { events: [], screenAtEnd: null };
+  try {
+    recorded = await page.evaluate(readRecorded, SCREEN_ID);
+  } catch (err) {
+    recorded.error = String(err?.message ?? err);
+  }
+  let checkout = null;
+  if (done && outcome.checkout?.path === "/checkout") {
+    try {
+      checkout = (await readCheckoutFaces(page, poll)) ?? null;
+    } catch {
+      checkout = null;
+    }
+  }
+  return { done, ...recorded, checkout };
+}
+
 /** A Footer block file (<script>…</script>) gives the text between its tags; a console file is used as it is. */
 export function scriptFromFile(text) {
   const m = /^\s*<script\b[^>]*>([\s\S]*)<\/script>\s*$/i.exec(text);
@@ -181,7 +209,7 @@ export async function scriptMode({ liveBlocks = [], scriptFile = null, code, why
 
 export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, executablePath }) {
   const need = code.counts.get(MPID);
-  const outcome = { width, need, menu: 0, menuNames: [], chosen: [], link: null, console: [], errors: [], checkout: null, evidence: null };
+  const outcome = { width, need, menu: 0, menuNames: [], chosen: [], link: null, console: [], errors: [], checkout: null, faces: null, evidence: null };
   const { browser, close } = await freshBrowser({ executablePath });
   try {
     const menuContext = await browser.createBrowserContext();
@@ -210,6 +238,7 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
       await page.setViewport(VIEWPORTS[width]);
       page.on("console", (m) => outcome.console.push(m.text()));
       page.on("pageerror", (e) => outcome.errors.push(String(e?.message ?? e)));
+      await page.evaluateOnNewDocument(recordFaces, { screen: SCREEN_ID, style: STYLE_ID });
       if (mode.kind === "paste") {
         await page.evaluateOnNewDocument(() => {
           window.__fitafHandoff = true;
@@ -232,19 +261,22 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
       outcome.checkout = outcome.console.includes(DONE_LINE)
         ? await poll(page, readCheckout, outcome.menuNames, (c) => c.path === "/checkout" && c.totalCents !== null && c.names.length > 0, { timeoutMs: CHECKOUT_MS })
         : await page.evaluate(() => ({ path: location.pathname, names: [], itemCounts: [], totalCents: null, totalFrom: null }));
+      outcome.faces = await facesOf(page, outcome);
       outcome.evidence = await evidenceOf(page, "the page the link ended on", outcome.console, outcome.errors);
       await context.close();
     }
   } finally {
     await close();
   }
-  const verdict = smokeVerdict({
+  const base = smokeVerdict({
     need,
     chosen: outcome.chosen,
     console: outcome.console.filter((l) => l.startsWith(LOG_PREFIX)),
     checkout: outcome.checkout,
   });
-  return { width, verdict, outcome };
+  // W10–W13 (lib/faces.mjs), when the link was run; a width that never ran it has already failed on the rule above.
+  const reasons = [...base.reasons, ...(outcome.faces ? facesVerdict(outcome.faces).reasons : [])];
+  return { width, verdict: { pass: reasons.length === 0, reasons }, outcome };
 }
 
 /** Both widths (or those given), one mode. `live` forces the link alone. */
