@@ -361,3 +361,11 @@ than `9e67484`). R2-32's pin moved from `c87cb754…` to
 `5eb8416e34809b9c1ccca6fc3bb422c3e3179114145eb4bc3669ba5db8644037`. ⬜ R2-58 is a gate in the suite, not in the build:
 `npm run build:storefront` still refuses only a `</script` in the text, so a text that failed R2-58 would still be
 written.
+
+**§ 11, amended the same night** (the Advisor, pasting `f27d2e4`; nothing saved): the validator reported *"<s> isn't
+allowed here"*. It reads `<` followed by **whitespace** and a letter as a tag: the key function's `i < s.length` (and,
+next, `n < it.qty`). The short-link block `8945de1` carries the same loop, so it would have been refused too. ⇒ Item 1
+becomes: **the shipped text holds no `<` at all**, except the Footer block's own opening `<script>` and closing
+`</script>`; comparisons are written the other way round (`s.length > i`). **The build refuses** a text that breaks it,
+writing nothing (as it refuses a size above the ceiling), and R2-58 scans for any `<`. The key function's vectors
+(R2-25) pin that the keys are unchanged.
