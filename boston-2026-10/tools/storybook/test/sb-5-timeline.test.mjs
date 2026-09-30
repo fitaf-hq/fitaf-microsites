@@ -20,7 +20,7 @@ async function table() {
     return row.split("|").slice(2, 6).map(cell);
   };
   const header = section.split("\n").find((l) => l.startsWith("| seconds")).split("|").slice(2, 6).map((c) => c.trim());
-  const unthrottled = /CHECKOUT to `\/checkout` in (\d\.\d)–(\d\.\d) s/.exec(text.slice(text.indexOf("## 13."), text.indexOf("## 13a.")));
+  const unthrottled = /CHECKOUT to `\/checkout` in\s+(\d\.\d)–(\d\.\d) s/.exec(text.slice(text.indexOf("## 13."), text.indexOf("## 13a.")));
   return {
     header,
     screen: read4("**A.**"),

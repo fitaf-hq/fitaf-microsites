@@ -38,7 +38,7 @@ test("SB-3: the stories import the screen's own module; the config the build's o
   const main = await read(join(TOOL, ".storybook", "main.js"));
   assert.match(main, /import\s*\{[^}]*\bscreenTokens\b[^}]*\bscreenWords\b[^}]*\}\s*from\s*["'](\.\.\/)+scripts\/screen-inputs\.mjs["']/, "the build's readers");
   const buildStorefront = await read(join(SITE, "scripts", "build-storefront.mjs"));
-  assert.match(buildStorefront, /import\s*\{\s*screenTokens,\s*screenWords\s*\}\s*from\s*"\.\/screen-inputs\.mjs"/, "the build takes its readers from the same module");
+  assert.match(buildStorefront, /import\s*\{[^}]*\bscreenTokens\b[^}]*\bscreenWords\b[^}]*\}\s*from\s*"\.\/screen-inputs\.mjs"/, "the build takes its readers from the same module");
 });
 
 test("SB-3: no rule of the screen's style appears under tools/storybook", async () => {
