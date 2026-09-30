@@ -70,7 +70,7 @@ export function tentCard(inputs) {
   const parts = makeParts(inputs);
   return sheet(piece("tent-card"), inputs, parts, `
 ${parts.line("p", "event-bar", c.eventLine, "event line")}
-<div class="tent-photos">${parts.photo("hero")}${parts.photo("meal-2")}${parts.photo("meal-3")}</div>
+<div class="tent-photos">${parts.photo("tent-large")}${parts.photo("tent-top")}${parts.photo("tent-bottom")}</div>
 <div class="tent-body">
   ${parts.logo("tent-logo")}
   <span class="rule"></span>
@@ -87,7 +87,7 @@ export function flyer(inputs) {
   const parts = makeParts(inputs);
   return sheet(piece("flyer"), inputs, parts, `
 ${parts.line("p", "event-bar", c.eventLine, "event line")}
-<div class="flyer-hero">${parts.photo("hero")}<div class="logo-plate">${parts.logo()}</div></div>
+<div class="flyer-hero">${parts.photo("flyer")}<div class="logo-plate">${parts.logo()}</div></div>
 <div class="flyer-body">
   <span class="rule"></span>
   ${parts.text("h1", "headline", c.headline, "headline")}
@@ -106,17 +106,17 @@ export function banner(inputs) {
 <div class="banner-top">${parts.logo()}${parts.text("p", "tagline", c.tagline, "tagline")}</div>
 <div class="banner-offer">${parts.text("h1", "headline", c.headline, "headline")}${parts.text("p", "offer", c.offer, "the offer")}</div>
 <div class="banner-scan">${parts.qr(c)}${parts.text("p", "scan-prompt", c.scan, "scan prompt")}${parts.text("p", "address", c.address, "web address")}</div>
-<div class="banner-photo">${parts.photo("hero")}</div>
+<div class="banner-photo">${parts.photo("banner")}</div>
 ${parts.planNames(c.plans, "plan names")}
 ${parts.line("p", "event-bar", c.eventLine, "event line")}`);
 }
 
-/** Photo slides: which slot shows with which plan's line. The plans are Lean, Signature, Performance, Family. */
+/** Photo slides: each slide's own photo position, and the plan whose line it shows (Lean, Signature, Performance, Family). */
 const PHOTO_SLIDES = [
-  { slot: "hero", plan: 0 },
-  { slot: "meal-2", plan: 1 },
-  { slot: "meal-3", plan: 2 },
-  { slot: "meal-4", plan: 3 },
+  { position: "slide-1", plan: 0 },
+  { position: "slide-2", plan: 1 },
+  { position: "slide-3", plan: 2 },
+  { position: "slide-4", plan: 3 },
 ];
 
 /** The slideshow: a photo slide per plan with the plan's own line, then the offer and the QR code. */
@@ -124,10 +124,10 @@ export function slideshow(inputs) {
   const c = campaign(inputs);
   const parts = makeParts(inputs);
   const count = PHOTO_SLIDES.length + 1;
-  const photoSlides = PHOTO_SLIDES.map(({ slot, plan }, i) => {
+  const photoSlides = PHOTO_SLIDES.map(({ position, plan }, i) => {
     const p = c.plans[plan];
     return `<section class="slide slide-photo" data-accent="${esc(p.id)}" aria-roledescription="slide" aria-label="${i + 1} / ${count}"${i ? " hidden" : ""}>
-${parts.photo(slot, "slide-bg")}
+${parts.photo(position, "slide-bg")}
 <div class="slide-logo">${parts.logo()}</div>
 <div class="slide-panel">${parts.text("p", "slide-kicker", p.name, "plan names")}${parts.text("p", "slide-line", p.promise, "plan lines")}</div>
 </section>`;

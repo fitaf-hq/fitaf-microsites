@@ -57,6 +57,34 @@ export function elements(html) {
   return [...html.matchAll(/<([a-z][a-z0-9]*)\b([^>]*)>/gi)].map((m) => ({ tag: m[1].toLowerCase(), attrs: attrsOf(m[2]) }));
 }
 
+/**
+ * Every opening tag in <body>, with the chain of elements that encloses it (outermost first), its index among its
+ * parent's element children (`nth`), and its markup as written. The chain holds the same objects the list does,
+ * so `el.path.includes(other)` asks whether `el` is inside `other`.
+ */
+export function placedElements(html) {
+  const body = /<body\b[^>]*>([\s\S]*)<\/body>/i.exec(html);
+  if (!body) throw new Error("no <body>");
+  const markup = body[1].replace(/<!--[\s\S]*?-->/g, "").replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, "");
+  const stack = [{ tag: "body", children: 0 }];
+  const out = [];
+  for (const m of markup.matchAll(/<(\/?)([a-z][a-z0-9]*)\b([^>]*)>/gi)) {
+    const tag = m[2].toLowerCase();
+    if (m[1]) {
+      if (stack.length === 1 || stack.at(-1).tag !== tag) throw new Error(`unbalanced </${tag}> (open: ${stack.at(-1).tag})`);
+      stack.pop();
+      continue;
+    }
+    const parent = stack.at(-1);
+    const el = { tag, attrs: attrsOf(m[3]), markup: m[0], nth: parent.children, path: stack.slice(1), children: 0 };
+    parent.children += 1;
+    out.push(el);
+    if (!VOID.has(tag) && !m[3].trimEnd().endsWith("/")) stack.push(el);
+  }
+  if (stack.length > 1) throw new Error(`unclosed <${stack.at(-1).tag}>`);
+  return out;
+}
+
 /** The data-src references on a page, split into their sources ("data/plans.json#/individual/0/name"). */
 export const dataSources = (html) =>
   elements(html).flatMap((el) => (el.attrs["data-src"] ? el.attrs["data-src"].split(" ") : []));

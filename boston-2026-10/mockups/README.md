@@ -52,21 +52,32 @@ folder is wholly this build's output and starts empty on every run. **Never hand
 
 This repository is PUBLIC and a photograph's usage rights are the Owner's. Photos live in
 **`mockups/photos/`, which git ignores**, and are named by the committed manifest
-[`photos.json`](photos.json) (slot → file name). A slot whose file is not in the folder shows a labelled
-placeholder ("Photo to come", the slot and the file it waits for).
+[`photos.json`](photos.json) (position → file name). A position whose file is not in the folder shows a
+labelled placeholder ("Photo to come", the position and the file it waits for).
 
-- **To preview with real photos**: copy a photo into `mockups/photos/` under its slot's file name (e.g.
-  `hero.jpg`), or set the slot's file name in `photos.json` to the photo's own name, and rebuild.
+- **To preview with real photos**: copy a photo into `mockups/photos/` under its position's file name (e.g.
+  `tent-large.jpg`) and rebuild. Nothing else changes: `photos.json` keeps each position's own file name and
+  is never set to a photo's own name or ID (test P3-7 reads it from git). To repeat a photo, copy it under
+  each position's file name.
 - ⚠ **The PNGs and `dist-mockups/photos/` then carry the photographs.** Both are git-ignored; do not attach
   or publish them without the Owner's say.
-- **Changing a slot's photo changes every piece that shows the slot**:
+- **Each position is one place in one piece** ([`SPEC-mockup-photos.md`](../SPEC-mockup-photos.md) § 1), so a
+  photo shows only where it is put: changing a position's photo changes that one place. Every photo fills
+  its window (`object-fit: cover`, centred), so a photo of another shape is cropped to it. The **shape** is
+  the window's width divided by its height, measured in headless Chrome at 1920 × 1080 with the legend
+  shut (2026-09-30):
 
-| slot | tent card | flyer | banner | slideshow |
-|---|---|---|---|---|
-| `hero` | large photo | hero | photo | slide 1 (Lean) |
-| `meal-2` | small photo, top | | | slide 2 (Signature) |
-| `meal-3` | small photo, bottom | | | slide 3 (Performance) |
-| `meal-4` | | | | slide 4 (Family) |
+| position | piece | where, highest in the piece's hierarchy first | shape |
+|---|---|---|---|
+| `banner` | banner | the photo, below the offer and the QR | 1.58 |
+| `flyer` | flyer | the hero, across the top | 2.20 |
+| `tent-large` | tent card | the large photo, left, two rows tall | 1.21 |
+| `tent-top` | tent card | the small tile, top right | 1.23 |
+| `tent-bottom` | tent card | the small tile, bottom right | 1.23 |
+| `slide-1` | slideshow | slide 1 (Lean's line) | 1.07 on a screen, 0.46 on a phone |
+| `slide-2` | slideshow | slide 2 (Signature's line) | 1.07 on a screen, 0.46 on a phone |
+| `slide-3` | slideshow | slide 3 (Performance's line) | 1.07 on a screen, 0.46 on a phone |
+| `slide-4` | slideshow | slide 4 (Family's line) | 1.07 on a screen, 0.46 on a phone |
 
 ## Where each part comes from
 
@@ -109,7 +120,7 @@ The QR code's own navy-on-white comes from `build.mjs`, not from CSS.
 |---|---|
 | P1 | git tracks no image but the store's logo and the flow diagrams (each named by its flow block, never by folder); `mockups/photos/` and `dist-mockups/` are ignored (with controls) |
 | P2 | every text run sits in an element citing `data/` by JSON pointer; the letterless-marker render; one changed value (offer, headline, scan prompt, event URL) shows on all four; one changed phrase in `data/messages.json` changes the page and all four; a changed price reaches the flyer; no CSS `content` or script writes a word |
-| P3 | the manifest's slots are all used and no piece uses another; placeholders without photos, photos with them; one changed photo changes all four; a path in the manifest is refused |
+| P3 | the manifest names the nine positions, plain file names (a path or another extension is refused); each position is on exactly one element, in the piece and place `SPEC-mockup-photos.md` § 1 gives it, and a position the manifest lacks is refused; placeholders naming the position and its file without photos, each file with them; one position's changed file changes exactly one element, every other photo byte-for-byte as before; two positions naming one file both show it, copied once; the manifest in git names each position's own `<position>.jpg`, status placeholder |
 | P4 | the QR files are byte-identical to `writeQrCodes`', decode to the event URL, one per piece; no QR generator here |
 | P5 | the legend: a plain label per source from `legend.json` (and a changed one reaches all four), file names only behind the switch, hidden by default, a label missing is refused; the `:root` tokens and font faces are the shipped page's; a token changed in the template reaches all four; the stylesheet is well formed; every file a piece loads is written; no raw colour or translucency; no text inside a photo; the legend lists exactly the cited files |
 | P6 | 3–5 photo slides, each with one plan line, then the closing slide with the offer and the QR; keys, clicks, the fragment, the legend and N, run in a `vm` over a stand-in DOM |

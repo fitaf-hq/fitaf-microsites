@@ -1,11 +1,16 @@
 {
-  "about": "Which photograph fills each photo slot of the mock-ups: slot -> file name in mockups/photos/, a folder git IGNORES. ⛔ No photograph is committed: this repository is public and a photo's usage rights are the Owner's. A slot whose file is not in the folder shows a labelled placeholder. To preview with real photos, copy a photo into mockups/photos/ under the slot's file name (or set the slot's file name here to the photo's own name) and run `npm run build:mockups`. Each slot is used by every piece that shows it, so changing a slot's photo changes all of them; the README lists which pieces use which slot.",
+  "about": "Which photograph fills each photo position of the mock-ups: position -> file name in mockups/photos/, a folder git IGNORES. ⛔ No photograph is committed: this repository is public and a photo's usage rights are the Owner's. There are nine positions, one per place: each is used by exactly one place in one piece (the README lists where), so a photo shows only where it is chosen for, and a repeat is its chooser's choice. A position whose file is not in the folder shows a labelled placeholder. To preview with real photos, copy a photo into mockups/photos/ under its position's file name (e.g. tent-large.jpg) and run `npm run build:mockups`; this manifest is not edited, and never names a photo's own name or ID.",
   "status": "placeholder",
-  "status_note": "PLACEHOLDER file names until the winning photos are chosen (2026-09-30).",
+  "status_note": "PLACEHOLDER file names, each its position's own, and they stay so: a chosen photo is copied under its position's file name in mockups/photos/, never named here (SPEC-mockup-photos.md § 1, 2026-09-30).",
   "slots": {
-    "hero": "hero.jpg",
-    "meal-2": "meal-2.jpg",
-    "meal-3": "meal-3.jpg",
-    "meal-4": "meal-4.jpg"
+    "banner": "banner.jpg",
+    "flyer": "flyer.jpg",
+    "tent-large": "tent-large.jpg",
+    "tent-top": "tent-top.jpg",
+    "tent-bottom": "tent-bottom.jpg",
+    "slide-1": "slide-1.jpg",
+    "slide-2": "slide-2.jpg",
+    "slide-3": "slide-3.jpg",
+    "slide-4": "slide-4.jpg"
   }
 }
