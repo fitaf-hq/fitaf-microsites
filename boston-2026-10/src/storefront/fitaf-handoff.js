@@ -128,9 +128,12 @@ var h = w.document.querySelector("img.header__logo-image"), i = h && h.complete 
 if (i) i.src = h.currentSrc, i.alt = "Fit AF", i.style.cssText = "display:block;margin:" + css;
 return i;
 }
-// On the screen: centred just above the step line, 48 px high. Tried at every poll of fill B's wait and at every press
-// until it is placed (L), because the store's header may load its logo after this block runs; placed once.
-function brand() { if (!L && (L = logo("0 auto 12px;height:48px"))) $("p").before(L); }
+// On the screen: the first thing, above the title, 48 px high, on a white plate (the Advisor, 2026-09-30, after seeing
+// it: "Top, on a white plate"; the logo's grey tagline was faint on navy). The plate is the image's OWN padding, rounded
+// corners and background, the screen's --white token: a plate element around it measured 10,308 bytes, over the
+// Footer's 10,240. Tried at every poll of fill B's wait and at every press until it is placed (L), because the store's
+// header may load its logo after this block runs; placed once.
+function brand() { if (!L && (L = logo("0 auto 16px;height:48px;padding:8px 10px;border-radius:8px;background:var(--white)"))) $("h2").before(L); }
 // After press k of t: the meal's slide, made at its first press from its own card (§ 2 item 2: its name as the card
 // shows it, and its photograph only if the page has already loaded it: the card's img complete with a width, whose
 // currentSrc the slide reuses, so nothing new is requested), shown; the bar at k of t + 1; the step line.
