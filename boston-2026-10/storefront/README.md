@@ -6,8 +6,9 @@ hashes and a few literal strings of the store's public bundle, never its code or
 
 - **`dependencies.json`** (F2): each literal string of the store's public code that the cart hand-off depends on
   (the meal card element, the title and actions classes, *Add to Cart*, *CHECKOUT*, *CHECKOUT NOW*, *CONTINUE TO
-  CHECKOUT*, the pending list and its commit, the Custom Scripts injection), with what the hand-off uses it for
-  and the contract section that says so. **Edited by a person**, when the hand-off comes to depend on something
+  CHECKOUT*, the pending list and its commit, the Custom Scripts injection; and, for rung 2's two faces, the checkout
+  component `app-checkout`, the hide list's names H1–H6 and the pay button's container `checkout__submit`), with what
+  the hand-off uses it for and the contract section that says so. 23 literals since 2026-09-29. **Edited by a person**, when the hand-off comes to depend on something
   new, or a release renames something it depends on (and the hand-off is changed to match).
 - **`watch-baseline.json`** (§§ 2, 3, 5): the release the watch compares with: the order page's script list, the
   entry bundle's name, its imports, every JS file reachable from it with its SHA-256, and `expectedFooter`, the

@@ -390,3 +390,15 @@ not the shipped fill. **It is removed**; the history keeps it.
 | R2-31 | the build | exactly two files; no `fill-A` file; no `hmp_local_cart`, `localStorage`, `productId` or `10538` in either (R2-11's absence list, now over both) |
 | R2-32 | ⭐ the shipped text | both files' text SHA-256 (the version line's own) equal `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8`; ⭐ mutant: one byte of the source's fill B changed, R2-32 fails |
 | R2-33 | the source | no `<fill A>` marker, no `fillA`, no `PLANS` slot |
+
+**Found at the build of rung 2's two faces, 2026-09-29** (`SPEC-rung2-progress-and-checkout.md`, which governs them;
+its § 8 has the build's notes). Not a ruling; §§ 8–12 above are unchanged.
+
+- **The shipped text changed, by that amendment**, so item 3's pin moved: from `054e6be8…` (the block placed in the
+  Footer on 2026-09-29, **still the live one** until the new text passes the live smoke and is pasted) to
+  `aa773aec65270cc4210e2ec64fe52a94865eb5676c764f826598d7eaf42caf08` (`ed422ad`; `28ce3983…` at `7b0d74f` before the
+  screen moved to the browser's top layer). Every press, wait, stop, key and link refusal of fill B is as these sections
+  left it: R2-01 to R2-28, R2-30, R2-31 and R2-33 pass unchanged, and fill B still sets only its 200 ms timers (the
+  screen's clocks are CSS animations).
+- **R2-29's fixture**, not its rule: its target sizes (5,120, 5,121, 5,200) are built from a small source with the
+  build's four slots, because fill B's file is now 8,749 bytes and a pad only adds (`b278a4b`, a separate commit).

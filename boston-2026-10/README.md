@@ -12,7 +12,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `SPEC.md` | the contract, §§ 0–5 | authority |
 | `data/plans.json` | the plan table, read off the store's public plans page on a date | INPUT |
 | `data/events.json` | one entry per event URL that gets a QR code | INPUT |
-| `data/messages.json` | the campaign's phrases: the page's headline, intro line, tagline (meta description) and top bar, and the mock-ups' own; one place to change a phrase | INPUT |
+| `data/messages.json` | the campaign's phrases: the page's headline, intro line, tagline (meta description) and top bar, and the mock-ups' own; one place to change a phrase. Its `handoff` key is the hand-off's progress screen (rung 2's two faces), read by `npm run build:storefront` only | INPUT |
 | `src/template.html` | the page: markup and inline CSS, with `{{SLOT}}` placeholders | INPUT |
 | `src/app.js` | the one small inline script: the two questions, tabs, "See all plans", URL fragment | INPUT |
 | `src/fonts/` | Poppins 600/700 and Open Sans 400/600, Latin WOFF2 subsets (Fontsource 5.3.0), with `OFL-*.txt` | INPUT, copied to `dist/fonts/` |
@@ -20,7 +20,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S26 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-33 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`; fill A's cases are retired, listed under Rung 2 below), P1–P6 of the mock-ups (`pN-*.test.mjs`) and F1 (the flow renders are current, with mutants), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S26 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-33 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`; fill A's cases are retired, listed under Rung 2 below) and R2-40–R2-52 of its two faces (with `r2-screen.mjs`; the cases that need Chrome run in the watch package, below), P1–P6 of the mock-ups (`pN-*.test.mjs`) and F1 (the flow renders are current, with mutants), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S26 | authority |
@@ -42,11 +42,11 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel); `email-preview/e1.html` and `ex.html` from `npm run preview:emails` | OUTPUT, git-ignored |
 | `SPEC-rung2-cart-handoff.md` | rung 2's contract: the cart hand-off, § 6 (the store's Custom Scripts Footer) and § 12 (fill B is the mechanism; fill A is retired) govern | authority |
 | `SPEC-storefront-watch.md` | the storefront watch: an hourly GitHub Actions check of the store's public bundle, the dependencies the hand-off presses, Fit AF's Footer block, and a live smoke test of the hand-off on each flag (never submits); an issue per release | authority |
-| `SPEC-rung2-progress-and-checkout.md` | rung 2's two faces (ruled 2026-09-29): *"Assembling your order"* with a carousel of the meals as fill B adds them, and a checkout stripped by style to the order and the payment for a deep-carted visit only (the offer to subscribe hidden while it is off); the payment's controls measured unchanged, live; cases R2-40–R2-52, W10–W13 | authority |
-| `tools/storefront-watch/`, `storefront/` | the watch itself, its own npm package (puppeteer-core; the site's install never gets it), and its committed inputs `storefront/dependencies.json` and `storefront/watch-baseline.json` (written by its `accept`, which since § 8 names the release it accepts, `--release main-<name>.js`, and refuses when another is live). Its § 7: a new release's publish time (the entry's `Last-Modified`) in its report and issue, and a failed smoke width's page as text, redacted, never a screenshot | tool; INPUT |
-| `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, fill B, the one fill (§ 12); its `//` lines are for maintainers and do not ship, and every line that ships is pinned byte for byte (R2-32) | INPUT |
+| `SPEC-rung2-progress-and-checkout.md` | rung 2's two faces (ruled 2026-09-29): *"Assembling your order"* with a carousel of the meals as fill B adds them, and a checkout stripped by style to the order and the payment for a deep-carted visit only (the offer to subscribe hidden while it is off); the payment's controls measured unchanged, live; cases R2-40–R2-52, W10–W13. Built at `ed422ad`; § 8 is the build's notes (H6 also requires a switch; the screen in the browser's top layer; its clocks CSS animations; the size) | authority |
+| `tools/storefront-watch/`, `storefront/` | the watch itself, its own npm package (puppeteer-core; the site's install never gets it), and its committed inputs `storefront/dependencies.json` and `storefront/watch-baseline.json` (written by its `accept`, which since § 8 names the release it accepts, `--release main-<name>.js`, and refuses when another is live). Its § 7: a new release's publish time (the entry's `Last-Modified`) in its report and issue, and a failed smoke width's page as text, redacted, never a screenshot. Its smoke also checks rung 2's two faces live (W10–W13), and its suite runs this package's rung 2 cases that need Chrome | tool; INPUT |
+| `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, fill B, the one fill (§ 12), with its two faces (the progress screen, the stripped checkout); its `//` lines are for maintainers and do not ship, and every line that ships is pinned byte for byte (R2-32) | INPUT |
 | `src/storefront/meal-key.js` | rung 2 § 11: a meal's key, ONE function: `handoff:link` imports it and the build inlines its text into fill B | INPUT |
-| `scripts/build-storefront.mjs` | `npm run build:storefront`: two files of one text, the plan counts and the key function inlined, the version line; warns above 5,120 bytes and refuses above 10,240 (§ 11) | build |
+| `scripts/build-storefront.mjs` | `npm run build:storefront`: two files of one text, the plan counts, the key function, the screen's words (`data/messages.json`) and colours (`src/template.html`'s tokens) inlined, the version line; warns above 5,120 bytes and refuses above 10,240 (§ 11) | build |
 | `scripts/handoff-link.mjs` | `npm run handoff:link`: prints a test link (payload version 2) and each meal's key beside its name | tool |
 | `dist-storefront/` | `fitaf-handoff.html` (the Footer block) and `fitaf-handoff.fill-B.console.js` (the same text, for a browser console) | OUTPUT, git-ignored |
 
@@ -56,7 +56,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-33, P1–P6, F1
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-52, P1–P6, F1
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/
 npm --prefix boston-2026-10 run email:tokens    # after a :root token change: the emails' copy (M17 fails until then)
@@ -127,9 +127,31 @@ exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.ha
   CHECKOUT). A malformed link stops with its own reason (`unknown version`, `bad meal: …`, `bad code`, `named
   twice: …`, `no mpid on this page`) before it looks at the page's content.
 - **The offer code** is checked but not applied in this build.
+- **Rung 2's two faces** ([`SPEC-rung2-progress-and-checkout.md`](SPEC-rung2-progress-and-checkout.md), ruled
+  2026-09-29; its § 8 is the build's notes). Once the link and the plan's count pass their checks, fill B shows **one
+  element of its own**, `#fitaf-screen`, over the whole order page (in the browser's top layer, as a manual popover,
+  since the store's own overlays are there too; ⚠ one the store opens after it, its extras dialog after CHECKOUT, is
+  above it): *"Assembling your order"*, a bar at the presses made
+  of the plan's count + 1 (the last is the store's CHECKOUT, then *"Taking you to checkout"*), and a carousel of the
+  meals as their cards show them (the card's photo only if the page has already loaded it, its `currentSrc` reused:
+  nothing is requested), one slide per meal as fill B presses it, cycling every 2.5 s once all are added; with
+  `prefers-reduced-motion` nothing slides or cycles. The words are `data/messages.json`'s `handoff`, the colours the
+  page's own tokens, both inlined by the build. It holds no control and nothing focusable. It goes at `done` (after
+  the checkout's style is set), at every stop (before the stop's line), and in any case 90 s after it appeared. ⚠ Its
+  clocks are **CSS animations**, not timers: fill B's timers stay its 200 ms polls. **At `done`**, `html.fitaf-deep` and
+  one `style#fitaf-deep` hide, only while the store's `app-checkout` is on the page, the header, footer, credit line and
+  pop-ups (H1, H2, H5), and inside the checkout only the two sign-in links (H3, H4) and the offer to subscribe while its
+  switch is off (H6). Never storage: a reload of `/checkout` is the store's full checkout. **An ordinary visit gets
+  nothing** (R2-04, R2-40).
+  **Where its cases run**: R2-40–R2-44, R2-50 and R2-52's first half here (linkedom, the shipped text); the ones that
+  need a browser (`:has()`, what is displayed, the top layer, motion, the 90 s clock, real images: R2-41c,
+  R2-45–R2-49, R2-51, R2-52 in Chrome) in `tools/storefront-watch/test/r2-*.test.mjs`, because that package is the one that drives Chrome and this
+  one never installs it. The live checks W10–W13 are in the watch's smoke.
 - ⛔ **Not yet run on the live store**: the full-plan rule, fill B's second presses of a meal (the
   2026-09-29 run pressed each of its two meals once), fill B's § 8 finish, and fill B's § 10 check. Nor any v2
   link (§ 11): matching by key, the two-card refusal and the 30 s wait are proven here on the synthetic page only.
+  Nor the two faces: the screen and the stripped checkout are proven on the synthetic page and the watch's synthetic
+  store only; the live smoke (with W10–W13) runs before any paste, and the Advisor looks in his own browser.
 
 ```sh
 npm --prefix boston-2026-10 run build:storefront   # writes dist-storefront/, prints each file's size and version line,
@@ -146,14 +168,20 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   with a test link (the one-browser run of § 6); it keeps its name, so a runbook that names it still works. There is no
   fill-A file.
 - ⭐ **The shipped text is pinned (§ 12 item 3, R2-32)**: its SHA-256, the one in each version line, is
-  `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8`, the block placed in the Footer on 2026-09-29, so
-  retiring fill A changed nothing live. Changing a shipped line is a separate amendment, with the live smoke before its
-  paste, and moves the pin in the same commit; only the source's `//` lines change freely.
+  `aa773aec65270cc4210e2ec64fe52a94865eb5676c764f826598d7eaf42caf08` since rung 2's two faces (`ed422ad`). It was
+  `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8` (`8945de1`'s text), **the block placed in the
+  Footer on 2026-09-29, which is still the live one until the new text passes the live smoke and is pasted**.
+  Changing a shipped line is a separate amendment, with the live smoke before its paste, and moves the pin in the same
+  commit; only the source's `//` lines change freely.
 - **The size (§ 11, the Advisor's ruling)**: each whole file should be at most 5,120 bytes, which the build **warns**
   above, and must be at most 10,240, which it **refuses** above, writing nothing. **Built 2026-09-29 at `c1764c1`**:
   the Footer block 5,180 bytes and `fitaf-handoff.fill-B.console.js` 5,161 (both warned: the key function and the
   v2 reader cost more than v1's reader saved); 6 more each from an uncommitted tree. The same two sizes since § 12:
-  the text did not change. The build never touches `dist/`, so `npm run build` stays byte-identical (S20).
+  the text did not change. **With the two faces (`ed422ad`)**: the Footer block **8,768** bytes and the console file
+  **8,749**, both warned, under the ceiling; the Advisor accepted *about 7 KB*, and the two faces cost 3,588 bytes, not
+  the 2 KB the contract estimated (SPEC-rung2-progress-and-checkout § 8 has the breakdown). R2-29 reaches the target's
+  edges from a small source since then (a pad only adds). The build never touches `dist/`, so `npm run build` stays
+  byte-identical (S20).
 - ⛔ **The kill switch is deleting our block from the Footer.** Never the store's *"Inject these scripts"* switch:
   it stops every vendor's script at once.
 
@@ -184,7 +212,7 @@ before rung 4 (test S20 compares SHA-256s with `test/s20-production-golden.json`
 
 ```sh
 export CLOUDFLARE_ACCOUNT_ID=…            # never committed
-npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-33, P1–P6, F1 (Miniflare, no network)
+npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-52, P1–P6, F1 (Miniflare, no network)
 npm --prefix boston-2026-10 run db:migrate:dev        # D1 migrations -> fitaf-leads-dev (0003 drops rung 3's tables; 0004 adds sending)
 npm --prefix boston-2026-10 run seed:dev              # 20 dummy saves, 5 marked exported
 npm --prefix boston-2026-10 run purge:dev             # DRY RUN: counts only

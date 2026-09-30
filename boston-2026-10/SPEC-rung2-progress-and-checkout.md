@@ -131,3 +131,81 @@ the footer. 5k is a good target, but it's OK if we're above it slightly."*). § 
 ⚠ **The build's reading, not his words**: *"a legitimate carousel"* is read as **the real meals being added, each as
 its own card shows it** (§ 2 item 2), with the card's photograph when the page already holds it; the Advisor sees it in
 his own browser before any paste.
+
+## 8. Found at the build, 2026-09-29 — the build's readings and choices, not rulings
+
+Red first at `5acc962`, built at `7b0d74f`, R2-29's fixture at `b278a4b`, the screen moved to the top layer at
+`ed422ad`. §§ 1–7 above are unchanged; this section says what the build did where they left a choice, and where the
+store's page made a sentence of them impossible to meet as written.
+
+- ⭐ **H6 also requires a switch** (`:has(.summary__subscription-toggle)`), found at the build, not ruled. The store's
+  own template (release `main-2HXLHIG7.js`) renders **no switch at all** for a plan that requires a subscription: the
+  controls hold only the label *"Subscription required"*. H6 as § 3 writes it (hide the controls whenever no ACTIVE
+  switch is inside) would hide that label, and § 3 item 3 says a commitment is never hidden. As built, H6 hides the
+  offer only while a switch is there and off: *"the offer to subscribe … only while it is off"*, and nothing of a plan
+  that requires one. **R2-51b** pins it; its mutant is H6 as written, and it fails. The renewal and frequency lines were
+  never in H6 either way; W13 still fails the smoke on any *"renews every"*.
+- **H1, H2 and H5 never hide anything inside `app-checkout`** (`:not(app-checkout *)`): § 3 item 3's *"inside the
+  checkout component, only H3, H4 and H6 are hidden"*, made structural, so a release that put a `.footer` inside the
+  checkout could not hide a payment control between releases and the next smoke. The style is one rule:
+  `html.fitaf-deep:has(app-checkout) :is(:is(H1, H2, H5):not(app-checkout *), H3, H4, H6){display:none!important}`.
+- ⚠ **The screen's two clocks are CSS animations, not timers.** A 90 s `setTimeout` (or a 2.5 s one) would sit among
+  fill B's polls, and R2-09, R2-10, R2-15, R2-16, R2-17 and R2-24 pin that fill B sets only 200 ms timers (*"only 200 ms
+  polls"*), which this contract does not change. So the screen carries its own 90 s animation (`fitaf-e`, moving
+  nothing) whose end removes it, and the carousel a 2.5 s repeating one (`fitaf-t`) whose every turn shows the next
+  slide. They run on the browser's clock, so the screen goes at 90 s even when fill B's timers never fire again
+  (R2-49 plants exactly that); the 90 s one is `!important` on the screen's own id, so a page-wide reduced-motion
+  reset of every animation cannot end it at once (none in this release). With `prefers-reduced-motion`, everything
+  inside the screen has `animation: none; transition: none`: nothing slides, nothing cycles, the clock runs on.
+- **The count line and the step line are one line**, the one `role="status"`: `handoff.step`, *"{meal} · {n} of
+  {total} meals"* (*"Chicken Pesto Pasta · 3 of 7 meals"*), then *"Taking you to checkout"* after CHECKOUT. Its words
+  are `data/messages.json`'s, inlined as ASCII (`·` as `\u00b7`); the build refuses a `step` without `{meal}`, `{n}`
+  and `{total}`, and a token that is not a hex colour. The colours are the page's `--navy` (the screen), `--white`
+  (the text), `--ice` (the bar's track) and `--cta` (its fill), as custom properties on the screen's own rule; the
+  type is `system-ui, sans-serif`.
+- **"The newest meal"** (§ 2 item 2, reduced motion) is read as the meal of the latest press: a meal pressed again
+  (its second of four, say) shows its slide again. For a link of distinct meals, as the smoke's, it is the last added.
+- **The photo** is the card's first `img` (the store's header image, which it loads lazily: no `src` until the card
+  scrolls into view). Complete with a width: the slide gets a new `img` whose `src` is its `currentSrc`, which Chrome
+  draws from the page's own copy with no request, even for an image sent `no-store` (R2-52 counts the requests). At
+  666 px and narrower the store hides `app-product-card` (fill B presses it all the same), so its photo is likely
+  never loaded there, and the slide is the name alone.
+- ⭐ **"Above every layer of the store's, its dialogs included" cannot be met by a `z-index`, and is met only in part.**
+  The store's dialogs and pop-ups are Angular CDK overlays, and this release's CDK (`chunk-V5PSWOJ3.js`) shows them as
+  **manual popovers, in the browser's top layer**, above any `z-index`, wherever the Popover API exists; no provider
+  in the release turns that off. So the screen is a manual popover too (`popover="manual"`, `showPopover()` when it is
+  appended; the popover's own box undone), with the largest `z-index` where there is no Popover API. It is above the
+  page and **every overlay already open** (a pop-up shown at load: R2-41c, whose mutant, the screen by `z-index` alone,
+  fails). ⚠ **An overlay the store opens after it is above it**: the top layer is ordered by opening, and moving the
+  screen back on top would hide and re-show it, restarting its clocks. The one fill B meets is the extras dialog after
+  CHECKOUT, which it presses within a poll (200 ms), though the dialog's CONTINUE is disabled while it syncs; a
+  subscription plan's *"Sign in to continue"* would stay above the screen until fill B's stop, 30 s later. The
+  Advisor sees which in his own browser; ⬜ whether that is acceptable is his to rule.
+- **The pay button** (W11) is a displayed `button` inside the store's `.checkout__submit` (its label varies with the
+  payment method: *Place order*, *PAY NOW*); `checkout__submit` joins `dependencies.json` with `app-checkout` and the
+  hide list's names (11 in all, each found in the release's files: 23 of 23 over a local copy whose 156 files match
+  `watch-baseline.json`'s hashes; no request to the store). H2's footer is the literal `[1,"footer"]` (an element whose
+  class is exactly `footer`), because `"footer"` alone is in 23 of the release's files and would never be missed.
+- **W12 also asks that each found name be hidden while our style is on**, and waits up to 10 s for all six (the store
+  renders its pop-up host deferred). **W10–W13 are judged only once fill B reached done**; a stopped run, already failed
+  by the smoke's own rule, is judged by W10 alone (the screen must be gone).
+- **Where the cases run.** R2-40–R2-44, R2-50 and R2-52 (the photo's state given) run in the site's suite on the
+  shipped text; R2-41c (the top layer), R2-45–R2-49, R2-51 (with R2-51b) and R2-52 with real images need Chrome and
+  run in the watch package's suite (`tools/storefront-watch/test/r2-*.test.mjs`), because the site's install never
+  gets a browser driver (`tools/README.md`). They read the page with their own functions, not the watch's
+  `lib/faces.mjs`. **R2-04** gains six names on its stub (`document`, `requestAnimationFrame`, `matchMedia`,
+  `getComputedStyle`, `MutationObserver`, `clearTimeout`), and **R2-40** runs the ordinary visit on a real document,
+  byte for byte.
+- ⚠ **R2-29's fixture changed, not its rule** (a separate commit, `b278a4b`, to revert alone if R2-29 is one of the
+  cases the build was told to leave unchanged). It padded fill B's own file up to 5,200 and 5,120 bytes, and a pad only
+  adds: at 8,749 bytes the file cannot be padded down. The target's sizes are now built from a small source with the
+  build's four slots; the ceiling's, from the real source padded, as before. Every other fill-B case passes unchanged.
+- **The size** (§ 6): the Footer block **8,768** bytes and the console file **8,749** at `ed422ad`, both warned, under
+  the 10,240 ceiling; the text was 5,161. The two faces cost 3,588 bytes, not the estimated 2 KB: the screen's code
+  1,522 (making the screen and its slides, the top layer, the photo, the bar, the step line, the carousel's turn, the
+  guard around it), the screen's style 1,304, the checkout's style 339 and the code that sets it 194, the words 124,
+  and the hooks into fill B about 105. R2-32's pin moved from `054e6be8…` to `28ce3983…` at `7b0d74f`, then to
+  `aa773aec65270cc4210e2ec64fe52a94865eb5676c764f826598d7eaf42caf08` at `ed422ad`.
+- ⬜ **Not run on the live store**: any of it. The screen, the stripped checkout and W10–W13 are proven on the
+  synthetic order page and the watch's synthetic store only. The live smoke, and the Advisor's own look at both widths,
+  come before any paste (§ 5).
