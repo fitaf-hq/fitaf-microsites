@@ -167,7 +167,9 @@ test("F2 carries the hide list's names (and the checkout's, and the pay button's
     "app-storefront-popup-host", "summary__plan-subscription-controls", "summary__subscription-toggle", "summary__subscription-toggle--active",
     // § 10
     "app-extra-products-dialog", "cdk-overlay-pane", "cdk-overlay-backdrop", "checkout-discounts", "smartbanner",
-    "data-smartbanner-original-margin-top", "summary__row", "summary__row--discount", "summary__total", "tip-selector__remove-btn"];
+    "data-smartbanner-original-margin-top", "summary__row", "summary__row--discount", "summary__total", "tip-selector__remove-btn",
+    // § 12
+    "ecc_additions_prompt_handled"];
   for (const name of NAMES) {
     assert.ok(literals.some((l) => new RegExp(`(^|[^\\w-])${name.replace(/[-_]/g, (c) => `\\${c}`)}([^\\w-]|$)`).test(l)), `a literal names ${name}`);
   }
