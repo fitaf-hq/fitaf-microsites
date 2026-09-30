@@ -1,0 +1,22 @@
+{
+  "name": "fitaf-microsite-boston-2026-10-storybook",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Storybook for the microsite's UI, first the deep-carting progress screen (SPEC-storybook.md). Its own package, so the site's install never contains it.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "storybook": "storybook dev --port 6016 --host localhost --no-open",
+    "build-storybook": "storybook build --output-dir storybook-static",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^10.2.1",
+    "@storybook/addon-docs": "^10.2.1",
+    "@storybook/html-vite": "^10.2.1",
+    "storybook": "^10.2.1",
+    "vite": "^7.1.0"
+  }
+}

@@ -8,6 +8,10 @@ dist-storefront/
 # The mock-ups' output: its PNGs and its copies of the photos carry photographs.
 dist-mockups/
 
+# Storybook (boston-2026-10/tools/storybook, SPEC-storybook.md): its static build, and the log it writes on a failure
+storybook-static/
+debug-storybook.log
+
 # ⛔ Photographs. This repository is PUBLIC and a photo's usage rights are the Owner's: the mock-ups read
 # them from this folder, named by the committed mockups/photos.json, and none is ever committed.
 /boston-2026-10/mockups/photos/
