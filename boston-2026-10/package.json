@@ -36,8 +36,8 @@
     "esbuild": "0.28.1",
     "jsqr": "^1.4.0",
     "linkedom": "0.18.13",
-    "miniflare": "5.20260926.0-alpha",
+    "miniflare": "5.20260926.1-alpha",
     "pngjs": "^7.0.0",
-    "wrangler": "^4.142.0"
+    "wrangler": "^4.144.0"
   }
 }
