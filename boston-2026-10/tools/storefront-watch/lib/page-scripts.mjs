@@ -7,8 +7,8 @@ const SCRIPT_BODY = /(<script\b[^>]*>)[\s\S]*?(<\/script\s*>)/gi;
 const TAG = /<(script|link)\b([^>]*)>/gi;
 const ATTR = /([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+)))?/g;
 const ENTITIES = { "&amp;": "&", "&quot;": '"', "&#39;": "'", "&lt;": "<", "&gt;": ">" };
-/** The Angular build's entry: `main-<hash>.js`, loaded as a module. */
-const ENTRY_NAME = /^main-[A-Za-z0-9_-]+\.js$/;
+/** The Angular build's entry: `main-<hash>.js`, loaded as a module. Also the form of the name `accept --release` takes. */
+export const ENTRY_NAME = /^main-[A-Za-z0-9_-]+\.js$/;
 
 const decode = (value) => value.replace(/&(amp|quot|#39|lt|gt);/g, (e) => ENTITIES[e]);
 

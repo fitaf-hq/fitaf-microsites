@@ -1,5 +1,5 @@
-// Shared by the r2-*.test.mjs files (rung 2, the storefront hand-off, SPEC-rung2 § 6, § 8, § 10 and § 11). Not a test
-// file itself. The hand-off is tested AS IT SHIPS: the built text runs in a fresh V8 context whose only global is a fake
+// Shared by the r2-*.test.mjs files (rung 2, the storefront hand-off, SPEC-rung2 § 6, § 8, § 10, § 11 and § 12). Not a
+// test file itself. Fill B is the one fill (§ 12: fill A is retired, its cases with it; the package README names them). The hand-off is tested AS IT SHIPS: the built text runs in a fresh V8 context whose only global is a fake
 // `window`, so a bare browser global in the script (localStorage, document, fetch, …) fails here.
 // The links here are payload VERSION 2 (§ 11), written from refKey() below, the contract's definition of a meal's key
 // implemented a second time, independently (Node's own UTF-8 bytes and BigInt arithmetic): so a test's link never
@@ -12,6 +12,7 @@ import { loadJson, PLANS_PATH } from "../build.mjs";
 import { countTable, storefrontText } from "../scripts/build-storefront.mjs";
 
 export const ORIGIN = "https://fitafnutrition.com";
+/** The store's cart key: a visitor's own cart there must be left exactly as it was (R2-14). */
 export const CART_KEY = "hmp_local_cart";
 export const POLL_MS = 200;
 /** § 8 and § 10: every wait BEFORE a press (the meal cards, an enabled CHECKOUT) is at most 10 s. */
@@ -25,8 +26,14 @@ export const ADD = "Add to Cart";
 /** Where `page.all` records a press outside every meal card: the page's own controls (§ 8), and the dialog's. */
 export const PAGE = "(page)";
 
-/** The shipped text: FILL as committed, or switched to `fill` — the one edit an operator makes. */
-export const script = (fill) => storefrontText(fill ? { fill } : {});
+/**
+ * The shipped text: fill B's, the one fill (SPEC-rung2 § 12). `fill` is kept so the fill-B cases read as they did;
+ * anything but "B" is refused, because fill A is retired and no text of it is built.
+ */
+export const script = async (fill = "B") => {
+  assert.equal(fill, "B", "fill A is retired (SPEC-rung2 § 12): the build has one text, fill B's");
+  return storefrontText();
+};
 
 /** Run the text as a page would: its only global is `window`. */
 export function run(text, window) {
@@ -67,17 +74,15 @@ export const rawFragment = (text) => `#fitaf=${text}`;
 /** A RETIRED version-1 link's fragment (§ 6: base64url of the JSON payload), which § 11 refuses. */
 export const v1Fragment = (payload) => `#fitaf=${Buffer.from(JSON.stringify(payload), "utf8").toString("base64url")}`;
 
-/** localStorage as a string map. `failSetItem` makes every write throw, as a full quota does. */
+/** localStorage as a string map. */
 export class FakeStorage {
-  constructor(entries = {}, { failSetItem = false } = {}) {
+  constructor(entries = {}) {
     this.map = new Map(Object.entries(entries));
-    this.failSetItem = failSetItem;
   }
   getItem(key) {
     return this.map.has(key) ? this.map.get(key) : null;
   }
   setItem(key, value) {
-    if (this.failSetItem) throw new Error("QuotaExceededError (fake)");
     this.map.set(key, String(value));
   }
   removeItem(key) {
@@ -130,8 +135,8 @@ export function fakeTimers() {
  * A browser window on `path` + `fragment`. `events` records every history write and navigation, in order —
  * replaceState, pushState (the store's own in-app routing), location.assign / replace, and a write to
  * location.href — and, on a bound `page`, every press of a page control as ["press", id]. `info` records every
- * console.info line. `faults.replace` makes location.replace throw (the A guard case). `page` (from orderPage)
- * supplies the document and is bound to this window, so its controls can route the way the store's do.
+ * console.info line. `page` (from orderPage) supplies the document and is bound to this window, so its controls can
+ * route the way the store's do.
  */
 export function fakeWindow({
   path = "/order?mpid=21",
@@ -140,7 +145,6 @@ export function fakeWindow({
   document = undefined,
   page = undefined,
   timers = fakeTimers(),
-  faults = {},
 } = {}) {
   let url = new URL(path + fragment, ORIGIN);
   const events = [];
@@ -162,7 +166,6 @@ export function fakeWindow({
       events.push(["href", to]);
     },
     replace(to) {
-      if (faults.replace) throw new Error("location.replace failed (fake)");
       events.push(["replace", to]);
     },
     assign(to) {

@@ -2,9 +2,12 @@
 // public files (the page's script list, the entry, its imports, every reachable JS file's SHA-256). The expected
 // Footer block is not read from the store: it is what is KEPT (a build's version line), set with --footer <built
 // block>, cleared with --footer null, and otherwise carried over, so F3 compares what is live with what is kept.
+// § 8: accept names the release it accepts (`main-<name>.js`, as the watch's issue title names it), and refuses,
+// writing nothing, unless that release is the live entry both before and after its files are read.
 import { readFile, writeFile } from "node:fs/promises";
 import { parseBlock } from "./footer-check.mjs";
-import { fileHashes, readEntry, readRelease } from "./read-store.mjs";
+import { ENTRY_NAME } from "./page-scripts.mjs";
+import { fileHashes, readEntry, readEntryName, readRelease } from "./read-store.mjs";
 
 export const ABOUT =
   "Written by `npm run accept` (tools/storefront-watch; SPEC-storefront-watch.md § 5) from the live store's public files. Do not hand-edit: re-run accept; set expectedFooter with accept --footer.";
@@ -30,17 +33,39 @@ async function existing(path) {
   }
 }
 
-export async function captureBaseline({ fetcher, page, expectedFooter }) {
+/** § 8 item 2: the release accept was asked for is not the live entry. Nothing is written. */
+export class NotTheLiveRelease extends Error {
+  constructor(live, release) {
+    super(`the live entry is ${live ?? "(none)"}, not ${release}: a newer release has landed; its own checks run on the next flag`);
+    this.name = "NotTheLiveRelease";
+  }
+}
+
+/** § 8 item 2's check, made on the first read of the entry and again after the release's files are read. */
+function mustBeLive(live, release) {
+  if (live !== release) throw new NotTheLiveRelease(live, release);
+}
+
+export async function captureBaseline({ fetcher, page, expectedFooter, release }) {
   const { entryUrl, entryText, live } = await readEntry({ fetcher, page });
   if (!entryUrl) throw new Error(`${page} names no entry bundle (one module script main-*.js): nothing to accept`);
+  mustBeLive(live.entry, release);
   const texts = await readRelease({ fetcher, entryUrl, entryText });
+  // A release that landed while its files were read (HMP released twice within an hour on 2026-09-29): refused too.
+  mustBeLive(await readEntryName({ fetcher, page }), release);
   return { about: ABOUT, page, html: live.html, entry: live.entry, imports: live.imports, files: fileHashes(texts), expectedFooter };
 }
 
-/** `footer`: undefined keeps the file's expectedFooter; null clears it; a string is a built block's text. */
-export async function acceptBaseline({ fetcher, path, page, footer }) {
+/**
+ * `release`: the entry bundle's name, `main-<name>.js`, required (§ 8), checked before anything is read or requested.
+ * `footer`: undefined keeps the file's expectedFooter; null clears it; a string is a built block's text.
+ */
+export async function acceptBaseline({ fetcher, path, page, footer, release }) {
+  if (!ENTRY_NAME.test(release ?? "")) {
+    throw new Error(`accept names the release it accepts, --release main-<name>.js (SPEC-storefront-watch § 8); got ${release}`);
+  }
   const expectedFooter = footer === undefined ? ((await existing(path))?.expectedFooter ?? null) : footer === null ? null : footerFromBlock(footer);
-  const baseline = await captureBaseline({ fetcher, page, expectedFooter });
+  const baseline = await captureBaseline({ fetcher, page, expectedFooter, release });
   await writeFile(path, baselineText(baseline));
   return baseline;
 }

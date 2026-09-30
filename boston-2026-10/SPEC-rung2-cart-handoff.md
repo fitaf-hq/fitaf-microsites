@@ -360,3 +360,33 @@ not rulings; § 11's rules above are unchanged.
   `679e6aa6e4ca2299e647ec999b8997a74a96012715ebd2e81bb399dc7140a9d5`.
 - ⬜ **Not yet run on the live store**: any v2 link, matching by key, and the 30 s wait. They are proven on the
   synthetic page (and the watch's headless synthetic store) only.
+
+## 12. Amendment, 2026-09-29 — fill A is retired; fill B is the mechanism (the Advisor's ruling)
+
+**Ruled** (the Advisor, 2026-09-29, after his browser test of the v2 link passed): *"Yes, let's officially promote Fill B
+as the mechanism."* Fill A (§ 6: it wrote the store's cart storage) cannot read a v2 link (§ 11's build note) and is
+not the shipped fill. **It is removed**; the history keeps it.
+
+1. **The source** loses every `// <fill A>` … `// </fill A>` region, the `PLANS` slot and table, `CART_KEY`, `OPTION`,
+   `undo` and the guard's restore line. **One fill remains**, so the fill markers, `FILLS` and the `FILL` switch may go
+   from the source and the build **only where the shipped text stays as it is** (item 3).
+2. **The build** writes two files, `fitaf-handoff.html` and `fitaf-handoff.fill-B.console.js` (the one-browser run's
+   file keeps its name, so a runbook that names it still works). `fitaf-handoff.fill-A.console.js` is no longer built;
+   `data/plans.json` is still read for the plan counts (`COUNTS`), and the per-meal prices are no longer inlined
+   anywhere.
+3. ⭐ **Nothing live changes.** The texts fill B ships are **byte-identical** to `8945de1`'s: the version line's text
+   SHA-256 of both files stays `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8`, and each built file
+   differs from `8945de1`'s only in the version line's commit. **So the Footer block placed tonight needs no new paste
+   and no new smoke**, and the watch's expected Footer is unaffected. A change to the shipped text is a separate
+   amendment, with the live smoke before its paste.
+4. **The tests**: every fill-A case is removed (R2-06, R2-07 and R2-08 whole; fill A's cases in R2-01, R2-02, R2-05,
+   R2-11, R2-12, R2-14, R2-27 and R2-29); every fill-B case is kept unchanged. The suite names the retired cases in one
+   place (its README), so a reader can find them in the history.
+5. **The documents**: the package README and the tools' READMEs stop describing fill A as a choice; §§ 2, 6 and 11
+   above stay as written (they are the record), with this section as the one that governs.
+
+| | case | expect |
+|---|---|---|
+| R2-31 | the build | exactly two files; no `fill-A` file; no `hmp_local_cart`, `localStorage`, `productId` or `10538` in either (R2-11's absence list, now over both) |
+| R2-32 | ⭐ the shipped text | both files' text SHA-256 (the version line's own) equal `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8`; ⭐ mutant: one byte of the source's fill B changed, R2-32 fails |
+| R2-33 | the source | no `<fill A>` marker, no `fillA`, no `PLANS` slot |

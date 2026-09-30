@@ -32,19 +32,17 @@ const REFUSED = [
 ];
 
 for (const [path, reason] of REFUSED) {
-  for (const fill of ["A", "B"]) {
-    test(`R2-03 fill ${fill} on ${path}: fragment removed, nothing else`, async () => {
-      const h = fakeWindow({
-        path,
-        fragment: fragmentFor(PAYLOAD),
-        storage: untouchableStorage(),
-        document: untouchableDocument(),
-      });
-      run(await script(fill), h.window);
-      h.timers.drain();
-      assertRefused(h, path, reason);
+  test(`R2-03 fill B on ${path}: fragment removed, nothing else`, async () => {
+    const h = fakeWindow({
+      path,
+      fragment: fragmentFor(PAYLOAD),
+      storage: untouchableStorage(),
+      document: untouchableDocument(),
     });
-  }
+    run(await script("B"), h.window);
+    h.timers.drain();
+    assertRefused(h, path, reason);
+  });
 }
 
 test("R2-03 control: mpid among other query parameters is found, and the query is kept", async () => {

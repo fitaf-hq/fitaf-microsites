@@ -1,0 +1,86 @@
+// R2-32 (SPEC-rung2 § 12 item 3, "nothing live changes"): retiring fill A leaves fill B's shipped text BYTE-IDENTICAL.
+// In both built files, the text after the version line has the SHA-256 below, the one 8945de1's build recorded (§ 11's
+// build note) and the Footer block placed on 2026-09-29 carries, and the version line declares that same hash. So the
+// block live in the store's Footer needs no new paste and no new smoke. A change to the shipped text is a separate
+// amendment, with the live smoke before its paste, and it moves this pin in the same commit.
+// ⭐ The mutant: a copy of the source with ONE byte of fill B's code changed builds a text R2-32 refuses. The copy is
+// made in a temporary directory; no file in the repository is edited. The control: an unmutated copy passes.
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
+
+/** Fill B's text SHA-256 as shipped at 8945de1 and pasted in the Footer on 2026-09-29 (SPEC-rung2 § 11, § 12). */
+const SHIPPED_SHA256 = "054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8";
+/** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
+const COMMIT = "0000000";
+const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
+const CONSOLE = "fitaf-handoff.fill-B.console.js";
+const FOOTER = "fitaf-handoff.html";
+/** One byte of fill B's code: its wait before a press, 50 polls, becomes 51. */
+const MUTATION = ["MAX_POLLS = 50", "MAX_POLLS = 51"];
+
+const sha256 = (text) => createHash("sha256").update(text, "utf8").digest("hex");
+
+/** The Footer block's script: what is between `<script>\n` and `</script>\n`. */
+function unwrap(footer) {
+  assert.ok(footer.startsWith("<script>\n") && footer.endsWith("</script>\n"), "the Footer block is one <script>");
+  return footer.slice("<script>\n".length, -"</script>\n".length);
+}
+
+/** R2-32's check over the build of `sourcePath`: each file's text hash, recomputed and as its version line declares. */
+async function shippedTextCase(sourcePath) {
+  const out = await mkdtemp(join(tmpdir(), "boston-storefront-r2-32-"));
+  try {
+    await buildStorefront({ outDir: out, sourcePath, commit: COMMIT });
+    const read = (name) => readFile(join(out, name), "utf8");
+    for (const [name, script] of [
+      [CONSOLE, await read(CONSOLE)],
+      [FOOTER, unwrap(await read(FOOTER))],
+    ]) {
+      const m = VERSION_LINE.exec(script);
+      assert.ok(m, `${name}: a version line`);
+      assert.equal(sha256(script.slice(m[0].length)), SHIPPED_SHA256, `${name}: the text's SHA-256`);
+      assert.equal(m[2], SHIPPED_SHA256, `${name}: the version line's own`);
+    }
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}
+
+/** A copy of the source in a temporary directory, `edit`ed there. */
+async function withCopy(edit, fn) {
+  const dir = await mkdtemp(join(tmpdir(), "boston-storefront-r2-32-src-"));
+  try {
+    const copy = join(dir, "fitaf-handoff.js");
+    await writeFile(copy, edit(await readFile(STOREFRONT_SOURCE, "utf8")));
+    return await fn(copy);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+test("R2-32: both built files' text SHA-256 (the version line's own) is 054e6be8…, fill B's as shipped at 8945de1", async () => {
+  await shippedTextCase(STOREFRONT_SOURCE);
+});
+
+test("R2-32 mutant: one byte of the source's fill B changed (MAX_POLLS 50 -> 51): R2-32 fails", async () => {
+  await withCopy((source) => source, shippedTextCase); // control: an unmutated copy passes
+  await withCopy(
+    (source) => {
+      assert.equal(source.split(MUTATION[0]).length, 2, "the mutated code appears exactly once");
+      const mutant = source.replace(...MUTATION);
+      const differing = [...source].filter((ch, i) => ch !== mutant[i]).length;
+      assert.deepEqual([mutant.length, differing], [source.length, 1], "exactly one byte changed");
+      return mutant;
+    },
+    (copy) =>
+      assert.rejects(shippedTextCase(copy), (err) => {
+        assert.ok(err instanceof assert.AssertionError, String(err));
+        return true;
+      }),
+  );
+});
