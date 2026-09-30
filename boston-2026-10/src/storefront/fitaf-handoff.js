@@ -4,8 +4,8 @@
 // `npm run build:storefront` writes it twice: the Footer block (fitaf-handoff.html) and the same text as a console file
 // for the one-browser run (fitaf-handoff.fill-B.console.js). The build inlines the plan counts at the COUNTS slot, the
 // progress screen's words (data/messages.json, `handoff`) at the UI slot and its colours (the page's own tokens,
-// src/template.html) at the TOKENS slot, and the meal-key function at the KEY slot, and drops every FULL-LINE `//`
-// comment, like this one. SPEC-rung2 § 11 item 5: each built file should be at most 5,120 bytes (the build warns above)
+// src/template.html) at the TOKENS slot, the meal-key function at the KEY slot and the progress screen's module
+// (src/storefront/progress-screen.js, § 14) at the SCREEN slot, and drops every FULL-LINE `//` comment, like this one. SPEC-rung2 § 11 item 5: each built file should be at most 5,120 bytes (the build warns above)
 // and must be at most 10,240 (it refuses above). `/* */` comments ship. The tests run the SHIPPED text, so what they
 // prove is what is pasted.
 //
@@ -58,80 +58,25 @@ function guard(fn) {
 }
 
 // ── Rung 2's two faces (SPEC-rung2-progress-and-checkout) ─────────────────────────────────────────────────────────────
-// § 2, the progress screen: ONE element of ours, #fitaf-screen, appended to <body> once every check has passed (the
-// guard at the bottom), fixed over the whole viewport above every layer of the store's. It holds its own <style>, the
-// title (an h2), the bar (.b, whose one child's width is the progress: presses made of the plan's count + 1, the last
-// being the store's CHECKOUT), the carousel (.c, one slide per meal, the one shown marked `on`) and the step line (the
-// one role=status). Nothing on it can be acted on or focused, and it touches nothing of the store's (§ 2 items 3, 5).
-// ⚠ The store's own dialogs and pop-ups are Angular CDK overlays, which a browser with the Popover API shows in its TOP
-// LAYER, above any z-index (found at the build, release main-2HXLHIG7.js). So the screen is a manual popover too, shown
-// at once: above everything on the page and every overlay already open (a pop-up shown at load). An overlay the store
-// opens LATER (its extras dialog after CHECKOUT) is above it. Where there is no Popover API, the z-index alone.
-// ⚠ Its clocks are CSS animations, not timers: fitaf-e, 90 s on the screen itself, whose end removes it (§ 2 item 4:
-// "in any case 90 s after it appeared", even if fill B's own polls never come again), and fitaf-t, 2.5 s, repeating on
-// the carousel once every meal is added, each turn showing the next slide. Fill B's timers stay its 200 ms polls
-// alone (R2-09, R2-15 … pin that). With prefers-reduced-motion nothing inside the screen animates, so nothing slides
-// and nothing cycles; the screen's own clock moves nothing and runs on, `!important` on its own id, so a page's
-// reduced-motion reset of every animation (`* { animation-duration: 0.01ms !important }`, common, not in this release)
-// cannot end it at once.
-// § 10 item 1: the store's extras pop-up (its overlay pane holding app-extra-products-dialog, and that overlay's
-// backdrop) is made INVISIBLE, never removed, while the screen is up: the rule is in the screen's own <style>, so it goes
-// with the screen, at done, at every stop, and at the 90 s clock alike (the build's reading of "a class fill B sets on
-// <html> … and removes with it": the screen itself is that mark). Fill B's own test for a displayed control
-// (getClientRects) still finds CONTINUE TO CHECKOUT, and presses it as before.
-var S, NOW, SLIDES = {}, CODE;
-var CSS = "#fitaf-screen{/*TOKENS*/;position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
-"#fitaf-screen>div{width:100%;max-width:420px}#fitaf-screen h2{margin:0 0 16px;font-size:24px;font-weight:700;color:inherit}" +
-"#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
-"#fitaf-screen .c{margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
-"#fitaf-screen img{display:block;width:100%;height:min(220px,32vh);object-fit:cover;border-radius:6px}#fitaf-screen b{display:block;margin-top:10px;font-size:18px}#fitaf-screen p{margin:0;min-height:1.4em}" +
-".cdk-overlay-pane:has(app-extra-products-dialog),.cdk-overlay-backdrop:has(+* app-extra-products-dialog){visibility:hidden!important}" +
-"@keyframes fitaf-e{}@keyframes fitaf-t{}@keyframes fitaf-in{from{opacity:0;transform:translateX(24px)}}@media (prefers-reduced-motion:reduce){#fitaf-screen *{animation:none!important;transition:none!important}}";
+// § 2, the progress screen, lives in its own module since § 14: src/storefront/progress-screen.js, ONE function,
+// progressScreen(document, words, tokens), which the build inlines here at the SCREEN slot (as it inlines the key
+// function at KEY) and tools/storybook imports. It makes the screen (one element of ours, #fitaf-screen, a manual
+// popover over the whole viewport, with its own style and its CSS clocks: see the module's header) and returns its
+// three moments: added() after each meal's press, last() after the press of CHECKOUT, remove() at done and at every
+// stop. Fill B calls it through ui(), at the same moments as ever: made once every check has passed (the guard at the
+// bottom: ui(screen)), a meal added after each press, the last step at CHECKOUT, removed through end(). S is what it
+// returned; until then (and for a link refused before it) S is undefined, and ui() swallows the call.
+var S, CODE;
+// § 1: the page's colours for the screen, src/template.html's tokens as custom properties, inlined by the build (R2-50).
+var TOKENS = "/*TOKENS*/";
+var progressScreen = /*SCREEN*/ null;
 // Everything the screen does runs inside ui(): a screen that cannot draw never stops fill B, whose presses cannot be
 // taken back.
 function ui(f) { try { f(); } catch (e) {} }
 // Every verdict line (done, stopped) is written through end(): the screen is gone before the line (§ 2 item 4).
 function end(m) { ui(function () { S.remove(); }); log(m); }
-function $(q) { return S.querySelector(q); }
-// SPEC-rung2-progress-and-checkout § 11: the store's admin reads the text inside this <script> as HTML and rejects a
-// tag in it, so the screen is built element by element (its style's rules as textContent): no markup string, no
-// innerHTML, and no `<` before a letter, `/` or `!` anywhere in the shipped text (R2-58). The same elements as before:
-// #fitaf-screen > style, div > (h2, div.b > i, div.c, p[role=status][aria-live=polite]).
-function make(tag, parent, cls) { var e = w.document.createElement(tag); if (cls) e.className = cls; return parent.appendChild(e); }
-function screen() {
-  S = w.document.createElement("div");
-  S.id = "fitaf-screen";
-  S.setAttribute("popover", "manual");
-  make("style", S).textContent = CSS;
-  var box = make("div", S), line;
-  make("h2", box).textContent = UI.title;
-  make("i", make("div", box, "b"));
-  make("div", box, "c").onanimationiteration = function () { show(NOW.nextElementSibling || this.firstElementChild); };
-  line = make("p", box);
-  line.setAttribute("role", "status");
-  line.setAttribute("aria-live", "polite");
-  S.onanimationend = function (e) { if (e.target === S) S.remove(); };
-  w.document.body.appendChild(S);
-  if (S.showPopover) S.showPopover();
-}
-function show(el) { if (NOW) NOW.className = ""; (NOW = el).className = "on"; }
-// After press k of t: the meal's slide, made at its first press from its own card (§ 2 item 2: its name as the card
-// shows it, and its photograph only if the page has already loaded it: the card's img complete with a width, whose
-// currentSrc the slide reuses, so nothing new is requested), shown; the bar at k of t + 1; the step line.
-function added(meal, c, k, t) {
-  var d = w.document, el = SLIDES[meal], im = c.querySelector("img"), i;
-  if (!el) {
-    el = SLIDES[meal] = d.createElement("div");
-    if (im && im.complete && im.naturalWidth) { i = el.appendChild(d.createElement("img")); i.alt = ""; i.src = im.currentSrc; }
-    el.appendChild(d.createElement("b")).textContent = text(c.querySelector(".product__content-title"));
-    $(".c").appendChild(el);
-  }
-  show(el);
-  $("i").style.width = k / (t + 1) * 100 + "%";
-  $("p").textContent = UI.step.replace("{meal}", el.lastChild.textContent).replace("{n}", k).replace("{total}", t);
-  if (k === t) $(".c").className = "c y";
-}
-function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout; }
+function screen() { S = progressScreen(w.document, UI, TOKENS); }
+function last() { S.last(); }
 // § 3, the checkout, stripped: at `done` only, the class fitaf-deep on <html> and ONE <style id="fitaf-deep">, never
 // storage (a reload of /checkout is the store's full checkout). Every rule is scoped html.fitaf-deep:has(app-checkout), so
 // it applies only while the store's checkout component is on the page, and a browser without :has() ignores it. It
@@ -254,7 +199,7 @@ function press(list, k) {
   var meal = list[k][0], n = list[k][1], c = card(meal);
   var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + meal + " after " + n);
   b.click();
-  ui(function () { added(meal, c, k + 1, list.length); });
+  ui(function () { S.added(meal, c, k + 1, list.length); });
   w.setTimeout(guard(function () { press(list, k + 1); }), POLL_MS);
 }
 // SPEC-rung2 § 8. On a meal-plan page the store's Add to Cart puts a meal in the plan's PENDING list, not the cart;
