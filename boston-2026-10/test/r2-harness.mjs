@@ -2,8 +2,9 @@
 // test file itself. Fill B is the one fill (§ 12: fill A is retired, its cases with it; the package README names them). The hand-off is tested AS IT SHIPS: the built text runs in a fresh V8 context whose only global is a fake
 // `window`, so a bare browser global in the script (localStorage, document, fetch, …) fails here.
 // The links here are payload VERSION 2 (§ 11), written from refKey() below, the contract's definition of a meal's key
-// implemented a second time, independently (Node's own UTF-8 bytes and BigInt arithmetic): so a test's link never
-// depends on the code under test. R2-25 pins that the shipped key function and this one agree.
+// implemented a second time, independently (Node's own UTF-8 bytes and BigInt arithmetic, and since
+// SPEC-rung2-progress-and-checkout § 15.1 its leading-tag rule read by code point): so a test's link never depends on
+// the code under test. R2-25 and R2-66 pin that the shipped key function and this one agree.
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
@@ -52,11 +53,31 @@ export function refFnv1a(text) {
   return h;
 }
 
+/** § 15.1's range of single-character emoji, and the first code point past the 16-bit range (a surrogate pair in UTF-16). */
+const TAG_EMOJI_FROM = 0x2600;
+const TAG_EMOJI_TO = 0x27bf;
+const ASTRAL = 0x10000;
+/**
+ * SPEC-rung2-progress-and-checkout § 15.1, read independently of the shipped pattern: a name that begins (after any
+ * whitespace) with an emoji, a code point past 16 bits (a surrogate pair in UTF-16) or one in U+2600–U+27BF, followed
+ * by optional whitespace, an uppercase word of 2 to 12 letters, optional whitespace, a colon and a whitespace, is keyed
+ * without that tag. Any other name is returned as it is.
+ */
+export function refUntagged(name) {
+  const [first, ...rest] = [...name.trimStart()];
+  const cp = first?.codePointAt(0) ?? 0;
+  if (!(cp >= ASTRAL || (cp >= TAG_EMOJI_FROM && cp <= TAG_EMOJI_TO))) return name;
+  const after = rest.join("");
+  const tag = /^\s*[A-Z]{2,12}\s*:\s/.exec(after);
+  return tag ? after.slice(tag[0].length) : name;
+}
+
 /**
  * SPEC-rung2 § 11 item 2, read the second way the contract states it: the hash of the name as the page shows it
- * (whitespace collapsed and trimmed) MODULO 36^5, in base 36, five characters.
+ * (whitespace collapsed and trimmed; since § 15.1 of the progress-and-checkout contract, without a leading marketing tag:
+ * refUntagged) MODULO 36^5, in base 36, five characters.
  */
-export const refKey = (name) => (refFnv1a(name.replace(/\s+/g, " ").trim()) % KEY_SPACE).toString(36).padStart(5, "0");
+export const refKey = (name) => (refFnv1a(refUntagged(name).replace(/\s+/g, " ").trim()) % KEY_SPACE).toString(36).padStart(5, "0");
 
 /** One item of a v2 payload: `<key>`, or `<key>*<n>` for a count above 1. */
 const itemToken = ({ name, qty }) => (qty === 1 ? refKey(name) : `${refKey(name)}*${qty}`);

@@ -3,9 +3,10 @@
 // them. mealKey (src/storefront/meal-key.js, the one function the link tool and the shipped script carry) now removes a
 // leading tag before it collapses whitespace and hashes: an emoji (a UTF-16 surrogate pair, or one character in
 // U+2600–U+27BF), optional space, an uppercase word of 2 to 12 letters, optional space, a colon, and the space after it.
-//   R2-66a  a tagged name and the name without its tag share one key, and it is the reference's key (r2-harness.mjs
-//           refKey, which knows nothing of tags) for the name without the tag;
-//   R2-66b  a name without a tag keys EXACTLY as before: R2-25's pinned vectors, and look-alikes that are not tags
+//   R2-66a  a tagged name and the name without its tag share one key; it is the reference's (r2-harness.mjs refKey,
+//           whose tag rule, refUntagged, reads the name by code point, not by the shipped pattern) for both;
+//   R2-66b  a name without a tag keys EXACTLY as before (the key of § 11 alone, `before` below): R2-25's pinned
+//           vectors, and look-alikes that are not tags
 //           ("Smart Oats: Almond Joy" keeps its words; no emoji; lower case; one letter; thirteen; not leading; no colon;
 //           no space after the colon; an emoji outside the contract's range);
 //   R2-66c  the link tool, run as a program, writes the untagged name's key for a tagged name; and the SHIPPED script
@@ -22,7 +23,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { mealKey } from "../src/storefront/meal-key.js";
-import { ADD, assertCheckedOut, CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, MEALS, orderPage, refKey, run, script } from "./r2-harness.mjs";
+import { ADD, assertCheckedOut, CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, MEALS, orderPage, refFnv1a, refKey, run, script } from "./r2-harness.mjs";
 
 const KEY_MODULE = join(ROOT, "src", "storefront", "meal-key.js");
 const TOOL = join(ROOT, "scripts", "handoff-link.mjs");
@@ -68,11 +69,17 @@ const PINNED = [
   ["Short Key 10", "0krtn"],
 ];
 
-/** R2-66a over `key`: every tagged form keys as the name without its tag, and as the reference keys that name. */
+/** The key as SPEC-rung2 § 11 alone defines it, before § 15.1: the name collapsed and trimmed, tag and all. */
+const before = (name) => (refFnv1a(name.replace(/\s+/g, " ").trim()) % 36n ** 5n).toString(36).padStart(5, "0");
+
+/** R2-66a over `key`: every tagged form keys as the name without its tag, and as the reference keys the tagged form. */
 function tagsIgnored(key) {
   for (const name of [NAME, ...MEALS]) {
-    assert.equal(key(name), refKey(name), `fixture control: ${name} untagged, as the reference`);
-    for (const tag of TAGGED) assert.equal(key(tag(name)), refKey(name), JSON.stringify(tag(name)));
+    assert.equal(key(name), before(name), `fixture control: ${name}, untagged, keys as before`);
+    for (const tag of TAGGED) {
+      assert.equal(key(tag(name)), key(name), `${JSON.stringify(tag(name))}: the untagged name's key`);
+      assert.equal(refKey(tag(name)), key(name), `${JSON.stringify(tag(name))}: the reference agrees`);
+    }
   }
 }
 
@@ -83,7 +90,10 @@ test("R2-66a: a leading tag is ignored: \"🟠NEW: X\" and \"X\" share one key, 
 
 test("R2-66b: a name without a tag keys as before: R2-25's vectors, and look-alikes that are not tags keep their words", () => {
   for (const [name, key] of PINNED) assert.equal(mealKey(name), key, name);
-  for (const name of NOT_TAGGED) assert.equal(mealKey(name), refKey(name), `not a tag: ${JSON.stringify(name)}`);
+  for (const name of NOT_TAGGED) {
+    assert.equal(mealKey(name), before(name), `not a tag, so keyed as before: ${JSON.stringify(name)}`);
+    assert.equal(refKey(name), before(name), `and the reference agrees: ${JSON.stringify(name)}`);
+  }
   assert.notEqual(mealKey("Smart Oats: Almond Joy"), mealKey("Almond Joy"), "\"Smart Oats\" is kept (no emoji: not a tag)");
 });
 
@@ -106,7 +116,8 @@ test("R2-66c: the link tool and the shipped script agree — a tagged name keys 
   const out = tool("--mpid", "21", "--item", `${tagged}:1`, "--item", `${MEALS[1]}:2`, "--item", `${MEALS[2]}:4`);
   const link = new URL(out.split("\n")[0]);
   assert.equal(link.hash, fragmentFor(CHECKOUT_PAYLOAD), "the tool writes the untagged name's key for the tagged name");
-  assert.match(out, new RegExp(`${refKey(MEALS[0])}\\s+${tagged}`), "and prints the name beside its key as it was given");
+  assert.equal(refKey(tagged), refKey(MEALS[0]), "fixture control: the reference keys them alike");
+  assert.match(out, new RegExp(`${before(MEALS[0])}\\s+${tagged}`), "and prints the name beside its key as it was given");
   const text = await script();
   await fillWith(text, { title: tagged }); // the page shows the tag; the link was written without it
   await fillWith(text, { fragment: link.hash }); // the link was written with the tag; the page no longer shows it

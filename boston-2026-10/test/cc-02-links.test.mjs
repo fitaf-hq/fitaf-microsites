@@ -19,7 +19,7 @@ import {
   readWithFillB,
   withFixtureInData,
 } from "./cc-harness.mjs";
-import { assertCheckedOut, LOG_PREFIX, refFnv1a } from "./r2-harness.mjs";
+import { assertCheckedOut, LOG_PREFIX, refFnv1a, refUntagged } from "./r2-harness.mjs";
 
 const V2_FRAGMENT = /^#fitaf=2(\.[0-9a-z]{5}(\*([2-9]|1\d|2[01]))?)+$/;
 const ORDER = "https://fitafnutrition.com/order";
@@ -59,13 +59,15 @@ test("CC-2b: fill B reads each link: every meal pressed its count, the size's mp
 });
 
 // The mirror's changes: a different key function (FNV-1a XORed with a constant before the last five base-36 digits) and a
-// different separator in the link tool's encoder. Each is a one-line edit whose anchor must be present.
+// different separator in the link tool's encoder. Each is a one-line edit whose anchor must be present. The name the
+// changed function hashes is still the name as keyed: since SPEC-rung2-progress-and-checkout § 15.1, without a leading
+// marketing tag (r2-harness.mjs refUntagged), which the fixture week's "🟠NEW: Maple Dijon Pork Tenderloin" carries.
 const KEY_LINE = 'return ("0000" + (h >>> 0).toString(36)).slice(-5);';
 const KEY_MUTANT = 'return ("0000" + ((h ^ 0x5bd1e995) >>> 0).toString(36)).slice(-5);';
 const JOIN_LINE = '].join(".");';
 const JOIN_MUTANT = '].join("_");';
 const altKey = (name) =>
-  ((refFnv1a(name.replace(/\s+/g, " ").trim()) ^ 0x5bd1e995n) % 36n ** 5n).toString(36).padStart(5, "0");
+  ((refFnv1a(refUntagged(name).replace(/\s+/g, " ").trim()) ^ 0x5bd1e995n) % 36n ** 5n).toString(36).padStart(5, "0");
 
 async function edit(path, from, to) {
   const text = await readFile(path, "utf8");
