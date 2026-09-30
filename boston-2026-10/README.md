@@ -176,12 +176,11 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
 - ⭐ **The shipped text is pinned (§ 12 item 3, R2-32)**: its SHA-256, the one in each version line, is
   `c4ceb682960ea0b048001f2babb9b1d4c75609f32c84fb17dd74a94bf9be12b8` since the two faces' § 12 (`d5a371e`: the store's
   own extras key set just before CHECKOUT). ⭐ **The block live in the store's Footer since 2026-09-29 ~22:04 PDT is
-  `c6775461…` (`8f5ee58`, § 11 as amended: no `<` in the text, which the store's admin reads as HTML)**; before it `5eb8416e…` at `4697f19`, `c87cb754…` at
-  `9e67484`, `aa773aec…` at `ed422ad`, and `28ce3983…` at `7b0d74f`). It was
-  `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8` (`8945de1`'s text), **the block placed in the
-  Footer on 2026-09-29, which is still the live one until the new text passes the live smoke and is pasted**.
-  Changing a shipped line is a separate amendment, with the live smoke before its paste, and moves the pin in the same
-  commit; only the source's `//` lines change freely.
+  `c6775461…`** (`8f5ee58`, § 11 as amended: no `<` in the text, which the store's admin reads as HTML). Before it:
+  `5eb8416e…` (`4697f19`), `c87cb754…` (`9e67484`), `aa773aec…` (`ed422ad`), `28ce3983…` (`7b0d74f`), and
+  `054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8` (`8945de1`'s text, the first block placed in the
+  Footer, 2026-09-29). Changing a shipped line is a separate amendment, with the live smoke before its paste, and moves
+  the pin in the same commit; only the source's `//` lines change freely.
 - **The size (§ 11, the Advisor's ruling)**: each whole file should be at most 5,120 bytes, which the build **warns**
   above, and must be at most 10,240, which it **refuses** above, writing nothing. **Built 2026-09-29 at `c1764c1`**:
   the Footer block 5,180 bytes and `fitaf-handoff.fill-B.console.js` 5,161 (both warned: the key function and the
