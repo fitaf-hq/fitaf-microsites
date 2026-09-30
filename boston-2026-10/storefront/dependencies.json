@@ -212,6 +212,12 @@
       "literal": "\"tip-selector__remove-btn\"",
       "use": "H10: shown by the store once a tip is chosen; the tip is never hidden while it is there",
       "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 5; R2-56"
+    },
+    {
+      "id": "extras-handled-key",
+      "literal": "\"ecc_additions_prompt_handled\"",
+      "use": "the store's sessionStorage key for \"the extras pop-up has been dealt with\": fill B sets it to \"true\" immediately before it presses CHECKOUT, so the store goes straight to /checkout (a release that drops it would open the pop-up again, under the screen)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 12 item 3; R2-59"
     }
   ]
 }
