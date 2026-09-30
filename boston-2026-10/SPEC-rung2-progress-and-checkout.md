@@ -352,3 +352,12 @@ what our text must be, not what the validator accepts:
 | | case | expect |
 |---|---|---|
 | R2-58 | the built Footer block and console file, scanned | exactly one `<script` and one `</script>` in the Footer block, none in the console file; no other `<[A-Za-z/!]` in either; ⭐ mutant: the markup string restored, fails |
+
+**Built** (found at the build, not ruled; § 11 above governs). Red at `e45dbe8`, built at `4697f19`. The screen is made
+by one helper around `createElement` (the same elements as before, its style's rules as `textContent`); no `innerHTML`
+and no markup string remain. The built Footer block holds exactly two tag-like sequences, its own `<script>` and
+`</script>`, and the console file none. The Footer block is **9,523** bytes and the console file **9,504** (224 more
+than `9e67484`). R2-32's pin moved from `c87cb754…` to
+`5eb8416e34809b9c1ccca6fc3bb422c3e3179114145eb4bc3669ba5db8644037`. ⬜ R2-58 is a gate in the suite, not in the build:
+`npm run build:storefront` still refuses only a `</script` in the text, so a text that failed R2-58 would still be
+written.
