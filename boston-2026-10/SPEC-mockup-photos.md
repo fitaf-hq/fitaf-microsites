@@ -63,3 +63,29 @@ The manifest `mockups/photos.json` keeps its shape (`slots`: a name → a plain 
 divided by the height, in headless Chrome at 1920 × 1080 with the legend shut, 2026-09-30: banner **1.58**, flyer
 **2.20**, tent large **1.21**, tent tiles **1.23**, a slide **1.07** on a screen and **0.46** on a phone). Its
 photographs section says to preview by copying a photo under the position's file name, and that nothing else changes.
+
+## 5. Built, 2026-09-30 — found at the build, not ruled
+
+Choices the contract did not settle, taken at the build and open to redirect:
+
+- **The word "slot" stays where it is a name in the code.** The manifest's key stays `slots` (§ 1: it keeps its
+  shape), and so do the markup's `data-slot` attribute, the placeholder's label (*"slot tent-top"*) and the
+  build's line *"placeholder: slot …"*. Only the names changed; the README and the manifest's `about` say
+  position.
+- **The manifest's `status_note`** said its names were placeholders *"until the winning photos are chosen"*,
+  which § 1 makes false: the names stay. It now says so, a chosen photo being copied under its position's name.
+- **A repeat, in a preview, is two copies.** § 1's shared file (two positions naming one file, copied once) can
+  only come from a manifest other than the committed one, since P3-7 holds that to `<position>.jpg`; P3-6
+  exercises it in a mirror. The README tells the chooser to copy a photo under each position's file name.
+- **The slots' file names are no longer read.** A photo previewed as `hero.jpg` or `meal-2.jpg` to `meal-4.jpg`
+  is not shown until it is copied under a position's name. The build of 2026-09-30 (`--no-png`, in the
+  worktree) reported all nine positions as placeholders.
+- **P3-2 reads a place from the markup**: the element's container and its order there (`.banner-photo`,
+  `.flyer-hero`, and the tent grid's first, second and third child, the first spanning both rows in
+  `mockups.css`), and for a slide its photo slide's order and the plan whose line it carries. The tent's top and
+  bottom tiles are told apart by that order, which the grid places top right then bottom right; the test does
+  not render the CSS.
+- **P3-5 changes each of the nine positions in turn** (§ 3 names one), so a position two places share is caught
+  whichever it is.
+- **P3-7 checks the commit, not the working tree**: it reads `HEAD`, so it failed between the manifest's change
+  and its commit, and a photo's name in an uncommitted manifest does not fail the suite until it is committed.
