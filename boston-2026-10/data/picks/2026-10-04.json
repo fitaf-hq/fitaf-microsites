@@ -1,0 +1,93 @@
+{
+  "delivery": "2026-10-04",
+  "menus": {
+    "7": [
+      {
+        "name": "Italian Chicken Trio",
+        "qty": 1
+      },
+      {
+        "name": "Grass-Fed Steak Frites with Roasted Sweet Potato Wedges",
+        "qty": 1
+      },
+      {
+        "name": "Birria de Res Bowl",
+        "qty": 1
+      },
+      {
+        "name": "🟠NEW: Coffee-Crusted Brisket & Smoked Gouda Mash",
+        "qty": 1
+      },
+      {
+        "name": "Wild Salmon Cakes with Wasabi Aioli",
+        "qty": 1
+      },
+      {
+        "name": "Buffalo Chicken Sliders",
+        "qty": 1
+      },
+      {
+        "name": "🟠NEW: Blackened Chicken Caesar Salad",
+        "qty": 1
+      }
+    ],
+    "14": [
+      {
+        "name": "Italian Chicken Trio",
+        "qty": 1
+      },
+      {
+        "name": "Lasagna Stuffed Pepper",
+        "qty": 1
+      },
+      {
+        "name": "Birria de Res Bowl",
+        "qty": 1
+      },
+      {
+        "name": "🟠NEW: Coffee-Crusted Brisket & Smoked Gouda Mash",
+        "qty": 1
+      },
+      {
+        "name": "BBQ Pulled Pork Mac & Cheese",
+        "qty": 1
+      },
+      {
+        "name": "Wild Salmon Cakes with Wasabi Aioli",
+        "qty": 1
+      },
+      {
+        "name": "Lemon Garlic Shrimp over Forbidden Rice",
+        "qty": 1
+      },
+      {
+        "name": "Buffalo Chicken Sliders",
+        "qty": 1
+      },
+      {
+        "name": "🟠NEW: Blackened Chicken Caesar Salad",
+        "qty": 1
+      },
+      {
+        "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+        "qty": 1
+      },
+      {
+        "name": "Grilled Chili Lime Free-Range Chicken Thighs",
+        "qty": 1
+      },
+      {
+        "name": "Maple Harvest Fit Bowl",
+        "qty": 1
+      },
+      {
+        "name": "Grass-Fed Steak Frites with Roasted Sweet Potato Wedges",
+        "qty": 1
+      },
+      {
+        "name": "Honey Mustard Chicken Wing Bites",
+        "qty": 1
+      }
+    ]
+  }
+}
