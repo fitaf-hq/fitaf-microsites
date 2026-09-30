@@ -164,11 +164,12 @@ Red first at `5acc962`, built at `7b0d74f`. § 4's pass rule (W6) is unchanged; 
   and our mark. Pass: the screen appeared, showed a meal added, and was gone at done. A run that never reached done is
   judged by W10 alone (the screen must be gone at the end); the smoke's own rule has already failed it.
 - **W11–W13** are read on `/checkout` after done: our `style#fitaf-deep` disabled, the displayed controls in
-  `app-checkout` read, the style enabled again (W11, the pay button being a button in `.checkout__submit`); each of
-  H1–H6 found, and hidden while the style is on (W12, waiting up to 10 s for all six: the store renders its pop-up
-  host deferred); no active subscription switch (class `…--active` or `aria-checked="true"`) and no *"renews every"*
+  `app-checkout` read, the style enabled again (W11; since the first live smoke, SPEC-rung2-progress-and-checkout § 9,
+  the pay button is the displayed one of `.checkout__submit button` and the mobile bar's `.summary__pay-button`); H1,
+  H2's `.footer`, H3 and H4 found and the conditional ones reported (W12, § 9), each found one hidden while the style
+  is on, waiting up to 10 s for the required ones; no active subscription switch (class `…--active` or `aria-checked="true"`) and no *"renews every"*
   inside `app-checkout` (W13). Nothing is typed or pressed. The report gives each width one line for them.
-- **`dependencies.json` gains 11 literals** (23 in all): `"app-checkout"`, the hide list's names, and
+- **`dependencies.json` gains 11 literals** (23 in all; 24 with § 9's `"summary__pay-button"`): `"app-checkout"`, the hide list's names, and
   `"checkout__submit"`, each found in the accepted release's files (checked over a local copy whose 156 files match the
   baseline's hashes; no request made). H2's footer is `[1,"footer"]`, since `"footer"` alone is in 23 files.
 - **Cases**: W10a–W13a on recorded outcomes; W10b–W13b in Chrome against the synthetic store (a pass at both widths,

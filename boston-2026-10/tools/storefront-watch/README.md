@@ -83,9 +83,12 @@ failure; it writes nothing unless it exits 0. Chrome: `CHROME_PATH` (or
 - **W10–W13 (rung 2's two faces) are part of F5's pass.** A recorder, installed before the page's own scripts, notes
   the progress screen and our checkout style as they come and go (W10: seen after the first press, gone at done).
   After done, on `/checkout`, the smoke disables our `style#fitaf-deep`, reads the displayed controls in
-  `app-checkout`, enables it again (W11: equal except H3, H4 and H6; the pay button, a button in `.checkout__submit`,
-  displayed both ways), reads each of H1–H6 (W12: found, and hidden while our style is on; it waits up to 10 s, since
-  the store renders its pop-up host deferred), and checks the order is one-time (W13). It presses and types nothing.
+  `app-checkout`, enables it again (W11: equal except H3, H4 and H6; a pay button displayed both ways: the displayed
+  one of `.checkout__submit button` and, at 1024 px and narrower, the summary's mobile bar's `.summary__pay-button`,
+  PAY NOW), reads each of H1–H6 (W12, § 9 of the two faces' contract: H1, H2's `.footer`, H3 and H4 must be found;
+  H2's `.app-hmp-credit`, H5 and H6 are conditional, reported found or absent and never a failure for being absent;
+  any found one must be hidden while our style is on; it waits up to 10 s for the required ones), and checks the order
+  is one-time (W13). It presses and types nothing.
   A run that never reached done is judged by W10 alone (the screen must be gone); the smoke's own rule has failed it.
 - **A failed width's evidence is text (§ 7), never a screenshot**: the path, the displayed buttons outside meal cards
   (label, disabled or not), each dialog's text, the counts (never the contents) of `hmp_pending_plan_items` and

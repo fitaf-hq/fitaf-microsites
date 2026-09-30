@@ -181,13 +181,13 @@ store's page made a sentence of them impossible to meet as written.
   CHECKOUT, which it presses within a poll (200 ms), though the dialog's CONTINUE is disabled while it syncs; a
   subscription plan's *"Sign in to continue"* would stay above the screen until fill B's stop, 30 s later. The
   Advisor sees which in his own browser; ⬜ whether that is acceptable is his to rule.
-- **The pay button** (W11) is a displayed `button` inside the store's `.checkout__submit` (its label varies with the
-  payment method: *Place order*, *PAY NOW*); `checkout__submit` joins `dependencies.json` with `app-checkout` and the
+- **The pay button** (W11) was a displayed `button` inside the store's `.checkout__submit` (its label varies with the
+  payment method: *Place order*, *PAY NOW*); ⚠ superseded by § 9 (a phone's is the mobile bar's `.summary__pay-button`); `checkout__submit` joins `dependencies.json` with `app-checkout` and the
   hide list's names (11 in all, each found in the release's files: 23 of 23 over a local copy whose 156 files match
   `watch-baseline.json`'s hashes; no request to the store). H2's footer is the literal `[1,"footer"]` (an element whose
   class is exactly `footer`), because `"footer"` alone is in 23 of the release's files and would never be missed.
-- **W12 also asks that each found name be hidden while our style is on**, and waits up to 10 s for all six (the store
-  renders its pop-up host deferred). **W10–W13 are judged only once fill B reached done**; a stopped run, already failed
+- **W12 also asks that each found name be hidden while our style is on**, and waited up to 10 s for all six (the store
+  renders its pop-up host deferred); since § 9, only for the required ones. **W10–W13 are judged only once fill B reached done**; a stopped run, already failed
   by the smoke's own rule, is judged by W10 alone (the screen must be gone).
 - **Where the cases run.** R2-40–R2-44, R2-50 and R2-52 (the photo's state given) run in the site's suite on the
   shipped text; R2-41c (the top layer), R2-45–R2-49, R2-51 (with R2-51b) and R2-52 with real images need Chrome and
@@ -241,3 +241,19 @@ new synthetic checkout before they change.
 | W11c | ⭐ mutant: the style also hides `.summary__pay-button` | W11 fails at 390 px |
 | W12b | the synthetic checkout without `.app-hmp-credit`, and without subscription controls | W12 passes, reporting both absent |
 | W12c | the synthetic checkout without `a.contact__sign-in` | W12 fails (a required target missing) |
+
+**Built** (found at the build, not ruled; § 9 above governs). Red at `8e6471c`, built at `ec815f1`; the shipped text is
+untouched (text sha256 `aa773aec…`, 8,768 and 8,749 bytes; R2-32's pin unmoved).
+
+- **The synthetic checkout** now has the store's breakpoint, read from its public code: `@media (max-width: 1024px)`
+  hides `.checkout__submit` and shows the summary's `.summary__mobile-bar`, whose pay button is an `app-button` with
+  the class `summary__pay-button` around a real `<button>`. So W11's pay button is a displayed **button in**
+  `.checkout__submit` or `.summary__pay-button`, and `"summary__pay-button"` joins `dependencies.json` (24 literals).
+  R2-45's own reader takes the same two, and R2-45 now names the one shown at each width.
+- **A conditional target found but still displayed with our style still fails W12**: § 9 makes absence never a
+  failure; a style that finds the element and fails to hide it is a broken style, not an absent element.
+- **The wait on `/checkout`** ends once the required targets are found; the conditional ones are reported as they are
+  at that reading (the store renders its pop-up host deferred, so H5 may read absent on a fast page).
+- **The case names**: the smoke's own cases of the first build, which used W11b and W12b for other checks, are renamed
+  "in the smoke", so that W11b, W11c, W12b and W12c are § 9's. The earlier case "a release without the pop-up host
+  fails on W12" now passes, reporting H5 absent. W12c passed on the red commit too: H4 is required under both rules.
