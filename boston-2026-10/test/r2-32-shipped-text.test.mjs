@@ -1,8 +1,10 @@
-// R2-32 (SPEC-rung2 § 12 item 3, "nothing live changes"): retiring fill A leaves fill B's shipped text BYTE-IDENTICAL.
-// In both built files, the text after the version line has the SHA-256 below, the one 8945de1's build recorded (§ 11's
-// build note) and the Footer block placed on 2026-09-29 carries, and the version line declares that same hash. So the
-// block live in the store's Footer needs no new paste and no new smoke. A change to the shipped text is a separate
-// amendment, with the live smoke before its paste, and it moves this pin in the same commit.
+// R2-32 (SPEC-rung2 § 12 item 3): fill B's shipped text is pinned BYTE FOR BYTE. In both built files, the text after the
+// version line has the SHA-256 below, and the version line declares that same hash. A change to the shipped text is a
+// separate amendment, with the live smoke before its paste, and it moves this pin in the same commit.
+// ⭐ Moved once, by SPEC-rung2-progress-and-checkout (rung 2's two faces: the progress screen and the stripped checkout),
+// from 054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8 (8945de1's text, the Footer block placed on
+// 2026-09-29, when fill A was retired) to the hash below. The block live in the store's Footer is still the old text
+// until the new one is smoked and pasted.
 // ⭐ The mutant: a copy of the source with ONE byte of fill B's code changed builds a text R2-32 refuses. The copy is
 // made in a temporary directory; no file in the repository is edited. The control: an unmutated copy passes.
 import test from "node:test";
@@ -13,8 +15,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
 
-/** Fill B's text SHA-256 as shipped at 8945de1 and pasted in the Footer on 2026-09-29 (SPEC-rung2 § 11, § 12). */
-const SHIPPED_SHA256 = "054e6be87aa3d690814be2b8165b29830d36f1503a5da418d4cc6b2a680bb2b8";
+/** Fill B's text SHA-256 with rung 2's two faces (SPEC-rung2-progress-and-checkout). Was 054e6be8… (8945de1). */
+const SHIPPED_SHA256 = "28ce3983424ec20e91b1a1ca198e7d518bdd458614842252e77d47766a54bea9";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -63,7 +65,7 @@ async function withCopy(edit, fn) {
   }
 }
 
-test("R2-32: both built files' text SHA-256 (the version line's own) is 054e6be8…, fill B's as shipped at 8945de1", async () => {
+test("R2-32: both built files' text SHA-256 (the version line's own) is 28ce3983…, fill B's with rung 2's two faces", async () => {
   await shippedTextCase(STOREFRONT_SOURCE);
 });
 

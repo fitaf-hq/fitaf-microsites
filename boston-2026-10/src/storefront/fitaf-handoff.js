@@ -2,15 +2,18 @@
    Kill switch: delete this block (never "Inject these scripts": that stops every vendor's). */
 // ── How this file ships ────────────────────────────────────────────────────────────────────────────────
 // `npm run build:storefront` writes it twice: the Footer block (fitaf-handoff.html) and the same text as a console file
-// for the one-browser run (fitaf-handoff.fill-B.console.js). The build inlines the plan counts at the COUNTS slot and
-// the meal-key function at the KEY slot, and drops every FULL-LINE `//` comment, like this one. SPEC-rung2 § 11 item 5:
-// each built file should be at most 5,120 bytes (the build warns above) and must be at most 10,240 (it refuses above).
-// `/* */` comments ship. The tests run the SHIPPED text, so what they prove is what is pasted.
+// for the one-browser run (fitaf-handoff.fill-B.console.js). The build inlines the plan counts at the COUNTS slot, the
+// progress screen's words (data/messages.json, `handoff`) at the UI slot and its colours (the page's own tokens,
+// src/template.html) at the TOKENS slot, and the meal-key function at the KEY slot, and drops every FULL-LINE `//`
+// comment, like this one. SPEC-rung2 § 11 item 5: each built file should be at most 5,120 bytes (the build warns above)
+// and must be at most 10,240 (it refuses above). `/* */` comments ship. The tests run the SHIPPED text, so what they
+// prove is what is pasted.
 //
 // ⭐ SPEC-rung2 § 12: fill B is the one fill. Fill A, which wrote the store's cart storage, is retired; the history keeps
-// it. The shipped text is pinned BYTE FOR BYTE (R2-32: its SHA-256 is that of the block in the store's Footer), so every
-// line that ships stays as it was, `var FILL = "B"` and the dispatch at the bottom included: only these `//` lines may
-// change freely. A change to a shipped line is a separate amendment, with the live smoke before its paste.
+// it. The shipped text is pinned BYTE FOR BYTE (R2-32: its SHA-256), so every line that ships is changed only by an
+// amendment, with the live smoke before its paste; only these `//` lines change freely. The last such amendment is
+// SPEC-rung2-progress-and-checkout (rung 2's two faces): the progress screen while fill B fills the cart, and the
+// checkout stripped by a style at `done`. Every press, wait and stop of fill B is as § 8–§ 12 left it.
 //
 // What it does (SPEC-rung2 § 6, § 8, § 11): a link to /order?mpid=N#fitaf=2.<key>[*n]…[.~code] presses each meal's own
 // Add to Cart on the plan's order page, then the store's own CHECKOUT (§ 8), which takes the visitor to /checkout. Any
@@ -33,6 +36,9 @@ w.__fitafHandoff = true;
 // short of the plan's count ("Please add at least 7 meals to continue": the one-browser run, 2026-09-29), so a
 // payload must add exactly that many — never a cart that stops at checkout.
 var COUNTS = /*COUNTS*/ {};
+// SPEC-rung2-progress-and-checkout § 1: the screen's words, data/messages.json's `handoff` ({ title, step, checkout }),
+// inlined by the build. No phrase of the screen is written in this file (R2-50).
+var UI = /*UI*/ {};
 
 function log(m) { w.console.info("[fitaf-handoff] " + m); }
 function fail(m) { throw new Error(m); }
@@ -46,9 +52,81 @@ function guard(fn) {
     try { fn(); } catch (e) {
       // Removing the fragment can fail too; then the page stays as it is.
       try { drop(); } catch (e3) {}
-      log("stopped: " + e.message);
+      end("stopped: " + e.message);
     }
   };
+}
+
+// ── Rung 2's two faces (SPEC-rung2-progress-and-checkout) ─────────────────────────────────────────────────────────────
+// § 2, the progress screen: ONE element of ours, #fitaf-screen, appended to <body> once every check has passed (the
+// guard at the bottom), fixed over the whole viewport above every layer of the store's. It holds its own <style>, the
+// title (an h2), the bar (.b, whose one child's width is the progress: presses made of the plan's count + 1, the last
+// being the store's CHECKOUT), the carousel (.c, one slide per meal, the one shown marked `on`) and the step line (the
+// one role=status). Nothing on it can be acted on or focused, and it touches nothing of the store's (§ 2 items 3, 5).
+// ⚠ Its clocks are CSS animations, not timers: fitaf-e, 90 s on the screen itself, whose end removes it (§ 2 item 4:
+// "in any case 90 s after it appeared", even if fill B's own polls never come again), and fitaf-t, 2.5 s, repeating on
+// the carousel once every meal is added, each turn showing the next slide. Fill B's timers stay its 200 ms polls
+// alone (R2-09, R2-15 … pin that). With prefers-reduced-motion nothing inside the screen animates, so nothing slides
+// and nothing cycles; the screen's own clock moves nothing and runs on, `!important` on its own id, so a page's
+// reduced-motion reset of every animation (`* { animation-duration: 0.01ms !important }`, common, not in this release)
+// cannot end it at once.
+var S, NOW, SLIDES = {};
+var CSS = "#fitaf-screen{/*TOKENS*/;position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
+"#fitaf-screen>div{width:100%;max-width:420px}#fitaf-screen h2{margin:0 0 16px;font-size:24px;font-weight:700;color:inherit}" +
+"#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
+"#fitaf-screen .c{margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
+"#fitaf-screen img{display:block;width:100%;height:min(220px,32vh);object-fit:cover;border-radius:6px}#fitaf-screen b{display:block;margin-top:10px;font-size:18px}#fitaf-screen p{margin:0;min-height:1.4em}" +
+"@keyframes fitaf-e{}@keyframes fitaf-t{}@keyframes fitaf-in{from{opacity:0;transform:translateX(24px)}}@media (prefers-reduced-motion:reduce){#fitaf-screen *{animation:none!important;transition:none!important}}";
+// Everything the screen does runs inside ui(): a screen that cannot draw never stops fill B, whose presses cannot be
+// taken back.
+function ui(f) { try { f(); } catch (e) {} }
+// Every verdict line (done, stopped) is written through end(): the screen is gone before the line (§ 2 item 4).
+function end(m) { ui(function () { S.remove(); }); log(m); }
+function $(q) { return S.querySelector(q); }
+function screen() {
+  S = w.document.createElement("div");
+  S.id = "fitaf-screen";
+  S.innerHTML = "<style>" + CSS + "</style><div><h2></h2><div class=b><i></i></div><div class=c></div><p role=status aria-live=polite></p></div>";
+  $("h2").textContent = UI.title;
+  S.onanimationend = function (e) { if (e.target === S) S.remove(); };
+  $(".c").onanimationiteration = function () { show(NOW.nextElementSibling || this.firstElementChild); };
+  w.document.body.appendChild(S);
+}
+function show(el) { if (NOW) NOW.className = ""; (NOW = el).className = "on"; }
+// After press k of t: the meal's slide, made at its first press from its own card (§ 2 item 2: its name as the card
+// shows it, and its photograph only if the page has already loaded it: the card's img complete with a width, whose
+// currentSrc the slide reuses, so nothing new is requested), shown; the bar at k of t + 1; the step line.
+function added(meal, c, k, t) {
+  var d = w.document, el = SLIDES[meal], im = c.querySelector("img"), i;
+  if (!el) {
+    el = SLIDES[meal] = d.createElement("div");
+    if (im && im.complete && im.naturalWidth) { i = el.appendChild(d.createElement("img")); i.alt = ""; i.src = im.currentSrc; }
+    el.appendChild(d.createElement("b")).textContent = text(c.querySelector(".product__content-title"));
+    $(".c").appendChild(el);
+  }
+  show(el);
+  $("i").style.width = k / (t + 1) * 100 + "%";
+  $("p").textContent = UI.step.replace("{meal}", el.lastChild.textContent).replace("{n}", k).replace("{total}", t);
+  if (k === t) $(".c").className = "c y";
+}
+function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout; }
+// § 3, the checkout, stripped: at `done` only, the class fitaf-deep on <html> and ONE <style id="fitaf-deep">, never
+// storage (a reload of /checkout is the store's full checkout). Every rule is scoped html.fitaf-deep:has(app-checkout), so
+// it applies only while the store's checkout component is on the page, and a browser without :has() ignores it. It
+// only hides. The hide list, the store's own names (release main-2HXLHIG7.js): H1 .sticky-header; H2 .footer and
+// .app-hmp-credit; H5 app-storefront-popup-host (these three never inside app-checkout: `:not(app-checkout *)`); H3
+// a.checkout__guest-signin-banner; H4 a.contact__sign-in; H6 the offer to subscribe, only while it is OFF: a
+// .summary__plan-subscription-controls holding a switch (.summary__subscription-toggle) and no active one (…--active).
+// ⚠ H6's `:has(.summary__subscription-toggle)` is the build's (found at the build, not ruled): for a plan that REQUIRES a
+// subscription the store renders no switch at all ("Subscription required"), which the contract's H6 alone would hide,
+// and § 3 item 3 says a commitment is never hidden. So: no switch, nothing hidden (R2-51b).
+var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))){display:none!important}";
+function mark() {
+  var d = w.document, s = d.createElement("style");
+  s.id = "fitaf-deep";
+  s.textContent = DEEP;
+  d.head.appendChild(s);
+  d.documentElement.classList.add("fitaf-deep");
 }
 
 // The payload, VERSION 2 (SPEC-rung2 § 11 item 1; version 1, base64 JSON, is retired and refused as an unknown
@@ -145,6 +223,7 @@ function press(list, k) {
   var meal = list[k][0], n = list[k][1], c = card(meal);
   var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + meal + " after " + n);
   b.click();
+  ui(function () { added(meal, c, k + 1, list.length); });
   w.setTimeout(guard(function () { press(list, k + 1); }), POLL_MS);
 }
 // SPEC-rung2 § 8. On a meal-plan page the store's Add to Cart puts a meal in the plan's PENDING list, not the cart;
@@ -167,13 +246,16 @@ function control(re, any) {
 // stay in the visitor's pending list, as if they had pressed the buttons themselves, and the page is the store's own.
 // k counts the presses made: 0, CHECKOUT not yet; 1, CHECKOUT; 2, the dialog's too (nothing more is looked for:
 // its pattern, (?!), matches no text at all, not even an empty one, so the wait for /checkout goes on).
+// Rung 2's two faces: after the press of CHECKOUT, the screen's last step (last(): the bar full, the checkout line); at
+// done, the mark and the style first, then the screen goes (§ 2 item 4: the first thing the visitor sees is the
+// stripped checkout).
 function checkout() {
   var k = 0, polls = 0;
   guard(function poll() {
-    if (k && loc.pathname === "/checkout") return log("done: /checkout");
+    if (k && loc.pathname === "/checkout") { ui(mark); return end("done: /checkout"); }
     var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]);
-    if (b) { if (!k) drop(); b.click(); k++; polls = 0; }
-    else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? log("stopped: /checkout not reached") : fail("no checkout control");
+    if (b) { if (!k) drop(); b.click(); if (!k) ui(last); k++; polls = 0; }
+    else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? end("stopped: /checkout not reached") : fail("no checkout control");
     w.setTimeout(guard(poll), POLL_MS);
   })();
 }
@@ -187,6 +269,9 @@ guard(function () {
   var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
   if (p.total !== need) fail("the plan needs " + need + " meals; the link has " + p.total);
   log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
+  // SPEC-rung2-progress-and-checkout § 1, § 2 item 1: the screen, now that the link and the plan's count have passed
+  // their checks, and before fill B's first poll. A link refused above shows nothing new.
+  ui(screen);
   // The two-fill source's dispatch, kept because it ships (SPEC-rung2 § 12 item 3): FILL is "B", so the line after it
   // never runs.
   if (FILL === "B") return fillB(p);

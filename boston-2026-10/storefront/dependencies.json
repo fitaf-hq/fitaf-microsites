@@ -1,7 +1,7 @@
 {
   "about": "The literal strings of the store's public code that the cart hand-off depends on (SPEC-storefront-watch.md § 3, F2). Each must be found, exactly and case-sensitively, in at least one JS file reachable from the order page's entry bundle. Each is quoted as the bundle has it, quotes and spaces included where they keep it exact (\" CHECKOUT \" is not found inside \" CHECKOUT NOW \"). Nothing else of the store's code is kept here.",
   "read_on": "2026-09-29",
-  "read_from": "the store's public bundle as served for /order?mpid=21 (the entry main-FEK5K7ML.js and the chunks it loads)",
+  "read_from": "the store's public bundle as served for /order?mpid=21 (the entry main-FEK5K7ML.js and the chunks it loads); the checkout's names (the hide list of SPEC-rung2-progress-and-checkout § 3, the checkout component and its pay button's container) from main-2HXLHIG7.js and the chunks it loads, the release the watch accepted on 2026-09-29",
   "literals": [
     {
       "id": "meal-card",
@@ -74,6 +74,72 @@
       "literal": "injectSlot(\"footer\"",
       "use": "the app appends the Footer slot's scripts to <body> at run time, re-created so that they run: how the block reaches the page",
       "spec": "SPEC-rung2-cart-handoff.md § 6; SPEC-storefront-watch.md § 3 (F3)"
+    },
+    {
+      "id": "checkout-component",
+      "literal": "\"app-checkout\"",
+      "use": "the store's checkout component: every rule of the checkout's style is scoped html.fitaf-deep:has(app-checkout), so it applies only while this is on the page; W11 measures the controls inside it",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 items 2 and 4"
+    },
+    {
+      "id": "hide-h1-header",
+      "literal": "\"sticky-header\"",
+      "use": "H1: the top bar, the subscription banners and the site header, hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H1)"
+    },
+    {
+      "id": "hide-h2-footer",
+      "literal": "[1,\"footer\"]",
+      "use": "H2: the store's footer (an element whose class is exactly footer), hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H2)"
+    },
+    {
+      "id": "hide-h2-credit",
+      "literal": "\"app-hmp-credit\"",
+      "use": "H2: the platform's credit line, hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H2)"
+    },
+    {
+      "id": "hide-h3-guest-signin",
+      "literal": "\"checkout__guest-signin-banner\"",
+      "use": "H3: the checkout's \"Already have an account? Sign in for faster checkout\", hidden",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H3)"
+    },
+    {
+      "id": "hide-h4-contact-signin",
+      "literal": "\"contact__sign-in\"",
+      "use": "H4: the contact section's \"Sign in\", hidden",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H4)"
+    },
+    {
+      "id": "hide-h5-popups",
+      "literal": "\"app-storefront-popup-host\"",
+      "use": "H5: the store's own pop-ups, hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H5)"
+    },
+    {
+      "id": "hide-h6-offer",
+      "literal": "\"summary__plan-subscription-controls\"",
+      "use": "H6: the offer to subscribe, hidden only while its switch is off",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H6)"
+    },
+    {
+      "id": "hide-h6-switch",
+      "literal": "\"summary__subscription-toggle\"",
+      "use": "H6: the subscription switch; the offer is hidden only while one is there and off (a plan that requires a subscription has none, and is never hidden)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H6); R2-51b"
+    },
+    {
+      "id": "hide-h6-switch-on",
+      "literal": "\"summary__subscription-toggle--active\"",
+      "use": "H6: the switch when on: an active subscription is never hidden; W13 fails the smoke if one is on",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 3 (H6); § 5 (W13)"
+    },
+    {
+      "id": "pay-button",
+      "literal": "\"checkout__submit\"",
+      "use": "the pay button's container: W11 requires the pay button in it displayed with the checkout's style and without it",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 3 item 4; § 5 (W11)"
     }
   ]
 }

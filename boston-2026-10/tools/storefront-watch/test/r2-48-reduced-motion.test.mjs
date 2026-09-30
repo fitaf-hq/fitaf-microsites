@@ -27,7 +27,8 @@ after(async () => {
   await store?.close();
 });
 
-/** In the page: every animation on the screen and inside it, by name, with its duration and iterations. */
+/** In the page: every animation on the screen and inside it, by name, with its duration and iterations (as text:
+ * JSON has no Infinity, so a repeating animation's count would arrive as null). */
 function motion() {
   const s = document.getElementById("fitaf-screen");
   if (!s) return null;
@@ -35,7 +36,7 @@ function motion() {
     name: a.animationName ?? a.transitionProperty ?? a.constructor.name,
     kind: a.constructor.name,
     duration: a.effect.getTiming().duration,
-    iterations: a.effect.getTiming().iterations,
+    iterations: String(a.effect.getTiming().iterations),
     own: a.effect.target === s,
   }));
 }
@@ -79,7 +80,7 @@ test("R2-48 control: without it, once all are added the carousel cycles every 2.
   const { shown, animations } = await watchCarousel(false);
   const changes = shown.filter((name, i) => i > 0 && name !== shown[i - 1]).length;
   assert.ok(changes >= 2, `the shown meal changed ${changes} times in ${shown.length} samples: ${shown.join(" | ")}`);
-  const cycle = animations.find((a) => !a.own && a.iterations === Infinity);
+  const cycle = animations.find((a) => !a.own && a.iterations === "Infinity");
   assert.ok(cycle, `a repeating animation drives the cycle: ${JSON.stringify(animations.slice(0, 5))}`);
   assert.equal(cycle.duration, CYCLE_MS, "every 2.5 s");
 });

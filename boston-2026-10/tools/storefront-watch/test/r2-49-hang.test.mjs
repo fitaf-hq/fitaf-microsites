@@ -29,10 +29,15 @@ const clock = () => {
   const s = document.getElementById("fitaf-screen");
   return s ? s.getAnimations().map((a) => ({ duration: a.effect.getTiming().duration, iterations: a.effect.getTiming().iterations })) : null;
 };
-/** In the page: move the screen's own animation to `ms` of its time. */
-const seek = (ms) => {
-  const s = document.getElementById("fitaf-screen");
-  s.getAnimations()[0].currentTime = ms;
+/**
+ * In the page: hold the screen's own animation at `ms` of its time, or, with `run`, let it run on from there. (A held
+ * clock does not move on while the test waits; one left running from 89.9 s would pass 90 s during the wait.)
+ */
+const seek = ({ ms, run }) => {
+  const a = document.getElementById("fitaf-screen").getAnimations()[0];
+  a.pause();
+  a.currentTime = ms;
+  if (run) a.play();
 };
 
 test("R2-49: a planted hang — no verdict; the screen gone at 90 s, by its own clock", { skip, timeout: 60_000 }, async () => {
@@ -45,10 +50,10 @@ test("R2-49: a planted hang — no verdict; the screen gone at 90 s, by its own 
     assert.equal(slides, 3, "fixture control: fill B stopped moving after the third meal (the hang holds)");
     assert.equal(await run.verdict(500), null, "no verdict line");
     assert.deepEqual(await run.page.evaluate(clock), [{ duration: 90_000, iterations: 1 }], "the screen's own clock: one 90 s animation");
-    await run.page.evaluate(seek, 89_900);
+    await run.page.evaluate(seek, { ms: 89_900, run: false });
     await sleep(300);
     assert.equal(await run.page.evaluate(() => Boolean(document.getElementById("fitaf-screen"))), true, "up at 89.9 s");
-    await run.page.evaluate(seek, 90_000);
+    await run.page.evaluate(seek, { ms: 89_990, run: true }); // 10 ms from its end, running
     const gone = await run.until(() => !document.getElementById("fitaf-screen"), undefined, 3_000);
     assert.equal(gone, true, "gone at 90 s");
     assert.equal(await run.verdict(500), null, "still no verdict line: the screen went on its own");
