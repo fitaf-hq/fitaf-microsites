@@ -333,3 +333,22 @@ what costs the bytes before it trims anything.
   under the ~9.8 KB this section set as the point to report the costs, and the 10,240 ceiling. R2-32's pin moved from
   `aa773aec…` to `c87cb754d9b7a07260795cf0619950401ad1a2b3f6347e641f36586c9e5334fc`.
 - `dependencies.json` gains 11 literals (35 in all), each found in the release's files over the same local copy.
+
+## 11. Amendment, 2026-09-29 (night) — the store's admin reads the block as HTML: no markup in the shipped text
+
+**Found at the paste** (the Advisor, pasting `1179afd` into Custom Scripts → Footer; nothing saved): the admin's
+validator, which its own screen calls a check before saving, reported *"<div> isn't allowed here — only <script>,
+<noscript>, <style>, <link>, <meta> and comments"* and *"Attribute values can't contain < or >"*, and *"Some snippets
+look like they'll be rejected — saving will tell you for certain."* It reads the text **inside** our `<script>` as HTML.
+The only tag-like text in the block is the screen's markup string (`"<style>" + CSS + "</style><div><h2></h2><div
+class=b>…"`); the short-link block `8945de1` has none. The validator's rules are not documented, so the contract states
+what our text must be, not what the validator accepts:
+
+1. **The shipped text holds no `<` followed by a letter, `/` or `!`**, except the block's own opening `<script>` and
+   closing `</script>`. The screen and its style are built with `document.createElement` (the style's rules set as the
+   element's `textContent`); no markup string, no `innerHTML`.
+2. **Nothing else changes**: what the screen shows, the checkout's style, every case of §§ 5, 9 and 10.
+
+| | case | expect |
+|---|---|---|
+| R2-58 | the built Footer block and console file, scanned | exactly one `<script` and one `</script>` in the Footer block, none in the console file; no other `<[A-Za-z/!]` in either; ⭐ mutant: the markup string restored, fails |
