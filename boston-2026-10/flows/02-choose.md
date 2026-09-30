@@ -103,8 +103,20 @@ QR code encodes that path. ⚠ An event id is public; it must never name a perso
 
 ## 7. Onto the store
 
-**Choose your meals** → the plan's order page. Rung 2 (planned) adds a pre-filled cart, and **without it,
-the link is exactly this one**.
+**Choose your meals** → the plan's order page. **Without this week's picks, the link is exactly this one.**
+
+**Built, not live: this week's Chef's Choice** ([`../SPEC-chefs-choice.md`](../SPEC-chefs-choice.md), on the dev
+line). When the week has picks (`data/picks/<sunday>.json`, the week chosen in the browser on New York's date) for
+the chosen count, the `CHOSEN` card's single **Choose your meals** becomes two:
+
+- **See this week's Chef's Choice** opens the week's list in place (a second press closes it): the meals, each
+  with its count, and **Continue to checkout** → the plan's order page with a pre-filled cart (rung 2's
+  `#fitaf=2.…` link, for the chosen size's `mpid`). The list is the same for every size.
+- **Choose my own meals** → the plan's order page, exactly the link above: the store's own catalogue.
+
+The state is unchanged (the fragment's three values); whether the list is open is page memory only. The words are
+placeholders for the copy review (`data/messages.json`'s `chefs_choice`). The diagram above still draws the one
+exit, **Choose your meals**; both links leave for the store's order page.
 
 ## 8. ⬜ The rewrite: meal photography
 

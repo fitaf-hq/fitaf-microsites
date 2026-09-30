@@ -88,3 +88,98 @@ When the week has picks for the chosen **count**:
 - **Photographs in the list**, and Flow 8's full menu: later.
 - **Prod**: this lands on the dev line and the test address; the live page (rung 1) changes only with the Advisor's go.
 - The KMS-side "menus" as rules (a default pick, per customer): later, his details.
+
+## 6. Built, 2026-09-30 — found at the build, not ruled
+
+Red at `cb8f197` (45 of CC-1–CC-8's 48 cases failing on the missing feature; CC-5's control, CC-8a and CC-8b, which
+guard what must not change, passing), green at `e62e26b` (the suite 432 of 432). The build's reading and its
+choices, where §§ 1–4 left one open; §§ 1–5 are unchanged.
+
+**A defect the build found.** `build.mjs` ran its command line as a top-level `await`. With a picks file, `build()`
+imports `scripts/chefs-choice.mjs`, which imports the link tool and so `build.mjs` back, still evaluating: the two
+wait on each other and Node exits 13 with nothing built (`npm run build` only; the tests import `build.mjs` and never
+met it). The command line now runs as a promise (CC-2c and CC-5's program case run `node build.mjs --on`).
+
+**⚠ What a committed picks file does to two existing cases (not changed here; a ruling).** Both builds read
+`data/picks/`, the production page included (§ 5: the live page changes only when a release pins a commit carrying
+a file). So:
+
+- **S20** compares the production build with its golden **on the day the suite runs** (the build's `--on` defaults to
+  today in New York): from the day a picks file is committed until its window ends (S − 3; before the week opens
+  too, since a page built early carries it), S20 fails; it passes again once every committed week has ended. Its own
+  rule is to re-record the golden only when production is meant to change.
+- **S24** builds the development page with the clock at 2026-09-15 and 2026-10-15: a committed week whose window ends
+  between them (week B's, `2026-10-04.json`, ends 2026-10-01; `2026-10-11.json` ends 2026-10-08) is on the first page
+  and not the second, and S24 fails.
+- The choices: let S20 and S24 build without picks (`build()` takes `picksDir`), or keep the production build without
+  picks until the Advisor's go (a switch), or re-record S20 per week. Nothing here decides it.
+
+**§ 1, the file**
+
+- Every `*.json` in `data/picks/` is a picks file and must be named `YYYY-MM-DD.json` for a real Sunday; other files
+  (a README) are not read. `delivery` must equal the file's own date.
+- **Every file is checked**, a week that has ended included: a broken file fails the build whatever `--on` is.
+- A file carries a menu for **any of the counts the page shows** (7, 14), at least one; a count the page does not show
+  (`"10"`) is refused, as is an empty `menus`.
+- `qty` must be a JSON whole number (`"2"`, as text, is refused, though the link tool would take it); then the tool's
+  own range, 1 to `MAX_QTY`.
+- **The rules are the link tool's `payloadFromArgs`, called once per size**, as `handoff:link --mpid N --item
+  "NAME:QTY" …` takes them: `checkDistinct` (a name twice, or two names sharing a key) and the full-plan rule are
+  inside it, and its words are the build's (*"the plan needs 7 meals; the link has 6"*), after the file's path and
+  the menu (`data/picks/2026-10-04.json: menus.7: …`). The checkout link is its `handoffLink`; no key function and
+  no encoder are in the build (CC-2c changes both in a mirror and the links follow).
+- A name is shown and keyed **as the tool reads it**, whitespace collapsed and trimmed; so two names differing only in
+  spaces are *"named twice"*.
+- The build checks and refuses **before anything is written** (the development build's emptying of `dist-dev/`
+  included).
+
+**§ 2, the week**
+
+- `--on` defaults to today in `data/save.json`'s `send_time_zone`, as the mock-ups' `--on`; a malformed `--on` is
+  refused even without `data/picks/`. The build embeds each week with `daysBetween(--on, S − 3) ≥ 0`, so every future
+  week with a file is embedded, not only next week's.
+- The window is computed at the build (`addDays`: `valid_from` S − 9, `valid_to` S − 3) and **the browser decides with
+  the offer's own `isLive`** over it, on `zonedDate(Date.now(), zone)`. The page inlines `formatter`, `zonedParts`,
+  `pad`, `zonedDate` (with `const FORMATTERS = new Map();`), exactly as the offer box does, and `isLive`, from their
+  modules' own source.
+- They are inlined **inside one function scope**: the development page already declares the same names at its top
+  level, and a second top-level `const FORMATTERS` throws in a browser (CC-1c runs the development page's scripts).
+- The week is chosen **once, when the page loads**: a page left open across Friday's midnight keeps its week until it
+  is reloaded.
+
+**§ 3, the card**
+
+- `app.js` is unchanged (it ships in the production page, byte for byte). The Chef's Choice script follows it: after
+  `app.js` renders (its `hashchange` listener runs first), it reads whether the card is shown and the `mpid` `app.js`
+  wrote into *Choose your meals*' link; the count is the menu whose links hold that `mpid`. *Choose my own meals* is
+  given that same `href`.
+- The order on the card: the button, the list (in place, when open), then *Choose my own meals*. The list's heading is
+  an `h3`; the button is the page's orange `.cta` with the `+`/`−` of *See all plans*; *Continue to checkout* is an
+  orange `.cta` link; *Choose my own meals* a centred navy text link. `npm run contrast` now reads the card's
+  stylesheet (`src/chefs-choice/style.css`): it draws only pairs already measured, and no raw colour.
+- The open state is **kept** when the size or count changes (the list is the same for every size); a count without
+  picks hides the button, the list and the second link, and a count with picks shows them again as they were.
+- **The date is `longDate`'s**, the offer's: *"October 4, 2026"*, so the heading reads *"… delivered Sunday, October 4,
+  2026"*, with the year § 3's example leaves out. `Sunday` is the phrase's (a picks file is always a Sunday).
+- *"× n"* is a phrase too, `chefs_choice.meal_qty` (`{meal} × {n}`); the heading's placeholders are `{count}` and
+  `{date}`. The build refuses a phrase or placeholder missing. `chefs_choice.status` is `"placeholder"`.
+- The heading and each meal's line are **filled at the build** and carried in `#picks-data`, so the browser script
+  writes no word of its own (CC-7's markers). The card's markup, `src/chefs-choice/card.html`, takes its four words
+  from `{{…}}` slots.
+- The links carry **no offer code** (`~CODE`): none is ruled for Chef's Choice. They differ between sizes only in
+  `?mpid=`.
+- The card's two new links have no `href` in the HTML (the script sets them), so the page still carries exactly seven
+  order links (T2, CC-6e).
+
+**§ 4, the cases**
+
+- CC-8's "before" is `test/cc-08-unchanged-golden.json`, recorded at `e431b55`: fill B's text (`c4ceb682…`, R2-32's
+  pin), the watch's `expectedFooter`, and the SHA-256 of the 29 files the Worker's entry (`wrangler.jsonc`'s `main`)
+  reaches by import (25 modules, 4 data files; `erase.js` is not reached from it). A Worker change meant later
+  re-records it in its own commit.
+- The fixture week (`test/fixtures/picks/2026-10-04.json`) carries invented names, one with a `🟠NEW:` tag.
+- CC-2's reading of a link is R2's: the shipped fill-B text on the synthetic order page, its cards replaced by the
+  menu's names; each meal pressed its count, `fill B, mpid N` logged, the store's CHECKOUT pressed.
+
+**Not done here**: no `data/picks/` file is committed; nothing is deployed or run live; the page was not looked at in
+a browser (its behaviour is proven over linkedom only); the copy review.
