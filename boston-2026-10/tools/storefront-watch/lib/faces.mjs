@@ -7,7 +7,11 @@
 //   W12  each of H1–H6 on the checkout: found, and hidden while the style is on (a missing one fails open: it shows).
 //        § 9: H1, H2's .footer, H3 and H4 are REQUIRED; H2's .app-hmp-credit, H5 and H6 are CONDITIONAL, reported
 //        found or absent, and their absence is never a failure (a rename of one is F2's to catch, in the bundle);
-//   W13  the order is one-time: no active subscription switch and no "renews every" line on the deep-carted checkout.
+//   W13  the order is one-time: no active subscription switch and no "renews every" line on the deep-carted checkout;
+//   W14  (§ 10) H7–H10 reported, found or absent (the discounts, the app banner, the price rows, the tip: each
+//        conditional, each found one hidden while our style is on; the smoke's links carry no offer code and choose no
+//        tip); the Total (.summary__total) displayed; W11's payment check as § 10 re-states it: the controls hidden are
+//        exactly H3, H4, H6, H7, H8 and H10's.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -17,21 +21,32 @@
 export const SCREEN_ID = "fitaf-screen";
 export const STYLE_ID = "fitaf-deep";
 /**
- * The hide list, as SPEC-rung2-progress-and-checkout § 3 item 3 names it (the store's own names, release
- * main-2HXLHIG7.js). `inCheckout`: inside app-checkout, where W11 allows exactly these to be hidden. H6 is the offer
- * to subscribe only while it is off: a switch there and no active one (the build's reading, R2-51b: a plan that
- * requires a subscription has no switch, and is never hidden).
+ * The hide list, as SPEC-rung2-progress-and-checkout § 3 item 3 and § 10 name it (the store's own names, release
+ * main-2HXLHIG7.js). `mayHideControls`: W11 allows exactly these targets' controls to be hidden (§ 10's re-statement:
+ * H3, H4, H6, H7, H8 and H10). `check`: the case that reports it (W12 for H1–H6, W14 for H7–H10). H6 is the offer to
+ * subscribe only while it is off: a switch there and no active one (R2-51b). H9 never a row holding the Total; H10 only
+ * while no tip is chosen.
  */
 export const HIDE = [
-  { id: "H1", selectors: [".sticky-header"], inCheckout: false },
-  { id: "H2", selectors: [".footer", ".app-hmp-credit"], inCheckout: false },
-  { id: "H3", selectors: ["a.checkout__guest-signin-banner"], inCheckout: true },
-  { id: "H4", selectors: ["a.contact__sign-in"], inCheckout: true },
-  { id: "H5", selectors: ["app-storefront-popup-host"], inCheckout: false },
+  { id: "H1", selectors: [".sticky-header"], mayHideControls: false, check: "W12" },
+  { id: "H2", selectors: [".footer", ".app-hmp-credit"], mayHideControls: false, check: "W12" },
+  { id: "H3", selectors: ["a.checkout__guest-signin-banner"], mayHideControls: true, check: "W12" },
+  { id: "H4", selectors: ["a.contact__sign-in"], mayHideControls: true, check: "W12" },
+  { id: "H5", selectors: ["app-storefront-popup-host"], mayHideControls: false, check: "W12" },
   {
     id: "H6",
     selectors: [".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))"],
-    inCheckout: true,
+    mayHideControls: true,
+    check: "W12",
+  },
+  { id: "H7", selectors: [".checkout-discounts"], mayHideControls: true, check: "W14" },
+  { id: "H8", selectors: [".smartbanner"], mayHideControls: true, check: "W14" },
+  { id: "H9", selectors: [".summary__row:not(.summary__row--discount,:has(.summary__total))"], mayHideControls: false, check: "W14" },
+  {
+    id: "H10",
+    selectors: [":is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))"],
+    mayHideControls: true,
+    check: "W14",
   },
 ];
 /**
@@ -42,7 +57,10 @@ export const CONDITIONAL = [
   ".app-hmp-credit",
   "app-storefront-popup-host",
   ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
+  ...HIDE.filter((h) => h.check === "W14").flatMap((h) => h.selectors),
 ];
+/** § 10 item 4 (W14): the Total, never hidden; on a phone the only place the visitor sees what they will pay. */
+export const TOTAL = ".summary__total";
 /** § 3 item 4: the controls that are measured. */
 export const CONTROLS = "input, select, textarea, button, iframe, a[href], [role=switch], [role=radio]";
 /**
@@ -93,7 +111,7 @@ export function readRecorded(screen) {
  * and label, so a report can name it; the sets are compared by element. The style is disabled only for W11's second
  * reading, and enabled again before anything else is read.
  */
-export function readFaces({ hide, controls, pay, style: styleId }) {
+export function readFaces({ hide, controls, pay, total: totalSel, style: styleId }) {
   const style = document.getElementById(styleId);
   const checkout = document.querySelector("app-checkout");
   const shown = (el) => el.getClientRects().length > 0;
@@ -117,7 +135,7 @@ export function readFaces({ hide, controls, pay, style: styleId }) {
     const withStyle = measure();
     style.disabled = true;
     const without = measure();
-    const inside = hide.filter((h) => h.inCheckout).flatMap((h) => h.selectors);
+    const inside = hide.filter((h) => h.mayHideControls).flatMap((h) => h.selectors);
     const allowed = without.filter((el) => inside.some((sel) => el.matches(sel) || el.closest(sel)));
     const hideCounts = hide.flatMap((h) => h.selectors.map((selector) => ({ id: h.id, selector, found: document.querySelectorAll(selector).length })));
     style.disabled = false;
@@ -131,6 +149,8 @@ export function readFaces({ hide, controls, pay, style: styleId }) {
       counts: { with: withStyle.length, without: without.length },
     };
     out.hide = hideCounts.map((h) => ({ ...h, displayed: [...document.querySelectorAll(h.selector)].filter(shown).length }));
+    const totals = [...document.querySelectorAll(totalSel)];
+    out.total = { found: totals.length, displayed: totals.filter(shown).length };
   } else {
     out.hide = hide.flatMap((h) => h.selectors.map((selector) => ({ id: h.id, selector, found: document.querySelectorAll(selector).length, displayed: null })));
   }
@@ -151,12 +171,12 @@ export function readFaces({ hide, controls, pay, style: styleId }) {
 const REQUIRED_FOUND = (faces) => faces.hide.every((h) => h.found > 0 || CONDITIONAL.includes(h.selector));
 
 /**
- * W11–W13's readings, read again until every REQUIRED target of H1–H6 is found or FACES_MS has passed. The conditional
- * ones are reported as they are at that reading.
+ * W11–W14's readings, read again until every REQUIRED target of H1–H6 and the Total are found, or FACES_MS has
+ * passed. The conditional ones are reported as they are at that reading.
  */
 export async function readCheckoutFaces(page, poll) {
-  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, style: STYLE_ID };
-  return poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f), { timeoutMs: FACES_MS, everyMs: 500 });
+  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID };
+  return poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f) && f.total?.found > 0, { timeoutMs: FACES_MS, everyMs: 500 });
 }
 
 /**
@@ -189,12 +209,17 @@ export function facesVerdict(faces) {
     }
   }
   for (const h of c.hide ?? []) {
-    // § 9: a conditional target's absence is reported (facesSummary), never a failure.
+    // § 9: a conditional target's absence is reported (facesSummary), never a failure. H7–H10 are W14's (§ 10).
+    const check = HIDE.find((x) => x.id === h.id)?.check ?? "W12";
     if (!h.found && !CONDITIONAL.includes(h.selector)) {
-      reasons.push(`W12: ${h.id} ${h.selector} not found on /checkout: nothing there to hide, so a renamed one shows (fails open)`);
+      reasons.push(`${check}: ${h.id} ${h.selector} not found on /checkout: nothing there to hide, so a renamed one shows (fails open)`);
     } else if (h.found && h.displayed) {
-      reasons.push(`W12: ${h.id} ${h.selector} found and still displayed with the style (${h.displayed})`);
+      reasons.push(`${check}: ${h.id} ${h.selector} found and still displayed with the style (${h.displayed})`);
     }
+  }
+  if (c.style && c.total) {
+    if (!c.total.found) reasons.push("W14: no .summary__total on /checkout: the Total the visitor pays is not shown");
+    else if (!c.total.displayed) reasons.push("W14: the Total (.summary__total) is not displayed with the style");
   }
   if (c.oneTime?.activeSwitches) reasons.push(`W13: an active subscription switch on /checkout (${c.oneTime.activeSwitches}): the order is not one-time`);
   if (c.oneTime?.renews?.length) reasons.push(`W13: a "renews every" line on /checkout: ${c.oneTime.renews.join("; ")}`);
@@ -220,5 +245,6 @@ export function facesSummary(faces) {
     })
     .join(", ");
   const once = c.oneTime && !c.oneTime.activeSwitches && !c.oneTime.renews.length ? "one-time" : "NOT one-time";
-  return `${screen}; ${pay}; hide list: ${found}; ${once}`;
+  const total = c.total ? (c.total.displayed ? "Total displayed" : c.total.found ? "Total NOT displayed" : "no Total") : "Total not read";
+  return `${screen}; ${pay}; hide list: ${found}; ${total}; ${once}`;
 }

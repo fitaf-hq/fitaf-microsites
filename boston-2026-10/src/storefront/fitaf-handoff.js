@@ -74,12 +74,18 @@ function guard(fn) {
 // and nothing cycles; the screen's own clock moves nothing and runs on, `!important` on its own id, so a page's
 // reduced-motion reset of every animation (`* { animation-duration: 0.01ms !important }`, common, not in this release)
 // cannot end it at once.
-var S, NOW, SLIDES = {};
+// § 10 item 1: the store's extras pop-up (its overlay pane holding app-extra-products-dialog, and that overlay's
+// backdrop) is made INVISIBLE, never removed, while the screen is up: the rule is in the screen's own <style>, so it goes
+// with the screen, at done, at every stop, and at the 90 s clock alike (the build's reading of "a class fill B sets on
+// <html> … and removes with it": the screen itself is that mark). Fill B's own test for a displayed control
+// (getClientRects) still finds CONTINUE TO CHECKOUT, and presses it as before.
+var S, NOW, SLIDES = {}, CODE;
 var CSS = "#fitaf-screen{/*TOKENS*/;position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
 "#fitaf-screen>div{width:100%;max-width:420px}#fitaf-screen h2{margin:0 0 16px;font-size:24px;font-weight:700;color:inherit}" +
 "#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
 "#fitaf-screen .c{margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
 "#fitaf-screen img{display:block;width:100%;height:min(220px,32vh);object-fit:cover;border-radius:6px}#fitaf-screen b{display:block;margin-top:10px;font-size:18px}#fitaf-screen p{margin:0;min-height:1.4em}" +
+".cdk-overlay-pane:has(app-extra-products-dialog),.cdk-overlay-backdrop:has(+* app-extra-products-dialog){visibility:hidden!important}" +
 "@keyframes fitaf-e{}@keyframes fitaf-t{}@keyframes fitaf-in{from{opacity:0;transform:translateX(24px)}}@media (prefers-reduced-motion:reduce){#fitaf-screen *{animation:none!important;transition:none!important}}";
 // Everything the screen does runs inside ui(): a screen that cannot draw never stops fill B, whose presses cannot be
 // taken back.
@@ -126,13 +132,21 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 // ⚠ H6's `:has(.summary__subscription-toggle)` is the build's (found at the build, not ruled): for a plan that REQUIRES a
 // subscription the store renders no switch at all ("Subscription required"), which the contract's H6 alone would hide,
 // and § 3 item 3 says a commitment is never hidden. So: no switch, nothing hidden (R2-51b).
-var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))){display:none!important}";
+// § 10: H7 the discounts (.checkout-discounts, three placements), only when the link carries NO offer code (a coded
+// link's second mark, fitaf-code, keeps them); H8 the app banner (.smartbanner), with the top margin its library sets on
+// <html> undone (the one rule that does not hide: the space is the banner's); H9 the price rows (.summary__row) except a
+// discount row, and never a row holding the Total (.summary__total is never hidden); H10 the tip (its section, or a bare
+// app-tip-selector), only while no tip is chosen (.tip-selector__remove-btn shows once one is).
+var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
+".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))){display:none!important}" +
+"html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}";
 function mark() {
   var d = w.document, s = d.createElement("style");
   s.id = "fitaf-deep";
   s.textContent = DEEP;
   d.head.appendChild(s);
   d.documentElement.classList.add("fitaf-deep");
+  if (CODE) d.documentElement.classList.add("fitaf-code");
 }
 
 // The payload, VERSION 2 (SPEC-rung2 § 11 item 1; version 1, base64 JSON, is retired and refused as an unknown
@@ -277,6 +291,7 @@ guard(function () {
   log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
   // SPEC-rung2-progress-and-checkout § 1, § 2 item 1: the screen, now that the link and the plan's count have passed
   // their checks, and before fill B's first poll. A link refused above shows nothing new.
+  CODE = p.code;
   ui(screen);
   // The two-fill source's dispatch, kept because it ships (SPEC-rung2 § 12 item 3): FILL is "B", so the line after it
   // never runs.

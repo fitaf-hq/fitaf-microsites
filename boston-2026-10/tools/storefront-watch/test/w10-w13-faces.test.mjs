@@ -113,7 +113,8 @@ test("W12a (§ 9): a CONDITIONAL target absent (H2's .app-hmp-credit, H5, H6) is
   const absent = passing();
   for (const h of absent.checkout.hide) if (CONDITIONAL.includes(h.selector)) h.found = 0;
   assert.deepEqual(facesVerdict(absent).reasons, []);
-  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 3, "fixture control: three targets absent");
+  // Three of § 9's, and § 10's four (H7–H10), all conditional.
+  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 7, "fixture control: seven targets absent");
 });
 
 test("W13a: an active subscription switch, or a \"renews every\" line, on the checkout: fail", () => {
@@ -163,7 +164,10 @@ test("F2 carries the hide list's names (and the checkout's, and the pay button's
   const deps = JSON.parse(await readFile(DEPENDENCIES_PATH, "utf8"));
   const literals = deps.literals.map((d) => d.literal);
   const NAMES = ["app-checkout", "checkout__submit", "summary__pay-button", "sticky-header", "footer", "app-hmp-credit", "checkout__guest-signin-banner", "contact__sign-in",
-    "app-storefront-popup-host", "summary__plan-subscription-controls", "summary__subscription-toggle", "summary__subscription-toggle--active"];
+    "app-storefront-popup-host", "summary__plan-subscription-controls", "summary__subscription-toggle", "summary__subscription-toggle--active",
+    // § 10
+    "app-extra-products-dialog", "cdk-overlay-pane", "cdk-overlay-backdrop", "checkout-discounts", "smartbanner",
+    "data-smartbanner-original-margin-top", "summary__row", "summary__row--discount", "summary__total", "tip-selector__remove-btn"];
   for (const name of NAMES) {
     assert.ok(literals.some((l) => new RegExp(`(^|[^\\w-])${name.replace(/[-_]/g, (c) => `\\${c}`)}([^\\w-]|$)`).test(l)), `a literal names ${name}`);
   }

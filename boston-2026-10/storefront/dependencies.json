@@ -146,6 +146,72 @@
       "literal": "\"summary__pay-button\"",
       "use": "the phone's pay button, PAY NOW in the order summary's mobile bar (the form's .checkout__submit is not displayed at 1024 px and narrower): W11 requires a pay button displayed with the checkout's style and without it",
       "spec": "SPEC-rung2-progress-and-checkout.md § 9; § 5 (W11)"
+    },
+    {
+      "id": "extras-dialog",
+      "literal": "\"app-extra-products-dialog\"",
+      "use": "the store's extras pop-up: while the progress screen is up, the overlay pane holding it and that overlay's backdrop are made invisible (never removed)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 1; R2-53"
+    },
+    {
+      "id": "overlay-pane",
+      "literal": "\"cdk-overlay-pane\"",
+      "use": "the overlay pane that holds a store dialog, made invisible while the screen is up when it holds the extras dialog",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 1"
+    },
+    {
+      "id": "overlay-backdrop",
+      "literal": "\"cdk-overlay-backdrop\"",
+      "use": "that overlay's backdrop, made invisible with it",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 1"
+    },
+    {
+      "id": "hide-h7-discounts",
+      "literal": "\"checkout-discounts\"",
+      "use": "H7: the gift-card and discount-code fields in their three placements, hidden only when the link carries no offer code",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 2; R2-54"
+    },
+    {
+      "id": "hide-h8-banner",
+      "literal": "class=\"smartbanner smartbanner--",
+      "use": "H8: the app-install banner the store shows on phones, hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 3; R2-57"
+    },
+    {
+      "id": "hide-h8-margin",
+      "literal": "data-smartbanner-original-margin-top",
+      "use": "H8: the banner's library reserves a top margin on <html>, keeping the original in this attribute; the checkout's style undoes the margin where the attribute is",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 3; R2-57"
+    },
+    {
+      "id": "hide-h9-rows",
+      "literal": "\"summary__row\"",
+      "use": "H9: the summary's price rows (Subtotal, Shipping, Tax), hidden",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 4; R2-55"
+    },
+    {
+      "id": "hide-h9-discount-row",
+      "literal": "\"summary__row--discount\"",
+      "use": "H9: a discount row, never hidden",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 4; R2-55"
+    },
+    {
+      "id": "total",
+      "literal": "\"summary__total\"",
+      "use": "the Total, never hidden (W14 requires it displayed)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 4; § 10 (W14)"
+    },
+    {
+      "id": "hide-h10-tip",
+      "literal": "\"checkout__section\",\"tip\"",
+      "use": "H10: the tip's section (section.checkout__section.tip), hidden only while no tip is chosen",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 5; R2-56"
+    },
+    {
+      "id": "hide-h10-remove",
+      "literal": "\"tip-selector__remove-btn\"",
+      "use": "H10: shown by the store once a tip is chosen; the tip is never hidden while it is there",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 5; R2-56"
     }
   ]
 }
