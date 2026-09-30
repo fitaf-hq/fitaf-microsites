@@ -489,3 +489,34 @@ Mac's, so a phone is slower.
    *"the page reports back that it's ready"* can key on the Total displayed rather than on `done`.
 4. On Slow 4G, the step line was **empty for 5.5–5.6 s** (A), the longest single stretch of the screen: the part the next
    design most needs to fill.
+
+## 14. Amendment, 2026-09-30 — the screen in its own module, for Storybook (no change a visitor sees)
+
+**Ruled by the Advisor** (2026-09-30): the screen's next design is developed in **Storybook**, *"OurFans uses it
+extensively for UI development"*; and, asked how the stories get the screen, *"Extract the screen"*. The tool is
+`SPEC-storybook.md`; this section is what it asks of the block.
+
+1. **The progress screen moves into its own source module**, `src/storefront/progress-screen.js`: its style, making it,
+   showing a slide, a meal added, the last step (CHECKOUT), and its removal: what `fitaf-handoff.js` holds today between
+   `var S, NOW, SLIDES` and `last()`, and the part of `end()` that removes it. **The build inlines it** into the Footer
+   block and the console file, as it inlines the key function (the KEY slot); **Storybook imports the same file**. One
+   source, so a story shows the code that ships.
+2. **Fill B is unchanged**: every press, wait, stop, log line and storage write; it calls the screen through the same
+   moments as today (the screen made once every check has passed, a meal added after each press, the last step at
+   CHECKOUT, removed at `done`, at every stop and at the 90 s clock). The screen still does nothing a person can act on,
+   still runs inside `ui()` (a screen that cannot draw never stops fill B), and the checkout's style (§ 3) is not part of
+   it.
+3. **What a visitor sees is unchanged**: every case of §§ 5, 9–12 passes unchanged against the new shipped text, and
+   the rules stand: no `<` but the block's own two (§ 11), the Footer block at most **10,240** bytes. The shipped text
+   changes (the module's wrapper), so **R2-32's pin moves**, and the build reports the bytes the move costs.
+4. ⛔ **Not pasted on its own**: the store keeps `ace775b` until the next design (§ 13's direction) is built on this, ruled,
+   smoked and pasted. The watch's expected Footer is unchanged.
+5. The module's interface is the builder's to choose, with one constraint: **a story can drive it with no store at
+   all**: a stand-in card (an element holding an `img` and a `.product__content-title`), the words and the colours given
+   to it, not read from a page.
+
+| | case | expect |
+|---|---|---|
+| R2-63 | the built block and console file | the module's text inlined; no `import`/`export` in either; no `<` but the two (R2-58) |
+| R2-64 | the module imported alone (no `#fitaf=` page, no store) | it makes the screen, adds meals from stand-in cards, shows the last step, and removes it, with the same elements, classes and step lines as the block's screen |
+| R2-65 | ⭐ one source | a change to the module (a rule of its style, say) changes both the built block and what R2-64 renders; a copy of the screen's code left in `fitaf-handoff.js` fails the case |
