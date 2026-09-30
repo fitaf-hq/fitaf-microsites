@@ -209,3 +209,35 @@ store's page made a sentence of them impossible to meet as written.
 - ⬜ **Not run on the live store**: any of it. The screen, the stripped checkout and W10–W13 are proven on the
   synthetic order page and the watch's synthetic store only. The live smoke, and the Advisor's own look at both widths,
   come before any paste (§ 5).
+
+## 9. Amendment, 2026-09-29 — the first live smoke: the synthetic checkout modelled the checkout expected, not the one served
+
+**The run** (the orchestrator, `c894f9c` pasted, release `main-2HXLHIG7.js`, 2026-09-30T01:33Z): at 1280 and 390 px
+fill B reached `done: /checkout` with the 7 chosen meals and $87.50; the screen was seen (8 steps) and gone; the style
+hid exactly 2 of the controls in `app-checkout` (58 at 1280, 62 at 390), the two sign-in links; the order one-time
+(W13). **It failed on three checks, and each is the smoke's model of the store, not the page**:
+
+1. **W11 at 390 px, "the pay button is not displayed with the style or without it"**: on a phone the store's pay
+   control is **`PAY NOW`, in the order summary's mobile bar** (`.summary__pay-button`), displayed and enabled; W11
+   looked only in `.checkout__submit`. ⇒ **The pay button is the displayed one of `.checkout__submit button` and
+   `.summary__pay-button`**, and W11 requires at least one displayed, with the style and without it.
+2. **W12, H2's `.app-hmp-credit` not found**: the store's layout renders it only in some cases (its footer's backlink
+   fallback). ⇒ It is **conditional**.
+3. **W12, H6 not found**: the checkout of this plan renders **no subscription switch at all**, at either width. ⇒ H6
+   is **conditional**: it hides what appears, and its absence is not a fault.
+
+⇒ **W12 is split**: **H1, H2's `.footer`, H3 and H4 must be found** (the store renders them on every guest checkout,
+seen at both widths); **H2's `.app-hmp-credit`, H5 and H6 are conditional**: reported as found or absent, never a
+failure (a rename of any of them is still F2's to catch, in the bundle).
+
+**Fixed synthetic store first, red, then the checks** (the lesson of the watch's own first live run): the synthetic
+checkout gains the mobile summary bar with its pay button (the desktop submit hidden below the store's breakpoint), a
+variant **without** the credit line, and a variant **without** any subscription controls; W11 and W12 are red on the
+new synthetic checkout before they change.
+
+| | case | expect |
+|---|---|---|
+| W11b | the synthetic checkout at 390 px: only the mobile bar's pay button displayed | W11 passes |
+| W11c | ⭐ mutant: the style also hides `.summary__pay-button` | W11 fails at 390 px |
+| W12b | the synthetic checkout without `.app-hmp-credit`, and without subscription controls | W12 passes, reporting both absent |
+| W12c | the synthetic checkout without `a.contact__sign-in` | W12 fails (a required target missing) |
