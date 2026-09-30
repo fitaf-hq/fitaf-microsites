@@ -16,13 +16,16 @@
 //   notes the progress screen and the checkout's style as they come and go (W10); after done, on /checkout, W11–W13
 //   read the payment with our style enabled and disabled, the hide list, and whether the order is one-time
 //   (lib/faces.mjs). Our style is toggled and restored; nothing is typed or pressed.
-// The pass rule is lib/smoke-verdict.mjs (W6), AND lib/faces.mjs's (W10–W13): a width passes only if both do.
+//   The Fit AF logo (SPEC-rung2-progress-and-checkout § 15.3, W16): the recorder notes it on the screen, and it is read
+//   on /checkout with W11–W14; absent fails the width.
+// The pass rule is lib/smoke-verdict.mjs (W6), AND lib/faces.mjs's (W10–W14, and W16's logoVerdict): a width passes only
+// if all do.
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
 import { LOG_PREFIX, MPID, STORE_ORIGIN, VIEWPORTS, WIDTHS } from "./config.mjs";
-import { extrasReport, facesVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
+import { extrasReport, facesVerdict, LOGO, logoVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
 import { parseBlock } from "./footer-check.mjs";
 import { siteCode } from "./site-code.mjs";
 import { DONE_LINE, smokeVerdict } from "./smoke-verdict.mjs";
@@ -31,11 +34,12 @@ const NAV_MS = 60_000;
 /** Fill B itself waits at most 10 s for the cards; the menu read and the paste wait for them longer. */
 const MENU_MS = 45_000;
 /**
- * Fill B's longest run on mpid 21 (SPEC-rung2 §§ 6, 8, 11), each wait at its limit: the cards (10 s), one 200 ms tick
- * per press of the 7 meals, an enabled CHECKOUT (10 s), then 30 s after CHECKOUT and 30 s after the extras dialog's
- * CONTINUE TO CHECKOUT (§ 11 item 4). W9e reads the built fill-B text's own constants and checks this sum.
+ * Fill B's longest run on mpid 21 (SPEC-rung2 §§ 6, 8, 11), each wait at its limit: the first meal card (30 s, since
+ * SPEC-rung2-progress-and-checkout § 15.2), every meal's card from the first (10 s), one 200 ms tick per press of the 7
+ * meals, an enabled CHECKOUT (10 s), then 30 s after CHECKOUT and 30 s after the extras dialog's CONTINUE TO CHECKOUT
+ * (§ 11 item 4): 111.4 s, where it was 81.4 s. W9e reads the built fill-B text's own constants and checks this sum.
  */
-export const FILL_B_LONGEST_MS = 10_000 + 7 * 200 + 10_000 + 30_000 + 30_000;
+export const FILL_B_LONGEST_MS = 30_000 + 10_000 + 7 * 200 + 10_000 + 30_000 + 30_000;
 /** § 7 item 3: the smoke waits for fill B's own verdict (done or stopped) at most this long, above its longest run. */
 export const HANDOFF_MS = FILL_B_LONGEST_MS + 15_000;
 const CHECKOUT_MS = 30_000;
@@ -238,7 +242,7 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
       await page.setViewport(VIEWPORTS[width]);
       page.on("console", (m) => outcome.console.push(m.text()));
       page.on("pageerror", (e) => outcome.errors.push(String(e?.message ?? e)));
-      await page.evaluateOnNewDocument(recordFaces, { screen: SCREEN_ID, style: STYLE_ID });
+      await page.evaluateOnNewDocument(recordFaces, { screen: SCREEN_ID, style: STYLE_ID, logo: LOGO });
       if (mode.kind === "paste") {
         await page.evaluateOnNewDocument(() => {
           window.__fitafHandoff = true;
@@ -274,8 +278,9 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
     console: outcome.console.filter((l) => l.startsWith(LOG_PREFIX)),
     checkout: outcome.checkout,
   });
-  // W10–W13 (lib/faces.mjs), when the link was run; a width that never ran it has already failed on the rule above.
-  const reasons = [...base.reasons, ...(outcome.faces ? facesVerdict(outcome.faces).reasons : [])];
+  // W10–W14 and W16 (lib/faces.mjs), when the link was run; a width that never ran it has already failed on the rule above.
+  const faces = outcome.faces ? [...facesVerdict(outcome.faces).reasons, ...logoVerdict(outcome.faces).reasons] : [];
+  const reasons = [...base.reasons, ...faces];
   return { width, verdict: { pass: reasons.length === 0, reasons }, outcome };
 }
 

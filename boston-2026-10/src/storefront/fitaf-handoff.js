@@ -19,7 +19,9 @@
 // Add to Cart on the plan's order page, then the store's own CHECKOUT (§ 8), which takes the visitor to /checkout. Any
 // failure removes the fragment and stops: the visitor keeps the plan's order page, as rung 1 leaves it.
 // The body of the one function below is not indented, to spend the 5 KB on code rather than spaces; for the same
-// reason, neighbouring declarations share one `var`.
+// reason, neighbouring declarations share one `var`. And since SPEC-rung2-progress-and-checkout § 15 (the Fit AF logo,
+// the wait for the cards and the key's tag took the Footer past its 10,240-byte ceiling), every line inside it is
+// indented one level less than usual: a function's body starts at the left edge, a block inside it two spaces in.
 (function () {
 "use strict";
 // The fill, named in the log line a link writes ("fill B, mpid N"). It was once a switch between two fills; it ships,
@@ -48,13 +50,13 @@ function drop() { w.history.replaceState(w.history.state, "", loc.pathname + loc
 // The one guard, around the start and every timer callback: any exception removes the fragment and stops. Removing
 // the fragment is tried on its own, so its failing cannot skip the stop line.
 function guard(fn) {
-  return function () {
-    try { fn(); } catch (e) {
-      // Removing the fragment can fail too; then the page stays as it is.
-      try { drop(); } catch (e3) {}
-      end("stopped: " + e.message);
-    }
-  };
+return function () {
+  try { fn(); } catch (e) {
+    // Removing the fragment can fail too; then the page stays as it is.
+    try { drop(); } catch (e3) {}
+    end("stopped: " + e.message);
+  }
+};
 }
 
 // ── Rung 2's two faces (SPEC-rung2-progress-and-checkout) ─────────────────────────────────────────────────────────────
@@ -79,12 +81,13 @@ function guard(fn) {
 // with the screen, at done, at every stop, and at the 90 s clock alike (the build's reading of "a class fill B sets on
 // <html> … and removes with it": the screen itself is that mark). Fill B's own test for a displayed control
 // (getClientRects) still finds CONTINUE TO CHECKOUT, and presses it as before.
-var S, NOW, SLIDES = {}, CODE;
+// § 15.3: the carousel's photos are `.c img` in the style, so the screen's Fit AF logo (below) is not one of them.
+var S, NOW, SLIDES = {}, CODE, L;
 var CSS = "#fitaf-screen{/*TOKENS*/;position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
 "#fitaf-screen>div{width:100%;max-width:420px}#fitaf-screen h2{margin:0 0 16px;font-size:24px;font-weight:700;color:inherit}" +
 "#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
 "#fitaf-screen .c{margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
-"#fitaf-screen img{display:block;width:100%;height:min(220px,32vh);object-fit:cover;border-radius:6px}#fitaf-screen b{display:block;margin-top:10px;font-size:18px}#fitaf-screen p{margin:0;min-height:1.4em}" +
+"#fitaf-screen .c img{display:block;width:100%;height:min(220px,32vh);object-fit:cover;border-radius:6px}#fitaf-screen b{display:block;margin-top:10px;font-size:18px}#fitaf-screen p{margin:0;min-height:1.4em}" +
 ".cdk-overlay-pane:has(app-extra-products-dialog),.cdk-overlay-backdrop:has(+* app-extra-products-dialog){visibility:hidden!important}" +
 "@keyframes fitaf-e{}@keyframes fitaf-t{}@keyframes fitaf-in{from{opacity:0;transform:translateX(24px)}}@media (prefers-reduced-motion:reduce){#fitaf-screen *{animation:none!important;transition:none!important}}";
 // Everything the screen does runs inside ui(): a screen that cannot draw never stops fill B, whose presses cannot be
@@ -99,37 +102,51 @@ function $(q) { return S.querySelector(q); }
 // #fitaf-screen > style, div > (h2, div.b > i, div.c, p[role=status][aria-live=polite]).
 function make(tag, parent, cls) { var e = w.document.createElement(tag); if (cls) e.className = cls; return parent.appendChild(e); }
 function screen() {
-  S = w.document.createElement("div");
-  S.id = "fitaf-screen";
-  S.setAttribute("popover", "manual");
-  make("style", S).textContent = CSS;
-  var box = make("div", S), line;
-  make("h2", box).textContent = UI.title;
-  make("i", make("div", box, "b"));
-  make("div", box, "c").onanimationiteration = function () { show(NOW.nextElementSibling || this.firstElementChild); };
-  line = make("p", box);
-  line.setAttribute("role", "status");
-  line.setAttribute("aria-live", "polite");
-  S.onanimationend = function (e) { if (e.target === S) S.remove(); };
-  w.document.body.appendChild(S);
-  if (S.showPopover) S.showPopover();
+S = w.document.createElement("div");
+S.id = "fitaf-screen";
+S.setAttribute("popover", "manual");
+make("style", S).textContent = CSS;
+var box = make("div", S), line;
+make("h2", box).textContent = UI.title;
+make("i", make("div", box, "b"));
+make("div", box, "c").onanimationiteration = function () { show(NOW.nextElementSibling || this.firstElementChild); };
+line = make("p", box);
+line.setAttribute("role", "status");
+line.setAttribute("aria-live", "polite");
+S.onanimationend = function (e) { if (e.target === S) S.remove(); };
+w.document.body.appendChild(S);
+if (S.showPopover) S.showPopover();
 }
 function show(el) { if (NOW) NOW.className = ""; (NOW = el).className = "on"; }
+// SPEC-rung2-progress-and-checkout § 15.3: the Fit AF logo is THE STORE'S OWN, the page's img.header__logo-image (the
+// image its header already loads, from its own image host), in an img made with the DOM: alt "Fit AF", not a link,
+// nothing focusable. No image URL is in this text. As the carousel's photos (§ 2 item 2), it is made only once the
+// header's image has LOADED (complete, with a width), from its currentSrc, so nothing is requested; until then, none.
+// `css`: the margin, then the height; it is centred (a block with auto side margins). No header logo: no logo.
+function logo(css) {
+var h = w.document.querySelector("img.header__logo-image"), i = h && h.complete && h.naturalWidth && w.document.createElement("img");
+if (i) i.src = h.currentSrc, i.alt = "Fit AF", i.style.cssText = "display:block;margin:" + css;
+return i;
+}
+// On the screen: centred just above the step line, 48 px high. Tried at every poll of fill B's wait and at every press
+// until it is placed (L), because the store's header may load its logo after this block runs; placed once.
+function brand() { if (!L && (L = logo("0 auto 12px;height:48px"))) $("p").before(L); }
 // After press k of t: the meal's slide, made at its first press from its own card (§ 2 item 2: its name as the card
 // shows it, and its photograph only if the page has already loaded it: the card's img complete with a width, whose
 // currentSrc the slide reuses, so nothing new is requested), shown; the bar at k of t + 1; the step line.
 function added(meal, c, k, t) {
-  var d = w.document, el = SLIDES[meal], im = c.querySelector("img"), i;
-  if (!el) {
-    el = SLIDES[meal] = d.createElement("div");
-    if (im && im.complete && im.naturalWidth) { i = el.appendChild(d.createElement("img")); i.alt = ""; i.src = im.currentSrc; }
-    el.appendChild(d.createElement("b")).textContent = text(c.querySelector(".product__content-title"));
-    $(".c").appendChild(el);
-  }
-  show(el);
-  $("i").style.width = k / (t + 1) * 100 + "%";
-  $("p").textContent = UI.step.replace("{meal}", el.lastChild.textContent).replace("{n}", k).replace("{total}", t);
-  if (k === t) $(".c").className = "c y";
+var d = w.document, el = SLIDES[meal], im = c.querySelector("img"), i;
+brand();
+if (!el) {
+  el = SLIDES[meal] = d.createElement("div");
+  if (im && im.complete && im.naturalWidth) { i = el.appendChild(d.createElement("img")); i.alt = ""; i.src = im.currentSrc; }
+  el.appendChild(d.createElement("b")).textContent = text(c.querySelector(".product__content-title"));
+  $(".c").appendChild(el);
+}
+show(el);
+$("i").style.width = k / (t + 1) * 100 + "%";
+$("p").textContent = UI.step.replace("{meal}", el.lastChild.textContent).replace("{n}", k).replace("{total}", t);
+if (k === t) $(".c").className = "c y";
 }
 function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout; }
 // § 3, the checkout, stripped: at `done` only, the class fitaf-deep on <html> and ONE <style id="fitaf-deep">, never
@@ -150,13 +167,18 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
 ".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))){display:none!important}" +
 "html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}";
+// § 15.3, on the checkout: the logo (above) centred at the top of the store's checkout component, 40 px high, where the
+// store's hidden header was (H1). Inside app-checkout, so it goes with the component, as every H rule stops applying:
+// only while the checkout is on the page, and only for a deep-carted visit (it is placed at done, never on a stop).
+// Last, so that nothing it does can keep the mark and the style from being set.
 function mark() {
-  var d = w.document, s = d.createElement("style");
-  s.id = "fitaf-deep";
-  s.textContent = DEEP;
-  d.head.appendChild(s);
-  d.documentElement.classList.add("fitaf-deep");
-  if (CODE) d.documentElement.classList.add("fitaf-code");
+var d = w.document, s = d.createElement("style"), c, i;
+s.id = "fitaf-deep";
+s.textContent = DEEP;
+d.head.appendChild(s);
+d.documentElement.classList.add("fitaf-deep");
+if (CODE) d.documentElement.classList.add("fitaf-code");
+if ((c = d.querySelector("app-checkout")) && (i = logo("16px auto;height:40px"))) c.prepend(i);
 }
 
 // The payload, VERSION 2 (SPEC-rung2 § 11 item 1; version 1, base64 JSON, is retired and refused as an unknown
@@ -166,29 +188,31 @@ function mark() {
 // is § 6's "over 2 KB", kept: 21 items never come near it. The plan is NOT in the payload: the guard at the bottom
 // reads it from the page's own ?mpid=, and applies the full-plan rule (§ 7) there, last.
 function payload(s) {
-  if (s.length > 2048) fail("payload over 2 KB");
-  var parts = s.split("."), items = [], keys = [], total = 0, code;
-  if (parts.shift() !== "2") fail("unknown version");
-  // The offer code is the last item, if any, and is checked but NOT applied in this build: how the store takes one is
-  // not yet proven.
-  if (/^~/.test(parts[parts.length - 1])) code = parts.pop().slice(1);
-  if (code !== undefined && !/^[A-Za-z0-9-]{1,40}$/.test(code)) fail("bad code");
-  if (!parts.length) fail("no items");
-  parts.forEach(function (part) {
-    var m = /^([0-9a-z]{5})(?:\*([2-9]|1\d|2[01]))?$/.exec(part) || fail("bad meal: " + part), n = +(m[2] || 1);
-    // A meal named twice would be two meals to B, pressing one card twice over; its count belongs in one item.
-    if (keys.indexOf(m[1]) >= 0) fail("named twice: " + m[1]);
-    keys.push(m[1]);
-    items.push({ key: m[1], qty: n });
-    total += n;
-  });
-  return { items: items, total: total, code: code };
+if (s.length > 2048) fail("payload over 2 KB");
+var parts = s.split("."), items = [], keys = [], total = 0, code;
+if (parts.shift() !== "2") fail("unknown version");
+// The offer code is the last item, if any, and is checked but NOT applied in this build: how the store takes one is
+// not yet proven.
+if (/^~/.test(parts[parts.length - 1])) code = parts.pop().slice(1);
+if (code !== undefined && !/^[A-Za-z0-9-]{1,40}$/.test(code)) fail("bad code");
+if (!parts.length) fail("no items");
+parts.forEach(function (part) {
+  var m = /^([0-9a-z]{5})(?:\*([2-9]|1\d|2[01]))?$/.exec(part) || fail("bad meal: " + part), n = +(m[2] || 1);
+  // A meal named twice would be two meals to B, pressing one card twice over; its count belongs in one item.
+  if (keys.indexOf(m[1]) >= 0) fail("named twice: " + m[1]);
+  keys.push(m[1]);
+  items.push({ key: m[1], qty: n });
+  total += n;
+});
+return { items: items, total: total, code: code };
 }
 
 // B polls every 200 ms: for at most 10 s before a press (the meal cards render after the store's own start-up; the
 // store's CHECKOUT enables once the plan is full), and for at most 30 s after the store's CHECKOUT (SPEC-rung2 § 11
-// item 4: one live phone-width run of four stopped at 10 s with the store still committing).
-var POLL_MS = 200, MAX_POLLS = 50, AFTER_CHECKOUT = 150;
+// item 4: one live phone-width run of four stopped at 10 s with the store still committing). SPEC-rung2-progress-and-
+// checkout § 15.2: the 10 s for the meals starts at the first poll that finds a titled meal card; before it, B waits
+// for the page's cards at most 30 s (NO_CARDS polls): in 2 of 7 live runs the store drew no card within 10 s.
+var POLL_MS = 200, MAX_POLLS = 50, AFTER_CHECKOUT = 150, NO_CARDS = 150;
 // A meal's key: src/storefront/meal-key.js, the one function the link tool also runs, inlined here by the build.
 var key = /*KEY*/ null;
 // Fill B keys each meal card's title as the page shows it, and presses the card whose key the link names.
@@ -197,24 +221,24 @@ function first(el, sel, ok) { return [].filter.call(el.querySelectorAll(sel), ok
 // SPEC-rung2 § 11 item 3: two cards whose titles share a key the link names cannot be told apart, so the link is
 // refused, nothing pressed. It runs on every lookup, so on every poll before the first press.
 function card(k) {
-  var c = [].filter.call(w.document.querySelectorAll("app-product-card"), function (el) {
-    var t = el.querySelector(".product__content-title");
-    return t && key(text(t)) === k;
-  });
-  if (c[1]) fail("two meals share a key: " + k);
-  return c[0];
+var c = [].filter.call(w.document.querySelectorAll("app-product-card"), function (el) {
+  var t = el.querySelector(".product__content-title");
+  return t && key(text(t)) === k;
+});
+if (c[1]) fail("two meals share a key: " + k);
+return c[0];
 }
 function addButton(c) {
-  return c && first(c, ".product__actions button", function (b) { return text(b).indexOf("Add to Cart") >= 0; });
+return c && first(c, ".product__actions button", function (b) { return text(b).indexOf("Add to Cart") >= 0; });
 }
 // What Add to Cart becomes once pressed is NOT known (a quantity stepper?). Best effort, unproven until the
 // one-browser run: Add to Cart again if it is still there; else, in the same card's .product__actions only, a
 // button whose label or text says increase, plus or "+" — never one that mentions a favourite or a wishlist.
 function moreButton(c) {
-  return addButton(c) || c && first(c, ".product__actions button", function (b) {
-    var label = (b.getAttribute("aria-label") || "") + " " + text(b);
-    return /increase|plus|\+/i.test(label) && !/favo|wish/i.test(label);
-  });
+return addButton(c) || c && first(c, ".product__actions button", function (b) {
+  var label = (b.getAttribute("aria-label") || "") + " " + text(b);
+  return /increase|plus|\+/i.test(label) && !/favo|wish/i.test(label);
+});
 }
 // SPEC-rung2 § 10: B presses the plan's whole count, so it starts only on a plan that holds NOTHING yet, and never
 // removes a visitor's meals. Read from the store's public code (§ 10's build note): the store displays a control in its
@@ -229,33 +253,39 @@ var HELD = /checkout|more meal|limit exceeded/i;
 // on every poll, the last one just before the first press: a meal already chosen shows the store's quantity counter
 // in place of its Add to Cart, so on a reload the payload's meals are never all found, and a check made only once
 // they were would never run.
+// § 15.2: `polls` counts the 10 s, from the first poll that finds a titled app-product-card (that poll is the first of
+// the 50) and on, whatever the page does after; `idle` counts the polls before it, and at NO_CARDS of them (the 150th,
+// 29.8 s after the first, as the wait after CHECKOUT counts) B stops, `no meal cards on this page`, pressing nothing.
+// The § 10 check runs on every poll of both. The screen's logo is tried on each (brand, above: never a stop).
 function fillB(p) {
-  var polls = 0;
-  guard(function poll() {
-    if (control(HELD, 1)) fail("the plan already holds meals");
-    var missing = p.items.filter(function (it) { return !addButton(card(it.key)); });
-    if (!missing.length) return press(steps(p.items), 0);
-    if (++polls >= MAX_POLLS) fail("not on this page: " + missing.map(function (it) { return it.key; }));
-    w.setTimeout(guard(poll), POLL_MS);
-  })();
+var polls = 0, idle = 0;
+guard(function poll() {
+  ui(brand);
+  if (control(HELD, 1)) fail("the plan already holds meals");
+  var missing = p.items.filter(function (it) { return !addButton(card(it.key)); });
+  if (!missing.length) return press(steps(p.items), 0);
+  if (!polls && !first(w.document, "app-product-card .product__content-title", text)) { if (++idle >= NO_CARDS) fail("no meal cards on this page"); }
+  else if (++polls >= MAX_POLLS) fail("not on this page: " + missing.map(function (it) { return it.key; }));
+  w.setTimeout(guard(poll), POLL_MS);
+})();
 }
 // Every meal's first press comes before any meal's second: if a card then offers no way to add another, B
 // stops with each meal in the cart once, rather than some meals complete and others absent. (No `<` in the shipped
 // text, SPEC-rung2-progress-and-checkout § 11: the loop's test is written the other way round.)
 function steps(items) {
-  var list = items.map(function (it) { return [it.key, 0]; });
-  items.forEach(function (it) { for (var n = 1; it.qty > n; n++) list.push([it.key, n]); });
-  return list;
+var list = items.map(function (it) { return [it.key, 0]; });
+items.forEach(function (it) { for (var n = 1; it.qty > n; n++) list.push([it.key, n]); });
+return list;
 }
 // One press per tick, so the store can re-render between presses. ⚠ A control missing after a press stops
 // here with part of the payload already in the cart: a press cannot be taken back.
 function press(list, k) {
-  if (k === list.length) return checkout();
-  var meal = list[k][0], n = list[k][1], c = card(meal);
-  var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + meal + " after " + n);
-  b.click();
-  ui(function () { added(meal, c, k + 1, list.length); });
-  w.setTimeout(guard(function () { press(list, k + 1); }), POLL_MS);
+if (k === list.length) return checkout();
+var meal = list[k][0], n = list[k][1], c = card(meal);
+var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + meal + " after " + n);
+b.click();
+ui(function () { added(meal, c, k + 1, list.length); });
+w.setTimeout(guard(function () { press(list, k + 1); }), POLL_MS);
 }
 // SPEC-rung2 § 8. On a meal-plan page the store's Add to Cart puts a meal in the plan's PENDING list, not the cart;
 // only the store's own checkout control commits that list and routes to /checkout inside the app. So B never loads
@@ -266,9 +296,9 @@ function press(list, k) {
 // the phone and tablet bar's; CHECKOUT NOW the desktop sidebar's (1025 px and wider); both run the store's same
 // checkout (§ 8, amended 2026-09-29).
 function control(re, any) {
-  return first(w.document, "button", function (b) {
-    return (any || !b.disabled) && re.test(text(b)) && b.getClientRects().length && !b.closest("app-product-card,app-product-card-mobile");
-  });
+return first(w.document, "button", function (b) {
+  return (any || !b.disabled) && re.test(text(b)) && b.getClientRects().length && !b.closest("app-product-card,app-product-card-mobile");
+});
 }
 // Wait for an enabled CHECKOUT (short of the plan's count the store shows a disabled "Add N more meals"), remove the
 // fragment, press it once. Then wait for /checkout; if the store opens its extras dialog instead, press the dialog's
@@ -285,32 +315,32 @@ function control(re, any) {
 // itself when its order page starts; a store that ignores it opens its pop-up, invisible under the screen, and fill B
 // presses its CONTINUE TO CHECKOUT as before (§ 10). A storage that throws changes nothing (ui()).
 function checkout() {
-  var k = 0, polls = 0;
-  guard(function poll() {
-    if (k && loc.pathname === "/checkout") { ui(mark); return end("done: /checkout"); }
-    var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]);
-    if (b) { if (!k) { drop(); ui(function () { w.sessionStorage.setItem("ecc_additions_prompt_handled", "true"); }); } b.click(); if (!k) ui(last); k++; polls = 0; }
-    else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? end("stopped: /checkout not reached") : fail("no checkout control");
-    w.setTimeout(guard(poll), POLL_MS);
-  })();
+var k = 0, polls = 0;
+guard(function poll() {
+  if (k && loc.pathname === "/checkout") { ui(mark); return end("done: /checkout"); }
+  var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]);
+  if (b) { if (!k) { drop(); ui(function () { w.sessionStorage.setItem("ecc_additions_prompt_handled", "true"); }); } b.click(); if (!k) ui(last); k++; polls = 0; }
+  else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? end("stopped: /checkout not reached") : fail("no checkout control");
+  w.setTimeout(guard(poll), POLL_MS);
+})();
 }
 
 // The plan is the page's own ?mpid= (SPEC-rung2 § 11 item 1), read once: a whole number with no leading zero. Then the
 // full-plan rule (§ 7), last, so every other fault above reports itself first.
 guard(function () {
-  if (loc.pathname !== "/order") fail("not the order page");
-  var p = payload(loc.hash.slice(7)), m = /[?&]mpid=([1-9]\d{0,8})(&|$)/.exec(loc.search) || fail("no mpid on this page");
-  p.mpid = +m[1];
-  var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
-  if (p.total !== need) fail("the plan needs " + need + " meals; the link has " + p.total);
-  log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
-  // SPEC-rung2-progress-and-checkout § 1, § 2 item 1: the screen, now that the link and the plan's count have passed
-  // their checks, and before fill B's first poll. A link refused above shows nothing new.
-  CODE = p.code;
-  ui(screen);
-  // The two-fill source's dispatch, kept because it ships (SPEC-rung2 § 12 item 3): FILL is "B", so the line after it
-  // never runs.
-  if (FILL === "B") return fillB(p);
-  fail("fill " + FILL + " is not in this text");
+if (loc.pathname !== "/order") fail("not the order page");
+var p = payload(loc.hash.slice(7)), m = /[?&]mpid=([1-9]\d{0,8})(&|$)/.exec(loc.search) || fail("no mpid on this page");
+p.mpid = +m[1];
+var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
+if (p.total !== need) fail("the plan needs " + need + " meals; the link has " + p.total);
+log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
+// SPEC-rung2-progress-and-checkout § 1, § 2 item 1: the screen, now that the link and the plan's count have passed
+// their checks, and before fill B's first poll. A link refused above shows nothing new.
+CODE = p.code;
+ui(screen);
+// The two-fill source's dispatch, kept because it ships (SPEC-rung2 § 12 item 3): FILL is "B", so the line after it
+// never runs.
+if (FILL === "B") return fillB(p);
+fail("fill " + FILL + " is not in this text");
 })();
 })();
