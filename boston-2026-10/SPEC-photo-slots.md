@@ -53,6 +53,10 @@ slice across a round plate.
 was a box floating at the bottom left. Both shapes now draw what this file says. The mock-ups apply it by orientation
 (`mockups/mockups.css`), so a screen share at another landscape size keeps the same proportions.
 
+**Picked the same night** (the Advisor's round 13 on the re-cut): the side-panel cut won for all five of his screen
+slides, with a small margin at the plate's rim. His earlier band crops still work for some of them, **should a band
+layout return** (his words: *"if not now, in the future"*); nothing is built for it.
+
 ## 3. The weight budget (the page only)
 
 | file | budget | format |
