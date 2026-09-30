@@ -1,9 +1,11 @@
 // R2-70 (SPEC-rung2-progress-and-checkout § 15.3): the Fit AF logo on the progress screen and on the deep-carted
 // checkout is THE STORE'S OWN, the page's img.header__logo-image: an img the block makes with the DOM, whose src is the
 // header image's, alt "Fit AF", not a link, nothing focusable. No image URL is in the shipped text (R2-71).
-//   R2-70   with a header logo: the screen shows one, centred just above the step line, 48 px high, and the checkout one,
-//           at the top of the store's checkout component, 40 px high; nothing focusable is added. Without a header logo:
-//           none anywhere, and the fill unchanged (the same presses, history writes, lines and timers);
+//   R2-70   with a header logo: the screen shows one, 48 px high, as the first element above the title, with a white
+//           background, a border radius and padding (the Advisor, 2026-09-30, after seeing it: "Top, on a white plate";
+//           the plate is the image's own padding and background, § 15.3), and the checkout one, at the top of the
+//           store's checkout component, 40 px high; nothing focusable is added. Without a header logo: none anywhere,
+//           and the fill unchanged (the same presses, history writes, lines and timers);
 //   R2-70b  the build's reading (§ 16): as the carousel's photos (§ 2 item 2), a logo is made only from a header image
 //           that has LOADED (complete, with a width), from its currentSrc, so nothing new is requested; a header logo
 //           still loading gives none, and the screen gains it at the next poll once it has loaded;
@@ -77,7 +79,7 @@ async function deepRun({ logo = null, pageOptions = {}, cardsLate = false } = {}
   h.window.history.pushState = (...args) => {
     const s = screenOf(page.document);
     atRoute = {
-      logos: [...(s?.querySelectorAll(OURS) ?? [])].map((img) => ({ ...describe(img), beforeStep: img.nextElementSibling?.getAttribute("role") === "status" })),
+      logos: [...(s?.querySelectorAll(OURS) ?? [])].map((img) => ({ ...describe(img), ...placed(img) })),
       focusable: s ? focusableIn(s).length : null,
     };
     pushState(...args);
@@ -91,12 +93,27 @@ async function deepRun({ logo = null, pageOptions = {}, cardsLate = false } = {}
   return { page, h, header, created, atRoute: () => atRoute };
 }
 
+/**
+ * Where the screen's logo is, and its plate: the first element of the screen's box, the title (the h2) next, and a white
+ * background (the screen's own --white token, not a raw colour), a border radius and padding of its own.
+ */
+const placed = (img) => ({
+  first: img.parentElement?.firstElementChild === img,
+  aboveTitle: img.nextElementSibling?.localName === "h2",
+  plate: {
+    background: img.style.background,
+    radius: Boolean(img.style.borderRadius && img.style.borderRadius !== "0px"),
+    padding: Boolean(img.style.padding && img.style.padding !== "0px"),
+  },
+});
+const PLATE = { first: true, aboveTitle: true, plate: { background: "var(--white)", radius: true, padding: true } };
+
 const theCheckout = (document) => {
   const c = document.querySelector("app-checkout");
   return c ? { first: c.firstElementChild?.localName, logos: [...c.querySelectorAll("img")].map(describe) } : null;
 };
 
-test("R2-70: with a header logo, one on the screen (above the step line) and one on the checkout; without one, none, and the fill unchanged", async () => {
+test("R2-70: with a header logo, one on the screen (first, above the title, on a white plate) and one on the checkout; without one, none, and the fill unchanged", async () => {
   const withLogo = await deepRun({ logo: "loaded" });
   withLogo.h.timers.drain();
   const without = await deepRun();
@@ -104,7 +121,7 @@ test("R2-70: with a header logo, one on the screen (above the step line) and one
   for (const r of [withLogo, without]) assert.ok(r.h.info.includes("[fitaf-handoff] done: /checkout"), JSON.stringify(r.h.info));
 
   const screen = withLogo.atRoute();
-  assert.deepEqual(screen.logos, [{ src: LOGO, alt: ALT, height: "48px", focusable: false, beforeStep: true }], "the screen: one logo, the header's src, just above the step line");
+  assert.deepEqual(screen.logos, [{ src: LOGO, alt: ALT, height: "48px", focusable: false, ...PLATE }], "the screen: one logo, the header's src, the first element above the title, on a white plate");
   assert.equal(screen.focusable, 0, "nothing focusable on the screen");
   const checkout = theCheckout(withLogo.page.document);
   assert.deepEqual(checkout, { first: "img", logos: [{ src: LOGO, alt: ALT, height: "40px", focusable: false }] }, "the checkout: one logo, first in app-checkout");
