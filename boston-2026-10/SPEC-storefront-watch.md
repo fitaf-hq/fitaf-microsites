@@ -187,3 +187,35 @@ Red first at `5acc962`, built at `7b0d74f`. § 4's pass rule (W6) is unchanged; 
   browser half), because the site's install never gets puppeteer-core.
 - ⬜ **Not run against the live store**: no request to it was made at this build. The first live smoke with W10–W13 is
   the orchestrator's, before any paste.
+
+## 10. Found at the build, 2026-09-30 — W16 and the longest run (SPEC-rung2-progress-and-checkout § 15), not ruled
+
+Red at `4657335`, built at `d57a273`. § 4's pass rule (W6) is unchanged; a width passes only if it, W10–W14 and W16
+all pass.
+
+| | case | expect |
+|---|---|---|
+| W16 | the Fit AF logo, live, both widths (§ 15.3 of the two faces' contract: the store's own `img.header__logo-image`, in an img of ours, alt "Fit AF") | reported found or absent on the progress screen and on the deep-carted checkout; **absent fails the width** |
+
+- **W16 as built** (`lib/faces.mjs`): the recorder notes the logo arriving in `#fitaf-screen` (`img[alt="Fit AF"]`,
+  once); on `/checkout`, read with W11–W14, the checkout's logo is an `img[alt="Fit AF"]` that is a **child** of
+  `app-checkout` (where the block puts it, so an image of the store's own inside the checkout is never read as ours),
+  **found and displayed**. Its own rule, `logoVerdict`, beside `facesVerdict` (`lib/smoke.mjs` runs both), judged only
+  once fill B reached done, as W11–W14; a stopped run is failed by the smoke's own rule and judged by W10 alone. The
+  report gives each width a W16 line.
+- **Cases**: W16a on recorded outcomes (both found; absent on the screen; absent on the checkout; there but not
+  displayed; the checkout not read; a run not done, not judged); W16b in Chrome against the synthetic store, both
+  widths passing with both logos found and the header's image requested once per page the smoke loads and never by a
+  logo of ours, and a store without a header logo failing on W16 alone, naming both. The synthetic store's header
+  gains the store's logo as a generated SVG rectangle (`/img/logo.svg`, `no-store`; `missing: ["logo"]` leaves it
+  out), never a photograph. The watch's R2-52 counts the slides' images as `#fitaf-screen .c img`, since the screen now
+  carries the logo too.
+- **The longest run (W9e)**: fill B now waits up to 30 s for the first meal card before its 10 s for the meals (§ 15.2
+  of the two faces' contract), so `FILL_B_LONGEST_MS` is 111.4 s (30 s + 10 s + 7 presses of 200 ms + 10 s + 30 s +
+  30 s, was 81.4 s) and the smoke's ceiling `HANDOFF_MS` 126.4 s (was 96.4 s). W9e reads the fourth constant,
+  `NO_CARDS`, from the built text.
+- ⬜ **`header__logo-image` is not in `dependencies.json`**: not asked, and not checked against the release's files (no
+  request made). A rename shows as W16's absent at the next smoke.
+- ⬜ **Not run against the live store**: no request to it was made at this build. The rehearsal (the smoke with
+  `--script` on this build's console file, both widths) is the orchestrator's, before the paste; the baseline's
+  expected Footer stays the live block's until the paste and `accept --footer`.
