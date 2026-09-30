@@ -47,9 +47,12 @@ export function mutate(text, from, to) {
   return text.replace(from, to);
 }
 
-/** The link the site's own payload code writes for `meals` (one each) on mpid 21, on the synthetic store. */
-export function linkFor(code, origin, meals = MEALS.slice(0, 7)) {
-  const args = ["--mpid", "21", ...meals.flatMap((name) => ["--item", `${name}:1`])];
+/**
+ * The link the site's own payload code writes for `meals` (one each) on mpid 21, on the synthetic store; with
+ * `offer`, the offer code it carries (`~<code>`, SPEC-rung2 § 11).
+ */
+export function linkFor(code, origin, meals = MEALS.slice(0, 7), offer = null) {
+  const args = ["--mpid", "21", ...meals.flatMap((name) => ["--item", `${name}:1`]), ...(offer ? ["--code", offer] : [])];
   const link = new URL(code.handoffLink(code.plans, code.payloadFromArgs(args, code.counts)));
   return new URL(link.pathname + link.search + link.hash, origin).href;
 }
@@ -64,14 +67,14 @@ export async function browserFor() {
  * smoke pastes) and `ready()` (a page function, if given) is true. `reducedMotion` emulates prefers-reduced-motion:
  * reduce. Returns the page, its console, and waits.
  */
-export async function openDeep(browser, { origin, code, text, width = 1280, reducedMotion = false, meals, ready = null }) {
+export async function openDeep(browser, { origin, code, text, width = 1280, reducedMotion = false, meals, ready = null, offer = null }) {
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
   await page.setViewport(VIEWPORTS[width]);
   if (reducedMotion) await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
   const lines = [];
   page.on("console", (m) => lines.push(m.text()));
-  await page.goto(linkFor(code, origin, meals), { waitUntil: "load" });
+  await page.goto(linkFor(code, origin, meals, offer), { waitUntil: "load" });
   await poll(page, () => document.querySelectorAll("app-product-card").length, null, (n) => n > 0, { timeoutMs: 15_000 });
   if (ready) await poll(page, ready, null, (v) => Boolean(v), { timeoutMs: 15_000, everyMs: 100 });
   await page.evaluate(text);
@@ -139,6 +142,16 @@ export function displayedMap(selectors) {
   for (const sel of selectors) {
     const el = document.querySelector(sel);
     out[sel] = el ? el.getClientRects().length > 0 : null;
+  }
+  return out;
+}
+
+/** In the page: for each selector, how many elements match and how many of them are displayed. */
+export function displayedCounts(selectors) {
+  const out = {};
+  for (const sel of selectors) {
+    const all = [...document.querySelectorAll(sel)];
+    out[sel] = { found: all.length, displayed: all.filter((el) => el.getClientRects().length > 0).length };
   }
   return out;
 }

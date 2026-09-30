@@ -134,8 +134,12 @@ test("W10a: a run stopped before done is judged by W10 alone (the screen must be
   assert.match(why(stopped), /W10: .*still/);
 });
 
-test("the hide list W11 and W12 read is the contract's H1–H6, with H6 only while a switch is there and off", () => {
-  assert.deepEqual(HIDE.map((h) => h.id), ["H1", "H2", "H3", "H4", "H5", "H6"]);
+const H6 = ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))";
+const H9 = ".summary__row:not(.summary__row--discount,:has(.summary__total))";
+const H10 = ":is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))";
+
+test("the hide list W11, W12 and W14 read is the contract's H1–H10, with H6 only while a switch is there and off", () => {
+  assert.deepEqual(HIDE.map((h) => h.id), ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]);
   assert.deepEqual(HIDE.flatMap((h) => h.selectors), [
     ".sticky-header",
     ".footer",
@@ -143,14 +147,16 @@ test("the hide list W11 and W12 read is the contract's H1–H6, with H6 only whi
     "a.checkout__guest-signin-banner",
     "a.contact__sign-in",
     "app-storefront-popup-host",
-    ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
+    H6,
+    ".checkout-discounts",
+    ".smartbanner",
+    H9,
+    H10,
   ]);
-  assert.deepEqual(HIDE.filter((h) => h.inCheckout).map((h) => h.id), ["H3", "H4", "H6"]);
-  assert.deepEqual(CONDITIONAL, [
-    ".app-hmp-credit",
-    "app-storefront-popup-host",
-    ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
-  ], "§ 9: the conditional targets");
+  // § 10's re-statement of the payment check: the controls hidden are exactly H3, H4, H6, H7, H8 and H10's.
+  assert.deepEqual(HIDE.filter((h) => h.mayHideControls).map((h) => h.id), ["H3", "H4", "H6", "H7", "H8", "H10"]);
+  assert.deepEqual(CONDITIONAL, [".app-hmp-credit", "app-storefront-popup-host", H6, ".checkout-discounts", ".smartbanner", H9, H10],
+    "§ 9 and § 10: the conditional targets");
 });
 
 test("F2 carries the hide list's names (and the checkout's, and the pay button's): a release that renames one is flagged", async () => {
@@ -211,9 +217,11 @@ test("W10–W13 in the smoke, on the synthetic store — the screen seen then go
     const kinds = f.events.map((e) => e.e);
     assert.ok(kinds.indexOf("screen+") < kinds.indexOf("style+") && kinds.indexOf("style+") < kinds.lastIndexOf("screen-"), kinds.join(" "));
     assert.ok(f.events.some((e) => e.e === "step" && / 1 of 7 /.test(e.text)), JSON.stringify(f.events));
-    assert.equal(f.checkout.payment.hidden.length, 4, JSON.stringify(f.checkout.payment));
+    assert.ok(f.checkout.payment.hidden.length >= 4, JSON.stringify(f.checkout.payment));
     assert.deepEqual(f.checkout.payment.hidden, f.checkout.payment.allowed);
-    assert.ok(f.checkout.hide.every((h) => h.found >= 1 && h.displayed === 0), JSON.stringify(f.checkout.hide));
+    const h16 = f.checkout.hide.filter((h) => ["H1", "H2", "H3", "H4", "H5", "H6"].includes(h.id));
+    assert.ok(h16.length === 7 && h16.every((h) => h.found >= 1 && h.displayed === 0), JSON.stringify(h16));
+    assert.ok(f.checkout.hide.every((h) => !h.found || h.displayed === 0), "every target found is hidden");
     const report = renderSmokeReport({ flag: false, script: "fill B", runs: [{ width, verdict, outcome }] }, "t");
     assert.match(report, /W10–W13/);
   }

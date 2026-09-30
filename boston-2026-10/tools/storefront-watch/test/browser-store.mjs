@@ -21,6 +21,14 @@
 //                    "[fixture] ORDER PLACED" if anything presses it.
 // Around both, the app's shell: the sticky header, the footer, the platform's credit line and the pop-up host (H1, H2,
 // H5), links and text only (no button, so the smoke's evidence of the order page is what it was).
+// § 10 (the Advisor's first look), with the store's names read from its public code: the discounts in their three
+// placements (.checkout-discounts: the payment section's, its own section, the summary's), each with a gift-card and a
+// discount-code field and their Apply buttons; the summary's price rows (.summary__row: Subtotal, Shipping, Tax, and on
+// request a discount row, .summary__row--discount) and its Total (.summary__total); the tip (section.checkout__section.tip
+// holding app-tip-selector, or a bare app-tip-selector), whose .tip-selector__remove-btn shows once a tip is chosen;
+// on request the app banner (.smartbanner, prepended to <body>, with the top margin its library reserves on <html>);
+// and the extras dialog as the store's overlays are (a manual popover holding .cdk-overlay-backdrop and
+// .cdk-overlay-pane > app-extra-products-dialog).
 // Like the store, the app injects its Footer text at run time as a re-created <script> (the store's injectSlot).
 // Images are GENERATED (a flat SVG rectangle), never a photograph, served here; nothing is fetched from anywhere else.
 import { createServer } from "node:http";
@@ -68,6 +76,21 @@ function subscriptionParts(state) {
   throw new Error(`subscription: ${state}`);
 }
 
+/** One placement of the discounts (§ 10, H7): a gift-card field and a discount-code field, each with its Apply. */
+const discounts = (where) =>
+  `<input name="giftCard-${where}" aria-label="Gift card"><button type="button" class="discount__apply">Apply</button>` +
+  `<input name="coupon-${where}" aria-label="Discount code"><button type="button" class="discount__apply">Apply</button>`;
+
+/** The tip (§ 10, H10): in its section, or a bare app-tip-selector; with its remove button once a tip is chosen. */
+function tipHtml(cfg) {
+  const selector = '<app-tip-selector><div class="tip-selector"><button type="button" class="tip__option">10%</button>' +
+    '<button type="button" class="tip__option">15%</button><input name="tip" aria-label="Custom tip">' +
+    `${cfg.tipChosen ? '<button type="button" class="tip-selector__remove-btn">Remove tip</button>' : ""}</div></app-tip-selector>`;
+  if (cfg.tip === "none") return "";
+  if (cfg.tip === "bare") return selector;
+  return `<section class="checkout__section tip"><h2>Tip Our Team</h2>${selector}</section>`;
+}
+
 /** The checkout component's skeleton; the page's script fills .summary__items and the totals. */
 function checkoutHtml(cfg) {
   const sub = subscriptionParts(cfg.subscription);
@@ -80,9 +103,10 @@ function checkoutHtml(cfg) {
 <section class="delivery"><h2>Delivery</h2><div role="radiogroup" aria-label="Order type"><div role="radio" aria-checked="true" tabindex="0">Delivery</div><div role="radio" aria-checked="false" tabindex="-1">Pickup</div></div>
 <input name="address" aria-label="Address"><select name="state" aria-label="State"><option>MA</option></select></section>
 <section class="schedule"><h2>Schedule</h2><select name="date" aria-label="Delivery date"><option>Sunday</option><option>Wednesday</option></select></section>
-<section class="tip"><h2>Tip</h2><button type="button" class="tip__option">10%</button><button type="button" class="tip__option">15%</button><input name="tip" aria-label="Custom tip"></section>
-<section class="checkout-discounts"><input name="coupon" aria-label="Discount code"><button type="button" class="discount__apply">Apply</button></section>
-<section class="payment"><h2>Payment</h2><iframe title="Card number (synthetic)" srcdoc="card field (synthetic)"></iframe></section>
+${tipHtml(cfg)}
+<section class="checkout__section checkout-discounts checkout-discounts--mobile">${discounts("section")}</section>
+<section class="payment"><h2>Payment</h2><iframe title="Card number (synthetic)" srcdoc="card field (synthetic)"></iframe>
+<div class="payment__discounts checkout-discounts checkout-discounts--mobile">${discounts("payment")}</div></section>
 <textarea name="specialRequests" aria-label="Special requests"></textarea>
 <label class="checkout__consent"><input type="checkbox" name="agreeToTerms"> I agree to the <a href="/refund-and-return-policy">refund and return policy</a></label>
 <div class="checkout__submit"><span class="checkout__submit-target"><button type="button" class="checkout__pay"> Place order </button></span></div>
@@ -90,7 +114,13 @@ function checkoutHtml(cfg) {
 <aside class="checkout__summary"><div class="summary">
 <div class="summary__plan-group"><div class="summary__plan-group-label">Lean 7</div>${sub.head}${sub.controls}
 <a class="summary__plan-return" href="/order?mpid=21">Edit plan</a><div class="summary__items"></div></div>
-${sub.tail}<div class="summary__totals"></div>
+${sub.tail}<div class="summary__discounts"><div class="checkout-discounts">${discounts("summary")}</div></div>
+<div class="summary__row"><span>Subtotal</span><span>$87.50</span></div>
+<div class="summary__row"><span>Shipping</span><span>$0.00</span></div>
+<div class="summary__row"><span>Tax</span><span>$0.00</span></div>
+${cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Discount (OFFER)</span><span>-$5.00</span></div>' : ""}
+<div class="summary__total"><span class="summary__total-label">Total</span><span class="summary__total-value">$87.50</span></div>
+<div class="summary__totals"></div>
 <div class="summary__mobile-bar"><div class="summary__bar-row"><span class="summary__stat">Order total</span>
 <app-button class="summary__pay-button"><button type="button" class="checkout__pay-mobile"> PAY NOW </button></app-button></div></div>
 </div></aside>
@@ -118,7 +148,9 @@ function shellParts(cfg) {
  * "loaded" | "none" | "pending" }: the card's img loaded, with no src yet, or still loading), routeDelayMs (the store
  * takes this long to route after CHECKOUT), hangAfter (after this many meals are added, the page's setTimeout runs
  * nothing any more: a hang planted under fill B), topLayerPopup (at load, a pop-up shown in the browser's top layer,
- * as the store's own overlays are: a manual popover).
+ * as the store's own overlays are: a manual popover). § 10: tip ("section", the default; "bare"; "none"), tipChosen,
+ * discountRow, banner (the app banner and its reserved margin), extrasOpenMs (the store fetching its extras before it
+ * opens the dialog), continueDelayMs (its CONTINUE disabled that long), continueNever (disabled for good).
  */
 function appHtml(cfg) {
   const shell = shellParts(cfg);
@@ -134,6 +166,11 @@ function appHtml(cfg) {
   dialog-box { display: block; }
   .product__header-image img { width: 160px; height: 100px; }
   app-button { display: inline-block; }
+  .cdk-overlay-popover { inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; background: none; overflow: visible; pointer-events: none; }
+  .cdk-overlay-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .32); pointer-events: auto; }
+  .cdk-overlay-pane { position: absolute; left: 24px; top: 120px; width: 300px; background: #fff; pointer-events: auto; }
+  app-extra-products-dialog { display: block; padding: 16px; }
+  .smartbanner { display: block; position: absolute; top: 0; left: 0; right: 0; height: 80px; background: #eee; }
   .summary__mobile-bar { display: none; }
   @media (max-width: 1024px) {
     .checkout__submit { display: none; }
@@ -173,11 +210,23 @@ function appHtml(cfg) {
   function onCheckout() {
     if (cfg.signIn) return signIn();
     if (!cfg.extrasDialog) return route();
-    var d = el("dialog-box", "extras");
-    d.setAttribute("role", "dialog");
-    var b = el("button", null, " CONTINUE TO CHECKOUT ");
-    b.onclick = function () { d.remove(); route(); };
-    d.appendChild(b); document.body.appendChild(d);
+    // As the store's overlays (§ 10): a manual popover in the top layer, its backdrop, its pane, the dialog.
+    setTimeout(function () {
+      var host = el("div", "cdk-overlay-popover");
+      host.setAttribute("popover", "manual");
+      var pane = el("div", "cdk-overlay-pane");
+      var d = el("app-extra-products-dialog", "extras");
+      d.setAttribute("role", "dialog");
+      d.appendChild(el("p", null, "Add a drink? (synthetic)"));
+      var b = el("button", null, " CONTINUE TO CHECKOUT ");
+      b.disabled = Boolean(cfg.continueDelayMs || cfg.continueNever);
+      if (cfg.continueDelayMs && !cfg.continueNever) setTimeout(function () { b.disabled = false; }, cfg.continueDelayMs);
+      b.onclick = function () { host.remove(); route(); };
+      d.appendChild(b); pane.appendChild(d);
+      host.appendChild(el("div", "cdk-overlay-backdrop")); host.appendChild(pane);
+      document.body.appendChild(host);
+      host.showPopover();
+    }, cfg.extrasOpenMs || 0);
   }
   function photo(name, i) {
     var how = (cfg.photos || {})[name];
@@ -253,6 +302,17 @@ function appHtml(cfg) {
     return summary;
   }
   (cfg.consoleNoise || []).forEach(function (line) { console.log(line); });
+  if (cfg.banner) {
+    // As the app-install banner's library does: prepended to <body>, and <html>'s top margin set to its height, the
+    // original kept in an attribute.
+    var banner = el("div", "smartbanner smartbanner--android js_smartbanner");
+    var exit = el("a", "smartbanner__exit js_smartbanner__exit"); exit.href = "#"; exit.title = "Close";
+    var view = el("a", "smartbanner__button", "View"); view.href = "/app";
+    banner.appendChild(exit); banner.appendChild(el("span", "smartbanner__info__title", "Synthetic app")); banner.appendChild(view);
+    document.body.prepend(banner);
+    document.documentElement.setAttribute("data-smartbanner-original-margin-top", "0");
+    document.documentElement.style.marginTop = "80px";
+  }
   if (cfg.topLayerPopup) {
     var pop = el("div", "top-layer-popup", "A synthetic pop-up, in the top layer");
     pop.setAttribute("popover", "manual");
@@ -284,6 +344,13 @@ const DEFAULTS = {
   routeDelayMs: 0,
   hangAfter: 0,
   topLayerPopup: false,
+  tip: "section",
+  tipChosen: false,
+  discountRow: false,
+  banner: false,
+  extrasOpenMs: 0,
+  continueDelayMs: 0,
+  continueNever: false,
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */

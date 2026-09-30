@@ -62,7 +62,13 @@ test("R2-42: done — html.fitaf-deep, one style#fitaf-deep in <head>, the scree
   assert.equal(events.filter((x) => x[0] === "added" && x[1] === SCREEN_ID).length, 1, "one screen, once");
 });
 
-test("R2-42b: the style — every rule scoped `html.fitaf-deep:has(app-checkout) …`, and it only hides", async () => {
+/**
+ * § 10 item 3: the one rule that does not hide. The app banner's library reserves a top margin on <html> itself (inline,
+ * its original kept in data-smartbanner-original-margin-top); it is undone with the banner, on the checkout only.
+ */
+const BANNER_MARGIN = ["html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]", "margin-top:0!important"];
+
+test("R2-42b: the style — every rule scoped `html.fitaf-deep:has(app-checkout) …`, and it only hides (but the banner's margin)", async () => {
   const page = await orderPage();
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
   run(await script(), h.window);
@@ -70,7 +76,10 @@ test("R2-42b: the style — every rule scoped `html.fitaf-deep:has(app-checkout)
   const { css } = deepState(page.document);
   const all = rules(css);
   assert.ok(all.length > 0, `a rule: ${css}`);
-  for (const [list, body] of all) {
+  const margin = all.filter(([list]) => list === BANNER_MARGIN[0]);
+  assert.equal(margin.length, 1, "§ 10 item 3: exactly one rule for the banner's reserved margin");
+  assert.equal(margin[0][1].replace(/\s+/g, "").replace(/;$/, ""), BANNER_MARGIN[1], "and it only sets the margin back");
+  for (const [list, body] of all.filter(([l]) => l !== BANNER_MARGIN[0])) {
     for (const sel of selectors(list)) assert.ok(sel.startsWith("html.fitaf-deep:has(app-checkout) "), `scoped: ${sel}`);
     assert.match(body.replace(/\s+/g, ""), /^display:none!important;?$/, `hiding only: ${body}`);
   }
