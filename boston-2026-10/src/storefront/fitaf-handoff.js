@@ -63,6 +63,10 @@ function guard(fn) {
 // title (an h2), the bar (.b, whose one child's width is the progress: presses made of the plan's count + 1, the last
 // being the store's CHECKOUT), the carousel (.c, one slide per meal, the one shown marked `on`) and the step line (the
 // one role=status). Nothing on it can be acted on or focused, and it touches nothing of the store's (§ 2 items 3, 5).
+// ⚠ The store's own dialogs and pop-ups are Angular CDK overlays, which a browser with the Popover API shows in its TOP
+// LAYER, above any z-index (found at the build, release main-2HXLHIG7.js). So the screen is a manual popover too, shown
+// at once: above everything on the page and every overlay already open (a pop-up shown at load). An overlay the store
+// opens LATER (its extras dialog after CHECKOUT) is above it. Where there is no Popover API, the z-index alone.
 // ⚠ Its clocks are CSS animations, not timers: fitaf-e, 90 s on the screen itself, whose end removes it (§ 2 item 4:
 // "in any case 90 s after it appeared", even if fill B's own polls never come again), and fitaf-t, 2.5 s, repeating on
 // the carousel once every meal is added, each turn showing the next slide. Fill B's timers stay its 200 ms polls
@@ -71,7 +75,7 @@ function guard(fn) {
 // reduced-motion reset of every animation (`* { animation-duration: 0.01ms !important }`, common, not in this release)
 // cannot end it at once.
 var S, NOW, SLIDES = {};
-var CSS = "#fitaf-screen{/*TOKENS*/;position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
+var CSS = "#fitaf-screen{/*TOKENS*/;position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
 "#fitaf-screen>div{width:100%;max-width:420px}#fitaf-screen h2{margin:0 0 16px;font-size:24px;font-weight:700;color:inherit}" +
 "#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
 "#fitaf-screen .c{margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
@@ -86,11 +90,13 @@ function $(q) { return S.querySelector(q); }
 function screen() {
   S = w.document.createElement("div");
   S.id = "fitaf-screen";
+  S.setAttribute("popover", "manual");
   S.innerHTML = "<style>" + CSS + "</style><div><h2></h2><div class=b><i></i></div><div class=c></div><p role=status aria-live=polite></p></div>";
   $("h2").textContent = UI.title;
   S.onanimationend = function (e) { if (e.target === S) S.remove(); };
   $(".c").onanimationiteration = function () { show(NOW.nextElementSibling || this.firstElementChild); };
   w.document.body.appendChild(S);
+  if (S.showPopover) S.showPopover();
 }
 function show(el) { if (NOW) NOW.className = ""; (NOW = el).className = "on"; }
 // After press k of t: the meal's slide, made at its first press from its own card (§ 2 item 2: its name as the card

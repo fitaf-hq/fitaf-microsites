@@ -109,7 +109,8 @@ function shellParts(cfg) {
  * subscriptionParts), missing (shell parts to leave out: "header", "footer", "credit", "popup"), photos ({ name:
  * "loaded" | "none" | "pending" }: the card's img loaded, with no src yet, or still loading), routeDelayMs (the store
  * takes this long to route after CHECKOUT), hangAfter (after this many meals are added, the page's setTimeout runs
- * nothing any more: a hang planted under fill B).
+ * nothing any more: a hang planted under fill B), topLayerPopup (at load, a pop-up shown in the browser's top layer,
+ * as the store's own overlays are: a manual popover).
  */
 function appHtml(cfg) {
   const shell = shellParts(cfg);
@@ -237,6 +238,13 @@ function appHtml(cfg) {
     return summary;
   }
   (cfg.consoleNoise || []).forEach(function (line) { console.log(line); });
+  if (cfg.topLayerPopup) {
+    var pop = el("div", "top-layer-popup", "A synthetic pop-up, in the top layer");
+    pop.setAttribute("popover", "manual");
+    pop.style.cssText = "inset:auto;left:20px;top:20px;width:300px;height:200px;margin:0";
+    document.body.appendChild(pop);
+    pop.showPopover();
+  }
   if (location.pathname === "/checkout") { renderCheckout(); return; }
   setTimeout(function () {
     if (cfg.footer !== null) { var s = document.createElement("script"); s.text = cfg.footer; document.body.appendChild(s); }
@@ -260,6 +268,7 @@ const DEFAULTS = {
   photos: {},
   routeDelayMs: 0,
   hangAfter: 0,
+  topLayerPopup: false,
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */

@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
 
 /** Fill B's text SHA-256 with rung 2's two faces (SPEC-rung2-progress-and-checkout). Was 054e6be8… (8945de1). */
-const SHIPPED_SHA256 = "28ce3983424ec20e91b1a1ca198e7d518bdd458614842252e77d47766a54bea9";
+const SHIPPED_SHA256 = "aa773aec65270cc4210e2ec64fe52a94865eb5676c764f826598d7eaf42caf08";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -65,7 +65,7 @@ async function withCopy(edit, fn) {
   }
 }
 
-test("R2-32: both built files' text SHA-256 (the version line's own) is 28ce3983…, fill B's with rung 2's two faces", async () => {
+test("R2-32: both built files' text SHA-256 (the version line's own) is aa773aec…, fill B's with rung 2's two faces", async () => {
   await shippedTextCase(STOREFRONT_SOURCE);
 });
 
