@@ -67,6 +67,62 @@ at 1280 and 390 px, record:
 Each selector and text becomes an entry in `storefront/dependencies.json` (F2), so the watch catches a rename. **If
 the store has no reliable per-meal count**, this contract returns to the Advisor before any code.
 
+## 2a. Measured, 2026-10-01 — found, not ruled
+
+**The probe**: `tools/storefront-watch/bin/probe-counts.mjs` (red `0fac0b4`, green `691f35f`, `c6d0af9`), headless,
+not the one-browser console paste § 2 names: a fresh profile per run, `/order?mpid=23` (Lean 14) **with no `#fitaf=`
+fragment**, the first 14 meals with an enabled Add to Cart, each pressed by a `.click()` in the page as fill B presses
+it, nothing else pressed or typed. A recorder in the page read every 50 ms. **The batch**: `4686955`,
+[`storefront/probe-counts/2026-10-01/`](storefront/probe-counts/2026-10-01/README.md), 14 runs, 21:33–21:35Z, release
+`main-EIFLKDHS.js`; at 1280 × 900 and 390 × 844, 5 runs pressing each next meal once the last showed its count, 1 with
+200 ms between presses, 1 with none: **196 presses**. A first batch of the same 14 runs on the release before
+(`main-6RE6FSMC.js`, 21:27–21:30Z) agreed (196 of 196 counted, none taken back, the plan full in 14 of 14, the longest
+95 ms) and is not committed: its summary carried a home path.
+HMP released at least twice in the afternoon after `main-XIJ2UX3I.js`, the watch's baseline, which is now behind.
+
+1. **The stepper.** A counted meal's Add to Cart is replaced by `app-counter > div.counter[role=spinbutton]`: the "−"
+   `button.counter__button[aria-label="Decrease value"]`, the number `span.counter__value`, the "+"
+   `button.counter__button[aria-label="Increase value"]`; **neither button has text** (an SVG each). It is in **both
+   card layouts at every width**, the hidden one included: `app-product-card .product__actions` (fill B's card, hidden
+   at 390) and `app-product-card-mobile .product-card-mobile__actions` (whose button read "Add"; hidden at 1280). The
+   sidebar's row for the meal, `app-cart app-cart-product-card` (matched by its `h4.product__content-title`), has a
+   stepper of its own with the same names. **The store keeps all three current, in the same 50 ms read: 196 of 196.**
+   So fill C can read the very card it presses, at both widths.
+2. **The plan's count.** `span.cart__items-count`, *"1 item"*, *"N items"* (absent while the plan is empty), in
+   `app-cart`; and the phone's `.mobile-cart-summary__stat` labelled *"Items"*, its `.mobile-cart-summary__stat-value`
+   *"N"* (*"0"* while empty). **Both are in the page at both widths** (one of them hidden) and moved together, with the
+   cards, in every read; the store's `hmp_pending_plan_items` count moved with them in 14 of 14 runs.
+   `p.cart__progress-label` reads *"Please add at least 14 meals to continue"* **whatever the count**: it is the plan's
+   minimum, not a running count; at 14 it reads *"Minimum Met"*. CHECKOUT: `.cart__checkout button` (the sidebar,
+   shown at 1280) *"ADD N MORE MEALS TO CHECKOUT"*, *"ADD 1 MORE MEAL TO CHECKOUT"*, disabled, then *"CHECKOUT NOW"*
+   enabled; `.mobile-cart-summary__checkout-button button` (shown at 390) *"Add N more meals"*, *"Add 1 more meal"*,
+   disabled, then *"CHECKOUT"* enabled. Both exist at both widths.
+3. **How long, and whether a count went.** Every press's card showed its count **within 5 s: 196 of 196, none
+   never**. ms from the press to the first read that showed it, median / p95 / max: **1280, 47 / 64 / 124 (98
+   presses); 390, 48 / 62 / 151 (98)**. ⚠ That is the 50 ms read, not the store: the count was **never on the card
+   when `.click()` returned (196 of 196)** and was there by the next read, or the one after when a read came late (the
+   151 is in a run whose reads came at most 152 ms apart; the 124 in one at most 130 ms); presses that fell between
+   reads (the 200 ms runs) give a median of 23. **No count went down in any run**: no card, phone card or row back to
+   Add to Cart, no total decreasing, in the 3 s after the last press too; no card above 1; the plan full in 14 of 14
+   (*"14 items"*, CHECKOUT enabled).
+4. **Spacing changed nothing**: presses 11–66 ms apart (no wait), 221–262 ms (200 ms gaps) and count-gated were
+   all counted, every one.
+
+**The store has a reliable per-meal count** by every measure taken, so § 2's last sentence does not stop this contract.
+⚠ **The race was not seen**: 28 runs and 392 presses (both batches) in fresh headless profiles counted everything, as
+the Boston record § 46's runs did. So **what the store shows when it drops a press is not measured**: whether the card
+never shows its count (§ 1.2's re-press) or shows it and takes it back (§ 1.3's settled check). The probe would tell
+them apart; it did not happen. Nothing here argues against § 7 e's defaults (`ACK_MS` 5000 is 33 times the longest
+count seen; the store counted presses 11 ms apart); nothing here tests them against the race either.
+
+**Not measured**: the **"+"** (a second unit's count, n + 1: the probe pressed only Add to Cart); a width other than
+1280 and 390 (§ 4.3's 2560); a slowed CPU or network; a headed browser, a profile with a past visit, a signed-in
+visitor, the Advisor's devices; the page with fill B's screen over it (no fragment: our block did nothing, 0 lines);
+what a press asks of the network; the sidebar's own "−" and "+". ⬜ **`dependencies.json` is unchanged**: F2 needs
+each literal found in the release's files, and this probe fetched none. Its candidates, for the build: `app-counter`,
+`counter__value`, `Increase value`, `Decrease value`, `cart__items-count`, `mobile-cart-summary__stat-value`,
+`cart__checkout`, `mobile-cart-summary__checkout-button`, `Minimum Met`.
+
 ## 3. Served from eatfitaf.com, with the paste kept as the way back
 
 1. **The Footer block becomes a loader**: it reads `location.hash` and, only for a deep-cart fragment, creates one
