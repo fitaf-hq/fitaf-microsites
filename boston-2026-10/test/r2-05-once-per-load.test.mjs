@@ -10,13 +10,14 @@ test("R2-05a fill B: a second run while the first waits for the cards presses no
   const page = await orderPage();
   page.hide();
   const h = fakeWindow({ fragment: fragmentFor(PAYLOAD), page });
-  const text = await script("B");
+  const text = await script();
   run(text, h.window);
   assert.equal(h.url.hash.startsWith("#fitaf="), true, "still waiting: the fragment is still there");
   run(text, h.window);
   page.show();
   h.timers.drain();
-  assert.deepEqual(page.presses.get("Chicken Pesto Pasta"), Array(7).fill("Add to Cart"));
+  // Its Add to Cart, then the store's "+" for the six more (SPEC-rung2-fill-c § 1.1): seven presses, one run's.
+  assert.deepEqual(page.presses.get("Chicken Pesto Pasta"), ["Add to Cart", ...Array(6).fill("Increase value")]);
   assert.deepEqual(page.controls, ["checkout:shown"], "the store's CHECKOUT pressed once, not twice (§ 8)");
   assertCheckedOut(h, page, "/order?mpid=21");
 });

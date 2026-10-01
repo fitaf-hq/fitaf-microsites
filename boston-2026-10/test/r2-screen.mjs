@@ -74,7 +74,8 @@ export function watchPresses(document) {
   const presses = [];
   document.addEventListener("click", (event) => {
     const button = event.target.closest("button");
-    presses.push({ label: clean(button), state: screenState(document) });
+    // The store's "+" has no text, only its aria-label (SPEC-rung2-fill-c § 2a).
+    presses.push({ label: button.getAttribute("aria-label") || clean(button), state: screenState(document) });
   });
   return presses;
 }
@@ -129,5 +130,5 @@ export const displayedButtonsOutsideCards = (document) =>
   );
 
 export function assertWords() {
-  for (const key of ["title", "step", "checkout"]) assert.equal(typeof WORDS[key], "string", `data/messages.json handoff.${key}`);
+  for (const key of ["title", "step", "checkout", "stopped"]) assert.equal(typeof WORDS[key], "string", `data/messages.json handoff.${key}`);
 }

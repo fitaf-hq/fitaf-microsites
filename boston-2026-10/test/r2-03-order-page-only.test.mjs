@@ -39,7 +39,7 @@ for (const [path, reason] of REFUSED) {
       storage: untouchableStorage(),
       document: untouchableDocument(),
     });
-    run(await script("B"), h.window);
+    run(await script(), h.window);
     h.timers.drain();
     assertRefused(h, path, reason);
   });
@@ -48,17 +48,17 @@ for (const [path, reason] of REFUSED) {
 test("R2-03 control: mpid among other query parameters is found, and the query is kept", async () => {
   const page = await orderPage();
   const h = fakeWindow({ path: "/order?utm_source=qr&mpid=21", fragment: fragmentFor(PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
-  assert.ok(h.info.includes("[fitaf-handoff] fill B, mpid 21"), JSON.stringify(h.info));
+  assert.ok(h.info.includes("[fitaf-handoff] fill C, mpid 21"), JSON.stringify(h.info));
   assertCheckedOut(h, page, "/order?utm_source=qr&mpid=21");
 });
 
 test("R2-03 control: the same link on another plan of the same count (Signature 7, mpid 26) is that plan's", async () => {
   const page = await orderPage();
   const h = fakeWindow({ path: "/order?mpid=26", fragment: fragmentFor(PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
-  assert.ok(h.info.includes("[fitaf-handoff] fill B, mpid 26"), JSON.stringify(h.info));
+  assert.ok(h.info.includes("[fitaf-handoff] fill C, mpid 26"), JSON.stringify(h.info));
   assertCheckedOut(h, page, "/order?mpid=26");
 });

@@ -25,7 +25,7 @@ test("R2-26 fixture control: the two planted names differ and share a key", () =
 });
 
 test("R2-26a: both cards on the page, the link naming one — stopped: two meals share a key; nothing pressed", async () => {
-  await collisionCase(await script("B"));
+  await collisionCase(await script());
 });
 
 test("R2-26b: the link naming the OTHER of the two — the same", async () => {
@@ -33,7 +33,7 @@ test("R2-26b: the link naming the OTHER of the two — the same", async () => {
   for (const name of COLLIDING) addCard(page.document, name);
   const payload = { ...COLLISION_PAYLOAD, items: COLLISION_PAYLOAD.items.map((it) => (it.name === COLLIDING[0] ? { ...it, name: COLLIDING[1] } : it)) };
   const h = fakeWindow({ fragment: fragmentFor(payload), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   assert.deepEqual(page.all, []);
   assert.ok(h.info.includes(`[fitaf-handoff] stopped: two meals share a key: ${refKey(COLLIDING[1])}`), JSON.stringify(h.info));
@@ -43,7 +43,7 @@ test("R2-26 control: only one of the two on the page — the link fills, pressin
   const page = await orderPage();
   addCard(page.document, COLLIDING[0]);
   const h = fakeWindow({ fragment: fragmentFor(COLLISION_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   assert.equal(page.presses.get(COLLIDING[0]).length, 4);
   assertCheckedOut(h, page, "/order?mpid=21");
@@ -53,7 +53,7 @@ test("R2-26 control: both on the page, the link naming neither — the link fill
   const page = await orderPage();
   for (const name of COLLIDING) addCard(page.document, name);
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   assert.equal(page.total(), 7);
   assert.ok(!COLLIDING.some((name) => page.presses.has(name)));
@@ -64,7 +64,7 @@ test("R2-26c: the same meal rendered in two cards shares its own key — refused
   const page = await orderPage();
   addCard(page.document, "Chicken   Pesto Pasta");
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   assert.deepEqual(page.all, []);
   assert.ok(h.info.includes(`[fitaf-handoff] stopped: two meals share a key: ${refKey("Chicken Pesto Pasta")}`), JSON.stringify(h.info));

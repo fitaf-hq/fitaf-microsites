@@ -16,16 +16,33 @@ export const ORIGIN = "https://fitafnutrition.com";
 /** The store's cart key: a visitor's own cart there must be left exactly as it was (R2-14). */
 export const CART_KEY = "hmp_local_cart";
 export const POLL_MS = 200;
-/** SPEC-rung2-progress-and-checkout § 23: fill B waits this long after each press (every Add to Cart and every +). */
-export const PRESS_MS = 1000;
 /**
- * § 23 item 3: what "every delay is POLL_MS" now says. Of the delays fill B scheduled, exactly one per meal press is
- * PRESS_MS, and every other is a POLL_MS poll. `presses` is the number of meal presses made (the page's `log`). R2-82
- * pins WHERE each PRESS_MS falls (right after its press).
+ * SPEC-rung2-fill-c § 1 and its § 7 e defaults: fill C presses one unit, then waits for the store's count on that card;
+ * the next press at least MIN_GAP_MS after the last; no count within ACK_MS, a re-read and, only if the meal is still
+ * short, a re-press, at most RETRIES per unit; SETTLE_MS after the last unit, every meal read once more. (Fill B's
+ * PRESS_MS, one second after every press, is gone with fill B's press loop.)
+ */
+export const MIN_GAP_MS = 300;
+export const ACK_MS = 5000;
+export const RETRIES = 2;
+export const SETTLE_MS = 1000;
+/**
+ * How long fill C waits for one press's count, as its own timers count it: MIN_GAP_MS to its first read, then POLL_MS
+ * polls until ACK_MS has passed. Its re-read is the first poll at or past ACK_MS: 300 + 24 x 200 = 5,100 ms.
+ */
+export const ACK_WINDOW_MS = MIN_GAP_MS + Math.ceil((ACK_MS - MIN_GAP_MS) / POLL_MS) * POLL_MS;
+/**
+ * What "every delay is POLL_MS" says of fill C. Of the delays it scheduled, exactly one per meal press is MIN_GAP_MS
+ * (its wait to the first read of that press's count), at most one is SETTLE_MS (the wait before the settled re-read),
+ * and every other is a POLL_MS poll. `presses` is the number of meal presses made (the page's `log`).
  */
 export function assertPollsAndPresses(delays, presses, what = "") {
-  assert.equal(delays.filter((ms) => ms === PRESS_MS).length, presses, `${what} one ${PRESS_MS} ms wait per press (${presses}): ${delays}`);
-  assert.ok(delays.filter((ms) => ms !== PRESS_MS).every((ms) => ms === POLL_MS), `${what} every other delay a ${POLL_MS} ms poll: ${delays}`);
+  assert.equal(delays.filter((ms) => ms === MIN_GAP_MS).length, presses, `${what} one ${MIN_GAP_MS} ms wait per press (${presses}): ${delays}`);
+  assert.ok(delays.filter((ms) => ms === SETTLE_MS).length <= 1, `${what} at most one ${SETTLE_MS} ms settle: ${delays}`);
+  assert.ok(
+    delays.filter((ms) => ms !== MIN_GAP_MS && ms !== SETTLE_MS).every((ms) => ms === POLL_MS),
+    `${what} every other delay a ${POLL_MS} ms poll: ${delays}`,
+  );
 }
 /** § 8 and § 10: every wait BEFORE a press (the meal cards, an enabled CHECKOUT) is at most 10 s. */
 export const MAX_WAIT_MS = 10_000;
@@ -35,15 +52,17 @@ export const LOG_PREFIX = "[fitaf-handoff]";
 export const FIXTURE = new URL("./r2-order-page.html", import.meta.url);
 export const MEALS = ["Birria de Res Bowl", "Chicken Pesto Pasta", "Jalapeño Lime Chicken"];
 export const ADD = "Add to Cart";
+/** The store's "+" on a counted meal's card (SPEC-rung2-fill-c § 2a: its aria-label; it has no text). */
+export const INC = "Increase value";
 /** Where `page.all` records a press outside every meal card: the page's own controls (§ 8), and the dialog's. */
 export const PAGE = "(page)";
 
 /**
- * The shipped text: fill B's, the one fill (SPEC-rung2 § 12). `fill` is kept so the fill-B cases read as they did;
- * anything but "B" is refused, because fill A is retired and no text of it is built.
+ * The shipped text: fill C's, the one fill (SPEC-rung2-fill-c § 1: fill B's press loop replaced, every other rule of
+ * fill B kept; fill A retired by SPEC-rung2 § 12). Anything but "C" is refused: no other fill's text is built.
  */
-export const script = async (fill = "B") => {
-  assert.equal(fill, "B", "fill A is retired (SPEC-rung2 § 12): the build has one text, fill B's");
+export const script = async (fill = "C") => {
+  assert.equal(fill, "C", "the build has one text, fill C's (SPEC-rung2-fill-c § 2b)");
   return storefrontText();
 };
 
@@ -160,6 +179,83 @@ export function fakeTimers() {
       while (step()) if (++n > limit) throw new Error("timers never settle");
       return n;
     },
+  };
+}
+
+/**
+ * A clock for SPEC-rung2-fill-c's cases: the same shape as fakeTimers, but each callback runs at its due time (the
+ * clock's `now` + its delay), in time order, ties in the order they were set; `step()` moves `now` to the next one. The
+ * synthetic store's own delays go through `later(fn, ms)`, unrecorded as the script's. So "the store counts this press
+ * 2 s later" and "fill C re-reads after ACK_MS" happen in the order a browser would run them.
+ */
+export function clockTimers() {
+  const queue = [];
+  const delays = [];
+  let now = 0;
+  let seq = 0;
+  const push = (fn, ms) => {
+    queue.push({ at: now + ms, seq: seq++, fn });
+    queue.sort((a, b) => a.at - b.at || a.seq - b.seq);
+  };
+  const step = () => {
+    const next = queue.shift();
+    if (!next) return false;
+    now = next.at;
+    next.fn();
+    return true;
+  };
+  return {
+    delays,
+    step,
+    get now() {
+      return now;
+    },
+    pending: () => queue.length,
+    setTimeout(fn, ms) {
+      delays.push(ms);
+      push(fn, ms);
+      return delays.length;
+    },
+    later(fn, ms = 0) {
+      push(fn, ms);
+    },
+    drain(limit = 100_000) {
+      let n = 0;
+      while (step()) if (++n > limit) throw new Error("timers never settle");
+      return n;
+    },
+  };
+}
+
+/** A small seeded generator (mulberry32): the same seed, the same sequence. */
+export function seeded(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * SPEC-rung2-fill-c § 4.1: a store that, by a seeded schedule, drops a press (never counts it), counts a press late
+ * (up to `maxAckMs`, 2 s), and takes ONE count back after showing it (up to `maxTakeBackMs` after). For orderPage's
+ * `fates`: the i-th press the store takes -> { drop, ackMs, takeBackMs }. The take-back is the first press counted at
+ * or after a seeded index among the first `takeBackWithin`.
+ */
+export function seededFates(seed, { dropRate = 0.15, maxAckMs = 2000, maxTakeBackMs = 800, takeBackWithin = 12 } = {}) {
+  const rand = seeded(seed);
+  const takeBackFrom = Math.floor(rand() * takeBackWithin);
+  let takenBack = false;
+  return (i) => {
+    const drop = rand() < dropRate;
+    const ackMs = Math.floor(rand() * (maxAckMs + 1));
+    const back = Math.floor(rand() * (maxTakeBackMs + 1));
+    const takeBackMs = !drop && !takenBack && i >= takeBackFrom ? back : null;
+    if (takeBackMs !== null) takenBack = true;
+    return { drop, ackMs, takeBackMs };
   };
 }
 
@@ -287,12 +383,23 @@ const CARDS = "app-product-card, app-product-card-mobile";
 const titleOf = (card) => card.querySelector(".product__content-title").textContent.replace(/\s+/g, " ").trim();
 const labelOf = (button) => button.getAttribute("aria-label") || button.textContent.trim();
 
-/** What a card's .product__actions become after its Add to Cart is pressed — unknown on the real store. */
+/**
+ * SPEC-rung2-fill-c § 2a: the store's own counter on a counted meal's card, by the live store's names (2026-10-01):
+ * app-counter > div.counter[role=spinbutton], its "−" and "+" buttons (aria-labels "Decrease value" and "Increase
+ * value", no text: an icon each), and the count in span.counter__value. Written by hand from those names.
+ */
+const COUNTER = (n) =>
+  '<app-counter><div class="counter" role="spinbutton">' +
+  '<button type="button" class="counter__button" aria-label="Decrease value"></button>' +
+  `<span class="counter__value">${n}</span>` +
+  '<button type="button" class="counter__button" aria-label="Increase value"></button></div></app-counter>';
+
+/**
+ * What a card's .product__actions become after its Add to Cart is pressed, for the shapes other than the store's own
+ * ("counter", drawn from the meal's count by orderPage): a store that shows no count ("stays", "gone", "decoys").
+ */
 const AFTER_FIRST_PRESS = {
   stays: null,
-  stepper:
-    '<button type="button" aria-label="Decrease quantity">−</button><span>1</span>' +
-    '<button type="button" aria-label="Increase quantity">+</button>',
   gone: "<span>In your cart</span>",
   // Look-alikes the fallback must never press: a favourites "+", a wishlist "Plus", a bare "add".
   decoys:
@@ -300,7 +407,7 @@ const AFTER_FIRST_PRESS = {
     '<button type="button" aria-label="Wishlist">Plus</button>' +
     '<button type="button">Add one more</button>',
 };
-export const DECOY_LABELS = ["Add to favourites", "Wishlist", "Add one more", "Increase quantity (outside actions)"];
+export const DECOY_LABELS = ["Add to favourites", "Wishlist", "Add one more", "Increase value (outside actions)"];
 
 const control = (id, html, disabled = false) =>
   `<button type="button" data-id="${id}"${disabled ? " disabled" : ""}>${html}</button>`;
@@ -330,12 +437,16 @@ const plural = (n, s) => (n === 1 ? "" : s);
  */
 function slot(width, layout, { held, short, busy, label }) {
   if (width === "bar") {
-    if (short > 0) return control(`more:${layout}`, ` Add ${short} more meal${plural(short, "s")} `, true);
-    if (short < 0) return control(`limit:${layout}`, " Limit Exceeded ", true);
-    return control(`checkout:${layout}`, `${label}<i class="icon"></i>`, busy);
+    // The bar's "Items" stat (SPEC-rung2-fill-c § 2a: .mobile-cart-summary__stat, its value the plan's count).
+    const stat = '<div class="mobile-cart-summary__stat"><span class="mobile-cart-summary__stat-label">Items</span> ' +
+      `<span class="mobile-cart-summary__stat-value">${held}</span></div> `;
+    if (short > 0) return stat + control(`more:${layout}`, ` Add ${short} more meal${plural(short, "s")} `, true);
+    if (short < 0) return stat + control(`limit:${layout}`, " Limit Exceeded ", true);
+    return stat + control(`checkout:${layout}`, `${label}<i class="icon"></i>`, busy);
   }
   if (!held) return "<p>Your cart is empty</p> <p>Add some delicious meals to get started!</p>";
-  const header = `<div class="cart__items-header"><span>${held} item${plural(held, "s")}</span> ${control("clear", "Clear cart")}</div> `;
+  // The item count is span.cart__items-count (SPEC-rung2-fill-c § 2a), "N item(s)".
+  const header = `<div class="cart__items-header"><span class="cart__items-count">${held} item${plural(held, "s")}</span> ${control("clear", "Clear cart")}</div> `;
   if (short > 0) return header + control(`more:${layout}`, ` ADD ${short} MORE MEAL${plural(short, "S")} TO CHECKOUT `, true);
   if (short < 0) return header + control(`limit:${layout}`, ` REMOVE ${-short} MEAL${plural(-short, "S")} TO CHECKOUT `, true);
   return header + control(`checkout:${layout}`, label, busy);
@@ -346,10 +457,17 @@ function slot(width, layout, { held, short, busy, label }) {
  * cards, `log` every meal press in order ([meal, label]), `controls` every press outside the cards in order (a
  * control's data-id, "<id> (disabled)" if it was disabled), and `all` both, interleaved ([meal, label] or [PAGE, id]).
  *
- * `afterFirstPress` is what a card's Add to Cart becomes once pressed: "stays" (unchanged), "stepper" (− 1 +),
- * "gone" (no button at all), or "decoys" (only look-alikes in the actions, and a real-looking increase button
- * OUTSIDE .product__actions, which the fallback must not reach). A meal already in the plan when the page loads shows
+ * `afterFirstPress` is what a card shows once its meal is counted. "counter" (the default) is the store's own
+ * (SPEC-rung2-fill-c § 2a): the meal's count in the card's counter in place of its Add to Cart, drawn from the count
+ * every time it changes (Add to Cart again at 0). The others are stores that show no count: "stays" (Add to Cart
+ * unchanged), "gone" (no button at all), or "decoys" (only look-alikes in the actions, and a real-looking increase
+ * button OUTSIDE .product__actions, which fill C must not reach). A meal already in the plan when the page loads shows
  * the same (the store renders its counter in place of Add to Cart for a meal already chosen: § 10's build note).
+ *
+ * `fates` (SPEC-rung2-fill-c § 4.1; with clockTimers): the i-th press the store takes, of an Add to Cart or a "+",
+ * -> { drop, ackMs, takeBackMs, twice }: never counted; counted `ackMs` later; that count taken back `takeBackMs` after
+ * it was shown; counted as two. Without it every press is counted at once. Once the store's CHECKOUT is pressed, a
+ * take-back still to come does nothing (the store has committed the plan).
  *
  * `store` is what outlives a page load, as the store's own storage does: `store.pending` is this plan's pending list,
  * one meal name per meal. Two pages given one store are one visitor's two loads (R2-22's reload). Default: empty.
@@ -369,7 +487,7 @@ function slot(width, layout, { held, short, busy, label }) {
  * enabled after its press, so a second press would be seen. Unbound, the summaries stay empty.
  */
 export async function orderPage({
-  afterFirstPress = "stays",
+  afterFirstPress = "counter",
   need = undefined,
   late = 0,
   loadingTicks = 0,
@@ -380,8 +498,10 @@ export async function orderPage({
   openTicks = 2,
   syncTicks = 3,
   routes = true,
+  fates = null,
 } = {}) {
   assert.ok(["bar", "sidebar"].includes(width), `width: ${width}`);
+  assert.ok(afterFirstPress === "counter" || afterFirstPress in AFTER_FIRST_PRESS, `afterFirstPress: ${afterFirstPress}`);
   const { document } = parseHTML(await readFile(FIXTURE, "utf8"));
   const counts = countTable(await loadJson(PLANS_PATH));
   const presses = new Map();
@@ -392,6 +512,17 @@ export async function orderPage({
   let bound = null;
   /** The store's own asynchrony: `fn` runs `n` store ticks from now, queued among the script's timers. */
   const tick = (n, fn) => (n > 0 ? bound.timers.later(() => tick(n - 1, fn)) : fn());
+  /** `fn` `ms` from now on the clock (clockTimers), or at once for 0. */
+  const after = (ms, fn) => (ms > 0 ? bound.timers.later(fn, ms) : fn());
+  /** The highest count each meal reached, the clock time of each meal press, the meals taken back, and the plan as it
+   * stood when the store's CHECKOUT was pressed (null until then). */
+  const max = new Map();
+  const at = [];
+  const takenBack = [];
+  let atCheckout = null;
+  let storePresses = 0;
+  const original = new WeakMap();
+  const countOf = (name) => store.pending.filter((n) => n === name).length;
 
   function render() {
     const held = store.pending.length;
@@ -427,6 +558,7 @@ export async function orderPage({
     controls.push(entry);
     all.push([PAGE, entry]);
     if (button.disabled) return;
+    if (id.startsWith("checkout:") && !atCheckout) atCheckout = [...store.pending];
     bound?.events.push(["press", id]);
     if (id.startsWith("checkout:")) return extras ? openDialog() : route();
     if (id === "continue") route();
@@ -435,14 +567,46 @@ export async function orderPage({
       tick(late, render);
     }
   }
+  /** "counter": the card's actions as the store draws them for its meal's count (Add to Cart at 0, the counter above). */
+  function draw(card) {
+    const actions = card.querySelector(".product__actions");
+    if (!original.has(card)) original.set(card, actions.innerHTML);
+    const n = countOf(titleOf(card));
+    actions.innerHTML = n ? COUNTER(n) : original.get(card);
+  }
+  /** The store counts a meal, or takes one count of it back, then redraws its card and (bound) its summaries. */
+  function change(name, card, by) {
+    if (by > 0) store.pending.push(name);
+    else store.pending.splice(store.pending.lastIndexOf(name), 1);
+    max.set(name, Math.max(max.get(name) ?? 0, countOf(name)));
+    draw(card);
+    if (bound) tick(late, render);
+  }
+  /** "counter": the store takes a press of Add to Cart or "+", as `fates` says. */
+  function counted(name, card) {
+    const fate = fates ? fates(storePresses, name) : {};
+    storePresses += 1;
+    if (fate.drop) return;
+    after(fate.ackMs ?? 0, () => {
+      change(name, card, 1);
+      if (fate.twice) change(name, card, 1);
+      if (fate.takeBackMs == null) return;
+      after(fate.takeBackMs, () => {
+        if (atCheckout || !countOf(name)) return;
+        takenBack.push(name);
+        change(name, card, -1);
+      });
+    });
+  }
   /** A meal already chosen: its card's Add to Cart becomes what `afterFirstPress` says. */
   function chosen(card) {
+    if (afterFirstPress === "counter") return draw(card);
     const replacement = AFTER_FIRST_PRESS[afterFirstPress];
     if (replacement === null) return;
     card.querySelector(".product__actions").innerHTML = replacement;
     if (afterFirstPress !== "decoys") return;
     const outside = document.createElement("button");
-    outside.setAttribute("aria-label", "Increase quantity (outside actions)");
+    outside.setAttribute("aria-label", "Increase value (outside actions)");
     outside.textContent = "+";
     card.appendChild(outside);
   }
@@ -451,7 +615,10 @@ export async function orderPage({
     presses.set(name, [...(presses.get(name) ?? []), labelOf(button)]);
     log.push([name, labelOf(button)]);
     all.push([name, labelOf(button)]);
-    if (!button.disabled && (/Add to Cart/.test(button.textContent) || labelOf(button) === "Increase quantity")) {
+    at.push(bound?.timers.now ?? null);
+    const adds = /Add to Cart/.test(button.textContent) || (labelOf(button) === INC && Boolean(button.closest(".product__actions")));
+    if (!button.disabled && adds && afterFirstPress === "counter") return counted(name, card);
+    if (!button.disabled && adds) {
       store.pending.push(name);
       if (bound) tick(late, render);
     }
@@ -475,8 +642,23 @@ export async function orderPage({
     presses,
     /** Every meal press, in the order it happened: [meal, label]. */
     log,
+    /** The clock time of each meal press (clockTimers), in the same order. */
+    at,
     controls,
     all,
+    /** The highest count each meal reached; each meal whose count the store took back; the plan at CHECKOUT. */
+    max,
+    takenBack,
+    get atCheckout() {
+      return atCheckout;
+    },
+    countOf,
+    /** A meal put in this plan by something other than this page's presses (another tab of the store: § 2b). */
+    elsewhere(name) {
+      store.pending.push(name);
+      if (afterFirstPress === "counter") for (const card of document.querySelectorAll("app-product-card")) if (titleOf(card) === name) draw(card);
+      if (bound) tick(late, render);
+    },
     total: () => [...presses.values()].reduce((n, list) => n + list.length, 0),
     /** The text of each summary's checkout-slot control, in document order, displayed or not, "(disabled)" when it is. */
     summary: () => slotButtons().map(text),
@@ -511,32 +693,34 @@ export const CHECKOUT_PAYLOAD = {
 };
 
 /**
+ * CHECKOUT_PAYLOAD's presses on the store's own page (the counter): every meal's Add to Cart, in the link's order, then
+ * each count above 1 by the card's "+" (SPEC-rung2-fill-c § 1.1, in fill B's order: every first press before any second).
+ */
+export const CHECKOUT_PRESSES = [
+  [MEALS[0], ADD],
+  [MEALS[1], ADD],
+  [MEALS[2], ADD],
+  [MEALS[1], INC],
+  [MEALS[2], INC],
+  [MEALS[2], INC],
+  [MEALS[2], INC],
+];
+
+/**
  * R2-15 (§ 8): run `text` on the synthetic page with CHECKOUT_PAYLOAD (or `fragment`: R2-24 passes the link tool's own)
  * and assert the whole finish: the seven meal presses, THEN the displayed CHECKOUT exactly once, the fragment removed
  * before that press, the store's in-app route to /checkout, "done" logged, no navigation by the script, storage never
- * touched, and only 200 ms polls. R2-18 runs a mutant text through this and expects it to throw.
+ * touched, and only fill C's delays (assertPollsAndPresses). R2-18 runs a mutant text through this and expects it to
+ * throw.
  */
 export async function checkoutCase(text, fragment = fragmentFor(CHECKOUT_PAYLOAD)) {
   const page = await orderPage();
   const h = fakeWindow({ fragment, page, storage: untouchableStorage() });
   run(text, h.window);
   h.timers.drain();
-  assert.deepEqual(
-    page.all,
-    [
-      [MEALS[0], ADD],
-      [MEALS[1], ADD],
-      [MEALS[2], ADD],
-      [MEALS[1], ADD],
-      [MEALS[2], ADD],
-      [MEALS[2], ADD],
-      [MEALS[2], ADD],
-      [PAGE, "checkout:shown"],
-    ],
-    "the seven meals, then CHECKOUT once, and nothing else",
-  );
+  assert.deepEqual(page.all, [...CHECKOUT_PRESSES, [PAGE, "checkout:shown"]], "the seven meals, then CHECKOUT once, and nothing else");
   assertCheckedOut(h, page, "/order?mpid=21");
-  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
+  assertPollsAndPresses(h.timers.delays, page.log.length, "fill C:");
   return { h, page };
 }
 
@@ -571,10 +755,10 @@ export async function heldCase(text, { width = "bar", pending = [MEALS[0]], ...o
  * new page over the same store (the pending list outlives the load, as the store's storage does) and a fresh window
  * on the same address, the fragment still in it — and `text` runs again. Asserts: the second run presses nothing,
  * stops with § 10's line at once (not after its 10 s wait), removes the fragment, and the pending meals stay exactly
- * the first run's. `afterFirstPress` "stepper" is the store's own case: a meal already chosen shows its counter in
+ * the first run's. `afterFirstPress` "counter" is the store's own case: a meal already chosen shows its counter in
  * place of Add to Cart. R2-23 runs a mutant text through this and expects it to throw.
  */
-export async function reloadCase(text, { width = "bar", afterFirstPress = "stepper", after = 7 } = {}) {
+export async function reloadCase(text, { width = "bar", afterFirstPress = "counter", after = 7 } = {}) {
   const store = { pending: [] };
   const fragment = fragmentFor(CHECKOUT_PAYLOAD);
   const first = await orderPage({ width, afterFirstPress, store });

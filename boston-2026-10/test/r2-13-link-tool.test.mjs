@@ -24,7 +24,7 @@ test("R2-13b: fill B accepts a link the tool printed", async () => {
   const url = new URL(firstLine(output("--mpid", "21", ...MEALS.flatMap((name, i) => ["--item", `${name}:${[1, 2, 4][i]}`]))));
   const page = await orderPage();
   const h = fakeWindow({ path: url.pathname + url.search, fragment: url.hash, page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   assert.deepEqual(Object.fromEntries([...page.presses].map(([name, list]) => [name, list.length])), {
     [MEALS[0]]: 1,

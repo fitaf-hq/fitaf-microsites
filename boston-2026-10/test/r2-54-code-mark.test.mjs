@@ -19,7 +19,7 @@ async function runOn(payload, options = {}) {
 
 test("R2-54: a coded link reaches done with fitaf-deep and fitaf-code on <html>", async () => {
   const { page, h } = await runOn(CODED);
-  assert.ok(h.info.includes("[fitaf-handoff] fill B, mpid 21; offer code not applied"), JSON.stringify(h.info));
+  assert.ok(h.info.includes("[fitaf-handoff] fill C, mpid 21; offer code not applied"), JSON.stringify(h.info));
   assert.ok(h.info.includes("[fitaf-handoff] done: /checkout"));
   assert.deepEqual(marks(page.document), ["fitaf-code", "fitaf-deep"]);
 });

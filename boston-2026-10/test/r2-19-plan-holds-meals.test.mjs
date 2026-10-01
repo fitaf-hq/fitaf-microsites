@@ -27,19 +27,19 @@ const SHORT = {
 
 for (const width of ["bar", "sidebar"]) {
   test(`R2-19a ${width}: the plan already holds 1 of the link's meals — stopped, nothing pressed`, async () => {
-    const { before, page } = await heldCase(await script("B"), { width });
+    const { before, page } = await heldCase(await script(), { width });
     assert.deepEqual(before, [SHORT[width](6)], "fixture control: the store's 'Add 6 more' state");
     if (width === "sidebar") assert.match(page.shownText(), /^1 item Clear cart ADD 6 MORE MEALS TO CHECKOUT$/);
   });
 
   test(`R2-19b ${width}: the plan holds a meal of the visitor's own, not in the link — the same`, async () => {
-    const { before } = await heldCase(await script("B"), { width, pending: ["A meal the visitor chose"] });
+    const { before } = await heldCase(await script(), { width, pending: ["A meal the visitor chose"] });
     assert.deepEqual(before, [SHORT[width](6)]);
   });
 
   test(`R2-19c ${width}: the plan holds 6 of 7 — the same`, async () => {
     const six = [MEALS[0], MEALS[1], MEALS[1], MEALS[2], MEALS[2], MEALS[2]];
-    const { before } = await heldCase(await script("B"), { width, pending: six });
+    const { before } = await heldCase(await script(), { width, pending: six });
     assert.deepEqual(before, [SHORT[width](1)]);
   });
 
@@ -51,7 +51,7 @@ for (const width of ["bar", "sidebar"]) {
     const summaries = [...page.document.querySelectorAll(".summary")];
     const rendered = summaries.map((s) => s.innerHTML);
     for (const s of summaries) s.innerHTML = "";
-    run(await script("B"), h.window);
+    run(await script(), h.window);
     for (let i = 0; i < 3; i++) assert.ok(h.timers.step(), "still waiting");
     assert.deepEqual(page.all, []);
     assert.deepEqual(h.events, [], "the fragment stays while B waits");

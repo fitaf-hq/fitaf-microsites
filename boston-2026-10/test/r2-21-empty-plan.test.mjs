@@ -6,13 +6,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  ADD,
   assertCheckedOut,
   CHECKOUT_PAYLOAD,
+  CHECKOUT_PRESSES,
   fakeWindow,
   fragmentFor,
   HELD_LINE,
-  MEALS,
   orderPage,
   PAGE,
   run,
@@ -32,18 +31,9 @@ for (const width of ["bar", "sidebar"]) {
       (b) => /checkout/i.test(b.textContent) && b.getClientRects().length && b.closest("app-product-card, app-product-card-mobile"),
     );
     assert.equal(lookalikes.length, 2, "displayed 'Checkout' look-alikes inside meal cards");
-    run(await script("B"), h.window);
+    run(await script(), h.window);
     h.timers.drain();
-    assert.deepEqual(page.all, [
-      [MEALS[0], ADD],
-      [MEALS[1], ADD],
-      [MEALS[2], ADD],
-      [MEALS[1], ADD],
-      [MEALS[2], ADD],
-      [MEALS[2], ADD],
-      [MEALS[2], ADD],
-      [PAGE, "checkout:shown"],
-    ]);
+    assert.deepEqual(page.all, [...CHECKOUT_PRESSES, [PAGE, "checkout:shown"]]);
     assertCheckedOut(h, page, "/order?mpid=21");
     assert.equal(page.store.pending.length, 7);
     assert.ok(!h.info.includes(HELD_LINE));

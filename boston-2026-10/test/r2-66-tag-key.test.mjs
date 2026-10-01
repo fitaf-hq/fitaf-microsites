@@ -23,7 +23,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { mealKey } from "../src/storefront/meal-key.js";
-import { ADD, assertCheckedOut, CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, MEALS, orderPage, refFnv1a, refKey, run, script } from "./r2-harness.mjs";
+import { ADD, assertCheckedOut, CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, INC, MEALS, orderPage, refFnv1a, refKey, run, script } from "./r2-harness.mjs";
 
 const KEY_MODULE = join(ROOT, "src", "storefront", "meal-key.js");
 const TOOL = join(ROOT, "scripts", "handoff-link.mjs");
@@ -105,7 +105,7 @@ async function fillWith(text, { title = null, fragment = fragmentFor(CHECKOUT_PA
   run(text, h.window);
   h.timers.drain();
   const shown = title ?? MEALS[0];
-  assert.deepEqual(Object.fromEntries(page.presses), { [shown]: [ADD], [MEALS[1]]: [ADD, ADD], [MEALS[2]]: [ADD, ADD, ADD, ADD] }, JSON.stringify(h.info));
+  assert.deepEqual(Object.fromEntries(page.presses), { [shown]: [ADD], [MEALS[1]]: [ADD, INC], [MEALS[2]]: [ADD, INC, INC, INC] }, JSON.stringify(h.info));
   assertCheckedOut(h, page, "/order?mpid=21");
 }
 

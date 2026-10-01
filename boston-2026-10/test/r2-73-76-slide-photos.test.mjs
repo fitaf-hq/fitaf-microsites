@@ -37,7 +37,9 @@ test("R2-74: an old link (no photo part) — the slides exactly as the live bloc
   const theirs = await record(live, await weekPage(r2_52), weekFragment(""));
   assert.ok(ours.info.includes(DONE), "control: the fill completes");
   assert.deepEqual(ours.first[0], { name: NAMES[0], sheet: null, card: PIXEL }, "control: today's rule, the card's loaded photo");
-  assert.deepEqual(ours, theirs);
+  // The one line that differs is the fill's own name: the live block is fill B, this text fill C (SPEC-rung2-fill-c).
+  assert.ok(theirs.info.includes("[fitaf-handoff] fill B, mpid 21"), "control: the live block names fill B");
+  assert.deepEqual(ours, { ...theirs, info: theirs.info.map((line) => line.replace("] fill B, mpid", "] fill C, mpid")) });
 });
 
 test("R2-74b: the LIVE block (914668de…) given a link with the photo part — refuses it whole: nothing pressed, no screen", async () => {

@@ -43,14 +43,14 @@ test("R2-12a: each console file's version line holds: its hash, its fill's text,
   const files = await built();
   const head = execFileSync("git", ["-C", ROOT, "rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
   const { text, commit } = verified(files.B);
-  assert.equal(text, await script("B"), "fill B: the text is the source built");
+  assert.equal(text, await script(), "fill B: the text is the source built");
   assert.equal(commit.replace(/-dirty$/, ""), head);
 });
 
-test("R2-12b: the Footer block is <script>, the fill-B console file, </script> — the source's FILL is B", async () => {
+test("R2-12b: the Footer block is <script>, the console file, </script> — the source's FILL is C (SPEC-rung2-fill-c)", async () => {
   const { footer, B } = await built();
   assert.equal(footer, wrap(B));
-  assert.match(verified(B).text, /var FILL = "B";/);
+  assert.match(verified(B).text, /var FILL = "C";/);
 });
 
 test("R2-12 mutant: one changed character in the text breaks the recorded hash", async () => {

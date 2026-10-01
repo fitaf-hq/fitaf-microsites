@@ -8,12 +8,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  ADD,
   assertCheckedOut,
   CHECKOUT_PAYLOAD,
+  CHECKOUT_PRESSES,
   fakeWindow,
   fragmentFor,
-  MEALS,
   orderPage,
   PAGE,
   POLL_MS,
@@ -39,22 +38,9 @@ async function lateCase(text, cardsAtMs = CARDS_AT_MS) {
   assert.deepEqual(h.events, [], `the fragment stays while fill B waits for the cards: ${JSON.stringify(h.info)}`);
   page.show();
   h.timers.drain();
-  assert.deepEqual(
-    page.all,
-    [
-      [MEALS[0], ADD],
-      [MEALS[1], ADD],
-      [MEALS[2], ADD],
-      [MEALS[1], ADD],
-      [MEALS[2], ADD],
-      [MEALS[2], ADD],
-      [MEALS[2], ADD],
-      [PAGE, "checkout:shown"],
-    ],
-    "the seven meals, then CHECKOUT once, and nothing else",
-  );
+  assert.deepEqual(page.all, [...CHECKOUT_PRESSES, [PAGE, "checkout:shown"]], "the seven meals, then CHECKOUT once, and nothing else");
   assertCheckedOut(h, page, "/order?mpid=21");
-  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
+  assertPollsAndPresses(h.timers.delays, page.log.length, "fill C:");
   return { h, page };
 }
 

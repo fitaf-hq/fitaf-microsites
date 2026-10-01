@@ -10,7 +10,7 @@ import { heldCase, reloadCase, script } from "./r2-harness.mjs";
 
 /** The shipped text's emptiness check, as § 10 builds it, and the press it must come before. */
 const CHECK = 'if (control(HELD, 1)) fail("the plan already holds meals");';
-const FOUND = "if (!missing.length) return press(steps(p.items), 0);";
+const FOUND = "if (!missing.length) return fill(p, steps(p.items), settle);";
 const MUTANTS = {
   "the emptiness check removed": "",
   "the check reads enabled controls only": 'if (control(HELD)) fail("the plan already holds meals");',
@@ -23,8 +23,8 @@ const rejectsWithAssertion = (promise) =>
   });
 
 for (const width of ["bar", "sidebar"]) {
-  test(`R2-23 control ${width}: the shipped fill-B text passes R2-19's and R2-22's cases`, async () => {
-    const text = await script("B");
+  test(`R2-23 control ${width}: the shipped text passes R2-19's and R2-22's cases`, async () => {
+    const text = await script();
     assert.ok(text.includes(CHECK), "the check the mutants replace is in the shipped text");
     await heldCase(text, { width });
     await reloadCase(text, { width });
@@ -32,7 +32,7 @@ for (const width of ["bar", "sidebar"]) {
 
   for (const [how, replacement] of Object.entries(MUTANTS)) {
     test(`R2-23 mutant ${width}: ${how} — R2-19 fails`, async () => {
-      const text = await script("B");
+      const text = await script();
       const mutant = text.replace(CHECK, replacement);
       assert.notEqual(mutant, text, "the mutation applied");
       await rejectsWithAssertion(heldCase(mutant, { width }));
@@ -40,11 +40,13 @@ for (const width of ["bar", "sidebar"]) {
   }
 
   test(`R2-23 mutant ${width}: the check made only once every meal is found — R2-19 passes, R2-22 fails`, async () => {
-    const text = await script("B");
+    const text = await script();
     assert.ok(text.includes(FOUND), "the press the check moves before is in the shipped text");
-    const mutant = text.replace(CHECK, "").replace(FOUND, `if (!missing.length) { ${CHECK} return press(steps(p.items), 0); }`);
+    const mutant = text.replace(CHECK, "").replace(FOUND, `if (!missing.length) { ${CHECK} return fill(p, steps(p.items), settle); }`);
     assert.notEqual(mutant, text, "the mutation applied");
-    await heldCase(mutant, { width });
-    await rejectsWithAssertion(reloadCase(mutant, { width, afterFirstPress: "stepper" }));
+    // R2-19 on a store whose held meal still shows its Add to Cart ("stays"), so every meal is found and the mutant's
+    // check runs; on the store's own page (its counter, R2-22) it never does.
+    await heldCase(mutant, { width, afterFirstPress: "stays" });
+    await rejectsWithAssertion(reloadCase(mutant, { width, afterFirstPress: "counter" }));
   });
 }

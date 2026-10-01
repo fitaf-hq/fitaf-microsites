@@ -5,8 +5,9 @@
 // characters, with anything that looks like a key or token (AIza…, sk_…, a long base64 run) replaced by [REDACTED].
 // W9a-c: the rendering and the redaction, on recorded evidence (no browser). W9d: the capture itself, in headless
 // Chrome at 390 px against the synthetic store on 127.0.0.1, whose CHECKOUT never routes (skipped without Chrome).
-// W9e (item 3): the smoke waits past fill B's longest wait, read from the built fill-B text itself (since
-// SPEC-rung2-progress-and-checkout § 15.2, the wait for the first card comes before the 10 s for the meals).
+// W9e (item 3): the smoke waits past the fill's longest wait, read from the built text itself (since
+// SPEC-rung2-progress-and-checkout § 15.2, the wait for the first card comes before the 10 s for the meals), and since
+// SPEC-rung2-fill-c § 4.4 sized for the LARGEST plan the menu offers (data/plans.json), not 7 meals.
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -16,7 +17,7 @@ import { chromePath } from "../lib/browser.mjs";
 import { cutLine, LINE_CHARS, redact } from "../lib/redact.mjs";
 import { evidenceLines, renderReport, renderSmokeReport } from "../lib/report.mjs";
 import { siteCode } from "../lib/site-code.mjs";
-import { FILL_B_LONGEST_MS, HANDOFF_MS, smokeRun } from "../lib/smoke.mjs";
+import { FILL_LONGEST_MS, HANDOFF_MS, LARGEST_PLAN, smokeRun } from "../lib/smoke.mjs";
 import { startStore } from "./browser-store.mjs";
 
 // Planted keys, built at run time so that no key-shaped literal is committed to this public repository.
@@ -173,18 +174,29 @@ test("W9d: at 390 px the store never routes — the smoke fails, and records the
   assert.ok(!run.outcome.console.includes("[fixture] ORDER PLACED"));
 });
 
-test("W9e (§ 7 item 3): the smoke's ceiling is above fill B's longest wait, as the built fill-B text sets it", () => {
-  const m = /var POLL_MS = (\d+), PRESS_MS = (\d+), MAX_POLLS = (\d+), AFTER_CHECKOUT = (\d+), NO_CARDS = (\d+);/.exec(consoleFile);
-  assert.ok(m, "the built text's poll constants");
-  const [poll, press, before, after, cards] = m.slice(1).map(Number);
-  assert.equal(press, 1000, "SPEC-rung2-progress-and-checkout § 23: one second after each press");
-  assert.equal(after * poll, 30_000, "fill B waits 30 s after CHECKOUT (SPEC-rung2 § 11 item 4)");
+test("W9e (§ 7 item 3, SPEC-rung2-fill-c § 4.4): the smoke's ceiling is above fill C's longest run on the largest plan, as the built text sets it", async () => {
+  const m = /var POLL_MS = (\d+), MIN_GAP_MS = (\d+), ACK_MS = (\d+), RETRIES = (\d+), SETTLE_MS = (\d+), MAX_POLLS = (\d+), AFTER_CHECKOUT = (\d+), NO_CARDS = (\d+);/.exec(consoleFile);
+  assert.ok(m, "the built text's constants");
+  const [poll, gap, ack, retries, settle, before, after, cards] = m.slice(1).map(Number);
+  assert.deepEqual([gap, ack, retries, settle], [300, 5000, 2, 1000], "SPEC-rung2-fill-c § 7 e's defaults");
+  assert.equal(after * poll, 30_000, "the fill waits 30 s after CHECKOUT (SPEC-rung2 § 11 item 4)");
   assert.equal(cards * poll, 30_000, "and up to 30 s for the page's first card (SPEC-rung2-progress-and-checkout § 15.2)");
-  // SPEC-rung2-progress-and-checkout § 15.2: the wait for the first card, then the 10 s for every meal's card (from the
-  // first card), one PRESS_MS per press of mpid 21's 7 meals (§ 23), an enabled CHECKOUT, then CHECKOUT's and CONTINUE's
-  // waits.
-  const longest = cards * poll + before * poll + 7 * press + before * poll + 2 * after * poll;
-  assert.equal(longest, 117_000, "30 s + 10 s + 7 s + 10 s + 30 s + 30 s");
-  assert.equal(FILL_B_LONGEST_MS, longest);
+  // The largest plan the menu offers, from the site's own data (not 7: the Boston record § 46).
+  const plans = JSON.parse(await readFile(new URL("../../../data/plans.json", import.meta.url), "utf8"));
+  const largest = Math.max(...[...plans.individual, plans.family].flatMap((p) => p.counts.map((c) => c.meals_per_week)));
+  assert.equal(LARGEST_PLAN, largest);
+  assert.ok(largest >= 14, `the largest plan: ${largest}`);
+  // One unit at its longest: MIN_GAP_MS to the first read, polls past ACK_MS, and that window 1 + RETRIES times.
+  const window = gap + Math.ceil((ack - gap) / poll) * poll;
+  const unit = (1 + retries) * window;
+  // The first card, the 10 s for every meal's card, every unit of the plan at its longest, the settle, every unit again
+  // (a completion of every meal taken back), the 10 s for CHECKOUT with the plan's count, then CHECKOUT's and CONTINUE's.
+  const longest = cards * poll + before * poll + largest * unit + settle + largest * unit + before * poll + 2 * after * poll;
+  assert.equal(window, 5100);
+  assert.equal(longest, 30_000 + 10_000 + 21 * 15_300 + 1000 + 21 * 15_300 + 10_000 + 60_000, "753.6 s for 21 meals");
+  assert.equal(FILL_LONGEST_MS, longest);
   assert.ok(HANDOFF_MS > longest, `${HANDOFF_MS} ms`);
+  // ⚠ The screen's 90 s clock (SPEC-rung2-progress-and-checkout § 2 item 4) is far below it: in the worst case the
+  // screen goes first and the visitor sees the order page while fill C goes on (as § 16 found for fill B at 111.4 s).
+  assert.ok(longest > 90_000);
 });

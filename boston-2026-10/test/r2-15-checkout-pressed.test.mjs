@@ -8,9 +8,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  ADD,
   checkoutCase,
   CHECKOUT_PAYLOAD,
+  CHECKOUT_PRESSES,
   fakeWindow,
   fragmentFor,
   MEALS,
@@ -22,13 +22,13 @@ import {
 } from "./r2-harness.mjs";
 
 test("R2-15a: the seven meals, then the displayed CHECKOUT once; the store routes; location.assign never called", async () => {
-  await checkoutCase(await script("B"));
+  await checkoutCase(await script());
 });
 
 test("R2-15b: CHECKOUT is disabled until the last meal, and enabled late — B waits for it and presses once", async () => {
   const page = await orderPage({ late: 4 });
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page, storage: untouchableStorage() });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   assert.deepEqual(page.summary(), ["Add 7 more meals (disabled)", "Add 7 more meals (disabled)"], "fixture control");
   while (page.log.length < 7) assert.ok(h.timers.step(), "still pressing meals");
   assert.deepEqual(page.summary(), ["Add 1 more meal (disabled)", "Add 1 more meal (disabled)"], "not yet enabled");
@@ -40,7 +40,7 @@ test("R2-15b: CHECKOUT is disabled until the last meal, and enabled late — B w
 test("R2-15c: the look-alikes are there, enabled, and ahead of it — and are never pressed", async () => {
   const page = await orderPage();
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   // Fixture control: in document order, every enabled button reading "checkout" (any case) before the real one.
   const naive = [...page.document.querySelectorAll("button")]
@@ -51,10 +51,10 @@ test("R2-15c: the look-alikes are there, enabled, and ahead of it — and are ne
   assert.ok(!page.log.some(([, label]) => /checkout/i.test(label)), `a card's look-alike pressed: ${JSON.stringify(page.log)}`);
 });
 
-test("R2-15d: a stepper after the first press — the Increase presses count toward the plan, then CHECKOUT", async () => {
-  const page = await orderPage({ afterFirstPress: "stepper" });
+test("R2-15d: the store's counter after the first press — its \"+\" presses count toward the plan, then CHECKOUT", async () => {
+  const page = await orderPage({ afterFirstPress: "counter" });
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   assert.equal(page.log.length, 7);
   assert.deepEqual(page.all.at(-1), [PAGE, "checkout:shown"]);
@@ -65,11 +65,11 @@ test("R2-15d: a stepper after the first press — the Increase presses count tow
 test("R2-15e: after the press, B keeps polling until the store routes, and presses nothing more meanwhile", async () => {
   const page = await orderPage({ syncTicks: 12 });
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   assert.deepEqual(page.controls, ["checkout:shown"], "CHECKOUT stayed enabled 12 store ticks; pressed once");
   assert.deepEqual(page.log.map(([meal]) => meal).sort(), [MEALS[0], MEALS[1], MEALS[1], MEALS[2], MEALS[2], MEALS[2], MEALS[2]].sort());
-  assert.ok(page.log.every(([, label]) => label === ADD));
+  assert.deepEqual(page.log, CHECKOUT_PRESSES, "Add to Cart, then the store's \"+\": the meals' presses and no other");
   assert.deepEqual(h.events.at(-1), ["pushState", "/checkout"]);
   assert.equal(h.info.filter((line) => / done: \/checkout$/.test(line)).length, 1);
 });
@@ -77,7 +77,7 @@ test("R2-15e: after the press, B keeps polling until the store routes, and press
 test("R2-15f: a CHECKOUT shown disabled at first (the store busy) is waited for, never pressed while disabled", async () => {
   const page = await orderPage({ loadingTicks: 6 });
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   while (page.log.length < 7) assert.ok(h.timers.step(), "still pressing meals");
   assert.deepEqual(page.summary(), ["CHECKOUT (disabled)", "CHECKOUT (disabled)"], "fixture control: disabled first");
   h.timers.drain();
@@ -90,7 +90,7 @@ test("R2-15g: at desktop width the store's control reads \"CHECKOUT NOW\" (its c
   // " CHECKOUT NOW ", which runs the same checkout. § 8, amended the same day, accepts both labels, exactly.
   const page = await orderPage({ shownLabel: " CHECKOUT NOW " });
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page, storage: untouchableStorage() });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   assert.deepEqual(page.summary(), ["CHECKOUT", "CHECKOUT NOW"], "fixture control: only CHECKOUT NOW is displayed");
   assert.deepEqual(page.controls, ["checkout:shown"], "pressed once");

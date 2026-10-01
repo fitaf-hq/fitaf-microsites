@@ -52,7 +52,7 @@ test("CC-2b: fill B reads each link: every meal pressed its count, the size's mp
         Object.fromEntries(menu.map((m) => [m.name, m.qty])),
         `${count}, mpid ${mpid}: each meal pressed its qty`,
       );
-      assert.ok(h.info.includes(`${LOG_PREFIX} fill B, mpid ${mpid}`), `fill B read mpid ${mpid}: ${JSON.stringify(h.info)}`);
+      assert.ok(h.info.includes(`${LOG_PREFIX} fill C, mpid ${mpid}`), `fill C read mpid ${mpid}: ${JSON.stringify(h.info)}`);
       assertCheckedOut(h, page, path);
     }
   }

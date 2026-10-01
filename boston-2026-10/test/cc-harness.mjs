@@ -220,7 +220,7 @@ export async function readWithFillB(link, names) {
   const page = await orderPage();
   page.document.querySelector("main").innerHTML = names.map(mealCard).join("");
   const h = fakeWindow({ path: url.pathname + url.search, fragment: url.hash, page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain(5000);
   return { page, h, path: url.pathname + url.search };
 }

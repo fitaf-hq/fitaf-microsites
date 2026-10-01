@@ -5,7 +5,7 @@
 // Each state is read AT each press (before fill B updates it) and at the store's route, so the order is observed.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ADD, CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, MEALS, orderPage, run, script, untouchableStorage } from "./r2-harness.mjs";
+import { CHECKOUT_PAYLOAD, CHECKOUT_PRESSES, fakeWindow, fragmentFor, MEALS, orderPage, run, script, untouchableStorage } from "./r2-harness.mjs";
 import { assertWords, percent, screenState, stepLine, watchPresses, WORDS } from "./r2-screen.mjs";
 
 /** CHECKOUT_PAYLOAD's presses, in fill B's order (every meal's first press before any second): 1 + 2 + 4 = 7. */
@@ -25,7 +25,9 @@ test("R2-41: the screen before the first press; 1 of 8 … 7 of 8, then 8 of 8 a
   run(await script(), h.window);
   h.timers.drain();
 
-  assert.deepEqual(presses.map((p) => p.label), [...ORDER.map(() => ADD), "CHECKOUT"], "fixture control: 7 meals, then CHECKOUT");
+  // Each meal's Add to Cart, then the store's "+" for its counts above 1 (SPEC-rung2-fill-c § 1.1), then CHECKOUT.
+  assert.deepEqual(presses.map((p) => p.label), [...CHECKOUT_PRESSES.map(([, label]) => label), "CHECKOUT"], "fixture control: 7 meals, then CHECKOUT");
+  assert.deepEqual(CHECKOUT_PRESSES.map(([meal]) => meal), ORDER, "fixture control: the meals in ORDER");
   const first = presses[0].state;
   assert.ok(first, "the screen is on the page at the first press");
   assert.equal(first.title, WORDS.title);
