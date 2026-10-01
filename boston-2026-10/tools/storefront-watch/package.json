@@ -11,6 +11,7 @@
     "watch": "node bin/watch.mjs",
     "smoke": "node bin/smoke.mjs",
     "accept": "node bin/accept.mjs",
+    "probe-counts": "node bin/probe-counts.mjs",
     "test": "node --test \"test/*.test.mjs\""
   },
   "dependencies": {
