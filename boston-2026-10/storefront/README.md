@@ -10,8 +10,10 @@ hashes and a few literal strings of the store's public bundle, never its code or
   component `app-checkout`, the hide list's names H1–H6 and the pay buttons' containers `checkout__submit` and, on a
   phone, `summary__pay-button`; and § 10's: the extras dialog and its overlay, the discounts, the app banner and the
   margin it reserves, the price rows, the Total, the tip), with what the hand-off uses it for and the contract section
-  that says so; and § 12's `ecc_additions_prompt_handled`, the store's key fill B sets before CHECKOUT. 36 literals since
-  2026-09-29. **Edited by a person**, when the hand-off comes to depend on something
+  that says so; and § 12's `ecc_additions_prompt_handled`, the store's key the fill sets before CHECKOUT; and fill C's
+  five (`SPEC-rung2-fill-c.md` § 1.1, § 1.4): the card's counter (`counter__value`, `counter__button`, its *"Increase
+  value"*) and the plan's own count (`cart__items-count`, `mobile-cart-summary__stat-value`), 51 literals since
+  2026-10-01, each found in release `main-N64VDY4M.js`'s files. **Edited by a person**, when the hand-off comes to depend on something
   new, or a release renames something it depends on (and the hand-off is changed to match).
 - **`watch-baseline.json`** (§§ 2, 3, 5): the release the watch compares with: the order page's script list, the
   entry bundle's name, its imports, every JS file reachable from it with its SHA-256, and `expectedFooter`, the
