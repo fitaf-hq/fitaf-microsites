@@ -259,3 +259,54 @@ buttons' order (numeral, then *meals/week*, then the meals line) and centring; P
 block (the weekly total first and larger, Chrome); PR-17 the heading *"Chef's Choice (October 5–11)"* for the
 fixture week's delivery and the cross-month form; PR-18 the foot centred, no rule. Existing cases a ruled change breaks
 are updated, not deleted (S20 re-recorded: the production page is meant to change). Storybook's stories follow.
+
+### § 8 — built, 2026-10-01 (found at the build, not ruled)
+
+Red at `8f4e6c7`: the site's suite had 466 tests, 18 failing on the missing feature, and the Chrome cases 6, 3 failing.
+Green at `8623119`: the site's suite **466 of 466**, Storybook **23 of 23** (the Chrome cases are in
+`tools/storybook/test/pr-chrome.test.mjs`, renamed from `pr-6-8-chrome.test.mjs`), `npm run contrast` passes, and the
+Footer block's text is `914668de…`. The builder's reading where § 8 left one open:
+
+- **Item 2.** One element, `#top`: the carousel, then the logo on its white plate, placed over the photo's top left.
+  Without photographs (`base: null`) the plate stands alone at the top, so the page never loses its logo. The carousel
+  spans the viewport but is **at most 640 px tall**: on a wide screen a 4:3 window would be 960 px tall at 1280, so the
+  window is centred in that height and its top and bottom are cropped. At 390 it is the whole 4:3 (292.5 px). On the
+  development page the save section (rung 4) comes right after the top. The Advisor's alternative, a header bar, is not
+  built.
+- **Item 4.** The numeral is 32 px bold. *meals/week* is uppercase at 12 px, weight 400, with letter-spacing (small
+  caps faked, as § 8 allows; the self-hosted Open Sans subset carries none), then the meals line. The check sits
+  centred above the numeral, as on the goal buttons. `plan_page.per_week` is now `"meals/week"`, with no `{n}`.
+- **Item 5.** Each figure carries its own unit, so the two numbers can be told apart without a label:
+  - **`$87.50/week`**, 34 px; **`$12.50/meal`**, 18 px. The units are 15 px muted, from `plan_page.total_unit` and
+    `plan_page.per_meal_unit` (new, placeholders).
+  - There is no `<dl>`, no `dt` and no panel. The order and the two sizes are still a two-line swap.
+  - **For the Advisor**: drop the units if he wants bare figures.
+- **Item 6.**
+  - `chefs_choice.heading` is `"Chef's Choice ({week})"`. `{week}` is filled at the build by
+    `scripts/chefs-choice.mjs`'s `weekRange`: *"October 5–11"*, and across a month *"September 28 – October 4"*.
+  - A week across a year has no year (*"December 28 – January 3"*).
+  - The heading no longer names the count; it is the same for 7 and 14.
+- **Item 7.** *See all plans* moved into the foot, above the footnote. It is hidden on the Family tab, as before, where
+  it was inside the Individual panel. The dialog stays where it was.
+- **Item 1.** The dots and their phrase `plan_page.carousel_dot` are gone. Neither the mock-ups nor the Footer block read
+  it. The carousel advances with no pause, as ruled.
+
+**Updated with it**: PR-2 (no dots), PR-5 (the numeral first), PR-9 (the footnote's own element), S18 (no step number),
+B2's mutant anchor (`.price`), and CC-1, CC-3 and CC-7. Those three go through `cc-harness.mjs`'s heading, which works
+out the week on its own. S20's golden is re-recorded; only `index.html` moved. Two comments under `tools/storybook/`
+were reworded: SM-4 caught *"Chef's Choice ("*, now a piece of a phrase, in prose. PR-18's rule reader skipped every
+second rule, a defect in the red case found at green and fixed there.
+
+**Found**
+- One full Storybook run had SM-5's mutant fail. Its own `build-storybook` exited 1 while the suite's other builds and
+  Chrome walks ran in parallel. The same case passed alone and in a full re-run (23 of 23). It looks like load, not the
+  change, but it is not explained.
+- ⚠ **At 1280 the carousel photo is soft.** The emitter's cells are 768 px wide and the window is 1280 CSS px wide (2560
+  device px on a 2× screen), so the photo is drawn larger than its source. At 390 it is drawn smaller than its source
+  and is sharp. **For the producer**: wider carousel cells, against § 3's 300 KB budget for the sheet.
+
+Looked at in headless Chrome at 390 and 1280: the production page with the committed sheets, `#lean-7`, the clock in week
+B's window.
+- The carousel box is 390 × 292.5 at 390 and 1280 × 640 at 1280. It advances to the second photo after 4 s.
+- The heading reads *"Chef's Choice (October 5–11)"*, with 7 photo tiles for 7 meals.
+- There is no horizontal scroll at either width.
