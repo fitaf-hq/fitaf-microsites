@@ -10,10 +10,10 @@ const RESULT = "#result";
 export const STATES = {
   start: { name: "Start", fragment: () => "", date: "today", waits: "#panel-individual" },
   chosen: { name: "Chosen", fragment: chosen, date: "today", waits: RESULT },
-  ccClosed: { name: "Chef's Choice · closed", fragment: chosen, date: "week", waits: RESULT, needs: "#cc-toggle" },
-  ccOpen: { name: "Chef's Choice · open", fragment: chosen, date: "week", waits: RESULT, needs: "#cc-toggle", press: "#cc-toggle", opens: "#cc-list" },
-  noPicks: { name: "No picks this week", fragment: chosen, date: "none", waits: RESULT, lacks: "#cc-toggle" },
-  allPlans: { name: "All plans", fragment: chosen, date: "today", waits: RESULT, press: "#all-toggle", opens: "#all" },
+  // SPEC-plan-page-refinement § 4: the list is always open, so *closed* and *open* are one story; the grid is a modal.
+  cc: { name: "Chef's Choice", fragment: chosen, date: "week", waits: RESULT, needs: "#cc-list" },
+  noPicks: { name: "No picks this week", fragment: chosen, date: "none", waits: RESULT, lacks: "#cc-list" },
+  allPlans: { name: "All plans", fragment: chosen, date: "today", waits: RESULT, press: "#all-link", opens: "#all" },
   family: { name: "Family", fragment: () => "#family", date: "today", waits: "#panel-family" },
 };
 

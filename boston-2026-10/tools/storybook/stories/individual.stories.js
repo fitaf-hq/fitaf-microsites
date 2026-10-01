@@ -16,7 +16,6 @@ export default {
 
 export const Start = { ...story("start", { plan: false }), name: "Start" };
 export const Chosen = { ...story("chosen"), name: "Chosen" };
-export const ChefsChoiceClosed = { ...story("ccClosed"), name: "Chef's Choice · closed" };
-export const ChefsChoiceOpen = { ...story("ccOpen"), name: "Chef's Choice · open" };
+export const ChefsChoice = { ...story("cc"), name: "Chef's Choice" };
 export const NoPicksThisWeek = { ...story("noPicks"), name: "No picks this week" };
 export const AllPlans = { ...story("allPlans"), name: "All plans" };

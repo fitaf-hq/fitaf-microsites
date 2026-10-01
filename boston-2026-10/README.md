@@ -12,17 +12,18 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `SPEC.md` | the contract, §§ 0–5 | authority |
 | `data/plans.json` | the plan table, read off the store's public plans page on a date | INPUT |
 | `data/events.json` | one entry per event URL that gets a QR code | INPUT |
-| `data/messages.json` | the campaign's phrases: the page's headline, intro line, tagline (meta description) and top bar, and the mock-ups' own; one place to change a phrase. Its `handoff` key is the hand-off's progress screen (rung 2's two faces), read by `npm run build:storefront` only; its `chefs_choice` key is the result card's Chef's Choice words (⚠ placeholders), read by `npm run build` only when a week is open | INPUT |
+| `data/messages.json` | the campaign's phrases: the tagline (meta description), the headline, intro line and top bar (since SPEC-plan-page-refinement § 1 shown by the mock-ups only; kept), and the mock-ups' own; one place to change a phrase. Its `plan_page` key is the plan page's own words (the meals buttons, `*or*` emphasised; the footnote; the carousel's dots; ⚠ placeholders). Its `handoff` key is the hand-off's progress screen (rung 2's two faces), read by `npm run build:storefront` only; its `chefs_choice` key is the result card's Chef's Choice words (⚠ placeholders), read by `npm run build` only when a week is open | INPUT |
 | `data/picks/<sunday>.json` | this week's Chef's Choice, one file per delivery Sunday (`2026-10-04.json`): `delivery` and, per count the page shows, the meals by the name the store's card shows and their `qty`; public fields only. Checked by the link tool's own rules; a broken file fails the build. **None is committed yet**: without one the page is exactly as before. See *This week's Chef's Choice* below | INPUT, weekly |
 | `src/template.html` | the page: markup and inline CSS, with `{{SLOT}}` placeholders | INPUT |
-| `src/app.js` | the one small inline script: the two questions, tabs, "See all plans", URL fragment | INPUT |
+| `src/app.js` | the one small inline script: the two questions, tabs, "See all plans" (a modal `<dialog>`), the carousel (4 s, none under reduced motion), URL fragment | INPUT |
+| `data/photo-sheets.json` + `src/assets/photo-sheets/` | ⛔ **not committed yet**: the plan page's photographs as sprite sheets and the one manifest naming them (SPEC-plan-page-refinement § 3: `base`, and per sheet its file, size and cells, the carousel's by position, Chef's Choice's by store name). Every photo URL is `base` + file (a relative base is copied beside the page; an absolute one is a CDN). The producer is held (made by Fit AF's own pipeline, not here); **without the manifest, or with `base: null`, the page has no photograph**: no carousel, plain tiles (PR-3). A sheet the manifest names but the directory lacks refuses the build | INPUT, when it lands |
 | `src/fonts/` | Poppins 600/700 and Open Sans 400/600, Latin WOFF2 subsets (Fontsource 5.3.0), with `OFL-*.txt` | INPUT, copied to `dist/fonts/` |
 | `src/assets/fitaf-logo.png` | the store's public logo, 330×210, byte-identical to the store's file | INPUT, copied to `dist/assets/` |
 | `src/contrast-pairs.json` | every colour pair the page draws, by token, with its role and minimum APCA Lc | INPUT to `npm run contrast` |
 | `scripts/contrast.mjs` | `npm run contrast`: prints the APCA table; exits 1 on a failing pair, a raw colour outside `:root`, or an unmeasured token | tool |
 | `build.mjs` | plain Node 22 ESM; fills the template from the data and writes the QR codes; `--on YYYY-MM-DD` is its date for the Chef's Choice weeks; `--out DIR` writes there instead of `dist/` (or `dist-dev/`), for Storybook's pages (`tools/storybook/`, SPEC-storybook-microsite.md) | build |
 | `scripts/chefs-choice.mjs` | the build's side of this week's Chef's Choice: reads and checks `data/picks/`, and fills the page's three `PICKS_*` slots; imported by `build.mjs` only when `data/picks/` exists | build |
-| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S26 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-33 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`; fill A's cases are retired, listed under Rung 2 below) and R2-40–R2-52 and R2-66–R2-71 of its two faces (with `r2-screen.mjs`; the cases that need Chrome run in the watch package, below), P1–P6 of the mock-ups (`pN-*.test.mjs`), F1 (the flow renders are current, with mutants) and CC-1–CC-8 of the Chef's Choice (`cc-NN-*.test.mjs`, with `cc-harness.mjs`, the fixture week `fixtures/picks/2026-10-04.json` (invented meal names) and `cc-08-unchanged-golden.json`), one file per case; `node --test`, no network | tests |
+| `test/*.test.mjs` | T1–T7 of SPEC § 4, B1 (brand assets), B2 (contrast, with mutants), S1–S26 of rung 4 (`sNN-*.test.mjs`), M1–M21 of rung 5 (`mNN-*.test.mjs`; M14–M21 are the emails' look), R2-01–R2-33 of rung 2 (`r2-NN-*.test.mjs`, with `r2-harness.mjs` and the synthetic `r2-order-page.html`; fill A's cases are retired, listed under Rung 2 below) and R2-40–R2-52 and R2-66–R2-71 of its two faces (with `r2-screen.mjs`; the cases that need Chrome run in the watch package, below), P1–P6 of the mock-ups (`pN-*.test.mjs`), F1 (the flow renders are current, with mutants) and CC-1–CC-8 of the Chef's Choice (`cc-NN-*.test.mjs`, with `cc-harness.mjs`, the fixture week `fixtures/picks/2026-10-04.json` (invented meal names) and `cc-08-unchanged-golden.json`), PR-1–PR-10 of the plan page's refinement (`pr-NN-*.test.mjs`, with `pr-harness.mjs` and the fixture photo sheets `fixtures/photo-sheets/`, generated flat colours; PR-4's layout, PR-6 and PR-8's behaviour need Chrome and run in `tools/storybook/`), one file per case; `node --test`, no network | tests |
 | `dist/` | `index.html`, `fonts/`, `assets/` and `qr/<event>.png` + `.svg` | OUTPUT, git-ignored |
 | `SPEC-rung3-lead-capture.md` | rung 3's contract: claim the offer, a lead record built to be destroyed (its claim endpoint and tables are retired by rung 4) | history |
 | `SPEC-rung4-save-offer.md` | rung 4's contract: save the offer first, the lead lifecycle, `/confirm` and `/o`; cases S1–S26 | authority |
@@ -34,7 +35,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `data/save.json` | the save endpoint, the wording version the page sends and the versions the Worker accepts, the send hour and zone, the lapse periods | INPUT |
 | `data/offers.json` | the offers, ⛔ **placeholders** (`"status": "placeholder"`): which one a save gets, which is current, and the label the dev page's offer box shows | INPUT |
 | `src/save/` | **dev build only**: Flow 1 (`section.html`, `flow1.js`), the share panel (`share-panel.html`, `share.js`), the one arithmetic module (`calculator.js`), `banner.html`, `style.css` | INPUT |
-| `src/chefs-choice/` | the result card's Chef's Choice, inlined only when a week is open: `card.html` (the button, the list, the two links; its words are `{{…}}` slots), `chefs-choice.js` (chooses the week and follows `app.js`'s card), `style.css` (tokens only; `npm run contrast` reads it) | INPUT |
+| `src/chefs-choice/` | the result card's Chef's Choice, inlined only when a week is open: `card.html` (the list, always open since SPEC-plan-page-refinement § 2 item 5, and the two links; its words are `{{…}}` slots), `chefs-choice.js` (chooses the week and follows `app.js`'s card), `style.css` (tokens only; `npm run contrast` reads it) | INPUT |
 | `src/worker/` | the Worker (below) | INPUT |
 | `src/worker/email-tokens.json` | the emails' copy of `src/template.html`'s `:root` tokens, written by `npm run email:tokens` (a Worker cannot read the template at run time); M17 fails when it differs | DERIVED, committed, never hand-edited |
 | `migrations/` | D1 schema, applied in order: `0001_claims.sql`, `0002_contacts.sql` (rung 3), `0003_saves.sql` (rung 4: drops rung 3's tables), `0004_sending.sql` (rung 5: attempts, Resend's id, the send claim) | INPUT |
@@ -60,7 +61,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-71, P1–P6, F1, CC-1–CC-8
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-71, P1–P6, F1, CC-1–CC-8, PR-1–PR-10
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/ (-- --on YYYY-MM-DD: the date for data/picks/; default today in New York)
 npm --prefix boston-2026-10 run email:tokens    # after a :root token change: the emails' copy (M17 fails until then)
@@ -224,9 +225,10 @@ npm --prefix boston-2026-10 run handoff:link -- --mpid 21 --item "Birria de Res 
   build embeds every file whose window has not ended on `--on` (so a page built on a Thursday carries Friday's
   week); the page picks, **in the browser**, the week whose window holds the date in New York (the offer's own
   `zonedDate` and `isLive`, inlined), or none: never last week's.
-- **The card**: with picks for the chosen count, *Choose your meals* gives way to *See this week's Chef's Choice*
-  (opens the list: the heading, each meal with its count, a line, and *Continue to checkout*, the size's
-  `#fitaf=2.…` link) and *Choose my own meals* (the plan's order page, the rung 1 link). The list is the same for
+- **The card**: with picks for the chosen count, *Choose your meals* gives way to the week's list, **always open**
+  since SPEC-plan-page-refinement § 2 item 5 (the heading, each meal with its count and a tile to its left, its photo
+  sheet's cell or plain, and *Continue to checkout*, the size's `#fitaf=2.…` link) and *Choose my own meals* (the plan's
+  order page, the rung 1 link). The list is the same for
   every size. The words are `data/messages.json`'s `chefs_choice` (⚠ placeholders for the copy review).
 - **Without a picks file** (or none open, or none for the count) the page is exactly as before: the template's
   three `PICKS_*` slots are empty (CC-4, S20). The grid's links, the Family tab, the Footer block and the Worker are
@@ -266,7 +268,7 @@ before rung 4 (test S20 compares SHA-256s with `test/s20-production-golden.json`
 
 ```sh
 export CLOUDFLARE_ACCOUNT_ID=…            # never committed
-npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-71, P1–P6, F1, CC-1–CC-8 (Miniflare, no network)
+npm --prefix boston-2026-10 test                      # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-71, P1–P6, F1, CC-1–CC-8, PR-1–PR-10 (Miniflare, no network)
 npm --prefix boston-2026-10 run db:migrate:dev        # D1 migrations -> fitaf-leads-dev (0003 drops rung 3's tables; 0004 adds sending)
 npm --prefix boston-2026-10 run seed:dev              # 20 dummy saves, 5 marked exported
 npm --prefix boston-2026-10 run purge:dev             # DRY RUN: counts only

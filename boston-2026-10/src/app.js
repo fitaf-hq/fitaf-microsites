@@ -3,6 +3,7 @@
   var data = JSON.parse(document.getElementById("plan-data").textContent);
   var $ = function (sel) { return document.querySelector(sel); };
   var $$ = function (sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); };
+  var CAROUSEL_MS = 4000; // one photo every 4 s (SPEC-plan-page-refinement § 2 item 1)
 
   function findGoal(id) {
     for (var i = 0; i < data.plans.length; i++) if (data.plans[i].id === id) return data.plans[i];
@@ -55,7 +56,6 @@
     var cell = plan && s.count && plan.cells[s.count];
     $("#result").hidden = !cell;
     if (plan) $("#result").setAttribute("data-accent", plan.id);
-    $("#hint").hidden = !!cell;
     if (cell) {
       $("#result-title").textContent = plan.name + " · " + s.count + " meals a week";
       $("#result-per-meal").textContent = cell.per_meal;
@@ -87,12 +87,32 @@
       n.click();
     });
   });
-  var toggle = $("#all-toggle");
-  toggle.addEventListener("click", function () {
-    var open = toggle.getAttribute("aria-expanded") !== "true";
-    toggle.setAttribute("aria-expanded", String(open));
-    $("#all").hidden = !open;
+  // See all plans: the grid in a modal dialog. Esc closes it (the browser's own); so do its close button and a press on
+  // the backdrop (the dialog itself, outside its box); focus goes back to the link.
+  var all = $("#all"), allLink = $("#all-link");
+  allLink.addEventListener("click", function () { all.showModal(); });
+  $("#all-close").addEventListener("click", function () { all.close(); });
+  all.addEventListener("click", function (e) { if (e.target === all) all.close(); });
+  all.addEventListener("close", function () { allLink.focus(); });
+
+  // The carousel: one photo shown, the next every CAROUSEL_MS, never under reduced motion; a dot shows its photo and
+  // stops the advance (the visitor has taken over).
+  var slides = $$("#carousel .slide"), dots = $$("#carousel .dot"), shown = 0, timer = null;
+  function show(i) {
+    shown = i;
+    slides.forEach(function (s, j) { s.className = j === i ? "slide on" : "slide"; });
+    dots.forEach(function (d, j) { d.setAttribute("aria-pressed", String(j === i)); });
+  }
+  dots.forEach(function (d, j) {
+    d.addEventListener("click", function () {
+      if (timer !== null) clearInterval(timer);
+      timer = null;
+      show(j);
+    });
   });
+  if (slides.length > 1 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    timer = setInterval(function () { show((shown + 1) % slides.length); }, CAROUSEL_MS);
+  }
 
   window.addEventListener("hashchange", function () { render(parse(location.hash)); });
   render(state);
