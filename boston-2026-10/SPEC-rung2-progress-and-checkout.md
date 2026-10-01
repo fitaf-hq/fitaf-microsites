@@ -828,3 +828,13 @@ Red at `1e94cf3`, built at `d8e5d4e`. § 21 above is unchanged.
   to `b323ee550e6f0258988fecdab4a50dc0564bf2de2eedfc6380dda792bb2f2209`; CC-8's `replaces` names the live `7eadcbdb…`
   until the paste; the watch's baseline is untouched.
 - ⬜ **Not run on the live store.**
+
+## 23. Amendment, 2026-10-01 — one second between presses
+
+**Ruled by the Advisor** (`ts=2026-10-01T17:04:50.063Z`): *"I think we might be overloading HMP UI layer. I think it needs to be at least 1 second of pause... \*possibly\* because they're dealing with a UI blocking or race condition. Can we bump that up now?"* **The evidence**: in the Advisor's own browser the 14-meal link (`mpid=23`) left 11 of 14 meals in the plan, the link's first 11 in order, and stopped short of CHECKOUT; fresh headless profiles at 1920 and 2560 px, and at 2560 px with the CPU slowed 4× and 8×, filled 14 of 14 and reached `/checkout`.
+
+1. fill B waits **`PRESS_MS` = 1000** after each press before the next (every Add to Cart and every +), and after the last press before its first look for CHECKOUT. **`POLL_MS` (200) and every poll count are unchanged**: the waits for the cards, for CHECKOUT and after CHECKOUT.
+2. A named constant beside `POLL_MS`. The Footer block stays within 15,360 bytes, ASCII, two `<`.
+3. Cases: **R2-82** (fake timers): each delay scheduled between presses, and after the last, is 1000 ms; every other delay is 200 ms. Existing cases that assert *"every delay is `POLL_MS`"* (R2-16, R2-67 and any other) assert it of the polls only.
+
+**Not in this amendment**: confirming that the store counted each press (its quantity counter) before the next, and naming the shortfall in the stop line. After the meeting.
