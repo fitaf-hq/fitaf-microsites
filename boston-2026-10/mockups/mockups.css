@@ -129,6 +129,12 @@ body.show { overflow: hidden; background: var(--navy); }
 body.legend-open .deck { right: 320px; }
 .slide { position: absolute; inset: 0; overflow: hidden; background: var(--white); }
 .slide[hidden] { display: none; }
+/* SPEC-slideshow.md § 1 item 3: the cross-dissolve, once the script plays the deck (body.playing; without it the
+   markup's `hidden` shows the first slide). Its duration is slideshow.js's FADE_MS, set as --fade; a slide leaving stays
+   drawn until its fade ends, so both are seen during it. At rest every slide is fully opaque or not drawn. */
+.playing .deck .slide { opacity: 0; visibility: hidden; transition: opacity var(--fade) ease-in-out, visibility 0s linear var(--fade); }
+.playing .deck .slide.on { opacity: 1; visibility: visible; transition: opacity var(--fade) ease-in-out; }
+@media (prefers-reduced-motion: reduce) { .playing .deck .slide, .playing .deck .slide.on { transition: none; } }
 .slide-bg { position: absolute; inset: 0; }
 .slide-bg .slot-label { font-size: clamp(12px, 1.8vmin, 18px); }
 .slide-bg .slot-label b { font-size: clamp(13px, 2vmin, 20px); }
@@ -161,13 +167,11 @@ body.legend-open .deck { right: 320px; }
 .slide-close .address { font-size: clamp(16px, 2.6vmin, 30px); }
 .slide-close .event-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.8vmin; font-size: clamp(13px, 1.8vmin, 20px); }
 
-/* The dots at the top centre and the legend button in the top-right corner: neither covers a slide's text. */
-.dots { position: absolute; top: 4vmin; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; padding: 8px 10px; background: var(--navy); border-radius: 999px; }
-.dot { width: 11px; height: 11px; border: 2px solid var(--white); border-radius: 50%; background: var(--navy); }
-.dot.on { background: var(--white); }
+/* The legend button in the top-right corner, shown only while the legend is open: it covers no slide's text. */
 
 .legend-float { position: fixed; top: 0; right: 0; bottom: 0; width: 320px; padding: calc(4vmin + 56px) 16px 24px; overflow: auto; background: var(--ice); display: none; }
 body.legend-open .legend-float { display: block; }
+body:not(.legend-open) .legend-toggle { display: none; } /* SPEC-slideshow.md § 1 item 2: L still opens the legend */
 .legend-toggle {
   position: fixed; top: 4vmin; right: 4vmin; z-index: 1; min-height: 40px; padding: 8px 14px; cursor: pointer;
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); color: var(--navy);

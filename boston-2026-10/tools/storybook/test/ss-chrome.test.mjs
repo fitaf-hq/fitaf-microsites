@@ -14,6 +14,8 @@ import { serveStatic } from "./serve-static.mjs";
 import { isLocal } from "./walk.mjs";
 
 const TIMEOUT_MS = 120_000;
+/** A moment after load before a case presses anything (the page at rest, well inside the first slide's 7 s). */
+const SETTLE_MS = 300;
 const out = await mkdtemp(join(tmpdir(), "fitaf-storybook-ss-"));
 after(() => rm(out, { recursive: true, force: true }));
 await buildMockups({ outDir: out, png: false, photosDir: join(MOCKUPS_DIR, "no-such-folder") });
@@ -28,6 +30,7 @@ async function withSlideshow({ reducedMotion = false } = {}, fn) {
     page.on("request", (r) => (isLocal(r.url()) ? r.continue() : r.abort()));
     await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: reducedMotion ? "reduce" : "no-preference" }]);
     await page.goto(`${server.base}/slideshow.html`, { waitUntil: "load" });
+    await new Promise((r) => setTimeout(r, SETTLE_MS));
     return await fn(page);
   } finally {
     await chrome.close();

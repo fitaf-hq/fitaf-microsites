@@ -95,7 +95,13 @@ test("P5: the mock-up stylesheet draws no raw colour and nothing translucent", a
   const css = await readFile(join(MOCKUPS_DIR, "mockups.css"), "utf8");
   assert.deepEqual(rawColours(css), []);
   assert.doesNotMatch(css, /:root\s*\{/, "declares no tokens of its own");
-  assert.doesNotMatch(css, /\bopacity\s*:|\btransparent\b|mix-blend-mode|backdrop-filter/i);
+  // Updated (SPEC-slideshow.md § 1 item 3, the ruled cross-dissolve): opacity only in the slideshow's two dissolve rules,
+  // and there only 0 and 1, so at rest nothing is translucent; everywhere else, none.
+  const DISSOLVE = /^\.playing \.deck \.slide(\.on)? \{[^}]*\}$/gm;
+  const dissolve = css.match(DISSOLVE) ?? [];
+  assert.equal(dissolve.length, 2, "control: the dissolve's two rules");
+  assert.deepEqual(dissolve.map((r) => /opacity:\s*([\d.]+)/.exec(r)?.[1]), ["0", "1"], "at rest, 0 or 1");
+  assert.doesNotMatch(css.replace(DISSOLVE, ""), /\bopacity\s*:|\btransparent\b|mix-blend-mode|backdrop-filter/i);
   // Control: the raw-colour check fires on this stylesheet's own syntax.
   assert.equal(rawColours(".offer { background: #d66400; }").length, 1);
 });

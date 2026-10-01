@@ -71,7 +71,6 @@
     { "fg": "--navy", "bg": "--ice", "role": "body", "where": "photo placeholder heading 13px/600 uppercase; the sheet caption 14px; the index page's links", "build": "mockups" },
     { "fg": "--ink", "bg": "--ice", "role": "body", "where": "the index page's list, 16px", "build": "mockups" },
     { "fg": "--field", "bg": "--ice", "role": "ui-or-heading", "where": "photo placeholder's dashed outline", "build": "mockups" },
-    { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "slideshow dots: the ring, and the filled dot of the current slide, on their navy pill", "build": "mockups" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the legend's hover outline: an orange ring on a white ring around a part", "build": "mockups" },
     { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "the hover outline's white ring, where the part is on the navy event bar", "build": "mockups" }
   ],
