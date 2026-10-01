@@ -4,7 +4,8 @@
 // copy of the package's inputs with the FIXTURE manifest and sheets put in data/ and src/assets/photo-sheets/, and the
 // fixture week in data/picks/), built by the program (`node build.mjs`), both builds. With no data/photo-sheets.json at
 // all (a mirror without it or the directory): the same page as base null. And the tree as committed, which since the
-// KMS-side emitter's sheets landed carries the five carousel windows and the committed week's eight photo cells.
+// KMS-side emitter's sheets landed carries the five carousel windows and a photo tile for each meal of the committed
+// week the manifest has a cell for (the count read from the manifest, never a literal).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -89,17 +90,20 @@ test("PR-3: no data/photo-sheets.json and no directory (a mirror) builds the pag
   }
 });
 
-test("PR-3: the tree as committed carries the five carousel windows and the committed week's eight photo cells", async () => {
+test("PR-3: the tree as committed carries the five carousel windows and a photo tile for each meal the manifest has a cell for", async () => {
   const photos = await loadPhotos();
   const { html } = await builtPage({ picks: PICKS_DIR, on: ON });
   const windows = [...parseHTML(html).document.querySelectorAll("#carousel .slide img")];
   assert.deepEqual(windows.map((img) => img.getAttribute("src")), Array(5).fill(photos.base + photos.carousel.file), "five windows onto the carousel sheet");
+  // The counts are the manifest's and the picks file's own, never literals: the emitter decides which meals have a photo.
   const sheet = photos.chefs_choice["2026-10-04"];
-  const cells = Object.keys(sheet.cells);
-  assert.equal(cells.length, 8, "the manifest names eight meals' cells");
+  const menu = JSON.parse(await readFile(join(PICKS_DIR, "2026-10-04.json"), "utf8")).menus["14"].map((m) => m.name);
+  const cells = menu.filter((name) => name in sheet.cells);
+  assert.ok(cells.length > 0, "control: the manifest has a cell for some meal of the 14-meal list");
   const page = openPlanPage(html, { hash: "#lean-14", now: midday(DAYS["S-5"]) });
   const rows = [...page.document.querySelectorAll("#cc-meals li")];
+  assert.equal(rows.length, menu.length, "control: the list shows the 14-meal menu");
   const withPhoto = rows.filter((li) => (li.querySelector(".cc-thumb").getAttribute("style") ?? "").includes(photos.base + sheet.file));
-  assert.deepEqual(withPhoto.map((li) => li.querySelector(".cc-name").textContent).sort(), [...cells].sort(), "the 14-meal list shows those eight with their photo");
-  assert.equal(rows.length - withPhoto.length, 6, "and six plain tiles");
+  assert.deepEqual(withPhoto.map((li) => li.querySelector(".cc-name").textContent).sort(), [...cells].sort(), `the ${cells.length} meals with a cell show their photo`);
+  assert.equal(rows.length - withPhoto.length, menu.length - cells.length, `and ${menu.length - cells.length} plain tiles`);
 });
