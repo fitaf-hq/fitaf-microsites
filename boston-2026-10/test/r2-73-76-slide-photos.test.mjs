@@ -14,7 +14,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { script } from "./r2-harness.mjs";
-import { liveText } from "./r2-live.mjs";
+import { liveText, PREVIOUS_FOOTER } from "./r2-live.mjs";
 import { DONE, expectedWindow, NAMES, NO_CELL, observe, PIXEL, sheetUrl, slideAtFirstPress, unknownHost, WITH_CELL, weekFragment, weekPage } from "./r2-photos.mjs";
 
 test("R2-73: card images never loading — each slide shows its meal's cell from the coded host at its first press", async () => {
@@ -41,7 +41,7 @@ test("R2-74: an old link (no photo part) — the slides exactly as the live bloc
 });
 
 test("R2-74b: the LIVE block (914668de…) given a link with the photo part — refuses it whole: nothing pressed, no screen", async () => {
-  const live = await liveText();
+  const live = await liveText(PREVIOUS_FOOTER);
   const page = await weekPage();
   const seen = await observe(live, page, weekFragment());
   assert.deepEqual(page.all, [], "nothing pressed");

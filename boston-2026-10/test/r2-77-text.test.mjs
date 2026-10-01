@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as storefront from "../scripts/build-storefront.mjs";
-import { liveText, urlsIn } from "./r2-live.mjs";
+import { liveText, PREVIOUS_FOOTER, urlsIn } from "./r2-live.mjs";
 import { HOSTS } from "./r2-photos.mjs";
 
 const FOOTER = "fitaf-handoff.html";
@@ -13,7 +13,7 @@ const FOOTER = "fitaf-handoff.html";
 test("R2-77: at most 15,360 bytes, ASCII, two `<`, and the only new URLs the listed hosts", async () => {
   assert.equal(storefront.MAX_SHIPPED_BYTES, 15360, "§ 17.3: the ceiling for this meeting");
   assert.equal(storefront.TARGET_SHIPPED_BYTES, 5120, "§ 17.3: the warning stays");
-  const live = await liveText();
+  const live = await liveText(PREVIOUS_FOOTER);
   const files = await storefront.storefrontFiles({ commit: "0000000" });
   const added = new Set(urlsIn(JSON.stringify(HOSTS)));
   for (const f of files) {

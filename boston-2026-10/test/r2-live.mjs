@@ -33,9 +33,14 @@ export function urlsIn(text) {
 /** A file of `commit`, by its path in this package. */
 const atCommit = (commit, path) => execFileSync("git", ["-C", ROOT, "show", `${commit}:./${path}`], { encoding: "utf8", maxBuffer: 1 << 24 });
 
-/** The live block's text: rebuilt from the commit its version line names, and checked against its SHA-256. */
-export async function liveText() {
-  const expected = JSON.parse(await readFile(BASELINE, "utf8")).expectedFooter;
+/** The block live before rung 2 § 17's paste (2026-10-01): R2-74b and R2-77 are about it, not about whatever block the
+ * watch's baseline names after a later accept (the same reason CC-8 kept `replaces` until the paste). */
+export const PREVIOUS_FOOTER = "fitaf-handoff a984fb5 sha256:914668ded95f6a8913e7ae0010661d26780700bd7443cbf93f9e4e8a875b41f6";
+
+/** A block's text: rebuilt from the commit its version line names (by default the baseline's, the live block), and
+ * checked against its SHA-256. */
+export async function liveText(versionLine = undefined) {
+  const expected = versionLine ?? JSON.parse(await readFile(BASELINE, "utf8")).expectedFooter;
   if (expected === null) return ""; // no block placed yet: nothing of ours is live
   const m = EXPECTED_FOOTER.exec(expected);
   assert.ok(m, `the baseline's expectedFooter is a version line: ${expected}`);
