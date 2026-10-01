@@ -11,10 +11,12 @@ import {
   LOG_PREFIX,
   MAX_WAIT_AFTER_CHECKOUT_MS,
   MAX_WAIT_MS,
+  MIN_GAP_MS,
   orderPage,
   POLL_MS,
   run,
   script,
+  SETTLE_MS,
 } from "./r2-harness.mjs";
 
 const DONE = `${LOG_PREFIX} done: /checkout`;
@@ -28,7 +30,7 @@ const NOT_REACHED = `${LOG_PREFIX} stopped: /checkout not reached`;
 async function afterPress({ routeAfterMs = null, control = "checkout:shown", extras = false }) {
   const page = await orderPage({ routes: false, extras });
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   while (!page.controls.includes(control)) assert.ok(h.timers.step(), `the script stopped before pressing ${control}`);
   let polls = 0;
   const at = {};
@@ -76,11 +78,16 @@ test("R2-28d: after the extras dialog's CONTINUE TO CHECKOUT, the wait for /chec
 test("R2-28e: the wait BEFORE a press stays 10 s — no enabled CHECKOUT: stopped after exactly 50 polls", async () => {
   const page = await orderPage({ need: 8 }); // the store keeps "Add 1 more meal" disabled
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   while (page.log.length < 7) assert.ok(h.timers.step());
-  let polls = 0;
-  while (h.timers.step()) polls += 1;
-  assert.ok(h.info.includes(`${LOG_PREFIX} stopped: no checkout control`), JSON.stringify(h.info));
-  // One poll after the last meal's press is the checkout's first; 50 in all.
-  assert.equal(polls, MAX_WAIT_MS / POLL_MS);
+  const from = h.timers.delays.length;
+  while (h.timers.step());
+  assert.ok(
+    h.info.includes(`${LOG_PREFIX} stopped: the store counted 7 of 7; the plan shows 7; no checkout control`),
+    JSON.stringify(h.info),
+  );
+  // After the last press: fill C's read of its count (MIN_GAP_MS), its settle (SETTLE_MS), then the look for CHECKOUT,
+  // whose first poll runs at once and whose 50th stops it: 49 timers of 200 ms (SPEC-rung2-fill-c § 1.3, § 1.4).
+  const polls = MAX_WAIT_MS / POLL_MS;
+  assert.deepEqual(h.timers.delays.slice(from - 1), [MIN_GAP_MS, SETTLE_MS, ...Array(polls - 1).fill(POLL_MS)]);
 });

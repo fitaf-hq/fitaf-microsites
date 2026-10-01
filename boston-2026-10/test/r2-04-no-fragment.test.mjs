@@ -65,7 +65,7 @@ const ORDINARY = ["", "#", "#lean-7", "#fitaf", "#FITAF=eyJ2IjoxfQ", "#xfitaf=ey
 for (const hash of ORDINARY) {
   test(`R2-04 fill B, hash ${JSON.stringify(hash)}: one read of location.hash, then return`, async () => {
     const { window, touched } = throwingWindow(hash);
-    run(await script("B"), window);
+    run(await script(), window);
     assert.deepEqual(touched, ["location", "location.hash"]);
   });
 }

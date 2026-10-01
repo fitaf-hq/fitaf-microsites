@@ -12,10 +12,11 @@ import { join } from "node:path";
 import { buildStorefront, MAX_SHIPPED_BYTES, STOREFRONT_SOURCE, TARGET_SHIPPED_BYTES } from "../scripts/build-storefront.mjs";
 
 const FILES = ["fitaf-handoff.fill-B.console.js", "fitaf-handoff.html"];
-/** Code that exists only in one fill: B's must be in every file; A's (retired, § 12) in none. */
+/** Code that exists only in one fill: the shipped fill's (C, SPEC-rung2-fill-c) must be in every file; A's (retired, § 12) in none. */
 const ONLY_IN = {
   A: [/hmp_local_cart/, /localStorage/, /function fillA/, /10538/, /productId/],
-  B: [/app-product-card/, /\.click\(/, /setTimeout/, /function fillB/, /Add to Cart/, /function mealKey/],
+  // The shipped fill is C since SPEC-rung2-fill-c (its press loop fill B's replaced; the file names kept).
+  C: [/app-product-card/, /\.click\(/, /setTimeout/, /function fillC/, /Add to Cart/, /function mealKey/],
 };
 
 async function withBuild(fn, options = {}) {
@@ -51,7 +52,7 @@ test("R2-11b: each file holds one fill only, is self-contained, and names nothin
       B: await read("fitaf-handoff.fill-B.console.js"),
       footer: await read("fitaf-handoff.html"),
     };
-    const fillOf = { B: "B", footer: "B" }; // the committed source's FILL is B, the one fill
+    const fillOf = { B: "C", footer: "C" }; // the committed source's FILL is C, the one fill (the console file keeps B's name)
     for (const [label, text] of Object.entries(files)) {
       const own = fillOf[label];
       const other = own === "A" ? "B" : "A";

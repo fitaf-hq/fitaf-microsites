@@ -9,13 +9,13 @@ import { collisionCase, script } from "./r2-harness.mjs";
 const REFUSAL = 'if (c[1]) fail("two meals share a key: " + k);';
 
 test("R2-30 control: the shipped fill-B text passes R2-26's case", async () => {
-  const text = await script("B");
+  const text = await script();
   assert.equal(text.split(REFUSAL).length, 2, "the refusal the mutant removes is in the shipped text, once");
   await collisionCase(text);
 });
 
 test("R2-30 mutant: fill B presses the first card whose key matches and ignores a second — R2-26 fails", async () => {
-  const text = await script("B");
+  const text = await script();
   const mutant = text.replace(REFUSAL, "");
   assert.notEqual(mutant, text, "the mutation applied");
   await assert.rejects(collisionCase(mutant), (err) => {

@@ -16,5 +16,5 @@ test("R2-24: the tool's v2 link for the 7-meal fixture: R2-15's presses, then do
   assert.equal(link.search, "?mpid=21");
   assert.match(link.hash, V2_FRAGMENT, "a v2 fragment");
   assert.equal(link.hash, `#fitaf=2.${CHECKOUT_PAYLOAD.items.map((it) => (it.qty === 1 ? refKey(it.name) : `${refKey(it.name)}*${it.qty}`)).join(".")}`);
-  await checkoutCase(await script("B"), link.hash);
+  await checkoutCase(await script(), link.hash);
 });

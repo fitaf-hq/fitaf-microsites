@@ -17,6 +17,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, orderPage, run, script } from "./r2-harness.mjs";
+import { endScreenClock } from "./fc-harness.mjs";
 import { focusableIn, screenOf } from "./r2-screen.mjs";
 
 const LOGO = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40"><rect width="120" height="40" fill="#1b2360"/></svg>')}`;
@@ -160,7 +161,9 @@ test("R2-70c: a stop after the screen — the screen and its logo gone, and no l
   h.timers.step();
   assert.equal(screenOf(page.document)?.querySelectorAll(OURS).length, 1, "fixture control: the screen carried the logo");
   h.timers.drain();
-  assert.ok(h.info.includes("[fitaf-handoff] stopped: no checkout control"), JSON.stringify(h.info));
+  assert.ok(h.info.includes("[fitaf-handoff] stopped: the store counted 7 of 7; the plan shows 7; no checkout control"), JSON.stringify(h.info));
+  // A stop of fill C's own (SPEC-rung2-fill-c § 1.6): the screen says so, and goes at its clock's end (R2-43).
+  endScreenClock(page.document);
   assert.equal(screenOf(page.document), null);
   assert.equal(page.document.querySelectorAll(OURS).length, 0, "no logo of ours left on the page");
 });

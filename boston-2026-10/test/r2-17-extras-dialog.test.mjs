@@ -10,10 +10,11 @@ import {
   LOG_PREFIX,
   MAX_WAIT_AFTER_CHECKOUT_MS,
   MAX_WAIT_MS,
+  MIN_GAP_MS,
   orderPage,
   PAGE,
-  POLL_MS,
   run,
+  SETTLE_MS,
   script,
   untouchableStorage,
   assertPollsAndPresses,
@@ -22,7 +23,7 @@ import {
 async function viaDialog(options) {
   const page = await orderPage({ extras: true, ...options });
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page, storage: untouchableStorage() });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   return { page, h };
 }
@@ -51,8 +52,10 @@ test("R2-17c: the store never routes after CONTINUE — B stops within its budge
   ]);
   assert.ok(h.info.includes(`${LOG_PREFIX} stopped: /checkout not reached`), JSON.stringify(h.info));
   assert.ok(!h.info.some((line) => /done/.test(line)));
-  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
-  // The meals' ticks, at most 10 s for CHECKOUT, then at most 30 s after each of the store's two controls (§ 11 item 4).
-  const budget = 7 * POLL_MS + MAX_WAIT_MS + 2 * MAX_WAIT_AFTER_CHECKOUT_MS;
-  assert.ok(h.timers.delays.length * POLL_MS <= budget, `${h.timers.delays.length} polls`);
+  assertPollsAndPresses(h.timers.delays, page.log.length, "fill C:");
+  // Fill C's wait after each of the seven presses and its settle (SPEC-rung2-fill-c § 1), at most 10 s for CHECKOUT,
+  // then at most 30 s after each of the store's two controls (§ 11 item 4).
+  const budget = 7 * MIN_GAP_MS + SETTLE_MS + MAX_WAIT_MS + 2 * MAX_WAIT_AFTER_CHECKOUT_MS;
+  const waited = h.timers.delays.reduce((a, b) => a + b, 0);
+  assert.ok(waited <= budget, `${waited} ms of ${budget}`);
 });

@@ -24,11 +24,12 @@
 //   slide, whether it showed Fit AF's sheet (a report line, not a pass rule).
 // The pass rule is lib/smoke-verdict.mjs (W6), AND lib/faces.mjs's (W10–W14, and W16's logoVerdict): a width passes only
 // if all do.
+import { readFileSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
-import { LOG_PREFIX, MPID, STORE_ORIGIN, VIEWPORTS, WIDTHS } from "./config.mjs";
+import { LOG_PREFIX, MPID, SITE_DIR, STORE_ORIGIN, VIEWPORTS, WIDTHS } from "./config.mjs";
 import { extrasReport, facesVerdict, LOGO, logoVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
 import { parseBlock } from "./footer-check.mjs";
 import { siteCode } from "./site-code.mjs";
@@ -38,15 +39,40 @@ const NAV_MS = 60_000;
 /** Fill B itself waits at most 10 s for the cards; the menu read and the paste wait for them longer. */
 const MENU_MS = 45_000;
 /**
- * Fill B's longest run on mpid 21 (SPEC-rung2 §§ 6, 8, 11), each wait at its limit: the first meal card (30 s, since
- * SPEC-rung2-progress-and-checkout § 15.2), every meal's card from the first (10 s), one 1 s wait per press of the 7
- * meals (§ 23; it was a 200 ms tick), an enabled CHECKOUT (10 s), then 30 s after CHECKOUT and 30 s after the extras
- * dialog's CONTINUE TO CHECKOUT (§ 11 item 4): 117 s, where it was 111.4 s. W9e reads the built fill-B text's own
- * constants and checks this sum.
+ * SPEC-rung2-fill-c § 4.4: every wait sized for the LARGEST plan the menu offers (data/plans.json: 21 meals a week),
+ * not the 7 the smoke links to (the Boston record § 46: the waits were sized from 7). Read from the site's own data.
  */
-export const FILL_B_LONGEST_MS = 30_000 + 10_000 + 7 * 1000 + 10_000 + 30_000 + 30_000;
-/** § 7 item 3: the smoke waits for fill B's own verdict (done or stopped) at most this long, above its longest run. */
-export const HANDOFF_MS = FILL_B_LONGEST_MS + 15_000;
+export const LARGEST_PLAN = (() => {
+  const plans = JSON.parse(readFileSync(`${SITE_DIR}/data/plans.json`, "utf8"));
+  return Math.max(...[...plans.individual, plans.family].flatMap((p) => p.counts.map((c) => c.meals_per_week)));
+})();
+/** Fill C's constants (SPEC-rung2-fill-c § 7 e; W9e reads the built text's own and checks the sum below). */
+const POLL_MS = 200;
+const MIN_GAP_MS = 300;
+const ACK_MS = 5000;
+const RETRIES = 2;
+const SETTLE_MS = 1000;
+/** One press's wait for its count, as fill C's timers count it: MIN_GAP_MS, then polls past ACK_MS (5.1 s). */
+const ACK_WINDOW_MS = MIN_GAP_MS + Math.ceil((ACK_MS - MIN_GAP_MS) / POLL_MS) * POLL_MS;
+/** One unit at its longest: its press and RETRIES re-presses, each a whole window (15.3 s). */
+const UNIT_LONGEST_MS = (1 + RETRIES) * ACK_WINDOW_MS;
+/**
+ * Fill C's longest run on the largest plan, each wait at its limit: the first meal card (30 s, SPEC-rung2-progress-and-
+ * checkout § 15.2), every meal's card from the first (10 s), every unit at its longest, the settle (1 s), every unit
+ * again (a completion of a plan whose every count was taken back, § 1.3), an enabled CHECKOUT with the plan's count
+ * (10 s, § 1.4), then 30 s after CHECKOUT and 30 s after the extras dialog's CONTINUE TO CHECKOUT (SPEC-rung2 § 11 item
+ * 4): 753.6 s for 21 meals. (Fill B's, on 7 meals: 117 s.)
+ */
+export const FILL_LONGEST_MS =
+  30_000 + 10_000 + LARGEST_PLAN * UNIT_LONGEST_MS + SETTLE_MS + LARGEST_PLAN * UNIT_LONGEST_MS + 10_000 + 30_000 + 30_000;
+/** § 7 item 3: the smoke waits for the fill's own verdict (done or stopped) at most this long, above its longest run. */
+export const HANDOFF_MS = FILL_LONGEST_MS + 15_000;
+/**
+ * SPEC-rung2-fill-c § 1.6: at a stop of fill C's own the screen stays up with the stop's words for its exit clock
+ * (fitaf-z, 4 s), then goes. A stopped run is judged by W10 alone (the screen gone at the end), so the smoke waits this
+ * long for it to go before it reads the faces.
+ */
+const STOPPED_SCREEN_MS = 4_000 + 2_000;
 const CHECKOUT_MS = 30_000;
 /** The store's own lists (SPEC-rung2 § 8), whose COUNTS a failed width records. */
 const STORE_LISTS = ["hmp_pending_plan_items", "hmp_local_cart"];
@@ -177,6 +203,13 @@ async function evidenceOf(page, where, consoleLines, errors) {
  */
 async function facesOf(page, outcome) {
   const done = outcome.console.includes(DONE_LINE);
+  if (!done) {
+    try {
+      await poll(page, (id) => !document.getElementById(id), SCREEN_ID, Boolean, { timeoutMs: STOPPED_SCREEN_MS });
+    } catch {
+      // The page gone or navigating: the reading below records what it can.
+    }
+  }
   let recorded = { events: [], screenAtEnd: null };
   try {
     recorded = await page.evaluate(readRecorded, SCREEN_ID);

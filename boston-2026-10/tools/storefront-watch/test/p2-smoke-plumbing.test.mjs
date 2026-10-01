@@ -61,7 +61,7 @@ test("P2: fill B pasted at 1280 (CHECKOUT NOW) and at 390 ×3 (CHECKOUT): pass; 
     assert.equal(outcome.checkout.totalCents, 8750);
     assert.equal(outcome.checkout.totalFrom, "Plan Total");
     assert.ok(outcome.link.startsWith(`${store.origin}/order?mpid=21#fitaf=`));
-    assert.deepEqual(fitaf(outcome), ["[fitaf-handoff] fill B, mpid 21", "[fitaf-handoff] done: /checkout"]);
+    assert.deepEqual(fitaf(outcome), ["[fitaf-handoff] fill C, mpid 21", "[fitaf-handoff] done: /checkout"]);
     assert.ok(!outcome.console.includes("[fixture] ORDER PLACED"));
   }
 });
@@ -79,7 +79,7 @@ test("P2: the live block alone (the store runs our Footer block): pass", { skip 
   store.set({ footer: built.footer });
   const { verdict, outcome } = await run(1280, { kind: "live", label: "live" });
   assert.deepEqual(verdict.reasons, []);
-  assert.equal(fitaf(outcome).filter((l) => l.startsWith("[fitaf-handoff] fill B")).length, 1);
+  assert.equal(fitaf(outcome).filter((l) => l.startsWith("[fitaf-handoff] fill C")).length, 1);
 });
 
 test("P2: a paste while another block of ours is on the page: the pasted one runs, the other is held off", { skip }, async () => {

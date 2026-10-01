@@ -34,7 +34,7 @@ async function outcome(fill, p) {
   const before = storage.dump();
   const page = await orderPage();
   const h = fakeWindow({ path, fragment: fragmentFor(p), storage, page });
-  run(await script(fill), h.window);
+  run(await script(), h.window); // `fill` names the case only: one fill is built (SPEC-rung2-fill-c § 2b)
   h.timers.drain();
   return { h, path, page, written: storage.dump() !== before };
 }

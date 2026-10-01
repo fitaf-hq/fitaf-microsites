@@ -34,7 +34,7 @@ const CASES = [
 test("R2-27 control: the valid link the cases are mutated from fills (fill B)", async () => {
   const page = await orderPage();
   const b = fakeWindow({ fragment: rawFragment(VALID), page });
-  run(await script("B"), b.window);
+  run(await script(), b.window);
   b.timers.drain();
   assertCheckedOut(b, page, "/order?mpid=21");
 });
@@ -43,7 +43,7 @@ for (const [label, fragment, reason] of CASES) {
   test(`R2-27 fill B refuses ${label}: nothing pressed, fragment removed`, async () => {
     const page = await orderPage();
     const h = fakeWindow({ fragment, page });
-    run(await script("B"), h.window);
+    run(await script(), h.window);
     h.timers.drain();
     assertRefused(h, "/order?mpid=21", reason);
     assert.deepEqual(page.all, [], "nothing pressed");

@@ -40,7 +40,7 @@ test("R2-68: no cards for 30 s — stopped: no meal cards on this page, at the 1
   assert.equal(lines.at(-1).screen, false, "the screen is gone before the stop's line");
   assert.equal(screenOf(page.document), null);
   assert.deepEqual(deepState(page.document), { mark: false, styles: 0, inHead: true, css: "" }, "no mark, no style");
-  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
+  assertPollsAndPresses(h.timers.delays, page.log.length, "fill C:");
   assert.equal(h.timers.delays.length, LAST_POLL - 1, "the stop at the 150th poll: 149 timers set before it");
   assert.equal(h.timers.pending(), 0, "and nothing left running");
 });

@@ -41,6 +41,16 @@
 // § 21: the plan group's header (.summary__plan-group-header: the plan's name, its "Remove plan" button and the chevron)
 // and its return link (a.summary__plan-return, "← Return to …"), as the live markup the Advisor quoted.
 // Images are GENERATED (a flat SVG rectangle), never a photograph, served here; nothing is fetched from anywhere else.
+// SPEC-rung2-fill-c § 2 (`counter`, BY DEFAULT since fill C, which waits for it; `counter: null` is the store of
+// before, which shows no count): the store's count, as the live store showed it on 2026-10-01 (names read from its
+// page, none of its code): a counted meal's Add to Cart is replaced, on both card layouts, by app-counter >
+// div.counter[role=spinbutton] holding button.counter__button "Decrease value", span.counter__value (the meal's count)
+// and button.counter__button "Increase value", which adds one more; the sidebar (.side, which also takes the live class
+// cart__checkout) gains p.cart__progress-label ("Please add at least N meals to continue") and span.cart__items-count
+// ("N items", absent while the plan is empty); the bar (.bar, also mobile-cart-summary__checkout-button) gains the
+// "Items" stat, .mobile-cart-summary__stat-value. Its schedule: ackMs (each press is counted that long after it; 0, at
+// once), drop (press indexes, from 0, the store ignores), takeBack ([{ press, afterMs }]: that press's count taken back
+// afterMs after it was shown).
 import { createServer } from "node:http";
 
 export const MEALS = ["Birria de Res Bowl", "Chicken Pesto Pasta", "Jalapeño Lime Chicken", "Turkey Chili", "Salmon Rice Bowl",
@@ -220,6 +230,50 @@ function appHtml(cfg) {
   function money(c) { return "$" + (c / 100).toFixed(2); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function checkoutButtons() { return [].slice.call(document.querySelectorAll(".checkout-control")); }
+  // SPEC-rung2-fill-c § 2: the store's count (cfg.counter). MEAL[name]: the meal's two actions boxes and their Add.
+  var COUNTER = cfg.counter, presses = 0, MEAL = {};
+  function counterEl(n, name) {
+    var c = el("app-counter"), d = el("div", "counter");
+    d.setAttribute("role", "spinbutton");
+    [["Decrease value"], null, ["Increase value"]].forEach(function (b, k) {
+      if (!b) return d.appendChild(el("span", "counter__value", String(n)));
+      var btn = el("button", "counter__button"); btn.type = "button"; btn.setAttribute("aria-label", b[0]); d.appendChild(btn);
+      if (k) btn.onclick = function () { counted(name); };
+    });
+    c.appendChild(d);
+    return c;
+  }
+  function countOf(name) { return pending.filter(function (n) { return n === name; }).length; }
+  function drawMeal(name) {
+    var m = MEAL[name], n = countOf(name);
+    m.actions.replaceChildren(n ? counterEl(n, name) : m.b);
+    m.mActions.replaceChildren(n ? counterEl(n, name) : m.mb);
+  }
+  function renderCount() {
+    var n = pending.length;
+    document.querySelectorAll(".cart__items-header").forEach(function (h) {
+      h.replaceChildren();
+      if (n) h.appendChild(el("span", "cart__items-count", n + (n === 1 ? " item" : " items")));
+    });
+    document.querySelectorAll(".mobile-cart-summary__stat-value").forEach(function (s) { s.textContent = String(n); });
+  }
+  function save() { localStorage.setItem("hmp_pending_plan_items", JSON.stringify({ "21": pending })); }
+  // A press of a meal's Add to Cart or "+": counted as the schedule says, at once when ackMs is 0 (so a planted hang,
+  // which stops the page's timers, does not stop the store counting).
+  function counted(name) {
+    var k = presses++;
+    if ((COUNTER.drop || []).indexOf(k) >= 0) return;
+    function count() {
+      pending.push(name); save(); renderBar(); renderCount(); drawMeal(name);
+      if (cfg.hangAfter && pending.length >= cfg.hangAfter) window.setTimeout = function () { return 0; };
+      (COUNTER.takeBack || []).filter(function (x) { return x.press === k; }).forEach(function (x) {
+        setTimeout(function () {
+          pending.splice(pending.lastIndexOf(name), 1); save(); renderBar(); renderCount(); drawMeal(name);
+        }, x.afterMs);
+      });
+    }
+    if (COUNTER.ackMs) setTimeout(count, COUNTER.ackMs); else count();
+  }
   function renderBar() {
     checkoutButtons().forEach(function (b) {
       var left = ${7} - pending.length;
@@ -290,8 +344,10 @@ function appHtml(cfg) {
       b.appendChild(el("span", "product__actions-add_label", "Add to Cart"));
       b.appendChild(el("span", "product__actions-add_price", money(${PRICE_CENTS})));
       if (cfg.soldOut.indexOf(name) >= 0) b.disabled = true;
+      var mobile = el("app-product-card-mobile"), mActions = el("div", "product-card-mobile__actions"), mb = el("button", null, COUNTER ? "Add" : "+");
       b.onclick = function () {
         window.__fixtureKey.push(["add", sessionStorage.getItem(KEY)]);
+        if (COUNTER) return counted(name);
         pending.push(name);
         localStorage.setItem("hmp_pending_plan_items", JSON.stringify({ "21": pending }));
         renderBar();
@@ -299,19 +355,32 @@ function appHtml(cfg) {
         if (cfg.hangAfter && pending.length >= cfg.hangAfter) window.setTimeout = function () { return 0; };
       };
       actions.appendChild(b); card.appendChild(actions); root.appendChild(card);
-      var mobile = el("app-product-card-mobile");
       mobile.appendChild(el("h2", "product-card-mobile__title", name)); // the real store's mobile title class
-      mobile.appendChild(el("button", null, "+"));
+      // Without cfg.counter, the mobile card's "+" stands alone, as before; with it, the live store's "Add" in its actions.
+      if (COUNTER) { mActions.appendChild(mb); mobile.appendChild(mActions); MEAL[name] = { actions: actions, mActions: mActions, b: b, mb: mb }; } else mobile.appendChild(mb);
       root.appendChild(mobile);
     });
-    [["bar", " CHECKOUT "], ["side", " CHECKOUT NOW "]].forEach(function (p) {
-      var box = el("div", p[0]);
+    [["bar", " CHECKOUT ", "mobile-cart-summary__checkout-button"], ["side", " CHECKOUT NOW ", "cart__checkout"]].forEach(function (p) {
+      var box = el("div", COUNTER ? p[0] + " " + p[2] : p[0]);
+      if (COUNTER && p[0] === "side") {
+        var least = el("p", "cart__progress-label", "Please add at least ");
+        least.appendChild(el("span", "cart__progress-label-highlight", "7"));
+        least.appendChild(document.createTextNode(" meals to continue"));
+        box.appendChild(least); box.appendChild(el("div", "cart__items-header"));
+      }
+      if (COUNTER && p[0] === "bar") {
+        var stat = el("div", "mobile-cart-summary__stat");
+        stat.appendChild(el("span", "mobile-cart-summary__stat-label", "Items"));
+        stat.appendChild(el("span", "mobile-cart-summary__stat-value", "0"));
+        box.appendChild(stat);
+      }
       var b = el("button", "checkout-control");
       b.setAttribute("data-label", p[1]);
       b.onclick = function () { console.log("[fixture] pressed" + p[1].trimEnd()); onCheckout(); };
       box.appendChild(b); root.appendChild(box);
     });
     renderBar();
+    if (COUNTER) renderCount();
   }
   function renderCheckout() {
     root.innerHTML = JSON.parse(document.getElementById("checkout-html").textContent);
@@ -411,6 +480,7 @@ const DEFAULTS = {
   extrasPopover: "manual",
   storeLines: false,
   checkoutNames: null,
+  counter: {},
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */

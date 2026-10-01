@@ -30,7 +30,7 @@ function rename(document, from, to) {
 
 async function runOn(page) {
   const h = fakeWindow({ fragment: fragmentFor(PAYLOAD), page });
-  run(await script("B"), h.window);
+  run(await script(), h.window);
   h.timers.drain();
   return h;
 }
@@ -48,7 +48,7 @@ test("R2-10a: one meal renamed — refused, zero presses, the wait bounded to 10
   const h = await runOn(page);
   assert.equal(page.total(), 0, "nothing pressed, not even the meals that were found");
   assertRefused(h, "/order?mpid=21", new RegExp(`stopped: not on this page: ${refKey("Chicken Pesto Pasta")}$`));
-  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
+  assertPollsAndPresses(h.timers.delays, page.log.length, "fill C:");
   assert.ok(h.timers.delays.length * POLL_MS <= MAX_WAIT_MS, `waited ${h.timers.delays.length} polls`);
 });
 

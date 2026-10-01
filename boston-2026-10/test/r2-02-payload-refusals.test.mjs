@@ -60,7 +60,7 @@ for (const [label, fragment, reason] of CASES) {
   test(`R2-02 fill B refuses: ${label}`, async () => {
     const page = await orderPage();
     const h = fakeWindow({ fragment, document: page.document });
-    run(await script("B"), h.window);
+    run(await script(), h.window);
     h.timers.drain();
     assertRefused(h, "/order?mpid=21", reason);
     assert.equal(page.total(), 0, "nothing pressed");
@@ -71,7 +71,7 @@ test("R2-02 control: the valid payload the cases are mutated from is read by fil
   for (const fragment of [rawFragment(valid), rawFragment(`${valid}.~BOSTON-26`), rawFragment(`${valid}.~${"A".repeat(40)}`)]) {
     const page = await orderPage();
     const b = fakeWindow({ fragment, page });
-    run(await script("B"), b.window);
+    run(await script(), b.window);
     b.timers.drain();
     assertCheckedOut(b, page, "/order?mpid=21");
   }

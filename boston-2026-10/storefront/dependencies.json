@@ -278,6 +278,36 @@
       "literal": "\"summary__plan-return\"",
       "use": "H17: the plan's return link (\"Return to ...\"), hidden on the deep-carted checkout",
       "spec": "SPEC-rung2-progress-and-checkout.md § 21; R2-81, W19"
+    },
+    {
+      "id": "counter-value",
+      "literal": "\"counter__value\"",
+      "use": "fill C reads a meal's count, as the store shows it on the meal's card, in this element of the card's counter (app-counter), in place of its Add to Cart: each press waits for it",
+      "spec": "SPEC-rung2-fill-c.md § 1.1; § 2a"
+    },
+    {
+      "id": "counter-button",
+      "literal": "\"counter__button\"",
+      "use": "the counter's two buttons (− and +): fill C presses the card's \"+\" for a meal's count above 1",
+      "spec": "SPEC-rung2-fill-c.md § 1.1; § 2a"
+    },
+    {
+      "id": "counter-increase",
+      "literal": "\"Increase value\"",
+      "use": "the aria-label of the counter's \"+\" (it has no text), by which fill C finds it",
+      "spec": "SPEC-rung2-fill-c.md § 1.1; § 2a"
+    },
+    {
+      "id": "plan-items-count",
+      "literal": "\"cart__items-count\"",
+      "use": "the cart sidebar's \"N items\" (1025 px and wider): the plan's own count, which must equal the link's before fill C presses CHECKOUT",
+      "spec": "SPEC-rung2-fill-c.md § 1.4; § 2a"
+    },
+    {
+      "id": "plan-items-stat",
+      "literal": "\"mobile-cart-summary__stat-value\"",
+      "use": "the cart bar's \"Items\" value (below 1025 px; its other value, the cart's total, is a price and is not read): the plan's own count there",
+      "spec": "SPEC-rung2-fill-c.md § 1.4; § 2a"
     }
   ]
 }
