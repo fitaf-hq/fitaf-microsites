@@ -1,0 +1,1279 @@
+{
+  "probe": "probe-counts (SPEC-rung2-fill-c § 2)",
+  "at": "2026-10-01T21:34:13.348Z",
+  "origin": "https://fitafnutrition.com",
+  "path": "/order?mpid=23",
+  "width": 390,
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 3,
+    "isMobile": true,
+    "hasTouch": true
+  },
+  "spacing": "nowait",
+  "gapMs": null,
+  "mpid": 23,
+  "need": 14,
+  "ackWindowMs": 5000,
+  "tailMs": 3000,
+  "release": "main-EIFLKDHS.js",
+  "cards": 54,
+  "duplicates": [],
+  "chosen": [
+    "Birria de Res Bowl",
+    "Buffalo Chicken Sliders",
+    "Italian Chicken Trio",
+    "Elk Chili",
+    "Chipotle Chicken Mac & Cheese",
+    "BBQ Pulled Pork Mac & Cheese",
+    "Mediterranean Chicken Quesadilla",
+    "Maple Harvest Fit Bowl",
+    "Vodka Chicken Parm Zucchini Noodle Lasagna",
+    "Grass-Fed Beef Taco Bowl",
+    "Pumpkin Pie Greek Yogurt Parfait",
+    "Wild Salmon Cakes with Wasabi Aioli",
+    "Lemon Garlic Shrimp over Forbidden Rice",
+    "Honey-Chipotle Pulled Chicken"
+  ],
+  "cardsMs": 954,
+  "selectors": {
+    "card": "app-product-card",
+    "cardTitle": ".product__content-title",
+    "cardActions": ".product__actions",
+    "addLabel": "Add to Cart",
+    "mobileCard": "app-product-card-mobile",
+    "mobileTitle": ".product-card-mobile__title",
+    "mobileActions": ".product-card-mobile__actions",
+    "mobileAddLabel": "Add",
+    "counter": "app-counter .counter[role=spinbutton]",
+    "counterValue": ".counter__value",
+    "counterDecrease": "button.counter__button[aria-label=\"Decrease value\"]",
+    "counterIncrease": "button.counter__button[aria-label=\"Increase value\"]",
+    "sidebarRow": "app-cart-product-card",
+    "sidebarRowTitle": ".product__content-title",
+    "itemsCount": ".cart__items-count",
+    "progressLabel": ".cart__progress-label",
+    "phoneItems": ".mobile-cart-summary__stat",
+    "phoneItemsLabel": ".mobile-cart-summary__stat-label",
+    "phoneItemsValue": ".mobile-cart-summary__stat-value",
+    "sideCheckout": ".cart__checkout button",
+    "barCheckout": ".mobile-cart-summary__checkout-button button",
+    "toast": ".toast-message",
+    "pendingKey": "hmp_pending_plan_items"
+  },
+  "sampling": {
+    "everyMs": 50,
+    "samples": 68,
+    "maxGapMs": 152.5
+  },
+  "presses": [
+    {
+      "index": 0,
+      "meal": "Birria de Res Bowl",
+      "pressed": true,
+      "at": 0,
+      "gapMs": null,
+      "clickMs": 13.2,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 114.1,
+        "stepperMs": 114.1,
+        "addGoneMs": 114.1
+      },
+      "mobile": {
+        "ackMs": 114.1
+      },
+      "row": {
+        "ackMs": 114.1
+      },
+      "items": {
+        "reachedMs": 114.1,
+        "textAtAck": "3 items"
+      },
+      "phoneItems": {
+        "reachedMs": 114.1,
+        "textAtAck": "3"
+      },
+      "sideAtAck": {
+        "text": "ADD 11 MORE MEALS TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 11 more meals",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 1,
+      "meal": "Buffalo Chicken Sliders",
+      "pressed": true,
+      "at": 30.5,
+      "gapMs": 30.5,
+      "clickMs": 7.7,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 83.6,
+        "stepperMs": 83.6,
+        "addGoneMs": 83.6
+      },
+      "mobile": {
+        "ackMs": 83.6
+      },
+      "row": {
+        "ackMs": 83.6
+      },
+      "items": {
+        "reachedMs": 83.6,
+        "textAtAck": "3 items"
+      },
+      "phoneItems": {
+        "reachedMs": 83.6,
+        "textAtAck": "3"
+      },
+      "sideAtAck": {
+        "text": "ADD 11 MORE MEALS TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 11 more meals",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 2,
+      "meal": "Italian Chicken Trio",
+      "pressed": true,
+      "at": 96.4,
+      "gapMs": 65.9,
+      "clickMs": 6.9,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 17.7,
+        "stepperMs": 17.7,
+        "addGoneMs": 17.7
+      },
+      "mobile": {
+        "ackMs": 17.7
+      },
+      "row": {
+        "ackMs": 17.7
+      },
+      "items": {
+        "reachedMs": 17.7,
+        "textAtAck": "3 items"
+      },
+      "phoneItems": {
+        "reachedMs": 17.7,
+        "textAtAck": "3"
+      },
+      "sideAtAck": {
+        "text": "ADD 11 MORE MEALS TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 11 more meals",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 3,
+      "meal": "Elk Chili",
+      "pressed": true,
+      "at": 115.1,
+      "gapMs": 18.7,
+      "clickMs": 8.2,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 53.1,
+        "stepperMs": 53.1,
+        "addGoneMs": 53.1
+      },
+      "mobile": {
+        "ackMs": 53.1
+      },
+      "row": {
+        "ackMs": 53.1
+      },
+      "items": {
+        "reachedMs": 53.1,
+        "textAtAck": "6 items"
+      },
+      "phoneItems": {
+        "reachedMs": 53.1,
+        "textAtAck": "6"
+      },
+      "sideAtAck": {
+        "text": "ADD 8 MORE MEALS TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 8 more meals",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 4,
+      "meal": "Chipotle Chicken Mac & Cheese",
+      "pressed": true,
+      "at": 134.8,
+      "gapMs": 19.7,
+      "clickMs": 5.2,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 33.4,
+        "stepperMs": 33.4,
+        "addGoneMs": 33.4
+      },
+      "mobile": {
+        "ackMs": 33.4
+      },
+      "row": {
+        "ackMs": 33.4
+      },
+      "items": {
+        "reachedMs": 33.4,
+        "textAtAck": "6 items"
+      },
+      "phoneItems": {
+        "reachedMs": 33.4,
+        "textAtAck": "6"
+      },
+      "sideAtAck": {
+        "text": "ADD 8 MORE MEALS TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 8 more meals",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 5,
+      "meal": "BBQ Pulled Pork Mac & Cheese",
+      "pressed": true,
+      "at": 151,
+      "gapMs": 16.2,
+      "clickMs": 6.4,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 17.2,
+        "stepperMs": 17.2,
+        "addGoneMs": 17.2
+      },
+      "mobile": {
+        "ackMs": 17.2
+      },
+      "row": {
+        "ackMs": 17.2
+      },
+      "items": {
+        "reachedMs": 17.2,
+        "textAtAck": "6 items"
+      },
+      "phoneItems": {
+        "reachedMs": 17.2,
+        "textAtAck": "6"
+      },
+      "sideAtAck": {
+        "text": "ADD 8 MORE MEALS TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 8 more meals",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 6,
+      "meal": "Mediterranean Chicken Quesadilla",
+      "pressed": true,
+      "at": 169.6,
+      "gapMs": 18.6,
+      "clickMs": 2.1,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 30.7,
+        "stepperMs": 30.7,
+        "addGoneMs": 30.7
+      },
+      "mobile": {
+        "ackMs": 30.7
+      },
+      "row": {
+        "ackMs": 30.7
+      },
+      "items": {
+        "reachedMs": 30.7,
+        "textAtAck": "8 items"
+      },
+      "phoneItems": {
+        "reachedMs": 30.7,
+        "textAtAck": "8"
+      },
+      "sideAtAck": {
+        "text": "ADD 6 MORE MEALS TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 6 more meals",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 7,
+      "meal": "Maple Harvest Fit Bowl",
+      "pressed": true,
+      "at": 183,
+      "gapMs": 13.4,
+      "clickMs": 1.8,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 17.3,
+        "stepperMs": 17.3,
+        "addGoneMs": 17.3
+      },
+      "mobile": {
+        "ackMs": 17.3
+      },
+      "row": {
+        "ackMs": 17.3
+      },
+      "items": {
+        "reachedMs": 17.3,
+        "textAtAck": "8 items"
+      },
+      "phoneItems": {
+        "reachedMs": 17.3,
+        "textAtAck": "8"
+      },
+      "sideAtAck": {
+        "text": "ADD 6 MORE MEALS TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 6 more meals",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 8,
+      "meal": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+      "pressed": true,
+      "at": 196.9,
+      "gapMs": 13.9,
+      "clickMs": 2,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 72.6,
+        "stepperMs": 72.6,
+        "addGoneMs": 72.6
+      },
+      "mobile": {
+        "ackMs": 72.6
+      },
+      "row": {
+        "ackMs": 72.6
+      },
+      "items": {
+        "reachedMs": 72.6,
+        "textAtAck": "13 items"
+      },
+      "phoneItems": {
+        "reachedMs": 72.6,
+        "textAtAck": "13"
+      },
+      "sideAtAck": {
+        "text": "ADD 1 MORE MEAL TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 1 more meal",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 9,
+      "meal": "Grass-Fed Beef Taco Bowl",
+      "pressed": true,
+      "at": 212.5,
+      "gapMs": 15.6,
+      "clickMs": 1.8,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 57,
+        "stepperMs": 57,
+        "addGoneMs": 57
+      },
+      "mobile": {
+        "ackMs": 57
+      },
+      "row": {
+        "ackMs": 57
+      },
+      "items": {
+        "reachedMs": 57,
+        "textAtAck": "13 items"
+      },
+      "phoneItems": {
+        "reachedMs": 57,
+        "textAtAck": "13"
+      },
+      "sideAtAck": {
+        "text": "ADD 1 MORE MEAL TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 1 more meal",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 10,
+      "meal": "Pumpkin Pie Greek Yogurt Parfait",
+      "pressed": true,
+      "at": 227.8,
+      "gapMs": 15.3,
+      "clickMs": 1.7,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 41.7,
+        "stepperMs": 41.7,
+        "addGoneMs": 41.7
+      },
+      "mobile": {
+        "ackMs": 41.7
+      },
+      "row": {
+        "ackMs": 41.7
+      },
+      "items": {
+        "reachedMs": 41.7,
+        "textAtAck": "13 items"
+      },
+      "phoneItems": {
+        "reachedMs": 41.7,
+        "textAtAck": "13"
+      },
+      "sideAtAck": {
+        "text": "ADD 1 MORE MEAL TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 1 more meal",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 11,
+      "meal": "Wild Salmon Cakes with Wasabi Aioli",
+      "pressed": true,
+      "at": 238.7,
+      "gapMs": 10.9,
+      "clickMs": 4,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 30.8,
+        "stepperMs": 30.8,
+        "addGoneMs": 30.8
+      },
+      "mobile": {
+        "ackMs": 30.8
+      },
+      "row": {
+        "ackMs": 30.8
+      },
+      "items": {
+        "reachedMs": 30.8,
+        "textAtAck": "13 items"
+      },
+      "phoneItems": {
+        "reachedMs": 30.8,
+        "textAtAck": "13"
+      },
+      "sideAtAck": {
+        "text": "ADD 1 MORE MEAL TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 1 more meal",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 12,
+      "meal": "Lemon Garlic Shrimp over Forbidden Rice",
+      "pressed": true,
+      "at": 255,
+      "gapMs": 16.3,
+      "clickMs": 1.4,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 14.5,
+        "stepperMs": 14.5,
+        "addGoneMs": 14.5
+      },
+      "mobile": {
+        "ackMs": 14.5
+      },
+      "row": {
+        "ackMs": 14.5
+      },
+      "items": {
+        "reachedMs": 14.5,
+        "textAtAck": "13 items"
+      },
+      "phoneItems": {
+        "reachedMs": 14.5,
+        "textAtAck": "13"
+      },
+      "sideAtAck": {
+        "text": "ADD 1 MORE MEAL TO CHECKOUT",
+        "disabled": true,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "Add 1 more meal",
+        "disabled": true,
+        "shown": true
+      }
+    },
+    {
+      "index": 13,
+      "meal": "Honey-Chipotle Pulled Chicken",
+      "pressed": true,
+      "at": 270.6,
+      "gapMs": 15.6,
+      "clickMs": 1.5,
+      "immediate": "add",
+      "acknowledged": true,
+      "card": {
+        "ackMs": 151.4,
+        "stepperMs": 151.4,
+        "addGoneMs": 151.4
+      },
+      "mobile": {
+        "ackMs": 151.4
+      },
+      "row": {
+        "ackMs": 151.4
+      },
+      "items": {
+        "reachedMs": 151.4,
+        "textAtAck": "14 items"
+      },
+      "phoneItems": {
+        "reachedMs": 151.4,
+        "textAtAck": "14"
+      },
+      "sideAtAck": {
+        "text": "CHECKOUT NOW",
+        "disabled": false,
+        "shown": false
+      },
+      "barAtAck": {
+        "text": "CHECKOUT",
+        "disabled": false,
+        "shown": true
+      }
+    }
+  ],
+  "takeBacks": [],
+  "glitches": [],
+  "final": {
+    "path": "/order",
+    "items": "14 items",
+    "phoneItems": "14",
+    "progressLabel": "Minimum Met",
+    "side": {
+      "text": "CHECKOUT NOW",
+      "disabled": false,
+      "shown": false
+    },
+    "bar": {
+      "text": "CHECKOUT",
+      "disabled": false,
+      "shown": true
+    },
+    "pending": "14",
+    "counted": 14,
+    "countedMobile": 14,
+    "countedRows": 14,
+    "need": 14
+  },
+  "changes": [
+    {
+      "t": -5.1,
+      "k": "card.0",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.0",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.0",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.1",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.1",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.1",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.2",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.2",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.2",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.3",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.3",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.3",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.4",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.4",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.4",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.5",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.5",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.5",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.6",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.6",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.6",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.7",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.7",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.7",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.8",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.8",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.8",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.9",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.9",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.9",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.10",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.10",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.10",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.11",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.11",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.11",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.12",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.12",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.12",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "card.13",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "mcard.13",
+      "v": "add"
+    },
+    {
+      "t": -5.1,
+      "k": "row.13",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "items",
+      "v": null
+    },
+    {
+      "t": -5.1,
+      "k": "phoneItems",
+      "v": "0"
+    },
+    {
+      "t": -5.1,
+      "k": "progressLabel",
+      "v": "Please add at least 14 meals to continue"
+    },
+    {
+      "t": -5.1,
+      "k": "side",
+      "v": null
+    },
+    {
+      "t": -5.1,
+      "k": "bar",
+      "v": "Add 14 more meals|disabled|hidden"
+    },
+    {
+      "t": -5.1,
+      "k": "pending",
+      "v": "absent"
+    },
+    {
+      "t": -5.1,
+      "k": "toasts",
+      "v": "0"
+    },
+    {
+      "t": -5.1,
+      "k": "path",
+      "v": "/order"
+    },
+    {
+      "t": 114.1,
+      "k": "card.0",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "mcard.0",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "row.0",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "card.1",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "mcard.1",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "row.1",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "card.2",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "mcard.2",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "row.2",
+      "v": "count 1"
+    },
+    {
+      "t": 114.1,
+      "k": "items",
+      "v": "3 items"
+    },
+    {
+      "t": 114.1,
+      "k": "phoneItems",
+      "v": "3"
+    },
+    {
+      "t": 114.1,
+      "k": "side",
+      "v": "ADD 11 MORE MEALS TO CHECKOUT|disabled|hidden"
+    },
+    {
+      "t": 114.1,
+      "k": "bar",
+      "v": "Add 11 more meals|disabled|shown"
+    },
+    {
+      "t": 114.1,
+      "k": "pending",
+      "v": "3"
+    },
+    {
+      "t": 114.1,
+      "k": "toasts",
+      "v": "3"
+    },
+    {
+      "t": 168.2,
+      "k": "card.3",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "mcard.3",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "row.3",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "card.4",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "mcard.4",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "row.4",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "card.5",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "mcard.5",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "row.5",
+      "v": "count 1"
+    },
+    {
+      "t": 168.2,
+      "k": "items",
+      "v": "6 items"
+    },
+    {
+      "t": 168.2,
+      "k": "phoneItems",
+      "v": "6"
+    },
+    {
+      "t": 168.2,
+      "k": "side",
+      "v": "ADD 8 MORE MEALS TO CHECKOUT|disabled|hidden"
+    },
+    {
+      "t": 168.2,
+      "k": "bar",
+      "v": "Add 8 more meals|disabled|shown"
+    },
+    {
+      "t": 168.2,
+      "k": "pending",
+      "v": "6"
+    },
+    {
+      "t": 168.2,
+      "k": "toasts",
+      "v": "6"
+    },
+    {
+      "t": 200.3,
+      "k": "card.6",
+      "v": "count 1"
+    },
+    {
+      "t": 200.3,
+      "k": "mcard.6",
+      "v": "count 1"
+    },
+    {
+      "t": 200.3,
+      "k": "row.6",
+      "v": "count 1"
+    },
+    {
+      "t": 200.3,
+      "k": "card.7",
+      "v": "count 1"
+    },
+    {
+      "t": 200.3,
+      "k": "mcard.7",
+      "v": "count 1"
+    },
+    {
+      "t": 200.3,
+      "k": "row.7",
+      "v": "count 1"
+    },
+    {
+      "t": 200.3,
+      "k": "items",
+      "v": "8 items"
+    },
+    {
+      "t": 200.3,
+      "k": "phoneItems",
+      "v": "8"
+    },
+    {
+      "t": 200.3,
+      "k": "side",
+      "v": "ADD 6 MORE MEALS TO CHECKOUT|disabled|hidden"
+    },
+    {
+      "t": 200.3,
+      "k": "bar",
+      "v": "Add 6 more meals|disabled|shown"
+    },
+    {
+      "t": 200.3,
+      "k": "pending",
+      "v": "8"
+    },
+    {
+      "t": 200.3,
+      "k": "toasts",
+      "v": "8"
+    },
+    {
+      "t": 269.5,
+      "k": "card.8",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "mcard.8",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "row.8",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "card.9",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "mcard.9",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "row.9",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "card.10",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "mcard.10",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "row.10",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "card.11",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "mcard.11",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "row.11",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "card.12",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "mcard.12",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "row.12",
+      "v": "count 1"
+    },
+    {
+      "t": 269.5,
+      "k": "items",
+      "v": "13 items"
+    },
+    {
+      "t": 269.5,
+      "k": "phoneItems",
+      "v": "13"
+    },
+    {
+      "t": 269.5,
+      "k": "side",
+      "v": "ADD 1 MORE MEAL TO CHECKOUT|disabled|hidden"
+    },
+    {
+      "t": 269.5,
+      "k": "bar",
+      "v": "Add 1 more meal|disabled|shown"
+    },
+    {
+      "t": 269.5,
+      "k": "pending",
+      "v": "13"
+    },
+    {
+      "t": 269.5,
+      "k": "toasts",
+      "v": "13"
+    },
+    {
+      "t": 422,
+      "k": "card.13",
+      "v": "count 1"
+    },
+    {
+      "t": 422,
+      "k": "mcard.13",
+      "v": "count 1"
+    },
+    {
+      "t": 422,
+      "k": "row.13",
+      "v": "count 1"
+    },
+    {
+      "t": 422,
+      "k": "items",
+      "v": "14 items"
+    },
+    {
+      "t": 422,
+      "k": "phoneItems",
+      "v": "14"
+    },
+    {
+      "t": 422,
+      "k": "progressLabel",
+      "v": "Minimum Met"
+    },
+    {
+      "t": 422,
+      "k": "side",
+      "v": "CHECKOUT NOW|enabled|hidden"
+    },
+    {
+      "t": 422,
+      "k": "bar",
+      "v": "CHECKOUT|enabled|shown"
+    },
+    {
+      "t": 422,
+      "k": "pending",
+      "v": "14"
+    },
+    {
+      "t": 422,
+      "k": "toasts",
+      "v": "14"
+    },
+    {
+      "t": 3353.4,
+      "k": "toasts",
+      "v": "13"
+    },
+    {
+      "t": 3454,
+      "k": "toasts",
+      "v": "10"
+    },
+    {
+      "t": 3485.4,
+      "k": "toasts",
+      "v": "9"
+    }
+  ],
+  "fitafLines": [],
+  "pageErrors": [],
+  "error": null,
+  "overCounts": [],
+  "file": "run-20261001T213413Z-390-nowait.json",
+  "command": "npm --prefix boston-2026-10/tools/storefront-watch run probe-counts -- --ack-runs 5 --gap-runs 1 --nowait-runs 1 --out boston-2026-10/storefront/probe-counts/2026-10-01"
+}

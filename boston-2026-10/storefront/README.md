@@ -20,6 +20,9 @@ hashes and a few literal strings of the store's public bundle, never its code or
   public files, for the release the watch's issue names, and only while it is the live one: SPEC § 8), with
   `--footer <dist-storefront/fitaf-handoff.html>` once a build is pasted in the Footer. The commit that lands a new
   baseline names the watch's issue.
+- **[`probe-counts/`](probe-counts/README.md)** is **not an input**: measurements of how the live store shows a press
+  counted ([`../SPEC-rung2-fill-c.md`](../SPEC-rung2-fill-c.md) § 2), one dated directory per batch, written by the
+  watch package's `probe-counts`. Nothing reads them; the contract quotes them.
 
 ## What a reader would misread
 
