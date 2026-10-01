@@ -808,3 +808,23 @@ Red at `1b72512`, built at `d6261da`. § 19 above is unchanged.
 1. On a **deep-carted** checkout only (the page's mark, as every H rule), both are hidden by the block's style, never removed; new H rules after § 19's, each selector in `storefront/dependencies.json` (F2) with its case. The lines (photograph and name), the order's Total and the pay button are unchanged.
 2. Within 15,360 bytes; ASCII; two `<`.
 3. Cases: R2-81 both hidden on a deep-carted checkout and displayed on an ordinary visit (the synthetic checkout gains both elements, as the live markup quoted above); W19 (the watch, live) both hidden or absent, per width, failing a width only if one is displayed.
+
+## 22. Built — found at the build of § 21, not ruled
+
+Red at `1e94cf3`, built at `d8e5d4e`. § 21 above is unchanged.
+
+- **H16** `.summary__plan-group-header` and **H17** `.summary__plan-return`, added to the style's one scoped hide list
+  (`display:none!important`, never removed). Both names are in the store's public code of 2026-09-29 (the plan group's
+  header holds `.summary__plan-group-label`, the actions and the chevron); F2 carries both. Nothing inside the header
+  is named separately: hiding the header hides the plan's name, *"Remove plan"* and the chevron together.
+- **The payment check (W11, R2-45)** now allows two more controls to be hidden: the header's *"Remove plan"* button
+  and the return link (an `a[href]`). R2-45's expected list gains both; the pay button and the Total are unchanged.
+- **The synthetic checkout** gains the header (*"Lean Plan 7 Meals"*, a *"Remove plan"* button, a chevron) and its
+  return link reads *"← Return to Lean Plan 7 Meals"* (it read *"Edit plan"*); R2-47 still routes back by it (a
+  script's click reaches a hidden link).
+- **W19, as built**: H16 and H17 in the watch's hide list under W19, conditional (absent is reported, not a failure),
+  found and still displayed fails the width.
+- **The size and the pins**: the text `b323ee55…`; R2-32, PR-10 and CC-8's `footer_text_sha256` moved from `7eadcbdb…`
+  to `b323ee550e6f0258988fecdab4a50dc0564bf2de2eedfc6380dda792bb2f2209`; CC-8's `replaces` names the live `7eadcbdb…`
+  until the paste; the watch's baseline is untouched.
+- ⬜ **Not run on the live store.**
