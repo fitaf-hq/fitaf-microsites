@@ -38,6 +38,8 @@
 // button .summary__item-remove; then .summary__item-price), spaced as the store's own stylesheet spaces them (56 px
 // images, 12 px padding, 8 px between lines; 48 px and 10 px at 1024 px and narrower), and the plan's total row as
 // .summary__plan-total; and `checkoutNames`, the lines /checkout draws whatever the plan holds (R2-80's fourteen).
+// § 21: the plan group's header (.summary__plan-group-header: the plan's name, its "Remove plan" button and the chevron)
+// and its return link (a.summary__plan-return, "← Return to …"), as the live markup the Advisor quoted.
 // Images are GENERATED (a flat SVG rectangle), never a photograph, served here; nothing is fetched from anywhere else.
 import { createServer } from "node:http";
 
@@ -124,8 +126,9 @@ ${tipHtml(cfg)}
 <div class="checkout__submit"><span class="checkout__submit-target"><button type="button" class="checkout__pay"> Place order </button></span></div>
 </form>
 <aside class="checkout__summary"><div class="summary">
-<div class="summary__plan-group"><div class="summary__plan-group-label">Lean 7</div>${sub.head}${sub.controls}
-<a class="summary__plan-return" href="/order?mpid=21">Edit plan</a><div class="summary__items"></div></div>
+<div class="summary__plan-group"><div class="summary__plan-group-header"><div class="summary__plan-group-label">Lean Plan 7 Meals</div>
+<button type="button" aria-label="Remove plan">Remove plan</button><svg class="summary__plan-group-chevron" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></div>${sub.head}${sub.controls}
+<a class="summary__plan-return" href="/order?mpid=21">← Return to Lean Plan 7 Meals</a><div class="summary__items"></div></div>
 ${sub.tail}<div class="summary__discounts"><div class="checkout-discounts">${discounts("summary")}</div></div>
 <div class="summary__row"><span>Subtotal</span><span>$87.50</span></div>
 <div class="summary__row"><span>Shipping</span><span>$0.00</span></div>
@@ -345,7 +348,7 @@ function appHtml(cfg) {
     totals.appendChild(sub);
     root.querySelector(".checkout__pay").onclick = function () { console.log("[fixture] ORDER PLACED"); };
     root.querySelector(".checkout__pay-mobile").onclick = function () { console.log("[fixture] ORDER PLACED"); };
-    // "Edit plan" routes back to the order page inside the app, as the store's own link does: the checkout component
+    // The return link ("Edit plan" until § 21) routes back to the order page inside the app, as the store's own link does: the checkout component
     // leaves the page (SPEC-rung2-progress-and-checkout § 3 item 2, R2-47).
     root.querySelector(".summary__plan-return").onclick = function (e) {
       e.preventDefault();
