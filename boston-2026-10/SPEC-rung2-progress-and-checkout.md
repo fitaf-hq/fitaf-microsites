@@ -763,3 +763,40 @@ chose where they left a choice, and what it found.
 3. **The plan's total row** (*"Plan Total (N items)"*) hidden. ⛔ **The order's Total stays displayed** (H9's rule, unchanged), and the pay button is untouched (W11).
 4. Bytes: within § 17.3's 15,360. Text: ASCII, two `<`.
 5. Cases: R2-78 the four line elements hidden and the photograph and name shown, only on a deep-carted checkout (an ordinary visit unchanged, R2-50's rule); R2-79 the plan-total row hidden, the order Total and the pay button displayed; R2-80 (Chrome) 14 lines within 844 px at 390; W18 (the watch, live) the line elements hidden and the 14-line height measured, reported per width.
+
+## 20. Built — found at the build of § 19, not ruled
+
+Red at `1b72512`, built at `d6261da`. § 19 above is unchanged.
+
+- **The names** (the store's public code as saved on 2026-09-29, `chunk-PVWLQ2OV.js`, the release of that day; not
+  re-read from `main-VISDSEXM.js`, accepted 2026-10-01, since nothing here requests the store): a line is
+  `.summary__item`, holding `.summary__item-image` (its `img`), `.summary__item-info` (`.summary__item-name`, the add-on
+  pills `.summary__item-addons`, and `.summary__item-quantity-controls`: a stepper and the trash can, `button
+  .summary__item-remove`, *"Remove item"*), then `.summary__item-price`. The plan's total row is `.summary__plan-total`
+  (*"Plan Total (N items)"*). **H11** price, **H12** portion, **H13** quantity, **H14** remove, **H15** the plan total.
+  ⚠ **"The portion tag" is read as the line's add-on pills** (`.summary__item-addons`, the cart item's `hmp_addons`): the
+  store's code has no element named for a portion; if the live store shows the portion elsewhere, W18 cannot see it
+  and the rehearsal's eye must. H14 sits inside H13's element, so it is hidden twice; it has its own rule in case the
+  store moves it. F2 carries the five and `.summary__item`, `-image` and `-name`; a rename in today's release shows at
+  the next F2 run, and as *absent* in W18.
+- **Compact (19.2)**: three rules, the only ones beside the banner's margin that do not hide (R2-42b names them and the
+  properties they may set): each line `padding:3px 6px;margin:0 0 2px;gap:8px;align-items:center`; its image 48 × 48;
+  its name `-webkit-line-clamp:2` at `line-height:1.3` (a third line is cut, not wrapped). No `!important`: each rule's
+  specificity (`html.fitaf-deep:has(app-checkout) .x`, 0-2-2) is above the store's own (`.x[_ngcontent-…]`, 0-2-0).
+- **R2-80, measured** (the synthetic checkout spaced as the store's stylesheet spaces it: 56-px images, 12 px of padding,
+  8 px between lines, 48 px and 10 px at 1024 px and narrower): fourteen lines take **782 px** at 390 × 844 with our
+  style (54-px lines), **1,456 px** without it. ⚠ That is the lines alone: the summary's header, the Total and the
+  store's pay bar are around them, and at 1024 px and narrower the store shows its summary in a drawer the synthetic
+  checkout does not model. W18 reports the live height per width; the smoke's own link has 7 meals, so it reports what
+  fourteen would take at the measured pitch.
+- **The payment check (W11)** now allows H13 and H14's controls to be hidden (the stepper's buttons and field, the
+  remove button): § 19's *"deliberately taking editing out of the checkout"*. The pay button and the Total are
+  unchanged (R2-79). W12a's count of conditional targets moved from 7 to 12 with H11–H15 (found after the red commit).
+- **W18, as built**: H11–H15 in the watch's hide list under W18, each conditional (absent is reported, not a failure;
+  found and still displayed fails the width, as W14's); `readFaces` measures the displayed `.summary__item`s with our
+  style; the report's line: *"W18: N order lines in H px (P px each); 14 would take 14·P px of 844: fits"*.
+- **The size**: the text `7eadcbdb…`, the Footer block **12,171** bytes and the console file **12,152** (480 more than
+  § 17 alone); every character ASCII; no `<` but the Footer block's two. **The pins**: R2-32, PR-10 and CC-8's
+  `footer_text_sha256` moved from `92ee18db…` to `7eadcbdbdce49492a85d2d05901829d14be8f055c54ad9bbdf95173458a76cd0`; CC-8's
+  `replaces` still names the live `914668de…`; the watch's baseline is untouched.
+- ⬜ **Not run on the live store**, and not seen by the Advisor: the rehearsal's.
