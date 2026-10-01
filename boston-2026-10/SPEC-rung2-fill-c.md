@@ -123,6 +123,23 @@ each literal found in the release's files, and this probe fetched none. Its cand
 `counter__value`, `Increase value`, `Decrease value`, `cart__items-count`, `mobile-cart-summary__stat-value`,
 `cart__checkout`, `mobile-cart-summary__checkout-button`, `Minimum Met`.
 
+## 2b. The orchestrator, 2026-10-01: phasing
+
+1. **Phase 2: fill C's behaviour**, § 1 with § 4.1, § 4.2 and § 4.4, **shipped as a Footer block exactly as fill B is
+   today**: pasteable, at most 15,360 bytes, every character ASCII, no `<` but the block's own two. One script: fill
+   B's press loop replaced, every other rule of fill B kept.
+2. **Phase 3: § 3 (served from eatfitaf.com) and § 4.3 (the wider smoke).** Not before Phase 2 is built.
+3. **§ 5 is its own contract**, as it says.
+
+**A lead for the Advisor's shortfall, not measured.** The probe read the store's pending list as a count of
+`localStorage` `hmp_pending_plan_items`, and in 14 of 14 runs that count moved with the cards and the plan's
+*"N items"*: the plan's meals live in `localStorage`. **`localStorage` is one store for every tab of
+`fitafnutrition.com` in one browser** (a property of the browser, not something the probe measured), and the store
+reads the list when its page starts (`SPEC-rung2-cart-handoff.md` § 10's build note). So a second tab of the store, or
+an earlier one still open, is a candidate cause of meals leaving the plan after they were counted, which no fresh
+headless profile would show. § 1.3's re-read and § 1.4's check before CHECKOUT are there to catch exactly that: a count
+taken back after it was shown.
+
 ## 3. Served from eatfitaf.com, with the paste kept as the way back
 
 1. **The Footer block becomes a loader**: it reads `location.hash` and, only for a deep-cart fragment, creates one
