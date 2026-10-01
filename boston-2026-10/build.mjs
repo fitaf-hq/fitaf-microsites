@@ -1,11 +1,12 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
 //
-//   node build.mjs [--env dev] [--on YYYY-MM-DD]
+//   node build.mjs [--env dev] [--on YYYY-MM-DD] [--out DIR]
 //
 // --on is the build's date for this week's Chef's Choice (SPEC-chefs-choice § 2): every data/picks/<sunday>.json whose
 // window has not ended on it is embedded, and the page chooses among them in the browser. Default: today in the send
 // time zone (data/save.json). Without data/picks/, or with no week open on --on, the page is exactly as before.
+// --out is the directory written instead of dist/ (or dist-dev/): Storybook's pages (tools/storybook), never a deploy.
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -448,7 +449,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const at = process.argv.indexOf(name);
     return at === -1 ? undefined : process.argv[at + 1];
   };
-  build({ target: flag("--env") ?? "prod", on: flag("--on") }).then(report, (err) => {
+  build({ target: flag("--env") ?? "prod", on: flag("--on"), outDir: flag("--out") }).then(report, (err) => {
     console.error(err);
     process.exitCode = 1;
   });

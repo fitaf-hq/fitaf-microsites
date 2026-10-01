@@ -26,8 +26,10 @@ export const DEFAULT_VIEWPORT = "w390";
 export const PAGES_ROUTE = "microsite";
 export const ROOT_STATIC = ["fonts", "assets"];
 
-/** The page a story's frame loads: one build, one date, relative to Storybook's own iframe. */
-export const pageUrl = (build, date) => `${PAGES_ROUTE}/${build}/${date}/index.html`;
+/** Where one build's page for one date is written, under the pages' directory; and the URL a story's frame loads it at,
+ *  relative to Storybook's own iframe. */
+export const pagePath = (build, date) => `${build}/${date}/index.html`;
+export const pageUrl = (build, date) => `${PAGES_ROUTE}/${pagePath(build, date)}`;
 
 /** The file every story reads its dates and choices from, written beside the pages. */
 export const MANIFEST = "pages.json";
