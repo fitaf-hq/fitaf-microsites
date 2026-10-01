@@ -841,7 +841,7 @@ Red at `1e94cf3`, built at `d8e5d4e`. § 21 above is unchanged.
 
 ## 24. Built — found at the build of § 23, not ruled
 
-Red at `8c7df94`, built at `c6bd77d`. § 23 above is unchanged.
+Red at `8c7df94`, built at `6b5f19b`. § 23 above is unchanged.
 
 - **One timer changed**: fill B schedules its next press with `PRESS_MS` (1000) where it used `POLL_MS`. That timer
   follows every press (each Add to Cart and each +), and the one after the last press is the wait before
