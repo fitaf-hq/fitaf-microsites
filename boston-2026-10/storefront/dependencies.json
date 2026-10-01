@@ -266,6 +266,18 @@
       "literal": "\"summary__item-name\"",
       "use": "§ 19 item 2: each order line's name, kept and clamped to two lines",
       "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
+    },
+    {
+      "id": "hide-h16-plan-group-header",
+      "literal": "\"summary__plan-group-header\"",
+      "use": "H16: the plan group's header (the plan's name, \"Remove plan\", the chevron), hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 21; R2-81, W19"
+    },
+    {
+      "id": "hide-h17-plan-return",
+      "literal": "\"summary__plan-return\"",
+      "use": "H17: the plan's return link (\"Return to ...\"), hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 21; R2-81, W19"
     }
   ]
 }

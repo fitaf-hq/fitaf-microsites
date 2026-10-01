@@ -191,9 +191,11 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 // (H9). And COMPACT, the only rules that do not hide but the banner's (§ 19 item 2): each line 48 px high, its photograph
 // 48 px, its name at most two lines, so fourteen lines fit one 390 x 844 screen (R2-80). Names from the store's public
 // code of 2026-09-29; their specificity is above the store's own (.summary__item[_ngcontent-...]), so no !important.
+// § 21: H16 the plan group's header (.summary__plan-group-header: the plan's name, "Remove plan", the chevron) and H17
+// its return link (.summary__plan-return, "Return to ..."), hidden.
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
 ".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
-".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total){display:none!important}" +
+".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return){display:none!important}" +
 "html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}" +
 "html.fitaf-deep:has(app-checkout) .summary__item{padding:3px 6px;margin:0 0 2px;gap:8px;align-items:center}html.fitaf-deep:has(app-checkout) .summary__item-image{width:48px;height:48px}" +
 "html.fitaf-deep:has(app-checkout) .summary__item-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}";

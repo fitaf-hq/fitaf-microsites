@@ -22,6 +22,8 @@
 //   W18  (§ 19) each order line's price, portion, quantity and remove (H11–H14) and the plan's total row (H15): each
 //        conditional, each found one hidden while our style is on (judged as W14's); and the lines' height, first top
 //        to last bottom with our style, reported with what fourteen lines would take of a phone's 844 px;
+//   W19  (§ 21) the plan group's header and its return link (H16, H17): hidden or absent; one found and still displayed
+//        with our style fails the width (judged as W14's and W18's);
 //   W17  (§ 17.4, a report, not a pass rule) per slide of the progress screen, whether it showed Fit AF's sheet: an img
 //        on a host of the block's fixed list (the site's src/storefront/photo-hosts.js), shown (loaded), failed (the
 //        browser reported an error: the slide fell back to today's rule), asked (neither seen) or not found.
@@ -67,6 +69,9 @@ export const HIDE = [
   { id: "H13", selectors: [".summary__item-quantity-controls"], mayHideControls: true, check: "W18" },
   { id: "H14", selectors: [".summary__item-remove"], mayHideControls: true, check: "W18" },
   { id: "H15", selectors: [".summary__plan-total"], mayHideControls: false, check: "W18" },
+  // § 21: the plan group's header (its "Remove plan" button) and its return link.
+  { id: "H16", selectors: [".summary__plan-group-header"], mayHideControls: true, check: "W19" },
+  { id: "H17", selectors: [".summary__plan-return"], mayHideControls: true, check: "W19" },
 ];
 /**
  * § 9: the targets the store renders only in some cases (its credit line is its footer's fallback; a plan may offer no
@@ -76,7 +81,7 @@ export const CONDITIONAL = [
   ".app-hmp-credit",
   "app-storefront-popup-host",
   ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
-  ...HIDE.filter((h) => h.check === "W14" || h.check === "W18").flatMap((h) => h.selectors),
+  ...HIDE.filter((h) => ["W14", "W18", "W19"].includes(h.check)).flatMap((h) => h.selectors),
 ];
 /** § 19 (W18): an order line, and a phone's height, against which fourteen lines are measured. */
 export const LINE = ".summary__item";
