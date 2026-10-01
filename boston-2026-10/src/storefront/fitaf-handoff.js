@@ -185,9 +185,18 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 // <html> undone (the one rule that does not hide: the space is the banner's); H9 the price rows (.summary__row) except a
 // discount row, and never a row holding the Total (.summary__total is never hidden); H10 the tip (its section, or a bare
 // app-tip-selector), only while no tip is chosen (.tip-selector__remove-btn shows once one is).
+// § 19: each order line shows only its photograph and its name: hidden, H11 its price (.summary__item-price), H12 its
+// portion (the add-on pills, .summary__item-addons), H13 its quantity control (.summary__item-quantity-controls), H14
+// its remove control (.summary__item-remove), and H15 the plan's total row (.summary__plan-total); the order's Total stays
+// (H9). And COMPACT, the only rules that do not hide but the banner's (§ 19 item 2): each line 48 px high, its photograph
+// 48 px, its name at most two lines, so fourteen lines fit one 390 x 844 screen (R2-80). Names from the store's public
+// code of 2026-09-29; their specificity is above the store's own (.summary__item[_ngcontent-...]), so no !important.
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
-".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))){display:none!important}" +
-"html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}";
+".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
+".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total){display:none!important}" +
+"html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}" +
+"html.fitaf-deep:has(app-checkout) .summary__item{padding:3px 6px;margin:0 0 2px;gap:8px;align-items:center}html.fitaf-deep:has(app-checkout) .summary__item-image{width:48px;height:48px}" +
+"html.fitaf-deep:has(app-checkout) .summary__item-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}";
 // § 15.3, on the checkout: the logo (above) centred at the top of the store's checkout component, 40 px high, where the
 // store's hidden header was (H1). Inside app-checkout, so it goes with the component, as every H rule stops applying:
 // only while the checkout is on the page, and only for a deep-carted visit (it is placed at done, never on a stop).

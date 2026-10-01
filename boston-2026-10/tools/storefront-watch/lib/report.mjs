@@ -1,7 +1,7 @@
 // The report of one watch run, as Markdown: printed by the CLI, the body of the issue (§ 5), the job summary in CI; and
 // the smoke's own report (bin/smoke.mjs). It quotes file names, the dependency literals and our own console lines, and,
 // for a smoke width that FAILED, the page as text (§ 7 item 2): never the store's code or config, never a screenshot.
-import { extrasLine, facesSummary, logoLine, sheetLine } from "./faces.mjs";
+import { extrasLine, facesSummary, linesLine, logoLine, sheetLine } from "./faces.mjs";
 import { cutLine, redact } from "./redact.mjs";
 
 const list = (items) => (items.length ? items.map((x) => `\`${x}\``).join(", ") : "none");
@@ -128,6 +128,7 @@ function smokeRun(run) {
   if (o.faces?.extras) out.push(`- ${extrasLine(o.faces.extras)} (SPEC-rung2-progress-and-checkout § 12)`);
   if (o.faces) out.push(`- ${logoLine(o.faces)} (SPEC-rung2-progress-and-checkout § 15.3)`);
   if (o.faces) out.push(`- ${redact(sheetLine(o.faces))} (SPEC-rung2-progress-and-checkout § 17)`);
+  if (o.faces) out.push(`- ${linesLine(o.faces)} (SPEC-rung2-progress-and-checkout § 19)`);
   if (o.errors.length) out.push(`- page errors: ${o.errors.slice(0, 5).map((e) => `\`${cutLine(e)}\``).join(" · ")}`);
   if (!run.verdict.pass) out.push(...evidenceLines(o.evidence));
   return out;

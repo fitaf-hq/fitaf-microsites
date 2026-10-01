@@ -113,8 +113,8 @@ test("W12a (§ 9): a CONDITIONAL target absent (H2's .app-hmp-credit, H5, H6) is
   const absent = passing();
   for (const h of absent.checkout.hide) if (CONDITIONAL.includes(h.selector)) h.found = 0;
   assert.deepEqual(facesVerdict(absent).reasons, []);
-  // Three of § 9's, and § 10's four (H7–H10), all conditional.
-  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 7, "fixture control: seven targets absent");
+  // Three of § 9's, § 10's four (H7–H10) and § 19's five (H11–H15), all conditional.
+  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 12, "fixture control: twelve targets absent");
 });
 
 test("W13a: an active subscription switch, or a \"renews every\" line, on the checkout: fail", () => {
