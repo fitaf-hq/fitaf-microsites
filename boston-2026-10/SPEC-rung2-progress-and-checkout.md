@@ -800,3 +800,11 @@ Red at `1b72512`, built at `d6261da`. § 19 above is unchanged.
   `footer_text_sha256` moved from `92ee18db…` to `7eadcbdbdce49492a85d2d05901829d14be8f055c54ad9bbdf95173458a76cd0`; CC-8's
   `replaces` still names the live `914668de…`; the watch's baseline is untouched.
 - ⬜ **Not run on the live store**, and not seen by the Advisor: the rehearsal's.
+
+## 21. Amendment, 2026-10-01 — the plan's header and its return link hidden
+
+**Ruled by the Advisor** (`ts=2026-10-01T14:47:25.654Z`): *"can you please hide this block of text in the checkout? I think that's the final change before the meeting. It's these 2 DIVs that need to be hidden"*: the plan group's header — `div.summary__plan-group-header` (the plan's name, e.g. *"Lean Plan 14 Meals"*, its *"Remove plan"* button and the chevron) — and the return link, `a.summary__plan-return` (*"← Return to Lean Plan 14 Meals"*).
+
+1. On a **deep-carted** checkout only (the page's mark, as every H rule), both are hidden by the block's style, never removed; new H rules after § 19's, each selector in `storefront/dependencies.json` (F2) with its case. The lines (photograph and name), the order's Total and the pay button are unchanged.
+2. Within 15,360 bytes; ASCII; two `<`.
+3. Cases: R2-81 both hidden on a deep-carted checkout and displayed on an ordinary visit (the synthetic checkout gains both elements, as the live markup quoted above); W19 (the watch, live) both hidden or absent, per width, failing a width only if one is displayed.
