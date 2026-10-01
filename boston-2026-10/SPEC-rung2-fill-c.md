@@ -1,6 +1,7 @@
 # boston-2026-10 — fill C: the cart filled by confirmation, not by a clock; served from eatfitaf.com. CONTRACT
 
-**Status: PROPOSED, 2026-10-01** (the orchestrator, session 218, from the Advisor's direction below). Not built. Each
+**Status: RULED, 2026-10-01.** Proposed by the orchestrator (session 218) from the Advisor's direction below; the
+Advisor (`ts=2026-10-01T20:47:44.490Z`): *"Excellent! I agree with Fill C – please implement it."* Not built. Each
 open choice in § 7 carries the default this contract proceeds under; a ruling replaces it.
 
 **The direction.** The Advisor, after a 14-meal link left meals out of the plan in their own browser more than once on
