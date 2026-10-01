@@ -13,6 +13,7 @@ import {
   POLL_MS,
   run,
   script,
+  assertPollsAndPresses,
 } from "./r2-harness.mjs";
 
 const MEAL_TICKS = 7; // one 200 ms tick after each of the seven meal presses
@@ -27,7 +28,7 @@ async function stopped(options, prepare = () => {}) {
   assert.deepEqual(page.controls, [], "no page control pressed, not even a disabled one");
   assert.deepEqual(h.events, [["replaceState", "/order?mpid=21"]], "fragment removed; no navigation of any kind");
   assert.ok(h.info.includes(`${LOG_PREFIX} stopped: no checkout control`), JSON.stringify(h.info));
-  assert.ok(h.timers.delays.every((ms) => ms === POLL_MS));
+  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
   assert.ok((h.timers.delays.length - MEAL_TICKS) * POLL_MS <= MAX_WAIT_MS, `waited ${h.timers.delays.length} polls`);
   return page;
 }

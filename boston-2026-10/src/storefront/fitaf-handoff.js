@@ -266,7 +266,10 @@ return { items: items, total: total, code: code };
 // item 4: one live phone-width run of four stopped at 10 s with the store still committing). SPEC-rung2-progress-and-
 // checkout § 15.2: the 10 s for the meals starts at the first poll that finds a titled meal card; before it, B waits
 // for the page's cards at most 30 s (NO_CARDS polls): in 2 of 7 live runs the store drew no card within 10 s.
-var POLL_MS = 200, MAX_POLLS = 50, AFTER_CHECKOUT = 150, NO_CARDS = 150;
+// § 23: PRESS_MS after each press (every Add to Cart and every +) before the next, and after the last before the first
+// look for CHECKOUT: one 14-meal run in the Advisor's browser left 11 of 14 meals in the plan at 200 ms. The polls and
+// their counts are unchanged.
+var POLL_MS = 200, PRESS_MS = 1000, MAX_POLLS = 50, AFTER_CHECKOUT = 150, NO_CARDS = 150;
 // A meal's key: src/storefront/meal-key.js, the one function the link tool also runs, inlined here by the build.
 var key = /*KEY*/ null;
 // Fill B keys each meal card's title as the page shows it, and presses the card whose key the link names.
@@ -339,7 +342,7 @@ var meal = list[k][0], n = list[k][1], c = card(meal);
 var b = (n ? moreButton(c) : addButton(c)) || fail("no control to add " + meal + " after " + n);
 b.click();
 ui(function () { added(meal, c, k + 1, list.length); });
-w.setTimeout(guard(function () { press(list, k + 1); }), POLL_MS);
+w.setTimeout(guard(function () { press(list, k + 1); }), PRESS_MS);
 }
 // SPEC-rung2 § 8. On a meal-plan page the store's Add to Cart puts a meal in the plan's PENDING list, not the cart;
 // only the store's own checkout control commits that list and routes to /checkout inside the app. So B never loads

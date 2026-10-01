@@ -1,5 +1,5 @@
-// PR-10 (SPEC-plan-page-refinement ⛔, § 5): unchanged. The Footer block's text (SHA-256 b323ee55…, R2-32's pin, moved
-// from 914668de… by SPEC-rung2-progress-and-checkout §§ 17, 19 and 21, which change the text; built
+// PR-10 (SPEC-plan-page-refinement ⛔, § 5): unchanged. The Footer block's text (SHA-256 cbc6d1ec…, R2-32's pin, moved
+// from 914668de… by SPEC-rung2-progress-and-checkout §§ 17, 19, 21 and 23, which change the text; built
 // from the same data/messages.json and template the page now reads); the Worker as CC-8's golden records it; and the
 // mock-ups' build still carries the phrases the page stopped showing (the event line, the hero, the plans' promises).
 import test from "node:test";
@@ -12,7 +12,7 @@ import { loadInputs, MOCKUPS_DIR, renderMockups } from "../mockups/build-mockups
 import { buildStorefront } from "../scripts/build-storefront.mjs";
 import { MESSAGES, PLANS, workerFiles } from "./cc-harness.mjs";
 
-const FOOTER_TEXT_SHA256 = "b323ee550e6f0258988fecdab4a50dc0564bf2de2eedfc6380dda792bb2f2209";
+const FOOTER_TEXT_SHA256 = "cbc6d1ecb340f818a39d1b3478e55e96f5cb9edf41033dc2b60a8ca4ef8c93cd";
 const VERSION_LINE = /^\/\* fitaf-handoff \S+ sha256:[0-9a-f]{64} \*\/\n/;
 const golden = JSON.parse(await readFile(new URL("./cc-08-unchanged-golden.json", import.meta.url), "utf8"));
 

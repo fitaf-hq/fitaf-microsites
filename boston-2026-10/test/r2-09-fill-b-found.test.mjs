@@ -20,6 +20,7 @@ import {
   refKey,
   run,
   script,
+  assertPollsAndPresses,
 } from "./r2-harness.mjs";
 
 const PAYLOAD = {
@@ -42,7 +43,7 @@ test("R2-09a: each meal's own Add to Cart pressed qty times, nothing else presse
     [MEALS[2]]: [ADD, ADD, ADD, ADD],
   });
   assertCheckedOut(h, page, "/order?mpid=21");
-  assert.ok(h.timers.delays.every((ms) => ms === POLL_MS), "one press per 200 ms tick");
+  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
 });
 
 test("R2-09b: cards that render late are waited for; nothing is pressed before they exist", async () => {

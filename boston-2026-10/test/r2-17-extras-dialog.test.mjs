@@ -16,6 +16,7 @@ import {
   run,
   script,
   untouchableStorage,
+  assertPollsAndPresses,
 } from "./r2-harness.mjs";
 
 async function viaDialog(options) {
@@ -50,7 +51,7 @@ test("R2-17c: the store never routes after CONTINUE — B stops within its budge
   ]);
   assert.ok(h.info.includes(`${LOG_PREFIX} stopped: /checkout not reached`), JSON.stringify(h.info));
   assert.ok(!h.info.some((line) => /done/.test(line)));
-  assert.ok(h.timers.delays.every((ms) => ms === POLL_MS));
+  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
   // The meals' ticks, at most 10 s for CHECKOUT, then at most 30 s after each of the store's two controls (§ 11 item 4).
   const budget = 7 * POLL_MS + MAX_WAIT_MS + 2 * MAX_WAIT_AFTER_CHECKOUT_MS;
   assert.ok(h.timers.delays.length * POLL_MS <= budget, `${h.timers.delays.length} polls`);

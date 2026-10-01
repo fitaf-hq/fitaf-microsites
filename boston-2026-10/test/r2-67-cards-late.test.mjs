@@ -20,6 +20,7 @@ import {
   run,
   script,
   untouchableStorage,
+  assertPollsAndPresses,
 } from "./r2-harness.mjs";
 
 /** When the page draws its cards, from fill B's start. */
@@ -53,7 +54,7 @@ async function lateCase(text, cardsAtMs = CARDS_AT_MS) {
     "the seven meals, then CHECKOUT once, and nothing else",
   );
   assertCheckedOut(h, page, "/order?mpid=21");
-  assert.ok(h.timers.delays.every((ms) => ms === POLL_MS), "only 200 ms polls");
+  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
   return { h, page };
 }
 

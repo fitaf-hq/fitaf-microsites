@@ -12,7 +12,8 @@
 // at the top, on a white plate), 914668de… (ac6c8e8; pasted by the Advisor 2026-10-01), and, by § 17 (the screen shows
 // Fit AF's own photographs, carried by the link; the ceiling 15,360), 92ee18db… (d984a7e), and, by § 19 (each order
 // line its photograph and name, no plan total), 7eadcbdb… (d6261da; pasted 2026-10-01), and, by § 21 (the plan's
-// header and its return link hidden), the hash below. The block live in the store's
+// header and its return link hidden), b323ee55… (d8e5d4e; pasted 2026-10-01), and, by § 23 (one second between
+// presses), the hash below. The block live in the store's
 // Footer is the old text until a new one is smoked and pasted.
 // ⭐ The mutant: a copy of the source with ONE byte of fill B's code changed builds a text R2-32 refuses. The copy is
 // made in a temporary directory; no file in the repository is edited. The control: an unmutated copy passes.
@@ -24,8 +25,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
 
-/** Fill B's text SHA-256 with rung 2's two faces (SPEC-rung2-progress-and-checkout, to its § 21). Was 7eadcbdb…. */
-const SHIPPED_SHA256 = "b323ee550e6f0258988fecdab4a50dc0564bf2de2eedfc6380dda792bb2f2209";
+/** Fill B's text SHA-256 with rung 2's two faces (SPEC-rung2-progress-and-checkout, to its § 23). Was b323ee55…. */
+const SHIPPED_SHA256 = "cbc6d1ecb340f818a39d1b3478e55e96f5cb9edf41033dc2b60a8ca4ef8c93cd";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -74,7 +75,7 @@ async function withCopy(edit, fn) {
   }
 }
 
-test("R2-32: both built files' text SHA-256 (the version line's own) is b323ee55…, fill B's with rung 2's two faces", async () => {
+test("R2-32: both built files' text SHA-256 (the version line's own) is cbc6d1ec…, fill B's with rung 2's two faces", async () => {
   await shippedTextCase(STOREFRONT_SOURCE);
 });
 
