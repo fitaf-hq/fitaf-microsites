@@ -860,3 +860,7 @@ Red at `8c7df94`, built at `6b5f19b`. § 23 above is unchanged.
   until the paste; the watch's baseline is untouched.
 - ⬜ **Not run on the live store**, and not known to cure the 11-of-14: § 23's evidence did not reproduce the shortfall
   headless; one second is the Advisor's ruling, and confirming each press was counted is after the meeting.
+
+## 25. Amendment, 2026-10-01 — two seconds between presses
+
+**Ruled by the Advisor** (2026-10-01, about 10:40 PDT): *"It's still happening. Can you please increase the delay to 2 seconds?"* — with § 23's one second live (`5d5fb72`), the 14-meal link again left meals out of the plan in the Advisor's own browser. **`PRESS_MS` = 2000**; nothing else in § 23 changes. R2-82 expects 2000. Not shown to cure the shortfall: § 23's evidence and § 24 stand.
