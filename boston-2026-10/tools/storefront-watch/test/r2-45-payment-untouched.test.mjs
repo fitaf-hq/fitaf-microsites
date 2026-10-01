@@ -15,11 +15,14 @@ import assert from "node:assert/strict";
 import { startStore } from "./browser-store.mjs";
 import { browserFor, DONE, displayedMap, mutate, openDeep, paymentMeasure, shipped, skip } from "./r2-browser.mjs";
 
-/** The fixture's H3, H4, H6, H7 and H10 controls, as paymentMeasure describes them. */
+/** The fixture's H3, H4, H6, H7, H10, H16 and H17 controls, as paymentMeasure describes them. */
 const H346 = [
   'a.checkout__guest-signin-banner "Already have an account? Sign in for fas"',
   'a.contact__sign-in "Sign in"',
   'a.summary__plan-auth-prompt-link "Sign in"',
+  // § 21 (H16, H17): the plan group's header (its "Remove plan" button) and its return link.
+  'button "Remove plan"',
+  'a.summary__plan-return "← Return to Lean Plan 7 Meals"',
   'button.summary__subscription-toggle "Switch to subscription"',
   ...["section", "payment", "summary"].flatMap((where) => [
     `input[name=giftCard-${where}] "Gift card"`,
@@ -61,7 +64,7 @@ async function paymentCase(text, width = 1280) {
     assert.equal(m.checkout, true, "app-checkout on the page");
     assert.equal(m.style, true, "style#fitaf-deep on the page");
     assert.deepEqual(m.added, [], "the style shows nothing that was not shown");
-    assert.deepEqual(m.hidden, H346, "the style hides exactly H3, H4, H6, H7 and H10's controls");
+    assert.deepEqual(m.hidden, H346, "the style hides exactly H3, H4, H6, H7, H10, H16 and H17's controls");
     const total = await run.page.evaluate(() => [...document.querySelectorAll(".summary__total")].map((el) => el.getClientRects().length > 0));
     assert.deepEqual(total, [true], "the Total displayed");
     assert.ok(m.payWith && m.payWithout, "the pay button displayed with the style and without it");

@@ -113,8 +113,8 @@ test("W12a (§ 9): a CONDITIONAL target absent (H2's .app-hmp-credit, H5, H6) is
   const absent = passing();
   for (const h of absent.checkout.hide) if (CONDITIONAL.includes(h.selector)) h.found = 0;
   assert.deepEqual(facesVerdict(absent).reasons, []);
-  // Three of § 9's, § 10's four (H7–H10) and § 19's five (H11–H15), all conditional.
-  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 12, "fixture control: twelve targets absent");
+  // Three of § 9's, § 10's four (H7–H10), § 19's five (H11–H15) and § 21's two (H16, H17), all conditional.
+  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 14, "fixture control: fourteen targets absent");
 });
 
 test("W13a: an active subscription switch, or a \"renews every\" line, on the checkout: fail", () => {
@@ -141,9 +141,11 @@ const H10 = ":is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-s
 
 /** § 19: each order line's price, portion, quantity and remove (H11–H14), and the plan's total row (H15). */
 const H19 = [".summary__item-price", ".summary__item-addons", ".summary__item-quantity-controls", ".summary__item-remove", ".summary__plan-total"];
+/** § 21: the plan group's header (H16) and its return link (H17). */
+const H21 = [".summary__plan-group-header", ".summary__plan-return"];
 
-test("the hide list W11, W12, W14 and W18 read is the contract's H1–H15, with H6 only while a switch is there and off", () => {
-  assert.deepEqual(HIDE.map((h) => h.id), ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11", "H12", "H13", "H14", "H15"]);
+test("the hide list W11, W12, W14, W18 and W19 read is the contract's H1–H17, with H6 only while a switch is there and off", () => {
+  assert.deepEqual(HIDE.map((h) => h.id), ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11", "H12", "H13", "H14", "H15", "H16", "H17"]);
   assert.deepEqual(HIDE.flatMap((h) => h.selectors), [
     ".sticky-header",
     ".footer",
@@ -157,13 +159,15 @@ test("the hide list W11, W12, W14 and W18 read is the contract's H1–H15, with 
     H9,
     H10,
     ...H19,
+    ...H21,
   ]);
   // § 10's re-statement of the payment check: the controls hidden are exactly H3, H4, H6, H7, H8 and H10's; and since
   // § 19 (editing taken out of the checkout), each line's quantity and remove controls, H13 and H14's.
-  assert.deepEqual(HIDE.filter((h) => h.mayHideControls).map((h) => h.id), ["H3", "H4", "H6", "H7", "H8", "H10", "H13", "H14"]);
-  assert.deepEqual(HIDE.filter((h) => h.id >= "H11" && h.id.length === 3).map((h) => h.check), ["W18", "W18", "W18", "W18", "W18"]);
-  assert.deepEqual(CONDITIONAL, [".app-hmp-credit", "app-storefront-popup-host", H6, ".checkout-discounts", ".smartbanner", H9, H10, ...H19],
-    "§ 9, § 10 and § 19: the conditional targets");
+  // And since § 21, the plan header's "Remove plan" and the return link, H16 and H17's.
+  assert.deepEqual(HIDE.filter((h) => h.mayHideControls).map((h) => h.id), ["H3", "H4", "H6", "H7", "H8", "H10", "H13", "H14", "H16", "H17"]);
+  assert.deepEqual(HIDE.filter((h) => h.id >= "H11" && h.id.length === 3).map((h) => h.check), ["W18", "W18", "W18", "W18", "W18", "W19", "W19"]);
+  assert.deepEqual(CONDITIONAL, [".app-hmp-credit", "app-storefront-popup-host", H6, ".checkout-discounts", ".smartbanner", H9, H10, ...H19, ...H21],
+    "§ 9, § 10, § 19 and § 21: the conditional targets");
 });
 
 test("F2 carries the hide list's names (and the checkout's, and the pay button's): a release that renames one is flagged", async () => {
@@ -178,7 +182,9 @@ test("F2 carries the hide list's names (and the checkout's, and the pay button's
     "ecc_additions_prompt_handled",
     // § 19
     "summary__item-price", "summary__item-addons", "summary__item-quantity-controls", "summary__item-remove", "summary__plan-total",
-    "summary__item-image", "summary__item-name"];
+    "summary__item-image", "summary__item-name",
+    // § 21
+    "summary__plan-group-header", "summary__plan-return"];
   for (const name of NAMES) {
     assert.ok(literals.some((l) => new RegExp(`(^|[^\\w-])${name.replace(/[-_]/g, (c) => `\\${c}`)}([^\\w-]|$)`).test(l)), `a literal names ${name}`);
   }
