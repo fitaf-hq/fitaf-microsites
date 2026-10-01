@@ -95,6 +95,9 @@ test("FC2: one ack-spaced run per width on a store that counts each press after 
     assert.deepEqual(r.fitafLines, []);
   }
   assert.ok(summary, "summary.md written");
+  // Each run names the command that made it, and the summary lists the commands of its runs.
+  for (const r of runs) assert.match(r.command, /^npm --prefix boston-2026-10\/tools\/storefront-watch run probe-counts -- .*--ack-runs 1/);
+  assert.ok(summary.includes(runs[0].command), "the summary shows the runs' command");
   assert.match(summary, /\| 1280 \| ack \| 1 \| 7 \| 7 \| 0 \|/);
   assert.match(summary, /\| 390 \| ack \| 1 \| 7 \| 7 \| 0 \|/);
   assert.match(summary, /counter__value/);

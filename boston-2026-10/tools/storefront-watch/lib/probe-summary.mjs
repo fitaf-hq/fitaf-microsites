@@ -46,7 +46,7 @@ function seen(runs, match, fold = true) {
   return [...out].map(([k, e]) => `${code(k.replace(/\|/g, " · "))}${fold && e.min !== Infinity ? ` (N ${e.min === e.max ? e.min : `${e.min}–${e.max}`})` : ""}`).join("<br>");
 }
 
-export function renderSummary(runs, { command = null } = {}) {
+export function renderSummary(runs) {
   const sorted = [...runs].sort((a, b) => a.at.localeCompare(b.at));
   const ok = sorted.filter((r) => !r.error || r.presses.length);
   const releases = [...new Set(sorted.map((r) => r.release ?? "unknown"))];
@@ -58,7 +58,9 @@ export function renderSummary(runs, { command = null } = {}) {
       `Runs from ${first?.at ?? "—"} to ${sorted.at(-1)?.at ?? "—"} (UTC), on ${first ? code(first.origin + first.path) : "—"} with **no \`#fitaf=\` fragment**, ` +
       `${first?.need ?? "—"} meals a run, each in a fresh profile. The store's release${releases.length > 1 ? "s" : ""}: ${releases.map(code).join(", ")}.`,
   );
-  if (command) lines.push("", `Command: ${code(command)}`);
+  // The commands that made the runs, each as its runs recorded it (from the repository's root).
+  const commands = [...new Set(sorted.map((r) => r.command ?? "not recorded"))];
+  lines.push("", `Command${commands.length > 1 ? "s" : ""}: ${commands.map(code).join("; ")}`);
   lines.push(
     "",
     "Nothing was pressed but each chosen meal's Add to Cart (a `.click()` on the store's own button, as fill B presses it); nothing typed; " +
