@@ -1,6 +1,6 @@
 // Build the storefront hand-off (SPEC-rung2 § 6): the script the store's Custom Scripts page injects in its
-// Footer slot. `npm run build:storefront` writes dist-storefront/ (git-ignored), TWO FILES of one text, fill B's (§ 12:
-// fill A is retired, and no file of it is built):
+// Footer slot. `npm run build:storefront` writes dist-storefront/ (git-ignored), TWO FILES of one text, fill C's
+// (SPEC-rung2-fill-c: fill B's press loop replaced; § 12: fill A is retired, and no file of it is built):
 //   fitaf-handoff.html               <script>, version line, text, </script>: ready to paste in the Footer
 //   fitaf-handoff.fill-B.console.js  version line and text, for a browser console (the one-browser run; the name is
 //                                    kept, so a runbook that names it still works)
@@ -53,8 +53,12 @@ const TOKENS_SLOT = "/*TOKENS*/";
  * the required slots: a source from before § 17 (R2-71 rebuilds the live block from its own commit) has none.
  */
 const HOSTS_SLOT = "/*HOSTS*/ []";
-/** The words the screen uses, each required; `step`'s placeholders, each required in it. */
-const UI_WORDS = ["title", "step", "checkout"];
+/**
+ * The words the screen can use; `step`'s placeholders, each required in it. `stopped` since fill C (SPEC-rung2-fill-c
+ * § 1.6: the line at a stop of its own). A build requires and inlines, in this order, those the source reads (`UI.<word>`),
+ * so a source from before `stopped` (R2-71 rebuilds the live block from its own commit) builds its own text unchanged.
+ */
+const UI_WORDS = ["title", "step", "checkout", "stopped"];
 const STEP_PLACEHOLDERS = ["{meal}", "{n}", "{total}"];
 /** The page's tokens the screen uses (src/template.html :root), each required to be a hex colour. */
 export const SCREEN_TOKENS = ["--navy", "--cta", "--ice", "--white"];
@@ -78,16 +82,19 @@ export function countTable(plans) {
 const asciiJson = (value) =>
   JSON.stringify(value).replace(/[<\u007f-\uffff]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
 
-/** § 1: data/messages.json's `handoff` words, checked: a missing word or placeholder refuses the build. */
-export function screenWords(messages) {
+/**
+ * § 1: data/messages.json's `handoff` words, checked: a missing word or placeholder refuses the build. `used`: the words
+ * the source reads (by default all of UI_WORDS).
+ */
+export function screenWords(messages, used = UI_WORDS) {
   const words = messages.handoff ?? {};
-  for (const key of UI_WORDS) {
+  for (const key of used) {
     if (typeof words[key] !== "string" || !words[key].trim()) throw new Error(`data/messages.json: handoff.${key} is missing`);
   }
   for (const p of STEP_PLACEHOLDERS) {
     if (!words.step.includes(p)) throw new Error(`data/messages.json: handoff.step has no ${p}`);
   }
-  return Object.fromEntries(UI_WORDS.map((key) => [key, words[key]]));
+  return Object.fromEntries(used.map((key) => [key, words[key]]));
 }
 
 /** § 1: the page's tokens the screen uses, as declarations (`--navy:#1b2360;…`), each a hex colour or the build refuses. */
@@ -115,7 +122,7 @@ export async function storefrontText({
     if (source.split(slot).length !== 2) throw new Error(`${sourcePath}: expected one ${slot}`);
   }
   const plans = await loadJson(plansPath);
-  const words = screenWords(await loadJson(messagesPath));
+  const words = screenWords(await loadJson(messagesPath), UI_WORDS.filter((word) => source.includes(`UI.${word}`)));
   const tokens = screenTokens(await readFile(templatePath, "utf8"));
   const table = (rows) => `/* data/plans.json, read_on ${plans.read_on} */ ${JSON.stringify(rows)}`;
   return source
@@ -179,7 +186,7 @@ export async function buildStorefront({ outDir = DIST_STOREFRONT, sourcePath = S
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const out = await buildStorefront();
-  console.log("the Footer block and the console file carry fill B, the one fill (SPEC-rung2 § 12)");
+  console.log("the Footer block and the console file carry fill C, the one fill (SPEC-rung2-fill-c; the file names are fill B's, kept)");
   for (const f of out.files) console.log(`wrote ${join(out.outDir, f.name)} (${f.bytes} bytes)  /* ${f.versionLine} */`);
   for (const w of out.warnings) console.warn(`warning: ${w}`);
 }
