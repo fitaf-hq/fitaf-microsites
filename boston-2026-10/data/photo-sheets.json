@@ -41,7 +41,7 @@
     "2026-10-04": {
       "file": "chefs-choice-2026-10-04.jpg",
       "width": 208,
-      "height": 1664,
+      "height": 2912,
       "cells": {
         "Italian Chicken Trio": {
           "x": 16,
@@ -55,39 +55,75 @@
           "w": 176,
           "h": 176
         },
-        "Buffalo Chicken Sliders": {
+        "Birria de Res Bowl": {
           "x": 16,
           "y": 432,
           "w": 176,
           "h": 176
         },
-        "Blackened Chicken Caesar Salad": {
+        "Coffee-Crusted Brisket & Smoked Gouda Mash": {
           "x": 16,
           "y": 640,
           "w": 176,
           "h": 176
         },
-        "Lasagna Stuffed Pepper": {
+        "Wild Salmon Cakes with Wasabi Aioli": {
           "x": 16,
           "y": 848,
           "w": 176,
           "h": 176
         },
-        "BBQ Pulled Pork Mac & Cheese": {
+        "Buffalo Chicken Sliders": {
           "x": 16,
           "y": 1056,
           "w": 176,
           "h": 176
         },
-        "Lemon Garlic Shrimp over Forbidden Rice": {
+        "Blackened Chicken Caesar Salad": {
           "x": 16,
           "y": 1264,
           "w": 176,
           "h": 176
         },
-        "Vodka Chicken Parm Zucchini Noodle Lasagna": {
+        "Lasagna Stuffed Pepper": {
           "x": 16,
           "y": 1472,
+          "w": 176,
+          "h": 176
+        },
+        "BBQ Pulled Pork Mac & Cheese": {
+          "x": 16,
+          "y": 1680,
+          "w": 176,
+          "h": 176
+        },
+        "Lemon Garlic Shrimp over Forbidden Rice": {
+          "x": 16,
+          "y": 1888,
+          "w": 176,
+          "h": 176
+        },
+        "Vodka Chicken Parm Zucchini Noodle Lasagna": {
+          "x": 16,
+          "y": 2096,
+          "w": 176,
+          "h": 176
+        },
+        "Grilled Chili Lime Free-Range Chicken Thighs": {
+          "x": 16,
+          "y": 2304,
+          "w": 176,
+          "h": 176
+        },
+        "Maple Harvest Fit Bowl": {
+          "x": 16,
+          "y": 2512,
+          "w": 176,
+          "h": 176
+        },
+        "Honey Mustard Chicken Wing Bites": {
+          "x": 16,
+          "y": 2720,
           "w": 176,
           "h": 176
         }
