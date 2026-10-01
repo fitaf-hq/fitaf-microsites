@@ -795,8 +795,8 @@ Red at `1b72512`, built at `d6261da`. § 19 above is unchanged.
 - **W18, as built**: H11–H15 in the watch's hide list under W18, each conditional (absent is reported, not a failure;
   found and still displayed fails the width, as W14's); `readFaces` measures the displayed `.summary__item`s with our
   style; the report's line: *"W18: N order lines in H px (P px each); 14 would take 14·P px of 844: fits"*.
-- **The size**: the text `7eadcbdb…`, the Footer block **12,171** bytes and the console file **12,152** (480 more than
-  § 17 alone); every character ASCII; no `<` but the Footer block's two. **The pins**: R2-32, PR-10 and CC-8's
+- **The size**: the text `7eadcbdb…`, the Footer block **12,165** bytes and the console file **12,146** at `09664a1`
+  (474 more than § 17 alone; 12,171 and 12,152 with a "-dirty" version line); every character ASCII; no `<` but the Footer block's two. **The pins**: R2-32, PR-10 and CC-8's
   `footer_text_sha256` moved from `92ee18db…` to `7eadcbdbdce49492a85d2d05901829d14be8f055c54ad9bbdf95173458a76cd0`; CC-8's
   `replaces` still names the live `914668de…`; the watch's baseline is untouched.
 - ⬜ **Not run on the live store**, and not seen by the Advisor: the rehearsal's.
