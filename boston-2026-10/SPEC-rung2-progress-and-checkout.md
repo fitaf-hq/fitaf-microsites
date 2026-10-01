@@ -677,3 +677,79 @@ is amended: the only addition is the fixed list of the sheet's hosts.
 
 Existing pins (R2-32, CC-8's `footer_text_sha256`) move with the text, in the commit that changes it; the watch's
 expected Footer moves only after the paste (`accept --footer`).
+
+## 18. Built — found at the build, not ruled
+
+Red at `ecdf156` (R2-72–R2-77, W17a; R2-11 and R2-29 moved to the new ceiling, R2-11b and R2-71 to § 17.3's one
+addition), built at `d984a7e`, mutants at `33e2583`. §§ 17.1–17.4 above are unchanged; this section says what the build
+chose where they left a choice, and what it found.
+
+- **The encoding (17.1: "however we want", "as short as it can be")**: after the meal part, `!`-separated: the host's
+  **code** (one digit, its index in the block's list), the sheet's **path** on that host from its first `/` (the
+  manifest's `base` and `file`), the sheet's **width** in base 36, then **one cell per meal in the link's order**,
+  `x,y,w,h` in base 36, or empty for a meal with no cell. For this week's Signature · 7 that is 130 characters:
+  `…34975!1!/assets/photo-sheets/chefs-choice-2026-10-04.jpg!5s!g,g,4w,4w!g,68,4w,4w!…`. The sheet's height is not
+  carried: the block does not need it (below). `!` separates because the meal part already uses `.` and `~`, and the
+  live block splits on `.` (next item).
+- ⭐ **How the live block (`914668de…`) treats a link with the photo part: it refuses it whole.** Its payload reader
+  splits the fragment on `.`, so the last meal's item reads `<key>!0!/assets/photo-sheets/chefs-choice-2026-10-04` and
+  fails its pattern: `stopped: bad meal: …`, the fragment removed, **nothing pressed, no screen**; the visitor has the
+  plan's order page as rung 1 leaves it. Measured with the live text, rebuilt as R2-71 rebuilds it (R2-74b). So the
+  failure is safe, but **every Chef's Choice link of a microsite built from this commit is refused by the live block**:
+  the order § 17.1 states (the rehearsal, the paste, then the microsite's release) is what keeps the Chef's Choice
+  working. ⚠ `npm run build` from this commit already writes those links (host code 0); it must not be deployed before
+  the paste. Old links (no photo part) behave in the new block exactly as in the live one, step for step (R2-74).
+- **The list (17.1)**: one module, `src/storefront/photo-hosts.js`: code 0 `https://eatfitaf.com`, code 1 the test
+  address `https://fitaf-microsites-dev.fitaf-microsite-boston-2026-10.workers.dev` (the README's Dev URL). The link
+  tool imports it; the build inlines it at a `HOSTS` slot. The slot is **optional** (not among the required slots), so
+  R2-71 can still rebuild the live block from its own commit. The production build's links use code 0, the development
+  build's code 1 (`build.mjs`, `PROD_PHOTO_HOST` / `DEV_PHOTO_HOST`). A manifest whose `base` is null or absolute (a CDN,
+  not on the list) gives the link of today.
+- **What the block accepts**: a code that is exactly one digit naming a listed host; a path matching
+  `^\/[\w\/.-]{1,200}$` (so the URL is the listed host followed by `/…`: no path can change the host); a width above 0;
+  a cell of four base-36 numbers of 1–4 digits, with a width and height above 0 and inside the sheet's width. Anything
+  else is **no photograph for that meal, or none at all, and never a stop**: the meal part alone decides the order. The
+  photo part is read inside `ui()`, after the meal part has passed every check.
+- **"When the week's photo sheet has a cell for its meals"** is read as **for any of them**: a meal without a cell
+  gets an empty cell and today's slide (R2-72, R2-73); a week with no cell for any meal gets the link of today.
+- **The slide (17.2, "at the slide's size, the cell's own pixels only")**: a box with the **cell's own ratio**
+  (`aspect-ratio`, written as one number, `w / h`) at the slide's height (`min(220px,32vh)`, the card photos'), centred;
+  inside it the whole sheet as an `img`, `width` the sheet's width in cells (`W / w`), `left` and `top` the cell's
+  offset (`-x / w`, `-y / h`), the box clipping the rest. For this week's square cells that is a 220 × 220 square,
+  **not** the full-width crop the card's own photographs get (a full-width cover of a 176-px cell would show it at
+  about 2.4×, and a cover window cannot be written without knowing the box's size). The Advisor sees it at the
+  rehearsal.
+- **The sheet is asked for once, before the first press**: when the screen appears the block makes an `img` with the
+  sheet's URL and does not place it (the browser starts the request); each slide's `img` asks for the same URL. Its
+  error, or a slide's, sets a flag: that slide falls back to today's rule (`pic()`: the card's loaded image, else the
+  name alone) and no later slide asks for the sheet (R2-76).
+- ⚠ **"The browser reuses its copy" (17.2) is not what a browser does here, as far as the build knows** (not measured):
+  Chrome (since 86), Safari and Firefox (since 85) partition their HTTP cache by the top-level site, so a sheet loaded
+  on eatfitaf.com is a separate entry from the same URL loaded inside fitafnutrition.com. The store's page fetches the
+  sheet itself (118,748 bytes for this week); the early request above is the head start. Nor is it known whether the
+  store's page restricts images by a Content-Security-Policy, or eatfitaf.com sends a `Cross-Origin-Resource-Policy`:
+  either would make the sheet fail, and the slides fall back. The rehearsal (W17) shows which.
+- **The size (17.3)**: the text 92ee18db…, the Footer block **11,691** bytes and the console file **11,672** (`33e2583`;
+  10,224 and 10,205 at `914668de…`): about 1,470 bytes for the photo part, the slide and its fallback. Every character
+  ASCII; no `<` but the Footer block's two; the only new URLs the two listed hosts (R2-77).
+- **The pins**: R2-32's and PR-10's moved from `914668de…` to
+  `92ee18dbb8260fda63ee1f2fccf1f741e7ac8e8a29e6676fbaf60a70a74578a6`; CC-8's golden `footer_text_sha256` the same, with
+  `replaces` naming the live `914668de…` (CC-8a's control) until the paste. `storefront/watch-baseline.json` is
+  untouched.
+- **R2-71's live-text rebuild** moved to `test/r2-live.mjs`, unchanged, so R2-74 and R2-77 read the same text.
+- **The mutants (`test/r2-73-75-mutants.test.mjs`, in a mirror)**: (a) the host taken from the link
+  (`HOSTS[f[0]] || f[0]`): R2-75 fails, a forged host requested; (b) the slide waiting for the card's image: R2-73 fails.
+  Each with a control.
+- **W17, as built** (`tools/storefront-watch`): `npm run smoke -- --link '<the microsite's checkout link>'` runs that
+  link instead of one built from the menu: its plan (`?mpid=`), its meals (read against the menu by name with the
+  site's key function, each as many times as the link says, so the pass rule's names and total are the link's), and its
+  whole fragment. The recorder notes each slide as it arrives, the `src` of its `img` on a listed host, and that img's
+  load or error; the report's line says, per slide, **shown**, **failed**, **asked** (neither seen) or **not found**.
+  **A report, not a pass rule**: § 17.4 asks "found or not", and a failed sheet is a fallback the contract allows.
+  W17a tests the line and `--link`'s choice; W17b runs the smoke with `--link` in Chrome on the synthetic store, the
+  link's page serving a generated sheet for the listed host by request interception (nothing reaches the network).
+- ⬜ **Not run on the live store**: any of it. The rehearsal is the orchestrator's: the console file with `--script`,
+  and `--link` with the development build's Signature · 7 link (host code 1, so the sheet must be served at the test
+  address's `/assets/photo-sheets/chefs-choice-2026-10-04.jpg`, or every slide reports *failed* and falls back).
+- ⬜ **Not checked**: how the sheet's box looks at 390 px in a real browser (W17b reads the report, not the geometry);
+  whether a pasted console run, which starts after the store's cards are drawn, gives the early request any head start.
