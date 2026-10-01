@@ -107,7 +107,8 @@ test("W14b: the smoke at both widths — H7, H9 and H10 found and hidden, H8 abs
     assert.deepEqual(byId("H9").map((h) => [h.found, h.displayed]), [[3, 0]], "Subtotal, Shipping, Tax, hidden");
     assert.deepEqual(byId("H10").map((h) => [h.found, h.displayed]), [[2, 0]], "the tip's section and its selector, hidden");
     assert.deepEqual(c.total, { found: 1, displayed: 1 }, "the Total displayed");
-    assert.equal(c.payment.hidden.length, 19, `H3, H4, H6 (4), H7 (12), H10 (3): ${c.payment.hidden.join("; ")}`);
+    // § 21: and H16's "Remove plan" and H17's return link, on the synthetic checkout's plan group.
+    assert.equal(c.payment.hidden.length, 21, `H3, H4, H6 (4), H7 (12), H10 (3), H16, H17: ${c.payment.hidden.join("; ")}`);
     assert.deepEqual(c.payment.hidden, c.payment.allowed);
     const report = renderSmokeReport({ flag: false, script: "fill B", runs: [{ width, verdict, outcome }] }, "t");
     assert.match(report, /H8 absent/);
