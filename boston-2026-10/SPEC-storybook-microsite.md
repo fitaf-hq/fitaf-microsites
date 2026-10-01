@@ -96,3 +96,124 @@ only thing a story adds to a page.
 - **The screen's stories** (`SPEC-storybook.md` §§ 3–5): with rung 2 § 14's extraction, on its own branch.
 - **The checkout**: HMP's page; its styling is reviewed on the live store and the recordings.
 - **The copy**: the words stay `data/messages.json`'s; a story shows them, and a change to them is the Advisor's review.
+
+## 7. Built, 2026-09-30 — found at the build, not ruled
+
+Red at `71fea5a` (17 tests in 7 files; 10 failing on the missing feature; SM-1, SM-4 with its two mutants, and SM-7,
+which guard what the skeleton already satisfied, passing), green at `7103fa6` (17 of 17; the site's suite 446 of 446,
+as on `c58313b`; the Footer block's text `914668de…`, 10,224 bytes, unchanged). The build's reading and its choices,
+where §§ 1–6 left one open; §§ 1–6 are unchanged.
+
+**⚠ A premise the build found false (§ 2 item 5).** *"The page makes none"* holds for the production page only. The
+development page carries `<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit">`
+(`build.mjs`'s `TURNSTILE_SCRIPT_URL`: rung 4's bot check, invisible, run only when *Save* is pressed). The page's bytes
+must stay the build's (§ 2 item 1, SM-3), and Chrome refuses to show a same-origin page in a frame carrying a `csp`
+attribute unless the page's server opts in (tried at the build), so the refusal is the server's: every response under
+`/microsite/` carries `Content-Security-Policy: default-src 'self' 'unsafe-inline' data: blob:` (`microsite/serve.mjs`),
+sent by the development server (`.storybook/middleware.js`) and by SM-5's server. At rest the development page draws the
+same without it; *Save* pressed in a story shows the page's own *loading* error. ⚠ A static build served by anything else
+(a publish, § 6) does not send it, and the development page would then make the request. ⚠ So § 4's *"the fixed clock is
+the only thing a story adds to a page"* is true of the page's bytes; the docs page also says the pages are served with a
+policy refusing other hosts. **For the Advisor**: refuse it in the stories (built), or let the development page fetch
+Turnstile there.
+
+**§ 1, the package**
+
+- From `fc0aa49`: `package.json` (its description; the development server's script gains `--no-version-updates`, since
+  without it Storybook asks storybook.js.org for its latest version, a request of its own; `pages` added),
+  `package-lock.json` (Storybook 10.6.1 and vite 7.3.6 unmoved), `.storybook/` (the screen's virtual module and its
+  `fs.allow` removed; the smoke's viewports kept, 390 × 844 now the default, 1280 × 900), `README.md` (rewritten).
+- **`puppeteer-core` 25.12.0**, the watch's exact version, is this package's own dev dependency (SM-5, SM-8); Chrome is
+  the one the watch's own `chromePath()` finds (`tools/storefront-watch/lib/browser.mjs`, imported by path:
+  `CHROME_PATH`, else the platform's usual place), so the watch's install is not needed. The lockfile gains 24 packages;
+  none it held moved.
+
+**§ 2, the page**
+
+- **The build**: `node build.mjs`, `--env dev` for development, as `npm run build` and `build:dev` run it, with the
+  date's `--on` and an `--out` of its own; `build.mjs` gains only the `--out DIR` flag (`build({ outDir })` existed).
+  ⚠ The development build empties its `--out` first, so the flag must name a directory of its own. Six builds per start
+  (two builds × three dates), in parallel, about 3 s. They need the site's install (`qrcode`; `wrangler` reads the
+  development build's config); without it Storybook does not start, and says why.
+- **Where**: `tools/storybook/node_modules/.cache/fitaf-microsite/<build>/<date>/`, git-ignored with the install and
+  outside `dist/` and `dist-dev/`; SM-4 does not read it (the site's output, not a file of the tool's).
+  `MICROSITE_PAGES_DIR` moves it (the cases do, so no two builds share one). Served under `/microsite/`. The development
+  page asks for `/fonts/…` and `/assets/fitaf-logo.png` at the site's root, so its build's `fonts/` and `assets/` are also
+  served at Storybook's root (in the static build, beside Storybook's own `assets/`, with distinct names).
+- **A change** shows after a restart, or after `npm run pages` (the pages rebuilt in place while the server runs) and a
+  reload of the story. No watch: a new picks file changes the dates, read at the start.
+- **The clock** starts at the instant and runs on (`Date.now()`, `new Date()`; a `Date` given a value, and the rest of
+  `Date`, untouched: a `Proxy` over the browser's own). It goes immediately before the page's first `<script>` (the
+  production page's first is `#plan-data`, a JSON block), as `<script data-storybook-clock="<ISO instant>">`. *No picks*
+  is noon too (§ 2 item 4 names no time). With the committed `2026-10-04.json`: *a week with picks* 2026-10-01 12:00 in
+  New York (16:00Z), *no picks* 2026-10-02 12:00 (16:00Z); *today* is `zonedDate(Date.now(), send_time_zone)` when
+  Storybook starts. *Committed* is read as the files in `data/picks/`, as the build reads them.
+- **What the stories offer** (the builds, the dates, the goals and counts of `data/plans.json`) reaches them as the
+  virtual module `virtual:microsite-pages`, the pages' own `pages.json`: the Goal control's names are the data's.
+
+**§ 3, the stories**
+
+- Titles `Microsite/Individual`, `Microsite/Family`, `Microsite/Whole page` (a root for when the screen's stories join);
+  the group in feedback is the last part. The width is Storybook's viewport (its toolbar), not a story or a control; the
+  frame is set to the viewport's width in pixels.
+- Defaults: Build *production*; Date *today*, but *a week with picks* for *Chef's Choice · closed* and *· open* and *no
+  picks* for *No picks this week*; Goal and Meals the first of `data/plans.json` (`#lean-7`). *Whole page · Scroll* has a
+  **State** control (any other story's state; default *Chosen*) beside Build, Date, Goal and Meals.
+- A story waits up to 10 s for the page's own script (the result card shown; the Individual panel for *Start*; the
+  Family panel for *Family*). *Chef's Choice · closed* and *· open* need `#cc-toggle` shown, *No picks this week* needs
+  it not; a press is a `click()` on the page's own control, then what it opens must show. **A pressed control is scrolled
+  to the frame's top**, where the visitor who pressed it is looking (on the development build at 390 the save section is
+  above the card), except in *Scroll*. A state not reached turns the caption red, with the reason; the caption is above
+  the frame, since nothing is written into the page.
+
+**§ 4**: `Microsite/About these stories` (MDX); its list is read from the three story modules, so it lists the stories
+Storybook shows.
+
+**§ 5, the cases** (17 tests in 7 files, about 35 s here; each file that needs a static build makes its own in a
+temporary directory, so three builds a run, and a fourth, the SM-5 mutant's mirror):
+
+- **SM-1** pins the four Storybook packages at exactly 10.6.1. **SM-2** wants exactly § 3's eight stories under
+  `Microsite/`, and a docs entry.
+- **SM-3** reads each page over HTTP at the URL the stories use, builds the same build and date afresh with the site's
+  own npm scripts (`npm run build` or `build:dev`, `-- --on D --out DIR`), and wants the served page to be that one with
+  exactly one clock script removed (none for *today*), placed before the page's first script, carrying the date's
+  instant. Its mutant: the served `production/today` page with `body { margin: 0;` made `1px` (killed: *"not
+  byte-identical to the site's build"*).
+- **SM-4**: *a rule* is each `selector{declarations}` of `src/template.html`'s `<style>` elements and of `src/**/*.css`
+  (an `@media`'s rules one by one, an `@font-face` whole) and each `:root` custom property, compared with whitespace,
+  comments and quote style set aside. *A phrase* is each string of `data/messages.json` but its two notes about itself
+  (`about`; `status`, whose `"placeholder"` is a marker, not a phrase), cut at its `{placeholders}`, each piece of ten
+  characters or more, compared after the escapes a copy would carry (`&#39;`, `\'`) are undone. The cases are under
+  `tools/storybook/` too, so they quote no rule and no phrase: each is read from the site when they run. Its mutants: a
+  phrase with an apostrophe, JavaScript-escaped, and a rule laid out differently, each in a new file of a mirror.
+- **SM-5 and SM-8 are one walk, in one file** (`sm-5-8-…`: SM-8 is *"during SM-5"*): Storybook's own manager, each story
+  at both viewports, for both builds, with its own defaults, and *Chef's Choice · open* at 14 meals too, 40 visits. Read:
+  the story's state; its frame's and its page's widths; the page's path (the build and the date); the open list's shown
+  lines against the committed week's names for the count (`meal_qty` for a `qty` over 1); no shown `#cc-toggle` and a
+  shown `#result-cta` for *No picks this week*; the grid's six links; the Family panel; the *Scroll* frame at least its
+  page's height. **SM-8**: every request the browser makes not to 127.0.0.1 is recorded and refused, so nothing leaves
+  even when a case fails; none was made in the walk (the manager, 40 visits, the docs page). Mutants: SM-5's, a mirror of
+  the package whose *Chef's Choice · open* does not press (`press: null`), built and walked (killed: *"the list is not
+  shown"* at every width, build and count); SM-8's, a server without the policy, where the development page's request for
+  Turnstile's script appears.
+- **SM-6** works the expected dates out from the file names by its own calendar arithmetic and `Intl`, adds a fixture of
+  two weeks and one of none, reads the six pages' clock scripts, and runs the clock script in a `vm` sandbox.
+  **SM-7** is SB-4's first half.
+
+**Found, not changed**
+
+- The a11y addon's panel audits the story's own element (0 violations, 6 passes, 1 inconclusive, on the two stories
+  looked at), **not the page in the frame**.
+- A link pressed in a frame leaves Storybook as it leaves the page (the store's addresses): a reviewer's click is not
+  stopped.
+- The site's suite on `c58313b`, before any change: twice 444 tests with 443 passing, one file crashing each time on
+  Miniflare's `read ECONNRESET` under a load average near 500 (S14's, then S10's; each passes alone, 3 of 3); a third run
+  at a lower load, 446 of 446.
+
+**Checked by hand, not by a case**: the development server (`npm run storybook`) in headless Chrome: the pages under
+`/microsite/` sent with the policy, the logo served at `/assets/`, *Chef's Choice · open* (390, development), *All plans*
+(1280, production) and *Scroll* (390, development) ready at their widths, the pressed control scrolled into view, no
+request beyond localhost; it listens on `[::1]:6016` only.
+
+**Not done here**: nothing published or deployed; Safari and Firefox not tried (a static build elsewhere, above); the
+page's own a11y; the screen's stories (§ 6).
