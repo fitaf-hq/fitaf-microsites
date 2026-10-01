@@ -1,4 +1,4 @@
-// R2-82 (SPEC-rung2-progress-and-checkout § 23), fake timers: fill B waits PRESS_MS (1000) after each press, every Add
+// R2-82 (SPEC-rung2-progress-and-checkout § 23, § 25), fake timers: fill B waits PRESS_MS (2000 since § 25) after each press, every Add
 // to Cart and every +, before the next, and after the last before its first look for CHECKOUT; every other delay it
 // schedules is a 200 ms poll (the waits for the cards, for CHECKOUT, and after CHECKOUT). Each delay is recorded with the
 // number of meal presses made when it was scheduled, so a PRESS_MS is placed, not only counted: a delay scheduled
@@ -8,8 +8,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { ADD, CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, MEALS, orderPage, PAGE, POLL_MS, PRESS_MS, run, script } from "./r2-harness.mjs";
 
-test("R2-82: 1000 ms after each press and after the last; every other delay a 200 ms poll", async () => {
-  assert.deepEqual([PRESS_MS, POLL_MS], [1000, 200]);
+test("R2-82: 2000 ms after each press and after the last; every other delay a 200 ms poll", async () => {
+  assert.deepEqual([PRESS_MS, POLL_MS], [2000, 200]);
   const page = await orderPage({ loadingTicks: 2 });
   page.hide();
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });

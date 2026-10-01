@@ -16,8 +16,9 @@ export const ORIGIN = "https://fitafnutrition.com";
 /** The store's cart key: a visitor's own cart there must be left exactly as it was (R2-14). */
 export const CART_KEY = "hmp_local_cart";
 export const POLL_MS = 200;
-/** SPEC-rung2-progress-and-checkout § 23: fill B waits this long after each press (every Add to Cart and every +). */
-export const PRESS_MS = 1000;
+/** SPEC-rung2-progress-and-checkout § 23: fill B waits this long after each press (every Add to Cart and every +); 2000
+ *  since § 25 (it was 1000). */
+export const PRESS_MS = 2000;
 /**
  * § 23 item 3: what "every delay is POLL_MS" now says. Of the delays fill B scheduled, exactly one per meal press is
  * PRESS_MS, and every other is a POLL_MS poll. `presses` is the number of meal presses made (the page's `log`). R2-82

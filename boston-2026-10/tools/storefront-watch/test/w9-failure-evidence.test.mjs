@@ -177,14 +177,14 @@ test("W9e (§ 7 item 3): the smoke's ceiling is above fill B's longest wait, as 
   const m = /var POLL_MS = (\d+), PRESS_MS = (\d+), MAX_POLLS = (\d+), AFTER_CHECKOUT = (\d+), NO_CARDS = (\d+);/.exec(consoleFile);
   assert.ok(m, "the built text's poll constants");
   const [poll, press, before, after, cards] = m.slice(1).map(Number);
-  assert.equal(press, 1000, "SPEC-rung2-progress-and-checkout § 23: one second after each press");
+  assert.equal(press, 2000, "SPEC-rung2-progress-and-checkout § 25: two seconds after each press (§ 23's was one)");
   assert.equal(after * poll, 30_000, "fill B waits 30 s after CHECKOUT (SPEC-rung2 § 11 item 4)");
   assert.equal(cards * poll, 30_000, "and up to 30 s for the page's first card (SPEC-rung2-progress-and-checkout § 15.2)");
   // SPEC-rung2-progress-and-checkout § 15.2: the wait for the first card, then the 10 s for every meal's card (from the
   // first card), one PRESS_MS per press of mpid 21's 7 meals (§ 23), an enabled CHECKOUT, then CHECKOUT's and CONTINUE's
   // waits.
   const longest = cards * poll + before * poll + 7 * press + before * poll + 2 * after * poll;
-  assert.equal(longest, 117_000, "30 s + 10 s + 7 s + 10 s + 30 s + 30 s");
+  assert.equal(longest, 124_000, "30 s + 10 s + 14 s + 10 s + 30 s + 30 s");
   assert.equal(FILL_B_LONGEST_MS, longest);
   assert.ok(HANDOFF_MS > longest, `${HANDOFF_MS} ms`);
 });
