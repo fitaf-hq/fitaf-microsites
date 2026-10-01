@@ -192,10 +192,31 @@ Mutants, each in a mirror of `a402eb0`, each case passing on the unmutated mirro
 - The production page is 30,515 bytes without photographs. With the real manifest (before the hold) it was 33,353.
   Both are under `SPEC.md` § 1's 60 KB.
 
+**Later the same night: the sheets landed.** Fit AF's emitter (its `scripts/menus/emit_microsite_photos.py` @
+`9cb0af26`) wrote `data/photo-sheets.json` and the two sheets; they are committed as it wrote them, unedited. Its cells
+are **768 × 576** (carousel, 4:3) and **176 × 176** (thumbnails): multiples of 16, not § 3's 780 × 585 and 168 × 168,
+which answers the edge bleed above. Sheets: carousel 299,467 bytes (under 300,000), week B 112,108 bytes (under
+120,000); 8 meal cells, the other 6 picked meals plain. PR-3's no-manifest case now runs in a mirror, and a new PR-3 case
+wants the committed page's five windows and eight cells; S20's golden is re-recorded with the sheets (CC-4 follows it).
+
+Looked at with the real sheets in headless Chrome (production page, `#lean-14`, the clock inside week B's window, device
+scale 2):
+- **The carousel advances**: windows 1 → 2 → 3 over about 8.6 s, at 390 and at 1280; under `prefers-reduced-motion` it
+  stays on window 1.
+- **The tiles**: 8 with a photo and 6 plain, at both widths.
+- ⚠ **At 390 a window's outermost row of device pixels (half a CSS pixel) comes from the neighbouring cell.** The 4:3 box
+  is 358 × 268.5 CSS pixels, so the sheet (768 wide) is drawn at 0.93 and the cell boundary falls between device pixels;
+  the browser's downscaling filter samples across it. Measured: each window's edge row against its own cell's edge row
+  and the neighbour's. At 390 the outermost row of windows 1/2 and 4/5, where the neighbours differ (slate against
+  white), matches the neighbour; the next row in matches its own cell. At 1280 (drawn at 1.79) the edge row is mostly its
+  own. Seen zoomed in as a thin line of the next photo's colour. **Not fixed here (not ruled)**: a gutter of a few pixels
+  between cells (the producer), or the page drawing each window a pixel inside its cell (the consumer).
+- **No bleed measured in the tiles** at either width (each tile's edge row closer to its own cell than to its neighbour),
+  but every neighbouring tile's edge is the same dark slate, so the measurement cannot tell them apart by much.
+
 **Not verified**:
-- the real photographs on the page, in any browser;
-- Safari and iOS;
-- the cross-fade's look over time;
+- Safari and iOS, with or without the real photographs;
+- the cross-fade's look over time (only which window is shown was read);
 - anything live: nothing is deployed.
 
 Looked at in headless Chrome at 390 and 1280 (production page, fixture sheets, `#lean-7`, the modal open): no
