@@ -56,9 +56,8 @@ test("CC-1b: the plan page opens it from the result card, for every size and cou
   for (const [hash, count, mpid] of CELLS) {
     const { state } = openedCard(html, { hash, now: midday(DAYS["S-5"]) });
     assert.equal(state.result, true, `${hash}: the result card is shown`);
-    assert.equal(state.toggle, true, `${hash}: the card offers the week's Chef's Choice`);
-    assert.equal(state.expanded, "true", `${hash}: pressed, it is open`);
-    assert.equal(state.list, true, `${hash}: the list is shown`);
+    // SPEC-plan-page-refinement § 2 item 5: always open, so no button to press (CC-1b's press removed).
+    assert.equal(state.list, true, `${hash}: the list is shown, with no press`);
     assert.equal(state.heading, headingFor(count, S), `${hash}: the heading`);
     assert.deepEqual(state.meals, FIXTURE.menus[count].map((m) => mealLine(m)), `${hash}: the meals`);
     assert.equal(state.checkout, picksData(html).weeks[0].counts[count].links[mpid], `${hash}: Continue to checkout is the size's link`);

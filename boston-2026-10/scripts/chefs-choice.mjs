@@ -10,7 +10,7 @@
 // (src/storefront/meal-key.js). No key function and no encoder live here (CC-2).
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join, relative, sep } from "node:path";
-import { declaration, esc, NO_PICKS, ROOT, scriptJson, shownCounts, ZONED_DATE_HELPERS } from "../build.mjs";
+import { declaration, esc, NO_PICKS, ROOT, scriptJson, sheetUrl, shownCounts, ZONED_DATE_HELPERS } from "../build.mjs";
 import { isLive, longDate } from "../src/worker/offers.js";
 import { addDays, daysBetween } from "../src/worker/zoned-time.js";
 import { countTable } from "./build-storefront.mjs";
@@ -26,8 +26,9 @@ const SUNDAY = 0;
 /** § 1: the only fields, each required: a file's, and a meal's. Anything else refuses the build. */
 const FILE_FIELDS = ["delivery", "menus"];
 const MEAL_FIELDS = ["name", "qty"];
-/** § 3's phrases in data/messages.json's `chefs_choice`, and the placeholders each must carry. */
-const PHRASES = { open: [], heading: ["{count}", "{date}"], meal_qty: ["{meal}", "{n}"], note: [], checkout: [], own: [] };
+/** § 3's phrases in data/messages.json's `chefs_choice` the card shows, and the placeholders each must carry. Since
+ *  SPEC-plan-page-refinement § 1–2 the list is always open: `open` (its button) and `note` are kept there, not read. */
+const PHRASES = { heading: ["{count}", "{date}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] };
 
 /** A path as a person finds it: from the package when it is inside it. */
 const shown = (path) => (path.startsWith(ROOT + sep) ? relative(ROOT, path) : path);
@@ -144,23 +145,44 @@ export async function readPicks(dir, plans) {
 /** § 2: the weeks whose window has not ended on `on` (the build's date). A page built early carries next week's. */
 export const openOn = (weeks, on) => weeks.filter((w) => daysBetween(on, windowOf(w.delivery).valid_to) >= 0);
 
-/** What the page's script reads: the zone, and per open week its window and, per count, the heading, the list, and
- *  one checkout link per size (by mpid). Every word is a phrase of data/messages.json filled here. */
-export function pageData(weeks, { words, zone }) {
+/** A percentage for an inline style, without float noise. */
+const pct = (n) => `${Number(n.toFixed(4))}%`;
+
+/** One meal's tile style (SPEC-plan-page-refinement § 2 item 5): its cell of the week's sheet, sized by percentages so the
+ *  stylesheet alone sets the tile's size; null (a plain tile) when the sheet has no cell for its store name. */
+function thumbStyle(url, sheet, name) {
+  const c = url && sheet.cells[name];
+  if (!c) return null;
+  const position = (offset, size, whole) => (whole === size ? "0%" : pct((offset / (whole - size)) * 100));
+  return (
+    `background-image:url("${url}");background-size:${pct((sheet.width / c.w) * 100)} ${pct((sheet.height / c.h) * 100)};` +
+    `background-position:${position(c.x, c.w, sheet.width)} ${position(c.y, c.h, sheet.height)}`
+  );
+}
+
+/** What the page's script reads: the zone, and per open week its window and, per count, the heading, the list (with each
+ *  meal's tile style, or null), and one checkout link per size (by mpid). Every word is a phrase of data/messages.json
+ *  filled here. `photos` is the photo sheets' manifest; every URL in it is built from its `base` (sheetUrl). */
+export function pageData(weeks, { words, zone, photos = null, assetPrefix = "" }) {
   return {
     zone,
     weeks: weeks.map((w) => ({
       delivery: w.delivery,
       ...windowOf(w.delivery),
       counts: Object.fromEntries(
-        Object.entries(w.menus).map(([count, menu]) => [
-          count,
-          {
-            heading: fill(words.heading, { count, date: longDate(w.delivery) }),
-            meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.name, n: m.qty }) : m.name)),
-            links: menu.links,
-          },
-        ]),
+        Object.entries(w.menus).map(([count, menu]) => {
+          const sheet = photos?.chefs_choice?.[w.delivery];
+          const url = sheetUrl(photos, sheet, assetPrefix);
+          return [
+            count,
+            {
+              heading: fill(words.heading, { count, date: longDate(w.delivery) }),
+              meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.name, n: m.qty }) : m.name)),
+              thumbs: menu.meals.map((m) => thumbStyle(url, sheet, m.name)),
+              links: menu.links,
+            },
+          ];
+        }),
       ),
     })),
   };
@@ -168,7 +190,7 @@ export function pageData(weeks, { words, zone }) {
 
 /** The card's markup (src/chefs-choice/card.html) with its words; a `{{…}}` left over refuses the build. */
 function cardHtml(template, words) {
-  const values = { OPEN: words.open, NOTE: words.note, CHECKOUT: words.checkout, OWN: words.own };
+  const values = { CHECKOUT: words.checkout, OWN: words.own };
   const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
     if (!(key in values)) throw new Error(`src/chefs-choice/card.html: ${whole} has no value`);
     return esc(values[key]);
@@ -181,7 +203,7 @@ function cardHtml(template, words) {
  * The page's slots for the weeks open on `on`, or none (the page as before: CC-4). The script is one function scope, so
  * its copies of the helpers never meet the offer box's (the development page declares the same names at the top level).
  */
-export async function chefsChoice({ plans, messages, dir, on, zone }) {
+export async function chefsChoice({ plans, messages, dir, on, zone, photos = null, assetPrefix = "" }) {
   const all = await readPicks(dir, plans);
   const weeks = openOn(all, on);
   const summary = weeks.map((w) => ({ delivery: w.delivery, ...windowOf(w.delivery), counts: Object.keys(w.menus) }));
@@ -194,7 +216,7 @@ export async function chefsChoice({ plans, messages, dir, on, zone }) {
       PICKS_STYLE: "\n" + (await read("style.css")).trim(),
       PICKS_CARD: "\n" + cardHtml(await read("card.html"), words).trimEnd(),
       PICKS_SCRIPT:
-        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone }))}</script>` +
+        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, photos, assetPrefix }))}</script>` +
         `\n<script>\n(function () {\n"use strict";\n${helpers}\n${(await read("chefs-choice.js")).trim()}\n})();\n</script>`,
     },
     weeks: summary,

@@ -1,6 +1,8 @@
 // CC-4 (SPEC-chefs-choice § 4): no file. Without a picks file for an open week, the page is byte-identical to the same
 // build without data/picks/: no directory, an empty one, or only a week whose window has ended on --on. Both builds.
-// The production page is also the one S20 pins (index.html's SHA-256 in s20-production-golden.json, before rung 4).
+// The production page is also the one S20 pins (index.html's SHA-256 in s20-production-golden.json): since
+// SPEC-plan-page-refinement § 3 (the Advisor's ruling on the photos) that page carries the committed photo sheets, so the
+// pin moved with S20's re-recording and this case follows it unchanged.
 // The control: the same build with the fixture's week open does differ, so the comparison can see a change.
 import test from "node:test";
 import assert from "node:assert/strict";

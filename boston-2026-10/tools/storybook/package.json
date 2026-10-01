@@ -1,0 +1,24 @@
+{
+  "name": "fitaf-microsite-boston-2026-10-storybook",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Storybook for the microsite: every state of the page a visitor can reach, as the site's own build writes it, at 390 and 1280 (SPEC-storybook-microsite.md). Its own package, so the site's install never contains it.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "storybook": "storybook dev --port 6016 --host localhost --no-open --no-version-updates",
+    "build-storybook": "storybook build --output-dir storybook-static",
+    "pages": "node microsite/pages.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^10.2.1",
+    "@storybook/addon-docs": "^10.2.1",
+    "@storybook/html-vite": "^10.2.1",
+    "puppeteer-core": "25.12.0",
+    "storybook": "^10.2.1",
+    "vite": "^7.1.0"
+  }
+}

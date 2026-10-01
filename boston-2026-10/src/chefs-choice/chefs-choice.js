@@ -11,7 +11,7 @@ if (week) start(week);
 
 function start(week) {
   var $ = function (id) { return document.getElementById(id); };
-  var result = $("result"), choose = $("result-cta"), toggle = $("cc-toggle"), list = $("cc-list"), own = $("cc-own");
+  var result = $("result"), choose = $("result-cta"), list = $("cc-list"), own = $("cc-own");
 
   // The chosen plan's mpid, as app.js wrote it into the card's link; the count is the menu that links it.
   function chosen() {
@@ -23,29 +23,32 @@ function start(week) {
     return null;
   }
 
+  // The list is always open (SPEC-plan-page-refinement § 2 item 5): shown whenever the week has picks for the count.
+  // Each meal has a tile to the left of its name: its cell of the week's photo sheet (the build's style, from the
+  // manifest), or plain, so the rows align.
   function render() {
     var c = chosen();
     choose.hidden = !!c;
-    toggle.hidden = own.hidden = !c;
-    list.hidden = !c || toggle.getAttribute("aria-expanded") !== "true";
+    list.hidden = own.hidden = !c;
     if (!c) return;
     $("cc-heading").textContent = c.menu.heading;
     var meals = $("cc-meals");
     while (meals.firstChild) meals.removeChild(meals.firstChild);
     for (var j = 0; c.menu.meals.length > j; j++) {
       var li = document.createElement("li");
-      li.textContent = c.menu.meals[j];
+      var tile = document.createElement("span");
+      tile.className = c.menu.thumbs[j] ? "cc-thumb cc-photo" : "cc-thumb";
+      if (c.menu.thumbs[j]) tile.setAttribute("style", c.menu.thumbs[j]);
+      var name = document.createElement("span");
+      name.className = "cc-name";
+      name.textContent = c.menu.meals[j];
+      li.appendChild(tile);
+      li.appendChild(name);
       meals.appendChild(li);
     }
     $("cc-checkout").href = c.link;
     own.href = choose.getAttribute("href");
   }
-
-  toggle.addEventListener("click", function () {
-    var open = toggle.getAttribute("aria-expanded") !== "true";
-    toggle.setAttribute("aria-expanded", String(open));
-    list.hidden = !open;
-  });
   window.addEventListener("hashchange", render);
   render();
 }

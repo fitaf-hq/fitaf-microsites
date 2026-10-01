@@ -1,11 +1,12 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
 //
-//   node build.mjs [--env dev] [--on YYYY-MM-DD]
+//   node build.mjs [--env dev] [--on YYYY-MM-DD] [--out DIR]
 //
 // --on is the build's date for this week's Chef's Choice (SPEC-chefs-choice § 2): every data/picks/<sunday>.json whose
 // window has not ended on it is embedded, and the page chooses among them in the browser. Default: today in the send
 // time zone (data/save.json). Without data/picks/, or with no week open on --on, the page is exactly as before.
+// --out is the directory written instead of dist/ (or dist-dev/): Storybook's pages (tools/storybook), never a deploy.
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -31,6 +32,11 @@ export const OFFERS_PATH = join(ROOT, "data", "offers.json");
 export const MENU_PATH = join(ROOT, "data", "menu.json");
 /** The week's Chef's Choice, one file per delivery Sunday (SPEC-chefs-choice § 1): read by scripts/chefs-choice.mjs. */
 export const PICKS_DIR = join(ROOT, "data", "picks");
+/** The plan page's photographs (SPEC-plan-page-refinement § 3): the manifest and the one directory holding every sheet it
+ *  names, both produced outside this repository (the producer, § 3's tool, is held: Fit AF's own pipeline makes them).
+ *  Every photo URL the page carries is built from the manifest's `base`. Without the manifest the page has no photograph. */
+export const PHOTOS_PATH = join(ROOT, "data", "photo-sheets.json");
+export const PHOTO_SHEETS_DIR = join(ROOT, "src", "assets", "photo-sheets");
 export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
 /** Same-origin static files the page references, copied beside index.html: src/<dir> -> <out>/<dir>. */
 export const STATIC_DIRS = [
@@ -97,21 +103,91 @@ export function gridCells(plans) {
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 export const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ESCAPES[ch]);
 
+/** A goal: its name and its calorie and protein ranges (SPEC-plan-page-refinement § 2 item 2; the promise line is gone). */
 function goalButton(plan) {
   const cal = `${plan.calories.min}–${plan.calories.max} cal`;
   const pro = `${plan.protein_g.min}–${plan.protein_g.max} g protein`;
   return `          <button type="button" class="choice" data-goal="${esc(plan.id)}" aria-pressed="false">
             <span class="choice-name">${esc(plan.name)}</span>
-            <span class="choice-line">${esc(plan.promise)}</span>
             <span class="facts"><span class="fact">${cal}</span><span class="fact">${pro}</span></span>
           </button>`;
 }
 
-function countButton(c) {
+/** `{name}` placeholders filled in one pass, so a value is never read again as a placeholder. */
+export const fillPhrase = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (whole, key) => (key in values ? String(values[key]) : whole));
+
+/** A phrase as markup: escaped, then each `*word*` emphasised (data/messages.json's own mark for emphasis). */
+export const emphasised = (phrase) => esc(phrase).replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+/** The plan page's own phrases (data/messages.json's `plan_page`), checked: a missing one refuses the build. */
+export function planPageWords(messages, plans) {
+  const words = messages.plan_page ?? {};
+  const need = (ok, what) => {
+    if (!ok) throw new Error(`data/messages.json: plan_page.${what} is missing`);
+  };
+  for (const count of shownCounts(plans)) need(typeof words.counts?.[count] === "string" && words.counts[count].trim(), `counts.${count}`);
+  for (const [key, placeholder] of [["per_week", "{n}"], ["prices_as_of", "{date}"], ["carousel_dot", "{n}"]]) {
+    need(typeof words[key] === "string" && words[key].includes(placeholder), `${key} (with ${placeholder})`);
+  }
+  return words;
+}
+
+/** Question 2 (§ 2 item 3): two buttons, the meals in words (*or* / *and* emphasised), then the count a week. */
+function countButton(c, words) {
   return `          <button type="button" class="choice" data-count="${c.meals_per_week}" aria-pressed="false">
-            <span class="count-n">${c.meals_per_week} <small>meals a week</small></span>
-            <span class="choice-line">${esc(c.label)}</span>
+            <span class="choice-name">${emphasised(words.counts[c.meals_per_week])}</span>
+            <span class="choice-line">${esc(fillPhrase(words.per_week, { n: c.meals_per_week }))}</span>
           </button>`;
+}
+
+/** The manifest of the photo sheets, or one with no photograph (`base: null`) when there is none. */
+export async function loadPhotos(path = PHOTOS_PATH) {
+  return existsSync(path) ? loadJson(path) : { base: null };
+}
+
+const ABSOLUTE_URL = /^([a-z][a-z0-9+.-]*:|\/\/)/i;
+
+/**
+ * A sheet's URL (§ 3), built from the manifest's `base` and nothing else: an absolute base (a CDN) as written; a relative
+ * one after the page's own asset prefix (the development pages are one directory down and address assets from the
+ * root). null when `base` is null (the photos removed) or the manifest names no such sheet.
+ */
+export function sheetUrl(photos, sheet, assetPrefix = "") {
+  if (photos?.base == null || !sheet) return null;
+  return (ABSOLUTE_URL.test(photos.base) ? "" : assetPrefix) + photos.base + sheet.file;
+}
+
+/** The sheets a relative base copies beside the page: every sheet the manifest names. None for a CDN or for null. */
+export function sheetsToCopy(photos) {
+  if (photos?.base == null || ABSOLUTE_URL.test(photos.base)) return [];
+  return [photos.carousel, ...Object.values(photos.chefs_choice ?? {})].filter(Boolean);
+}
+
+/** A percentage for an inline style, without float noise. */
+const pct = (n) => `${Number(n.toFixed(4))}%`;
+
+/** § 2 item 1: the carousel, five 4:3 windows onto the carousel sheet's cells by position, and a dot each; "" when the
+ *  page has no carousel photo (base null, or none in the manifest). Decorative: alt="", no dish is claimed. */
+function carouselHtml(photos, assetPrefix, words) {
+  const sheet = photos?.carousel;
+  const url = sheetUrl(photos, sheet, assetPrefix);
+  if (!url) return "";
+  const cells = Object.entries(sheet.cells).sort(([a], [b]) => Number(a) - Number(b));
+  const slides = cells.map(([, c], i) => {
+    const style = `width:${pct((sheet.width / c.w) * 100)};left:${pct((-c.x / c.w) * 100)};top:${pct((-c.y / c.h) * 100)}`;
+    return `      <div class="slide${i === 0 ? " on" : ""}"><img src="${esc(url)}" alt="" width="${sheet.width}" height="${sheet.height}" style="${style}"></div>`;
+  });
+  const dots = cells.map(
+    ([, c], i) =>
+      `<button type="button" class="dot" aria-label="${esc(fillPhrase(words.carousel_dot, { n: i + 1, total: cells.length }))}" aria-pressed="${i === 0}"></button>`,
+  );
+  return `
+  <div class="carousel" id="carousel">
+    <div class="slides">
+${slides.join("\n")}
+    </div>
+    <div class="dots js-only">${dots.join("")}</div>
+  </div>`;
 }
 
 function gridRows(plans) {
@@ -190,7 +266,6 @@ export const scriptJson = (value) => JSON.stringify(value).replace(/</g, "\\u003
 export const PROD_SLOTS = {
   ASSET_PREFIX: "",
   QUESTION_ONE: "What's your goal?",
-  HINT: "Pick a goal and how many meals to see your price.",
   DEV_STYLE: "",
   DRAFT_BANNER: "",
   SAVE_SECTION: "",
@@ -212,6 +287,9 @@ function sizeButton(plan) {
             <span class="facts"><span class="fact">${cal}</span><span class="fact">${pro}</span></span>
           </button>`;
 }
+
+/** The development pages are at /<event-id>/, so they address the page's own files from the root. */
+export const DEV_ASSET_PREFIX = "/";
 
 const MENU_LINK = '<button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button>';
 
@@ -263,9 +341,8 @@ export async function devSlots(plans, { save, zips, siteKey, eventId, offers, me
     ...[isLive, currentGeneral, offerForSave, ...ZONED_DATE_HELPERS].map(declaration),
   ].join("\n");
   return {
-    ASSET_PREFIX: "/",
+    ASSET_PREFIX: DEV_ASSET_PREFIX,
     QUESTION_ONE: "Meal size",
-    HINT: "Pick a meal size and how many meals to see your price.",
     GOALS: plans.individual.map(sizeButton).join("\n"),
     DEV_STYLE: (await read("style.css")).trimEnd(),
     DRAFT_BANNER: "\n" + fill(await read("banner.html")).trimEnd(),
@@ -296,15 +373,20 @@ export function messageSlots(messages) {
   };
 }
 
-/** `picks`: this week's Chef's Choice slots (scripts/chefs-choice.mjs), or none. */
-export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS) {
+/** `picks`: this week's Chef's Choice slots (scripts/chefs-choice.mjs), or none. `photos`: the photo sheets' manifest
+ *  (data/photo-sheets.json when not given). */
+export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS, photos = undefined) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
   messages ??= await loadJson(MESSAGES_PATH);
+  photos ??= await loadPhotos();
+  const words = planPageWords(messages, plans);
   const slots = {
     ...messageSlots(messages),
+    CAROUSEL: carouselHtml(photos, dev.ASSET_PREFIX ?? PROD_SLOTS.ASSET_PREFIX, words),
+    FOOTNOTE: esc(fillPhrase(words.prices_as_of, { date: plans.read_on })),
     GOALS: plans.individual.map(goalButton).join("\n"),
-    COUNTS: plans.shown_counts.map(countButton).join("\n"),
+    COUNTS: plans.shown_counts.map((c) => countButton(c, words)).join("\n"),
     GRID_HEAD: gridHead(plans),
     GRID_ROWS: gridRows(plans),
     FAMILY: familySection(plans),
@@ -325,8 +407,11 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
   return html;
 }
 
-/** Copy the fonts and the logo next to the page. Only files the page may reference are copied. */
-export async function copyStatic(outDir) {
+/** Copy the fonts, the logo and (a relative `base`) the photo sheets next to the page. Only files the page may reference
+ *  are copied. A sheet the manifest names that is not in `sheetsDir` (src/assets/photo-sheets/) refuses the build: a
+ *  broken image never ships (to remove the photos, `base` is null). */
+export async function copyStatic(outDir, photos = undefined, sheetsDir = PHOTO_SHEETS_DIR) {
+  photos ??= await loadPhotos();
   const written = [];
   for (const { dir, match } of STATIC_DIRS) {
     await mkdir(join(outDir, dir), { recursive: true });
@@ -334,6 +419,14 @@ export async function copyStatic(outDir) {
       await copyFile(join(ROOT, "src", dir, name), join(outDir, dir, name));
       written.push(join(outDir, dir, name));
     }
+  }
+  for (const sheet of sheetsToCopy(photos)) {
+    const from = join(sheetsDir, sheet.file);
+    if (!existsSync(from)) throw new Error(`data/photo-sheets.json names ${sheet.file}, which is not in src/assets/photo-sheets/ (to remove the photos, set base to null)`);
+    const to = join(outDir, photos.base, sheet.file);
+    await mkdir(dirname(to), { recursive: true });
+    await copyFile(from, to);
+    written.push(to);
   }
   return written;
 }
@@ -362,7 +455,7 @@ const checkEventId = (id) => {
  * The development pages: dist-dev/<event-id>/index.html per event, each with its event id built in, and
  * dist-dev/index.html = the first event's page (SPEC-rung4 § 2).
  */
-async function writeDevPages(plans, events, outDir, offersPath, messages, picks) {
+async function writeDevPages(plans, events, outDir, offersPath, messages, picks, photos) {
   const save = await loadJson(SAVE_PATH);
   const zips = await loadJson(ZIPS_PATH);
   const offers = await loadJson(offersPath);
@@ -370,7 +463,7 @@ async function writeDevPages(plans, events, outDir, offersPath, messages, picks)
   const written = [];
   for (const [i, event] of events.entries()) {
     const dev = await devSlots(plans, { save, zips, siteKey, eventId: checkEventId(event.id), offers });
-    const html = await renderPage(plans, dev, messages, picks);
+    const html = await renderPage(plans, dev, messages, picks, photos);
     await mkdir(join(outDir, event.id), { recursive: true });
     const paths = [join(outDir, event.id, "index.html"), ...(i === 0 ? [join(outDir, "index.html")] : [])];
     for (const path of paths) {
@@ -388,13 +481,13 @@ const YMD = /^\d{4}-\d{2}-\d{2}$/;
  * checked (a file breaking a rule throws, naming it) and the weeks still open on `on` made into the page's slots.
  * Loaded only when the directory exists, so a build without it reads nothing more.
  */
-async function picksFor({ plans, messages, picksDir, on }) {
+async function picksFor({ plans, messages, picksDir, on, photos, assetPrefix }) {
   if (on !== undefined && !(YMD.test(on) && addDays(on, 0) === on)) throw new Error(`--on must be a date, YYYY-MM-DD; got ${on}`);
   if (!existsSync(picksDir)) return { slots: NO_PICKS, weeks: [], on };
   const zone = (await loadJson(SAVE_PATH)).send_time_zone;
   on ??= zonedDate(Date.now(), zone);
   const { chefsChoice } = await import("./scripts/chefs-choice.mjs");
-  return { ...(await chefsChoice({ plans, messages, dir: picksDir, on, zone })), on };
+  return { ...(await chefsChoice({ plans, messages, dir: picksDir, on, zone, photos, assetPrefix })), on };
 }
 
 export async function build({
@@ -403,6 +496,8 @@ export async function build({
   offersPath = OFFERS_PATH,
   messagesPath = MESSAGES_PATH,
   picksDir = PICKS_DIR,
+  photosPath = PHOTOS_PATH,
+  sheetsDir = PHOTO_SHEETS_DIR,
   on = undefined,
   target = "prod",
   outDir,
@@ -412,21 +507,23 @@ export async function build({
   const plans = await loadJson(plansPath);
   const events = await loadJson(eventsPath);
   const messages = await loadJson(messagesPath);
+  const photos = await loadPhotos(photosPath);
+  const assetPrefix = target === "dev" ? DEV_ASSET_PREFIX : PROD_SLOTS.ASSET_PREFIX;
   // Before anything is written: a picks file that breaks a rule stops the build here (a wrong list never ships).
-  const picks = await picksFor({ plans, messages, picksDir, on });
+  const picks = await picksFor({ plans, messages, picksDir, on, photos, assetPrefix });
   // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
   if (target === "dev") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
   let pages;
   if (target === "dev") {
-    pages = await writeDevPages(plans, events, outDir, offersPath, messages, picks.slots);
+    pages = await writeDevPages(plans, events, outDir, offersPath, messages, picks.slots, photos);
   } else {
-    const html = await renderPage(plans, PROD_SLOTS, messages, picks.slots);
+    const html = await renderPage(plans, PROD_SLOTS, messages, picks.slots, photos);
     const path = join(outDir, "index.html");
     await writeFile(path, html);
     pages = [{ path, bytes: Buffer.byteLength(html) }];
   }
-  const files = await copyStatic(outDir);
+  const files = await copyStatic(outDir, photos, sheetsDir);
   // QR codes point at the production URL, so only the production build writes them.
   const qr = target === "prod" ? await writeQrCodes(events, outDir) : [];
   return { indexPath: pages[0].path, bytes: pages[0].bytes, pages, files, qr, picks: { on: picks.on, weeks: picks.weeks } };
@@ -448,7 +545,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const at = process.argv.indexOf(name);
     return at === -1 ? undefined : process.argv[at + 1];
   };
-  build({ target: flag("--env") ?? "prod", on: flag("--on") }).then(report, (err) => {
+  build({ target: flag("--env") ?? "prod", on: flag("--on"), outDir: flag("--out") }).then(report, (err) => {
     console.error(err);
     process.exitCode = 1;
   });

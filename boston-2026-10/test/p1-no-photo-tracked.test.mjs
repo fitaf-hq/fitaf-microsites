@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import { ROOT } from "../build.mjs";
+import { loadPhotos, ROOT } from "../build.mjs";
 import { flowBlocks } from "../scripts/flow-sources.mjs";
 
 const REPO = join(ROOT, "..");
@@ -17,14 +17,26 @@ const IMAGE = /\.(jpe?g|png|gif|webp|heic|heif|avif|tiff?|bmp|svg|raw|dng|cr2|ne
  * the block (F1 keeps each current). Named one by one: a folder or an extension is never the exemption.
  */
 const FLOW_DIAGRAMS = (await flowBlocks()).map((b) => `${PACKAGE}/flows/rendered/${b.name}.svg`);
-const ALLOWED_IMAGES = [`${PACKAGE}/src/assets/fitaf-logo.png`, ...FLOW_DIAGRAMS];
+/**
+ * Updated (SPEC-plan-page-refinement § 3, the Advisor's ruling): the plan page's photographs may be committed as sprite
+ * sheets in ONE directory, src/assets/photo-sheets/, each named by the manifest data/photo-sheets.json (none is yet: the
+ * producer is held); and the photo-sheet cases' FIXTURE sheets, generated flat colours, each named by the fixture's own
+ * manifest. Still one by one: a sheet no manifest names, or a photograph anywhere else, is flagged.
+ */
+const sheetsOf = (manifest, dir) =>
+  [manifest.carousel, ...Object.values(manifest.chefs_choice ?? {})].filter(Boolean).map((s) => `${PACKAGE}/${dir}/${s.file}`);
+const PHOTO_SHEETS = [
+  ...sheetsOf(await loadPhotos(), "src/assets/photo-sheets"),
+  ...sheetsOf(await loadPhotos(join(ROOT, "test", "fixtures", "photo-sheets", "photo-sheets.json")), "test/fixtures/photo-sheets"),
+];
+const ALLOWED_IMAGES = [`${PACKAGE}/src/assets/fitaf-logo.png`, ...FLOW_DIAGRAMS, ...PHOTO_SHEETS];
 
 const git = (...args) => spawnSync("git", ["-C", REPO, ...args], { encoding: "utf8" });
 
 /** Tracked image files other than the allowed brand asset. */
 export const trackedPhotos = (paths) => paths.filter((p) => IMAGE.test(p) && !ALLOWED_IMAGES.includes(p));
 
-test("P1: git tracks no image but the store's logo and the flow diagrams", () => {
+test("P1: git tracks no image but the store's logo, the flow diagrams and the photo sheets a manifest names", () => {
   const res = git("ls-files", "-z");
   assert.equal(res.status, 0, res.stderr);
   const tracked = res.stdout.split("\0").filter(Boolean);
@@ -46,6 +58,12 @@ test("P1 control: the check flags a photograph, whatever its case or folder", ()
     `${PACKAGE}/data/plans.json`,
   ];
   assert.deepEqual(trackedPhotos(listing), listing.slice(1, 4));
+});
+
+test("P1 control: a JPEG in the photo sheets' directory that no manifest names is flagged", () => {
+  assert.ok(PHOTO_SHEETS.length > 0, "a manifest names sheets (control)");
+  const stray = `${PACKAGE}/src/assets/photo-sheets/stray.jpg`;
+  assert.deepEqual(trackedPhotos([...PHOTO_SHEETS, stray, `${PACKAGE}/src/assets/carousel.jpg`]), [stray, `${PACKAGE}/src/assets/carousel.jpg`]);
 });
 
 test("P1 control: beside the flow diagrams, a photograph or an SVG no flow block names is still flagged", () => {

@@ -111,9 +111,11 @@ function clockAt(now) {
 /**
  * The page in a browser: its inline scripts (not the JSON ones), in order, in one context whose globals are linkedom's
  * document, a location whose hash fires `hashchange` as a browser's does, and (with `now`) a clock fixed at that instant.
- * `go(hash)` is a visitor choosing; `el(id)` an element, which must exist.
+ * `go(hash)` is a visitor choosing; `el(id)` an element, which must exist. Since SPEC-plan-page-refinement § 2 item 1 the
+ * page's script starts the carousel's timer: `timers` records each setInterval (none fires by itself; `tick()` fires
+ * them) and `reducedMotion` is what matchMedia answers for prefers-reduced-motion.
  */
-export function openPlanPage(html, { hash = "", now } = {}) {
+export function openPlanPage(html, { hash = "", now, reducedMotion = false } = {}) {
   const { document } = parseHTML(html);
   const listeners = {};
   let current = hash;
@@ -128,12 +130,21 @@ export function openPlanPage(html, { hash = "", now } = {}) {
       for (const fn of listeners.hashchange ?? []) fn({ type: "hashchange" });
     },
   };
+  const timers = [];
   const g = {
     document,
     location,
     console,
     addEventListener(type, fn) {
       (listeners[type] ??= []).push(fn);
+    },
+    matchMedia: (query) => ({ matches: reducedMotion && /prefers-reduced-motion:\s*reduce/.test(query) }),
+    setInterval(fn, ms) {
+      timers.push({ fn, ms, cleared: false });
+      return timers.length;
+    },
+    clearInterval(id) {
+      if (timers[id - 1]) timers[id - 1].cleared = true;
     },
   };
   g.window = g;
@@ -145,7 +156,8 @@ export function openPlanPage(html, { hash = "", now } = {}) {
     assert.ok(found, `the page has an element #${id}`);
     return found;
   };
-  return { document, el, go: (h) => (location.hash = h), has: (id) => Boolean(document.getElementById(id)) };
+  const tick = () => timers.filter((t) => !t.cleared).forEach((t) => t.fn());
+  return { document, el, go: (h) => (location.hash = h), has: (id) => Boolean(document.getElementById(id)), timers, tick };
 }
 
 /** True when `node` or an ancestor carries `hidden`: not shown, and nothing inside it can take focus. */
@@ -154,7 +166,8 @@ export function hiddenInTree(node) {
   return false;
 }
 
-/** What the result card offers at this moment: which of its controls are shown, the list's words, and the links. */
+/** What the result card offers at this moment: which of its controls are shown, the list's words, and the links. Since
+ *  SPEC-plan-page-refinement § 2 item 5 there is no button: the card offers the week's Chef's Choice when its list shows. */
 export function card(page) {
   const { document } = page;
   const shown = (id) => {
@@ -165,22 +178,20 @@ export function card(page) {
   return {
     result: shown("result"),
     choose: shown("result-cta"),
-    toggle: shown("cc-toggle"),
-    expanded: document.getElementById("cc-toggle")?.getAttribute("aria-expanded") ?? null,
     list: shown("cc-list"),
     own: shown("cc-own"),
     heading: text("cc-heading"),
     meals: [...(document.getElementById("cc-meals")?.querySelectorAll("li") ?? [])].map((li) => li.textContent),
+    tiles: [...(document.getElementById("cc-meals")?.querySelectorAll("li") ?? [])].map((li) => li.querySelector(".cc-thumb")),
     checkout: document.getElementById("cc-checkout")?.getAttribute("href") ?? null,
     ownHref: document.getElementById("cc-own")?.getAttribute("href") ?? null,
     chooseHref: document.getElementById("result-cta")?.getAttribute("href") ?? null,
   };
 }
 
-/** The plan page at `now`, on `hash`, with the list opened if the card offers it. */
+/** The plan page at `now`, on `hash`: the list is open with no press (SPEC-plan-page-refinement § 2 item 5). */
 export function openedCard(html, { hash = "#lean-7", now = midday(DAYS["S-5"]) } = {}) {
   const page = openPlanPage(html, { hash, now });
-  if (card(page).toggle) page.el("cc-toggle").click();
   return { page, state: card(page) };
 }
 
