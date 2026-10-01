@@ -41,3 +41,30 @@ network connectivity). Then when setting up an event all the sales rep has to do
 is sitting on its holder – and the slideshow "just works"."* For that variant, later: the legend closed and no control
 on screen whatever the width (a landscape tablet is "wide" today); everything the slideshow loads packaged with it
 (fonts, photos, the QR image) so nothing is fetched; and starting on its own when opened.
+
+## 5. Built, 2026-10-01 — found at the build, not ruled
+
+Red at `6805cc3`: the slideshow's files had 9 tests, 7 failing, and the Chrome cases 2 of 2 failing. Green at `ad79d22`:
+the site's suite **468 of 468** (466 before), Storybook **25 of 25** (23 before), and `npm run contrast` 66 of 66.
+
+- **Where the cases run**: SS-1 and SS-3 are in the site's suite (`test/ss-01-…`, `test/ss-03-…`). SS-2 and SS-4 are in
+  Chrome, in `tools/storybook/test/ss-chrome.test.mjs`, beside the plan page's Chrome cases. The mock-ups have no Chrome
+  checks of their own: their Chrome only renders PNGs. That file builds the mock-ups (`buildMockups`, no PNGs) into a
+  temporary directory and opens `slideshow.html` at 1920 × 1080.
+- **The one place**: `SLIDE_MS = 7000` and `FADE_MS = 500`, at the top of `mockups/slideshow.js`. The script sets
+  `--fade` on the root, and `mockups.css` uses `var(--fade)` with no duration of its own.
+- **The count**: every show of a slide restarts it: by the timer, a key, a click or the fragment. So a slide is on
+  screen for 7 s from the start of its fade in, and the 0.5 s overlaps the start of the next slide's 7 s. It is not
+  7 s plus 0.5 s.
+- **The dissolve** is opacity on both slides. The slide leaving stays drawn (`visibility`, held back by the fade's
+  length) until its fade ends. It applies only once the script plays the deck (`body.playing`), so without JavaScript
+  the markup's `hidden` still shows the first slide. The first slide does not fade in on load.
+- **The toggle**: `body:not(.legend-open) .legend-toggle { display: none; }`. On a phone (the legend closed by default)
+  there is no button, and **L** opens the legend.
+- **Updated**:
+  - P6: a slide is shown by its `on` class, the dots' assertion goes with the dots, and its stand-in gains a clock that
+    never runs.
+  - P5: opacity is allowed only in the dissolve's two rules, and at rest only 0 or 1.
+  - The dots' contrast pair is removed from `src/contrast-pairs.json`.
+- **Not verified**: the look of the dissolve over a whole cycle, beyond the two screenshots; a real tablet; § 4's kiosk
+  variant (not built).
