@@ -1,13 +1,15 @@
 {
   "about": "SHA-256 of every file `npm run build` writes to dist/, recorded from the production build at built_from, before rung 4. S20 rebuilds and compares. Regenerate only when production is MEANT to change, and say so in the commit.",
-  "built_from": "re-recorded for SPEC-plan-page-refinement.md (its § 5: the production page is meant to change by the Advisor's ruling): the page of §§ 1–2, and no photograph (no data/photo-sheets.json is committed: § 3’s producer is held), so only index.html moved; before it, dd252ad + main d4bb74a/53ab88e (eatfitaf.com: the demo QR re-encoded; only qr/demo.png and qr/demo.svg changed, verified by decoding)",
+  "built_from": "re-recorded for SPEC-plan-page-refinement.md § 3 (the Advisor ruled the photos, ts=2026-10-01T04:47:22.382Z): the page of §§ 1–2 with the KMS-side emitter's photo sheets (Fit AF scripts/menus/emit_microsite_photos.py @ 9cb0af26), so index.html moved and assets/photo-sheets/carousel.jpg and chefs-choice-2026-10-04.jpg were added; before it (a402eb0), the page of §§ 1–2 with no photograph; before that, dd252ad + main d4bb74a/53ab88e (eatfitaf.com: the demo QR re-encoded; only qr/demo.png and qr/demo.svg changed, verified by decoding)",
   "files": {
     "assets/fitaf-logo.png": "e51500f85fee09c3a5762e82cd3812ac824fa81378478035a94ab91e5de94ef0",
+    "assets/photo-sheets/carousel.jpg": "8c6ec2967d22c085bc1c4167eeb996a5cd361c2914007e2eaf1e2b9f7d65fea9",
+    "assets/photo-sheets/chefs-choice-2026-10-04.jpg": "9e1281fdd2f7d5614c608fe8fb7af565f0b650c6775bc251ebffd2e6d1bae910",
     "fonts/open-sans-latin-400-normal.woff2": "0e44026ad31376af1b56593cd4acb4f353f8e8789c51759e18f64578e4ef296a",
     "fonts/open-sans-latin-600-normal.woff2": "a97a6ed7ef9f75c495e9224f5c59b2271d826e4a4345b738b390b0c76cc9f412",
     "fonts/poppins-latin-600-normal.woff2": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
     "fonts/poppins-latin-700-normal.woff2": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
-    "index.html": "a820668a10915402b0b6afb3d51cd226dc477854971b67f3ff0121627da5ef05",
+    "index.html": "3bd1b142354e01bf08bd77b66b637c07c36bfc73d9f499355605a50feb0261cc",
     "qr/demo.png": "41c13c7d3960effe439e1ec8baa1f5f2ce2c7c9a57b4902a1c02d46bbddd4222",
     "qr/demo.svg": "223d775bfe0ef32e6a6d0f6a03f2d7eb8b6920d3199a1f1360934a3447c22f1c"
   }

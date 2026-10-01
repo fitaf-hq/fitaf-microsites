@@ -1,0 +1,97 @@
+{
+  "base": "assets/photo-sheets/",
+  "carousel": {
+    "file": "carousel.jpg",
+    "width": 768,
+    "height": 2880,
+    "cells": {
+      "1": {
+        "x": 0,
+        "y": 0,
+        "w": 768,
+        "h": 576
+      },
+      "2": {
+        "x": 0,
+        "y": 576,
+        "w": 768,
+        "h": 576
+      },
+      "3": {
+        "x": 0,
+        "y": 1152,
+        "w": 768,
+        "h": 576
+      },
+      "4": {
+        "x": 0,
+        "y": 1728,
+        "w": 768,
+        "h": 576
+      },
+      "5": {
+        "x": 0,
+        "y": 2304,
+        "w": 768,
+        "h": 576
+      }
+    }
+  },
+  "chefs_choice": {
+    "2026-10-04": {
+      "file": "chefs-choice-2026-10-04.jpg",
+      "width": 176,
+      "height": 1408,
+      "cells": {
+        "Italian Chicken Trio": {
+          "x": 0,
+          "y": 0,
+          "w": 176,
+          "h": 176
+        },
+        "Grass-Fed Steak Frites with Roasted Sweet Potato Wedges": {
+          "x": 0,
+          "y": 176,
+          "w": 176,
+          "h": 176
+        },
+        "Buffalo Chicken Sliders": {
+          "x": 0,
+          "y": 352,
+          "w": 176,
+          "h": 176
+        },
+        "Blackened Chicken Caesar Salad": {
+          "x": 0,
+          "y": 528,
+          "w": 176,
+          "h": 176
+        },
+        "Lasagna Stuffed Pepper": {
+          "x": 0,
+          "y": 704,
+          "w": 176,
+          "h": 176
+        },
+        "BBQ Pulled Pork Mac & Cheese": {
+          "x": 0,
+          "y": 880,
+          "w": 176,
+          "h": 176
+        },
+        "Lemon Garlic Shrimp over Forbidden Rice": {
+          "x": 0,
+          "y": 1056,
+          "w": 176,
+          "h": 176
+        },
+        "Vodka Chicken Parm Zucchini Noodle Lasagna": {
+          "x": 0,
+          "y": 1232,
+          "w": 176,
+          "h": 176
+        }
+      }
+    }
+  }
+}
