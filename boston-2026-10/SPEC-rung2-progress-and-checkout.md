@@ -623,3 +623,57 @@ what it found.
 - ⬜ **The Storybook branch** (`boston/rung-2-screen-next`, 236 bytes more than the block it was built on) does not fit on
   this text as it stands: 10,224 + 236 is over 10,240.
 - ⬜ **Not run on the live store**: any of it. The rehearsal (§ 15.6) is the orchestrator's.
+
+## 17. Amendment, 2026-10-01 — the screen shows Fit AF's own photographs, carried by the link
+
+**Ruled by the Advisor** (`ts=2026-10-01T13:23:28.601Z`): *"For the interstitial, we can use our own images (which we
+should have preloaded from the microsite) here. That should make this page work as intended (currently the HMP site
+lags in downloading its images)."* And (`ts=2026-10-01T13:29:04.015Z`): *"I'm OK bumping the script limit to 15 kb just
+to get through this meeting. Frankly we could be at 50 kb and still be lighter than most of the elements on the
+page"* (a hosted script is the later path); on how the block learns each meal's photograph: *"We can optimize this
+however we want."* **Base**: the dev line at `e8477d4` (the Footer block `914668de…`, live since the 2026-10-01 paste).
+
+**Today** (§ 2 item 2): a slide shows its meal's photograph only once the store has loaded the card's image, so on a
+slow store most slides are names alone.
+
+### 17.1 The link carries each meal's photograph
+
+- The microsite's checkout link (built by the link tool's `handoffLink`, used by `scripts/chefs-choice.mjs`) gains,
+  **when the week's photo sheet has a cell for its meals**, what the block needs to show each meal's cell: **the sheet**
+  and **each meal's cell**, read from `data/photo-sheets.json` by the tool — ⛔ no cell geometry is a literal in the
+  block or the tool. The encoding is the builder's (the Advisor: *"however we want"*), as short as it can be.
+- ⛔⛔ **The sheet's host is never a URL from the link.** A link is anyone's to write. The link names the host by a
+  **code from a fixed list in the block** — the production site (`https://eatfitaf.com`) and the test address — and the
+  block requests nothing else; an unknown code means no photograph.
+- **Old links keep working exactly as today** (no photo part → today's slides). **And the new link must not reach a
+  store whose block is older** before the Advisor pastes this block: the order is the rehearsal, his paste, then the
+  microsite's release. The builder states how the live block (`914668de…`) treats a link with the photo part.
+
+### 17.2 The slide shows Fit AF's photograph at once
+
+At a meal's first press its slide shows **its cell of Fit AF's sheet** (the sheet's URL on the coded host, at the
+slide's size, the cell's own pixels only), without waiting for the store's card image. The microsite has already loaded
+that URL (its list shows it), so the browser reuses its copy. ⚠ eatfitaf.com serves `Cache-Control: public, max-age=0,
+must-revalidate`: the browser revalidates (a conditional request); stated, not changed here. If the sheet fails to load,
+the slide falls back to today's rule (the card's loaded image, else the name alone).
+
+### 17.3 The size
+
+The Footer block and the console file at most **15,360 bytes** (the Advisor's ruling, for this meeting); the 5,120-byte
+warning stays. Every character ASCII; no `<` but the Footer block's two (§ 11). R2-71's *"no URL the live block lacks"*
+is amended: the only addition is the fixed list of the sheet's hosts.
+
+### 17.4 Cases
+
+| | case | expect |
+|---|---|---|
+| R2-72 | the link | built from a fixture manifest, it carries each meal's cell; the block's reader decodes the same cells (one writer, one reader) |
+| R2-73 | ⭐ the slide | on the synthetic store with the card images never loading, each slide shows its meal's cell from the coded host at its first press |
+| R2-74 | old link | no photo part: slides exactly as today (R2-52 unchanged) |
+| R2-75 | ⛔ unknown host code | no request to any host but the store's; today's slides |
+| R2-76 | sheet fails | today's fallback per slide |
+| R2-77 | the text | ≤ 15,360 bytes, ASCII, two `<`; the only new URLs are the listed hosts |
+| W17 | the watch, live | given the microsite's own checkout link (`--link`), the screen's slides show Fit AF's sheet: found or not, per slide |
+
+Existing pins (R2-32, CC-8's `footer_text_sha256`) move with the text, in the commit that changes it; the watch's
+expected Footer moves only after the paste (`accept --footer`).
