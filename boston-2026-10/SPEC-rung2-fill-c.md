@@ -140,6 +140,100 @@ an earlier one still open, is a candidate cause of meals leaving the plan after 
 headless profile would show. § 1.3's re-read and § 1.4's check before CHECKOUT are there to catch exactly that: a count
 taken back after it was shown.
 
+## 2c. Built (Phase 2), 2026-10-01 — found at the build, not ruled
+
+Red at `a077321`, built at `61352f9`, F2 at `b5220b0`. § 1 and § 4 are unchanged; this section says what the build chose
+where they left a choice, and what it found. The text `1e3802b8592cd1a3271860a43895341aa6135d2949d7da83dc388c63fa4fb656`;
+the Footer block **13,693 bytes**, the console file 13,674 (from `b5220b0`; 6 more from an uncommitted tree), every
+character ASCII, two `<` and zero. **Not pasted**: the store's Footer runs fill B's `cbc6d1ec…` (`5d5fb72`), which
+CC-8's golden names as the text this one `replaces`.
+
+1. **"Counted" (§ 1.1) is the card's count above the unit's n**, not equal to n + 1: a press the store counts twice
+   within the meal's count is accepted, and a later unit the card already shows is not pressed (FC-5c). **"Above its
+   expected quantity" (§ 1.5) is above the link's count for that meal**, read at every one of fill C's reads, for every
+   meal, not only the one being pressed; so another tab adding one of the link's meals stops it too (FC-4a).
+2. **The press**: the card's Add to Cart while it shows no count, else the counter's "+" (`button.counter__button
+   [aria-label="Increase value"]`, inside `.product__actions`); neither at a press or a re-press: a stop,
+   `…; no control`. Fill C reads and presses `app-product-card` at every width, as fill B did: § 2a found the store keeps
+   its counter current while hidden.
+3. **The times, as its timers count them**: the first read MIN_GAP_MS (300) after a press, then 200 ms polls; the re-read
+   of § 1.2 is the first poll at or past ACK_MS: **5.1 s**. A unit at its longest (a press and two re-presses) is 15.3 s.
+   On a store that counts at once, presses are 300 ms apart (14 meals: 3.9 s of presses, then the 1 s settle).
+4. **The settled read runs once** (§ 1.3): its completion goes straight to § 1.4, and a count taken back after it is
+   § 1.4's to catch: the plan short, CHECKOUT disabled, a stop naming the meal after 10 s (FC-3b), never silent.
+5. **§ 1.4 as built**: wait up to 10 s (fill B's 50 polls) for BOTH an enabled CHECKOUT and the plan's own count equal
+   to the link's total. The plan's count is the displayed one of `.cart__items-count` (*"N items"*) and
+   `.mobile-cart-summary__stat-value` read as a whole number (the bar's other value, the cart's total, is a price and
+   never matches); 0 when neither is displayed (FC-4c: a renamed count stops it).
+6. **The stop line (§ 1.6)**: `stopped: the store counted K of N` (K the sum of the cards' counts), then
+   `; short: <keys>` and `; over: <keys>` in the link's order, and at § 1.4 `; the plan shows M` and, if CHECKOUT was not
+   there at all, `; no checkout control` (where fill B's line was `stopped: no checkout control`). **Which stops name
+   the counts**: every stop of fill C's own, between its first press and its press of CHECKOUT. The stops before the
+   first press (not on this page, two meals share a key, the plan already holds meals, no meal cards) and after
+   CHECKOUT (`/checkout not reached`) keep their lines, and their screen goes at once as before (R2-43).
+7. **The screen at such a stop** ("then goes, as today" read as: goes on its own, after the words have been shown): it
+   stays, its step line says `data/messages.json`'s new `handoff.stopped`, ⚠ a placeholder for the Advisor's copy
+   review: *"We couldn't add all your meals. The menu is next, so you can finish your order there."*, and its own CSS
+   clock (`fitaf-z`, **4 s**, in place of its 90 s one; a class `z`, so no timer) removes it. Chrome runs it (FC-6c).
+   The smoke judges a stopped run by W10 (the screen gone at the end), so it now reads the faces once that clock has had
+   its time (up to 6 s).
+8. **The name**: `FILL = "C"`; the log line `fill C, mpid N`. The built files keep fill B's names
+   (`fitaf-handoff.fill-B.console.js`), so a runbook that names them still works. The build requires and inlines only
+   the words the source reads (`UI.<word>`), so R2-71 still rebuilds the live block byte for byte from its own commit.
+9. ⚠ **A known limit (FC-2e)**: a store that counts presses but shows no count would get 1 + RETRIES presses of the
+   first meal, all of them counted, before the stop. § 1.2 can only trust a count it is shown; § 2a found the store shows
+   one, and F2 now flags a release that renames it.
+
+**§ 4.1, as built** (the site's suite, the shipped text on a synthetic page in a clock: each callback at its due time):
+the store drops 15 % of presses, counts the rest 0–2 s late and takes one count back 0–0.8 s after showing it. **FC-7,
+200 seeds at both widths, the 14-meal link: 189 reached the full plan, 11 stopped naming the meals short (each a unit
+the store dropped three times running), none over**, over 3,393 presses (469 dropped, 2,489 counted more than 300 ms
+late, 200 taken back). FC-1 to FC-5 each carry a mutant made in memory that must fail them (fill B's clock with no
+count, a re-press on the clock alone, no settled read, no plan count, no over check): all five fail.
+
+**§ 4.2, as built**: fill B's cases run against fill C. Changed for what fill C does, each rule kept: the store's "+" in
+place of a second Add to Cart (the synthetic page now draws the store's counter by its live names); the stop lines
+naming the counts (R2-09d, R2-16, R2-28e, R2-43, R2-70c); fill C's delays (one MIN_GAP_MS per press, one SETTLE_MS) in
+place of PRESS_MS (R2-82 rewritten as fill C's spacing); R2-43 split by stage; R2-74 comparing with the live block but
+for the fill's name in its first line; R2-23's third mutant shown passing R2-19 on a page that keeps a held meal's Add
+to Cart ("stays"), since the store's own counter now catches it in R2-19 too. **Retired**: R2-22's four "stays"
+variants (a reload on a store that shows no count): fill C never reaches seven presses there; FC-2e pins what it does.
+Site **508 of 508** (485 + FC-1–FC-7's 27, less those four); watch **144 of 144** (142 + FC-6c's two), in 271 s where
+fill B's suite took 966 s (its one second per press is gone).
+
+**§ 4.4, as built**: `LARGEST_PLAN` is read from `data/plans.json` (21 meals a week: Lean, Signature and Performance
+21), and the smoke's ceiling is computed for it with fill C's own arithmetic, which W9e checks against the built text's
+constants: 30 s for the first card + 10 s for the meals + 21 units at 15.3 s + the 1 s settle + 21 units again (a
+completion of a plan whose every count was taken back) + 10 s for § 1.4 + 30 s + 30 s after CHECKOUT and CONTINUE =
+**`FILL_LONGEST_MS` 753.6 s, `HANDOFF_MS` 768.6 s** (fill B's were 117 s and 132 s, sized from 7).
+- ⚠ **The screen's 90 s clock is far below it**, as § 16 of the two faces' contract found for fill B at 111.4 s: in the
+  worst case the screen goes first and the visitor sees the order page while fill C goes on. For 14 meals with the
+  cards already drawn, about 16 presses the store drops (each costs one 5.1 s window) fit before CHECKOUT within 90 s.
+  Unchanged here; not ruled.
+- ⚠ **For Phase 3**: 768.6 s is the smoke's ceiling per width, reached only by a store that withholds nearly every
+  count. The hourly workflow's 30-minute timeout holds two widths at that ceiling (25.6 min) but not § 4.3's three
+  widths and five runs; Phase 3 sizes it.
+
+**F2** (`b5220b0`): `storefront/dependencies.json` gains the five names fill C reads, each read first in the release's
+files: `"counter__value"`, `"counter__button"`, `"Increase value"`, `"cart__items-count"`,
+`"mobile-cart-summary__stat-value"`. `npm run watch -- --full --no-browser`: **51 of 51 found** on `main-N64VDY4M.js`
+(published 21:59:37Z) and again on `main-SKN6QR4E.js` (22:12:59Z). F1 flagged both against this branch's older
+baseline (`main-XIJ2UX3I.js`), as expected; the baseline is not accepted here. Not added: `app-counter` and *"Minimum
+Met"*, which fill C does not read.
+
+**The rehearsal** (`b5220b0`'s console file, pasted by the smoke on the live store, the microsite's own 14-meal link from
+eatfitaf.com with its photo part; 22:24:01–22:24:50Z, release `main-SKN6QR4E.js`): **PASS at 1280 and 390**. Both:
+14 of 14 chosen, `[fitaf-handoff] fill C, mpid 23` · `done: /checkout`, /checkout listing 14 names, *"14 items"*,
+$168.00; the screen seen (15 step lines) and gone; the hide list as before, the Total and the pay button displayed,
+one-time; the extras pop-up not opened, CHECKOUT to /checkout in 3.6 s and 3.2 s; the Fit AF logo on both faces; Fit
+AF's sheet on 14 of 14 slides; 14 order lines in 782 px.
+
+**Not done or not seen**: no paste (the Advisor's); the watch's baseline and expected Footer unchanged (`accept` after the
+paste); ⚠ **the "+" has not been pressed on the live store**: the microsite's 14-meal link names 14 different meals, so
+the rehearsal pressed Add to Cart only, and the counter's "+" is proven on the synthetic pages alone; a stop of fill C's
+own, and its screen, seen only on the synthetic stores; the race itself, which no headless run has reproduced (§ 2a).
+Hosting (§ 3) and the wider smoke (§ 4.3) are Phase 3.
+
 ## 3. Served from eatfitaf.com, with the paste kept as the way back
 
 1. **The Footer block becomes a loader**: it reads `location.hash` and, only for a deep-cart fragment, creates one
