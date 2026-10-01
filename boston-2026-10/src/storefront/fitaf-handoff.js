@@ -268,8 +268,8 @@ return { items: items, total: total, code: code };
 // for the page's cards at most 30 s (NO_CARDS polls): in 2 of 7 live runs the store drew no card within 10 s.
 // § 23: PRESS_MS after each press (every Add to Cart and every +) before the next, and after the last before the first
 // look for CHECKOUT: one 14-meal run in the Advisor's browser left 11 of 14 meals in the plan at 200 ms. The polls and
-// their counts are unchanged.
-var POLL_MS = 200, PRESS_MS = 1000, MAX_POLLS = 50, AFTER_CHECKOUT = 150, NO_CARDS = 150;
+// their counts are unchanged. § 25: two seconds (the shortfall recurred at one).
+var POLL_MS = 200, PRESS_MS = 2000, MAX_POLLS = 50, AFTER_CHECKOUT = 150, NO_CARDS = 150;
 // A meal's key: src/storefront/meal-key.js, the one function the link tool also runs, inlined here by the build.
 var key = /*KEY*/ null;
 // Fill B keys each meal card's title as the page shows it, and presses the card whose key the link names.

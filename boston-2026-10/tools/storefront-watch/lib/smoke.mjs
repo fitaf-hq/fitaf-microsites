@@ -39,12 +39,12 @@ const NAV_MS = 60_000;
 const MENU_MS = 45_000;
 /**
  * Fill B's longest run on mpid 21 (SPEC-rung2 §§ 6, 8, 11), each wait at its limit: the first meal card (30 s, since
- * SPEC-rung2-progress-and-checkout § 15.2), every meal's card from the first (10 s), one 1 s wait per press of the 7
- * meals (§ 23; it was a 200 ms tick), an enabled CHECKOUT (10 s), then 30 s after CHECKOUT and 30 s after the extras
- * dialog's CONTINUE TO CHECKOUT (§ 11 item 4): 117 s, where it was 111.4 s. W9e reads the built fill-B text's own
- * constants and checks this sum.
+ * SPEC-rung2-progress-and-checkout § 15.2), every meal's card from the first (10 s), one 2 s wait per press of the 7
+ * meals (§ 25; 1 s in § 23, a 200 ms tick before), an enabled CHECKOUT (10 s), then 30 s after CHECKOUT and 30 s after
+ * the extras dialog's CONTINUE TO CHECKOUT (§ 11 item 4): 124 s, where it was 117 s. W9e reads the built fill-B text's
+ * own constants and checks this sum.
  */
-export const FILL_B_LONGEST_MS = 30_000 + 10_000 + 7 * 1000 + 10_000 + 30_000 + 30_000;
+export const FILL_B_LONGEST_MS = 30_000 + 10_000 + 7 * 2000 + 10_000 + 30_000 + 30_000;
 /** § 7 item 3: the smoke waits for fill B's own verdict (done or stopped) at most this long, above its longest run. */
 export const HANDOFF_MS = FILL_B_LONGEST_MS + 15_000;
 const CHECKOUT_MS = 30_000;
