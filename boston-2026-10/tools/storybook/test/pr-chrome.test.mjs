@@ -3,7 +3,9 @@
 //   PR-6, the price: the weekly total's element comes first and its computed font size is larger, at 390;
 //   PR-4's layout: the three goals in one row (one top) at 390 and at 1280;
 //   PR-8, the modal: the link opens a modal dialog holding the grid, focus moves in; Esc closes it and focus returns
-//   to the link; a press on the backdrop closes it too.
+//   to the link; a press on the backdrop closes it too;
+//   § 8: PR-13, the carousel full bleed (its box the viewport's width, at 390 and 1280) with the logo inside it;
+//   PR-14, the two question headings centred; PR-16, the price one untinted block, the weekly total first and larger.
 // The page is the site's own production build (`node build.mjs --on --out`, as the stories' pages are built), served on
 // 127.0.0.1; nothing else is requested.
 import test, { after } from "node:test";
@@ -92,4 +94,57 @@ test("PR-8: the link opens a modal dialog with the grid; Esc closes it and focus
     await page.mouse.click(4, 4); // a corner of the viewport: the backdrop, outside the dialog's box
     assert.equal((await state()).open, false, "a press on the backdrop closes it");
   });
+});
+
+/** Where `sel`'s text sits inside its own box: the gaps left and right of the text (a Range over its contents). */
+const textGaps = (sel) =>
+  [...document.querySelectorAll(sel)].map((el) => {
+    const box = el.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const text = range.getBoundingClientRect();
+    return { text: el.textContent.trim(), left: text.left - box.left, right: box.right - text.right };
+  });
+
+test("PR-13: the carousel spans the viewport's width with the logo inside it; no separate header (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
+  for (const { width } of Object.values(VIEWPORTS)) {
+    const read = await withPage({ width, hash: "#lean-7" }, (page) =>
+      page.evaluate(() => {
+        const r = (el) => el && el.getBoundingClientRect().toJSON();
+        return { viewport: document.documentElement.clientWidth, carousel: r(document.getElementById("carousel")), logo: r(document.querySelector("#top .logo-plate img")), header: document.querySelectorAll("header, .site-head").length };
+      }),
+    );
+    assert.ok(read.carousel, `${width}: control: the committed sheets give a carousel`);
+    assert.deepEqual([read.carousel.left, read.carousel.width], [0, read.viewport], `${width}: edge to edge`);
+    const inside = read.logo && read.logo.left >= read.carousel.left && read.logo.right <= read.carousel.right && read.logo.top >= read.carousel.top && read.logo.bottom <= read.carousel.bottom;
+    assert.ok(inside, `${width}: the logo inside the carousel: ${JSON.stringify(read)}`);
+    assert.equal(read.header, 0, `${width}: no separate header`);
+  }
+});
+
+test("PR-14: the two question headings are centred (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
+  for (const { width } of Object.values(VIEWPORTS)) {
+    const gaps = await withPage({ width, hash: "#lean-7" }, (page) => page.evaluate(textGaps, ".step-label"));
+    assert.equal(gaps.length, 2, `${width}: two headings`);
+    for (const g of gaps) assert.ok(g.left > 4 && Math.abs(g.left - g.right) <= 2, `${width}: ${g.text} centred: ${JSON.stringify(g)}`);
+  }
+});
+
+test("PR-16: the price is one untinted block, the weekly total first and larger; no title (Chrome, 390)", { timeout: TIMEOUT_MS }, async () => {
+  const read = await withPage({ width: VIEWPORTS.w390.width, hash: "#lean-7" }, (page) =>
+    page.evaluate(() => {
+      const t = document.getElementById("result-total"), m = document.getElementById("result-per-meal");
+      const block = t.closest(".price");
+      const tinted = [block, ...block.querySelectorAll("*")].filter((el) => getComputedStyle(el).backgroundColor !== "rgba(0, 0, 0, 0)").length;
+      return {
+        sameBlock: block !== null && block === m.closest(".price"),
+        tinted,
+        totalFirst: t.getBoundingClientRect().top < m.getBoundingClientRect().top,
+        sizes: [parseFloat(getComputedStyle(t).fontSize), parseFloat(getComputedStyle(m).fontSize)],
+        title: document.querySelectorAll("#result .result-title").length,
+      };
+    }),
+  );
+  assert.deepEqual([read.sameBlock, read.tinted, read.totalFirst, read.title], [true, 0, true, 0], JSON.stringify(read));
+  assert.ok(read.sizes[0] > read.sizes[1], `the total larger: ${read.sizes}`);
 });

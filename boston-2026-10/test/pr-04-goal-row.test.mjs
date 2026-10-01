@@ -1,6 +1,6 @@
 // PR-4 (SPEC-plan-page-refinement § 2 item 2, § 5): the goals, one row. Three choices, each its name and its calorie
 // and protein ranges and no promise line; the stylesheet sets three columns at every width (Chrome at 390 and 1280:
-// tools/storybook's pr-6-8 case).
+// tools/storybook's pr-chrome case).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { parseHTML } from "linkedom";

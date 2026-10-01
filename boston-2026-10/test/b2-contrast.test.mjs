@@ -52,8 +52,9 @@ test("B2 mutant: the store's own button (white on #ff931e) fails its role", asyn
 });
 
 test("B2 mutant: a raw colour outside :root is refused (it would bypass the check)", async () => {
-  // The anchor was .hint's rule until SPEC-plan-page-refinement § 1 item 3 removed the hint; the dots' is as plain.
-  const path = await mutantTemplate("raw.html", ".dots { display", ".dots { color: #777777; display");
+  // The anchor was .hint's rule until SPEC-plan-page-refinement § 1 item 3 removed the hint, then the dots' until § 8
+  // item 1 removed them; the price block's is as plain.
+  const path = await mutantTemplate("raw.html", ".price { display", ".price { color: #777777; display");
   const res = run("--template", path);
   assert.equal(res.status, 1, res.stdout);
   assert.match(res.stdout, /PROBLEM: raw colour outside :root/);

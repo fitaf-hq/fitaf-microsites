@@ -10,10 +10,11 @@ import { FIXTURE_PHOTOS as photos, photoPage } from "./pr-harness.mjs";
 const CAROUSEL_MS = 4000;
 const pct = (n) => `${Number(n.toFixed(4))}%`;
 
-test("PR-2: five cells from the manifest, alt=\"\", dots; a 4 s timer; none under reduced motion", async () => {
+// Updated (§ 8 items 1–2): no dots (PR-12), and the carousel is the top of the page with the logo over it (PR-13).
+test("PR-2: five cells from the manifest, alt=\"\"; a 4 s timer; none under reduced motion", async () => {
   const prod = await photoPage("prod");
   const { document } = parseHTML(prod);
-  assert.ok(prod.indexOf('class="site-head"') < prod.indexOf('id="carousel"') && prod.indexOf('id="carousel"') < prod.indexOf('class="tabs'), "below the logo, above the tabs");
+  assert.ok(prod.indexOf('id="carousel"') < prod.indexOf('class="tabs'), "above the tabs");
   const sheet = photos.carousel;
   const cells = ["1", "2", "3", "4", "5"].map((n) => sheet.cells[n]);
   const imgs = [...document.querySelectorAll("#carousel .slide img")];
@@ -23,7 +24,6 @@ test("PR-2: five cells from the manifest, alt=\"\", dots; a 4 s timer; none unde
     assert.equal(img.getAttribute("src"), photos.base + sheet.file, `photo ${i + 1}: the sheet`);
     assert.match(img.getAttribute("style"), new RegExp(`top:${pct((-cells[i].y / cells[i].h) * 100)}(;|$)`), `photo ${i + 1}: its cell`);
   });
-  assert.equal(document.querySelectorAll("#carousel .dot").length, 5, "a dot each");
   const page = openPlanPage(prod, { now: midday(DAYS["S-5"]) });
   assert.deepEqual(page.timers.map((t) => t.ms), [CAROUSEL_MS], "one timer, every 4 s");
   page.tick();
