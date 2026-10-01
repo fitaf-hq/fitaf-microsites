@@ -148,7 +148,7 @@ test("S18: Flow 1's states in the page — OFFER, ERROR keeps what was typed, SA
 
 test("S18: Flow 2 reframed — question 1 is Meal size, each size with its per-meal calories and protein", async () => {
   const plans = await loadPlans();
-  assert.match(devHtml, /<span class="step-num" aria-hidden="true">1<\/span>Meal size<\/h2>/);
+  assert.match(devHtml, /<h2 class="step-label" id="q-goal">Meal size<\/h2>/); // no step number since SPEC-plan-page-refinement § 8 item 3
   assert.doesNotMatch(visibleText(devHtml), /What's your goal\?/);
   for (const p of plans.individual) {
     const button = new RegExp(`<button[^>]*data-goal="${p.id}"[^>]*>([\\s\\S]*?)</button>`).exec(devHtml)[1];

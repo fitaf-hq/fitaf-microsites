@@ -11,7 +11,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join, relative, sep } from "node:path";
 import { declaration, esc, NO_PICKS, ROOT, scriptJson, sheetUrl, shownCounts, ZONED_DATE_HELPERS } from "../build.mjs";
-import { isLive, longDate } from "../src/worker/offers.js";
+import { isLive } from "../src/worker/offers.js";
 import { addDays, daysBetween } from "../src/worker/zoned-time.js";
 import { countTable } from "./build-storefront.mjs";
 import { handoffLink, payloadFromArgs } from "./handoff-link.mjs";
@@ -28,7 +28,7 @@ const FILE_FIELDS = ["delivery", "menus"];
 const MEAL_FIELDS = ["name", "qty"];
 /** § 3's phrases in data/messages.json's `chefs_choice` the card shows, and the placeholders each must carry. Since
  *  SPEC-plan-page-refinement § 1–2 the list is always open: `open` (its button) and `note` are kept there, not read. */
-const PHRASES = { heading: ["{count}", "{date}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] };
+const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] };
 
 /** A path as a person finds it: from the package when it is inside it. */
 const shown = (path) => (path.startsWith(ROOT + sep) ? relative(ROOT, path) : path);
@@ -145,6 +145,15 @@ export async function readPicks(dir, plans) {
 /** § 2: the weeks whose window has not ended on `on` (the build's date). A page built early carries next week's. */
 export const openOn = (weeks, on) => weeks.filter((w) => daysBetween(on, windowOf(w.delivery).valid_to) >= 0);
 
+/** SPEC-plan-page-refinement § 8 item 6: the week a delivery Sunday's meals are for, Monday to Sunday after it, as the
+ *  heading's {week}: "October 5–11"; across a month "September 28 – October 4" (no year: a week is always this one). */
+export function weekRange(delivery) {
+  const [from, to] = [addDays(delivery, 1), addDays(delivery, 7)];
+  const month = (ymd) => new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "long" }).format(new Date(`${ymd}T00:00:00Z`));
+  const day = (ymd) => Number(ymd.slice(8));
+  return month(from) === month(to) ? `${month(from)} ${day(from)}–${day(to)}` : `${month(from)} ${day(from)} – ${month(to)} ${day(to)}`;
+}
+
 /** A percentage for an inline style, without float noise. */
 const pct = (n) => `${Number(n.toFixed(4))}%`;
 
@@ -176,7 +185,7 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "" }
           return [
             count,
             {
-              heading: fill(words.heading, { count, date: longDate(w.delivery) }),
+              heading: fill(words.heading, { week: weekRange(w.delivery) }),
               meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.name, n: m.qty }) : m.name)),
               thumbs: menu.meals.map((m) => thumbStyle(url, sheet, m.name)),
               links: menu.links,
