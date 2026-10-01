@@ -290,6 +290,9 @@ function sizeButton(plan) {
 
 /** The development pages are at /<event-id>/, so they address the page's own files from the root. */
 export const DEV_ASSET_PREFIX = "/";
+/** SPEC-rung2-progress-and-checkout § 17.1: the codes of the sheet's hosts (scripts/handoff-link.mjs PHOTO_HOSTS). */
+export const PROD_PHOTO_HOST = 0;
+export const DEV_PHOTO_HOST = 1;
 
 const MENU_LINK = '<button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button>';
 
@@ -481,13 +484,13 @@ const YMD = /^\d{4}-\d{2}-\d{2}$/;
  * checked (a file breaking a rule throws, naming it) and the weeks still open on `on` made into the page's slots.
  * Loaded only when the directory exists, so a build without it reads nothing more.
  */
-async function picksFor({ plans, messages, picksDir, on, photos, assetPrefix }) {
+async function picksFor({ plans, messages, picksDir, on, photos, assetPrefix, photoHost }) {
   if (on !== undefined && !(YMD.test(on) && addDays(on, 0) === on)) throw new Error(`--on must be a date, YYYY-MM-DD; got ${on}`);
   if (!existsSync(picksDir)) return { slots: NO_PICKS, weeks: [], on };
   const zone = (await loadJson(SAVE_PATH)).send_time_zone;
   on ??= zonedDate(Date.now(), zone);
   const { chefsChoice } = await import("./scripts/chefs-choice.mjs");
-  return { ...(await chefsChoice({ plans, messages, dir: picksDir, on, zone, photos, assetPrefix })), on };
+  return { ...(await chefsChoice({ plans, messages, dir: picksDir, on, zone, photos, assetPrefix, photoHost })), on };
 }
 
 export async function build({
@@ -510,7 +513,10 @@ export async function build({
   const photos = await loadPhotos(photosPath);
   const assetPrefix = target === "dev" ? DEV_ASSET_PREFIX : PROD_SLOTS.ASSET_PREFIX;
   // Before anything is written: a picks file that breaks a rule stops the build here (a wrong list never ships).
-  const picks = await picksFor({ plans, messages, picksDir, on, photos, assetPrefix });
+  // SPEC-rung2-progress-and-checkout § 17.1: the checkout links name the sheet's host by its code in the block's fixed
+  // list (scripts/handoff-link.mjs PHOTO_HOSTS): the production site for this build, the test address for dev.
+  const photoHost = target === "dev" ? DEV_PHOTO_HOST : PROD_PHOTO_HOST;
+  const picks = await picksFor({ plans, messages, picksDir, on, photos, assetPrefix, photoHost });
   // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
   if (target === "dev") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });

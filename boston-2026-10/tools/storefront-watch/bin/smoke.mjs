@@ -5,6 +5,9 @@
 //                    test a build before it is pasted in the Footer (§ 4, last point); keep the report with it
 //   --live           the link alone: the store's own Footer block runs it
 //   (neither)        fill B built from this checkout (npm run build:storefront's text), pasted
+//   --link <url>     run THIS checkout link (the microsite's own, its photo part included: SPEC-rung2-progress-and-
+//                    checkout § 17, W17) instead of one built from the menu; the report says, per slide, whether the
+//                    screen showed Fit AF's sheet
 //   --origin <url>   a local synthetic store (http://127.0.0.1:<port> or localhost) instead of the store, to test
 //                    the smoke itself; no other origin is accepted
 // Exit 0 if every width passed, 1 otherwise, 2 if the smoke itself failed.
@@ -24,6 +27,7 @@ async function main() {
       width: { type: "string", multiple: true },
       report: { type: "string" },
       origin: { type: "string" },
+      link: { type: "string" },
     },
   });
   const origin = values.origin ?? STORE_ORIGIN;
@@ -31,7 +35,8 @@ async function main() {
   if (values.script && values.live) throw new Error("give --script or --live, not both");
   const widths = values.width ? values.width.map(Number) : WIDTHS;
   for (const w of widths) if (!WIDTHS.includes(w)) throw new Error(`--width must be one of ${WIDTHS.join(", ")}, got ${w}`);
-  const result = await smoke({ scriptFile: values.script ?? null, live: values.live, widths, origin, why: "neither --script nor --live given" });
+  if (values.link && !/^https:\/\/[^/]+\/order\?mpid=\d+#fitaf=/.test(values.link)) throw new Error(`--link must be a checkout link (https://<store>/order?mpid=N#fitaf=...), got ${values.link}`);
+  const result = await smoke({ scriptFile: values.script ?? null, live: values.live, widths, origin, why: "neither --script nor --live given", link: values.link ?? null });
   // For a width that failed, the report carries the page as text (SPEC-storefront-watch § 7 item 2), redacted.
   const report = renderSmokeReport(result);
   process.stdout.write(`${report}\n`);

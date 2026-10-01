@@ -8,14 +8,27 @@
 // count; the plan's id is the link's own ?mpid=, which the script reads from the page. Version 1 (base64 JSON, with an
 // optional product id per meal for fill A) is retired: § 11, "no link has been published".
 // The tool refuses what the shipped script would refuse, so it never prints a link that silently does nothing.
+// SPEC-rung2-progress-and-checkout § 17.1: with `--photos <delivery Sunday>` (and `--host <code>`, 0 by default), the link
+// also carries what the progress screen needs to show each meal's cell of that week's photo sheet, read here from
+// data/photo-sheets.json (no cell geometry is a literal in this tool or the block). After the meal part, "!"-separated:
+// the host's CODE (its index in PHOTO_HOSTS, the fixed list the block carries: never a URL from the link), the sheet's
+// path on that host ("/", then the manifest's base and file), the sheet's width in base 36, then one cell per meal in the link's
+// order, "x,y,w,h" in base 36, or empty for a meal with no cell. A week whose sheet has no cell for any of its meals, or
+// a manifest whose base is null or absolute (a host not on the list), gives the link of today, with no photo part.
+//   https://fitafnutrition.com/order?mpid=21#fitaf=2.t1fkl*2.eh97u*5!0!/assets/photo-sheets/x.jpg!5s!g,g,4w,4w!g,68,4w,4w
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { loadJson, orderUrl, PLANS_PATH } from "../build.mjs";
+import { loadJson, orderUrl, PHOTOS_PATH, PLANS_PATH } from "../build.mjs";
 import { mealKey } from "../src/storefront/meal-key.js";
+import { PHOTO_HOSTS } from "../src/storefront/photo-hosts.js";
 import { countTable } from "./build-storefront.mjs";
 
-export { mealKey };
+export { mealKey, PHOTO_HOSTS };
 export const PAYLOAD_VERSION = 2;
 export const MAX_QTY = 21;
+/** A manifest base the block can request: relative (on a listed host), never a URL of its own. */
+const RELATIVE_PATH_RE = /^[\w/.-]+$/;
+const BASE_36 = 36;
 /** § 11 item 1: the offer code (checked by the script, not applied). */
 const CODE_RE = /^[A-Za-z0-9-]{1,40}$/;
 const WHOLE_NUMBER_RE = /^\d+$/;
@@ -25,9 +38,32 @@ const asShown = (name) => name.replace(/\s+/g, " ").trim();
 /** One meal of the payload: `<key>`, or `<key>*<n>` above 1. */
 const token = (it) => (it.qty === 1 ? it.key : `${it.key}*${it.qty}`);
 
-/** The text after `#fitaf=`: "2", each meal, then "~<code>" if there is one, dot-separated. */
-export const encodePayload = (payload) =>
+/** § 17.1: the photo part, "!"-separated: the host's code, the sheet's path, its width, then each meal's cell or "". */
+const photoText = (photos) => {
+  const cell = (c) => (c ? [c.x, c.y, c.w, c.h].map((n) => n.toString(BASE_36)).join(",") : "");
+  return ["", photos.host, photos.path, photos.width.toString(BASE_36), ...photos.cells.map(cell)].join("!");
+};
+
+/** The meal part: "2", each meal, then "~<code>" if there is one, dot-separated. */
+const mealPart = (payload) =>
   [PAYLOAD_VERSION, ...payload.items.map(token), ...(payload.code === undefined ? [] : [`~${payload.code}`])].join(".");
+
+/** The text after `#fitaf=`: the meal part, then the photo part (§ 17.1), if there is one. */
+export const encodePayload = (payload) => mealPart(payload) + (payload.photos ? photoText(payload.photos) : "");
+
+/**
+ * § 17.1: what the link carries of the week `delivery`'s sheet in the manifest `photos`, for `items` on host `code`:
+ * { host, path, width, cells } (each cell { x, y, w, h } from the manifest, keyed by the meal's name as the picks name
+ * it, or null), or null when there is nothing to carry (no such sheet, a base that is null or not a relative path, or
+ * no cell for any meal). The cells are the manifest's own numbers; none is written here.
+ */
+export function photoPart(photos, delivery, items, code) {
+  const sheet = photos?.chefs_choice?.[delivery];
+  if (!sheet || typeof photos.base !== "string" || !RELATIVE_PATH_RE.test(photos.base + sheet.file)) return null;
+  const cells = items.map((it) => sheet.cells?.[it.name] ?? null);
+  if (!cells.some(Boolean)) return null;
+  return { host: code, path: `/${photos.base}${sheet.file}`, width: sheet.width, cells };
+}
 
 /** "a:b:c" split at its LAST separator, so a meal name may itself contain one. */
 function splitLast(value, sep, usage) {
@@ -58,8 +94,8 @@ function checkDistinct(items) {
  * script would refuse. `counts` maps each mpid in data/plans.json to its meals a week: the counts must add up to exactly
  * that (the full-plan rule, § 7).
  */
-export function payloadFromArgs(argv, counts) {
-  const flags = { "--mpid": [], "--item": [], "--code": [] };
+export function payloadFromArgs(argv, counts, photos = null) {
+  const flags = { "--mpid": [], "--item": [], "--code": [], "--photos": [], "--host": [] };
   for (let i = 0; i < argv.length; i += 2) {
     if (!(argv[i] in flags)) throw new Error(`unknown flag ${argv[i]}`);
     if (argv[i + 1] === undefined) throw new Error(`${argv[i]} needs a value`);
@@ -86,6 +122,15 @@ export function payloadFromArgs(argv, counts) {
     if (!CODE_RE.test(code)) throw new Error(`--code must match ${CODE_RE}`);
     payload.code = code;
   }
+  // § 17.1: the week's photo sheet, from the manifest `photos` (data/photo-sheets.json when run as a program).
+  if (flags["--host"].length && !flags["--photos"].length) throw new Error("--host needs --photos");
+  if (flags["--photos"].length) {
+    const [delivery] = flags["--photos"];
+    if (!photos?.chefs_choice?.[delivery]) throw new Error(`--photos ${delivery}: no such week's sheet in data/photo-sheets.json`);
+    const code = wholeNumber(flags["--host"][0] ?? "0", "--host", 0, PHOTO_HOSTS.length - 1);
+    const part = photoPart(photos, delivery, items, code);
+    if (part) payload.photos = part;
+  }
   return payload;
 }
 
@@ -95,6 +140,7 @@ export const handoffLink = (plans, payload) => `${orderUrl(plans, payload.mpid)}
 export function legend(payload) {
   const rows = payload.items.map((it) => [token(it), it.name]);
   if (payload.code !== undefined) rows.push([`~${payload.code}`, "the offer code (checked, not applied)"]);
+  if (payload.photos) rows.push([`!${payload.photos.host}`, `each meal's cell of ${PHOTO_HOSTS[payload.photos.host]}${payload.photos.path}`]);
   const width = Math.max(...rows.map(([t]) => t.length));
   return rows.map(([t, what]) => `  ${t.padEnd(width)}  ${what}`);
 }
@@ -103,7 +149,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
     const plans = await loadJson(PLANS_PATH);
     const counts = new Map(Object.entries(countTable(plans)).map(([mpid, n]) => [Number(mpid), n]));
-    const payload = payloadFromArgs(process.argv.slice(2), counts);
+    const photos = existsSync(PHOTOS_PATH) ? await loadJson(PHOTOS_PATH) : null;
+    const payload = payloadFromArgs(process.argv.slice(2), counts, photos);
     console.log([handoffLink(plans, payload), ...legend(payload)].join("\n"));
   } catch (err) {
     console.error(`handoff:link: ${err.message}`);

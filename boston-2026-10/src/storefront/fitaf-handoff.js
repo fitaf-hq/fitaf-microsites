@@ -6,7 +6,7 @@
 // progress screen's words (data/messages.json, `handoff`) at the UI slot and its colours (the page's own tokens,
 // src/template.html) at the TOKENS slot, and the meal-key function at the KEY slot, and drops every FULL-LINE `//`
 // comment, like this one. SPEC-rung2 § 11 item 5: each built file should be at most 5,120 bytes (the build warns above)
-// and must be at most 10,240 (it refuses above). `/* */` comments ship. The tests run the SHIPPED text, so what they
+// and must be at most 15,360 (it refuses above; SPEC-rung2-progress-and-checkout § 17.3, for the 2026-10-01 meeting). `/* */` comments ship. The tests run the SHIPPED text, so what they
 // prove is what is pasted.
 //
 // ⭐ SPEC-rung2 § 12: fill B is the one fill. Fill A, which wrote the store's cart storage, is retired; the history keeps
@@ -82,12 +82,12 @@ return function () {
 // <html> … and removes with it": the screen itself is that mark). Fill B's own test for a displayed control
 // (getClientRects) still finds CONTINUE TO CHECKOUT, and presses it as before.
 // § 15.3: the carousel's photos are `.c img` in the style, so the screen's Fit AF logo (below) is not one of them.
-var S, NOW, SLIDES = {}, CODE, L;
+var S, NOW, SLIDES = {}, CODE, L, SHEET, CELLS = {}, BAD;
 var CSS = "#fitaf-screen{/*TOKENS*/;position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
 "#fitaf-screen>div{width:100%;max-width:420px}#fitaf-screen h2{margin:0 0 16px;font-size:24px;font-weight:700;color:inherit}" +
 "#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
 "#fitaf-screen .c{margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
-"#fitaf-screen .c img{display:block;width:100%;height:min(220px,32vh);object-fit:cover;border-radius:6px}#fitaf-screen b{display:block;margin-top:10px;font-size:18px}#fitaf-screen p{margin:0;min-height:1.4em}" +
+"#fitaf-screen .c img{display:block;width:100%;height:min(220px,32vh);object-fit:cover;border-radius:6px}#fitaf-screen .f{position:relative;overflow:hidden;height:min(220px,32vh);margin:0 auto;border-radius:6px}#fitaf-screen .f img{position:absolute;height:auto;max-width:none;border-radius:0}#fitaf-screen b{display:block;margin-top:10px;font-size:18px}#fitaf-screen p{margin:0;min-height:1.4em}" +
 ".cdk-overlay-pane:has(app-extra-products-dialog),.cdk-overlay-backdrop:has(+* app-extra-products-dialog){visibility:hidden!important}" +
 "@keyframes fitaf-e{}@keyframes fitaf-t{}@keyframes fitaf-in{from{opacity:0;transform:translateX(24px)}}@media (prefers-reduced-motion:reduce){#fitaf-screen *{animation:none!important;transition:none!important}}";
 // Everything the screen does runs inside ui(): a screen that cannot draw never stops fill B, whose presses cannot be
@@ -137,13 +137,31 @@ function brand() { if (!L && (L = logo("0 auto 16px;height:48px;padding:8px 10px
 // After press k of t: the meal's slide, made at its first press from its own card (§ 2 item 2: its name as the card
 // shows it, and its photograph only if the page has already loaded it: the card's img complete with a width, whose
 // currentSrc the slide reuses, so nothing new is requested), shown; the bar at k of t + 1; the step line.
+// § 17.2: a meal the link gives a cell (CELLS, below) shows, at once, that cell of Fit AF's sheet: a box of the cell's
+// own ratio at the slide's height, holding the whole sheet scaled so the cell fills the box (its width the sheet's in
+// cells, its left and top the cell's offset), the box clipping the rest. The store's card image is not waited for. If the
+// sheet fails (the img's error, or the early load's: BAD), the slide falls back to today's rule, pic(), and no later
+// slide asks for the sheet again.
+function pic(el, c) {
+var im = c.querySelector("img"), i;
+if (im && im.complete && im.naturalWidth) { i = el.insertBefore(w.document.createElement("img"), el.firstChild); i.alt = ""; i.src = im.currentSrc; }
+}
 function added(meal, c, k, t) {
-var d = w.document, el = SLIDES[meal], im = c.querySelector("img"), i;
+var d = w.document, el = SLIDES[meal], x = CELLS[meal], f, g;
 brand();
 if (!el) {
   el = SLIDES[meal] = d.createElement("div");
-  if (im && im.complete && im.naturalWidth) { i = el.appendChild(d.createElement("img")); i.alt = ""; i.src = im.currentSrc; }
   el.appendChild(d.createElement("b")).textContent = text(c.querySelector(".product__content-title"));
+  if (x && !BAD) {
+    f = el.insertBefore(d.createElement("div"), el.firstChild);
+    f.className = "f";
+    f.style.cssText = "aspect-ratio:" + x[2] / x[3];
+    g = f.appendChild(d.createElement("img"));
+    g.alt = "";
+    g.style.cssText = "width:" + x[4] / x[2] * 100 + "%;left:" + -x[0] / x[2] * 100 + "%;top:" + -x[1] / x[3] * 100 + "%";
+    g.onerror = function () { BAD = 1; ui(function () { f.remove(); pic(el, c); }); };
+    g.src = SHEET;
+  } else pic(el, c);
   $(".c").appendChild(el);
 }
 show(el);
@@ -167,9 +185,18 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 // <html> undone (the one rule that does not hide: the space is the banner's); H9 the price rows (.summary__row) except a
 // discount row, and never a row holding the Total (.summary__total is never hidden); H10 the tip (its section, or a bare
 // app-tip-selector), only while no tip is chosen (.tip-selector__remove-btn shows once one is).
+// § 19: each order line shows only its photograph and its name: hidden, H11 its price (.summary__item-price), H12 its
+// portion (the add-on pills, .summary__item-addons), H13 its quantity control (.summary__item-quantity-controls), H14
+// its remove control (.summary__item-remove), and H15 the plan's total row (.summary__plan-total); the order's Total stays
+// (H9). And COMPACT, the only rules that do not hide but the banner's (§ 19 item 2): each line 48 px high, its photograph
+// 48 px, its name at most two lines, so fourteen lines fit one 390 x 844 screen (R2-80). Names from the store's public
+// code of 2026-09-29; their specificity is above the store's own (.summary__item[_ngcontent-...]), so no !important.
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
-".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))){display:none!important}" +
-"html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}";
+".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
+".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total){display:none!important}" +
+"html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}" +
+"html.fitaf-deep:has(app-checkout) .summary__item{padding:3px 6px;margin:0 0 2px;gap:8px;align-items:center}html.fitaf-deep:has(app-checkout) .summary__item-image{width:48px;height:48px}" +
+"html.fitaf-deep:has(app-checkout) .summary__item-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}";
 // § 15.3, on the checkout: the logo (above) centred at the top of the store's checkout component, 40 px high, where the
 // store's hidden header was (H1). Inside app-checkout, so it goes with the component, as every H rule stops applying:
 // only while the checkout is on the page, and only for a deep-carted visit (it is placed at done, never on a stop).
@@ -182,6 +209,28 @@ d.head.appendChild(s);
 d.documentElement.classList.add("fitaf-deep");
 if (CODE) d.documentElement.classList.add("fitaf-code");
 if ((c = d.querySelector("app-checkout")) && (i = logo("16px auto;height:40px"))) c.prepend(i);
+}
+
+// SPEC-rung2-progress-and-checkout § 17.1: the link's photo part, after the meal part, "!"-separated (the link tool,
+// scripts/handoff-link.mjs, writes it): the host's CODE, its index in HOSTS, the fixed list the build inlines from the
+// tool's own (the production site, the test address); the sheet's path on that host, from its first "/"; the sheet's
+// width in base 36;
+// then one cell per meal in the link's order, "x,y,w,h" in base 36, or empty. ⛔ The host is never a URL from the link:
+// a code that is not one digit naming a host of the list means no photograph, and nothing is requested. Any fault in
+// the photo part means no photograph for that meal (or none at all), never a stop: the order is the meal part's.
+// The sheet is asked for once here, before the first press (the img is not placed): the slides' imgs reuse it.
+var HOSTS = /*HOSTS*/ [];
+function photos(f, items) {
+var h = /^\d$/.test(f[0]) && HOSTS[f[0]], W = parseInt(f[2], 36), g;
+if (!h || !/^\/[\w\/.-]{1,200}$/.test(f[1]) || !(W > 0)) return;
+SHEET = h + f[1];
+items.forEach(function (it, k) {
+  var c = /^[0-9a-z]{1,4}(,[0-9a-z]{1,4}){3}$/.test(f[k + 3]) && f[k + 3].split(",").map(function (n) { return parseInt(n, 36); });
+  if (c && c[2] && c[3] && W >= c[0] + c[2]) CELLS[it.key] = c.concat(W);
+});
+g = w.document.createElement("img");
+g.onerror = function () { BAD = 1; };
+g.src = SHEET;
 }
 
 // The payload, VERSION 2 (SPEC-rung2 § 11 item 1; version 1, base64 JSON, is retired and refused as an unknown
@@ -332,7 +381,7 @@ guard(function poll() {
 // full-plan rule (§ 7), last, so every other fault above reports itself first.
 guard(function () {
 if (loc.pathname !== "/order") fail("not the order page");
-var p = payload(loc.hash.slice(7)), m = /[?&]mpid=([1-9]\d{0,8})(&|$)/.exec(loc.search) || fail("no mpid on this page");
+var f = loc.hash.slice(7).split("!"), p = payload(f.shift()), m = /[?&]mpid=([1-9]\d{0,8})(&|$)/.exec(loc.search) || fail("no mpid on this page");
 p.mpid = +m[1];
 var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
 if (p.total !== need) fail("the plan needs " + need + " meals; the link has " + p.total);
@@ -340,6 +389,7 @@ log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" :
 // SPEC-rung2-progress-and-checkout § 1, § 2 item 1: the screen, now that the link and the plan's count have passed
 // their checks, and before fill B's first poll. A link refused above shows nothing new.
 CODE = p.code;
+if (f.length) ui(function () { photos(f, p.items); });
 ui(screen);
 // The two-fill source's dispatch, kept because it ships (SPEC-rung2 § 12 item 3): FILL is "B", so the line after it
 // never runs.

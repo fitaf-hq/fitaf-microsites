@@ -9,8 +9,10 @@
 // § 12, the store's own extras key set just before CHECKOUT; the block live in the store's Footer since 2026-09-29 ~23:45
 // PDT), adf6024c… (d57a273, its § 15: the key ignores a leading marketing tag, fill B's 10 s counts from the first card,
 // the Fit AF logo on the screen and the checkout) and, by § 15.3 as the Advisor ruled after seeing it (the screen's logo
-// at the top, on a white plate), the hash below. The block live in the store's Footer is the old text until a
-// new one is smoked and pasted.
+// at the top, on a white plate), 914668de… (ac6c8e8; pasted by the Advisor 2026-10-01), and, by § 17 (the screen shows
+// Fit AF's own photographs, carried by the link; the ceiling 15,360), 92ee18db… (d984a7e), and, by § 19 (each order
+// line its photograph and name, no plan total), the hash below. The block live in the store's
+// Footer is the old text until a new one is smoked and pasted.
 // ⭐ The mutant: a copy of the source with ONE byte of fill B's code changed builds a text R2-32 refuses. The copy is
 // made in a temporary directory; no file in the repository is edited. The control: an unmutated copy passes.
 import test from "node:test";
@@ -21,8 +23,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
 
-/** Fill B's text SHA-256 with rung 2's two faces (SPEC-rung2-progress-and-checkout, to its § 15). Was c4ceb682…. */
-const SHIPPED_SHA256 = "914668ded95f6a8913e7ae0010661d26780700bd7443cbf93f9e4e8a875b41f6";
+/** Fill B's text SHA-256 with rung 2's two faces (SPEC-rung2-progress-and-checkout, to its § 19). Was 92ee18db…. */
+const SHIPPED_SHA256 = "7eadcbdbdce49492a85d2d05901829d14be8f055c54ad9bbdf95173458a76cd0";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -71,7 +73,7 @@ async function withCopy(edit, fn) {
   }
 }
 
-test("R2-32: both built files' text SHA-256 (the version line's own) is 914668de…, fill B's with rung 2's two faces", async () => {
+test("R2-32: both built files' text SHA-256 (the version line's own) is 7eadcbdb…, fill B's with rung 2's two faces", async () => {
   await shippedTextCase(STOREFRONT_SOURCE);
 });
 

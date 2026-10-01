@@ -218,6 +218,54 @@
       "literal": "\"ecc_additions_prompt_handled\"",
       "use": "the store's sessionStorage key for \"the extras pop-up has been dealt with\": fill B sets it to \"true\" immediately before it presses CHECKOUT, so the store goes straight to /checkout (a release that drops it would open the pop-up again, under the screen)",
       "spec": "SPEC-rung2-progress-and-checkout.md § 12 item 3; R2-59"
+    },
+    {
+      "id": "hide-h11-item-price",
+      "literal": "\"summary__item-price\"",
+      "use": "H11: each order line's price, hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
+    },
+    {
+      "id": "hide-h12-item-addons",
+      "literal": "\"summary__item-addons\"",
+      "use": "H12: each order line's add-on pills (its portion), hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
+    },
+    {
+      "id": "hide-h13-item-quantity",
+      "literal": "\"summary__item-quantity-controls\"",
+      "use": "H13: each order line's quantity control, hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
+    },
+    {
+      "id": "hide-h14-item-remove",
+      "literal": "\"summary__item-remove\"",
+      "use": "H14: each order line's \"Remove item\" button, hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
+    },
+    {
+      "id": "hide-h15-plan-total",
+      "literal": "\"summary__plan-total\"",
+      "use": "H15: the plan's total row (\"Plan Total (N items)\"), hidden on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
+    },
+    {
+      "id": "line-item",
+      "literal": "\"summary__item\"",
+      "use": "§ 19 item 2: each order line, made compact on the deep-carted checkout",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
+    },
+    {
+      "id": "line-item-image",
+      "literal": "\"summary__item-image\"",
+      "use": "§ 19 item 2: each order line's photograph, kept and sized 48 px",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
+    },
+    {
+      "id": "line-item-name",
+      "literal": "\"summary__item-name\"",
+      "use": "§ 19 item 2: each order line's name, kept and clamped to two lines",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 19; R2-78, R2-79, R2-80, W18"
     }
   ]
 }

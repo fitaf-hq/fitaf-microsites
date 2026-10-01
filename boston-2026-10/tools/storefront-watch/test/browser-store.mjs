@@ -32,6 +32,12 @@
 // and the extras dialog as the store's overlays are (a manual popover holding .cdk-overlay-backdrop and
 // .cdk-overlay-pane > app-extra-products-dialog).
 // Like the store, the app injects its Footer text at run time as a re-created <script> (the store's injectSlot).
+// § 19 (on request, `storeLines`): each order line as the store's checkout draws it (its names from the store's public
+// code, read 2026-09-29: .summary__item holding .summary__item-image's img, .summary__item-info with .summary__item-name,
+// the add-on pills .summary__item-addons, and .summary__item-quantity-controls with a stepper and the "Remove item"
+// button .summary__item-remove; then .summary__item-price), spaced as the store's own stylesheet spaces them (56 px
+// images, 12 px padding, 8 px between lines; 48 px and 10 px at 1024 px and narrower), and the plan's total row as
+// .summary__plan-total; and `checkoutNames`, the lines /checkout draws whatever the plan holds (R2-80's fourteen).
 // Images are GENERATED (a flat SVG rectangle), never a photograph, served here; nothing is fetched from anywhere else.
 import { createServer } from "node:http";
 
@@ -184,9 +190,20 @@ function appHtml(cfg) {
   app-extra-products-dialog { display: block; padding: 16px; }
   .smartbanner { display: block; position: absolute; top: 0; left: 0; right: 0; height: 80px; background: #eee; }
   .summary__mobile-bar { display: none; }
+  .summary__item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; padding: 12px; background: #fff; border-radius: 6px; }
+  .summary__item-image { flex-shrink: 0; width: 56px; height: 56px; }
+  .summary__item-image img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+  .summary__item-info { flex: 1 1 0; min-width: 0; }
+  .summary__item-name { font: 600 14px/1.4 sans-serif; }
+  .summary__item-addons { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .summary__item-addon { font-size: 11px; padding: 2px 6px; background: #eee; }
+  .summary__item-quantity-controls { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .summary__item-price { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
   @media (max-width: 1024px) {
     .checkout__submit { display: none; }
     .summary__mobile-bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; background: #fff; }
+    .summary__item { gap: 8px; padding: 10px; }
+    .summary__item-image { width: 48px; height: 48px; }
   }
 </style></head>
 <body><app-root>${shell.before}<main class="outlet"></main>${shell.after}</app-root>
@@ -298,13 +315,29 @@ function appHtml(cfg) {
     var summary = root.querySelector(".checkout__summary");
     var items = root.querySelector(".summary__items");
     var totals = root.querySelector(".summary__totals");
-    var names = pending.filter(function (n, i) { return n !== cfg.dropOnCheckout && pending.indexOf(n) === i; });
+    var names = cfg.checkoutNames || pending.filter(function (n, i) { return n !== cfg.dropOnCheckout && pending.indexOf(n) === i; });
     var n = pending.length;
     var total = n * ${PRICE_CENTS} + cfg.totalDeltaCents;
     if (!n) items.appendChild(el("p", null, "Your cart is empty"));
-    names.forEach(function (name) { var row = el("div", "item"); row.appendChild(el("span", null, " " + name + " ")); row.appendChild(el("span", null, money(${PRICE_CENTS}))); items.appendChild(row); });
-    var plan = el("div", "plan-total");
-    plan.appendChild(el("span", null, "Plan Total (" + n + " items)"));
+    names.forEach(function (name, i) {
+      if (!cfg.storeLines) { var row = el("div", "item"); row.appendChild(el("span", null, " " + name + " ")); row.appendChild(el("span", null, money(${PRICE_CENTS}))); items.appendChild(row); return; }
+      var line = el("div", "summary__item item"), image = el("div", "summary__item-image"), img = el("img"), info = el("div", "summary__item-info");
+      img.src = "/img/meal-" + i + ".svg"; img.alt = ""; image.appendChild(img); line.appendChild(image);
+      info.appendChild(el("div", "summary__item-name", name));
+      var addons = el("div", "summary__item-addons"); addons.appendChild(el("span", "summary__item-addon", "Regular portion")); info.appendChild(addons);
+      var qty = el("div", "summary__item-quantity-controls");
+      [["Decrease quantity", "-"], ["Increase quantity", "+"]].forEach(function (b, k) {
+        var btn = el("button", null, b[1]); btn.type = "button"; btn.setAttribute("aria-label", b[0]);
+        if (k) { var input = el("input"); input.setAttribute("aria-label", "Quantity"); input.value = "1"; qty.appendChild(input); }
+        qty.appendChild(btn);
+      });
+      var remove = el("button", "summary__item-remove", "x"); remove.type = "button"; remove.setAttribute("aria-label", "Remove item"); qty.appendChild(remove);
+      info.appendChild(qty); line.appendChild(info);
+      var price = el("div", "summary__item-price"); price.appendChild(el("span", "summary__item-price-current", money(${PRICE_CENTS}))); line.appendChild(price);
+      items.appendChild(line);
+    });
+    var plan = el("div", cfg.storeLines ? "summary__plan-total" : "plan-total");
+    plan.appendChild(el("span", cfg.storeLines ? "summary__plan-total-label" : null, "Plan Total (" + n + " items)"));
     var amount = el("span"); amount.appendChild(el("span", null, money(total))); plan.appendChild(amount);
     totals.appendChild(plan);
     var sub = el("div", "subtotal");
@@ -373,6 +406,8 @@ const DEFAULTS = {
   continueNever: false,
   honoursKey: false,
   extrasPopover: "manual",
+  storeLines: false,
+  checkoutNames: null,
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */

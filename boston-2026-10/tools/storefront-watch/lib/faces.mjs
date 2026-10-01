@@ -19,6 +19,12 @@
 //        screen (the recorder notes it arriving there) and on the deep-carted checkout (first in app-checkout, found and
 //        displayed), each reported found or absent; ABSENT FAILS THE WIDTH. Its own rule, logoVerdict, beside
 //        facesVerdict (lib/smoke.mjs runs both), judged only once fill B reached done, as W11–W14.
+//   W18  (§ 19) each order line's price, portion, quantity and remove (H11–H14) and the plan's total row (H15): each
+//        conditional, each found one hidden while our style is on (judged as W14's); and the lines' height, first top
+//        to last bottom with our style, reported with what fourteen lines would take of a phone's 844 px;
+//   W17  (§ 17.4, a report, not a pass rule) per slide of the progress screen, whether it showed Fit AF's sheet: an img
+//        on a host of the block's fixed list (the site's src/storefront/photo-hosts.js), shown (loaded), failed (the
+//        browser reported an error: the slide fell back to today's rule), asked (neither seen) or not found.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -55,6 +61,12 @@ export const HIDE = [
     mayHideControls: true,
     check: "W14",
   },
+  // § 19: editing taken out of the checkout; each line its photograph and name only, and no plan total.
+  { id: "H11", selectors: [".summary__item-price"], mayHideControls: false, check: "W18" },
+  { id: "H12", selectors: [".summary__item-addons"], mayHideControls: false, check: "W18" },
+  { id: "H13", selectors: [".summary__item-quantity-controls"], mayHideControls: true, check: "W18" },
+  { id: "H14", selectors: [".summary__item-remove"], mayHideControls: true, check: "W18" },
+  { id: "H15", selectors: [".summary__plan-total"], mayHideControls: false, check: "W18" },
 ];
 /**
  * § 9: the targets the store renders only in some cases (its credit line is its footer's fallback; a plan may offer no
@@ -64,8 +76,12 @@ export const CONDITIONAL = [
   ".app-hmp-credit",
   "app-storefront-popup-host",
   ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
-  ...HIDE.filter((h) => h.check === "W14").flatMap((h) => h.selectors),
+  ...HIDE.filter((h) => h.check === "W14" || h.check === "W18").flatMap((h) => h.selectors),
 ];
+/** § 19 (W18): an order line, and a phone's height, against which fourteen lines are measured. */
+export const LINE = ".summary__item";
+export const PHONE_HEIGHT = 844;
+const FOURTEEN = 14;
 /** § 10 item 4 (W14): the Total, never hidden; on a phone the only place the visitor sees what they will pay. */
 export const TOTAL = ".summary__total";
 /** § 3 item 4: the controls that are measured. */
@@ -84,7 +100,7 @@ export const LOGO = 'img[alt="Fit AF"]';
  * In the page, from before its own scripts (page.evaluateOnNewDocument): record, in order, the screen arriving, each
  * text its step line shows, the style arriving, the mark, and the screen going. Into window.__fitafFaces.
  */
-export function recordFaces({ screen, style, logo }) {
+export function recordFaces({ screen, style, logo, hosts = [] }) {
   const events = [];
   window.__fitafFaces = events;
   let last = null;
@@ -110,6 +126,21 @@ export function recordFaces({ screen, style, logo }) {
         push("step", { text: line });
       }
     }
+    // W17: each slide of the carousel, once, as it arrives: the src of its img on a listed host (Fit AF's sheet), or
+    // null; and that img's load or error, once.
+    for (const el of document.getElementById(screen)?.querySelector(".c")?.children ?? []) {
+      if (el.__fitafSlide) continue;
+      el.__fitafSlide = true;
+      const name = (el.querySelector("b")?.textContent ?? "").replace(/\s+/g, " ").trim();
+      const img = [...el.querySelectorAll("img")].find((i) => hosts.some((h) => (i.getAttribute("src") ?? "").startsWith(`${h}/`)));
+      push("slide", { name, src: img ? img.getAttribute("src") : null });
+      if (!img) continue;
+      if (img.complete && img.naturalWidth) push("sheet", { name, ok: true });
+      else {
+        img.addEventListener("load", () => push("sheet", { name, ok: true }), { once: true });
+        img.addEventListener("error", () => push("sheet", { name, ok: false }), { once: true });
+      }
+    }
     // W16: the Fit AF logo arriving on the screen, once.
     const mark = document.getElementById(screen)?.querySelector(logo);
     if (mark && !events.some((x) => x.e === "logo")) push("logo", { src: mark.getAttribute("src") });
@@ -126,7 +157,7 @@ export function readRecorded(screen) {
  * and label, so a report can name it; the sets are compared by element. The style is disabled only for W11's second
  * reading, and enabled again before anything else is read.
  */
-export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo }) {
+export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo, line = ".summary__item" }) {
   const style = document.getElementById(styleId);
   const checkout = document.querySelector("app-checkout");
   const shown = (el) => el.getClientRects().length > 0;
@@ -169,6 +200,9 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
   } else {
     out.hide = hide.flatMap((h) => h.selectors.map((selector) => ({ id: h.id, selector, found: document.querySelectorAll(selector).length, displayed: null })));
   }
+  // W18: the order lines displayed (with our style, as the visitor sees them), first top to last bottom.
+  const lines = checkout ? [...checkout.querySelectorAll(line)].filter(shown) : [];
+  out.lines = { count: lines.length, height: lines.length ? Math.round(lines[lines.length - 1].getBoundingClientRect().bottom - lines[0].getBoundingClientRect().top) : 0 };
   // W16: the Fit AF logo in the checkout component, found and displayed: a CHILD of app-checkout, where the block puts it,
   // so an image of the store's own inside the checkout, whatever its alt, is never read as ours.
   const logos = checkout ? [...checkout.querySelectorAll(`:scope > ${logo}`)] : [];
@@ -194,7 +228,7 @@ const REQUIRED_FOUND = (faces) => faces.hide.every((h) => h.found > 0 || CONDITI
  * passed. The conditional ones are reported as they are at that reading.
  */
 export async function readCheckoutFaces(page, poll) {
-  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO };
+  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO, line: LINE };
   return poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f) && f.total?.found > 0, { timeoutMs: FACES_MS, everyMs: 500 });
 }
 
@@ -280,6 +314,35 @@ export function logoLine(faces) {
   const l = faces?.checkout?.logo;
   const checkout = !l ? "not read" : !l.found ? "ABSENT" : l.displayed ? "found" : "found, NOT displayed";
   return `W16: the Fit AF logo on the screen: ${screen}; on the checkout: ${checkout}`;
+}
+
+/**
+ * W17 (§ 17.4): per slide, Fit AF's sheet shown (its img loaded), failed (an error: the slide fell back), asked (neither
+ * seen) or not found (no sheet on that slide); the line counts the shown. A report, not a pass rule.
+ */
+export function sheetLine(faces) {
+  if (!faces) return "W17: not recorded";
+  const events = faces.events ?? [];
+  const slides = events.filter((e) => e.e === "slide");
+  if (!slides.length) return "W17: no slide seen";
+  const state = (s) => {
+    if (!s.src) return "not found";
+    const seen = events.find((e) => e.e === "sheet" && e.name === s.name);
+    return !seen ? "asked" : seen.ok ? "shown" : "failed";
+  };
+  const states = slides.map((s) => [s.name, state(s)]);
+  const shown = states.filter(([, st]) => st === "shown").length;
+  return `W17: Fit AF's sheet on ${shown} of ${slides.length} slides: ${states.map(([n, st]) => `${n} ${st}`).join("; ")}`;
+}
+
+/** W18's height line: the lines read, their height, and what fourteen take at that pitch of a phone's 844 px. */
+export function linesLine(faces) {
+  const l = faces?.checkout?.lines;
+  if (!faces?.checkout) return "W18: /checkout not read";
+  if (!l?.count) return "W18: no order line read";
+  const pitch = Math.round(l.height / l.count);
+  const fourteen = pitch * FOURTEEN;
+  return `W18: ${l.count} order lines in ${l.height} px (${pitch} px each); 14 would take ${fourteen} px of ${PHONE_HEIGHT}: ${fourteen > PHONE_HEIGHT ? "DOES NOT FIT" : "fits"}`;
 }
 
 /** W15's line for the report. */

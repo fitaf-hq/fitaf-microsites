@@ -113,8 +113,8 @@ test("W12a (§ 9): a CONDITIONAL target absent (H2's .app-hmp-credit, H5, H6) is
   const absent = passing();
   for (const h of absent.checkout.hide) if (CONDITIONAL.includes(h.selector)) h.found = 0;
   assert.deepEqual(facesVerdict(absent).reasons, []);
-  // Three of § 9's, and § 10's four (H7–H10), all conditional.
-  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 7, "fixture control: seven targets absent");
+  // Three of § 9's, § 10's four (H7–H10) and § 19's five (H11–H15), all conditional.
+  assert.equal(absent.checkout.hide.filter((h) => h.found === 0).length, 12, "fixture control: twelve targets absent");
 });
 
 test("W13a: an active subscription switch, or a \"renews every\" line, on the checkout: fail", () => {
@@ -139,8 +139,11 @@ const H6 = ".summary__plan-subscription-controls:has(.summary__subscription-togg
 const H9 = ".summary__row:not(.summary__row--discount,:has(.summary__total))";
 const H10 = ":is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))";
 
-test("the hide list W11, W12 and W14 read is the contract's H1–H10, with H6 only while a switch is there and off", () => {
-  assert.deepEqual(HIDE.map((h) => h.id), ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10"]);
+/** § 19: each order line's price, portion, quantity and remove (H11–H14), and the plan's total row (H15). */
+const H19 = [".summary__item-price", ".summary__item-addons", ".summary__item-quantity-controls", ".summary__item-remove", ".summary__plan-total"];
+
+test("the hide list W11, W12, W14 and W18 read is the contract's H1–H15, with H6 only while a switch is there and off", () => {
+  assert.deepEqual(HIDE.map((h) => h.id), ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11", "H12", "H13", "H14", "H15"]);
   assert.deepEqual(HIDE.flatMap((h) => h.selectors), [
     ".sticky-header",
     ".footer",
@@ -153,11 +156,14 @@ test("the hide list W11, W12 and W14 read is the contract's H1–H10, with H6 on
     ".smartbanner",
     H9,
     H10,
+    ...H19,
   ]);
-  // § 10's re-statement of the payment check: the controls hidden are exactly H3, H4, H6, H7, H8 and H10's.
-  assert.deepEqual(HIDE.filter((h) => h.mayHideControls).map((h) => h.id), ["H3", "H4", "H6", "H7", "H8", "H10"]);
-  assert.deepEqual(CONDITIONAL, [".app-hmp-credit", "app-storefront-popup-host", H6, ".checkout-discounts", ".smartbanner", H9, H10],
-    "§ 9 and § 10: the conditional targets");
+  // § 10's re-statement of the payment check: the controls hidden are exactly H3, H4, H6, H7, H8 and H10's; and since
+  // § 19 (editing taken out of the checkout), each line's quantity and remove controls, H13 and H14's.
+  assert.deepEqual(HIDE.filter((h) => h.mayHideControls).map((h) => h.id), ["H3", "H4", "H6", "H7", "H8", "H10", "H13", "H14"]);
+  assert.deepEqual(HIDE.filter((h) => h.id >= "H11" && h.id.length === 3).map((h) => h.check), ["W18", "W18", "W18", "W18", "W18"]);
+  assert.deepEqual(CONDITIONAL, [".app-hmp-credit", "app-storefront-popup-host", H6, ".checkout-discounts", ".smartbanner", H9, H10, ...H19],
+    "§ 9, § 10 and § 19: the conditional targets");
 });
 
 test("F2 carries the hide list's names (and the checkout's, and the pay button's): a release that renames one is flagged", async () => {
@@ -169,7 +175,10 @@ test("F2 carries the hide list's names (and the checkout's, and the pay button's
     "app-extra-products-dialog", "cdk-overlay-pane", "cdk-overlay-backdrop", "checkout-discounts", "smartbanner",
     "data-smartbanner-original-margin-top", "summary__row", "summary__row--discount", "summary__total", "tip-selector__remove-btn",
     // § 12
-    "ecc_additions_prompt_handled"];
+    "ecc_additions_prompt_handled",
+    // § 19
+    "summary__item-price", "summary__item-addons", "summary__item-quantity-controls", "summary__item-remove", "summary__plan-total",
+    "summary__item-image", "summary__item-name"];
   for (const name of NAMES) {
     assert.ok(literals.some((l) => new RegExp(`(^|[^\\w-])${name.replace(/[-_]/g, (c) => `\\${c}`)}([^\\w-]|$)`).test(l)), `a literal names ${name}`);
   }
