@@ -16,6 +16,17 @@ export const ORIGIN = "https://fitafnutrition.com";
 /** The store's cart key: a visitor's own cart there must be left exactly as it was (R2-14). */
 export const CART_KEY = "hmp_local_cart";
 export const POLL_MS = 200;
+/** SPEC-rung2-progress-and-checkout § 23: fill B waits this long after each press (every Add to Cart and every +). */
+export const PRESS_MS = 1000;
+/**
+ * § 23 item 3: what "every delay is POLL_MS" now says. Of the delays fill B scheduled, exactly one per meal press is
+ * PRESS_MS, and every other is a POLL_MS poll. `presses` is the number of meal presses made (the page's `log`). R2-82
+ * pins WHERE each PRESS_MS falls (right after its press).
+ */
+export function assertPollsAndPresses(delays, presses, what = "") {
+  assert.equal(delays.filter((ms) => ms === PRESS_MS).length, presses, `${what} one ${PRESS_MS} ms wait per press (${presses}): ${delays}`);
+  assert.ok(delays.filter((ms) => ms !== PRESS_MS).every((ms) => ms === POLL_MS), `${what} every other delay a ${POLL_MS} ms poll: ${delays}`);
+}
 /** § 8 and § 10: every wait BEFORE a press (the meal cards, an enabled CHECKOUT) is at most 10 s. */
 export const MAX_WAIT_MS = 10_000;
 /** § 11 item 4: the wait AFTER the store's CHECKOUT is pressed (for its dialog, for /checkout) is at most 30 s. */
@@ -525,7 +536,7 @@ export async function checkoutCase(text, fragment = fragmentFor(CHECKOUT_PAYLOAD
     "the seven meals, then CHECKOUT once, and nothing else",
   );
   assertCheckedOut(h, page, "/order?mpid=21");
-  assert.ok(h.timers.delays.every((ms) => ms === POLL_MS), "only 200 ms polls");
+  assertPollsAndPresses(h.timers.delays, page.log.length, "§ 23:");
   return { h, page };
 }
 
