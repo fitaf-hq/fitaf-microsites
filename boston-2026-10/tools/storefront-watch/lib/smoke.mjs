@@ -18,6 +18,10 @@
 //   (lib/faces.mjs). Our style is toggled and restored; nothing is typed or pressed.
 //   The Fit AF logo (SPEC-rung2-progress-and-checkout § 15.3, W16): the recorder notes it on the screen, and it is read
 //   on /checkout with W11–W14; absent fails the width.
+//   W17 (SPEC-rung2-progress-and-checkout § 17.4): with `link` (the CLI's --link, the microsite's own checkout link),
+//   steps 1-2 choose nothing: the link's own plan and meals are run (read against the menu by name, with the site's key
+//   function, so the pass rule's names and prices are the link's), its photo part included; the recorder notes, per
+//   slide, whether it showed Fit AF's sheet (a report line, not a pass rule).
 // The pass rule is lib/smoke-verdict.mjs (W6), AND lib/faces.mjs's (W10–W14, and W16's logoVerdict): a width passes only
 // if all do.
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -63,16 +67,19 @@ function readMenu(need) {
   const shown = new Set([...document.querySelectorAll(TITLES)].filter((t) => t.getClientRects().length > 0).map(text));
   const names = [];
   const chosen = [];
+  const priced = [];
   for (const card of document.querySelectorAll("app-product-card")) {
     const name = text(card.querySelector(".product__content-title"));
     if (!name) continue;
     if (!names.includes(name)) names.push(name);
-    if (chosen.length >= need || !shown.has(name) || chosen.some((c) => c.name === name)) continue;
     const add = [...card.querySelectorAll(".product__actions button")].find((b) => text(b).includes("Add to Cart"));
     if (!add || add.disabled) continue;
-    chosen.push({ name, priceCents: price(add) ?? price(card.querySelector(".product__price-now")) });
+    const meal = { name, priceCents: price(add) ?? price(card.querySelector(".product__price-now")) };
+    if (!priced.some((c) => c.name === name)) priced.push(meal);
+    if (chosen.length >= need || !shown.has(name) || chosen.some((c) => c.name === name)) continue;
+    chosen.push(meal);
   }
-  return { names, chosen };
+  return { names, chosen, priced };
 }
 
 /** In the page, on /checkout: read only. Text nodes are read whether or not they are displayed (a closed drawer). */
@@ -186,6 +193,26 @@ async function facesOf(page, outcome) {
   return { done, ...recorded, checkout, extras: extrasReport(recorded.events) };
 }
 
+/**
+ * W17: a given link (`--link`) as the smoke's choice. Its plan (?mpid=), its meals (the fragment's meal part: each key,
+ * read against `menu` [{ name, priceCents }] with the site's own key function, as many times as its count) and the path
+ * the smoke opens on the origin (the link's path, query and whole fragment, photo part included). Throws on a link with
+ * no #fitaf= fragment, and on a meal that is not on the menu.
+ */
+export function linkChoice(href, menu, code) {
+  const url = new URL(href);
+  if (!url.hash.startsWith("#fitaf=")) throw new Error(`--link has no #fitaf= fragment: ${href}`);
+  const mpid = Number(url.searchParams.get("mpid"));
+  const items = url.hash.slice("#fitaf=".length).split("!")[0].split(".").slice(1).filter((t) => !t.startsWith("~"));
+  const chosen = items.flatMap((item) => {
+    const [key, n = "1"] = item.split("*");
+    const meal = menu.find((m) => code.mealKey(m.name) === key);
+    if (!meal) throw new Error(`--link names a meal not on the menu: ${key}`);
+    return Array(Number(n)).fill(meal);
+  });
+  return { mpid, chosen, path: url.pathname + url.search + url.hash };
+}
+
 /** A Footer block file (<script>…</script>) gives the text between its tags; a console file is used as it is. */
 export function scriptFromFile(text) {
   const m = /^\s*<script\b[^>]*>([\s\S]*)<\/script>\s*$/i.exec(text);
@@ -211,8 +238,9 @@ export async function scriptMode({ liveBlocks = [], scriptFile = null, code, why
   }
 }
 
-export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, executablePath }) {
-  const need = code.counts.get(MPID);
+export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, executablePath, link = null, onPage = null }) {
+  const mpid = link ? Number(new URL(link).searchParams.get("mpid")) : MPID;
+  const need = code.counts.get(mpid);
   const outcome = { width, need, menu: 0, menuNames: [], chosen: [], link: null, console: [], errors: [], checkout: null, faces: null, evidence: null };
   const { browser, close } = await freshBrowser({ executablePath });
   try {
@@ -223,7 +251,7 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
     menuPage.on("console", (m) => menuConsole.push(m.text()));
     menuPage.on("pageerror", (e) => menuErrors.push(String(e?.message ?? e)));
     await menuPage.setViewport(VIEWPORTS[width]);
-    await menuPage.goto(`${origin}/order?mpid=${MPID}`, { waitUntil: "load", timeout: NAV_MS });
+    await menuPage.goto(`${origin}/order?mpid=${mpid}`, { waitUntil: "load", timeout: NAV_MS });
     const menu = await poll(menuPage, readMenu, need, (m) => m.chosen.length >= need, { timeoutMs: MENU_MS });
     // Too few meals to choose: the width fails here, so the menu page is the one to record.
     if (!(menu?.chosen?.length >= need)) outcome.evidence = await evidenceOf(menuPage, "the order page with no fragment (the menu read)", menuConsole, menuErrors);
@@ -231,18 +259,31 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
     outcome.menuNames = menu?.names ?? [];
     outcome.menu = outcome.menuNames.length;
     outcome.chosen = menu?.chosen ?? [];
+    let path = null;
+    if (link) {
+      try {
+        ({ chosen: outcome.chosen, path } = linkChoice(link, menu?.priced ?? [], code));
+      } catch (err) {
+        outcome.chosen = [];
+        outcome.errors.push(String(err.message));
+      }
+    }
 
     if (outcome.chosen.length >= need) {
-      const args = ["--mpid", String(MPID), ...outcome.chosen.flatMap((c) => ["--item", `${c.name}:1`])];
-      const link = new URL(code.handoffLink(code.plans, code.payloadFromArgs(args, code.counts)));
-      outcome.link = new URL(link.pathname + link.search + link.hash, origin).href;
+      if (!path) {
+        const args = ["--mpid", String(MPID), ...outcome.chosen.flatMap((c) => ["--item", `${c.name}:1`])];
+        const built = new URL(code.handoffLink(code.plans, code.payloadFromArgs(args, code.counts)));
+        path = built.pathname + built.search + built.hash;
+      }
+      outcome.link = new URL(path, origin).href;
 
       const context = await browser.createBrowserContext();
       const page = await context.newPage();
       await page.setViewport(VIEWPORTS[width]);
+      if (onPage) await onPage(page);
       page.on("console", (m) => outcome.console.push(m.text()));
       page.on("pageerror", (e) => outcome.errors.push(String(e?.message ?? e)));
-      await page.evaluateOnNewDocument(recordFaces, { screen: SCREEN_ID, style: STYLE_ID, logo: LOGO });
+      await page.evaluateOnNewDocument(recordFaces, { screen: SCREEN_ID, style: STYLE_ID, logo: LOGO, hosts: code.photoHosts ?? [] });
       if (mode.kind === "paste") {
         await page.evaluateOnNewDocument(() => {
           window.__fitafHandoff = true;
@@ -285,10 +326,10 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
 }
 
 /** Both widths (or those given), one mode. `live` forces the link alone. */
-export async function smoke({ liveBlocks = [], scriptFile = null, live = false, widths = WIDTHS, origin = STORE_ORIGIN, executablePath, why } = {}) {
+export async function smoke({ liveBlocks = [], scriptFile = null, live = false, widths = WIDTHS, origin = STORE_ORIGIN, executablePath, why, link = null } = {}) {
   const code = await siteCode();
   const mode = await scriptMode({ liveBlocks: live ? ["as asked, with --live"] : liveBlocks, scriptFile, code, why });
   const runs = [];
-  for (const width of widths) runs.push(await smokeRun({ origin, width, mode, code, executablePath }));
+  for (const width of widths) runs.push(await smokeRun({ origin, width, mode, code, executablePath, link }));
   return { flag: runs.some((r) => !r.verdict.pass), script: mode.label, runs };
 }

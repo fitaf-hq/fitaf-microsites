@@ -13,26 +13,9 @@
 //         for again.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { LOG_PREFIX, script } from "./r2-harness.mjs";
+import { script } from "./r2-harness.mjs";
 import { liveText } from "./r2-live.mjs";
-import { expectedWindow, NAMES, observe, photoText, PIXEL, SHEET, sheetUrl, weekFragment, weekPage } from "./r2-photos.mjs";
-
-const DONE = `${LOG_PREFIX} done: /checkout`;
-const WITH_CELL = NAMES.filter((n) => SHEET.cells[n]);
-const NO_CELL = NAMES.filter((n) => !SHEET.cells[n]);
-
-/** R2-73's case over `text`: returns what it saw, after asserting the whole of R2-73 (a mutant is run through it). */
-export async function slideAtFirstPress(text, code = 0) {
-  const page = await weekPage(); // every card's image never loads
-  const seen = await observe(text, page, weekFragment(photoText({ host: code })));
-  assert.ok(seen.h.info.includes(DONE), JSON.stringify(seen.h.info));
-  for (const name of WITH_CELL) {
-    assert.deepEqual(seen.first.get(name)?.sheet, expectedWindow(name, code), `${name}: its cell at its first press`);
-  }
-  for (const name of NO_CELL) assert.deepEqual(seen.first.get(name), { name, sheet: null, card: null }, `${name}: no cell, the name alone`);
-  assert.ok(seen.srcs.length > 0 && seen.srcs.every((s) => s === sheetUrl(code)), `only the sheet is requested: ${seen.srcs}`);
-  return seen;
-}
+import { DONE, expectedWindow, NAMES, NO_CELL, observe, PIXEL, sheetUrl, slideAtFirstPress, unknownHost, WITH_CELL, weekFragment, weekPage } from "./r2-photos.mjs";
 
 test("R2-73: card images never loading — each slide shows its meal's cell from the coded host at its first press", async () => {
   assert.ok(WITH_CELL.length >= 2 && NO_CELL.length >= 1, "fixture control: meals with and without a cell");
@@ -66,18 +49,6 @@ test("R2-74b: the LIVE block (914668de…) given a link with the photo part — 
   assert.equal(seen.h.url.hash, "", "the fragment removed");
   assert.ok(seen.h.info.some((l) => /^\[fitaf-handoff\] stopped: bad meal: /.test(l)), JSON.stringify(seen.h.info));
 });
-
-/** R2-75's case over `text`, asserting the whole of R2-75 (a mutant is run through it). */
-export async function unknownHost(text) {
-  const forged = ["7", "9", "https://evil.example", "evil.example", "x", "-1", "constructor", ""];
-  for (const host of forged) {
-    const page = await weekPage();
-    const seen = await observe(text, page, weekFragment(photoText({ host })));
-    assert.ok(seen.h.info.includes(DONE), `${host}: the fill as ever: ${JSON.stringify(seen.h.info)}`);
-    assert.deepEqual(seen.srcs, [], `host ${JSON.stringify(host)}: no request at all`);
-    assert.deepEqual(seen.last, NAMES.map((name) => ({ name, sheet: null, card: null })), `host ${JSON.stringify(host)}: today's slides`);
-  }
-}
 
 test("R2-75: an unknown host code — no request to any host, today's slides, the fill as ever", async () => {
   await unknownHost(await script());

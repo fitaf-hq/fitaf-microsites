@@ -22,6 +22,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadJson, MESSAGES_PATH, PLANS_PATH, ROOT } from "../build.mjs";
 import { mealKey } from "../src/storefront/meal-key.js";
+import { PHOTO_HOSTS } from "../src/storefront/photo-hosts.js";
 import { pageTokens, TEMPLATE_PATH } from "./flow-theme.mjs";
 
 export const STOREFRONT_SOURCE = join(ROOT, "src", "storefront", "fitaf-handoff.js");
@@ -31,8 +32,12 @@ export const DIST_STOREFRONT = join(ROOT, "dist-storefront");
  * version line included, as the ceiling is.
  */
 export const TARGET_SHIPPED_BYTES = 5120;
-/** SPEC-rung2 § 11 item 5: the CEILING; a file above it refuses the build, and nothing is written. */
-export const MAX_SHIPPED_BYTES = 10240;
+/**
+ * SPEC-rung2 § 11 item 5: the CEILING; a file above it refuses the build, and nothing is written. 15,360 since
+ * SPEC-rung2-progress-and-checkout § 17.3 (the Advisor, 2026-10-01: "bumping the script limit to 15 kb just to get
+ * through this meeting"); it was 10,240.
+ */
+export const MAX_SHIPPED_BYTES = 15360;
 /** The Footer block, and the same text for a browser console. */
 const FOOTER_FILE = "fitaf-handoff.html";
 const CONSOLE_FILE = "fitaf-handoff.fill-B.console.js";
@@ -43,6 +48,11 @@ const KEY_SLOT = "/*KEY*/ null";
 const UI_SLOT = "/*UI*/ {}";
 /** § 1: the screen's colours, the page's own tokens, as CSS custom properties inside the screen's own rule. */
 const TOKENS_SLOT = "/*TOKENS*/";
+/**
+ * SPEC-rung2-progress-and-checkout § 17.1: the sheet's hosts (src/storefront/photo-hosts.js), as a JSON list. Not among
+ * the required slots: a source from before § 17 (R2-71 rebuilds the live block from its own commit) has none.
+ */
+const HOSTS_SLOT = "/*HOSTS*/ []";
 /** The words the screen uses, each required; `step`'s placeholders, each required in it. */
 const UI_WORDS = ["title", "step", "checkout"];
 const STEP_PLACEHOLDERS = ["{meal}", "{n}", "{total}"];
@@ -113,6 +123,7 @@ export async function storefrontText({
     .replace(COUNTS_SLOT, () => table(countTable(plans)))
     .replace(UI_SLOT, () => asciiJson(words))
     .replace(TOKENS_SLOT, () => tokens)
+    .replace(HOSTS_SLOT, () => JSON.stringify(PHOTO_HOSTS))
     .replace(KEY_SLOT, () => mealKey.toString());
 }
 

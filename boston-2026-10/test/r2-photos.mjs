@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
-import { addCard, fakeWindow, fragmentFor, orderPage, run } from "./r2-harness.mjs";
+import { addCard, fakeWindow, fragmentFor, LOG_PREFIX, orderPage, run } from "./r2-harness.mjs";
 
 /** § 17.1's fixed list, as the contract names it: the production site, then the test address (README, "Dev URL"). */
 export const HOSTS = ["https://eatfitaf.com", "https://fitaf-microsites-dev.fitaf-microsite-boston-2026-10.workers.dev"];
@@ -22,15 +22,19 @@ export const MENU = PICKS.menus["7"];
 export const NAMES = MENU.map((m) => m.name);
 export const PIXEL = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><rect width="4" height="3" fill="#48aeee"/></svg>')}`;
 
+export const DONE = `${LOG_PREFIX} done: /checkout`;
+export const WITH_CELL = NAMES.filter((n) => SHEET.cells[n]);
+export const NO_CELL = NAMES.filter((n) => !SHEET.cells[n]);
+
 /** The sheet's URL on host `code`: the host, then the manifest's base and file. */
 export const sheetUrl = (code = 0) => `${HOSTS[code]}/${PHOTOS.base}${SHEET.file}`;
 
 /**
  * The photo part as this build encodes it (§ 18): after the meal part, "!"-separated, the host's code (its index in the
- * block's list), the sheet's path on it, the sheet's width in base 36, then one cell per meal in the link's order,
+ * block's list), the sheet's path on it (from its first "/"), the sheet's width in base 36, then one cell per meal in the link's order,
  * "x,y,w,h" in base 36, or empty for a meal with no cell. `fields` overrides any of them (a forged host, say).
  */
-export function photoText({ host = 0, path = PHOTOS.base + SHEET.file, width = SHEET.width, cells = NAMES.map((n) => SHEET.cells[n] ?? null) } = {}) {
+export function photoText({ host = 0, path = `/${PHOTOS.base}${SHEET.file}`, width = SHEET.width, cells = NAMES.map((n) => SHEET.cells[n] ?? null) } = {}) {
   const cell = (c) => (c ? [c.x, c.y, c.w, c.h].map((n) => n.toString(36)).join(",") : "");
   return ["", host, path, typeof width === "number" ? width.toString(36) : width, ...cells.map(cell)].join("!");
 }
@@ -76,7 +80,7 @@ const styleOf = (el, prop) => {
   const m = new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*([^;]+)`).exec(el?.getAttribute("style") ?? "");
   return m ? m[1].trim() : null;
 };
-const round = (n) => (n === null || Number.isNaN(n) ? null : Math.round(n * 1000) / 1000);
+const round = (n) => (n === null || Number.isNaN(n) ? null : Math.round(n * 1000) / 1000 || 0); // -0 is 0
 
 /**
  * A slide's photograph as the visitor would see it: `sheet`, the window it shows onto a sheet of a listed host (the
@@ -92,7 +96,7 @@ export function slidePhoto(slide) {
     sheet: sheet
       ? {
           src: sheet.getAttribute("src"),
-          ratio: styleOf(box, "aspect-ratio"),
+          ratio: round(parseFloat(styleOf(box, "aspect-ratio"))),
           width: round(parseFloat(styleOf(sheet, "width"))),
           left: round(parseFloat(styleOf(sheet, "left"))),
           top: round(parseFloat(styleOf(sheet, "top"))),
@@ -105,7 +109,7 @@ export function slidePhoto(slide) {
 /** What § 17.2 says a slide shows for `name`: its cell, at the slide's size (the cell's ratio), the cell's pixels only. */
 export function expectedWindow(name, code = 0) {
   const c = SHEET.cells[name];
-  return { src: sheetUrl(code), ratio: `${c.w}/${c.h}`, width: round((SHEET.width / c.w) * 100), left: round((-c.x / c.w) * 100), top: round((-c.y / c.h) * 100) };
+  return { src: sheetUrl(code), ratio: round(c.w / c.h), width: round((SHEET.width / c.w) * 100), left: round((-c.x / c.w) * 100), top: round((-c.y / c.h) * 100) };
 }
 
 const nameOf = (slide) => slide.querySelector("b")?.textContent.replace(/\s+/g, " ").trim() ?? null;
@@ -145,4 +149,29 @@ export async function observe(text, page, fragment, { onStep = () => {} } = {}) 
     look();
   }
   return { h, first, last, srcs: made.map((i) => i.getAttribute("src")).filter(Boolean), made };
+}
+
+/** R2-73's case over `text`: returns what it saw, after asserting the whole of R2-73 (a mutant is run through it). */
+export async function slideAtFirstPress(text, code = 0) {
+  const page = await weekPage(); // every card's image never loads
+  const seen = await observe(text, page, weekFragment(photoText({ host: code })));
+  assert.ok(seen.h.info.includes(DONE), JSON.stringify(seen.h.info));
+  for (const name of WITH_CELL) {
+    assert.deepEqual(seen.first.get(name)?.sheet, expectedWindow(name, code), `${name}: its cell at its first press`);
+  }
+  for (const name of NO_CELL) assert.deepEqual(seen.first.get(name), { name, sheet: null, card: null }, `${name}: no cell, the name alone`);
+  assert.ok(seen.srcs.length > 0 && seen.srcs.every((s) => s === sheetUrl(code)), `only the sheet is requested: ${seen.srcs}`);
+  return seen;
+}
+
+/** R2-75's case over `text`, asserting the whole of R2-75 (a mutant is run through it). */
+export async function unknownHost(text) {
+  const forged = ["7", "9", "https://evil.example", "evil.example", "x", "-1", "constructor", ""];
+  for (const host of forged) {
+    const page = await weekPage();
+    const seen = await observe(text, page, weekFragment(photoText({ host })));
+    assert.ok(seen.h.info.includes(DONE), `${host}: the fill as ever: ${JSON.stringify(seen.h.info)}`);
+    assert.deepEqual(seen.srcs, [], `host ${JSON.stringify(host)}: no request at all`);
+    assert.deepEqual(seen.last, NAMES.map((name) => ({ name, sheet: null, card: null })), `host ${JSON.stringify(host)}: today's slides`);
+  }
 }

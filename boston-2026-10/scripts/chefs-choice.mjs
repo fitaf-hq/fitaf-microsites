@@ -87,9 +87,11 @@ function mealsOf(menu, where) {
  * One picks file (already parsed), checked against § 1: the file's name is its delivery Sunday; the fields are exactly
  * `delivery` and `menus`; each menu is for a count the page shows, and for each size of that count the link tool takes
  * it. Returns { delivery, menus: { count: { meals: [{ name, qty }], links: { mpid: url } } } }, the names as the page
- * shows them (whitespace collapsed, as the tool keys them).
+ * shows them (whitespace collapsed, as the tool keys them). `photo` ({ photos, host }: the photo sheets' manifest and
+ * the code of the host the page is served from) gives each link the week's cells, by the tool's own --photos
+ * (SPEC-rung2-progress-and-checkout § 17.1); without it, or with no sheet for the week, the links are today's.
  */
-export function checkPicks(json, fileName, plans) {
+export function checkPicks(json, fileName, plans, photo = null) {
   const date = PICKS_FILE.exec(fileName)?.[1];
   if (!date || !isSunday(date)) throw new Error(`the file name is not a Sunday's date (YYYY-MM-DD.json)`);
   onlyFields(json, FILE_FIELDS, "the file");
@@ -107,9 +109,10 @@ export function checkPicks(json, fileName, plans) {
     for (const plan of plans.individual) {
       const { mpid } = plan.counts.find((c) => c.meals_per_week === Number(count));
       const argv = ["--mpid", String(mpid), ...meals.flatMap((m) => ["--item", `${m.name}:${m.qty}`])];
+      if (photo?.photos?.chefs_choice?.[date]) argv.push("--photos", date, "--host", String(photo.host));
       let payload;
       try {
-        payload = payloadFromArgs(argv, needs);
+        payload = payloadFromArgs(argv, needs, photo?.photos);
       } catch (err) {
         throw new Error(`menus.${count}: ${err.message}`);
       }
@@ -122,7 +125,7 @@ export function checkPicks(json, fileName, plans) {
 }
 
 /** Every picks file in `dir`, each checked; a file breaking a rule throws, naming it. Sorted by delivery. */
-export async function readPicks(dir, plans) {
+export async function readPicks(dir, plans, photo = null) {
   const names = (await readdir(dir)).filter((name) => name.endsWith(".json")).sort();
   const weeks = [];
   for (const name of names) {
@@ -134,7 +137,7 @@ export async function readPicks(dir, plans) {
       } catch (err) {
         throw new Error(`not JSON: ${err.message}`);
       }
-      weeks.push(checkPicks(json, basename(path), plans));
+      weeks.push(checkPicks(json, basename(path), plans, photo));
     } catch (err) {
       throw new Error(`${shown(path)}: ${err.message}`);
     }
@@ -203,8 +206,8 @@ function cardHtml(template, words) {
  * The page's slots for the weeks open on `on`, or none (the page as before: CC-4). The script is one function scope, so
  * its copies of the helpers never meet the offer box's (the development page declares the same names at the top level).
  */
-export async function chefsChoice({ plans, messages, dir, on, zone, photos = null, assetPrefix = "" }) {
-  const all = await readPicks(dir, plans);
+export async function chefsChoice({ plans, messages, dir, on, zone, photos = null, assetPrefix = "", photoHost = 0 }) {
+  const all = await readPicks(dir, plans, { photos, host: photoHost });
   const weeks = openOn(all, on);
   const summary = weeks.map((w) => ({ delivery: w.delivery, ...windowOf(w.delivery), counts: Object.keys(w.menus) }));
   if (!weeks.length) return { slots: NO_PICKS, weeks: summary };

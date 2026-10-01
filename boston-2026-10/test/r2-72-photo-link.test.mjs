@@ -25,7 +25,7 @@ test("R2-72a: the link tool, given the week's sheet, writes each meal's cell fro
     assert.ok(part, `host ${code}: the link carries a photo part: ${href}`);
     assert.deepEqual(part, {
       host: code,
-      path: PHOTOS.base + SHEET.file,
+      path: `/${PHOTOS.base}${SHEET.file}`,
       width: SHEET.width,
       cells: NAMES.map((n) => SHEET.cells[n] ?? null),
     });

@@ -19,6 +19,7 @@ export async function siteCode() {
     payloadFromArgs: link.payloadFromArgs,
     handoffLink: link.handoffLink,
     mealKey: link.mealKey,
+    photoHosts: link.PHOTO_HOSTS ?? [],
     buildStorefront: storefront.buildStorefront,
   };
 }

@@ -19,6 +19,9 @@
 //        screen (the recorder notes it arriving there) and on the deep-carted checkout (first in app-checkout, found and
 //        displayed), each reported found or absent; ABSENT FAILS THE WIDTH. Its own rule, logoVerdict, beside
 //        facesVerdict (lib/smoke.mjs runs both), judged only once fill B reached done, as W11–W14.
+//   W17  (§ 17.4, a report, not a pass rule) per slide of the progress screen, whether it showed Fit AF's sheet: an img
+//        on a host of the block's fixed list (the site's src/storefront/photo-hosts.js), shown (loaded), failed (the
+//        browser reported an error: the slide fell back to today's rule), asked (neither seen) or not found.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -84,7 +87,7 @@ export const LOGO = 'img[alt="Fit AF"]';
  * In the page, from before its own scripts (page.evaluateOnNewDocument): record, in order, the screen arriving, each
  * text its step line shows, the style arriving, the mark, and the screen going. Into window.__fitafFaces.
  */
-export function recordFaces({ screen, style, logo }) {
+export function recordFaces({ screen, style, logo, hosts = [] }) {
   const events = [];
   window.__fitafFaces = events;
   let last = null;
@@ -108,6 +111,21 @@ export function recordFaces({ screen, style, logo }) {
       if (line && line !== last) {
         last = line;
         push("step", { text: line });
+      }
+    }
+    // W17: each slide of the carousel, once, as it arrives: the src of its img on a listed host (Fit AF's sheet), or
+    // null; and that img's load or error, once.
+    for (const el of document.getElementById(screen)?.querySelector(".c")?.children ?? []) {
+      if (el.__fitafSlide) continue;
+      el.__fitafSlide = true;
+      const name = (el.querySelector("b")?.textContent ?? "").replace(/\s+/g, " ").trim();
+      const img = [...el.querySelectorAll("img")].find((i) => hosts.some((h) => (i.getAttribute("src") ?? "").startsWith(`${h}/`)));
+      push("slide", { name, src: img ? img.getAttribute("src") : null });
+      if (!img) continue;
+      if (img.complete && img.naturalWidth) push("sheet", { name, ok: true });
+      else {
+        img.addEventListener("load", () => push("sheet", { name, ok: true }), { once: true });
+        img.addEventListener("error", () => push("sheet", { name, ok: false }), { once: true });
       }
     }
     // W16: the Fit AF logo arriving on the screen, once.
@@ -280,6 +298,25 @@ export function logoLine(faces) {
   const l = faces?.checkout?.logo;
   const checkout = !l ? "not read" : !l.found ? "ABSENT" : l.displayed ? "found" : "found, NOT displayed";
   return `W16: the Fit AF logo on the screen: ${screen}; on the checkout: ${checkout}`;
+}
+
+/**
+ * W17 (§ 17.4): per slide, Fit AF's sheet shown (its img loaded), failed (an error: the slide fell back), asked (neither
+ * seen) or not found (no sheet on that slide); the line counts the shown. A report, not a pass rule.
+ */
+export function sheetLine(faces) {
+  if (!faces) return "W17: not recorded";
+  const events = faces.events ?? [];
+  const slides = events.filter((e) => e.e === "slide");
+  if (!slides.length) return "W17: no slide seen";
+  const state = (s) => {
+    if (!s.src) return "not found";
+    const seen = events.find((e) => e.e === "sheet" && e.name === s.name);
+    return !seen ? "asked" : seen.ok ? "shown" : "failed";
+  };
+  const states = slides.map((s) => [s.name, state(s)]);
+  const shown = states.filter(([, st]) => st === "shown").length;
+  return `W17: Fit AF's sheet on ${shown} of ${slides.length} slides: ${states.map(([n, st]) => `${n} ${st}`).join("; ")}`;
 }
 
 /** W15's line for the report. */

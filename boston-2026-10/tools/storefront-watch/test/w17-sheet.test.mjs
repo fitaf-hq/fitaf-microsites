@@ -38,7 +38,7 @@ test("W17a: --link — the smoke's choice is the link's own plan and meals (by n
     { name: "Meal Three", priceCents: 1300 },
   ];
   const payload = code.payloadFromArgs(["--mpid", "21", "--item", "Meal One:5", "--item", "Meal Three:2"], code.counts);
-  const href = `${code.handoffLink(code.plans, payload)}!0!assets/photo-sheets/s.jpg!5s!g,g,4w,4w!`;
+  const href = `${code.handoffLink(code.plans, payload)}!0!/assets/photo-sheets/s.jpg!5s!g,g,4w,4w!`;
   const choice = smoke.linkChoice(href, menu, code);
   assert.equal(choice.mpid, 21);
   assert.deepEqual(choice.chosen.map((c) => c.name), [...Array(5).fill("Meal One"), "Meal Three", "Meal Three"]);
