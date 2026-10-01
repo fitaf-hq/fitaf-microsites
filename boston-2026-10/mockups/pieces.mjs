@@ -147,7 +147,6 @@ ${parts.line("p", "event-bar", c.eventLine, "event line")}
 <body class="show">
 <main class="deck" aria-roledescription="slideshow">
 ${[...photoSlides, closing].join("\n")}
-<nav class="dots" aria-hidden="true">${'<span class="dot"></span>'.repeat(count)}</nav>
 </main>
 <aside class="legend-float" id="legend" data-annotation>
 <p class="caption"><b>${esc(p.title)}</b> · ${esc(p.size)} · a mock-up for a screen share</p>

@@ -3,7 +3,7 @@
 //
 //   node build.mjs [--env dev] [--on YYYY-MM-DD] [--out DIR]
 //
-// --on is the build's date for this week's Chef's Choice (SPEC-chefs-choice § 2): every data/picks/<sunday>.json whose
+// --on is the build's date for this week's Chef's Choice, SPEC-chefs-choice § 2: every data/picks/<sunday>.json whose
 // window has not ended on it is embedded, and the page chooses among them in the browser. Default: today in the send
 // time zone (data/save.json). Without data/picks/, or with no week open on --on, the page is exactly as before.
 // --out is the directory written instead of dist/ (or dist-dev/): Storybook's pages (tools/storybook), never a deploy.
@@ -126,18 +126,18 @@ export function planPageWords(messages, plans) {
     if (!ok) throw new Error(`data/messages.json: plan_page.${what} is missing`);
   };
   for (const count of shownCounts(plans)) need(typeof words.counts?.[count] === "string" && words.counts[count].trim(), `counts.${count}`);
-  for (const [key, placeholder] of [["per_week", "{n}"], ["prices_as_of", "{date}"], ["carousel_dot", "{n}"]]) {
-    need(typeof words[key] === "string" && words[key].includes(placeholder), `${key} (with ${placeholder})`);
+  for (const [key, placeholder] of [["per_week", ""], ["total_unit", ""], ["per_meal_unit", ""], ["prices_as_of", "{date}"]]) {
+    need(typeof words[key] === "string" && words[key].trim() && words[key].includes(placeholder), `${key}${placeholder ? ` (with ${placeholder})` : ""}`);
   }
   return words;
 }
 
-/** Question 2 (§ 2 item 3): two buttons, the meals in words (*or* / *and* emphasised), then the count a week. */
+/** Question 2 (§ 2 item 3, § 8 item 4): two buttons, the numeral first, then its unit, then the meals in words
+ *  (*or* / *and* emphasised). */
 function countButton(c, words) {
-  return `          <button type="button" class="choice" data-count="${c.meals_per_week}" aria-pressed="false">
-            <span class="choice-name">${emphasised(words.counts[c.meals_per_week])}</span>
-            <span class="choice-line">${esc(fillPhrase(words.per_week, { n: c.meals_per_week }))}</span>
-          </button>`;
+  return `          <button type="button" class="choice" data-count="${c.meals_per_week}" aria-pressed="false">` +
+    `<span class="count-n">${c.meals_per_week}</span><span class="count-unit">${esc(words.per_week)}</span>` +
+    `<span class="choice-line">${emphasised(words.counts[c.meals_per_week])}</span></button>`;
 }
 
 /** The manifest of the photo sheets, or one with no photograph (`base: null`) when there is none. */
@@ -166,9 +166,9 @@ export function sheetsToCopy(photos) {
 /** A percentage for an inline style, without float noise. */
 const pct = (n) => `${Number(n.toFixed(4))}%`;
 
-/** § 2 item 1: the carousel, five 4:3 windows onto the carousel sheet's cells by position, and a dot each; "" when the
- *  page has no carousel photo (base null, or none in the manifest). Decorative: alt="", no dish is claimed. */
-function carouselHtml(photos, assetPrefix, words) {
+/** § 2 item 1: the carousel, five 4:3 windows onto the carousel sheet's cells by position (no dots since § 8 item 1); ""
+ *  when the page has no carousel photo (base null, or none in the manifest). Decorative: alt="", no dish is claimed. */
+function carouselHtml(photos, assetPrefix) {
   const sheet = photos?.carousel;
   const url = sheetUrl(photos, sheet, assetPrefix);
   if (!url) return "";
@@ -177,16 +177,11 @@ function carouselHtml(photos, assetPrefix, words) {
     const style = `width:${pct((sheet.width / c.w) * 100)};left:${pct((-c.x / c.w) * 100)};top:${pct((-c.y / c.h) * 100)}`;
     return `      <div class="slide${i === 0 ? " on" : ""}"><img src="${esc(url)}" alt="" width="${sheet.width}" height="${sheet.height}" style="${style}"></div>`;
   });
-  const dots = cells.map(
-    ([, c], i) =>
-      `<button type="button" class="dot" aria-label="${esc(fillPhrase(words.carousel_dot, { n: i + 1, total: cells.length }))}" aria-pressed="${i === 0}"></button>`,
-  );
   return `
   <div class="carousel" id="carousel">
     <div class="slides">
 ${slides.join("\n")}
     </div>
-    <div class="dots js-only">${dots.join("")}</div>
   </div>`;
 }
 
@@ -273,7 +268,7 @@ export const PROD_SLOTS = {
   DEV_SCRIPT: "",
 };
 
-/** The page without this week's Chef's Choice (SPEC-chefs-choice § 3: no picks for the week, or no file): every slot
+/** The page without this week's Chef's Choice, SPEC-chefs-choice § 3 (no picks for the week, or no file): every slot
  *  empty, so the page is byte-identical to the one before the slots existed (CC-4, S20). */
 export const NO_PICKS = { PICKS_STYLE: "", PICKS_CARD: "", PICKS_SCRIPT: "" };
 
@@ -386,7 +381,9 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
   const words = planPageWords(messages, plans);
   const slots = {
     ...messageSlots(messages),
-    CAROUSEL: carouselHtml(photos, dev.ASSET_PREFIX ?? PROD_SLOTS.ASSET_PREFIX, words),
+    CAROUSEL: carouselHtml(photos, dev.ASSET_PREFIX ?? PROD_SLOTS.ASSET_PREFIX),
+    TOTAL_UNIT: esc(words.total_unit),
+    PER_MEAL_UNIT: esc(words.per_meal_unit),
     FOOTNOTE: esc(fillPhrase(words.prices_as_of, { date: plans.read_on })),
     GOALS: plans.individual.map(goalButton).join("\n"),
     COUNTS: plans.shown_counts.map((c) => countButton(c, words)).join("\n"),

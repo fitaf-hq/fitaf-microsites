@@ -1,7 +1,7 @@
 // PR-8 (SPEC-plan-page-refinement § 2 item 6, § 5): the modal, as the page is written. "See all plans" is a plain text
 // link (a button: it opens, it goes nowhere) naming a <dialog> that holds the 3 × 2 grid and a close button; the grid's
 // links are unchanged, seven order links in the page (T2). Opening, Esc, the backdrop and focus run in Chrome:
-// tools/storybook's pr-6-8 case.
+// tools/storybook's pr-chrome case.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { parseHTML } from "linkedom";

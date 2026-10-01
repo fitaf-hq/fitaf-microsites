@@ -2,28 +2,40 @@
 // and the ends wrap. A click goes forward, a click on the left quarter goes back. The slide number is in
 // the URL fragment (#3), so a reload stays put. L shows or hides the legend; N (or the legend's switch) shows
 // the file names behind its plain labels; F asks for full screen.
+// It plays itself (SPEC-slideshow.md § 1 item 3): each slide for SLIDE_MS, dissolving into the next over FADE_MS (the
+// stylesheet's --fade, set from here), wrapping; a key or click that moves the slide restarts the count. Under
+// prefers-reduced-motion the stylesheet drops the fade; the slides still advance.
 // It only shows and hides slides; it writes no text (test P2).
 (() => {
+  // ⭐ The two durations, here and nowhere else (the Advisor: "assume that we'll end up tweaking that").
+  const SLIDE_MS = 7000;
+  const FADE_MS = 500;
   const slides = [...document.querySelectorAll(".slide")];
-  const dots = [...document.querySelectorAll(".dot")];
   const NEXT = ["ArrowRight", "ArrowDown", "PageDown", " "];
   const PREV = ["ArrowLeft", "ArrowUp", "PageUp"];
   const BACK_ZONE = 0.25;
   const WIDE_PX = 700;
   let index = 0;
+  let timer = null;
+  document.documentElement.style.setProperty("--fade", `${FADE_MS}ms`);
+  document.body.classList.add("playing");
 
   const wrap = (i) => (i + slides.length) % slides.length;
   function fromHash() {
     const n = Number.parseInt(String(location.hash).slice(1), 10);
     return Number.isInteger(n) ? Math.min(Math.max(n, 1), slides.length) - 1 : 0;
   }
+  // A slide is shown by its `on` class (the stylesheet fades it in, and the one leaving out); `hidden` is the markup's
+  // state without JavaScript only. Every show restarts the count to the next.
   function show(i) {
     index = i;
     slides.forEach((slide, k) => {
-      slide.hidden = k !== i;
+      slide.hidden = false;
+      slide.classList.toggle("on", k === i);
     });
-    dots.forEach((dot, k) => dot.classList.toggle("on", k === i));
     history.replaceState(null, "", `#${i + 1}`);
+    clearTimeout(timer);
+    timer = setTimeout(() => show(wrap(index + 1)), SLIDE_MS);
   }
   const toggleLegend = () => document.body.classList.toggle("legend-open");
   const filesBox = document.querySelector(".files-toggle input");

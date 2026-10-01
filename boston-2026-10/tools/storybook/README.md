@@ -40,7 +40,7 @@ read at the start).
 | `microsite/layout.js`, `paths.mjs` | the builds, dates, widths and URLs the stories and the hook share; where the site and the pages are |
 | `stories/states.js` | each state: its fragment, what it waits for, and the page's own control it presses (by the page's element ids) |
 | `stories/frame.js` | one story: the frame, its caption, the wait and the press; the controls |
-| `stories/*.stories.js` | **Individual** (Start, Chosen, Chef's Choice (always open since SPEC-plan-page-refinement § 4), No picks this week, All plans (the modal)), **Family**, **Whole page** (Scroll) |
+| `stories/*.stories.js` | **Individual** (Start, Chosen, Chef's Choice, always open since SPEC-plan-page-refinement § 4, No picks this week, All plans (the modal)), **Family**, **Whole page** (Scroll) |
 | `stories/About.mdx`, `story-list.js` | the docs page: what is shown, how to name a state, and every story by group, read from the stories themselves |
 | `test/` | SM-1 to SM-8, one file per case (SM-5 and SM-8 share one walk), with their mutants in the suite: SM-3 (a served page with one CSS rule changed), SM-4 (a copied phrase, a copied rule), SM-5 (a *Chef's Choice* story on the *no picks* date), SM-8 (a server without the policy) |
 

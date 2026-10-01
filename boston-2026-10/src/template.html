@@ -49,21 +49,20 @@ button { font: inherit; color: inherit; }
 .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
 
 /* The store's chrome: a slim navy bar over a white header carrying the logo */
-.site-head { background: var(--white); border-bottom: 1px solid var(--line); }
-.site-head .wrap { display: flex; align-items: center; min-height: 72px; }
+/* The top (SPEC-plan-page-refinement § 8 item 2): one element, the carousel full bleed, the logo over it on a small
+   white plate (top left). Without photographs the plate stands alone. */
+.top { position: relative; }
+.logo-plate { display: inline-block; margin: 12px 16px; padding: 6px 8px; background: var(--white); border-radius: var(--radius); line-height: 0; }
+.carousel + .logo-plate { position: absolute; top: 0; left: 0; z-index: 1; }
 .logo { display: block; width: 88px; height: 56px; }
 
-/* The carousel (SPEC-plan-page-refinement § 2 item 1): a 4:3 window onto one cell of the photo sheet each, one shown,
-   cross-faded by app.js every 4 s; without JavaScript, or under reduced motion, the first stays */
-.carousel { margin: 0 0 20px; }
-.slides { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius); background: var(--ice); }
-.slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity .8s ease-in-out; }
+/* The carousel (§ 2 item 1, § 8 items 1–2): a 4:3 window onto one cell of the photo sheet each, one shown, cross-faded
+   by app.js every 4 s, no dots; without JavaScript, or under reduced motion, the first stays. Full bleed: the viewport's
+   width; on a wide screen at most 640 px tall, the 4:3 window centred in it (its top and bottom cropped). */
+.slides { position: relative; height: min(75vw, 640px); overflow: hidden; background: var(--ice); }
+.slide { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); aspect-ratio: 4 / 3; overflow: hidden; opacity: 0; transition: opacity .8s ease-in-out; }
 .slide.on { opacity: 1; }
 .slide img { position: absolute; display: block; max-width: none; height: auto; }
-.dots { display: flex; justify-content: center; gap: 2px; margin-top: 4px; }
-.dot { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; background: transparent; cursor: pointer; }
-.dot::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--white); border: 2px solid var(--field); }
-.dot[aria-pressed="true"]::before { background: var(--navy); border-color: var(--navy); }
 
 main.wrap { padding-top: 20px; }
 
@@ -74,11 +73,7 @@ main.wrap { padding-top: 20px; }
 
 section.panel { padding-top: 28px; }
 .step { margin: 0 0 28px; }
-.step-label { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; font: 600 20px/1.3 var(--head); color: var(--navy); }
-.step-num {
-  flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px;
-  border-radius: 4px; background: var(--teal); color: var(--navy); font: 700 19px/1 var(--head);
-}
+.step-label { margin: 0 0 14px; text-align: center; font: 600 20px/1.3 var(--head); color: var(--navy); }
 
 /* Choice cards: the store's plan card — white, a hairline, the plan's colour as a top bar */
 .choices { display: grid; gap: 10px; }
@@ -111,13 +106,18 @@ section.panel { padding-top: 28px; }
 .facts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .fact { font-size: 13px; font-weight: 600; color: var(--navy); background: var(--ice); border-radius: 4px; padding: 3px 8px; }
 /* The goals' one row (§ 2 item 2): narrow cards, centred, the check above the name */
-.goals .choice { padding: 34px 6px 12px; text-align: center; }
+.goals .choice, .counts .choice { padding: 34px 6px 12px; text-align: center; }
 .goals .choice-name { padding-right: 0; font-size: clamp(15px, 4vw, 19px); }
 .goals .facts { flex-direction: column; align-items: center; gap: 4px; margin-top: 8px; }
 .goals .fact { font-size: 12px; padding: 2px 6px; }
-.goals .choice[aria-pressed="true"]::before, .goals .choice[aria-pressed="true"]::after { top: 9px; right: calc(50% - 10px); width: 20px; height: 20px; }
-.goals .choice[aria-pressed="true"]::after { -webkit-mask-size: 20px; mask-size: 20px; }
-.counts .choice-name { font-size: 17px; }
+.goals .choice[aria-pressed="true"]::before, .goals .choice[aria-pressed="true"]::after,
+.counts .choice[aria-pressed="true"]::before, .counts .choice[aria-pressed="true"]::after { top: 9px; right: calc(50% - 10px); width: 20px; height: 20px; }
+.goals .choice[aria-pressed="true"]::after, .counts .choice[aria-pressed="true"]::after { -webkit-mask-size: 20px; mask-size: 20px; }
+/* The meal-count buttons (§ 8 item 4): the numeral first and largest, then its unit in small caps at body weight
+   (faked: the face has none), then the meals line */
+.count-n { display: block; font: 700 32px/1.1 var(--head); color: var(--navy); }
+.count-unit { display: block; margin-top: 2px; font: 400 12px/1.3 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--navy); }
+.counts .choice-line { margin-top: 6px; }
 
 /* Result: the chosen plan's card, with the hand-off to the store */
 .result, .family-card {
@@ -126,15 +126,16 @@ section.panel { padding-top: 28px; }
 }
 .result { margin: 0 0 20px; }
 .result[hidden] { display: none; }
-.result-title, .family-card h2 { margin: 4px 0 16px; font: 700 24px/1.2 var(--head); color: var(--navy); }
+.family-card h2 { margin: 4px 0 16px; font: 700 24px/1.2 var(--head); color: var(--navy); }
 .figures { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 18px; }
 .figures div { background: var(--ice); border-radius: 4px; padding: 10px 12px; }
 .figures dt { font-size: 13px; color: var(--muted); }
 .figures dd { margin: 0; font: 700 24px/1.25 var(--head); color: var(--navy); font-variant-numeric: tabular-nums; }
-/* The result's price (§ 2 item 4): one box, the lead figure first and larger, the other below it, smaller */
-.price { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: var(--ice); border-radius: 4px; }
-.price div { padding: 0; background: none; }
-.price dd { font-size: var(--figure-size); line-height: 1.15; }
+/* The result's price (§ 2 item 4, § 8 item 5): one block, no panel, no label; the lead figure first and larger, the
+   other below it, smaller, each with its unit */
+.price { display: flex; flex-direction: column; gap: 2px; margin: 0 0 18px; }
+.price .fig { font: 700 var(--figure-size)/1.15 var(--head); color: var(--navy); font-variant-numeric: tabular-nums; }
+.price .unit { font: 400 15px var(--body); color: var(--muted); }
 /* ⭐ Which figure leads: the order and the two sizes, here and nowhere else. To swap them, swap these two lines. */
 .price .fig-total { order: 1; --figure-size: 34px; }
 .price .fig-per-meal { order: 2; --figure-size: 18px; }
@@ -149,6 +150,7 @@ section.panel { padding-top: 28px; }
 .cta::after { content: "\2192"; font-size: 20px; line-height: 1; }
 
 /* All plans (§ 2 item 6): a plain text link opening the grid in a modal dialog */
+.all-link[hidden] { display: none; }
 .all-link { display: inline-block; min-height: 44px; padding: 10px 0; border: 0; background: none; color: var(--navy); font: 600 16px var(--head); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .all { width: min(680px, calc(100% - 24px)); max-height: calc(100% - 24px); padding: 0; border: 0; border-radius: var(--radius); background: var(--white); color: var(--ink); }
 .all::backdrop { background: var(--navy); opacity: .6; }
@@ -172,8 +174,10 @@ section.panel { padding-top: 28px; }
 .family-card h2 { margin-top: 0; margin-bottom: 4px; }
 .family-card p { margin: 0 0 16px; color: var(--muted); }
 
-.foot { margin-top: 36px; border-top: 1px solid var(--line); }
-.foot .wrap { padding-top: 20px; padding-bottom: 40px; color: var(--muted); font-size: 13px; }
+/* The foot (§ 8 item 7): See all plans and the footnote together, centred, no rule */
+.foot { margin-top: 12px; }
+.foot .wrap { padding-bottom: 40px; text-align: center; color: var(--muted); font-size: 13px; }
+.footnote { margin: 2px 0 0; }
 
 @media (min-width: 720px) {
   .tabs { max-width: 420px; }
@@ -183,11 +187,11 @@ section.panel { padding-top: 28px; }
 <noscript><style>.js-only { display: none !important; } .panel[hidden] { display: block; } .all:not([open]) { display: block; position: static; width: auto; max-width: none; margin: 12px 0 0; }</style></noscript>
 </head>
 <body>{{DRAFT_BANNER}}
-<header class="site-head">
-  <div class="wrap"><img class="logo" src="{{ASSET_PREFIX}}assets/fitaf-logo.png" alt="Fit AF" width="88" height="56"></div>
-</header>{{SAVE_SECTION}}
+<div class="top" id="top">{{CAROUSEL}}
+  <div class="logo-plate"><img class="logo" src="{{ASSET_PREFIX}}assets/fitaf-logo.png" alt="Fit AF" width="88" height="56"></div>
+</div>{{SAVE_SECTION}}
 
-<main class="wrap">{{CAROUSEL}}
+<main class="wrap">
   <div class="tabs js-only" role="tablist" aria-label="Who is this for?">
     <button class="tab" role="tab" id="tab-individual" aria-controls="panel-individual" aria-selected="true" data-tab="individual">Individual</button>
     <button class="tab" role="tab" id="tab-family" aria-controls="panel-family" aria-selected="false" data-tab="family" tabindex="-1">Family</button>
@@ -196,14 +200,14 @@ section.panel { padding-top: 28px; }
   <section class="panel" id="panel-individual" role="tabpanel" aria-labelledby="tab-individual">
     <div class="js-only">
       <div class="step" role="group" aria-labelledby="q-goal">
-        <h2 class="step-label" id="q-goal"><span class="step-num" aria-hidden="true">1</span>{{QUESTION_ONE}}</h2>
+        <h2 class="step-label" id="q-goal">{{QUESTION_ONE}}</h2>
         <div class="choices goals">
 {{GOALS}}
         </div>
       </div>
 
       <div class="step" role="group" aria-labelledby="q-count">
-        <h2 class="step-label" id="q-count"><span class="step-num" aria-hidden="true">2</span>Which meals should we cover?</h2>
+        <h2 class="step-label" id="q-count">Which meals should we cover?</h2>
         <div class="choices counts">
 {{COUNTS}}
         </div>
@@ -211,17 +215,15 @@ section.panel { padding-top: 28px; }
 
       <div aria-live="polite">
         <div class="result" id="result" hidden>
-          <p class="result-title" id="result-title"></p>
-          <dl class="figures price">
-            <div class="fig-total"><dt>Weekly total</dt><dd id="result-total"></dd></div>
-            <div class="fig-per-meal"><dt>Per meal</dt><dd id="result-per-meal"></dd></div>
-          </dl>
+          <p class="price">
+            <span class="fig-total"><span class="fig" id="result-total"></span><span class="unit">{{TOTAL_UNIT}}</span></span>
+            <span class="fig-per-meal"><span class="fig" id="result-per-meal"></span><span class="unit">{{PER_MEAL_UNIT}}</span></span>
+          </p>
           <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CARD}}
         </div>
       </div>{{SHARE_PANEL}}
     </div>
 
-    <button type="button" class="all-link js-only" id="all-link" aria-haspopup="dialog" aria-controls="all">See all plans</button>
     <dialog class="all" id="all" aria-labelledby="all-caption">
       <div class="all-box">
         <div class="all-head js-only"><button type="button" class="all-close" id="all-close" aria-label="Close">&times;</button></div>
@@ -242,7 +244,7 @@ section.panel { padding-top: 28px; }
 </main>
 
 <footer class="foot">
-  <div class="wrap">{{FOOTNOTE}}</div>
+  <div class="wrap"><button type="button" class="all-link js-only" id="all-link" aria-haspopup="dialog" aria-controls="all">See all plans</button><p class="footnote">{{FOOTNOTE}}</p></div>
 </footer>
 
 <script type="application/json" id="plan-data">{{DATA}}</script>

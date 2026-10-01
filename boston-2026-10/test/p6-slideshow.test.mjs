@@ -33,7 +33,6 @@ function classList() {
 function run(n, { hash = "", width = 1600 } = {}) {
   const node = (sel) => ({ sel, hidden: false, classList: classList(), attrs: {}, setAttribute(k, v) { this.attrs[k] = String(v); }, closest: () => null });
   const slides = Array.from({ length: n }, () => node(".slide"));
-  const dots = Array.from({ length: n }, () => node(".dot"));
   const legendHit = { closest: (sel) => (sel.includes(".legend") ? {} : null) };
   const boxListeners = {};
   const filesBox = { checked: false, addEventListener: (type, fn) => ((boxListeners[type] ??= []).push(fn)) };
@@ -42,9 +41,9 @@ function run(n, { hash = "", width = 1600 } = {}) {
   const body = { classList: classList() };
   const document = {
     body,
-    documentElement: { requestFullscreen: () => Promise.resolve() },
+    documentElement: { requestFullscreen: () => Promise.resolve(), style: { setProperty() {} } },
     fullscreenElement: null,
-    querySelectorAll: (sel) => (sel === ".slide" ? slides : sel === ".dot" ? dots : []),
+    querySelectorAll: (sel) => (sel === ".slide" ? slides : []),
     querySelector: (sel) => (sel === ".files-toggle input" ? filesBox : null),
   };
   const window = {
@@ -53,6 +52,9 @@ function run(n, { hash = "", width = 1600 } = {}) {
     innerWidth: width,
     history: { replaceState: (_s, _t, url) => (location.hash = url) },
     addEventListener: (type, fn) => ((listeners[type] ??= []).push(fn)),
+    // SPEC-slideshow.md § 1 item 3: the slideshow advances on its own; here its clock never runs (SS-3 runs it).
+    setTimeout: () => 0,
+    clearTimeout: () => {},
   };
   window.window = window;
   vm.runInNewContext(script, window);
@@ -62,13 +64,13 @@ function run(n, { hash = "", width = 1600 } = {}) {
     return e;
   };
   return {
-    shown: () => slides.map((s, i) => (s.hidden ? -1 : i)).filter((i) => i >= 0),
+    // Updated (SPEC-slideshow.md § 1 item 3): a slide is shown by its `on` class, so two can be drawn during the fade.
+    shown: () => slides.map((s, i) => (s.classList.contains("on") ? i : -1)).filter((i) => i >= 0),
     key: (key, mods = {}) => fire("keydown", { key, ...mods }),
     click: (clientX, target = { closest: () => null }) => fire("click", { clientX, target }),
     clickLegend: () => fire("click", { clientX: 1500, target: legendHit }),
     body,
     location,
-    dots,
     filesBox,
     tick: () => { filesBox.checked = !filesBox.checked; for (const fn of boxListeners.change ?? []) fn({}); },
   };
@@ -101,8 +103,7 @@ test("P6: arrow keys, Page keys and space move through the slides; Home and End 
     assert.deepEqual(s.shown(), [want], `${key} -> slide ${want + 1}`);
     assert.equal(e.defaultPrevented, true, `${key} is handled`);
   }
-  assert.equal(s.location.hash, "#5", "the slide is in the URL, so a reload stays on it");
-  assert.ok(s.dots[4].classList.contains("on") && !s.dots[0].classList.contains("on"), "the dots follow");
+  assert.equal(s.location.hash, "#5", "the slide is in the URL, so a reload stays on it"); // the dots are gone: SS-1
 });
 
 test("P6: a click moves forward, a click on the left quarter moves back, a click on the legend does neither", () => {

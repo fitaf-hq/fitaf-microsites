@@ -8,6 +8,7 @@ import { MESSAGES, PLANS } from "./cc-harness.mjs";
 
 test("PR-9: the footnote reads \"Prices as of 2026-09-27.\"", async () => {
   const { document } = parseHTML(await renderPage(PLANS));
-  assert.equal(document.querySelector("footer.foot").textContent.trim(), "Prices as of 2026-09-27.");
+  // Updated (§ 8 item 7): the foot also holds See all plans, so the footnote is read from its own element.
+  assert.equal(document.querySelector("footer.foot .footnote").textContent.trim(), "Prices as of 2026-09-27.");
   assert.equal(MESSAGES.plan_page.prices_as_of.replace("{date}", PLANS.read_on), "Prices as of 2026-09-27.", "data's phrase and date");
 });

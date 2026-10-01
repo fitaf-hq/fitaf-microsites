@@ -10,7 +10,6 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
-import { longDate } from "../src/worker/offers.js";
 import {
   builtPage,
   FIXTURE,
@@ -22,13 +21,14 @@ import {
   picksData,
   picksDir,
   S,
+  weekOf,
 } from "./cc-harness.mjs";
 
 const LETTER = /\p{L}/u;
 const SENTINEL = /⟦\d+⟧/g;
 /** The phrases of § 3 in data/messages.json the card shows, and the placeholders each must keep. Since
  *  SPEC-plan-page-refinement §§ 1–2 the list is always open: `open` (its button) and `note` are no longer shown. */
-const PHRASES = { heading: ["{count}", "{date}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] };
+const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] }; // heading: § 8 item 6
 /** The card's parts a visitor reads (always open). */
 const PARTS = ["cc-list", "cc-own"];
 
@@ -102,7 +102,7 @@ test("CC-7b: with every phrase and every meal name a letterless marker, the open
     for (const hash of ["#lean-7", "#lean-14"]) {
       const text = cardText(html, hash);
       for (const m of text.match(SENTINEL) ?? []) seen.add(m);
-      const left = text.replace(SENTINEL, "").replace(longDate(S), "");
+      const left = text.replace(SENTINEL, "").replace(weekOf(S), "");
       assert.doesNotMatch(left, LETTER, `${hash}: letters not from data/: ${JSON.stringify(left.match(/\S*\p{L}\S*/gu))}`);
     }
     assert.deepEqual([...seen].sort(), [...markers].sort(), "every phrase and every name is shown");
@@ -128,11 +128,11 @@ test("CC-7c: a phrase changed in a copy of data/messages.json changes the card; 
   }
   const messages = structuredClone(MESSAGES);
   messages.chefs_choice.own = "CC-7 ONE PLACE";
-  messages.chefs_choice.heading = "CC-7 HEADING {count} {date}";
+  messages.chefs_choice.heading = "CC-7 HEADING {week}";
   await withCopies(messages, FIXTURE, async (html) => {
     const text = cardText(html, "#lean-7");
     assert.ok(text.includes("CC-7 ONE PLACE"), "the changed phrase is shown");
-    assert.ok(text.includes(`CC-7 HEADING 7 ${longDate(S)}`), "the changed heading, filled");
+    assert.ok(text.includes(`CC-7 HEADING ${weekOf(S)}`), "the changed heading, filled");
     assert.ok(!text.includes(MESSAGES.chefs_choice.own), "and the old one is gone");
   });
 });

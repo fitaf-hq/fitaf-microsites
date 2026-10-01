@@ -11,7 +11,6 @@ import { dirname, join, relative, resolve } from "node:path";
 import vm from "node:vm";
 import { parseHTML } from "linkedom";
 import { build, ROOT } from "../build.mjs";
-import { longDate } from "../src/worker/offers.js";
 import { fakeWindow, orderPage, refKey, run, script } from "./r2-harness.mjs";
 
 /** The committed fixture: invented meal names, the week delivered Sunday 2026-10-04 (week B of § 2's ruling). */
@@ -89,9 +88,16 @@ export function picksData(html) {
 /** The phrases of § 3, as data/messages.json holds them (placeholders in their places). */
 export const words = (messages = MESSAGES) => messages.chefs_choice;
 const fill = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (whole, k) => (k in values ? String(values[k]) : whole));
-/** The list's heading for `count` meals delivered on `delivery`, the date written as the offer writes dates. */
-export const headingFor = (count, delivery, messages = MESSAGES) =>
-  fill(words(messages).heading, { count, date: longDate(delivery) });
+/** The week a delivery Sunday's meals are for (SPEC-plan-page-refinement § 8 item 6): Monday to Sunday after it,
+ *  "October 5–11", or across a month "September 28 – October 4". Worked out here on its own, not by the build's code. */
+export function weekOf(delivery) {
+  const day = (n) => new Date(Date.parse(`${delivery}T00:00:00Z`) + n * 86_400_000);
+  const month = (d) => d.toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+  const [a, b] = [day(1), day(7)];
+  return month(a) === month(b) ? `${month(a)} ${a.getUTCDate()}–${b.getUTCDate()}` : `${month(a)} ${a.getUTCDate()} – ${month(b)} ${b.getUTCDate()}`;
+}
+/** The list's heading for the week delivered on `delivery` (since § 8 item 6 the same for every count). */
+export const headingFor = (count, delivery, messages = MESSAGES) => fill(words(messages).heading, { week: weekOf(delivery) });
 /** One meal as the list shows it: its name, with its count when above 1. */
 export const mealLine = ({ name, qty }, messages = MESSAGES) =>
   qty > 1 ? fill(words(messages).meal_qty, { meal: name, n: qty }) : name;

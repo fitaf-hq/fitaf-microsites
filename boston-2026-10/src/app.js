@@ -56,8 +56,8 @@
     var cell = plan && s.count && plan.cells[s.count];
     $("#result").hidden = !cell;
     if (plan) $("#result").setAttribute("data-accent", plan.id);
+    $("#all-link").hidden = s.tab !== "individual";
     if (cell) {
-      $("#result-title").textContent = plan.name + " · " + s.count + " meals a week";
       $("#result-per-meal").textContent = cell.per_meal;
       $("#result-total").textContent = cell.total;
       $("#result-cta").href = data.base + "?mpid=" + cell.mpid;
@@ -95,23 +95,13 @@
   all.addEventListener("click", function (e) { if (e.target === all) all.close(); });
   all.addEventListener("close", function () { allLink.focus(); });
 
-  // The carousel: one photo shown, the next every CAROUSEL_MS, never under reduced motion; a dot shows its photo and
-  // stops the advance (the visitor has taken over).
-  var slides = $$("#carousel .slide"), dots = $$("#carousel .dot"), shown = 0, timer = null;
-  function show(i) {
-    shown = i;
-    slides.forEach(function (s, j) { s.className = j === i ? "slide on" : "slide"; });
-    dots.forEach(function (d, j) { d.setAttribute("aria-pressed", String(j === i)); });
-  }
-  dots.forEach(function (d, j) {
-    d.addEventListener("click", function () {
-      if (timer !== null) clearInterval(timer);
-      timer = null;
-      show(j);
-    });
-  });
+  // The carousel: one photo shown, the next every CAROUSEL_MS, never under reduced motion (no dots: § 8 item 1).
+  var slides = $$("#carousel .slide"), shown = 0;
   if (slides.length > 1 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    timer = setInterval(function () { show((shown + 1) % slides.length); }, CAROUSEL_MS);
+    setInterval(function () {
+      shown = (shown + 1) % slides.length;
+      slides.forEach(function (s, j) { s.className = j === shown ? "slide on" : "slide"; });
+    }, CAROUSEL_MS);
   }
 
   window.addEventListener("hashchange", function () { render(parse(location.hash)); });

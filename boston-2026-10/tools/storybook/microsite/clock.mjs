@@ -1,6 +1,6 @@
 // The one script a story adds to a page (SPEC-storybook-microsite.md § 2 item 4): placed before the page's own first
-// script, it starts the frame's clock at a fixed instant, so the page chooses the week's Chef's Choice (in the browser,
-// on zonedDate(Date.now(), zone): SPEC-chefs-choice § 2) as it would on that date. The page's bytes are otherwise the
+// script, it starts the frame's clock at a fixed instant, so the page chooses the week's Chef's Choice, in the browser,
+// on zonedDate(Date.now(), zone), SPEC-chefs-choice § 2, as it would on that date. The page's bytes are otherwise the
 // build's (SM-3). The clock runs on from the instant; a Date given a value is untouched.
 export const CLOCK_ATTRIBUTE = "data-storybook-clock";
 
