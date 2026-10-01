@@ -864,3 +864,5 @@ Red at `8c7df94`, built at `6b5f19b`. § 23 above is unchanged.
 ## 25. Amendment, 2026-10-01 — two seconds between presses
 
 **Ruled by the Advisor** (2026-10-01, about 10:40 PDT): *"It's still happening. Can you please increase the delay to 2 seconds?"* — with § 23's one second live (`5d5fb72`), the 14-meal link again left meals out of the plan in the Advisor's own browser. **`PRESS_MS` = 2000**; nothing else in § 23 changes. R2-82 expects 2000. Not shown to cure the shortfall: § 23's evidence and § 24 stand.
+
+**Built** (not ruled): red at `0a7847d`, built at `03751cf`: `PRESS_MS` = 2000; the watch's `FILL_B_LONGEST_MS` 124 s (7 × 2 s for the presses) and `HANDOFF_MS` 139 s; its browser cases' wait for fill B's verdict 30 s (it was 15 s, about one second above a 7-meal link's 14 s of presses); the text `2a7f15ff…`. Not run on the live store.

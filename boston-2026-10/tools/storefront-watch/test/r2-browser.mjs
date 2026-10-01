@@ -82,8 +82,12 @@ export async function openDeep(browser, { origin, code, text, width = 1280, redu
     page,
     lines,
     close: () => context.close(),
-    /** Wait for fill B's verdict line (done or stopped); the line, or null after `ms`. */
-    async verdict(ms = 15_000) {
+    /**
+     * Wait for fill B's verdict line (done or stopped); the line, or null after `ms`. 30 s since
+     * SPEC-rung2-progress-and-checkout § 25: a 7-meal link now spends 14 s on its presses alone (2 s each), which left 15 s
+     * a margin of about one second. A longer ceiling costs time only when a case fails.
+     */
+    async verdict(ms = 30_000) {
       const until = Date.now() + ms;
       while (Date.now() < until) {
         const line = lines.find((l) => VERDICT.test(l));
