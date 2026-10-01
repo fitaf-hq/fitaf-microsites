@@ -753,3 +753,13 @@ chose where they left a choice, and what it found.
   address's `/assets/photo-sheets/chefs-choice-2026-10-04.jpg`, or every slide reports *failed* and falls back).
 - ⬜ **Not checked**: how the sheet's box looks at 390 px in a real browser (W17b reads the report, not the geometry);
   whether a pasted console run, which starts after the store's cards are drawn, gives the early request any head start.
+
+## 19. Amendment, 2026-10-01 — the deep-carted checkout shows each meal as its photograph and name, and no plan total
+
+**Ruled by the Advisor** (`ts=2026-10-01T13:52:25.026Z`): *"It just needs to be the meal image and meal name (on 2 lines like this is fine). We don't need to repeat the per item price, the portion size, the quantity or the trash can. Ideally the entire set of 14 meals fits on a single phone screen."* *"Since, in the microsite version of the checkout at least, there should only ever be 1 plan, we can drop"* the *"Plan Total (N items)"* row. Timing (`ts=2026-10-01T13:55:29.394Z`): this cleanup now, in § 17's paste; the three-step checkout (meals, delivery, payment) later. *"We're deliberately taking editing out of the checkout."*
+
+1. On a **deep-carted** checkout only (the page's mark, as every H rule), each order line shows **only the meal's photograph and its name** (the name may wrap to two lines). Hidden by the block's style, never removed: the line's **price**, its **portion** tag, its **quantity** control and its **remove** control. New H rules, numbered after H10, each with its selector in `storefront/dependencies.json` (F2) and its case.
+2. **Compact**: each line's photograph small (about 48 px) beside its name, the lines' spacing tight, so that **all 14 lines of a 14-meal plan fit in one 390 × 844 screen** (measured on the synthetic checkout in Chrome; the live rehearsal measures the real one).
+3. **The plan's total row** (*"Plan Total (N items)"*) hidden. ⛔ **The order's Total stays displayed** (H9's rule, unchanged), and the pay button is untouched (W11).
+4. Bytes: within § 17.3's 15,360. Text: ASCII, two `<`.
+5. Cases: R2-78 the four line elements hidden and the photograph and name shown, only on a deep-carted checkout (an ordinary visit unchanged, R2-50's rule); R2-79 the plan-total row hidden, the order Total and the pay button displayed; R2-80 (Chrome) 14 lines within 844 px at 390; W18 (the watch, live) the line elements hidden and the 14-line height measured, reported per width.
