@@ -26,16 +26,16 @@ import {
 
 const LETTER = /\p{L}/u;
 const SENTINEL = /⟦\d+⟧/g;
-/** The phrases of § 3 in data/messages.json, and the placeholders each must keep. */
-const PHRASES = { open: [], heading: ["{count}", "{date}"], meal_qty: ["{meal}", "{n}"], note: [], checkout: [], own: [] };
-/** The card's parts a visitor reads, opened. */
-const PARTS = ["cc-toggle", "cc-list", "cc-own"];
+/** The phrases of § 3 in data/messages.json the card shows, and the placeholders each must keep. Since
+ *  SPEC-plan-page-refinement §§ 1–2 the list is always open: `open` (its button) and `note` are no longer shown. */
+const PHRASES = { heading: ["{count}", "{date}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] };
+/** The card's parts a visitor reads (always open). */
+const PARTS = ["cc-list", "cc-own"];
 
-/** The card's words at `hash`, opened, as one string. */
+/** The card's words at `hash`, as one string. */
 function cardText(html, hash) {
   const page = openPlanPage(html, { hash, now: midday(DAYS["S-5"]) });
-  assert.ok(page.has("cc-toggle"), "the card offers the week's Chef's Choice");
-  page.el("cc-toggle").click();
+  assert.ok(page.has("cc-list"), "the card offers the week's Chef's Choice");
   return PARTS.map((id) => page.el(id).textContent).join(" ");
 }
 
@@ -123,7 +123,7 @@ test("CC-7b (control): a word typed into the card is caught", async () => {
 test("CC-7c: a phrase changed in a copy of data/messages.json changes the card; the committed one shows its own", async () => {
   assert.ok(MESSAGES.chefs_choice, "data/messages.json has a chefs_choice key");
   const shipped = cardText((await builtPage({ on: ON })).html, "#lean-7");
-  for (const key of ["open", "note", "checkout", "own"]) {
+  for (const key of ["checkout", "own"]) {
     assert.ok(shipped.includes(MESSAGES.chefs_choice[key]), `the card shows chefs_choice.${key} as committed`);
   }
   const messages = structuredClone(MESSAGES);

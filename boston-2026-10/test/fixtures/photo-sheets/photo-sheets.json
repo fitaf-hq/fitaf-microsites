@@ -1,0 +1,68 @@
+{
+  "about": "A FIXTURE for the plan page's photo-sheet cases (SPEC-plan-page-refinement.md § 3; PR-2, PR-3, PR-7): data/photo-sheets.json's shape over two tiny generated sheets of flat colour (no photograph), cells far smaller than the page's. The Chef's Choice cells are named by test/fixtures/picks/2026-10-04.json's invented store names, exactly as that file writes them; two of its eight meals have none.",
+  "base": "assets/photo-sheets/",
+  "carousel": {
+    "file": "carousel.jpg",
+    "width": 40,
+    "height": 150,
+    "cells": {
+      "1": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 30
+      },
+      "2": {
+        "x": 0,
+        "y": 30,
+        "w": 40,
+        "h": 30
+      },
+      "3": {
+        "x": 0,
+        "y": 60,
+        "w": 40,
+        "h": 30
+      },
+      "4": {
+        "x": 0,
+        "y": 90,
+        "w": 40,
+        "h": 30
+      },
+      "5": {
+        "x": 0,
+        "y": 120,
+        "w": 40,
+        "h": 30
+      }
+    }
+  },
+  "chefs_choice": {
+    "2026-10-04": {
+      "file": "chefs-choice-2026-10-04.jpg",
+      "width": 24,
+      "height": 72,
+      "cells": {
+        "Smoked Paprika Chicken Bowl": {
+          "x": 0,
+          "y": 0,
+          "w": 24,
+          "h": 24
+        },
+        "Turkey Chili Verde": {
+          "x": 0,
+          "y": 24,
+          "w": 24,
+          "h": 24
+        },
+        "🟠NEW: Maple Dijon Pork Tenderloin": {
+          "x": 0,
+          "y": 48,
+          "w": 24,
+          "h": 24
+        }
+      }
+    }
+  }
+}

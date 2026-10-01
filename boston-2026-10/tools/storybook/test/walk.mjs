@@ -40,9 +40,9 @@ function inspect() {
     innerWidth: frame?.contentWindow?.innerWidth ?? null,
     pageHeight: doc?.documentElement.scrollHeight ?? null,
     path: frame?.contentWindow?.location.pathname ?? null,
-    ccToggle: shown("#cc-toggle"),
     ccList: shown("#cc-list"),
     meals: all("#cc-meals li").map((li) => li.textContent),
+    tiles: all("#cc-meals li .cc-thumb").length,
     chooseYourMeals: shown("#result-cta"),
     gridLinks: shown("#all") ? all("#all a").length : 0,
     family: shown("#panel-family"),
@@ -90,12 +90,13 @@ export function statesProblems(results, { menus, defaultMeals, gridLinks }) {
     if (r.state !== "ready") fail(`${r.state}: ${r.problem}`);
     if (r.frameWidth !== r.width || r.innerWidth !== r.width) fail(`frame ${r.frameWidth} wide, its page ${r.innerWidth}`);
     if (r.path !== `/${pageUrl(r.build, r.date)}`) fail(`loads ${r.path}, not ${pageUrl(r.build, r.date)}`);
-    if (r.story === "Chef's Choice · open") {
+    if (r.story === "Chef's Choice") {
       if (!r.ccList) fail("the list is not shown");
       const expected = menus[r.extra?.meals ?? defaultMeals];
       if (JSON.stringify(r.meals) !== JSON.stringify(expected)) fail(`shows ${JSON.stringify(r.meals)}, not ${JSON.stringify(expected)}`);
+      if (r.tiles !== r.meals.length) fail(`${r.tiles} tiles for ${r.meals.length} meals`);
     }
-    if (r.story === "No picks this week" && (r.ccToggle || !r.chooseYourMeals)) fail("a Chef's Choice button, or no plain button");
+    if (r.story === "No picks this week" && (r.ccList || !r.chooseYourMeals)) fail("a Chef's Choice list, or no plain button");
     if (r.story === "All plans" && r.gridLinks !== gridLinks) fail(`${r.gridLinks} of the grid's ${gridLinks} links shown`);
     if (r.story === "Family" && (!r.family || r.individual)) fail("not the Family panel");
     if (r.story === "Scroll" && !(r.frameHeight >= r.pageHeight)) fail(`frame ${r.frameHeight} tall, its page ${r.pageHeight}`);

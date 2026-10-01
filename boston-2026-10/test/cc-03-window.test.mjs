@@ -33,7 +33,7 @@ const NEXT = "2026-10-11"; // the week after S: open S − 2 through S + 4
 /** Which week the plan page offers at `now` (the heading's week), or null when the card is today's. */
 function offeredAt(html, now) {
   const { state } = openedCard(html, { hash: "#lean-7", now });
-  if (!state.toggle) {
+  if (!state.list) {
     assert.equal(state.choose, true, "no picks: the card's Choose your meals is shown");
     assert.equal(state.own, false, "no picks: no second link");
     return null;
@@ -122,5 +122,5 @@ test("CC-3e: the build embeds every file whose window has not ended on --on", as
   assert.deepEqual(await on("2026-10-09"), [], "S + 5: every window has ended, and the page carries none");
   const html = await pageWith(BOTH, DAYS["S-2"]);
   const page = openPlanPage(html, { hash: "#lean-7", now: midday(DAYS["S-3"]) });
-  assert.equal(card(page).toggle, false, "a page built on S − 2, opened on S − 3 (a clock behind): S is not on it");
+  assert.equal(card(page).list, false, "a page built on S − 2, opened on S − 3 (a clock behind): S is not on it");
 });

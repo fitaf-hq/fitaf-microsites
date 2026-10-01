@@ -96,13 +96,16 @@ test("P2 (c): one changed value in data/ shows on all four pieces", () => {
   }
 });
 
-test("P2 (c): one changed phrase in data/messages.json changes the page AND all four pieces", async () => {
+// Updated (SPEC-plan-page-refinement § 1 items 1–2): the page no longer shows the headline or the event line (the hero
+// is the Advisor's rewrite), so the changed phrase reaches all four pieces and NOT the page; the page's own words
+// since then are data/messages.json's `plan_page` (PR-5, PR-9).
+test("P2 (c): one changed phrase in data/messages.json changes all four pieces (the page no longer shows it)", async () => {
   const messages = structuredClone(inputs.data.messages);
   messages.headline = "P2 ONE PLACE";
   messages.event_line = ["P2 EVENT", "P2 MONTH"];
   const page = await renderPage(await loadPlans(), undefined, messages);
-  assert.ok(page.includes("<h1>P2 ONE PLACE</h1>"), "the page's h1");
-  assert.ok(page.includes("P2 EVENT &middot; P2 MONTH"), "the page's top bar");
+  assert.ok(!page.includes("P2 ONE PLACE"), "the page carries no headline (§ 1 item 2)");
+  assert.ok(!page.includes("P2 EVENT"), "the page carries no event line (§ 1 item 1)");
   const pieces = renderMockups({ ...inputs, data: { ...inputs.data, messages } });
   for (const [id, html] of Object.entries(pieces)) {
     const text = pieceRuns(html).map((r) => r.text).join(" ");
@@ -110,7 +113,7 @@ test("P2 (c): one changed phrase in data/messages.json changes the page AND all 
     assert.ok(text.includes("P2 EVENT") && text.includes("P2 MONTH"), `${id} shows the changed event line`);
   }
   const shipped = await renderPage(await loadPlans());
-  assert.ok(shipped.includes(`<h1>${inputs.data.messages.headline}</h1>`), "control: the page as shipped reads the committed file");
+  assert.ok(!shipped.includes(inputs.data.messages.headline), "control: nor does the page as shipped");
 });
 
 test("P2 (c): a changed price reaches the pieces that quote one", () => {

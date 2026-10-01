@@ -4,18 +4,22 @@ import assert from "node:assert/strict";
 import { mkdtemp, readdir, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { copyStatic, renderPage, ROOT } from "../build.mjs";
+import { copyStatic, loadPhotos, renderPage, ROOT } from "../build.mjs";
 import { isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
 
 const FONT_BUDGET_BYTES = 90 * 1024;
 const LOGO_BUDGET_BYTES = 8 * 1024;
 const html = await renderPage(await loadPlans());
 
+// Updated (SPEC-plan-page-refinement § 3): beside the fonts and the logo, the photo sheets. The carousel's is in the
+// markup; a week's Chef's Choice sheet is loaded by its script when the week is open, so it is copied whatever the date.
 test("B1: every file the page loads is copied beside it, and nothing else is", async () => {
   const out = await mkdtemp(join(tmpdir(), "boston-static-"));
   try {
     const written = (await copyStatic(out)).map((f) => f.slice(out.length + 1)).sort();
-    const referenced = [...new Set(loadedUrls(html).filter((u) => !u.startsWith("data:")))].sort();
+    const photos = await loadPhotos();
+    const weekSheets = Object.values(photos.chefs_choice ?? {}).map((s) => photos.base + s.file);
+    const referenced = [...new Set([...loadedUrls(html).filter((u) => !u.startsWith("data:")), ...weekSheets])].sort();
     assert.deepEqual(written, referenced);
   } finally {
     await rm(out, { recursive: true, force: true });
@@ -42,7 +46,8 @@ test("B1: four self-hosted WOFF2 faces, all font-display: swap, under the font b
 });
 
 test("B1: the logo replaces the wordmark: alt \"Fit AF\", a 330x210 PNG shown at 88x56 (crisp past 2x)", async () => {
-  const imgs = [...html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
+  // Updated (SPEC-plan-page-refinement § 2 item 1): the carousel's windows are images too; the logo is the one that is not.
+  const imgs = [...html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]).filter((img) => !/photo-sheets\//.test(img));
   assert.equal(imgs.length, 1);
   assert.match(imgs[0], /src="assets\/fitaf-logo\.png"/);
   assert.match(imgs[0], /alt="Fit AF"/);

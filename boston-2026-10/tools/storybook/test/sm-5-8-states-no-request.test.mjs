@@ -2,14 +2,17 @@
 //
 // SM-5: in headless Chrome over the static build, served on 127.0.0.1 as Storybook's development server serves it, each
 // story of § 3 opened in Storybook's own manager at 390 and 1280, for both builds, with each story's own defaults (the
-// date § 3 gives it): *Chef's Choice · open* shows the committed week's meals for the count (7, the default, and 14),
+// date § 3 gives it): *Chef's Choice* (SPEC-plan-page-refinement § 4) shows the committed week's meals for the count (7, the default, and 14),
 // *No picks this week* no Chef's Choice button, *All plans* the grid, *Family* the Family panel, *Scroll* a frame as
-// tall as its page; every story ready, on the page of its build and date, its frame at the viewport's width.
+// tall as its page; every story ready, on the page of its build and date, its frame at the viewport's width. Since
+// SPEC-plan-page-refinement § 4: *Chef's Choice* (always open, one story) shows the week's meals for the count, a tile
+// each; *All plans* presses the link and the grid shows in its modal.
 // SM-8: during the walk (the manager, every story, the docs page), no request leaves 127.0.0.1.
 //
 // Mutants (in the suite): SM-8's, a server that forgets the pages' policy (microsite/serve.mjs), so the development
 // page asks another host for its Turnstile script (refused here, recorded); SM-5's, a mirror of this package whose
-// *Chef's Choice · open* forgets to press #cc-toggle, built and walked.
+// *Chef's Choice* opens on the *no picks* date (there is no press to forget since the list is always open), built and
+// walked.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
@@ -29,15 +32,14 @@ const ROOT = "Microsite";
 const STORY_DATES = {
   "Individual · Start": "today",
   "Individual · Chosen": "today",
-  "Individual · Chef's Choice · closed": "week",
-  "Individual · Chef's Choice · open": "week",
+  "Individual · Chef's Choice": "week",
   "Individual · No picks this week": "none",
   "Individual · All plans": "today",
   "Family · Family": "today",
   "Whole page · Scroll": "today",
 };
-const OPEN = "Individual · Chef's Choice · open";
-const MUTANT_PRESS = 'press: "#cc-toggle"';
+const OPEN = "Individual · Chef's Choice";
+const MUTANT_DATE = ['cc: { name: "Chef\'s Choice", fragment: chosen, date: "week"', 'cc: { name: "Chef\'s Choice", fragment: chosen, date: "none"'];
 
 after(removeStorybookStatic);
 
@@ -102,7 +104,7 @@ test("SM-8 (mutant): a server that forgets the pages' policy lets the developmen
   assert.deepEqual(outside, [TURNSTILE_SCRIPT_URL]);
 });
 
-test("SM-5 (mutant): a story that forgets to press #cc-toggle fails", { timeout: WALK_TIMEOUT_MS }, async (t) => {
+test("SM-5 (mutant): a Chef's Choice story on a date with no picks fails", { timeout: WALK_TIMEOUT_MS }, async (t) => {
   const work = await mkdtemp(join(tmpdir(), "fitaf-storybook-sm-5-mutant-"));
   t.after(() => rm(work, { recursive: true, force: true }));
   assert.ok(existsSync(join(TOOL, "stories", "states.js")), "the stories' states (§ 3), stories/states.js");
@@ -111,8 +113,8 @@ test("SM-5 (mutant): a story that forgets to press #cc-toggle fails", { timeout:
   await symlink(join(TOOL, "node_modules"), join(mirror, "node_modules"));
   const states = join(mirror, "stories", "states.js");
   const source = await readFile(states, "utf8");
-  assert.equal(source.split(MUTANT_PRESS).length, 2, `fixture control: one ${MUTANT_PRESS} in stories/states.js`);
-  await writeFile(states, source.replace(MUTANT_PRESS, "press: null"));
+  assert.equal(source.split(MUTANT_DATE[0]).length, 2, `fixture control: one ${MUTANT_DATE[0]} in stories/states.js`);
+  await writeFile(states, source.replace(MUTANT_DATE[0], MUTANT_DATE[1]));
   const out = join(work, "storybook-static");
   await buildStorybook({ toolDir: mirror, outDir: out, pagesDir: join(work, "pages"), env: { MICROSITE_SITE: SITE } });
   const { stories } = await indexOf(out);
@@ -122,5 +124,5 @@ test("SM-5 (mutant): a story that forgets to press #cc-toggle fails", { timeout:
   const visits = visitsFor(stories, { builds: ["production"], viewports: [DEFAULT_VIEWPORT], only: [OPEN], menus: { [expected.defaultMeals]: [] } });
   const { results } = await walk({ base: server.base, visits });
   const problems = statesProblems(results, expected);
-  assert.ok(problems.some((p) => p.startsWith("Chef's Choice · open · 390 · production: the list is not shown")), problems.join("\n"));
+  assert.ok(problems.some((p) => p.startsWith("Chef's Choice · 390 · production: the list is not shown")), problems.join("\n"));
 });

@@ -10,7 +10,8 @@ const BUILD_TIMEOUT_MS = 900_000;
 
 /** § 3's table: group -> its stories, as a reviewer names them. */
 const STORIES = {
-  Individual: ["Start", "Chosen", "Chef's Choice · closed", "Chef's Choice · open", "No picks this week", "All plans"],
+  // SPEC-plan-page-refinement § 4: *Chef's Choice · closed* and *· open* are one story, *Chef's Choice*.
+  Individual: ["Start", "Chosen", "Chef's Choice", "No picks this week", "All plans"],
   Family: ["Family"],
   "Whole page": ["Scroll"],
 };
