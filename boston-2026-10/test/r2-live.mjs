@@ -37,6 +37,10 @@ const atCommit = (commit, path) => execFileSync("git", ["-C", ROOT, "show", `${c
  * watch's baseline names after a later accept (the same reason CC-8 kept `replaces` until the paste). */
 export const PREVIOUS_FOOTER = "fitaf-handoff a984fb5 sha256:914668ded95f6a8913e7ae0010661d26780700bd7443cbf93f9e4e8a875b41f6";
 
+/** The last fill B block live (rung 2 § 23, pasted 2026-10-01), before fill C's paste (`e85b95a`): R2-74 compares fill
+ * C with fill B, so it names fill B's block rather than the baseline's, which names fill C itself after that accept. */
+export const FILL_B_FOOTER = "fitaf-handoff 5d5fb72 sha256:cbc6d1ecb340f818a39d1b3478e55e96f5cb9edf41033dc2b60a8ca4ef8c93cd";
+
 /** A block's text: rebuilt from the commit its version line names (by default the baseline's, the live block), and
  * checked against its SHA-256. */
 export async function liveText(versionLine = undefined) {

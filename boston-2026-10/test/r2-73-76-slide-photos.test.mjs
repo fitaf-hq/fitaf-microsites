@@ -14,7 +14,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { script } from "./r2-harness.mjs";
-import { liveText, PREVIOUS_FOOTER } from "./r2-live.mjs";
+import { liveText, PREVIOUS_FOOTER, FILL_B_FOOTER } from "./r2-live.mjs";
 import { DONE, expectedWindow, NAMES, NO_CELL, observe, PIXEL, sheetUrl, slideAtFirstPress, unknownHost, WITH_CELL, weekFragment, weekPage } from "./r2-photos.mjs";
 
 test("R2-73: card images never loading — each slide shows its meal's cell from the coded host at its first press", async () => {
@@ -32,7 +32,7 @@ const record = async (text, page, fragment) => {
 const r2_52 = (name) => (name === NAMES[0] ? { complete: true, naturalWidth: 640, currentSrc: PIXEL } : {});
 
 test("R2-74: an old link (no photo part) — the slides exactly as the live block shows them, step for step", async () => {
-  const live = await liveText();
+  const live = await liveText(FILL_B_FOOTER);
   const ours = await record(await script(), await weekPage(r2_52), weekFragment(""));
   const theirs = await record(live, await weekPage(r2_52), weekFragment(""));
   assert.ok(ours.info.includes(DONE), "control: the fill completes");
