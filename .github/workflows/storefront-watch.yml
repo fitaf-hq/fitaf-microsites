@@ -1,4 +1,4 @@
-# The storefront watch (boston-2026-10/SPEC-storefront-watch.md). Each hour: has the store released a new build of
+# The storefront watch (boston-2026-10/SPEC-storefront-watch.md). Every 10 minutes: has the store released a new build of
 # its public bundle? On a release (or a dispatch): check what the cart hand-off depends on, and smoke-test the
 # hand-off on the live store at two widths (never submitting anything). Once a day: check Fit AF's Footer block.
 # A flagged run fails and opens (or updates) an issue labelled storefront-watch.
@@ -10,7 +10,7 @@ name: storefront-watch
 
 on:
   schedule:
-    - cron: "17 * * * *" # hourly, at 17 minutes past (UTC)
+    - cron: "7-59/10 * * * *" # every 10 minutes, at :07, :17, :27 ... (UTC); was hourly at :17 until 2026-10-02
     - cron: "17 7 * * *" # daily, 07:17 UTC (03:17 in Boston): also F3 and F4
   workflow_dispatch:
     inputs:
