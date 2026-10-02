@@ -861,7 +861,7 @@ Red at `8c7df94`, built at `6b5f19b`. § 23 above is unchanged.
 - ⬜ **Not run on the live store**, and not known to cure the 11-of-14: § 23's evidence did not reproduce the shortfall
   headless; one second is the Advisor's ruling, and confirming each press was counted is after the meeting.
 
-## 25. Amendment, 2026-10-02 — the three-step checkout. ⚠ PROPOSED: three forks open (§ 25.6), nothing built
+## 25. Amendment, 2026-10-02 — the three-step checkout. RULED (§ 25.7); not yet built
 
 **Ruled by the Advisor** (`ts=2026-10-01T13:52:25.026Z`): *"Break the checkout page up into a 3 step process:
 confirming meals, delivery details, and payment. This is the current flow of the page – just collapsed so it only shows
@@ -942,3 +942,11 @@ Advisor's paste.
 
 A Storybook mock-up is **not** proposed: the synthetic checkout already carries the live markup and is looked at in
 Chrome at both widths; the iterative tweaking happens on it, then on the live rehearsal.
+
+### 25.7 Ruled (`AskUserQuestion`, 2026-10-02, session 220): all three forks as recommended
+
+- **F1**: *"Raise the ceiling"*. § 17.3's ceiling becomes **20,480 bytes**; the block stays inline in the Footer; hosting
+  on eatfitaf.com stays fill C's phase 3.
+- **F2**: *"Every width"*. The same three steps at every width.
+- **F3**: *"As proposed"*. The bar *"Your meals · Delivery · Payment"*; *"Continue to delivery"*, *"Continue to payment"*,
+  *"Back"*.
