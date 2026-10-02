@@ -860,3 +860,85 @@ Red at `8c7df94`, built at `6b5f19b`. § 23 above is unchanged.
   until the paste; the watch's baseline is untouched.
 - ⬜ **Not run on the live store**, and not known to cure the 11-of-14: § 23's evidence did not reproduce the shortfall
   headless; one second is the Advisor's ruling, and confirming each press was counted is after the meeting.
+
+## 25. Amendment, 2026-10-02 — the three-step checkout. ⚠ PROPOSED: three forks open (§ 25.6), nothing built
+
+**Ruled by the Advisor** (`ts=2026-10-01T13:52:25.026Z`): *"Break the checkout page up into a 3 step process:
+confirming meals, delivery details, and payment. This is the current flow of the page – just collapsed so it only shows
+~1 phone screen's worth of information at a time."* Timing: after the meeting (`ts=2026-10-01T13:55:29.394Z`, *"Cleanup
+now, 3-step after"*). Confirmed as the checkout's refinement (`ts=2026-10-02T16:42:51.831Z`): *"Yes that's it. I also
+think that inside of each step there may be some iterative UI tweaking. We may or may not want to mock up the checkout
+page in Storybook – I don't think that this will require that many rounds of adjustments though."* Wanted by Saturday
+2026-10-03 09:00 (the Boston record § 47).
+
+### 25.1 What it is, and what it is not
+
+- **On a deep-carted checkout only** (§ 3 item 1's mark, `html.fitaf-deep:has(app-checkout)`), the block shows the
+  store's own checkout **one step at a time**: a step bar (*1 · 2 · 3* with the three names) at the top, the current
+  step's sections, and **Back** / **Continue** at the foot. A reload shows the store's full checkout (§ 3: never
+  storage), and an ordinary visit is unchanged (R2-50).
+- ⛔ **Nothing of the store's is removed, moved out of its form, typed into or pressed by the block.** A step is a CSS
+  state (`html.fitaf-step-1` … `-3`) that hides the other steps' sections; Back and Continue are the block's own buttons
+  and change only that state. Every value the customer enters goes into the store's own fields, and the store's own pay
+  button places the order.
+- ⛔ Not editing: the Advisor, *"we're deliberately taking editing \*out\* of the checkout"*; the *"I want to pick
+  different meals"* button is later, not here.
+
+### 25.2 The steps, by the store's own sections (the live markup as `tools/storefront-watch/test/browser-store.mjs` carries it)
+
+| step | name (⬜ F3) | shows | hides |
+|---|---|---|---|
+| 1 | **Your meals** | the summary (`.checkout__summary`): every order line (photograph and name, § 19) and the Total | the form's sections |
+| 2 | **Delivery** | `section.contact`, `section.delivery` (delivery or pickup, the address), `section.schedule` (the delivery date) | the summary's lines; payment |
+| 3 | **Payment** | `section.payment` (the card field, the store's iframe), the tip while one is chosen (H10's rule), `.checkout__consent`, the pay button (`.checkout__submit`; on a phone `.summary__pay-button`) | the summary's lines; contact, delivery, schedule |
+
+- ⭐ **The Total is displayed in every step** (W14, unchanged): steps 2 and 3 show a one-line recap, *"7 meals ·
+  Total $87.50"*, the store's own Total element, with the lines hidden.
+- **The pay button is displayed only in step 3.** On a phone the store's bottom bar keeps its Total and shows the
+  block's **Continue** in steps 1–2 in place of *PAY NOW* (the store's button hidden by the style, never removed).
+  ⇒ W11 is amended (§ 25.5): the pay button displayed **at step 3**.
+- Every H rule (H2–H17) applies in every step as now.
+
+### 25.3 Continue never lets the customer reach a dead end
+
+- **Continue from step 2 reads the store's own validity** (Angular's `ng-invalid` on the step's form controls, the
+  framework's marker, a new F2 dependency): while any control in the step is invalid, Continue does not advance; it
+  scrolls to and focuses the first one, and the store shows its own message. ⛔ The block has no validation rules of
+  its own.
+- **An error in a hidden step shows that step**: if, after the customer presses the pay button, a control in step 1 or
+  2 becomes `ng-invalid.ng-touched` or the store shows an error inside a hidden step, the block switches to that step.
+- **Back** never loses an entry (the sections are hidden, not destroyed; Angular keeps their state).
+
+### 25.4 The words, the place and the size
+
+- Words: ⬜ F3. Proposed: the bar *"Your meals · Delivery · Payment"*; *"Continue to delivery"*, *"Continue to
+  payment"*, *"Back"*. ASCII in the shipped text (§ 17.3), the bar's own type and colours from the store's page, the
+  contrast checked as B2 does.
+- Widths: ⬜ F2. Proposed: the same three steps at every width; at 1025 px and wider the summary (step 1) sits where
+  the store puts it, beside the form.
+- Size: ⬜ F1. The block is **13,693** bytes against **15,360** (§ 17.3); the steps' style and logic are estimated at
+  1.5–2.5 KB, so likely over.
+
+### 25.5 Cases (contract only; numbered when built)
+
+On the synthetic checkout (`browser-store.mjs`, the live markup), at 390 and 1280 px: the step bar only on a
+deep-carted checkout; exactly one step's sections displayed; the Total displayed in all three; the pay button
+displayed only at step 3; Continue refused while a step-2 control is `ng-invalid`, with that control focused; an error
+in a hidden step shows its step; Back keeps every entry; no store control pressed by the block (the fill-B rule:
+`control()`); an ordinary visit and a reload unchanged. **Mutants**: a style that hides the Total in step 2; a Continue
+that ignores `ng-invalid`; each must turn a case red. **The watch**: W10–W13 walk the three steps (Continue, Continue)
+before reading the pay button; a new W19 reports each step's displayed sections and that the order Total was
+displayed in each, live, no order placed. **Before the paste**: the live smoke on a flag at both widths, then the
+Advisor's paste.
+
+### 25.6 ⬜ The forks, the Advisor's
+
+- **F1, the size**: (a) raise § 17.3's ceiling (he, 2026-10-01: *"Frankly we could be at 50 kb and still be lighter
+  than most of the elements on the page"*), e.g. to 20,480 bytes, and keep the block inline for Saturday; or (b) host
+  the block on eatfitaf.com now (fill C's phase 3; whether the store's page loads an outside script is unmeasured).
+  **Recommended: (a)**, hosting staying phase 3.
+- **F2, the widths**: the same steps at every width (**recommended**: one flow, one set of cases), or phones only.
+- **F3, the words**: the names and buttons in § 25.4, or his.
+
+A Storybook mock-up is **not** proposed: the synthetic checkout already carries the live markup and is looked at in
+Chrome at both widths; the iterative tweaking happens on it, then on the live rehearsal.
