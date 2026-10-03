@@ -950,3 +950,130 @@ Chrome at both widths; the iterative tweaking happens on it, then on the live re
 - **F2**: *"Every width"*. The same three steps at every width.
 - **F3**: *"As proposed"*. The bar *"Your meals · Delivery · Payment"*; *"Continue to delivery"*, *"Continue to payment"*,
   *"Back"*.
+
+## 26. Built — found at the build of § 25, not ruled
+
+Built at `ba9eabc` (branch `boston/three-step-checkout`, from the dev line's `5363d87`). The brief's rule commits only
+on a green suite, so no red commit exists: the new cases were run red against `5363d87`'s block source (built by this
+build) before it changed: R2-83–R2-90 10 of 10 failed (no steps: *"step 1 not reached"*; the two mutants' targets
+absent from the old text), R2-91 3 of 3, B2b, and W20b–W20d 3 of 3 (W20a tests the watch's new rule on recorded
+outcomes, not the block, and passes on either). §§ 25.1–25.7 above are unchanged; this section says what the build
+chose where they left a choice, and what it could not build as written.
+
+- **The steps, as built** (§ 25.2): selectors inside style#fitaf-deep's ONE scoped hide rule (every one still begins
+  `html.fitaf-deep:has(app-checkout) `, R2-42b), each beginning with a step class and **the block's own foot**:
+  `.fitaf-step-N:has(#fitaf-nav) …`. Step 1 hides the store's whole form (`.checkout__form`: *"the form's sections"*
+  read as the form); step 2 hides the order lines (`.summary__item`), every child of the form that neither is nor holds
+  `section.contact`, `section.delivery` or `section.schedule`, and `.checkout__submit` by name (in case a release
+  wraps the sections); step 3 hides the lines and those three sections, so **the rest of the form is step 3**: the
+  payment, the tip while chosen (H10), the consent, the form's pay button, and anything the table does not name (the
+  synthetic form's special requests; the discounts while a code keeps them, H7). Every control of the form is displayed
+  in exactly one step. *"The summary's lines"* is read as `.summary__item` (the name read from the store's code,
+  § 20): the rest of the summary (the Total, a discount row, an active subscription's lines, the summary's discounts with
+  a code) is displayed at every step; a commitment is never hidden (§ 3 item 3).
+- ⭐ **The fail-safe**: `:has(#fitaf-nav)` on every step selector. The foot is inside `app-checkout`, so if the store draws
+  its checkout again without it (the visitor leaves and comes back inside the app), the step class on `<html>` hides
+  nothing and the visitor has the whole stripped checkout, never a step with no way on. A browser without `:has()` gets
+  no steps at all (the block checks `CSS.supports("selector(:has(+*))")` before drawing them).
+- **The phone's PAY NOW** (§ 25.2): hidden in steps 1 and 2 only while the block's Continue is its next sibling
+  (`.summary__pay-button:has(+#fitaf-go)`): Continue is placed right after the store's `.summary__pay-button` while that
+  button's row is displayed (the store shows its phone bar at 1024 px and narrower, § 9), else in the foot; at every step
+  and at every `resize`. If the store draws its bar again without Continue in it, PAY NOW shows again (pressing it early
+  meets the store's own validation and the rule below), never neither. The foot keeps a bottom margin as tall as the
+  store's bar, so the bar never covers Back.
+- **The recap** (§ 25.2, *"7 meals · Total $87.50"*): a `::before` of the store's own `.summary__total` in steps 2 and
+  3, its content `data/messages.json`'s new `handoff.recap`, *"{n} meals ·"*, with {n} the link's meal count. The one
+  rule of the style that adds rather than hides, besides § 10's margin and § 19's compact lines: **R2-42b is amended to
+  allow exactly it** (content and the space after it). How it sits beside the live Total (a flex row?) is not known here.
+- **The block's own elements** (§ 25.4: *"the bar's own type and colours from the store's page"*, read as the store's
+  TYPE, `font-family: inherit`, and the page's colour TOKENS, which echo the store's look): `#fitaf-bar` after the logo
+  (*"1 Your meals · 2 Delivery · 3 Payment"*: the ruled names, numbered by the block, the current one navy and bold and
+  `aria-current="step"`, the others `--muted`), `#fitaf-nav` the checkout's last child holding Back (`#fitaf-back`), and
+  Continue (`#fitaf-go`), both `type="button"` (they never submit a form they stand in). Their style is inline (the
+  tokens as custom properties on each), so style#fitaf-deep still only hides the store's elements. Back and Continue sit
+  together, centred, in the foot: the store's layout around them (its column widths at 1280) is not the block's to know.
+  Continue reads *"Continue to delivery"* at step 1 and *"Continue to payment"* at step 2, and is gone at step 3; Back is
+  gone at step 1. Each step change scrolls to the top. `--muted` joins the inlined tokens; **the build now inlines only
+  the tokens the source reads** (`var(--…)`), as it already did the words, so the older live blocks still rebuild byte
+  for byte (R2-71, R2-74, R2-77 read them).
+- **The words** (§ 25.7 F3): `data/messages.json`'s `handoff.steps` (*"Your meals · Delivery · Payment"*, the bar),
+  `to_delivery`, `to_payment`, `back` and `recap`. ⭐ **The middle dot ships as the ASCII escape `·`**: in the
+  words (as the step line's already does) and in the block's own split of the bar at `" · "`. The build refuses a
+  `steps` that is not three names joined by `" · "`, and a `recap` without {n} (R2-91c).
+- **Continue from step 2** (§ 25.3): the first `.ng-invalid` inside the three sections that holds no `.ng-invalid`
+  itself (a field, not its form group or the form) and is displayed; its own input, select or textarea (or the first
+  inside it) is scrolled to the centre and focused, and no step is taken. Step 1 has no check: no store control is
+  displayed there (H13, H14 take the lines' controls).
+- **An error in a hidden step** (§ 25.3): after a press inside `.checkout__submit` or `.summary__pay-button` (read in the
+  capture phase, never prevented), a MutationObserver on the checkout's `class` attributes looks for a step-2 field
+  `ng-invalid` AND `ng-touched` (the store's `markAllAsTouched`, or a refusal it receives later) while step 2 is hidden,
+  and shows step 2 with it focused. No timer. ⚠ **Not built: *"or the store shows an error inside a hidden step"***
+  beyond Angular's marker: the store's own error element is not named in any contract, there is no local copy of its
+  code, and none was requested; and step 1's lines have no control displayed. ⚠ **An edge, not built against and not
+  seen**: a step-2 control the STORE itself hides (an address while *Pickup* is chosen, say), if it were invalid and
+  touched, would bring step 2 up with nothing visible to fix.
+- ⚠ **Could not be built as written: the watch's walk, *"W10–W13 walk the three steps (Continue, Continue)"*.** The
+  smoke types nothing into `/checkout` (§ 0, the watch's own rule), the store's step-2 fields are required, and § 25.3's
+  Continue refuses while one is `ng-invalid`, as it must. So on the live store, as on the synthetic one (whose step-2
+  fields now carry Angular's state), **the second Continue is refused**. Built: the smoke records the refusal (the control
+  the block focused, and whether it is `ng-invalid`: itself a live check of § 25.3) and enters step 3 by setting the
+  block's own class, `html.fitaf-step-3`, which shows exactly what step 3 displays; the report says so (*"Continue
+  REFUSED at step 2 (focused input[name=email], ng-invalid): entered by the block's class, the smoke types nothing"*).
+  ⬜ The other reading (the smoke typing test entries into the live checkout) is not the build's to choose.
+- **W20, not W19** (§ 25.5's *"a new W19"*): W19 is § 21's (H16, H17). W20 reports, per step, how it was reached, § 25.2's
+  sections displayed and the Total; it fails a width on another step's section displayed, a step's own found and not
+  displayed, the Total not displayed at a step, or a walk that stopped. **W11 as amended**: the measure (§ 3 item 4) is
+  made at every step, each with its own allowance (the controls of the steps not shown, and the pay button before step
+  3); the pay button must be displayed at step 3 and not at steps 1 and 2; the top-level reading W11 reports is step 3's.
+  The hide list (W12, W14, W18, W19) is judged over all three steps (a target displayed at any step fails), the lines
+  (W18) and the logo (W16) at step 1. ⭐ **A block without steps** (the live `1e3802b8…` until the paste): one reading at
+  done, as before, and W20 reports *"no steps on this checkout"*, not a failure, so the hourly smoke of the live block
+  stays as it was.
+- **The synthetic store** (`tools/storefront-watch/test/browser-store.mjs`), extended for § 25 only: `validity` (by
+  default) gives the step-2 controls Angular's own state, by the framework's classes (none of the store's code):
+  `formcontrolname` on the contact's email, phone, first and last name (required) and the delivery's address (required),
+  state and the schedule's date; the address and state in a `formgroupname="address"` group (a wrapper
+  `div.delivery__address`); `ng-valid`/`ng-invalid`, `ng-pristine`/`ng-dirty` (on input), `ng-untouched`/`ng-touched`
+  (on blur), and `ng-invalid` on the group and the form while a control inside is invalid; a touched invalid control
+  shows the store's message after it (`p.field-error`, `role=alert`). Either pay button marks every control touched and,
+  with the form invalid, places nothing (*"[fixture] pay pressed: the form is invalid"*). `payError` (a control's name):
+  the store refuses the first valid press 300 ms later, that control invalid and touched with its message, until edited.
+- **The cases.** New: **R2-83–R2-90** in Chrome at 390 and 1280 (`tools/storefront-watch/test/r2-83-90-three-steps.test.mjs`),
+  the test acting as the customer (trusted clicks on the block's buttons where they are drawn; typing step 2's entries);
+  **R2-91** (the words, the site suite); **B2b** (the steps' colours); **W20a–W20d**. Changed, each because § 25 shows one
+  step at a time: **R2-45/45b/46** re-stated over the steps (at each step nothing displayed that was not, the Total, the
+  pay button only at step 3; ACROSS the steps, by element, the controls no step displays are exactly the same H3, H4,
+  H6, H7, H10, H16 and H17 controls); **R2-54, R2-56** read at step 3 (where the form's discounts and the tip are; at step
+  1 a hidden one could not be told from the step); **R2-79, R2-81** (the pay button at step 3, the lines at step 1);
+  **R2-78a, R2-81a** (the step selectors set aside before *"never hidden"*, and the lines' one step selector pinned to
+  steps 2 and 3); **R2-42b** (the recap); **W14b** (W11's count at step 3: the 21 H controls plus step 2's nine); **R2-11,
+  R2-29, R2-77** (the ceiling); **R2-32, PR-10, CC-8** (the pins). The harness `r2-browser.mjs` gains the step readers and
+  `walkTo` (forward from the step shown; step 2's entries typed into empty fields only).
+- **The mutants** (in the suite, each with its control): **R2-85b**, a style that also hides the Total in step 2
+  (`.fitaf-step-2 .summary__total` added to the hide list): R2-85 fails, *"390, step 2: the Total displayed"*. **R2-87b**,
+  a Continue that ignores `ng-invalid` (its query `" .ng-invalid"` made `" .ng-never"`): R2-87 fails, *"1280: Continue
+  refused, step 2 kept"* (the block went to step 3). **W20c**, the R2-85b style in the smoke: the width fails on *"W20: the
+  Total not displayed at step 2"*. R2-46's mutant (the email field hidden) still fails the re-stated R2-45, and the
+  smoke's W11 email mutant now fails at step 2.
+- **F2** (`storefront/dependencies.json`, 51 → 57 literals): `"checkout__form"`, `1,"contact"`, `1,"delivery"`,
+  `1,"schedule"`, `"ng-invalid"`, `"ng-touched"`. ⚠ **None was checked against the release's files** (no request to the
+  store). ⚠⚠ **The three section names themselves are the synthetic checkout's** (`browser-store.mjs` since `5acc962`,
+  *"with the contract's names only"*): § 25.2's table takes them as the live markup, but no live reading of them is on
+  record; the literals are written as Angular compiles a static class attribute (`[1,"footer"]` is H2's), which holds
+  only if the class comes first. F2's next `npm run watch -- --full --no-browser` says whether the store has them; the
+  rehearsal at both widths says whether the steps show what the table says.
+- **Contrast** (as B2 does: four `"build": "storefront"` rows in `src/contrast-pairs.json`, and B2b ties them to the
+  tokens `stepper()` uses): the current step and Back's label `--navy` on `--white`, Lc 100.9 (body, 75); the other steps
+  `--muted` on `--white`, 83.5 (body, 75); Continue's 19px/700 label `--white` on `--cta`, −69.3 (large text, 60); Back's
+  border, 100.9 (UI, 45). The recap inherits the store's own Total colour, not measured here.
+- **The size** (§ 25.7 F1: 20,480): the text `b65fb47f…` 17,369 bytes; the Footer block **17,488** bytes and the console
+  file **17,469** at `ba9eabc` (13,693 and 13,674 before: § 25 costs 3,795); every character ASCII; two `<` in the Footer
+  block (its own) and none in the console file. The ceiling is pinned in R2-11, R2-29 and R2-77.
+- **The pins**: R2-32, PR-10 and CC-8's `footer_text_sha256` moved from `1e3802b8…` to
+  `b65fb47f9053870f28ff3005b1dff9bfcd5fdc7894fc8e74f4a03ef67e60b471`; CC-8's `replaces` names the live `1e3802b8…`
+  (`e85b95a`) until the paste; `storefront/watch-baseline.json` is untouched.
+- ⬜ **Seen only on the synthetic checkout**, in headless Chrome at 390 × 844 and 1280 × 800 at each step (six screenshots,
+  kept off every repository). Not modelled there: the store's own desktop layout (its columns), its phone summary drawer
+  (§ 20), the payment provider's card frame (mounted while step 1 hides the form: whether it draws correctly when shown
+  is the rehearsal's), and the store's type. ⬜ **Not run on the live store**: any of it; the live smoke on a flag at both
+  widths, then the Advisor's paste, are the orchestrator's.
