@@ -2,11 +2,13 @@
 // app-tip-selector where the store places one) is hidden ONLY while no tip is chosen: once one is, the store shows
 // .tip-selector__remove-btn, and the tip stays displayed: the style may hide an offer, never a charge. ⭐ Mutant (in
 // the suite): H10 without its guard; R2-56 fails.
+// § 25 (the three-step checkout): read at step 3, where the tip is (step 1 hides the whole form, so a reading there
+// could not tell H10 from the step); the test walks there as a customer (walkTo).
 // Headless Chrome against the synthetic store on 127.0.0.1; skipped without Chrome.
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { startStore } from "./browser-store.mjs";
-import { browserFor, DONE, displayedCounts, mutate, openDeep, shipped, skip } from "./r2-browser.mjs";
+import { browserFor, DONE, displayedCounts, mutate, openDeep, shipped, skip, walkTo } from "./r2-browser.mjs";
 
 /** H10 as the build ships it. */
 const H10 = ":is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))";
@@ -32,6 +34,7 @@ async function tipOn(text, cfg) {
   try {
     assert.equal(await run.verdict(), DONE);
     await run.until(() => document.querySelector("app-checkout .summary__items .item"));
+    await walkTo(run, 3);
     return await run.page.evaluate(displayedCounts, TIP);
   } finally {
     await run.close();

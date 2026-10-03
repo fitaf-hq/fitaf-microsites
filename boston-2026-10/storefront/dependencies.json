@@ -308,6 +308,42 @@
       "literal": "\"mobile-cart-summary__stat-value\"",
       "use": "the cart bar's \"Items\" value (below 1025 px; its other value, the cart's total, is a price and is not read): the plan's own count there",
       "spec": "SPEC-rung2-fill-c.md § 1.4; § 2a"
+    },
+    {
+      "id": "step-form",
+      "literal": "\"checkout__form\"",
+      "use": "§ 25, the three-step checkout: step 1 hides the store's form (.checkout__form) whole; step 2 hides each of its children that neither is nor holds a step-2 section (section.contact, section.delivery, section.schedule)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.2; R2-84, W20"
+    },
+    {
+      "id": "step2-contact",
+      "literal": "1,\"contact\"",
+      "use": "§ 25.2: step 2 shows the store's contact section (section.contact) and step 3 hides it; Continue from step 2 reads the validity of the controls inside it. ⚠ Read from the synthetic checkout (browser-store.mjs, since 5acc962), NOT yet found in the release's files: the literal is a static class attribute as Angular compiles one (AttributeMarker.Classes, 1, then the class), as [1,\"footer\"] is for H2; F2's next run says whether the store has it",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step2-delivery",
+      "literal": "1,\"delivery\"",
+      "use": "§ 25.2: step 2 shows the store's delivery section (section.delivery: delivery or pickup, the address) and step 3 hides it. ⚠ As step2-contact: from the synthetic checkout, not yet found in the release's files",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step2-schedule",
+      "literal": "1,\"schedule\"",
+      "use": "§ 25.2: step 2 shows the store's schedule section (section.schedule: the delivery date) and step 3 hides it. ⚠ As step2-contact: from the synthetic checkout, not yet found in the release's files",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "ng-invalid",
+      "literal": "\"ng-invalid\"",
+      "use": "§ 25.3: Angular's own marker of an invalid form control (the framework's, in the store's forms code): Continue from step 2 does not advance while a displayed control of step 2 carries it, and focuses the first",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.3; R2-87"
+    },
+    {
+      "id": "ng-touched",
+      "literal": "\"ng-touched\"",
+      "use": "§ 25.3: Angular's marker of a touched control: after a press of the store's pay button, a step-2 control ng-invalid AND ng-touched (the store's markAllAsTouched, or a refusal it receives) shows step 2",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.3; R2-88"
     }
   ]
 }

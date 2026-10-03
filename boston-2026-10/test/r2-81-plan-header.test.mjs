@@ -26,12 +26,42 @@ async function hidingSelectors() {
 }
 const names = (list, name) => new RegExp(`\\.${name.replace(/[-_]/g, (c) => `\\${c}`)}(?![\\w-])`).test(list);
 
+/**
+ * § 25 (the three-step checkout): the one hide rule also carries the step selectors, each beginning with a step class
+ * (`.fitaf-step-N`, or `:is(.fitaf-step-2,.fitaf-step-3)`) and the block's own foot (`:has(#fitaf-nav)`), which hide
+ * the order lines in steps 2 and 3 by design (§ 25.2; R2-84 and R2-85 show them displayed at step 1, in Chrome). They
+ * are taken out of the list before the "never hidden" check, which holds for every other selector; and the lines' one
+ * step selector is pinned to steps 2 and 3.
+ */
+function stepParts(list) {
+  const head = `${SCOPE}:is(`;
+  if (!list.startsWith(head) || !list.endsWith(")")) return { rest: list, steps: [] };
+  const inner = list.slice(head.length, -1);
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < inner.length; i++) {
+    if (inner[i] === "(") depth++;
+    else if (inner[i] === ")") depth--;
+    else if (inner[i] === "," && depth === 0) {
+      parts.push(inner.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(inner.slice(start));
+  const isStep = (s) => /^(:is\()?\.fitaf-step-\d/.test(s.trim());
+  return { rest: `${head}${parts.filter((s) => !isStep(s)).join(",")})`, steps: parts.filter(isStep) };
+}
+
+
 test("R2-81a: the style hides the plan group's header and its return link (H16, H17); never the lines, the group or the Total", async () => {
   const hiding = await hidingSelectors();
   for (const [id, name] of Object.entries(H)) {
     assert.ok(hiding.some((list) => list.startsWith(SCOPE) && names(list, name)), `${id}: .${name} hidden on the deep-carted checkout`);
   }
-  for (const name of KEPT) assert.ok(!hiding.some((list) => names(list.replace(/:has\([^)]*\)|:not\([^)]*\)/g, ""), name)), `.${name} never hidden`);
+  const lineSteps = hiding.flatMap((list) => stepParts(list).steps).filter((s) => names(s.replace(/:has\([^)]*\)|:not\([^)]*\)/g, ""), "summary__item"));
+  assert.deepEqual(lineSteps, [":is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item"], "§ 25: the lines hidden in steps 2 and 3 only, by one step selector");
+  for (const name of KEPT) assert.ok(!hiding.some((list) => names(stepParts(list).rest.replace(/:has\([^)]*\)|:not\([^)]*\)/g, ""), name)), `.${name} never hidden (but by § 25's step selectors)`);
 });
 
 test("R2-81a: F2 carries both names", async () => {

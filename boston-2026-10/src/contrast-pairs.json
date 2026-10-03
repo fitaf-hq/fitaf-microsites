@@ -72,7 +72,11 @@
     { "fg": "--ink", "bg": "--ice", "role": "body", "where": "the index page's list, 16px", "build": "mockups" },
     { "fg": "--field", "bg": "--ice", "role": "ui-or-heading", "where": "photo placeholder's dashed outline", "build": "mockups" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the legend's hover outline: an orange ring on a white ring around a part", "build": "mockups" },
-    { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "the hover outline's white ring, where the part is on the navy event bar", "build": "mockups" }
+    { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "the hover outline's white ring, where the part is on the navy event bar", "build": "mockups" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "the deep-carted checkout's step bar: the current step, 15px/700; Back's label, 16px/700 (SPEC-rung2-progress-and-checkout § 25)", "build": "storefront" },
+    { "fg": "--muted", "bg": "--white", "role": "body", "where": "the step bar: the other two steps, 15px (§ 25)", "build": "storefront" },
+    { "fg": "--white", "bg": "--cta", "role": "large-text", "where": "Continue's label, 19px/700 on the page's button orange (§ 25)", "build": "storefront" },
+    { "fg": "--navy", "bg": "--white", "role": "ui-or-heading", "where": "Back's 2px border (§ 25)", "build": "storefront" }
   ],
   "considered_not_drawn": [
     { "fg": "#ffffff", "bg": "#ff931e", "role": "large-text", "why": "the store's own button (white on its orange): measured, and under 60 even at 19px/700" },

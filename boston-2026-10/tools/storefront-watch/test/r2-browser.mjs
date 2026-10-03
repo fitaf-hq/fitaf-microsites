@@ -136,6 +136,32 @@ export function paymentMeasure() {
   };
 }
 
+/**
+ * In the page, § 25 (the three-step checkout): § 3 item 4's measure ACROSS the steps. Each call adds the controls
+ * displayed now, with style#fitaf-deep, to a set kept on the page (`reset` starts it again), and returns those the
+ * store displays without our style that no step has displayed so far, described. After the three steps, that is
+ * exactly what the style hides from the visitor altogether. Compared by element; reads and toggles our style only.
+ */
+export function unionMeasure({ reset = false } = {}) {
+  const LIST = "input, select, textarea, button, iframe, a[href], [role=switch], [role=radio]";
+  const style = document.getElementById("fitaf-deep");
+  const checkout = document.querySelector("app-checkout");
+  if (!checkout || !style) return null;
+  const describe = (el) => {
+    const cls = (el.getAttribute("class") || "").split(/\s+/).filter(Boolean)[0];
+    const name = el.getAttribute("name");
+    const label = (el.getAttribute("aria-label") || el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40);
+    return `${el.tagName.toLowerCase()}${cls ? `.${cls}` : ""}${name ? `[name=${name}]` : ""}${label ? ` "${label}"` : ""}`;
+  };
+  const displayed = () => [...checkout.querySelectorAll(LIST)].filter((el) => el.getClientRects().length > 0);
+  if (reset || !window.__fitafUnion) window.__fitafUnion = new Set();
+  for (const el of displayed()) window.__fitafUnion.add(el);
+  style.disabled = true;
+  const without = displayed();
+  style.disabled = false;
+  return { never: without.filter((el) => !window.__fitafUnion.has(el)).map(describe).sort(), seen: window.__fitafUnion.size };
+}
+
 /** In the page: is each selector's first element displayed (null: none on the page)? */
 export function displayedMap(selectors) {
   const out = {};
@@ -155,6 +181,71 @@ export function displayedCounts(selectors) {
   }
   return out;
 }
+
+// ── SPEC-rung2-progress-and-checkout § 25: the three-step checkout ─────────────────────────────────────────────────────
+// The block's own elements: the step bar, the foot (Back, and Continue where no phone bar is displayed), Continue, Back.
+export const STEP_IDS = { bar: "fitaf-bar", nav: "fitaf-nav", go: "fitaf-go", back: "fitaf-back" };
+/** § 25.2's step 2: the store's own sections (the live markup as browser-store.mjs carries it). */
+export const STEP2 = ["section.contact", "section.delivery", "section.schedule"];
+/** What a customer types into step 2 of the synthetic form (its required controls): valid entries, invented. */
+export const ENTRIES = [["email", "visitor@example.com"], ["phone", "6175550100"], ["firstName", "Test"], ["lastName", "Visitor"], ["address", "1 Main St"]];
+
+/**
+ * In the page: the step the block shows (the class html.fitaf-step-N), its bar's text and current step, its Continue
+ * (words, displayed, and whether it stands right after the store's .summary__pay-button) and Back, and the focused
+ * element described. Reads only.
+ */
+export function stepRead(ids) {
+  const html = document.documentElement;
+  const shown = (el) => Boolean(el && el.getClientRects().length > 0);
+  const clean = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : null);
+  const bar = document.getElementById(ids.bar);
+  const go = document.getElementById(ids.go);
+  const back = document.getElementById(ids.back);
+  const a = document.activeElement;
+  return {
+    classes: [1, 2, 3].filter((n) => html.classList.contains(`fitaf-step-${n}`)),
+    bar: clean(bar),
+    barShown: shown(bar),
+    current: clean(bar?.querySelector('[aria-current="step"]')),
+    nav: Boolean(document.getElementById(ids.nav)),
+    go: go ? { text: clean(go), shown: shown(go), inBar: Boolean(go.previousElementSibling?.matches(".summary__pay-button")) } : null,
+    back: back ? { text: clean(back), shown: shown(back) } : null,
+    focused: a && a !== document.body ? { name: a.getAttribute("name"), invalid: a.classList.contains("ng-invalid") } : null,
+  };
+}
+
+/** Wait until the block shows `step` (its class on <html>); the reading, or throws after `ms`. */
+export async function untilStep(run, step, ms = 5_000) {
+  const r = await poll(run.page, stepRead, STEP_IDS, (v) => v.classes.length === 1 && v.classes[0] === step, { timeoutMs: ms, everyMs: 50 });
+  if (!(r.classes.length === 1 && r.classes[0] === step)) throw new Error(`step ${step} not reached: ${JSON.stringify(r)}`);
+  return r;
+}
+
+/** A person's press of one of the block's buttons (a trusted click at its place on the screen). */
+export const press = (run, which) => run.page.click(`#${STEP_IDS[which]}`);
+
+/** A person typing step 2's entries, each into its own field (displayed: step 2 is shown); a field holding one is left. */
+export async function fillStep2(run, entries = ENTRIES) {
+  for (const [name, value] of entries) {
+    const sel = `app-checkout [name=${name}]`;
+    if (!(await run.page.$eval(sel, (el) => el.value))) await run.page.type(sel, value);
+  }
+}
+
+/** Forward from the step the block shows, as a person: Continue, with step 2's entries made before leaving step 2. */
+export async function walkTo(run, step) {
+  let now = (await poll(run.page, stepRead, STEP_IDS, (v) => v.classes.length === 1, { timeoutMs: 5_000, everyMs: 50 })).classes[0];
+  if (!(now <= step)) throw new Error(`walkTo goes forward only: at step ${now}, asked for ${step}`);
+  while (now < step) {
+    if (now === 2) await fillStep2(run);
+    await press(run, "go");
+    await untilStep(run, ++now);
+  }
+}
+
+/** In the page: the step-related parts of the checkout, each with how many are found and displayed. */
+export const SECTIONS = [".summary__item", ...STEP2, "section.payment", ".checkout__consent", "textarea[name=specialRequests]", "section.checkout__section.tip"];
 
 /** In the page: the screen's slides, the one shown, its title and step line; null when it is not on the page. */
 export function screenRead() {

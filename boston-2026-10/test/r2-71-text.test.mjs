@@ -1,7 +1,7 @@
 // R2-71 (SPEC-rung2-progress-and-checkout § 15.4, § 15.3; amended by § 17.3): the shipped text, the Footer block and
 // the console file as the build writes them. Every character is ASCII (the store's admin reads the block as HTML); no URL
 // in them that the live block lacks but the fixed list of the sheet's hosts (§ 17.1; the logo's src is read from the
-// page at run time: no image URL is written in); each at most the ceiling (15,360 bytes since § 17.3). "The live
+// page at run time: no image URL is written in); each at most the ceiling (20,480 bytes since § 25.7; 15,360 by § 17.3). "The live
 // block" is the one the watch's baseline expects in the store's Footer (storefront/watch-baseline.json, expectedFooter: its version line, the commit it was built from and its text's SHA-256): rebuilt here from that
 // commit's own source, words, colours and key function by this build, checked against that SHA-256 so it is exactly the
 // live text, and read with the same URL reader. The reader is shown to bite (R2-71b): an absolute URL, a

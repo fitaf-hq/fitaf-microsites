@@ -52,7 +52,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `SPEC-rung2-fill-c.md` | ⭐ fill C (ruled 2026-10-01): each press confirmed by the store's own count before the next, a re-press only when the store still shows the meal short, a settled re-read, the plan's own count before CHECKOUT, every stop naming the counts; § 2a the probe of the live store, § 2b the phasing (this phase: the Footer block; hosting on eatfitaf.com next), § 2c the build's notes | authority |
 | `src/storefront/fitaf-handoff.js` | rung 2: the hand-off script, **fill C, the one fill** (`SPEC-rung2-fill-c.md`: fill B's press loop replaced; every other rule of fill B, § 12, kept), with its two faces (the progress screen, the stripped checkout); its `//` lines are for maintainers and do not ship, and every line that ships is pinned byte for byte (R2-32) | INPUT |
 | `src/storefront/meal-key.js` | rung 2 § 11: a meal's key, ONE function: `handoff:link` imports it and the build inlines its text into fill B; since the two faces' § 15.1 a leading marketing tag (`🟠NEW: `) is not part of the name as keyed | INPUT |
-| `scripts/build-storefront.mjs` | `npm run build:storefront`: two files of one text, the plan counts, the key function, the screen's words (`data/messages.json`) and colours (`src/template.html`'s tokens) inlined, the version line; warns above 5,120 bytes and refuses above 15,360 (§ 11; the two faces' § 17.3), and refuses any `<` but the Footer block's own script tags (the two faces' § 11) | build |
+| `scripts/build-storefront.mjs` | `npm run build:storefront`: two files of one text, the plan counts, the key function, the screen's words (`data/messages.json`) and colours (`src/template.html`'s tokens) inlined, the version line; warns above 5,120 bytes and refuses above 20,480 (§ 11; the two faces' § 17.3, then § 25.7), and refuses any `<` but the Footer block's own script tags (the two faces' § 11) | build |
 | `scripts/handoff-link.mjs` | `npm run handoff:link`: prints a test link (payload version 2) and each meal's key beside its name | tool |
 | `dist-storefront/` | `fitaf-handoff.html` (the Footer block) and `fitaf-handoff.fill-B.console.js` (the same text, for a browser console) | OUTPUT, git-ignored |
 
@@ -90,8 +90,11 @@ exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.ha
   its count stops it. Every stop of its own names the counts (`stopped: the store counted K of N; short: <keys>` /
   `over: <keys>`), and its screen says, in `data/messages.json`'s `handoff.stopped`, that the cart could not be filled,
   then goes by its own 4 s clock. Its log line is `fill C, mpid N`; its cases are FC-1–FC-7 here and FC-6c in the
-  watch. **The text is `1e3802b8…`** (R2-32, PR-10, CC-8), **not yet pasted**: the block live in the store's Footer
-  is fill B's `cbc6d1ec…` (`5d5fb72`), which CC-8's golden names as the text this one `replaces`.
+  watch. Fill C's text `1e3802b8…` is the block live in the store's Footer (`e85b95a`). ⭐ **The text is `b65fb47f…`**
+  (R2-32, PR-10, CC-8) since the three-step checkout (SPEC-rung2-progress-and-checkout § 25: on a deep-carted checkout
+  only, *Your meals · Delivery · Payment*, one step at a time, a CSS state over the store's own sections; cases
+  R2-83–R2-91 and W20; the ceiling 20,480 bytes), **not yet pasted**: CC-8's golden names `1e3802b8…` as the text it
+  `replaces`.
 - **The link, payload version 2 (§ 11)**: `#fitaf=2.<key>[*n].<key>[*n]…[.~CODE]`, ASCII, dot-separated. Each meal
   is its **key**, 5 base-36 characters: 32-bit FNV-1a over the UTF-8 bytes of its name as the page shows it
   (whitespace collapsed and trimmed), the last 5 characters (`src/storefront/meal-key.js`, the one function

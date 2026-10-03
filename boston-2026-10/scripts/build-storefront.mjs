@@ -5,7 +5,7 @@
 //   fitaf-handoff.fill-B.console.js  version line and text, for a browser console (the one-browser run; the name is
 //                                    kept, so a runbook that names it still works)
 // The size (SPEC-rung2 § 11 item 5, the Advisor's ruling), over each whole file: the build WARNS above 5,120 bytes (the
-// target) and REFUSES above 10,240 (the ceiling), writing nothing. And it REFUSES, writing nothing, any `<` in a file
+// target) and REFUSES above the ceiling (20,480 since SPEC-rung2-progress-and-checkout § 25.7), writing nothing. And it REFUSES, writing nothing, any `<` in a file
 // but the Footer block's own opening <script> and closing </script> (SPEC-rung2-progress-and-checkout § 11, amended:
 // the store's admin reads the text inside the block as HTML, and `<` before a letter, even across a space, as a tag).
 // Its own directory and its own npm script, NOT `npm run build`: the production build stays byte-identical (S20).
@@ -33,11 +33,12 @@ export const DIST_STOREFRONT = join(ROOT, "dist-storefront");
  */
 export const TARGET_SHIPPED_BYTES = 5120;
 /**
- * SPEC-rung2 § 11 item 5: the CEILING; a file above it refuses the build, and nothing is written. 15,360 since
- * SPEC-rung2-progress-and-checkout § 17.3 (the Advisor, 2026-10-01: "bumping the script limit to 15 kb just to get
- * through this meeting"); it was 10,240.
+ * SPEC-rung2 § 11 item 5: the CEILING; a file above it refuses the build, and nothing is written. 20,480 since
+ * SPEC-rung2-progress-and-checkout § 25.7 (the Advisor, 2026-10-02, for the three-step checkout: "Raise the ceiling";
+ * the block stays inline in the Footer); 15,360 since its § 17.3 (2026-10-01: "bumping the script limit to 15 kb just to
+ * get through this meeting"); 10,240 before.
  */
-export const MAX_SHIPPED_BYTES = 15360;
+export const MAX_SHIPPED_BYTES = 20480;
 /** The Footer block, and the same text for a browser console. */
 const FOOTER_FILE = "fitaf-handoff.html";
 const CONSOLE_FILE = "fitaf-handoff.fill-B.console.js";
@@ -57,11 +58,19 @@ const HOSTS_SLOT = "/*HOSTS*/ []";
  * The words the screen can use; `step`'s placeholders, each required in it. `stopped` since fill C (SPEC-rung2-fill-c
  * § 1.6: the line at a stop of its own). A build requires and inlines, in this order, those the source reads (`UI.<word>`),
  * so a source from before `stopped` (R2-71 rebuilds the live block from its own commit) builds its own text unchanged.
+ * Since SPEC-rung2-progress-and-checkout § 25, the three-step checkout's: the bar's names (`steps`), Continue at steps 1
+ * and 2 (`to_delivery`, `to_payment`), `back`, and the recap before the Total (`recap`, with {n}).
  */
-const UI_WORDS = ["title", "step", "checkout", "stopped"];
+const UI_WORDS = ["title", "step", "checkout", "stopped", "steps", "to_delivery", "to_payment", "back", "recap"];
+/** § 25: the step bar's names are `steps` split at this separator (the block splits it the same way), exactly three. */
+const STEPS_SEPARATOR = " \u00b7 ";
+const STEPS_COUNT = 3;
 const STEP_PLACEHOLDERS = ["{meal}", "{n}", "{total}"];
-/** The page's tokens the screen uses (src/template.html :root), each required to be a hex colour. */
-export const SCREEN_TOKENS = ["--navy", "--cta", "--ice", "--white"];
+/**
+ * The page's tokens the screen uses (src/template.html :root), each required to be a hex colour; since
+ * SPEC-rung2-progress-and-checkout § 25 also the checkout's step bar and buttons (`--muted`: the bar's other steps).
+ */
+export const SCREEN_TOKENS = ["--navy", "--cta", "--ice", "--white", "--muted"];
 /** A whole line that is only a `//` comment. The script has no template literal, so such a line is always one. */
 const SOURCE_ONLY_COMMENT = /^[ \t]*\/\/.*\n/gm;
 /** A change to any of these changes a text, so any of them uncommitted marks the version line "-dirty". */
@@ -94,13 +103,21 @@ export function screenWords(messages, used = UI_WORDS) {
   for (const p of STEP_PLACEHOLDERS) {
     if (!words.step.includes(p)) throw new Error(`data/messages.json: handoff.step has no ${p}`);
   }
+  if (used.includes("steps") && words.steps.split(STEPS_SEPARATOR).filter((s) => s.trim()).length !== STEPS_COUNT) {
+    throw new Error(`data/messages.json: handoff.steps is not three names joined by "${STEPS_SEPARATOR}"`);
+  }
+  if (used.includes("recap") && !words.recap.includes("{n}")) throw new Error("data/messages.json: handoff.recap has no {n}");
   return Object.fromEntries(used.map((key) => [key, words[key]]));
 }
 
-/** § 1: the page's tokens the screen uses, as declarations (`--navy:#1b2360;…`), each a hex colour or the build refuses. */
-export function screenTokens(templateHtml) {
+/**
+ * § 1: the page's tokens the screen uses, as declarations (`--navy:#1b2360;…`), each a hex colour or the build refuses.
+ * `used`: those the source reads (`var(--…)`), in SCREEN_TOKENS's order, as the words are (UI_WORDS): so a source from
+ * before § 25's `--muted` (R2-71 rebuilds the live block from its own commit) builds its own text unchanged.
+ */
+export function screenTokens(templateHtml, used = SCREEN_TOKENS) {
   const tokens = pageTokens(templateHtml);
-  return SCREEN_TOKENS.map((name) => {
+  return used.map((name) => {
     if (!/^#[0-9a-f]{3,8}$/i.test(tokens[name] ?? "")) throw new Error(`src/template.html: ${name} is not a hex colour (${tokens[name]})`);
     return `${name}:${tokens[name]}`;
   }).join(";");
@@ -123,7 +140,7 @@ export async function storefrontText({
   }
   const plans = await loadJson(plansPath);
   const words = screenWords(await loadJson(messagesPath), UI_WORDS.filter((word) => source.includes(`UI.${word}`)));
-  const tokens = screenTokens(await readFile(templatePath, "utf8"));
+  const tokens = screenTokens(await readFile(templatePath, "utf8"), SCREEN_TOKENS.filter((name) => source.includes(`var(${name})`)));
   const table = (rows) => `/* data/plans.json, read_on ${plans.read_on} */ ${JSON.stringify(rows)}`;
   return source
     .replace(SOURCE_ONLY_COMMENT, "")

@@ -66,3 +66,25 @@ test("B2 mutant: a colour token no pair measures is refused", async () => {
   assert.equal(res.status, 1, res.stdout);
   assert.match(res.stdout, /PROBLEM: colour token --unmeasured is in no pair/);
 });
+
+// SPEC-rung2-progress-and-checkout § 25.4: the three-step checkout's step bar and buttons, drawn by the Footer block on
+// the store's checkout in the page's own tokens (inlined by the build, as the progress screen's are), contrast checked as
+// B2 does: each colour pair they draw is a "storefront" row of the table, and passes. The block's own step styles name
+// exactly those tokens (var(--…) in stepper(), read from the source), so a colour added there without a row fails here.
+test("B2b: the three-step checkout's pairs (storefront) — each drawn pair in the table, passing; the block's steps use only their tokens", async () => {
+  const { rows } = await measure();
+  const ours = rows.filter((r) => r.build === "storefront");
+  const drawn = [
+    ["--navy", "--white", "body"],
+    ["--muted", "--white", "body"],
+    ["--white", "--cta", "large-text"],
+    ["--navy", "--white", "ui-or-heading"],
+  ];
+  assert.deepEqual(ours.map((r) => [r.fg, r.bg, r.role]), drawn, "the storefront rows: the step bar, Back, Continue");
+  for (const r of ours) assert.ok(r.pass, `${r.fg} on ${r.bg} (${r.role}): Lc ${r.lc.toFixed(1)}`);
+  const source = await readFile(join(ROOT, "src", "storefront", "fitaf-handoff.js"), "utf8");
+  const stepper = source.slice(source.indexOf("function stepper("), source.indexOf("\n}\n", source.indexOf("function stepper(")));
+  assert.ok(stepper.length > 500, "fixture control: stepper() read from the source");
+  const used = [...new Set([...stepper.matchAll(/var\((--[a-z-]+)\)/g)].map((m) => m[1]))].sort();
+  assert.deepEqual(used, [...new Set(drawn.flatMap(([fg, bg]) => [fg, bg]))].sort(), "the step styles' tokens are the measured ones");
+});

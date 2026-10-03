@@ -1,5 +1,5 @@
 // R2-29 (SPEC-rung2 § 11 item 5, the Advisor's ruling: "We can go up to 10k for the footer. 5k is a good target"): over
-// each WHOLE built file, the build WARNS above 5,120 bytes and REFUSES above 15,360 (SPEC-rung2-progress-and-checkout § 17.3; was 10,240), writing nothing. Padded copies of
+// each WHOLE built file, the build WARNS above 5,120 bytes and REFUSES above 20,480 (SPEC-rung2-progress-and-checkout § 25.7; 15,360 by its § 17.3, 10,240 before), writing nothing. Padded copies of
 // a source (a `/* */` comment at its top, which ships, so every file grows by the same bytes) are built to exact sizes:
 // 5,200 and 10,300 as the contract names them, and each limit's edge. The ceiling's are reached from the source itself.
 // A pad only adds, and fill B's files are well over the target unpadded (8,631 bytes since rung 2's two faces,
@@ -74,8 +74,8 @@ async function refusedWith(file, bytes) {
 
 const warned = (built) => built.warnings.map((w) => w.split(":")[0]);
 
-test("R2-29 fixture control: the limits; a pad can reach 15,360 from fill B's file, and 5,120 from the small source", async () => {
-  assert.deepEqual([TARGET_SHIPPED_BYTES, MAX_SHIPPED_BYTES], [5120, 15360]); // § 17.3 (was 10,240)
+test("R2-29 fixture control: the limits; a pad can reach 20,480 from fill B's file, and 5,120 from the small source", async () => {
+  assert.deepEqual([TARGET_SHIPPED_BYTES, MAX_SHIPPED_BYTES], [5120, 20480]); // § 25.7 (15,360 by § 17.3; 10,240 before)
   const base = await sizes();
   assert.ok(base[FOOTER] <= MAX_SHIPPED_BYTES - 5, `the Footer block: ${base[FOOTER]} bytes`);
   assert.ok(base[B] > TARGET_SHIPPED_BYTES, `fill B's console file is over the target unpadded: ${base[B]} bytes`);
@@ -96,20 +96,20 @@ test("R2-29a: a built file of 5,200 bytes — built, with a warning naming it; e
   for (const [name, bytes] of Object.entries(onDisk)) assert.equal(warned(built).includes(name), bytes > 5120, name);
 });
 
-test("R2-29b: a built file of 15,400 bytes — refused, naming it, and nothing written", async () => {
-  const { error, written } = await refusedWith(FOOTER, 15400);
-  assert.match(String(error?.message), /^fitaf-handoff\.html: 15,400 bytes; the ceiling is 15,360/);
+test("R2-29b: a built file of 20,520 bytes — refused, naming it, and nothing written", async () => {
+  const { error, written } = await refusedWith(FOOTER, 20520);
+  assert.match(String(error?.message), /^fitaf-handoff\.html: 20,520 bytes; the ceiling is 20,480/);
   assert.equal(written, false, "nothing written, not even the directory");
 });
 
-test("R2-29c: the edges — 5,120 bytes is no warning and 5,121 is one; 15,360 is built and 15,361 refused", async () => {
+test("R2-29c: the edges — 5,120 bytes is no warning and 5,121 is one; 20,480 is built and 20,481 refused", async () => {
   const onTarget = await builtWith(B, 5120, { small: true });
   assert.equal(onTarget.onDisk[B], 5120, "5,120: built");
   assert.ok(!warned(onTarget.built).includes(B), "5,120: on the target, no warning");
   assert.ok(warned((await builtWith(B, 5121, { small: true })).built).includes(B), "5,121: a warning");
-  const top = await builtWith(FOOTER, 15360);
-  assert.equal(top.onDisk[FOOTER], 15360, "15,360: built");
-  const over = await refusedWith(FOOTER, 15361);
-  assert.match(String(over.error?.message), /15,361 bytes; the ceiling is 15,360/);
+  const top = await builtWith(FOOTER, 20480);
+  assert.equal(top.onDisk[FOOTER], 20480, "20,480: built");
+  const over = await refusedWith(FOOTER, 20481);
+  assert.match(String(over.error?.message), /20,481 bytes; the ceiling is 20,480/);
   assert.equal(over.written, false);
 });
