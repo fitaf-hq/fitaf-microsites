@@ -1110,3 +1110,58 @@ step 3 the three. The F2 literals are the compiled class lists (`"checkout__sect
 literal already uses), **one per modifier**, so F2 reads them in the checkout chunk itself. The synthetic checkout is
 re-shaped to the live sections and headings so the cases test the markup the store ships. ⬜ Still not seen rendered: the
 live layout of these sections at 390 and 1280 px, which the pre-paste rehearsal shows.
+
+## 28. Built — found at the build of § 27
+
+Built at `5f13cb9`. § 27 above is unchanged; this section says what changed, F2's result, and what remains unseen.
+
+- **The block**: step 2 is now Q2 = `.checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,`
+  `.schedule,.pickup-location,.special-requests)`, step 3 Q3 = `.checkout__section:is(.tip,.payment,.checkout__consent)`,
+  selected by the modifier on `.checkout__section`, never by an element's name (§ 26's `section.contact`, `.delivery`,
+  `.schedule` are gone). Step 2 hides every child of the form that neither is nor holds one of Q2, and Q3 and
+  `.checkout__submit` by name (in case a release wraps the sections); step 3 hides Q2; step 1 still hides the form. So
+  whichever of the seven the store renders (the delivery address and method for delivery, the pickup location for
+  pickup) is step 2's, and **the food notes (`special-requests`) are step 2's**, where § 26's synthetic form had left a
+  loose textarea to step 3. Continue's validity and the rule after a pay press read Q2. `special-requests--food` is not
+  selected (§ 27: the section carries `special-requests` too); a release that dropped `special-requests` would show the
+  food notes in step 3 as well, never lose them.
+- **The synthetic checkout** (`browser-store.mjs`) is re-shaped to § 27: each section a `section.checkout__section` with
+  its modifier and the live heading: `contact` (Contact), `order-type` (Order type: the two radios), `delivery-address`
+  (Delivery address: the address and state in the `formgroupname="address"` group), `delivery-method` (Delivery method: a
+  select), `schedule` (Delivery schedule, or Pickup schedule), `special-requests special-requests--food` (Food Notes),
+  the tip, the discounts, `payment` (Payment), and `checkout__consent` (the terms, now a section, was a label); with
+  `orderType: "pickup"`, `pickup-location` (Pickup location: a required select) in place of the delivery address and
+  method. Angular's state stays on the real fields: the contact's four (required), the address (required), the state,
+  the delivery method, the pickup location (required, pickup), the date, the food notes. The controls inside and their
+  names are the synthetic store's own, not read from the release (only the sections and headings are).
+- **F2** (`storefront/dependencies.json`, 57 → 63): § 26's three guessed `1,"contact"`, `1,"delivery"`, `1,"schedule"`
+  removed; one literal per modifier added, as the checkout chunk compiles the class list and as H10's tip literal is
+  written: `"checkout__section","<modifier>"` for `contact`, `order-type`, `delivery-address`, `delivery-method`,
+  `schedule`, `pickup-location`, `special-requests`, `payment` and `checkout__consent` (the tip's is H10's
+  `"checkout__section","tip"`, its use extended). **Run once**, `npm --prefix boston-2026-10/tools/storefront-watch run
+  watch -- --full --no-browser`, 2026-10-03T01:58:05Z, entry `main-ZWZNOUKM.js` (published 2026-10-03T00:15:44Z), 164
+  requests, every one to the store's origin: **F2 — 63 of 63 found in the fetched files.** F1 flagged the release
+  against this branch's baseline (`main-Y5BLQZ6B.js`), as expected: the baseline is not accepted here. F3–F5 not run (no
+  browser). ⚠ F2 says found, not where: that the section literals are found in the checkout chunk (`chunk-C7ZYYQVI.js`)
+  rather than elsewhere rests on § 27's reading; each is a two-class pair, which the false match of `1,"contact"`
+  (`monarch-contact`) was not.
+- **The cases**: R2-84 by modifier (the set the store renders for delivery a fixture control); **R2-84b**, new (pickup:
+  step 2 shows the pickup location and not the delivery address or method; Continue refused, the location focused, until
+  one is chosen; step 3 hides it); R2-83 (the rendered sections after a reload and on an ordinary visit); R2-88 (the
+  store's refusal shown in the delivery address); R2-89 (the food notes typed at step 2); W14b (W11's count at step 3:
+  the 21 H controls plus step 2's eleven, the delivery method and the food notes added); W20a and W20b (the modifier
+  names; the delivery-rendered set). `lib/faces.mjs`'s `STEP2` and `STEPS` are by modifier; W20 leaves step 3's tip to
+  H10 (hidden while none is chosen).
+- **A stall, not reproduced**: in one run, W14b's smoke waited about 15 minutes for fill C's verdict (the smoke's ceiling
+  is 768.6 s) while the machine's load average was 44–118 from other processes; run alone it passed in 17 s, and in the
+  full suite. The cause is not established.
+- **The size**: the text `76871ff95ab458a2453625efa0d8b8d8dd4ea330d9f02d0232ca6713c06a36d7`, 17,498 bytes; the Footer block
+  **17,617** bytes and the console file **17,598** at `5f13cb9` (17,488 and 17,469 at `ba9eabc`); every character ASCII;
+  two `<` in the Footer block (its own) and none in the console file; under the 20,480 ceiling.
+- **The pins**: R2-32, PR-10 and CC-8's `footer_text_sha256` moved from `b65fb47f…` to `76871ff9…`; CC-8's `replaces` still
+  names the live `1e3802b8…` (`e85b95a`); `storefront/watch-baseline.json` untouched.
+- **The suites** at `5f13cb9`: site 512 of 512; watch 162 of 162 (one Chrome at a time).
+- ⬜ **Seen only on the synthetic checkout** (the six screenshots re-shot, kept off every repository): on the synthetic
+  page, with the browser's default heading margins, step 2's seven sections run past one 390 × 844 screen; the live
+  spacing, layout and the controls inside the sections are the rehearsal's to show at both widths. ⬜ **Not run on the
+  live store**; no paste.
