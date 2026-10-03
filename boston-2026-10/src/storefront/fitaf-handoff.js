@@ -87,8 +87,10 @@ return function () {
 // <html> … and removes with it": the screen itself is that mark). Fill B's own test for a displayed control
 // (getClientRects) still finds CONTINUE TO CHECKOUT, and presses it as before.
 // § 15.3: the carousel's photos are `.c img` in the style, so the screen's Fit AF logo (below) is not one of them.
+// The page's colour tokens (TOK, the build's TOKENS slot: `--navy:#…;…`) are the screen's custom properties, and since
+// SPEC-rung2-progress-and-checkout § 25 also those of the checkout's step bar and buttons (stepper(), below).
 var S, NOW, SLIDES = {}, CODE, L, SHEET, CELLS = {}, BAD, F;
-var CSS = "#fitaf-screen{/*TOKENS*/;position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
+var TOK = "/*TOKENS*/", CSS = "#fitaf-screen{" + TOK + ";position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
 "#fitaf-screen>div{width:100%;max-width:420px}#fitaf-screen h2{margin:0 0 16px;font-size:24px;font-weight:700;color:inherit}" +
 "#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
 "#fitaf-screen .c{margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
@@ -201,9 +203,28 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 // code of 2026-09-29; their specificity is above the store's own (.summary__item[_ngcontent-...]), so no !important.
 // § 21: H16 the plan group's header (.summary__plan-group-header: the plan's name, "Remove plan", the chevron) and H17
 // its return link (.summary__plan-return, "Return to ..."), hidden.
+// § 25, the three-step checkout (ruled 2026-10-02: every width; the ceiling 20,480 bytes): one step at a time, a CSS
+// STATE, the class html.fitaf-step-1, -2 or -3 (stepper(), below), over the store's own sections, inside the same one
+// scoped hide rule. The store's sections, as § 27 measured them in the live release's files: each a .checkout__section
+// with ONE modifier, selected by it, never by an element's name. Q2, step 2's seven (whichever the store renders, for
+// delivery or for pickup): contact, order-type, delivery-address, delivery-method, schedule, pickup-location and
+// special-requests (Food Notes). Q3, step 3's three: tip (while chosen, H10), payment, checkout__consent. Step 1 hides the
+// form (.checkout__form): the summary, its lines and the Total. Step 2 hides the order lines (.summary__item), every child
+// of the form that neither is nor holds one of Q2, and Q3 and the form's pay button (.checkout__submit) by name too, in
+// case a release wraps the sections. Step 3 hides the lines and Q2: the rest of the form (Q3, the pay button, and what no
+// table names) shows. So every control of the form is displayed in exactly one step, and nothing of the store's is removed,
+// moved or pressed. On a phone the summary's PAY NOW (.summary__pay-button) is hidden in steps 1 and 2 ONLY while the
+// block's Continue stands right after it (`:has(+#fitaf-go)`), in its place. ⭐ Every step rule also requires the
+// block's own foot, #fitaf-nav, inside the checkout (`:has(#fitaf-nav)`): if the store draws its checkout again without
+// it (the visitor left and came back in the app), the step class alone hides nothing, and the visitor has the whole
+// stripped checkout, never a step with no way on. The recap (steps 2 and 3, "N meals" before the store's own Total) is
+// mark()'s one rule that adds rather than hides: a ::before of the Total, its words data/messages.json's.
+var Q2 = ".checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests)", Q3 = ".checkout__section:is(.tip,.payment,.checkout__consent)", N, AT, PAID;
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
 ".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
-".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return){display:none!important}" +
+".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return," +
+".fitaf-step-1:has(#fitaf-nav) .checkout__form,:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item,.fitaf-step-2:has(#fitaf-nav) :is(.checkout__form>:not(" + Q2 + ",:has(" + Q2 + "))," + Q3 + ",.checkout__submit)," +
+".fitaf-step-3:has(#fitaf-nav) " + Q2 + ",:is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) .summary__pay-button:has(+#fitaf-go)){display:none!important}" +
 "html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}" +
 "html.fitaf-deep:has(app-checkout) .summary__item{padding:3px 6px;margin:0 0 2px;gap:8px;align-items:center}html.fitaf-deep:has(app-checkout) .summary__item-image{width:48px;height:48px}" +
 "html.fitaf-deep:has(app-checkout) .summary__item-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}";
@@ -211,14 +232,82 @@ var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.ap
 // store's hidden header was (H1). Inside app-checkout, so it goes with the component, as every H rule stops applying:
 // only while the checkout is on the page, and only for a deep-carted visit (it is placed at done, never on a stop).
 // Last, so that nothing it does can keep the mark and the style from being set.
+// § 25: last, the steps (stepper), so that nothing they do can keep the mark, the style or the logo from being set.
 function mark() {
 var d = w.document, s = d.createElement("style"), c, i;
 s.id = "fitaf-deep";
-s.textContent = DEEP;
+s.textContent = DEEP + "html.fitaf-deep:has(app-checkout) :is(:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__total)::before{content:" + JSON.stringify(UI.recap.replace("{n}", N)) + ";margin-right:.4em}";
 d.head.appendChild(s);
 d.documentElement.classList.add("fitaf-deep");
 if (CODE) d.documentElement.classList.add("fitaf-code");
 if ((c = d.querySelector("app-checkout")) && (i = logo("16px auto;height:40px"))) c.prepend(i);
+if (c) ui(function () { stepper(c, i); });
+}
+
+// § 25, the three-step checkout's own elements, made with the DOM (§ 11: no markup), each with an id and its style
+// inline (the page's tokens, TOK; the store's own type, `font-family: inherit`), so style#fitaf-deep still only hides
+// the store's elements (R2-42b): the step bar (#fitaf-bar, the three names of data/messages.json's `steps`, numbered,
+// the current one marked aria-current="step"), after the logo at the top of the checkout; the foot (#fitaf-nav), the
+// checkout's last child, holding Back (#fitaf-back); and Continue (#fitaf-go). Both are type="button", so neither can
+// submit a form it stands in. ⛔ No :has() in the browser: no steps at all (the rules could not apply), the stripped
+// checkout as before.
+// place(): Continue stands in the store's phone bar, right after its PAY NOW (.summary__pay-button), while that bar is
+// displayed (the store shows it at 1024 px and narrower), so the style hides PAY NOW in its place (steps 1 and 2); else in
+// the foot, after Back. At every step and every resize. The foot then keeps clear of the store's bar below it. The foot
+// centres its buttons as a pair: the store's own layout around it (its column widths) is not the block's to know.
+// Continue from step 2 reads the store's own validity, Angular's `ng-invalid` (bad()): the first displayed control of
+// Q2 so marked that holds none so marked (a field, not its group or the form), focused, in view, and no step taken; the
+// store shows its own message. The block has no rule of its own about any entry. Back never loses an entry: a step only
+// hides; Angular keeps every field.
+// After a press of the store's pay button (PAID: a click inside .checkout__submit or .summary__pay-button, read in the
+// capture phase, never prevented), a control of Q2 that the store marks ng-invalid AND ng-touched (its markAllAsTouched,
+// or a refusal it receives later) while step 2 is hidden shows step 2 with that control focused (a MutationObserver on
+// the checkout's classes; no timer).
+function own(tag, id, css, p) { var e = w.document.createElement(tag); e.id = id; e.style.cssText = TOK + ";" + css; return p ? p.appendChild(e) : e; }
+function stepper(c, i) {
+if (!w.CSS.supports("selector(:has(+*))")) return;
+var d = w.document, h = d.documentElement, BTN = "font-family:inherit;font-weight:700;line-height:1.2;border-radius:6px;cursor:pointer;",
+  bar = own("div", "fitaf-bar", "display:table;margin:8px auto 16px;padding:6px 14px;border-radius:6px;background:var(--white);color:var(--muted);font-family:inherit;font-size:15px;line-height:1.4"),
+  nav = own("div", "fitaf-nav", "display:flex;justify-content:center;gap:12px;margin:24px 0 16px;padding:0 16px", c),
+  back = own("button", "fitaf-back", BTN + "background:var(--white);color:var(--navy);border:2px solid var(--navy);padding:10px 18px;font-size:16px", nav),
+  go = own("button", "fitaf-go", BTN + "background:var(--cta);color:var(--white);border:0;padding:12px 20px;font-size:19px");
+function place() {
+  var p = c.querySelector(".summary__pay-button"), r = p && p.parentNode.getClientRects()[0];
+  if (r) p.after(go); else nav.append(go);
+  nav.style.marginBottom = (r ? Math.max(0, w.innerHeight - r.top) : 0) + 16 + "px";
+}
+function at(n) {
+  AT = n;
+  [1, 2, 3].forEach(function (k) { h.classList.toggle("fitaf-step-" + k, k === n); });
+  [].forEach.call(bar.children, function (s, k) {
+    s.style.cssText = k + 1 === n ? "color:var(--navy);font-weight:700" : "";
+    if (k + 1 === n) s.setAttribute("aria-current", "step"); else s.removeAttribute("aria-current");
+  });
+  go.textContent = n === 1 ? UI.to_delivery : UI.to_payment;
+  go.style.display = n > 2 ? "none" : "";
+  back.style.display = n > 1 ? "" : "none";
+  place();
+  w.scrollTo(0, 0);
+}
+function bad(q, shown) {
+  return [].filter.call(c.querySelectorAll(Q2 + q), function (e) { return !e.querySelector(".ng-invalid") && (!shown || e.getClientRects().length); })[0];
+}
+function fix(e) {
+  at(2);
+  e = e.matches("input,select,textarea") ? e : e.querySelector("input,select,textarea") || e;
+  e.scrollIntoView({ block: "center" });
+  e.focus({ preventScroll: true });
+}
+UI.steps.split(" \u00b7 ").forEach(function (t, k) { if (k) bar.append(" \u00b7 "); bar.appendChild(d.createElement("span")).textContent = k + 1 + " " + t; });
+if (i) i.after(bar); else c.prepend(bar);
+back.type = go.type = "button";
+back.textContent = UI.back;
+back.onclick = function () { at(AT - 1); };
+go.onclick = function () { var e = AT === 2 && bad(" .ng-invalid", 1); if (e) fix(e); else at(AT + 1); };
+at(1);
+w.addEventListener("resize", place);
+c.addEventListener("click", function (e) { if (e.target.closest(".checkout__submit,.summary__pay-button")) PAID = 1; }, true);
+new w.MutationObserver(function () { var e = PAID && AT !== 2 && bad(" .ng-invalid.ng-touched"); if (e) fix(e); }).observe(c, { subtree: true, attributes: true, attributeFilter: ["class"] });
 }
 
 // SPEC-rung2-progress-and-checkout § 17.1: the link's photo part, after the meal part, "!"-separated (the link tool,
@@ -443,6 +532,7 @@ log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" :
 // SPEC-rung2-progress-and-checkout § 1, § 2 item 1: the screen, now that the link and the plan's count have passed
 // their checks, and before the fill's first poll. A link refused above shows nothing new.
 CODE = p.code;
+N = p.total;
 if (f.length) ui(function () { photos(f, p.items); });
 ui(screen);
 // The two-fill source's dispatch, kept because it ships (SPEC-rung2 § 12 item 3): FILL is "C", so the line after it

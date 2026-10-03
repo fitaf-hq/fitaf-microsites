@@ -27,6 +27,17 @@
 //   W17  (§ 17.4, a report, not a pass rule) per slide of the progress screen, whether it showed Fit AF's sheet: an img
 //        on a host of the block's fixed list (the site's src/storefront/photo-hosts.js), shown (loaded), failed (the
 //        browser reported an error: the slide fell back to today's rule), asked (neither seen) or not found.
+//   W20  (§ 25, the three-step checkout; § 25.5 names it "a new W19", but W19 is § 21's) the walk: when the block draws
+//        its steps (its foot, #fitaf-nav, in app-checkout), the checkout is read at step 1 (done), then after the
+//        block's own Continue (step 2), then after Continue again (step 3). ⚠ The smoke types nothing, so on a store
+//        whose step-2 fields are required Continue REFUSES at step 2 (§ 25.3, as it must): the refusal is recorded (the
+//        control the block focused, and whether it is ng-invalid) and step 3 is entered by setting the block's own class
+//        (html.fitaf-step-3), which reads exactly what step 3 displays. At each step: § 25.2's sections (each step's own
+//        displayed, the others' hidden), the Total displayed, and W11's measure with that step's own allowance (the
+//        controls of the steps not shown); the pay button displayed at step 3 and at no other (§ 25.2, W11 as amended).
+//        The hide list (W12, W14, W18, W19) is judged over every step (a target displayed at any step fails), the lines
+//        (W18) and the logo (W16) at step 1. A block from before § 25 (no foot): one reading at done, as before, and
+//        W20 says so; a report, not a failure, so the hourly smoke of the live block before the paste is unchanged.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -100,6 +111,25 @@ export const PAY = [".checkout__submit", ".summary__pay-button"];
 export const FACES_MS = 10_000;
 /** § 15.3 (W16): a Fit AF logo of ours, on the screen or in app-checkout. The store's own header logo is neither. */
 export const LOGO = 'img[alt="Fit AF"]';
+/** § 25 (W20): the block's own step elements: its foot (Back), Continue. Their presence is a block that draws steps. */
+export const STEP_NAV = "fitaf-nav";
+export const STEP_GO = "fitaf-go";
+/**
+ * § 27 (the live release's checkout, replacing § 25.2's synthetic names): step 2's sections, each a .checkout__section
+ * with its modifier; the store renders the delivery address and method for delivery, the pickup location for pickup.
+ */
+export const STEP2 = ["contact", "order-type", "delivery-address", "delivery-method", "schedule", "pickup-location", "special-requests"].map((m) => `.checkout__section.${m}`);
+/**
+ * § 25.2's table, by what each step shows: each found one displayed at its step and hidden at the others (W20). Step 3's
+ * tip is left out: H10 hides it while none is chosen (W14), so its being hidden at step 3 is not a fault.
+ */
+export const STEPS = [
+  { step: 1, shows: [".summary__item"] },
+  { step: 2, shows: STEP2 },
+  { step: 3, shows: [".checkout__section.payment", ".checkout__section.checkout__consent"] },
+];
+/** How long the walk waits for a press of the block's Continue to show the next step. */
+export const STEP_MS = 2_000;
 
 /**
  * In the page, from before its own scripts (page.evaluateOnNewDocument): record, in order, the screen arriving, each
@@ -162,7 +192,7 @@ export function readRecorded(screen) {
  * and label, so a report can name it; the sets are compared by element. The style is disabled only for W11's second
  * reading, and enabled again before anything else is read.
  */
-export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo, line = ".summary__item" }) {
+export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo, line = ".summary__item", step = null, step2 = [], sections = [] }) {
   const style = document.getElementById(styleId);
   const checkout = document.querySelector("app-checkout");
   const shown = (el) => el.getClientRects().length > 0;
@@ -187,7 +217,19 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
     style.disabled = true;
     const without = measure();
     const inside = hide.filter((h) => h.mayHideControls).flatMap((h) => h.selectors);
-    const allowed = without.filter((el) => inside.some((sel) => el.matches(sel) || el.closest(sel)));
+    // § 25 (W20): at a step, the controls of the steps not shown are hidden by design (the form at step 1; at step 2
+    // the form but step 2's sections, and the lines; at step 3 step 2's sections and the lines), and so is the pay
+    // button before step 3. With no step (a block from before § 25), none.
+    const offStep = (el) => {
+      const form = el.closest(".checkout__form");
+      const two = step2.length && el.closest(step2.join(","));
+      const lines = el.closest(line);
+      if (step === 1) return Boolean(form || isPay(el));
+      if (step === 2) return Boolean((form && !two) || lines || isPay(el));
+      if (step === 3) return Boolean(two || lines);
+      return false;
+    };
+    const allowed = without.filter((el) => inside.some((sel) => el.matches(sel) || el.closest(sel)) || offStep(el));
     const hideCounts = hide.flatMap((h) => h.selectors.map((selector) => ({ id: h.id, selector, found: document.querySelectorAll(selector).length })));
     style.disabled = false;
     out.payment = {
@@ -202,6 +244,10 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
     out.hide = hideCounts.map((h) => ({ ...h, displayed: [...document.querySelectorAll(h.selector)].filter(shown).length }));
     const totals = [...document.querySelectorAll(totalSel)];
     out.total = { found: totals.length, displayed: totals.filter(shown).length };
+    out.sections = Object.fromEntries(sections.map((sel) => {
+      const all = [...document.querySelectorAll(sel)];
+      return [sel, { found: all.length, displayed: all.filter(shown).length }];
+    }));
   } else {
     out.hide = hide.flatMap((h) => h.selectors.map((selector) => ({ id: h.id, selector, found: document.querySelectorAll(selector).length, displayed: null })));
   }
@@ -230,11 +276,86 @@ const REQUIRED_FOUND = (faces) => faces.hide.every((h) => h.found > 0 || CONDITI
 
 /**
  * W11–W14's readings, read again until every REQUIRED target of H1–H6 and the Total are found, or FACES_MS has
- * passed. The conditional ones are reported as they are at that reading.
+ * passed. The conditional ones are reported as they are at that reading. § 25 (W20): when the block draws its steps,
+ * the walk (walkSteps) reads each step, and the readings are merged (mergeSteps); else the one reading, `steps: null`.
  */
 export async function readCheckoutFaces(page, poll) {
-  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO, line: LINE };
-  return poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f) && f.total?.found > 0, { timeoutMs: FACES_MS, everyMs: 500 });
+  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO, line: LINE, step2: STEP2, sections: STEPS.flatMap((s) => s.shows) };
+  const first = await poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f) && f.total?.found > 0, { timeoutMs: FACES_MS, everyMs: 500 });
+  if (!first?.payment || !(await page.evaluate((id) => Boolean(document.getElementById(id)), STEP_NAV))) return first && { ...first, steps: null };
+  const steps = await walkSteps(page, poll, arg);
+  return steps.some((s) => !s.error) ? mergeSteps(steps) : { ...first, steps };
+}
+
+/** In the page: the step the block shows (its class on <html>), and the focused element, described. */
+export function stepNow() {
+  const html = document.documentElement;
+  const a = document.activeElement;
+  const describe = (el) => `${el.tagName.toLowerCase()}${el.getAttribute("name") ? `[name=${el.getAttribute("name")}]` : ""}`;
+  return {
+    step: [1, 2, 3].filter((n) => html.classList.contains(`fitaf-step-${n}`)),
+    focused: a && a !== document.body ? { el: describe(a), invalid: a.classList.contains("ng-invalid") } : null,
+  };
+}
+
+/**
+ * § 25 (W20): the walk. Step 1 as at done; the block's own Continue pressed (a trusted click where it is drawn), step 2;
+ * pressed again, step 3, or, when the block refuses (the store's step-2 fields required and empty: the smoke types
+ * nothing), the refusal recorded and step 3 entered by the block's own class. Each step read with its own allowance.
+ * Reads, presses only the block's own Continue, types nothing. A press that fails ends the walk, recorded.
+ */
+export async function walkSteps(page, poll, arg) {
+  const steps = [];
+  const read = async (step, reached, extra = {}) => steps.push({ step, reached, ...extra, ...(await page.evaluate(readFaces, { ...arg, step })) });
+  const until = (n) => poll(page, stepNow, null, (s) => s.step.length === 1 && s.step[0] === n, { timeoutMs: STEP_MS, everyMs: 100 });
+  const at1 = await page.evaluate(stepNow);
+  if (!(at1.step.length === 1 && at1.step[0] === 1)) return [{ step: 1, error: `at done the block shows step ${at1.step.join(",") || "none"}, not step 1` }];
+  await read(1, "done");
+  try {
+    await page.click(`#${STEP_GO}`);
+  } catch (err) {
+    return [...steps, { step: 2, error: `Continue could not be pressed: ${err.message}` }];
+  }
+  const at2 = await until(2);
+  if (!(at2?.step.length === 1 && at2.step[0] === 2)) return [...steps, { step: 2, error: `Continue at step 1 did not show step 2 (${at2?.step.join(",") || "none"})` }];
+  await read(2, "Continue");
+  try {
+    await page.click(`#${STEP_GO}`);
+  } catch (err) {
+    return [...steps, { step: 3, error: `Continue could not be pressed at step 2: ${err.message}` }];
+  }
+  const at3 = await until(3);
+  if (at3?.step.length === 1 && at3.step[0] === 3) {
+    await read(3, "Continue");
+    return steps;
+  }
+  const refused = at3?.focused ?? null;
+  await page.evaluate(() => {
+    document.documentElement.classList.remove("fitaf-step-1", "fitaf-step-2");
+    document.documentElement.classList.add("fitaf-step-3");
+  });
+  await read(3, "class", { refused });
+  return steps;
+}
+
+/**
+ * The walk's readings as one: the payment (W11) is step 3's, as § 25.2 amends it; each hide-list target its most
+ * displayed over the steps; the Total its least; the lines, the logo and the one-time check step 1's. `steps` keeps
+ * each step's own (W20).
+ */
+export function mergeSteps(steps) {
+  const ok = steps.filter((s) => !s.error);
+  const { step, reached, refused, ...first } = ok[0];
+  const three = ok.find((s) => s.step === 3);
+  const hide = (first.hide ?? []).map((h) => ({ ...h, displayed: Math.max(...ok.map((s) => s.hide.find((x) => x.selector === h.selector)?.displayed ?? 0)) }));
+  const totals = ok.map((s) => s.total).filter(Boolean);
+  return {
+    ...first,
+    payment: three ? three.payment : first.payment,
+    hide,
+    total: totals.length ? { found: Math.max(...totals.map((x) => x.found)), displayed: Math.min(...totals.map((x) => x.displayed)) } : first.total,
+    steps: steps.map((s) => (s.error ? s : { step: s.step, reached: s.reached, refused: s.refused ?? null, payment: s.payment, sections: s.sections, total: s.total })),
+  };
 }
 
 /**
@@ -279,9 +400,58 @@ export function facesVerdict(faces) {
     if (!c.total.found) reasons.push("W14: no .summary__total on /checkout: the Total the visitor pays is not shown");
     else if (!c.total.displayed) reasons.push("W14: the Total (.summary__total) is not displayed with the style");
   }
+  for (const s of c.steps ?? []) reasons.push(...stepReasons(s));
   if (c.oneTime?.activeSwitches) reasons.push(`W13: an active subscription switch on /checkout (${c.oneTime.activeSwitches}): the order is not one-time`);
   if (c.oneTime?.renews?.length) reasons.push(`W13: a "renews every" line on /checkout: ${c.oneTime.renews.join("; ")}`);
   return { reasons };
+}
+
+/**
+ * § 25 (W11 at steps 1 and 2, W20): one step's reasons. Step 3's payment is the top-level one (W11 as before, its pay
+ * button required); at steps 1 and 2 the same measure with that step's allowance, and the pay button must NOT be
+ * displayed. Each step: its own sections displayed, the others' hidden, and the Total displayed.
+ */
+export function stepReasons(s) {
+  if (s.error) return [`W20: the walk stopped at step ${s.step}: ${s.error}`];
+  const reasons = [];
+  const p = s.payment;
+  if (p && s.step < 3) {
+    const extra = p.hidden.filter((x) => !p.allowed.includes(x));
+    const kept = p.allowed.filter((x) => !p.hidden.includes(x));
+    if (extra.length) reasons.push(`W11: the style hides controls that are not H3, H4 or H6, nor another step's (step ${s.step}): ${extra.join("; ")}`);
+    if (kept.length) reasons.push(`W11: controls the style should hide at step ${s.step} still displayed: ${kept.join("; ")}`);
+    if (p.added.length) reasons.push(`W11: controls displayed only with the style (step ${s.step}): ${p.added.join("; ")}`);
+    if (p.payWith) reasons.push(`W11: the pay button displayed at step ${s.step} (only at step 3): ${(p.payShown ?? []).join(", ")}`);
+  }
+  for (const st of STEPS) {
+    for (const sel of st.shows) {
+      const x = s.sections?.[sel];
+      if (!x?.found) continue;
+      if (st.step === s.step && !x.displayed) reasons.push(`W20: at step ${s.step}, ${sel} (its own) not displayed`);
+      if (st.step !== s.step && x.displayed) reasons.push(`W20: at step ${s.step}, ${sel} (step ${st.step}'s) displayed`);
+    }
+  }
+  if (!s.total?.displayed) reasons.push(`W20: the Total not displayed at step ${s.step}`);
+  return reasons;
+}
+
+/** W20's line for the report: each step, how it was reached, what it displayed of § 25.2's sections, and the Total. */
+export function stepsLine(faces) {
+  const c = faces?.checkout;
+  if (!c) return "W20: /checkout not read";
+  if (!c.steps) return "W20: no steps on this checkout (a block from before SPEC-rung2-progress-and-checkout § 25)";
+  const how = (s) => {
+    if (s.reached !== "class") return s.reached;
+    const f = s.refused;
+    return `Continue REFUSED at step 2${f ? ` (focused ${f.el}${f.invalid ? ", ng-invalid" : ""})` : ""}: entered by the block's class, the smoke types nothing`;
+  };
+  const parts = c.steps.map((s) => {
+    if (s.error) return `step ${s.step}: ${s.error}`;
+    const shown = Object.entries(s.sections ?? {}).filter(([, x]) => x.displayed).map(([sel, x]) => `${sel} ${x.displayed}`);
+    const pay = s.payment?.payWith ? "; the pay button" : "";
+    return `step ${s.step} (${how(s)}): ${shown.join(", ") || "none of § 25.2's sections"}; the Total ${s.total?.displayed ? "displayed" : "NOT displayed"}${pay}`;
+  });
+  return `W20: ${parts.join(" | ")}`;
 }
 
 /**

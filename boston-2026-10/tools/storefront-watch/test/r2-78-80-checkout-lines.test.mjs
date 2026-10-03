@@ -5,7 +5,9 @@
 //   R2-78 each line's price, portion (its add-on pills), quantity and remove HIDDEN, its photograph and name DISPLAYED,
 //         at both widths; and only on a deep-carted checkout: the same checkout reached without the link's run shows
 //         them all (nothing of ours on an ordinary visit).
-//   R2-79 the plan's total row hidden; the order's Total (.summary__total) and the pay button displayed.
+//   R2-79 the plan's total row hidden; the order's Total (.summary__total) and the pay button displayed. § 25 (the three-step
+//         checkout): the pay button at step 3, where § 25.2 displays it (and only there: R2-86), the row and the Total
+//         at step 1 and at step 3.
 //   R2-80 ⭐ fourteen lines (a 14-meal plan's: `checkoutNames`) fit one 390 x 844 screen: from the first line's top to the
 //         last line's bottom at most 844 px; the control, the same lines without our style, do not.
 import test, { after, before } from "node:test";
@@ -13,7 +15,7 @@ import assert from "node:assert/strict";
 import { poll } from "../lib/browser.mjs";
 import { VIEWPORTS } from "../lib/config.mjs";
 import { MEALS, startStore } from "./browser-store.mjs";
-import { browserFor, displayedCounts, DONE, openDeep, shipped, skip } from "./r2-browser.mjs";
+import { browserFor, displayedCounts, DONE, openDeep, shipped, skip, walkTo } from "./r2-browser.mjs";
 
 const HIDDEN = [".summary__item-price", ".summary__item-addons", ".summary__item-quantity-controls", ".summary__item-remove"];
 const SHOWN = [".summary__item", ".summary__item-image img", ".summary__item-name"];
@@ -93,11 +95,14 @@ test("R2-78b: the same checkout without a deep-carted run (no link of ours) — 
 test("R2-79: the plan's total row hidden; the order's Total and the pay button displayed (both widths)", { skip, timeout: 90_000 }, async () => {
   for (const width of [1280, 390]) {
     await deep(width, {}, async (run) => {
-      const counts = await run.page.evaluate(displayedCounts, [".summary__plan-total", ".summary__total", ".checkout__submit button", ".summary__pay-button button"]);
-      assert.deepEqual([counts[".summary__plan-total"].found, counts[".summary__plan-total"].displayed], [1, 0], `${width}: the plan total hidden`);
-      assert.deepEqual(counts[".summary__total"], { found: 1, displayed: 1 }, `${width}: the order's Total displayed`);
-      const pay = width === 1280 ? ".checkout__submit button" : ".summary__pay-button button";
-      assert.equal(counts[pay].displayed, 1, `${width}: the pay button displayed`);
+      for (const step of [1, 3]) {
+        await walkTo(run, step);
+        const counts = await run.page.evaluate(displayedCounts, [".summary__plan-total", ".summary__total", ".checkout__submit button", ".summary__pay-button button"]);
+        assert.deepEqual([counts[".summary__plan-total"].found, counts[".summary__plan-total"].displayed], [1, 0], `${width}, step ${step}: the plan total hidden`);
+        assert.deepEqual(counts[".summary__total"], { found: 1, displayed: 1 }, `${width}, step ${step}: the order's Total displayed`);
+        const pay = width === 1280 ? ".checkout__submit button" : ".summary__pay-button button";
+        if (step === 3) assert.equal(counts[pay].displayed, 1, `${width}, step 3: the pay button displayed`);
+      }
     });
   }
 });

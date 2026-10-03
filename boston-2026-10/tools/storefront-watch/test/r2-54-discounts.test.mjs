@@ -2,11 +2,14 @@
 // the payment section's, its own section, the summary's), each with a gift-card and a discount-code field and their Apply
 // buttons. A link WITH an offer code (`~<code>`) keeps them displayed, so the visitor can enter the offer (fill B still
 // never types into /checkout); a link without one hides them. Both widths.
+// § 25 (the three-step checkout): read at step 3, where the form's two placements are (step 1 hides the whole form, so
+// a reading there could not tell H7 from the step); the test walks there as a customer (walkTo: Continue, step 2's
+// entries, Continue). The summary's placement is in every step.
 // Headless Chrome against the synthetic store on 127.0.0.1; skipped without Chrome.
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { startStore } from "./browser-store.mjs";
-import { browserFor, DONE, displayedCounts, openDeep, shipped, skip } from "./r2-browser.mjs";
+import { browserFor, DONE, displayedCounts, openDeep, shipped, skip, walkTo } from "./r2-browser.mjs";
 
 const DISCOUNTS = [".checkout-discounts", ".checkout-discounts input", ".checkout-discounts button"];
 
@@ -30,7 +33,9 @@ async function discountsOn({ offer, width }) {
   try {
     assert.equal(await run.verdict(), DONE);
     await run.until(() => document.querySelector("app-checkout .summary__items .item"));
-    const marks = await run.page.evaluate(() => [...document.documentElement.classList].filter((c) => c.startsWith("fitaf-")).sort());
+    await walkTo(run, 3);
+    // The marks (§ 25's step classes are the steps', not marks).
+    const marks = await run.page.evaluate(() => [...document.documentElement.classList].filter((c) => c.startsWith("fitaf-") && !c.startsWith("fitaf-step-")).sort());
     return { counts: await run.page.evaluate(displayedCounts, DISCOUNTS), marks };
   } finally {
     await run.close();

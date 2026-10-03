@@ -92,6 +92,9 @@ after(async () => {
   await store?.close();
 });
 
+/** § 25.2: step 2's controls on the synthetic checkout, as W11 describes them (hidden at step 3 by design). */
+const STEP2_CONTROL = /\[name=(email|phone|firstName|lastName|address|state|deliveryMethod|date|specialRequests)\]|^div "(Delivery|Pickup)"$/;
+
 const smoke = (width, script = text) =>
   smokeRun({ origin: store.origin, width, mode: { kind: "paste", text: script, label: "fill B, pasted" }, code, executablePath: chrome });
 
@@ -108,7 +111,14 @@ test("W14b: the smoke at both widths — H7, H9 and H10 found and hidden, H8 abs
     assert.deepEqual(byId("H10").map((h) => [h.found, h.displayed]), [[2, 0]], "the tip's section and its selector, hidden");
     assert.deepEqual(c.total, { found: 1, displayed: 1 }, "the Total displayed");
     // § 21: and H16's "Remove plan" and H17's return link, on the synthetic checkout's plan group.
-    assert.equal(c.payment.hidden.length, 21, `H3, H4, H6 (4), H7 (12), H10 (3), H16, H17: ${c.payment.hidden.join("; ")}`);
+    // § 25 (the three-step checkout): W11's measure is made at step 3, which also hides step 2's own eleven controls (§ 27's
+    // sections: the contact's four fields, the order type's two radios, the delivery address and state, the delivery
+    // method, the schedule's date, the food notes) by design (§ 25.2); W20 checks them displayed at step 2. The H list's
+    // own are the 21, as before.
+    const stepTwo = c.payment.hidden.filter((x) => STEP2_CONTROL.test(x));
+    assert.equal(stepTwo.length, 11, `step 2's eleven controls, hidden at step 3: ${stepTwo.join("; ")}`);
+    const own = c.payment.hidden.filter((x) => !STEP2_CONTROL.test(x));
+    assert.equal(own.length, 21, `H3, H4, H6 (4), H7 (12), H10 (3), H16, H17: ${own.join("; ")}`);
     assert.deepEqual(c.payment.hidden, c.payment.allowed);
     const report = renderSmokeReport({ flag: false, script: "fill B", runs: [{ width, verdict, outcome }] }, "t");
     assert.match(report, /H8 absent/);

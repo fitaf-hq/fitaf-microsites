@@ -204,7 +204,7 @@
     {
       "id": "hide-h10-tip",
       "literal": "\"checkout__section\",\"tip\"",
-      "use": "H10: the tip's section (section.checkout__section.tip), hidden only while no tip is chosen",
+      "use": "H10: the tip's section (section.checkout__section.tip), hidden only while no tip is chosen; and since SPEC-rung2-progress-and-checkout § 27, step 3's tip section (.checkout__section.tip): step 2 hides it by name",
       "spec": "SPEC-rung2-progress-and-checkout.md § 10 item 5; R2-56"
     },
     {
@@ -308,6 +308,78 @@
       "literal": "\"mobile-cart-summary__stat-value\"",
       "use": "the cart bar's \"Items\" value (below 1025 px; its other value, the cart's total, is a price and is not read): the plan's own count there",
       "spec": "SPEC-rung2-fill-c.md § 1.4; § 2a"
+    },
+    {
+      "id": "step-form",
+      "literal": "\"checkout__form\"",
+      "use": "§ 25, the three-step checkout: step 1 hides the store's form (.checkout__form) whole; step 2 hides each of its children that neither is nor holds a step-2 section (§ 27's seven .checkout__section modifiers)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.2; R2-84, W20"
+    },
+    {
+      "id": "step2-contact",
+      "literal": "\"checkout__section\",\"contact\"",
+      "use": "§ 25, § 27: step 2 shows .checkout__section.contact, the contact section (Contact: email, phone, name); Continue from step 2 reads the validity of its fields, and step 3 hides it; the section's class list as the store's checkout chunk compiles it, read from the live release (main-ZWZNOUKM.js, chunk-C7ZYYQVI.js) by § 27",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step2-order-type",
+      "literal": "\"checkout__section\",\"order-type\"",
+      "use": "§ 25, § 27: step 2 shows .checkout__section.order-type, the order type (Order type: delivery or pickup), and step 3 hides it; the section's class list as the store's checkout chunk compiles it, read from the live release (main-ZWZNOUKM.js, chunk-C7ZYYQVI.js) by § 27",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step2-delivery-address",
+      "literal": "\"checkout__section\",\"delivery-address\"",
+      "use": "§ 25, § 27: step 2 shows .checkout__section.delivery-address, the delivery address (Delivery address), rendered for delivery, and step 3 hides it; the section's class list as the store's checkout chunk compiles it, read from the live release (main-ZWZNOUKM.js, chunk-C7ZYYQVI.js) by § 27",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step2-delivery-method",
+      "literal": "\"checkout__section\",\"delivery-method\"",
+      "use": "§ 25, § 27: step 2 shows .checkout__section.delivery-method, the delivery method (Delivery method), rendered for delivery, and step 3 hides it; the section's class list as the store's checkout chunk compiles it, read from the live release (main-ZWZNOUKM.js, chunk-C7ZYYQVI.js) by § 27",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step2-schedule",
+      "literal": "\"checkout__section\",\"schedule\"",
+      "use": "§ 25, § 27: step 2 shows .checkout__section.schedule, the schedule (Delivery schedule, or Pickup schedule), and step 3 hides it; the section's class list as the store's checkout chunk compiles it, read from the live release (main-ZWZNOUKM.js, chunk-C7ZYYQVI.js) by § 27",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step2-pickup-location",
+      "literal": "\"checkout__section\",\"pickup-location\"",
+      "use": "§ 25, § 27: step 2 shows .checkout__section.pickup-location, the pickup location (Pickup location), rendered for pickup, and step 3 hides it; the section's class list as the store's checkout chunk compiles it, read from the live release (main-ZWZNOUKM.js, chunk-C7ZYYQVI.js) by § 27",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step2-special-requests",
+      "literal": "\"checkout__section\",\"special-requests\"",
+      "use": "§ 25, § 27: step 2 shows .checkout__section.special-requests, the food notes (Food Notes; the section also carries special-requests--food), and step 3 hides it; the section's class list as the store's checkout chunk compiles it, read from the live release (main-ZWZNOUKM.js, chunk-C7ZYYQVI.js) by § 27",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2, § 25.3; R2-84, R2-87, W20"
+    },
+    {
+      "id": "step3-payment",
+      "literal": "\"checkout__section\",\"payment\"",
+      "use": "§ 25, § 27: step 3 shows .checkout__section.payment, the payment (Payment: the card field); step 2 hides it by name; the section's class list as the store's checkout chunk compiles it (§ 27)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2; R2-84, R2-86, W20"
+    },
+    {
+      "id": "step3-consent",
+      "literal": "\"checkout__section\",\"checkout__consent\"",
+      "use": "§ 25, § 27: step 3 shows .checkout__section.checkout__consent, the terms (the consent); step 2 hides it by name; the section's class list as the store's checkout chunk compiles it (§ 27)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 27, § 25.2; R2-84, R2-86, W20"
+    },
+    {
+      "id": "ng-invalid",
+      "literal": "\"ng-invalid\"",
+      "use": "§ 25.3: Angular's own marker of an invalid form control (the framework's, in the store's forms code): Continue from step 2 does not advance while a displayed control of step 2 carries it, and focuses the first",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.3; R2-87"
+    },
+    {
+      "id": "ng-touched",
+      "literal": "\"ng-touched\"",
+      "use": "§ 25.3: Angular's marker of a touched control: after a press of the store's pay button, a step-2 control ng-invalid AND ng-touched (the store's markAllAsTouched, or a refusal it receives) shows step 2",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 25.3; R2-88"
     }
   ]
 }

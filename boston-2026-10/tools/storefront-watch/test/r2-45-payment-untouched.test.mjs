@@ -9,11 +9,17 @@
 // bar's PAY NOW at 390, where .checkout__submit is not displayed.
 // Also here: H1, H2 and H5 (the header, the footer and credit line, the pop-up host) hidden on the checkout.
 // R2-46 (⭐ mutant, in the suite): a text whose hide rule also matches a field of .checkout__form; R2-45's check fails.
+// § 25 (the three-step checkout) re-states the measure over the steps, since each step hides the others' sections by
+// design: the test walks the steps as a customer (Continue; step 2's entries; Continue), and at EACH step nothing is
+// displayed with the style that is not without it, the Total is displayed, and the pay button only at step 3 (§ 25.2);
+// ACROSS the steps (unionMeasure, by element), the controls the store displays that no step displays are EXACTLY the
+// same H3, H4, H6, H7, H10, H16 and H17 controls as before. So no control of the store's is out of the visitor's reach
+// but the ones the hide list names.
 // Headless Chrome against the synthetic store on 127.0.0.1; skipped without Chrome.
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { startStore } from "./browser-store.mjs";
-import { browserFor, DONE, displayedMap, mutate, openDeep, paymentMeasure, shipped, skip } from "./r2-browser.mjs";
+import { browserFor, DONE, displayedMap, mutate, openDeep, paymentMeasure, shipped, skip, unionMeasure, walkTo } from "./r2-browser.mjs";
 
 /** The fixture's H3, H4, H6, H7, H10, H16 and H17 controls, as paymentMeasure describes them. */
 const H346 = [
@@ -60,18 +66,25 @@ async function paymentCase(text, width = 1280) {
   const run = await openDeep(browser.browser, { origin: store.origin, code: site.code, text, width });
   try {
     assert.equal(await run.verdict(), DONE, "fill B reached /checkout");
-    const m = await run.until(paymentMeasure, undefined, 10_000);
-    assert.equal(m.checkout, true, "app-checkout on the page");
-    assert.equal(m.style, true, "style#fitaf-deep on the page");
-    assert.deepEqual(m.added, [], "the style shows nothing that was not shown");
-    assert.deepEqual(m.hidden, H346, "the style hides exactly H3, H4, H6, H7, H10, H16 and H17's controls");
-    const total = await run.page.evaluate(() => [...document.querySelectorAll(".summary__total")].map((el) => el.getClientRects().length > 0));
-    assert.deepEqual(total, [true], "the Total displayed");
-    assert.ok(m.payWith && m.payWithout, "the pay button displayed with the style and without it");
-    assert.deepEqual(m.payShown, PAY_SHOWN[width], `the pay button the store shows at ${width} px`);
-    assert.equal(m.restored, true, "the page is left as it was read");
-    assert.ok(m.counts.without > 15, `fixture control: the form's fields were measured (${m.counts.without})`);
-    return { run, m };
+    await run.until(paymentMeasure, undefined, 10_000);
+    let u;
+    for (const step of [1, 2, 3]) {
+      await walkTo(run, step);
+      const m = await run.page.evaluate(paymentMeasure);
+      assert.equal(m.checkout, true, "app-checkout on the page");
+      assert.equal(m.style, true, "style#fitaf-deep on the page");
+      assert.deepEqual(m.added, [], `step ${step}: the style shows nothing that was not shown`);
+      const total = await run.page.evaluate(() => [...document.querySelectorAll(".summary__total")].map((el) => el.getClientRects().length > 0));
+      assert.deepEqual(total, [true], `step ${step}: the Total displayed`);
+      assert.ok(m.payWithout, `step ${step}: fixture control: the store displays its pay button without our style`);
+      if (step === 3) assert.deepEqual(m.payShown, PAY_SHOWN[width], `step 3: the pay button the store shows at ${width} px`);
+      else assert.equal(m.payWith, false, `step ${step}: the pay button not displayed before step 3`);
+      assert.equal(m.restored, true, "the page is left as it was read");
+      assert.ok(m.counts.without > 15, `fixture control: the form's fields were measured (${m.counts.without})`);
+      u = await run.page.evaluate(unionMeasure, { reset: step === 1 });
+    }
+    assert.deepEqual(u.never, H346, "across the three steps, the style hides exactly H3, H4, H6, H7, H10, H16 and H17's controls");
+    return { run, u };
   } finally {
     await run.close();
   }
@@ -81,15 +94,20 @@ test("R2-45: the displayed controls in app-checkout, with the style and without:
   for (const width of [1280, 390]) await paymentCase(site.text, width);
 });
 
-test("R2-45b: on the deep-carted checkout H1, H2 and H5 are hidden too; the order recap and the form are displayed", { skip, timeout: 60_000 }, async () => {
+test("R2-45b: on the deep-carted checkout H1, H2 and H5 are hidden too; the order recap and the form are displayed (§ 25: the recap at every step, the form from step 2, its pay button at step 3)", { skip, timeout: 60_000 }, async () => {
   store.set({});
   const run = await openDeep(browser.browser, { origin: store.origin, code: site.code, text: site.text });
   try {
     assert.equal(await run.verdict(), DONE);
     await run.until(() => document.querySelector("app-checkout .summary__items .item"));
-    const shown = await run.page.evaluate(displayedMap, [...SHELL, ".checkout__summary", ".checkout__form", ".checkout__submit button"]);
-    for (const sel of SHELL) assert.equal(shown[sel], false, `${sel} hidden`);
-    for (const sel of [".checkout__summary", ".checkout__form", ".checkout__submit button"]) assert.equal(shown[sel], true, `${sel} displayed`);
+    for (const step of [1, 2, 3]) {
+      await walkTo(run, step);
+      const shown = await run.page.evaluate(displayedMap, [...SHELL, ".checkout__summary", ".checkout__form", ".checkout__submit button"]);
+      for (const sel of SHELL) assert.equal(shown[sel], false, `step ${step}: ${sel} hidden`);
+      assert.equal(shown[".checkout__summary"], true, `step ${step}: .checkout__summary displayed`);
+      assert.equal(shown[".checkout__form"], step > 1, `step ${step}: .checkout__form ${step > 1 ? "displayed" : "hidden (step 1)"}`);
+      assert.equal(shown[".checkout__submit button"], step === 3, `step ${step}: .checkout__submit button ${step === 3 ? "displayed" : "hidden"}`);
+    }
     const bare = await run.page.evaluate((sels) => {
       document.getElementById("fitaf-deep").disabled = true;
       return sels.map((s) => document.querySelector(s).getClientRects().length > 0);
@@ -104,7 +122,7 @@ test("R2-46 (mutant): a hide rule that also matches a field of .checkout__form �
   const mutant = mutate(site.text, H4, `${H4},.checkout__form input[type=email]`);
   await assert.rejects(paymentCase(mutant), (err) => {
     assert.ok(err instanceof assert.AssertionError, String(err));
-    assert.match(err.message, /hides exactly H3, H4, H6, H7 and H10|email/i, err.message);
+    assert.match(err.message, /hides exactly H3, H4, H6, H7, H10, H16 and H17|email/i, err.message);
     return true;
   });
 });

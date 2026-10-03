@@ -15,7 +15,10 @@
 //   Rung 2's two faces (SPEC-rung2-progress-and-checkout § 5, "Live"): from before the page's own scripts, a recorder
 //   notes the progress screen and the checkout's style as they come and go (W10); after done, on /checkout, W11–W13
 //   read the payment with our style enabled and disabled, the hide list, and whether the order is one-time
-//   (lib/faces.mjs). Our style is toggled and restored; nothing is typed or pressed.
+//   (lib/faces.mjs). Our style is toggled and restored; nothing is typed, and nothing of the store's is pressed.
+//   The three-step checkout (SPEC-rung2-progress-and-checkout § 25, W20): when the block draws its steps, the faces are
+//   read at each, after a press of the block's OWN Continue (the store's step-2 fields empty, the block refuses at step
+//   2, as § 25.3 says; step 3 is then entered by the block's own class, and the report says so).
 //   The Fit AF logo (SPEC-rung2-progress-and-checkout § 15.3, W16): the recorder notes it on the screen, and it is read
 //   on /checkout with W11–W14; absent fails the width.
 //   W17 (SPEC-rung2-progress-and-checkout § 17.4): with `link` (the CLI's --link, the microsite's own checkout link),

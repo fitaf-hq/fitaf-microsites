@@ -5,6 +5,7 @@
 // `html.fitaf-deep:has(app-checkout) …`, and it hides (display: none !important), nothing else. What it hides on a
 // checkout is proven in Chrome (the watch package, R2-45 … R2-51).
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import { assertCheckedOut, CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, orderPage, run, script, untouchableStorage } from "./r2-harness.mjs";
 import { DEEP, deepState, SCREEN_ID, screenOf, watchLines, watchMutations } from "./r2-screen.mjs";
@@ -76,7 +77,15 @@ const BANNER_MARGIN = ["html.fitaf-deep:has(app-checkout)[data-smartbanner-origi
 const COMPACT = [".summary__item", ".summary__item-image", ".summary__item-name"].map((c) => `html.fitaf-deep:has(app-checkout) ${c}`);
 const COMPACT_PROPERTIES = new Set(["padding", "margin", "margin-bottom", "gap", "align-items", "width", "height", "min-height", "font-size", "line-height", "display", "-webkit-line-clamp", "-webkit-box-orient", "overflow"]);
 
-test("R2-42b: the style — every rule scoped `html.fitaf-deep:has(app-checkout) …`, and it only hides (but the banner's margin and § 19's compact lines)", async () => {
+/**
+ * § 25.2 (the three-step checkout): in steps 2 and 3 a one-line recap, the plan's meals before the store's own Total
+ * ("7 meals ·", data/messages.json's handoff.recap with {n}): the third rule that does not hide, a ::before of
+ * .summary__total that only sets its content and the space after it, scoped like the rest and only while a step class
+ * and the block's own foot (#fitaf-nav) are on the page. Added by § 25's build; until then this case allowed two.
+ */
+const RECAP = "html.fitaf-deep:has(app-checkout) :is(:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__total)::before";
+
+test("R2-42b: the style — every rule scoped `html.fitaf-deep:has(app-checkout) …`, and it only hides (but the banner's margin, § 19's compact lines and § 25's recap)", async () => {
   const page = await orderPage();
   const h = fakeWindow({ fragment: fragmentFor(CHECKOUT_PAYLOAD), page });
   run(await script(), h.window);
@@ -94,7 +103,10 @@ test("R2-42b: the style — every rule scoped `html.fitaf-deep:has(app-checkout)
     assert.deepEqual(props.filter((p) => !COMPACT_PROPERTIES.has(p)), [], `${list}: size, spacing and the clamp only: ${body}`);
     assert.doesNotMatch(body.replace(/\s+/g, ""), /display:none/, `${list}: never hidden`);
   }
-  for (const [list, body] of all.filter(([l]) => l !== BANNER_MARGIN[0] && !COMPACT.includes(l))) {
+  const recap = all.filter(([list]) => list === RECAP);
+  const words = JSON.parse(await readFile(new URL("../data/messages.json", import.meta.url), "utf8")).handoff;
+  assert.deepEqual(recap.map(([, body]) => body), [`content:${JSON.stringify(words.recap.replace("{n}", "7"))};margin-right:.4em`], "§ 25.2: exactly one recap rule, its content and its space only");
+  for (const [list, body] of all.filter(([l]) => l !== BANNER_MARGIN[0] && !COMPACT.includes(l) && l !== RECAP)) {
     for (const sel of selectors(list)) assert.ok(sel.startsWith("html.fitaf-deep:has(app-checkout) "), `scoped: ${sel}`);
     assert.match(body.replace(/\s+/g, ""), /^display:none!important;?$/, `hiding only: ${body}`);
   }

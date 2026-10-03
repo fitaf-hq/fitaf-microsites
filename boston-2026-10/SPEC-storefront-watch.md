@@ -219,3 +219,17 @@ all pass.
 - ⬜ **Not run against the live store**: no request to it was made at this build. The rehearsal (the smoke with
   `--script` on this build's console file, both widths) is the orchestrator's, before the paste; the baseline's
   expected Footer stays the live block's until the paste and `accept --footer`.
+
+## 11. Found at the build, 2026-10-02 — the walk and W20 (SPEC-rung2-progress-and-checkout § 25), not ruled
+
+The three-step checkout's build (`ba9eabc`); its § 26 has the whole of it. In short, for this contract:
+- **The walk** (`lib/faces.mjs` `walkSteps`): when the block draws its steps (its foot, `#fitaf-nav`, in `app-checkout`),
+  W10–W13's readings are taken at step 1 (done), after the block's OWN Continue (step 2), and after Continue again.
+  ⚠ The smoke types nothing, and the store's step-2 fields are required, so the second Continue is **refused** (as the
+  block's § 25.3 requires): the smoke records the refusal and enters step 3 by the block's own class, and its report
+  says so. The smoke still presses nothing of the store's.
+- **W11 as amended**: measured at each step with that step's allowance; the pay button displayed at step 3 and at no
+  other; the hide list judged over all three steps. **W20** (not W19, which is § 21's): each step's sections and the
+  Total, a line in the report. A block without steps (the live one before the paste): one reading, W20 *"no steps"*, not
+  a failure.
+- ⬜ Not run against the live store.
