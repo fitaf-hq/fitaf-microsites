@@ -1165,3 +1165,23 @@ Built at `5f13cb9`. § 27 above is unchanged; this section says what changed, F2
   page, with the browser's default heading margins, step 2's seven sections run past one 390 × 844 screen; the live
   spacing, layout and the controls inside the sections are the rehearsal's to show at both widths. ⬜ **Not run on the
   live store**; no paste.
+
+## 29. Rehearsed on the live store, 2026-10-03T04:03:57Z → 04:04:25Z (the orchestrator; not pasted)
+
+`npm run smoke -- --script dist-storefront/fitaf-handoff.html` (the block `fitaf-handoff 5f13cb9 sha256:76871ff9…`, pasted in
+the console as a person would, nothing typed, no order), on HMP's release `main-ZWZNOUKM.js`, after the orchestrator re-ran
+the site suite (512 of 512) and the watch suite (162 of 162; a first run lost three cases to a Chrome start timeout under
+load, *"Target.setAutoAttach timed out"*, which passed alone and in a full re-run). **PASS at 1280 and 390.**
+
+- `done: /checkout` in 2.7 s (1280) and 2.3 s (390); the extras pop-up not opened; the Fit AF logo on the screen and the
+  checkout; 7 order lines; the pay button displayed at step 3 (*"Pay now - $87.50"*, *"PAY NOW"*).
+- **W20, live**: step 1 the 7 order lines and the Total; step 2 `contact`, `order-type`, `delivery-address`,
+  `special-requests` (2) and the Total; **Continue refused at step 2, the first empty required field focused** (the
+  store's own `ng-invalid`, § 25.3, working on the live form); step 3 (entered by the block's class: the smoke types
+  nothing) `payment`, `checkout__consent`, the Total and the pay button.
+- ⚠ `delivery-method` and `schedule` were not rendered on the empty form; the store appears to add them after an address
+  (not measured). Both fall under step 2's selector when they appear.
+- W17 (Fit AF's photo sheet on the screen's slides) 0 of 7, as on the live block: the sheet the screen reads is the
+  microsite's, carried by its link, and this smoke builds its own link from the menu.
+- ⬜ The look of each step on the live page (spacing, the bar's type) is the Advisor's to judge after his paste; the
+  report is text only (the smoke never takes a screenshot).
