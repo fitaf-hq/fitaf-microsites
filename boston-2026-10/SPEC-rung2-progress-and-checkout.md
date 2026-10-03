@@ -1077,3 +1077,36 @@ chose where they left a choice, and what it could not build as written.
   (§ 20), the payment provider's card frame (mounted while step 1 hides the form: whether it draws correctly when shown
   is the rehearsal's), and the store's type. ⬜ **Not run on the live store**: any of it; the live smoke on a flag at both
   widths, then the Advisor's paste, are the orchestrator's.
+
+## 27. Amendment, 2026-10-02 (the orchestrator) — § 25.2's sections, measured on the live release, replace the synthetic ones
+
+**Found by F2 before any paste**: run against the live store's files (`main-ZWZNOUKM.js`, 2026-10-02 ~19:00 PDT, `npm run
+watch -- --full --no-browser`), 55 of 57 literals found; **`1,"delivery"` and `1,"schedule"` missing**, and **`1,"contact"`
+found only in another component** (`monarch-contact`, chunk `chunk-TR6PGF47.js`), so a false "found". § 25.2's three step-2
+sections came from the synthetic checkout (`5acc962`) and **none was ever read on the live store** (§ 26 item 4).
+
+**Measured** (a scratch read of the release's files by the watch's own fetcher, the same requests F1/F2 make; nothing
+typed, no browser): the checkout component is `chunk-C7ZYYQVI.js` (`"app-checkout"`, `checkout__form`). Its sections are
+**`section.checkout__section` plus one modifier**, compiled as Angular class lists `[1,"checkout__section","<modifier>"]`:
+
+| step | modifier | heading in the template |
+|---|---|---|
+| 2 | `contact` | Contact |
+| 2 | `order-type` | Order type |
+| 2 | `delivery-address` | Delivery address |
+| 2 | `delivery-method` | Delivery method |
+| 2 | `schedule` | Delivery schedule / Pickup schedule |
+| 2 | `pickup-location` | Pickup location |
+| 2 | `special-requests` (also `special-requests--food`) | Food Notes |
+| 3 | `tip` | (H10's rule, unchanged) |
+| 3 | `payment` | Payment |
+| 3 | `checkout__consent` | (the terms) |
+| — | `checkout-discounts` (`--mobile`) | hidden by H7 as now |
+
+A bare `[1,"checkout__section"]` belongs to the loading skeleton (`form-skeleton__*` beside it), not the form.
+
+**Therefore**: step 2 shows exactly the seven step-2 modifiers above (whichever the store renders: delivery or pickup);
+step 3 the three. The F2 literals are the compiled class lists (`"checkout__section","contact"` … in the form R2's tip
+literal already uses), **one per modifier**, so F2 reads them in the checkout chunk itself. The synthetic checkout is
+re-shaped to the live sections and headings so the cases test the markup the store ships. ⬜ Still not seen rendered: the
+live layout of these sections at 390 and 1280 px, which the pre-paste rehearsal shows.
