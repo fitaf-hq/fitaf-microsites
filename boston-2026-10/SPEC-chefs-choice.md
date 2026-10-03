@@ -184,3 +184,58 @@ a file). So:
 
 **Not done here**: no `data/picks/` file is committed; nothing is deployed or run live; the page was not looked at in
 a browser (its behaviour is proven over linkedom only); the copy review.
+
+## 7. The display name from the KMS. CONTRACT, written 2026-10-03 (session 222) before any code
+
+**Ruled by the Advisor, 2026-10-03 morning**: *"the names we're displaying should be coming from the KMS – which does
+\*not\* have the "New" label as part of the name"*; *"Please plan to make the deep carting label change after the
+meeting. For now it's fine that we're directly displaying the meal name from the store as the join key."* The writer's
+side is Fit AF's `scripts/menus/emit_microsite_picks.spec.md` § 5, written the same day; the two land together.
+
+### 7.1 The file (§ 1, amended)
+
+- **Each meal becomes `{ "name": …, "display": …, "qty": n }`; all three are required**, and any other field is still
+  refused.
+  - `name` is unchanged: the store's card name, verbatim, tag included. **It stays the only key**: the checkout link
+    (`handoffLink` through `payloadFromArgs`), the photo cell (`thumbStyle` looks a cell up by it) and the `--photos`
+    payload all go on reading `name`.
+  - `display` is **the name the page shows**: the KMS's name for the meal, written by Fit AF's emitter. It must be
+    text and not blank. It is shown as the link tool reads a name (whitespace collapsed and trimmed), and it is not a
+    key: two meals may not share a `name`, but nothing is checked between `display` values.
+- ⛔ Still no internal identifier (no KMS slug, no product id), no price, no person. `display` is a meal's name, which
+  the page already showed in its store spelling.
+
+### 7.2 The page (§ 3, amended)
+
+- **The list shows `display`** wherever it showed `name`: each meal's line, and `chefs_choice.meal_qty`'s `{meal}`.
+- Nothing else moves: the heading, the links, the tiles, the card's controls, the words in `data/messages.json`.
+- ⚠ **What a customer then sees**: the KMS's name on eatfitaf.com, and the store's own name (a `🟠NEW:` tag included) in
+  the store's cart and in the three-step checkout's step 1, which read the store, not this file. That is the ruling's
+  intent; it is stated so nobody reports it as a defect.
+
+### 7.3 The committed weeks
+
+- `data/picks/2026-10-11.json` (2026-W41) is **re-emitted by Fit AF's emitter** with `display`. It is not edited by
+  hand: the emitter is the file's only writer.
+- `data/picks/2026-10-04.json` (week B, window ended 2026-10-01) **is removed**: three of its picks have no KMS meal, so
+  the emitter refuses it, and a week whose window has ended is never shown (§ 2). Its history stays in git.
+- The production build then changes only in W41's three tagged meals' lines (*Nashville Hot Chicken Mac & Cheese*,
+  *Sweet Chili BBQ Sloppy Joe Sliders*, *Blackened Shrimp Caesar Salad*, each without `🟠NEW: `). S20's golden is
+  re-recorded once, in its own commit, for exactly that difference.
+
+### 7.4 Cases
+
+| | case | expect |
+|---|---|---|
+| CC-1, CC-2 | (fixtures gain `display`) | unchanged expectations; the fixture's tagged meal has a `display` without the tag |
+| CC-9 | ⭐ shown versus keyed | the fixture's tagged meal: the page's line shows `display`; its link decodes to the key of `name`; its tile is the cell of `name`. A mirror mutant keying the link on `display` fails it, and so does one showing `name` |
+| CC-5 | (extended) refusals | `display` missing, blank, or not text: the build fails, naming the file and the meal |
+| CC-8 | unchanged | the Footer block's text, the watch's expected Footer, the Worker: byte-identical |
+| S20 | the production build | re-recorded for W41's three lines only (§ 7.3); the diff shown in the commit |
+
+### 7.5 Not decided here
+
+- ⬜ **A KMS name with a kitchen note** (15 of the KMS's 271 names have a parenthesis, e.g. *"Philly Cheesesteak Bowl
+  (Low Carb too)"*): the emitter warns (Fit AF § 5.1), and this page shows what the file says. Whether such names need
+  a customer-facing form is open with the Advisor.
+- **Prod**: the dev line and the test address first; eatfitaf.com only on the Advisor's go (three `fitaf-infra` PRs).
