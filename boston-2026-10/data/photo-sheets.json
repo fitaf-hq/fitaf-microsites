@@ -128,6 +128,97 @@
           "h": 176
         }
       }
+    },
+    "2026-10-11": {
+      "file": "chefs-choice-2026-10-11.jpg",
+      "width": 208,
+      "height": 2912,
+      "cells": {
+        "🟠NEW: Nashville Hot Chicken Mac & Cheese": {
+          "x": 16,
+          "y": 16,
+          "w": 176,
+          "h": 176
+        },
+        "Thai Peanut Noodle Salad with Chicken": {
+          "x": 16,
+          "y": 224,
+          "w": 176,
+          "h": 176
+        },
+        "Wild Salmon Cake with Cucumber-Dill Crema": {
+          "x": 16,
+          "y": 432,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Sweet Chili BBQ Sloppy Joe Sliders": {
+          "x": 16,
+          "y": 640,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Blackened Shrimp Caesar Salad": {
+          "x": 16,
+          "y": 848,
+          "w": 176,
+          "h": 176
+        },
+        "Grass-fed Steak Carnitas Burrito Bowl": {
+          "x": 16,
+          "y": 1056,
+          "w": 176,
+          "h": 176
+        },
+        "Grass-fed Balsamic Steak & Roasted Potatoes": {
+          "x": 16,
+          "y": 1264,
+          "w": 176,
+          "h": 176
+        },
+        "Grilled Pork Chops with Cranberry Apple Chutney": {
+          "x": 16,
+          "y": 1472,
+          "w": 176,
+          "h": 176
+        },
+        "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy": {
+          "x": 16,
+          "y": 1680,
+          "w": 176,
+          "h": 176
+        },
+        "Grilled Chipotle Free-Range Chicken": {
+          "x": 16,
+          "y": 1888,
+          "w": 176,
+          "h": 176
+        },
+        "Honey Mustard Glazed Coho Salmon": {
+          "x": 16,
+          "y": 2096,
+          "w": 176,
+          "h": 176
+        },
+        "Free-Range Chicken Parm Over Spiralized Noodles": {
+          "x": 16,
+          "y": 2304,
+          "w": 176,
+          "h": 176
+        },
+        "Sesame Chicken Teriyaki with Fried Rice": {
+          "x": 16,
+          "y": 2512,
+          "w": 176,
+          "h": 176
+        },
+        "Smokehouse BBQ Gouda Grass-Fed Burger": {
+          "x": 16,
+          "y": 2720,
+          "w": 176,
+          "h": 176
+        }
+      }
     }
   }
 }
