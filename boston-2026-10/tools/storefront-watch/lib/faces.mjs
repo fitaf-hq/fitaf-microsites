@@ -114,13 +114,19 @@ export const LOGO = 'img[alt="Fit AF"]';
 /** § 25 (W20): the block's own step elements: its foot (Back), Continue. Their presence is a block that draws steps. */
 export const STEP_NAV = "fitaf-nav";
 export const STEP_GO = "fitaf-go";
-/** § 25.2: step 2's sections, the store's own (contact, delivery or pickup, the delivery date). */
-export const STEP2 = ["section.contact", "section.delivery", "section.schedule"];
-/** § 25.2's table, by what each step shows: each found one displayed at its step and hidden at the others (W20). */
+/**
+ * § 27 (the live release's checkout, replacing § 25.2's synthetic names): step 2's sections, each a .checkout__section
+ * with its modifier; the store renders the delivery address and method for delivery, the pickup location for pickup.
+ */
+export const STEP2 = ["contact", "order-type", "delivery-address", "delivery-method", "schedule", "pickup-location", "special-requests"].map((m) => `.checkout__section.${m}`);
+/**
+ * § 25.2's table, by what each step shows: each found one displayed at its step and hidden at the others (W20). Step 3's
+ * tip is left out: H10 hides it while none is chosen (W14), so its being hidden at step 3 is not a fault.
+ */
 export const STEPS = [
   { step: 1, shows: [".summary__item"] },
   { step: 2, shows: STEP2 },
-  { step: 3, shows: ["section.payment", ".checkout__consent"] },
+  { step: 3, shows: [".checkout__section.payment", ".checkout__section.checkout__consent"] },
 ];
 /** How long the walk waits for a press of the block's Continue to show the next step. */
 export const STEP_MS = 2_000;

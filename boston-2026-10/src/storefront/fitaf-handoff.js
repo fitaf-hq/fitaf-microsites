@@ -205,23 +205,26 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 // its return link (.summary__plan-return, "Return to ..."), hidden.
 // § 25, the three-step checkout (ruled 2026-10-02: every width; the ceiling 20,480 bytes): one step at a time, a CSS
 // STATE, the class html.fitaf-step-1, -2 or -3 (stepper(), below), over the store's own sections, inside the same one
-// scoped hide rule. Step 1 hides the form (.checkout__form): the summary, its lines and the Total. Step 2 hides the order
-// lines (.summary__item) and every child of the form that neither is nor holds one of Q2, the store's contact, delivery
-// and schedule sections, and the form's pay button (.checkout__submit) by name too, in case a release wraps the
-// sections. Step 3 hides the lines and Q2: the rest of the form (payment, the tip while chosen, the consent, the pay
-// button) shows. So every control of the form is displayed in exactly one step, and nothing of the store's is removed,
+// scoped hide rule. The store's sections, as § 27 measured them in the live release's files: each a .checkout__section
+// with ONE modifier, selected by it, never by an element's name. Q2, step 2's seven (whichever the store renders, for
+// delivery or for pickup): contact, order-type, delivery-address, delivery-method, schedule, pickup-location and
+// special-requests (Food Notes). Q3, step 3's three: tip (while chosen, H10), payment, checkout__consent. Step 1 hides the
+// form (.checkout__form): the summary, its lines and the Total. Step 2 hides the order lines (.summary__item), every child
+// of the form that neither is nor holds one of Q2, and Q3 and the form's pay button (.checkout__submit) by name too, in
+// case a release wraps the sections. Step 3 hides the lines and Q2: the rest of the form (Q3, the pay button, and what no
+// table names) shows. So every control of the form is displayed in exactly one step, and nothing of the store's is removed,
 // moved or pressed. On a phone the summary's PAY NOW (.summary__pay-button) is hidden in steps 1 and 2 ONLY while the
 // block's Continue stands right after it (`:has(+#fitaf-go)`), in its place. ⭐ Every step rule also requires the
 // block's own foot, #fitaf-nav, inside the checkout (`:has(#fitaf-nav)`): if the store draws its checkout again without
 // it (the visitor left and came back in the app), the step class alone hides nothing, and the visitor has the whole
 // stripped checkout, never a step with no way on. The recap (steps 2 and 3, "N meals" before the store's own Total) is
 // mark()'s one rule that adds rather than hides: a ::before of the Total, its words data/messages.json's.
-var Q2 = "section.contact,section.delivery,section.schedule", N, AT, PAID;
+var Q2 = ".checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests)", Q3 = ".checkout__section:is(.tip,.payment,.checkout__consent)", N, AT, PAID;
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
 ".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
 ".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return," +
-".fitaf-step-1:has(#fitaf-nav) .checkout__form,:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item,.fitaf-step-2:has(#fitaf-nav) :is(.checkout__form>:not(" + Q2 + ",:has(" + Q2 + ")),.checkout__submit)," +
-".fitaf-step-3:has(#fitaf-nav) :is(" + Q2 + "),:is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) .summary__pay-button:has(+#fitaf-go)){display:none!important}" +
+".fitaf-step-1:has(#fitaf-nav) .checkout__form,:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item,.fitaf-step-2:has(#fitaf-nav) :is(.checkout__form>:not(" + Q2 + ",:has(" + Q2 + "))," + Q3 + ",.checkout__submit)," +
+".fitaf-step-3:has(#fitaf-nav) " + Q2 + ",:is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) .summary__pay-button:has(+#fitaf-go)){display:none!important}" +
 "html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}" +
 "html.fitaf-deep:has(app-checkout) .summary__item{padding:3px 6px;margin:0 0 2px;gap:8px;align-items:center}html.fitaf-deep:has(app-checkout) .summary__item-image{width:48px;height:48px}" +
 "html.fitaf-deep:has(app-checkout) .summary__item-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}";
@@ -287,7 +290,7 @@ function at(n) {
   w.scrollTo(0, 0);
 }
 function bad(q, shown) {
-  return [].filter.call(c.querySelectorAll(":is(" + Q2 + ")" + q), function (e) { return !e.querySelector(".ng-invalid") && (!shown || e.getClientRects().length); })[0];
+  return [].filter.call(c.querySelectorAll(Q2 + q), function (e) { return !e.querySelector(".ng-invalid") && (!shown || e.getClientRects().length); })[0];
 }
 function fix(e) {
   at(2);

@@ -51,10 +51,17 @@
 // "Items" stat, .mobile-cart-summary__stat-value. Its schedule: ackMs (each press is counted that long after it; 0, at
 // once), drop (press indexes, from 0, the store ignores), takeBack ([{ press, afterMs }]: that press's count taken back
 // afterMs after it was shown).
+// SPEC-rung2-progress-and-checkout § 27 (the live release's checkout, measured from its files): the form's sections are
+// each a section.checkout__section with ONE modifier and the live headings: contact (Contact), order-type (Order type),
+// delivery-address (Delivery address), delivery-method (Delivery method), schedule (Delivery schedule, or Pickup schedule),
+// special-requests special-requests--food (Food Notes), tip, the discounts (checkout-discounts), payment (Payment),
+// checkout__consent (the terms); with `orderType: "pickup"`, pickup-location (Pickup location) in place of the delivery
+// address and method. (Until § 27: section.contact, .delivery and .schedule, invented by 5acc962 and never on the live store.)
 // SPEC-rung2-progress-and-checkout § 25 (the three-step checkout), `validity` (BY DEFAULT): the form's step-2 controls
 // carry Angular's own form state, as the store's reactive form does (the framework's classes, none of the store's code):
 // each control named by `formcontrolname` (the contact section's email, phone, first and last name, all required; the
-// delivery section's address, required, and state, inside a `formgroupname="address"` group; the schedule's date) has
+// delivery address's address, required, and state, inside a `formgroupname="address"` group; the delivery method; the
+// pickup location, required, for pickup; the schedule's date; the food notes) has
 // ng-valid or ng-invalid, ng-pristine or ng-dirty (on input), ng-untouched or ng-touched (on blur); the group and the form
 // carry ng-invalid while a control inside is invalid. A touched invalid control shows the store's message after it
 // (p.field-error, role=alert). A press of either pay button marks every control touched (Angular's markAllAsTouched)
@@ -130,21 +137,25 @@ function checkoutHtml(cfg) {
   const sub = subscriptionParts(cfg.subscription);
   /** § 25: a step-2 control's Angular name (and `required`), with `validity`; the page's script keeps its classes. */
   const ng = (name, required = false) => (cfg.validity ? ` formcontrolname="${name}"${required ? " required" : ""}` : "");
+  /** § 27: an order for pickup renders the pickup location in place of the delivery address and method. */
+  const pickup = cfg.orderType === "pickup";
   return `<app-checkout><div class="checkout">
 <form class="checkout__form" onsubmit="return false">
 <a class="checkout__guest-signin-banner" href="/login?returnUrl=%2Fcheckout">Already have an account? Sign in for faster checkout</a>
-<section class="contact"><h2>Contact</h2>${cfg.missing.includes("contact-sign-in") ? "" : '<a class="contact__sign-in" href="/login?returnUrl=%2Fcheckout">Sign in</a>'}
+<section class="checkout__section contact"><h2>Contact</h2>${cfg.missing.includes("contact-sign-in") ? "" : '<a class="contact__sign-in" href="/login?returnUrl=%2Fcheckout">Sign in</a>'}
 <input type="email" name="email" aria-label="Email"${ng("email", true)}><input type="tel" name="phone" aria-label="Phone"${ng("phone", true)}>
 <input name="firstName" aria-label="First name"${ng("firstName", true)}><input name="lastName" aria-label="Last name"${ng("lastName", true)}><input type="hidden" name="token" value="synthetic"></section>
-<section class="delivery"><h2>Delivery</h2><div role="radiogroup" aria-label="Order type"><div role="radio" aria-checked="true" tabindex="0">Delivery</div><div role="radio" aria-checked="false" tabindex="-1">Pickup</div></div>
-<div class="delivery__address"${cfg.validity ? ' formgroupname="address"' : ""}><input name="address" aria-label="Address"${ng("address", true)}><select name="state" aria-label="State"${ng("state")}><option>MA</option></select></div></section>
-<section class="schedule"><h2>Schedule</h2><select name="date" aria-label="Delivery date"${ng("date")}><option>Sunday</option><option>Wednesday</option></select></section>
+<section class="checkout__section order-type"><h2>Order type</h2><div role="radiogroup" aria-label="Order type"><div role="radio" aria-checked="${!pickup}" tabindex="${pickup ? -1 : 0}">Delivery</div><div role="radio" aria-checked="${pickup}" tabindex="${pickup ? 0 : -1}">Pickup</div></div></section>
+${pickup ? `<section class="checkout__section pickup-location"><h2>Pickup location</h2><select name="pickupLocation" aria-label="Pickup location"${ng("pickupLocation", true)}><option value="">Choose a location</option><option>Fit AF Kitchen</option></select></section>`
+    : `<section class="checkout__section delivery-address"><h2>Delivery address</h2><div class="delivery__address"${cfg.validity ? ' formgroupname="address"' : ""}><input name="address" aria-label="Address"${ng("address", true)}><select name="state" aria-label="State"${ng("state")}><option>MA</option></select></div></section>
+<section class="checkout__section delivery-method"><h2>Delivery method</h2><select name="deliveryMethod" aria-label="Delivery method"${ng("deliveryMethod")}><option>Home delivery</option></select></section>`}
+<section class="checkout__section schedule"><h2>${pickup ? "Pickup" : "Delivery"} schedule</h2><select name="date" aria-label="${pickup ? "Pickup" : "Delivery"} date"${ng("date")}><option>Sunday</option><option>Wednesday</option></select></section>
+<section class="checkout__section special-requests special-requests--food"><h2>Food Notes</h2><textarea name="specialRequests" aria-label="Special requests"${ng("specialRequests")}></textarea></section>
 ${tipHtml(cfg)}
 <section class="checkout__section checkout-discounts checkout-discounts--mobile">${discounts("section")}</section>
-<section class="payment"><h2>Payment</h2><iframe title="Card number (synthetic)" srcdoc="card field (synthetic)"></iframe>
+<section class="checkout__section payment"><h2>Payment</h2><iframe title="Card number (synthetic)" srcdoc="card field (synthetic)"></iframe>
 <div class="payment__discounts checkout-discounts checkout-discounts--mobile">${discounts("payment")}</div></section>
-<textarea name="specialRequests" aria-label="Special requests"></textarea>
-<label class="checkout__consent"><input type="checkbox" name="agreeToTerms"> I agree to the <a href="/refund-and-return-policy">refund and return policy</a></label>
+<section class="checkout__section checkout__consent"><label><input type="checkbox" name="agreeToTerms"> I agree to the <a href="/refund-and-return-policy">refund and return policy</a></label></section>
 <div class="checkout__submit"><span class="checkout__submit-target"><button type="button" class="checkout__pay"> Place order </button></span></div>
 </form>
 <aside class="checkout__summary"><div class="summary">
@@ -531,6 +542,7 @@ const DEFAULTS = {
   counter: {},
   validity: true,
   payError: null,
+  orderType: "delivery",
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */

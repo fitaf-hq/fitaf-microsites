@@ -185,8 +185,12 @@ export function displayedCounts(selectors) {
 // ── SPEC-rung2-progress-and-checkout § 25: the three-step checkout ─────────────────────────────────────────────────────
 // The block's own elements: the step bar, the foot (Back, and Continue where no phone bar is displayed), Continue, Back.
 export const STEP_IDS = { bar: "fitaf-bar", nav: "fitaf-nav", go: "fitaf-go", back: "fitaf-back" };
-/** § 25.2's step 2: the store's own sections (the live markup as browser-store.mjs carries it). */
-export const STEP2 = ["section.contact", "section.delivery", "section.schedule"];
+/**
+ * § 27 (the live release's sections, replacing § 25.2's): step 2's seven, each a .checkout__section with its modifier
+ * (pickup-location only on an order for pickup, delivery-address and delivery-method only for delivery); step 3's three.
+ */
+export const STEP2 = ["contact", "order-type", "delivery-address", "delivery-method", "schedule", "pickup-location", "special-requests"].map((m) => `.checkout__section.${m}`);
+export const STEP3 = ["tip", "payment", "checkout__consent"].map((m) => `.checkout__section.${m}`);
 /** What a customer types into step 2 of the synthetic form (its required controls): valid entries, invented. */
 export const ENTRIES = [["email", "visitor@example.com"], ["phone", "6175550100"], ["firstName", "Test"], ["lastName", "Visitor"], ["address", "1 Main St"]];
 
@@ -245,7 +249,7 @@ export async function walkTo(run, step) {
 }
 
 /** In the page: the step-related parts of the checkout, each with how many are found and displayed. */
-export const SECTIONS = [".summary__item", ...STEP2, "section.payment", ".checkout__consent", "textarea[name=specialRequests]", "section.checkout__section.tip"];
+export const SECTIONS = [".summary__item", ...STEP2, ...STEP3];
 
 /** In the page: the screen's slides, the one shown, its title and step line; null when it is not on the page. */
 export function screenRead() {

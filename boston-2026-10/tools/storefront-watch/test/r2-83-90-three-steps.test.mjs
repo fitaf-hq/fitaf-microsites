@@ -18,7 +18,9 @@
 //   R2-88 an error in a hidden step shows its step: at step 3 the customer presses the store's pay button and the
 //         store refuses the address 300 ms later (ng-invalid ng-touched, its message): the block shows step 2 with the
 //         address focused.
-//   R2-89 Back keeps every entry: step 2's fields and selection, step 3's special requests, across Back and Continue.
+//   R2-89 Back keeps every entry: step 2's fields, its selection and its food notes, across Back and Continue.
+//   R2-84b (§ 27) an order for pickup: step 2 shows the store's pickup location in place of the delivery address and
+//         method; Continue waits for a location chosen; step 3 hides it.
 //   R2-90 no store control pressed by the block: through a whole walk (a refusal included), every click on the page
 //         is a trusted one on a button of ours; no submit; no order placed.
 import test, { after, before } from "node:test";
@@ -39,6 +41,7 @@ import {
   shipped,
   skip,
   STEP2,
+  STEP3,
   STEP_IDS,
   stepRead,
   untilStep,
@@ -96,11 +99,20 @@ function sectionsAt(sels) {
   return out;
 }
 
-/** § 25.2's table: what each step shows (`on`) and hides (`off`) of SECTIONS, on the synthetic checkout. */
+/**
+ * § 25.2's table as § 27 measured the sections: what each step shows (`on`, each rendered one displayed) and hides
+ * (`off`) of SECTIONS. The tip is step 3's, but H10 hides it while none is chosen (R2-56), so it is `off` everywhere here.
+ */
+const PAY3 = [".checkout__section.payment", ".checkout__section.checkout__consent"];
 const TABLE = {
-  1: { on: [".summary__item"], off: [...STEP2, "section.payment", ".checkout__consent", "textarea[name=specialRequests]", "section.checkout__section.tip"] },
-  2: { on: STEP2, off: [".summary__item", "section.payment", ".checkout__consent", "textarea[name=specialRequests]", "section.checkout__section.tip"] },
-  3: { on: ["section.payment", ".checkout__consent", "textarea[name=specialRequests]"], off: [".summary__item", ...STEP2] },
+  1: { on: [".summary__item"], off: [...STEP2, ...STEP3] },
+  2: { on: STEP2, off: [".summary__item", ...STEP3] },
+  3: { on: PAY3, off: [".summary__item", ...STEP2, ".checkout__section.tip"] },
+};
+/** What the store renders of step 2 for each order type (§ 27): the rest are not on the page. */
+const RENDERED = {
+  delivery: STEP2.filter((s) => !s.endsWith(".pickup-location")),
+  pickup: STEP2.filter((s) => !/\.delivery-(address|method)$/.test(s)),
 };
 
 // ── R2-83 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -120,7 +132,7 @@ test("R2-83: the steps only on a deep-carted checkout — step 1 at done with th
       const again = await run.page.evaluate(stepRead, STEP_IDS);
       assert.deepEqual([again.classes, again.bar, again.nav, again.go, again.back], [[], null, false, null, null], `${width}: a reload — nothing of ours`);
       // (The synthetic store keeps its plan in the page, so a reload shows its checkout with an empty cart: no lines.)
-      const counts = await run.page.evaluate(displayedCounts, [".checkout__form", PAY[width], ...STEP2]);
+      const counts = await run.page.evaluate(displayedCounts, [".checkout__form", PAY[width], ...RENDERED.delivery]);
       for (const [sel, c] of Object.entries(counts)) assert.ok(c.found > 0 && c.displayed === c.found, `${width}: after a reload ${sel} displayed: ${JSON.stringify(c)}`);
     });
     store.set({ storeLines: true, checkoutNames: MEALS.slice(0, 7) });
@@ -132,7 +144,7 @@ test("R2-83: the steps only on a deep-carted checkout — step 1 at done with th
       await poll(page, () => document.querySelectorAll("app-checkout .summary__item").length, null, (n) => n > 0, { timeoutMs: 15_000 });
       const r = await page.evaluate(stepRead, STEP_IDS);
       assert.deepEqual([r.classes, r.bar, r.nav, r.go, r.back], [[], null, false, null, null], `${width}: an ordinary visit — nothing of ours`);
-      const counts = await page.evaluate(displayedCounts, [".checkout__form", PAY[width], ...STEP2, ".summary__item"]);
+      const counts = await page.evaluate(displayedCounts, [".checkout__form", PAY[width], ...RENDERED.delivery, ".summary__item"]);
       for (const [sel, c] of Object.entries(counts)) assert.ok(c.found > 0 && c.displayed === c.found, `${width}: an ordinary visit, ${sel} displayed: ${JSON.stringify(c)}`);
     } finally {
       await context.close();
@@ -148,7 +160,8 @@ test("R2-84: exactly one step's sections displayed at each step; the bar and the
       for (const step of [1, 2, 3]) {
         await walkTo(run, step);
         const s = await run.page.evaluate(sectionsAt, SECTIONS);
-        for (const sel of TABLE[step].on) assert.ok(s[sel].found > 0 && s[sel].displayed > 0, `${width}, step ${step}: ${sel} displayed: ${JSON.stringify(s[sel])}`);
+        for (const sel of STEP2) assert.equal(s[sel].found, RENDERED.delivery.includes(sel) ? 1 : 0, `fixture control: ${sel} rendered for delivery`);
+        for (const sel of TABLE[step].on.filter((x) => s[x].found)) assert.ok(s[sel].displayed > 0, `${width}, step ${step}: ${sel} displayed: ${JSON.stringify(s[sel])}`);
         for (const sel of TABLE[step].off) assert.equal(s[sel].displayed, 0, `${width}, step ${step}: ${sel} hidden: ${JSON.stringify(s[sel])}`);
         const r = await run.page.evaluate(stepRead, STEP_IDS);
         assert.equal(r.current, `${step} ${names()[step - 1]}`, `${width}, step ${step}: the bar's current step`);
@@ -164,6 +177,29 @@ test("R2-84: exactly one step's sections displayed at each step; the bar and the
         }
       }
     });
+  }
+});
+
+test("R2-84b (§ 27): an order for pickup — step 2 shows the pickup location, not the delivery address or method; Continue waits for a location; step 3 hides it (both widths)", { skip, timeout: 120_000 }, async () => {
+  for (const width of WIDTHS) {
+    await deep(width, async (run) => {
+      await walkTo(run, 2);
+      const s = await run.page.evaluate(sectionsAt, SECTIONS);
+      for (const sel of STEP2) assert.deepEqual(s[sel], RENDERED.pickup.includes(sel) ? { found: 1, displayed: 1 } : { found: 0, displayed: 0 }, `${width}, step 2: ${sel}`);
+      for (const sel of STEP3) assert.equal(s[sel].displayed, 0, `${width}, step 2: ${sel} hidden`);
+      assert.match(await run.page.$eval(".checkout__section.schedule h2", (h) => h.textContent), /^Pickup schedule$/, "fixture control: the pickup heading");
+      await fillStep2(run, ENTRIES.filter(([n]) => n !== "address"));
+      await press(run, "go");
+      await new Promise((r) => setTimeout(r, 300));
+      const r = await run.page.evaluate(stepRead, STEP_IDS);
+      assert.deepEqual([r.classes, r.focused], [[2], { name: "pickupLocation", invalid: true }], `${width}: refused, the location focused`);
+      await run.page.select("app-checkout select[name=pickupLocation]", "Fit AF Kitchen");
+      await press(run, "go");
+      await untilStep(run, 3);
+      const at3 = await run.page.evaluate(sectionsAt, SECTIONS);
+      for (const sel of RENDERED.pickup) assert.equal(at3[sel].displayed, 0, `${width}, step 3: ${sel} hidden`);
+      for (const sel of PAY3) assert.equal(at3[sel].displayed, 1, `${width}, step 3: ${sel} displayed`);
+    }, { cfg: { orderType: "pickup" } });
   }
 });
 
@@ -283,7 +319,7 @@ test("R2-88: after a pay press the store refuses a step-2 entry (ng-invalid ng-t
       assert.deepEqual(r.focused, { name: "address", invalid: true }, `${width}: the refused control focused`);
       assert.ok(run.lines.includes("[fixture] pay pressed: the store refused address"), `${width}: fixture control: the store refused it: ${run.lines.join(" | ")}`);
       const msg = await run.page.evaluate(() => {
-        const m = document.querySelector("section.delivery .field-error");
+        const m = document.querySelector(".checkout__section.delivery-address .field-error");
         return m ? [m.textContent, m.getClientRects().length > 0] : null;
       });
       assert.deepEqual(msg, ["We don't deliver to this address", true], `${width}: the store's own message displayed`);
@@ -299,15 +335,16 @@ function entriesNow() {
   return Object.fromEntries(["email", "phone", "firstName", "lastName", "address", "date", "specialRequests"].map((n) => [n, v(n)]));
 }
 
-test("R2-89: Back keeps every entry — step 2's fields and selection, step 3's special requests (both widths)", { skip, timeout: 120_000 }, async () => {
+test("R2-89: Back keeps every entry — step 2's fields, its selection and its food notes (both widths)", { skip, timeout: 120_000 }, async () => {
   for (const width of WIDTHS) {
     await deep(width, async (run) => {
       await walkTo(run, 2);
       await fillStep2(run);
       await run.page.select("app-checkout select[name=date]", "Wednesday");
+      // § 27: the food notes (special-requests) are step 2's.
+      await run.page.type("app-checkout textarea[name=specialRequests]", "Leave at the door");
       await press(run, "go");
       await untilStep(run, 3);
-      await run.page.type("app-checkout textarea[name=specialRequests]", "Leave at the door");
       const expected = { ...Object.fromEntries(ENTRIES), date: "Wednesday", specialRequests: "Leave at the door" };
       assert.deepEqual(await run.page.evaluate(entriesNow), expected, `${width}: fixture control: the entries made`);
       for (const [which, step] of [["back", 2], ["back", 1], ["go", 2], ["go", 3]]) {

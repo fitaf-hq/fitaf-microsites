@@ -52,18 +52,18 @@ const why = (o) => faces.facesVerdict(o).reasons;
 test("W20a: a walk whose every step shows its own sections and the Total, the pay button at step 3 only: pass; the line says how each step was reached", () => {
   assert.deepEqual(why(outcome()), []);
   const line = faces.stepsLine(outcome());
-  assert.match(line, /^W20: step 1 \(done\): \.summary__item 1; the Total displayed \| step 2 \(Continue\): section\.contact 1, section\.delivery 1, section\.schedule 1; the Total displayed \| step 3 \(Continue REFUSED at step 2 \(focused input\[name=email\], ng-invalid\): entered by the block's class, the smoke types nothing\)/);
+  assert.match(line, /^W20: step 1 \(done\): \.summary__item 1; the Total displayed \| step 2 \(Continue\): \.checkout__section\.contact 1, \.checkout__section\.order-type 1, \.checkout__section\.delivery-address 1, \.checkout__section\.delivery-method 1, \.checkout__section\.schedule 1, \.checkout__section\.pickup-location 1, \.checkout__section\.special-requests 1; the Total displayed \| step 3 \(Continue REFUSED at step 2 \(focused input\[name=email\], ng-invalid\): entered by the block's class, the smoke types nothing\)/);
   assert.match(line, /; the pay button$/, "the pay button at step 3");
 });
 
 test("W20a: another step's section displayed, its own hidden, the Total missing at a step: fail under W20, naming the step", () => {
   const steps = walked();
-  steps[1].sections["section.payment"].displayed = 1;
-  steps[1].sections["section.contact"].displayed = 0;
+  steps[1].sections[".checkout__section.payment"].displayed = 1;
+  steps[1].sections[".checkout__section.contact"].displayed = 0;
   steps[1].total.displayed = 0;
   assert.deepEqual(why(outcome(steps)), [
-    "W20: at step 2, section.contact (its own) not displayed",
-    "W20: at step 2, section.payment (step 3's) displayed",
+    "W20: at step 2, .checkout__section.contact (its own) not displayed",
+    "W20: at step 2, .checkout__section.payment (step 3's) displayed",
     "W20: the Total not displayed at step 2",
   ]);
 });
@@ -133,7 +133,11 @@ test("W20b: the smoke walks the steps at both widths — step 2 by Continue, ste
     for (const s of steps) {
       assert.deepEqual(s.total, { found: 1, displayed: 1 }, `${width}, step ${s.step}: the Total`);
       for (const st of faces.STEPS) {
-        for (const sel of st.shows) assert.equal(s.sections[sel].displayed > 0, st.step === s.step, `${width}, step ${s.step}: ${sel}`);
+        // § 27: the store renders the delivery address and method for delivery, the pickup location for pickup.
+        for (const sel of st.shows) {
+          if (sel.startsWith(".checkout__section")) assert.equal(s.sections[sel].found, sel.endsWith(".pickup-location") ? 0 : 1, `fixture control: ${sel} rendered for delivery`);
+          if (s.sections[sel].found) assert.equal(s.sections[sel].displayed > 0, st.step === s.step, `${width}, step ${s.step}: ${sel}`);
+        }
       }
       assert.equal(s.payment.payWith, s.step === 3, `${width}, step ${s.step}: the pay button ${s.step === 3 ? "displayed" : "hidden"}`);
     }
