@@ -8,10 +8,11 @@
 // week the manifest has a cell for (the count read from the manifest, never a literal).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseHTML } from "linkedom";
 import { loadPhotos, PICKS_DIR, ROOT } from "../build.mjs";
+import { addDays } from "../src/worker/zoned-time.js";
 import { builtPage, card, DAYS, midday, mirror, ON, openPlanPage, withFixtureInData } from "./cc-harness.mjs";
 import { FIXTURE_PHOTOS_PATH, FIXTURE_SHEETS_DIR, photoUrls, programBuild } from "./pr-harness.mjs";
 
@@ -92,18 +93,29 @@ test("PR-3: no data/photo-sheets.json and no directory (a mirror) builds the pag
 
 test("PR-3: the tree as committed carries the five carousel windows and a photo tile for each meal the manifest has a cell for", async () => {
   const photos = await loadPhotos();
-  const { html } = await builtPage({ picks: PICKS_DIR, on: ON });
+  // The committed week (the latest data/picks/ file, never a literal: SPEC-chefs-choice § 7.3 removed week B's), built on
+  // the first day of its window (S − 9) and seen on its last (S − 3), SPEC-chefs-choice § 2.
+  const delivery = (await readdir(PICKS_DIR))
+    .map((f) => /^(\d{4}-\d{2}-\d{2})\.json$/.exec(f)?.[1])
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  assert.ok(delivery, "control: a committed week in data/picks/");
+  const { html } = await builtPage({ picks: PICKS_DIR, on: addDays(delivery, -9) });
   const windows = [...parseHTML(html).document.querySelectorAll("#carousel .slide img")];
   assert.deepEqual(windows.map((img) => img.getAttribute("src")), Array(5).fill(photos.base + photos.carousel.file), "five windows onto the carousel sheet");
   // The counts are the manifest's and the picks file's own, never literals: the emitter decides which meals have a photo.
-  const sheet = photos.chefs_choice["2026-10-04"];
-  const menu = JSON.parse(await readFile(join(PICKS_DIR, "2026-10-04.json"), "utf8")).menus["14"].map((m) => m.name);
+  // A row is matched to its meal by position: since SPEC-chefs-choice § 7.2 a row shows `display`, and the cell is `name`'s.
+  const sheet = photos.chefs_choice[delivery];
+  assert.ok(sheet, `control: the manifest has the committed week's sheet (${delivery})`);
+  const menu = JSON.parse(await readFile(join(PICKS_DIR, `${delivery}.json`), "utf8")).menus["14"].map((m) => m.name);
   const cells = menu.filter((name) => name in sheet.cells);
   assert.ok(cells.length > 0, "control: the manifest has a cell for some meal of the 14-meal list");
-  const page = openPlanPage(html, { hash: "#lean-14", now: midday(DAYS["S-5"]) });
+  const page = openPlanPage(html, { hash: "#lean-14", now: midday(addDays(delivery, -3)) });
   const rows = [...page.document.querySelectorAll("#cc-meals li")];
   assert.equal(rows.length, menu.length, "control: the list shows the 14-meal menu");
-  const withPhoto = rows.filter((li) => (li.querySelector(".cc-thumb").getAttribute("style") ?? "").includes(photos.base + sheet.file));
-  assert.deepEqual(withPhoto.map((li) => li.querySelector(".cc-name").textContent).sort(), [...cells].sort(), `the ${cells.length} meals with a cell show their photo`);
+  const photo = (li) => (li.querySelector(".cc-thumb").getAttribute("style") ?? "").includes(photos.base + sheet.file);
+  const withPhoto = menu.filter((name, i) => photo(rows[i]));
+  assert.deepEqual(withPhoto.sort(), [...cells].sort(), `the ${cells.length} meals with a cell show their photo`);
   assert.equal(rows.length - withPhoto.length, menu.length - cells.length, `and ${menu.length - cells.length} plain tiles`);
 });
