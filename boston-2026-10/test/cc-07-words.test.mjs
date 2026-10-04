@@ -1,7 +1,7 @@
 // CC-7 (SPEC-chefs-choice § 3, § 4): words. Every phrase of § 3 comes from data/messages.json (its `chefs_choice` key),
 // by the letterless-marker rule the mock-ups' P2 uses: with every phrase replaced by a marker that has no letters (its
-// placeholders kept) and every meal name by another, the card, opened, shows no letter but the delivery date as the
-// offer writes it. So no word was typed into the template, the card's markup or the script. The copies are made in a
+// placeholders kept) and every meal's shown name (`display`, § 7.2) by another, the card, opened, shows no letter but the
+// delivery date as the offer writes it. So no word was typed into the template, the card's markup or the script. The copies are made in a
 // temporary directory; no file in the repository is edited.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -88,12 +88,14 @@ test("CC-7b: with every phrase and every meal name a letterless marker, the open
   };
   const messages = structuredClone(MESSAGES);
   for (const [key, placeholders] of Object.entries(PHRASES)) messages.chefs_choice[key] = mark(...placeholders);
+  // § 7.2: the list shows each meal's `display`, so the marker goes there; `name` (the key, the store's spelling) keeps
+  // its letters, so a line showing `name` would be caught here too.
   const picks = structuredClone(FIXTURE);
   const names = new Map();
   for (const menu of Object.values(picks.menus)) {
     for (const meal of menu) {
       if (!names.has(meal.name)) names.set(meal.name, mark());
-      meal.name = names.get(meal.name);
+      meal.display = names.get(meal.name);
     }
   }
   await withCopies(messages, picks, async (html) => {

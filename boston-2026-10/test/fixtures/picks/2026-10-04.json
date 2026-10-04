@@ -2,21 +2,21 @@
   "delivery": "2026-10-04",
   "menus": {
     "7": [
-      { "name": "Smoked Paprika Chicken Bowl", "qty": 2 },
-      { "name": "Lemon Herb Salmon with Greens", "qty": 1 },
-      { "name": "Turkey Chili Verde", "qty": 2 },
-      { "name": "🟠NEW: Maple Dijon Pork Tenderloin", "qty": 1 },
-      { "name": "Ginger Beef Rice Bowl", "qty": 1 }
+      { "name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 2 },
+      { "name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 1 },
+      { "name": "Turkey Chili Verde", "display": "Turkey Chili Verde", "qty": 2 },
+      { "name": "🟠NEW: Maple Dijon Pork Tenderloin", "display": "Maple Dijon Pork Tenderloin", "qty": 1 },
+      { "name": "Ginger Beef Rice Bowl", "display": "Ginger Beef Bowl with Jasmine Rice", "qty": 1 }
     ],
     "14": [
-      { "name": "Smoked Paprika Chicken Bowl", "qty": 3 },
-      { "name": "Lemon Herb Salmon with Greens", "qty": 2 },
-      { "name": "Turkey Chili Verde", "qty": 2 },
-      { "name": "🟠NEW: Maple Dijon Pork Tenderloin", "qty": 2 },
-      { "name": "Ginger Beef Rice Bowl", "qty": 1 },
-      { "name": "Chipotle Shrimp Tacos", "qty": 2 },
-      { "name": "Garden Pesto Penne", "qty": 1 },
-      { "name": "Jerk Chicken with Coconut Rice", "qty": 1 }
+      { "name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 3 },
+      { "name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 2 },
+      { "name": "Turkey Chili Verde", "display": "Turkey Chili Verde", "qty": 2 },
+      { "name": "🟠NEW: Maple Dijon Pork Tenderloin", "display": "Maple Dijon Pork Tenderloin", "qty": 2 },
+      { "name": "Ginger Beef Rice Bowl", "display": "Ginger Beef Bowl with Jasmine Rice", "qty": 1 },
+      { "name": "Chipotle Shrimp Tacos", "display": "Chipotle Shrimp Tacos", "qty": 2 },
+      { "name": "Garden Pesto Penne", "display": "Garden Pesto Penne", "qty": 1 },
+      { "name": "Jerk Chicken with Coconut Rice", "display": "Jerk Chicken with Coconut Rice", "qty": 1 }
     ]
   }
 }
