@@ -68,7 +68,7 @@ const CASES = [
   [
     `qty over MAX_QTY (${MAX_QTY})`,
     FILE,
-    changed((w) => (w.menus["14"] = [{ name: "Garden Pesto Penne", qty: MAX_QTY + 1 }])),
+    changed((w) => (w.menus["14"] = [{ name: "Garden Pesto Penne", display: "Garden Pesto Penne", qty: MAX_QTY + 1 }])),
     new RegExp(`must be 1\\.\\.${MAX_QTY}, got ${MAX_QTY + 1}`),
   ],
   ["qty 0", FILE, changed((w) => (w.menus["7"][0].qty = 0)), /must be 1\.\.21, got 0/],

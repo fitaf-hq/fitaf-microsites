@@ -29,9 +29,10 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   Chef's Choice (`SPEC-chefs-choice.md` § 3): `open`, `heading` (`{count}`, `{date}`), `meal_qty` (`{meal}`,
   `{n}`), `note`, `checkout`, `own`; ⚠ placeholders (`status`) for the copy review. `npm run build` reads it only
   when a week in `picks/` is open, and refuses a missing phrase or placeholder.
-- **`picks/<sunday>.json`** (not committed yet): this week's Chef's Choice, one file per delivery Sunday, written
-  by a person from the week's picks: `{ "delivery", "menus": { "<count>": [{ "name", "qty" }] } }`, the names as the
-  store's cards show them, public fields only. Only `.json` files here are read, each named by its Sunday; every
+- **`picks/<sunday>.json`**: this week's Chef's Choice, one file per delivery Sunday, written by Fit AF's emitter
+  from the week's picks (never by hand): `{ "delivery", "menus": { "<count>": [{ "name", "display", "qty" }] } }`;
+  `name` as the store's cards show it (the only key), `display` the KMS's name, which the page shows
+  (`SPEC-chefs-choice.md` § 7), public fields only. Only `.json` files here are read, each named by its Sunday; every
   one is checked by the link tool's own rules and a broken one fails the build. The page carries each week whose
   window (the Friday nine days before to the Thursday three days before) has not ended on the build's `--on`.
   ⚠ Until its window ends, a committed file changes the production page (`SPEC-chefs-choice.md` § 6).

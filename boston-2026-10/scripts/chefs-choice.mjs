@@ -8,13 +8,17 @@
 // payloadFromArgs (qty 1..MAX_QTY, names distinct and no two sharing a key, the counts making the plan's count) exactly
 // as `npm run handoff:link` takes it, and its link is the tool's handoffLink, whose keys are the one mealKey
 // (src/storefront/meal-key.js). No key function and no encoder live here (CC-2).
+//
+// § 7: each meal is { name, display, qty }. `name` (the store's card name) is the ONLY key: the link tool's --item, the
+// tile's cell and the --photos payload read it. `display` (the KMS's name) is what the list shows, as the tool reads a
+// name (whitespace collapsed and trimmed), and nothing else: it is not keyed, and nothing is checked between displays.
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join, relative, sep } from "node:path";
 import { declaration, esc, NO_PICKS, ROOT, scriptJson, sheetUrl, shownCounts, ZONED_DATE_HELPERS } from "../build.mjs";
 import { isLive } from "../src/worker/offers.js";
 import { addDays, daysBetween } from "../src/worker/zoned-time.js";
 import { countTable } from "./build-storefront.mjs";
-import { handoffLink, payloadFromArgs } from "./handoff-link.mjs";
+import { asShown, handoffLink, payloadFromArgs } from "./handoff-link.mjs";
 
 export const CHEFS_CHOICE_SRC = join(ROOT, "src", "chefs-choice");
 /** § 2: delivery Sunday S is open to order from S − 9 (a Friday: the store's switch) through S − 3 (a Thursday). */
@@ -23,9 +27,9 @@ export const CLOSES_DAYS_BEFORE = 3;
 /** A picks file is named by its delivery Sunday: 2026-10-04.json. Only `.json` files in the directory are picks. */
 const PICKS_FILE = /^(\d{4}-\d{2}-\d{2})\.json$/;
 const SUNDAY = 0;
-/** § 1: the only fields, each required: a file's, and a meal's. Anything else refuses the build. */
+/** § 1 (and § 7.1): the only fields, each required: a file's, and a meal's. Anything else refuses the build. */
 const FILE_FIELDS = ["delivery", "menus"];
-const MEAL_FIELDS = ["name", "qty"];
+const MEAL_FIELDS = ["name", "display", "qty"];
 /** § 3's phrases in data/messages.json's `chefs_choice` the card shows, and the placeholders each must carry. Since
  *  SPEC-plan-page-refinement § 1–2 the list is always open: `open` (its button) and `note` are kept there, not read. */
 const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] };
@@ -70,14 +74,20 @@ function onlyFields(value, allowed, where) {
   for (const key of allowed) if (!(key in value)) throw new Error(`${where}: missing field ${JSON.stringify(key)}`);
 }
 
+/** A meal as a refusal names it: its place, and its `name` when it has one as text (§ 7.4: the file and the meal). */
+const mealAt = (meal, where) => (isObject(meal) && typeof meal.name === "string" ? `${where} ${JSON.stringify(meal.name)}` : where);
+
 /** One menu's meals, their shape checked; the link tool checks the rest. */
 function mealsOf(menu, where) {
   if (!Array.isArray(menu) || !menu.length) throw new Error(`${where} must be a list of meals`);
   return menu.map((meal, i) => {
-    onlyFields(meal, MEAL_FIELDS, `${where}[${i}]`);
-    if (typeof meal.name !== "string") throw new Error(`${where}[${i}]: name must be text`);
+    const at = mealAt(meal, `${where}[${i}]`);
+    onlyFields(meal, MEAL_FIELDS, at);
+    if (typeof meal.name !== "string") throw new Error(`${at}: name must be text`);
+    if (typeof meal.display !== "string") throw new Error(`${at}: display must be text, got ${JSON.stringify(meal.display)}`);
+    if (!asShown(meal.display)) throw new Error(`${at}: display is blank`);
     if (typeof meal.qty !== "number" || !Number.isInteger(meal.qty)) {
-      throw new Error(`${where}[${i}]: qty must be a whole number, got ${JSON.stringify(meal.qty)}`);
+      throw new Error(`${at}: qty must be a whole number, got ${JSON.stringify(meal.qty)}`);
     }
     return meal;
   });
@@ -86,8 +96,9 @@ function mealsOf(menu, where) {
 /**
  * One picks file (already parsed), checked against § 1: the file's name is its delivery Sunday; the fields are exactly
  * `delivery` and `menus`; each menu is for a count the page shows, and for each size of that count the link tool takes
- * it. Returns { delivery, menus: { count: { meals: [{ name, qty }], links: { mpid: url } } } }, the names as the page
- * shows them (whitespace collapsed, as the tool keys them). `photo` ({ photos, host }: the photo sheets' manifest and
+ * it. Returns { delivery, menus: { count: { meals: [{ name, display, qty }], links: { mpid: url } } } }, `name` as the
+ * tool keys it and `display` as the page shows it (each with whitespace collapsed and trimmed: § 7.1); only `name`
+ * reaches the tool. `photo` ({ photos, host }: the photo sheets' manifest and
  * the code of the host the page is served from) gives each link the week's cells, by the tool's own --photos
  * (SPEC-rung2-progress-and-checkout § 17.1); without it, or with no sheet for the week, the links are today's.
  */
@@ -117,7 +128,8 @@ export function checkPicks(json, fileName, plans, photo = null) {
         throw new Error(`menus.${count}: ${err.message}`);
       }
       links[mpid] = handoffLink(plans, payload);
-      items ??= payload.items.map(({ name, qty }) => ({ name, qty }));
+      // The tool's items are the menu's meals in order (one --item each), so each takes its own display.
+      items ??= payload.items.map(({ name, qty }, i) => ({ name, display: asShown(meals[i].display), qty }));
     }
     menus[count] = { meals: items, links };
   }
@@ -174,7 +186,8 @@ function thumbStyle(url, sheet, name) {
 
 /** What the page's script reads: the zone, and per open week its window and, per count, the heading, the list (with each
  *  meal's tile style, or null), and one checkout link per size (by mpid). Every word is a phrase of data/messages.json
- *  filled here. `photos` is the photo sheets' manifest; every URL in it is built from its `base` (sheetUrl). */
+ *  filled here. `photos` is the photo sheets' manifest; every URL in it is built from its `base` (sheetUrl). § 7.2: each
+ *  line shows the meal's `display`; its tile is the cell of its `name`, the key. */
 export function pageData(weeks, { words, zone, photos = null, assetPrefix = "" }) {
   return {
     zone,
@@ -189,7 +202,7 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "" }
             count,
             {
               heading: fill(words.heading, { week: weekRange(w.delivery) }),
-              meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.name, n: m.qty }) : m.name)),
+              meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.display, n: m.qty }) : m.display)),
               thumbs: menu.meals.map((m) => thumbStyle(url, sheet, m.name)),
               links: menu.links,
             },
