@@ -239,3 +239,45 @@ side is Fit AF's `scripts/menus/emit_microsite_picks.spec.md` § 5, written the 
   (Low Carb too)"*): the emitter warns (Fit AF § 5.1), and this page shows what the file says. Whether such names need
   a customer-facing form is open with the Advisor.
 - **Prod**: the dev line and the test address first; eatfitaf.com only on the Advisor's go (three `fitaf-infra` PRs).
+
+### 7.6 Built, 2026-10-03 — found at the build, not ruled
+
+Red at `b269e38` (46 of CC-1–CC-9's 58 cases failing on the unchanged reader: every build of the fixture refused with
+its own words, `unknown field "display"`), green at `1e3be7c` (56 of 58), week B removed at `3daa294`. The two still
+failing, **CC-2c and CC-5's program case**, build a mirror that copies `data/`, and so `data/picks/2026-10-11.json`,
+which has no `display` until Fit AF's emitter re-emits it (§ 7.3). §§ 1–7.5 are unchanged.
+
+**The choices, where § 7 left one open**
+
+- The refusals' words: *"display must be text, got 42"* and *"display is blank"* (blank as the link tool reads a name).
+  To name *the meal* (§ 7.4), every meal-level refusal now carries the meal's `name` after its place:
+  `menus.7[3] "🟠NEW: Maple Dijon Pork Tenderloin": display is blank`.
+- `display` is shown by the link tool's own `asShown`, now exported from `scripts/handoff-link.mjs` (imported, not
+  copied). The build fills each line from it; `src/chefs-choice/chefs-choice.js` is unchanged.
+- The fixture: the tagged meal's `display` is its name without the tag; one meal is **reworded** (*Ginger Beef Rice
+  Bowl*, shown *Ginger Beef Bowl with Jasmine Rice*); the others equal `name`.
+- CC-7b's letterless markers go in `display`; `name` keeps its letters, so a line showing `name` is caught there too.
+- CC-9d: `display` collapsed and trimmed, and two meals sharing a `display` are taken (§ 7.1: nothing is checked between
+  them), their links unchanged.
+
+**Found**
+
+- ⚠ **As § 7.4 words it, CC-9 cannot kill the mutant "link keyed on `display`" through the tagged meal's key.** Since
+  SPEC-rung2-progress-and-checkout § 15.1 the key drops a leading marketing tag, so *"🟠NEW: Maple Dijon Pork
+  Tenderloin"* and *"Maple Dijon Pork Tenderloin"* share a key. That is also W41's case as § 7.3 states it: its three
+  tagged meals show the store's names without `🟠NEW: `. CC-9b kills the mutant through the tagged meal's tile and its
+  link's photo cell (both looked up by name), and through the reworded meal's key. A KMS name that differs from the
+  store's in more than the tag keys differently, so a link keyed on it fails in the store.
+- ⚠ **§ 7.3's and § 7.4's S20 row disagree with § 6's ruling and with S20's code.** S20 builds with an empty picks
+  directory (§ 6, ruled 2026-09-30; `test/s20-production-build.test.mjs`), so W41's `display` does not move its golden.
+  Re-recording it would change nothing. `npm run build`'s page does change in W41's three lines, but no case pins that
+  page with a week on it.
+- **Two cases read week B or the store name by name:** PR-3's committed-tree case read `data/picks/2026-10-04.json`. It
+  now takes the latest committed week, built on its S − 9 and seen on its S − 3, and matches a row to its meal by
+  position. Storybook's SM-5 (Chrome) built its expected lines from `name` and now reads `display`. **Not run.**
+- **Failing until W41 carries `display`**: CC-2c, CC-5's program case, PR-3's committed-tree case, and SM-6's pages
+  case. Reading the code adds PR-1 (`bothPages`) and S22 (a development build of the default `data/picks/`). In a
+  scratch copy of the package, with a stand-in W41 carrying `display`, PR-3, CC-2, CC-5, PR-1 and SM-6 pass. S22 was
+  not run.
+- ⬜ A question, not a defect: two meals sharing a `display` show two identical lines. § 7.1 allows it. Whether the
+  emitter should refuse it is open.
