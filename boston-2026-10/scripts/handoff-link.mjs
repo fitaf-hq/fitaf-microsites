@@ -32,8 +32,9 @@ const BASE_36 = 36;
 /** § 11 item 1: the offer code (checked by the script, not applied). */
 const CODE_RE = /^[A-Za-z0-9-]{1,40}$/;
 const WHOLE_NUMBER_RE = /^\d+$/;
-/** A name as the page shows it and as the script reads a card's title: whitespace collapsed and trimmed. */
-const asShown = (name) => name.replace(/\s+/g, " ").trim();
+/** A name as the page shows it and as the script reads a card's title: whitespace collapsed and trimmed. Exported for
+ *  the plan page's build, which shows a meal's `display` this way (SPEC-chefs-choice § 7.1). */
+export const asShown = (name) => name.replace(/\s+/g, " ").trim();
 
 /** One meal of the payload: `<key>`, or `<key>*<n>` above 1. */
 const token = (it) => (it.qty === 1 ? it.key : `${it.key}*${it.qty}`);

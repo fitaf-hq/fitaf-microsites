@@ -2,7 +2,8 @@
 // build, naming the file, before anything is written: a wrong list must never reach a customer. The rules on the menus
 // are the link tool's own (scripts/handoff-link.mjs: qty 1..MAX_QTY, names distinct and no two sharing a key, the
 // counts making the plan's count), so each refusal carries the tool's own words. Every case changes ONE thing in the
-// fixture, which builds (the control), so each fails for its own reason.
+// fixture, which builds (the control), so each fails for its own reason. § 7 (extended): a meal's `display` missing,
+// blank, or not text.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -67,7 +68,7 @@ const CASES = [
   [
     `qty over MAX_QTY (${MAX_QTY})`,
     FILE,
-    changed((w) => (w.menus["14"] = [{ name: "Garden Pesto Penne", qty: MAX_QTY + 1 }])),
+    changed((w) => (w.menus["14"] = [{ name: "Garden Pesto Penne", display: "Garden Pesto Penne", qty: MAX_QTY + 1 }])),
     new RegExp(`must be 1\\.\\.${MAX_QTY}, got ${MAX_QTY + 1}`),
   ],
   ["qty 0", FILE, changed((w) => (w.menus["7"][0].qty = 0)), /must be 1\.\.21, got 0/],
@@ -90,6 +91,32 @@ for (const [label, name, body, reason] of CASES) {
     const { error, wrote } = await attempt(name, body);
     assert.ok(error, "the build fails");
     assert.ok(error.message.includes(name), `the message names the file: ${error.message}`);
+    assert.match(error.message, reason);
+    assert.equal(wrote, false, "nothing is written");
+  });
+}
+
+// § 7.1 (extended): each meal's `display`, the name the page shows, is required, text, and not blank (blank as the link
+// tool reads a name: whitespace collapsed and trimmed). Each refusal names the file AND the meal (its `name`, the key).
+// The meal changed is the fixture's tagged one, whose display differs from its name.
+const TAGGED = FIXTURE.menus["7"].findIndex((m) => m.name.startsWith("🟠NEW:"));
+const DISPLAY_CASES = [
+  ["display missing", (meal) => delete meal.display, /missing field "display"/],
+  ["display empty", (meal) => (meal.display = ""), /display is blank/],
+  ["display blank (whitespace only)", (meal) => (meal.display = " \t\n "), /display is blank/],
+  ["display not text (a number)", (meal) => (meal.display = 42), /display must be text, got 42/],
+  ["display not text (null)", (meal) => (meal.display = null), /display must be text, got null/],
+];
+
+for (const [label, change, reason] of DISPLAY_CASES) {
+  test(`CC-5 (§ 7): ${label}: the build fails, naming the file and the meal, and writes nothing`, async () => {
+    assert.ok(TAGGED >= 0, "fixture control: menus.7 has a tagged meal");
+    const meal = FIXTURE.menus["7"][TAGGED];
+    assert.notEqual(meal.display, meal.name, "fixture control: its display is not its name");
+    const { error, wrote } = await attempt(FILE, changed((w) => change(w.menus["7"][TAGGED])));
+    assert.ok(error, "the build fails");
+    assert.ok(error.message.includes(FILE), `the message names the file: ${error.message}`);
+    assert.ok(error.message.includes(meal.name), `the message names the meal: ${error.message}`);
     assert.match(error.message, reason);
     assert.equal(wrote, false, "nothing is written");
   });

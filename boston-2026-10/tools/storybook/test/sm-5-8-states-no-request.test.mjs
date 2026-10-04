@@ -57,8 +57,9 @@ async function expectations(manifest) {
   assert.ok(week.delivery, "fixture control: a committed week with picks");
   const picks = await readJson(join(SITE, "data", "picks", `${week.delivery}.json`));
   const { meal_qty: qty } = (await readJson(join(SITE, "data", "messages.json"))).chefs_choice;
-  const line = ({ name, qty: n }) => {
-    const shown = name.replace(/\s+/g, " ").trim();
+  // SPEC-chefs-choice § 7.2: the list shows each meal's `display` (the KMS's name), never its `name` (the key).
+  const line = ({ display, qty: n }) => {
+    const shown = display.replace(/\s+/g, " ").trim();
     return n > 1 ? qty.replace("{meal}", shown).replace("{n}", String(n)) : shown;
   };
   const menus = Object.fromEntries(Object.entries(picks.menus).map(([count, meals]) => [count, meals.map(line)]));

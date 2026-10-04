@@ -13,7 +13,9 @@ import { parseHTML } from "linkedom";
 import { build, ROOT } from "../build.mjs";
 import { fakeWindow, orderPage, refKey, run, script } from "./r2-harness.mjs";
 
-/** The committed fixture: invented meal names, the week delivered Sunday 2026-10-04 (week B of § 2's ruling). */
+/** The committed fixture: invented meal names, the week delivered Sunday 2026-10-04 (week B of § 2's ruling). Since
+ *  § 7 each meal carries `display`, the name the page shows: the tagged meal's without its tag, one meal's reworded
+ *  (so its key differs from its name's: CC-9), the others equal to `name`. */
 export const FIXTURE_DIR = join(ROOT, "test", "fixtures", "picks");
 export const FIXTURE_FILE = join(FIXTURE_DIR, "2026-10-04.json");
 export const FIXTURE = JSON.parse(await readFile(FIXTURE_FILE, "utf8"));
@@ -57,11 +59,16 @@ export async function picksDir(files) {
   return dir;
 }
 
-/** The fixture as another week: every name suffixed, so a page shows which week it carries. */
+/** The fixture as another week: every name (and the name shown, § 7) suffixed, so a page shows which week it carries. */
 export function otherWeek(delivery, suffix = " (next week)") {
   const week = structuredClone(FIXTURE);
   week.delivery = delivery;
-  for (const menu of Object.values(week.menus)) for (const meal of menu) meal.name += suffix;
+  for (const menu of Object.values(week.menus)) {
+    for (const meal of menu) {
+      meal.name += suffix;
+      meal.display += suffix;
+    }
+  }
   return week;
 }
 
@@ -98,9 +105,12 @@ export function weekOf(delivery) {
 }
 /** The list's heading for the week delivered on `delivery` (since § 8 item 6 the same for every count). */
 export const headingFor = (count, delivery, messages = MESSAGES) => fill(words(messages).heading, { week: weekOf(delivery) });
-/** One meal as the list shows it: its name, with its count when above 1. */
-export const mealLine = ({ name, qty }, messages = MESSAGES) =>
-  qty > 1 ? fill(words(messages).meal_qty, { meal: name, n: qty }) : name;
+/** One meal as the list shows it: since § 7.2 its `display` (as the link tool reads a name: whitespace collapsed and
+ *  trimmed), with its count when above 1. Never its `name`, which is the key. */
+export const mealLine = ({ display, qty }, messages = MESSAGES) => {
+  const shown = display.replace(/\s+/g, " ").trim();
+  return qty > 1 ? fill(words(messages).meal_qty, { meal: shown, n: qty }) : shown;
+};
 
 /** A Date whose clock reads `now` (ms since the epoch), as page-sim.mjs's. */
 function clockAt(now) {
