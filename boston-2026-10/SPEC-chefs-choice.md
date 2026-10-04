@@ -235,9 +235,12 @@ side is Fit AF's `scripts/menus/emit_microsite_picks.spec.md` § 5, written the 
 
 ### 7.5 Not decided here
 
-- ⬜ **A KMS name with a kitchen note** (15 of the KMS's 271 names have a parenthesis, e.g. *"Philly Cheesesteak Bowl
-  (Low Carb too)"*): the emitter warns (Fit AF § 5.1), and this page shows what the file says. Whether such names need
-  a customer-facing form is open with the Advisor.
+- ✅ **A KMS name with a kitchen note** (15 of the KMS's 271 names have a parenthesis, e.g. *"Philly Cheesesteak Bowl
+  (Low Carb too)"*): **ruled by the Advisor, 2026-10-03**: *"The KMS should contain authored decisions (which we need
+  to create) to split these items into multiple meals"*. The remedy is in the KMS, not here; until each split lands
+  the emitter warns (Fit AF § 5.1) and this page shows what the file says.
+- **S20** (§ 7.3's re-record) is a no-op, as § 7.6 found: S20 builds with an empty picks directory (§ 6's ruling), so
+  W41's three changed lines are not in its golden. They are in the real production build, which the release compares.
 - **Prod**: the dev line and the test address first; eatfitaf.com only on the Advisor's go (three `fitaf-infra` PRs).
 
 ### 7.6 Built, 2026-10-03 — found at the build, not ruled
