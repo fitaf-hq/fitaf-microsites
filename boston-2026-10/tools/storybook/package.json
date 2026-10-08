@@ -2,7 +2,7 @@
   "name": "fitaf-microsite-boston-2026-10-storybook",
   "version": "0.1.0",
   "private": true,
-  "description": "Storybook for the microsite: every state of the page a visitor can reach, as the site's own build writes it, at 390 and 1280 (SPEC-storybook-microsite.md). Its own package, so the site's install never contains it.",
+  "description": "Storybook for the microsite: every state of the page a visitor can reach, as the site's own build writes it, and the hand-off's two faces as the Footer block draws them over the storefront watch's synthetic store, at 390 and 1280 (SPEC-storybook-microsite.md). Its own package, so the site's install never contains it.",
   "type": "module",
   "engines": {
     "node": ">=22.12"
@@ -10,7 +10,7 @@
   "scripts": {
     "storybook": "storybook dev --port 6016 --host localhost --no-open --no-version-updates",
     "build-storybook": "storybook build --output-dir storybook-static",
-    "pages": "node microsite/pages.mjs",
+    "pages": "node microsite/pages.mjs && node handoff/store.mjs",
     "test": "node --test \"test/*.test.mjs\""
   },
   "devDependencies": {
