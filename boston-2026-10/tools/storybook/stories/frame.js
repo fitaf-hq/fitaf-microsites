@@ -11,18 +11,18 @@ import { WHY } from "./states.js";
 
 const READY_TIMEOUT_MS = 10_000;
 const POLL_MS = 50;
-const CAPTION_STYLE = "margin:0;padding:6px 10px;font:13px/1.4 system-ui,sans-serif;background:#f4f4f5;color:#18181b;border-bottom:1px solid #d4d4d8";
-const FAILED_STYLE = "background:#fef2f2;color:#7f1d1d";
+export const CAPTION_STYLE = "margin:0;padding:6px 10px;font:13px/1.4 system-ui,sans-serif;background:#f4f4f5;color:#18181b;border-bottom:1px solid #d4d4d8";
+export const FAILED_STYLE = "background:#fef2f2;color:#7f1d1d";
 
 class Unreachable extends Error {}
 
 /** The viewport's width in px, or null when none of § 3's is chosen (the frame then fills the canvas). */
-function viewportWidth(globals) {
+export function viewportWidth(globals) {
   const v = globals?.viewport;
   return VIEWPORTS[typeof v === "string" ? v : v?.value]?.width ?? null;
 }
 
-const shown = (el) => Boolean(el && el.getClientRects().length > 0);
+export const shown = (el) => Boolean(el && el.getClientRects().length > 0);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function until(test, why) {

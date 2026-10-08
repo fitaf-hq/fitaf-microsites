@@ -5,12 +5,16 @@
 //
 // Mutants (in the suite, in a mirror of the package's own files): a story file with a phrase copied into it (escaped as
 // a JavaScript string would carry it), and one with a rule copied into it (laid out differently), each fail the check.
+//
+// SPEC-storybook-microsite § 8.4, SM-4 extended to the Hand-off stories: no copied rule of the BLOCK either (its two
+// style sheets as it ships them, test/copies.mjs's blockRules; its words are data/messages.json's `handoff`, phrases
+// already). Mutant: a story file with the screen's title rule copied into it (laid out differently) fails.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { copiesUnder, messagePhrases, pageRules, squeeze } from "./copies.mjs";
+import { blockRules, copiesUnder, messagePhrases, pageRules, squeeze } from "./copies.mjs";
 import { NOT_THE_TOOLS_OWN, readJson, SITE, TOOL } from "./paths.mjs";
 
 /** The first rule of src/chefs-choice/style.css as its file writes it, and the :root's first token. */
@@ -61,4 +65,28 @@ test("SM-4 (mutant): a rule of the page's stylesheet copied into a story fails",
   const found = await copiesUnder(mirror, SITE);
   assert.equal(found.length, 1, found.join("\n"));
   assert.ok(found[0].startsWith(`copied.stories.js: rule ${squeeze(rule).slice(0, 20)}`), found[0]);
+});
+
+/** The block's rule the SM-4 extension's control and mutant use: the screen's title, as the block's source writes it. */
+async function blockExample() {
+  const source = await readFile(join(SITE, "src", "storefront", "fitaf-handoff.js"), "utf8");
+  return /#fitaf-screen h2\{[^}]+\}/.exec(source)[0];
+}
+
+test("SM-4 (§ 8.4): the block's rules were read (fixture control)", async () => {
+  const rules = await blockRules(SITE);
+  const example = await blockExample();
+  assert.ok(rules.includes(squeeze(example)), `the screen's title rule, among the block's ${rules.length} rules`);
+  assert.ok(rules.some((r) => r.startsWith("html.fitaf-deep:has(app-checkout)")), "a rule of the stripped checkout's sheet");
+  assert.ok(rules.length >= 20, `the block's two sheets, rule by rule (${rules.length})`);
+});
+
+test("SM-4 (§ 8.4, mutant): a rule of the block copied into a story fails", async (t) => {
+  const example = await blockExample();
+  const relaid = example.replace("{", " {\n  ").replace(/;/g, ";\n  ").replace(/\}$/, "\n}");
+  assert.notEqual(relaid, example, "fixture control: the copy is laid out differently");
+  const mirror = await mirrorWith(t, "copied.stories.js", `export const STYLE = \`${relaid}\`;\n`);
+  const found = await copiesUnder(mirror, SITE);
+  for (const line of found) t.diagnostic(line);
+  assert.deepEqual(found, [`copied.stories.js: rule of the block ${squeeze(example).slice(0, 60)}`]);
 });

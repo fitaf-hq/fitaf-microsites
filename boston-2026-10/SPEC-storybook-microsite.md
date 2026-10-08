@@ -279,3 +279,31 @@ A press is the block's own control in the frame, as § 2 item 2. ⛔ No story pr
 
 - Publishing a static build; the copy (the block's words stay `data/messages.json`'s `handoff`).
 - The screen's module stories (`SPEC-storybook.md`): with rung 2 § 14.
+
+### 8.6 Built, 2026-10-07 — found at the build, not ruled
+
+Built by an agent and re-gated by the orchestrator: the seven Hand-off stories at 390 and 1280 (`tools/storybook/handoff/`,
+`stories/handoff*.js`), cases SM-9–SM-11 and the SM-4/7/8 extensions (the package's suite **36 of 36**, re-run by the
+orchestrator), two fixture options in the watch's `browser-store.mjs` with their case P3. **Where § 8 was wrong**:
+
+1. **Not under `/store/`.** The block refuses any path but `/order` and finishes only on `/checkout`, so the synthetic
+   store is served at `/order`, `/checkout` and `/img/` on Storybook's own address (`?store=<id>` chooses the page);
+   only its files live under `store/`. One rule, `handoff/serve.mjs`, serves both the development server and the cases.
+   A static build served by anything else shows no Hand-off store.
+2. **Screen · C as written is not a state.** The block takes the path alone as *finished*: routed to `/checkout` before
+   the checkout is drawn, it removes the screen at once, and a checkout drawn afterwards gets no step bar, no Back /
+   Continue and no logo. Built instead: the store holds its route (still on `/order`) until the caption's **Release**;
+   unreleased, the block's own 30 s wait ends it. ⚠ **The same ordering on the live store would give an undecorated
+   checkout**; the rung 2 § 29 rehearsal passed, and how close it came is not measured.
+3. **The link's photographs cannot be shown**: the block fetches a photo sheet only from its two fixed hosts, which no
+   story may reach, so a story's link carries no photo part and each slide shows its card's image (a generated tile).
+   **The 220 × 220 sheet-cell look of a real microsite link is not in Storybook.** § 19 never puts the link's photos into
+   the checkout's lines either.
+4. **Checkout · 3 needs step 2 filled**: the fixture's default form state makes the block refuse the second Continue
+   while step 2 is empty, as the live store does, so the story types invented entries into the five required fields
+   first (R2-84's walk).
+5. Smaller: *Screen · B*'s *t* is a plan's count (7 or 14; the block refuses another), *k* 1–14; the fixture had no
+   off-host reference; the *ordinary visit* page carries no block (the fixture never places one on a directly opened
+   `/checkout`); Screens A and B still go after the block's own 90 s; `build-storefront.mjs` is called in-process
+   (`buildStorefront({ outDir })`), so the paste copy in `dist-storefront/` is never written; the logo shown is the
+   fixture's navy placeholder.

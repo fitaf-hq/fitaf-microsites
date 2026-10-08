@@ -2,6 +2,7 @@ import { Meta } from "@storybook/addon-docs/blocks";
 import * as Individual from "./individual.stories.js";
 import * as Family from "./family.stories.js";
 import * as WholePage from "./whole-page.stories.js";
+import * as HandOff from "./handoff.stories.js";
 import { storyList } from "./story-list.js";
 
 <Meta title="Microsite/About these stories" />
@@ -19,9 +20,24 @@ own starts the frame's clock at noon on that date (the caption names it), so the
 as it would then; *today* adds nothing. Storybook serves the pages with a policy that refuses any request to another
 host (the development page's Turnstile script), so nothing leaves this machine.
 
+## The hand-off
+
+The **Hand-off** stories show the hand-off's two faces, the progress screen and the three-step checkout, as the Footer
+block ships them: the block is `scripts/build-storefront.mjs`'s own build, made when Storybook starts, running on the
+storefront watch's **synthetic store** (`tools/storefront-watch/test/browser-store.mjs`, its page as it serves it) as
+the store's Custom Scripts Footer runs it, opened with a test link (`scripts/handoff-link.mjs`'s, the fixture's own
+meals), in a frame exactly the viewport's size. Name a state as *Hand-off · Screen · B · 390: …*. The screen is held at
+its state by the synthetic store's own options (a planted hang; a route held until the caption's *Release*), and goes
+90 s after it came up by its own clock, as on the store: reload the story to see it again. **The checkout is a
+stand-in**: it carries the store's names, so its stories show which sections each step shows and hides, the step bar,
+Back and Continue, the recap and our words; the store's own fonts, colours and spacing are only on the live store, where
+a tweak to how the store's own parts look is still checked. The meals' images are generated tiles (a page colour and the
+meal's initial), never a photograph. Nothing presses the pay button, and the store's pages are served with the same
+policy, so nothing leaves this machine.
+
 ## Every story, by group
 
-{storyList([Individual, Family, WholePage]).map(({ group, stories }) => (
+{storyList([Individual, Family, WholePage, HandOff]).map(({ group, stories }) => (
   <div key={group}>
     <h3>{group}</h3>
     <ul>{stories.map((name) => <li key={name}>{name}</li>)}</ul>

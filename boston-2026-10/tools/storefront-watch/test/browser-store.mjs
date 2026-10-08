@@ -68,6 +68,11 @@
 // and, if the form is invalid, places nothing ("[fixture] pay pressed: the form is invalid"). `payError` (a control's
 // name): the first valid press is refused by the store 300 ms later (a server's answer), that control made invalid and
 // touched, with its message ("[fixture] pay pressed: the store refused <name>"), until it is edited.
+// SPEC-storybook-microsite § 8.3 (the Storybook's Hand-off stories hold the progress screen with these): `hangAtStart`,
+// the planted hang BEFORE the first press (`hangAfter` reads 0 as off): from the moment the Footer text is placed, the
+// page's setTimeout runs nothing, so a block's first poll, which runs as its text does, is its last, and it presses
+// nothing; and `routeHeld`, a store that has CHECKOUT's press and has not yet routed: the route to /checkout waits until
+// something calls window.__fixtureRoute() (once), which the page sets at the press.
 import { createServer } from "node:http";
 
 export const MEALS = ["Birria de Res Bowl", "Chicken Pesto Pasta", "Jalapeño Lime Chicken", "Turkey Chili", "Salmon Rice Bowl",
@@ -197,7 +202,9 @@ function shellParts(cfg) {
  * "loaded" | "none" | "pending" }: the card's img loaded, with no src yet, or still loading), routeDelayMs (the store
  * takes this long to route after CHECKOUT), hangAfter (after this many meals are added, the page's setTimeout runs
  * nothing any more: a hang planted under fill B), topLayerPopup (at load, a pop-up shown in the browser's top layer,
- * as the store's own overlays are: a manual popover). § 10: tip ("section", the default; "bare"; "none"), tipChosen,
+ * as the store's own overlays are: a manual popover), hangAtStart (the page's setTimeout runs nothing from the moment
+ * the Footer text is placed: a hang planted before the first press), routeHeld (CHECKOUT's route waits for
+ * window.__fixtureRoute()). § 10: tip ("section", the default; "bare"; "none"), tipChosen,
  * discountRow, banner (the app banner and its reserved margin), extrasOpenMs (the store fetching its extras before it
  * opens the dialog), continueDelayMs (its CONTINUE disabled that long), continueNever (disabled for good). § 12:
  * honoursKey (as the store: the order page clears sessionStorage's ecc_additions_prompt_handled when it starts, CHECKOUT
@@ -336,7 +343,11 @@ function appHtml(cfg) {
     setTimeout(function () { c.__refused = true; ngSync(); console.log("[fixture] pay pressed: the store refused " + cfg.payError); }, 300);
   }
   function goCheckout() { history.pushState({}, "", "/checkout"); renderCheckout(); }
-  function route() { if (cfg.routeDelayMs) setTimeout(goCheckout, cfg.routeDelayMs); else goCheckout(); }
+  function route() {
+    // routeHeld: the store has the press and has not routed yet; whoever calls window.__fixtureRoute() releases it, once.
+    if (cfg.routeHeld) { window.__fixtureRoute = function () { window.__fixtureRoute = null; goCheckout(); }; return; }
+    if (cfg.routeDelayMs) setTimeout(goCheckout, cfg.routeDelayMs); else goCheckout();
+  }
   function signIn() {
     var d = el("dialog-box", "sign-in");
     d.setAttribute("role", "dialog");
@@ -506,6 +517,9 @@ function appHtml(cfg) {
   }
   if (location.pathname === "/checkout") { renderCheckout(); return; }
   setTimeout(function () {
+    // hangAtStart: from here on the page's timers run nothing (the order page's own, set above, still comes), so the
+    // block's first poll, run as its text is placed, is its last.
+    if (cfg.hangAtStart) window.setTimeout = function () { return 0; };
     if (cfg.footer !== null) { var s = document.createElement("script"); s.text = cfg.footer; document.body.appendChild(s); }
   }, 150);
   setTimeout(renderOrder, 400);
@@ -527,6 +541,8 @@ const DEFAULTS = {
   photos: {},
   routeDelayMs: 0,
   hangAfter: 0,
+  hangAtStart: false,
+  routeHeld: false,
   topLayerPopup: false,
   tip: "section",
   tipChosen: false,

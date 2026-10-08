@@ -7,30 +7,47 @@
 // (/fonts/, /assets/), so those two directories of its build are served there too: the same files the production
 // page finds beside itself. What the stories offer (the dates, the goals, the counts) reaches them as the virtual
 // module virtual:microsite-pages, the pages' own manifest.
+//
+// § 8, the Hand-off stories: at the same moment handoff/store.mjs builds the block (scripts/build-storefront.mjs's own
+// build) and the watch's synthetic store's page for each story, into node_modules/.cache/fitaf-storefront/
+// (STOREFRONT_PAGES_DIR overrides it), kept under /store/ in a static build; the store is served at its own paths,
+// /order and /checkout (handoff/serve.mjs says why: .storybook/middleware.js here, test/serve-static.mjs for the cases).
+// The links and the counts reach the stories as virtual:handoff-store, the store's own manifest.
 import { join } from "node:path";
 import { buildPages, report } from "../microsite/pages.mjs";
 import { PAGES_ROUTE, ROOT_STATIC } from "../microsite/layout.js";
 import { PAGES_DIR } from "../microsite/paths.mjs";
+import { buildStore, report as reportStore } from "../handoff/store.mjs";
+import { STORE_ROUTE } from "../handoff/layout.js";
+import { STORE_DIR } from "../handoff/paths.mjs";
 
 const PAGES_MODULE = "virtual:microsite-pages";
+const STORE_MODULE = "virtual:handoff-store";
 /** The development build whose root-relative files are served at the root (any date's are the same files). */
 const ROOT_FILES_FROM = join(PAGES_DIR, "development", "today");
 
 let built;
+let storeBuilt;
 /** The site's build for the stories: once per Storybook process, however often Storybook asks. */
 const pages = () =>
   (built ??= buildPages().then((manifest) => {
     report(manifest);
     return manifest;
   }));
+/** The block and the synthetic store for the Hand-off stories: once per Storybook process, too. */
+const store = () =>
+  (storeBuilt ??= buildStore().then((manifest) => {
+    reportStore(manifest);
+    return manifest;
+  }));
 
-/** The virtual module the stories import what they offer from: the pages' manifest, as JSON. */
-function pagesModule() {
+/** A virtual module the stories import what they offer from: a manifest, as JSON. */
+function manifestModule(name, id, manifest) {
   return {
-    name: "microsite-pages",
-    resolveId: (id) => (id === PAGES_MODULE ? `\0${PAGES_MODULE}` : null),
-    async load(id) {
-      return id === `\0${PAGES_MODULE}` ? `export default ${JSON.stringify(await pages())};\n` : null;
+    name,
+    resolveId: (source) => (source === id ? `\0${id}` : null),
+    async load(source) {
+      return source === `\0${id}` ? `export default ${JSON.stringify(await manifest())};\n` : null;
     },
   };
 }
@@ -43,15 +60,20 @@ export default {
   // server's update check is off on its command line (--no-version-updates).
   core: { disableTelemetry: true, disableWhatsNewNotifications: true },
   async staticDirs(dirs = []) {
-    await pages();
+    await Promise.all([pages(), store()]);
     return [
       ...dirs,
       { from: PAGES_DIR, to: `/${PAGES_ROUTE}` },
       ...ROOT_STATIC.map((dir) => ({ from: join(ROOT_FILES_FROM, dir), to: `/${dir}` })),
+      { from: STORE_DIR, to: `/${STORE_ROUTE}` },
     ];
   },
   async viteFinal(config) {
-    config.plugins = [...(config.plugins ?? []), pagesModule()];
+    config.plugins = [
+      ...(config.plugins ?? []),
+      manifestModule("microsite-pages", PAGES_MODULE, pages),
+      manifestModule("handoff-store", STORE_MODULE, store),
+    ];
     return config;
   },
 };
