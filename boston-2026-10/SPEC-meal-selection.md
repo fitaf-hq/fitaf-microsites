@@ -363,3 +363,8 @@ only when production is MEANT to change"*), so a flip's own commit re-records th
 `03fcc0c1…`), and with it the suite was 615 of 615 (in a mirror). ⚠ Storybook's stories build from the committed data
 (the site's build takes no other plans file), and SM-5's walk of the *"… · snacks"* stories expects Q4: read, not run;
 it moves with the flag too. `carted: true` is still refused by the build (§ 10 item 1), so that flip stops every build.
+
+**The contract: [`SPEC-snacks-in-the-cart.md`](SPEC-snacks-in-the-cart.md)** (2026-10-08): the probe first (its § 1), then the
+link's snack items, the block's press and CHECKOUT by width, the page's links, the live proof, and the release order (no
+link carrying a snack before the Advisor's paste). Two choices open with defaults: the snack price (none on the page) and
+who chooses the week's snacks.
