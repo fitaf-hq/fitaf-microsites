@@ -29,10 +29,11 @@ const RULE_CHANGED = "body { margin: 1px;";
 
 after(removeStorybookStatic);
 
-/** The site's own build of `build` on `on`, into a fresh directory: its index.html. */
-async function freshPage(build, on, work) {
-  const out = join(work, `${build}-${on}`);
-  await run("npm", ["--prefix", SITE, "run", SITE_SCRIPT[build], "--", "--on", on, "--out", out], { maxBuffer: 16 * 1024 * 1024 });
+/** The site's own build of `build` on `on`, into a fresh directory: its index.html. `picks` (the fixture week's
+ *  directory, SPEC-meal-selection § 9) is the build's --picks, as the stories' pages are built. */
+async function freshPage(build, on, work, picks = null) {
+  const out = join(work, `${build}-${on}${picks ? "-fixture" : ""}`);
+  await run("npm", ["--prefix", SITE, "run", SITE_SCRIPT[build], "--", "--on", on, "--out", out, ...(picks ? ["--picks", picks] : [])], { maxBuffer: 16 * 1024 * 1024 });
   return readFile(join(out, "index.html"), "utf8");
 }
 
@@ -49,7 +50,7 @@ async function oneSource(staticDir) {
         const served = await (await fetch(`${server.base}/${pageUrl(build, date.id)}`)).text();
         const clocks = [...served.matchAll(CLOCK)];
         const own = served.replace(CLOCK, "");
-        const fresh = await freshPage(build, date.on, work);
+        const fresh = await freshPage(build, date.on, work, date.picks);
         checked++;
         const where = `${build}/${date.id} (--on ${date.on})`;
         if (clocks.length !== (date.instant ? 1 : 0)) problems.push(`${where}: ${clocks.length} clock scripts`);

@@ -153,7 +153,8 @@ test("S18: Flow 2 reframed — question 1 is Meal size, each size with its per-m
   for (const p of plans.individual) {
     const button = new RegExp(`<button[^>]*data-goal="${p.id}"[^>]*>([\\s\\S]*?)</button>`).exec(devHtml)[1];
     assert.match(button, new RegExp(`<span class="choice-name">${p.name}</span>\\s*<span class="choice-line">Per meal</span>`), p.id);
-    assert.ok(button.includes(`<span class="fact">${p.calories.min}–${p.calories.max} cal</span><span class="fact">${p.protein_g.min}–${p.protein_g.max} g protein</span>`), p.id);
+    // Updated (SPEC-meal-selection § 9 item 1): the two facts are one block, each a line of it, the words unchanged.
+    assert.ok(button.includes(`<span class="facts"><span class="fact-line">${p.calories.min}–${p.calories.max} cal</span><span class="fact-line">${p.protein_g.min}–${p.protein_g.max} g protein</span></span>`), p.id);
     assert.ok(!devHtml.includes(p.promise), `no goal language: ${p.promise}`);
   }
   assert.match(devHtml, /data-goal="lean"/, "the fragment keys are unchanged (#lean-14)");

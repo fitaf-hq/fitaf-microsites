@@ -13,6 +13,8 @@
 // edit of the mirror's scripts/chefs-choice.mjs whose anchor must be present once, built by the program as the deploy
 // builds (`node build.mjs`): the link keyed on `display` (CC-9b) and the line showing `name` (CC-9c). Each must fail the
 // check the real page passes, for its own reason; the unchanged mirror (CC-9 control) passes it.
+// Updated (SPEC-meal-selection § 8 item 2): the page's data is keyed by answer set (cc-harness cartFor: 7 is or-7d, 14
+// is and-7d); the links and their checks are unchanged.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -20,6 +22,7 @@ import { join } from "node:path";
 import {
   builtPage,
   card,
+  cartFor,
   DAYS,
   FIXTURE,
   mealLine,
@@ -89,7 +92,7 @@ function problemsOf(html) {
       if (state.meals[i] !== mealLine(meal)) problems.push(`line ${at}: shows ${JSON.stringify(state.meals[i])}`);
       if (tileOf(state.tiles[i]) !== expectedTile(meal.name)) problems.push(`tile ${at}: ${tileOf(state.tiles[i])}`);
     });
-    for (const [mpid, href] of Object.entries(data.weeks[0].counts[count].links)) {
+    for (const [mpid, href] of Object.entries(cartFor(data.weeks[0], count).links)) {
       const keys = keysOf(href);
       const cells = readPhotoPart(href)?.cells ?? [];
       menu.forEach((meal, i) => {
@@ -138,8 +141,9 @@ test("CC-9a: the tagged meal's line shows display; its link is keyed on name; it
 // The mutants: each a one-line edit of the mirror's scripts/chefs-choice.mjs.
 const LINK_LINE = '["--item", `${m.name}:${m.qty}`]';
 const LINK_MUTANT = '["--item", `${m.display}:${m.qty}`]';
-const SHOWN_LINE = "meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.display, n: m.qty }) : m.display)),";
-const SHOWN_MUTANT = "meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.name, n: m.qty }) : m.name)),";
+// Updated (SPEC-meal-selection § 8 item 2): the shown line is pageData's one `lines` helper, for every cart and snack list.
+const SHOWN_LINE = "const lines = (meals) => meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.display, n: m.qty }) : m.display));";
+const SHOWN_MUTANT = "const lines = (meals) => meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.name, n: m.qty }) : m.name));";
 
 async function edit(path, from, to) {
   const text = await readFile(path, "utf8");
@@ -204,11 +208,11 @@ test("CC-9d: display is shown as the link tool reads a name (whitespace collapse
     const { html } = await builtPage({ picks: dir, on: ON });
     const data = picksData(html);
     assert.ok(data, "the build takes the file");
-    assert.equal(data.weeks[0].counts["7"].meals[i], "Maple Dijon Pork Tenderloin", "the line, collapsed and trimmed");
-    assert.equal(data.weeks[0].counts["14"].meals[1], mealLine(week.menus["14"][1]), "a shared display is shown as written");
+    assert.equal(cartFor(data.weeks[0], "7").meals[i], "Maple Dijon Pork Tenderloin", "the line, collapsed and trimmed");
+    assert.equal(cartFor(data.weeks[0], "14").meals[1], mealLine(week.menus["14"][1]), "a shared display is shown as written");
     const fixture = picksData((await builtPage({ on: ON })).html);
     for (const count of COUNTS) {
-      assert.deepEqual(data.weeks[0].counts[count].links, fixture.weeks[0].counts[count].links, `${count}: the links do not move with display`);
+      assert.deepEqual(cartFor(data.weeks[0], count).links, cartFor(fixture.weeks[0], count).links, `${count}: the links do not move with display`);
     }
   } finally {
     await rm(dir, { recursive: true, force: true });

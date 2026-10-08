@@ -1,21 +1,24 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
 //
-//   node build.mjs [--env dev] [--on YYYY-MM-DD] [--out DIR]
+//   node build.mjs [--env dev] [--on YYYY-MM-DD] [--out DIR] [--picks DIR]
 //
 // --on is the build's date for this week's Chef's Choice, SPEC-chefs-choice § 2: every data/picks/<sunday>.json whose
 // window has not ended on it is embedded, and the page chooses among them in the browser. Default: today in the send
 // time zone (data/save.json). Without data/picks/, or with no week open on --on, the page is exactly as before.
 // --out is the directory written instead of dist/ (or dist-dev/): Storybook's pages (tools/storybook), never a deploy.
+// --picks is the picks directory read instead of data/picks/: Storybook's fixture week (SPEC-meal-selection § 9, a week of
+// invented names in version 2, test/fixtures/picks-v2/), never a deploy.
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
-import { parseTarget, shareLines } from "./src/save/calculator.js";
+import { mealsADayOf, parseTarget, shareLines } from "./src/save/calculator.js";
 import { currentGeneral, isLive, offerForSave } from "./src/worker/offers.js";
 import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
+import { checkSelection, legacyKey } from "./scripts/selection.mjs";
 import { addDays, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -103,13 +106,19 @@ export function gridCells(plans) {
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 export const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ESCAPES[ch]);
 
-/** A goal: its name and its calorie and protein ranges (SPEC-plan-page-refinement § 2 item 2; the promise line is gone). */
-function goalButton(plan) {
+/** A size's calorie and protein ranges as ONE block, calories on its first line and protein on its second
+ *  (SPEC-meal-selection § 9 item 1: one background, each line whole). */
+function factsBlock(plan) {
   const cal = `${plan.calories.min}–${plan.calories.max} cal`;
   const pro = `${plan.protein_g.min}–${plan.protein_g.max} g protein`;
+  return `<span class="facts"><span class="fact-line">${cal}</span><span class="fact-line">${pro}</span></span>`;
+}
+
+/** A goal: its name and its calorie and protein ranges (SPEC-plan-page-refinement § 2 item 2; the promise line is gone). */
+function goalButton(plan) {
   return `          <button type="button" class="choice" data-goal="${esc(plan.id)}" aria-pressed="false">
             <span class="choice-name">${esc(plan.name)}</span>
-            <span class="facts"><span class="fact">${cal}</span><span class="fact">${pro}</span></span>
+            ${factsBlock(plan)}
           </button>`;
 }
 
@@ -119,25 +128,58 @@ export const fillPhrase = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (w
 /** A phrase as markup: escaped, then each `*word*` emphasised (data/messages.json's own mark for emphasis). */
 export const emphasised = (phrase) => esc(phrase).replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
+/** The meal selection's four questions (SPEC-meal-selection § 1) and each one's two answers, in the page's order; the
+ *  answer is the button's `data-a`, and its phrase is `plan_page.questions.<question>.<answer>`. */
+export const QUESTIONS = {
+  lunch_dinner: ["or", "and"],
+  weekends: ["yes", "no"],
+  breakfast: ["yes", "no"],
+  snacks: ["yes", "no"],
+};
+
 /** The plan page's own phrases (data/messages.json's `plan_page`), checked: a missing one refuses the build. */
-export function planPageWords(messages, plans) {
+export function planPageWords(messages) {
   const words = messages.plan_page ?? {};
+  const phrase = (value) => typeof value === "string" && value.trim();
   const need = (ok, what) => {
     if (!ok) throw new Error(`data/messages.json: plan_page.${what} is missing`);
   };
-  for (const count of shownCounts(plans)) need(typeof words.counts?.[count] === "string" && words.counts[count].trim(), `counts.${count}`);
-  for (const [key, placeholder] of [["per_week", ""], ["total_unit", ""], ["per_meal_unit", ""], ["prices_as_of", "{date}"]]) {
-    need(typeof words[key] === "string" && words[key].trim() && words[key].includes(placeholder), `${key}${placeholder ? ` (with ${placeholder})` : ""}`);
+  for (const [q, answers] of Object.entries(QUESTIONS)) {
+    for (const key of ["heading", ...answers]) need(phrase(words.questions?.[q]?.[key]), `questions.${q}.${key}`);
+  }
+  const PHRASES = [["meals_unit", []], ["rounded", ["{meals}", "{plan}"]], ["total_unit", []], ["per_meal_unit", []], ["prices_as_of", ["{date}"]]];
+  for (const [key, placeholders] of PHRASES) {
+    need(phrase(words[key]) && placeholders.every((p) => words[key].includes(p)), `${key}${placeholders.length ? ` (with ${placeholders.join(" and ")})` : ""}`);
   }
   return words;
 }
 
-/** Question 2 (§ 2 item 3, § 8 item 4): two buttons, the numeral first, then its unit, then the meals in words
- *  (*or* / *and* emphasised). */
-function countButton(c, words) {
-  return `          <button type="button" class="choice" data-count="${c.meals_per_week}" aria-pressed="false">` +
-    `<span class="count-n">${c.meals_per_week}</span><span class="count-unit">${esc(words.per_week)}</span>` +
-    `<span class="choice-line">${emphasised(words.counts[c.meals_per_week])}</span></button>`;
+/** One question (SPEC-meal-selection § 1): its heading and its two answers, in the count buttons' style (centred, the
+ *  check above: SPEC-plan-page-refinement § 8 item 4), words only (§ 7, ruled: no numeral). */
+function question(q, words) {
+  const w = words.questions[q];
+  const buttons = QUESTIONS[q].map(
+    (a) =>
+      `          <button type="button" class="choice" data-q="${q}" data-a="${a}" aria-pressed="false">` +
+      `<span class="choice-name">${emphasised(w[a])}</span></button>`,
+  );
+  return `      <div class="step" role="group" aria-labelledby="q-${q}">
+        <h2 class="step-label" id="q-${q}">${esc(w.heading)}</h2>
+        <div class="choices counts">
+${buttons.join("\n")}
+        </div>
+      </div>`;
+}
+
+/** Q1, then Q2–Q4 in one group the page shows once Q1 is answered (§ 7, ruled "After Q1"); Q4 only while snacks are
+ *  shown (§ 9 item 3: data/plans.json's `snacks.shown`). */
+function mealQuestions(plans, words) {
+  const more = ["weekends", "breakfast", ...(plans.snacks.shown ? ["snacks"] : [])];
+  return `${question("lunch_dinner", words)}
+
+      <div class="more" id="more" hidden>
+${more.map((q) => question(q, words)).join("\n")}
+      </div>`;
 }
 
 /** The manifest of the photo sheets, or one with no photograph (`base: null`) when there is none. */
@@ -225,12 +267,24 @@ function familySection(plans) {
     </div>`;
 }
 
-/** What the inline script needs: display strings computed here from cents, so money math lives once. */
-function clientData(plans) {
-  const counts = shownCounts(plans);
+/**
+ * What the inline script needs: display strings computed here from cents, so money math lives once. Since
+ * SPEC-meal-selection: per answer set (`or-5d`, § 8 item 2) the plan it goes through and the rounded line, or "" (§ 2);
+ * each size's cells for every plan an answer set goes through; the defaults; today's two counts as answer sets (§ 3:
+ * `#lean-7`, `#meals-14`); and whether Q4 is on the page.
+ */
+function clientData(plans, words) {
+  const { rows, defaults, snacks } = checkSelection(plans);
+  const counts = [...new Set([...rows.values()].map((r) => r.plan))].sort((a, b) => a - b);
+  const legacy = shownCounts(plans).map((n) => [n, legacyKey(rows, n)]).filter(([, key]) => key);
   return {
     base: plans.order_base_url,
-    counts,
+    answers: Object.fromEntries(
+      [...rows].map(([key, r]) => [key, { plan: r.plan, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
+    ),
+    defaults,
+    legacy: Object.fromEntries(legacy),
+    snacks: snacks.shown,
     plans: plans.individual.map((plan) => ({
       id: plan.id,
       name: plan.name,
@@ -274,12 +328,10 @@ export const NO_PICKS = { PICKS_STYLE: "", PICKS_CARD: "", PICKS_SCRIPT: "" };
 
 /** Question 1 as a meal size (flows/02 § 2): what each size provides per meal, and no goal language. */
 function sizeButton(plan) {
-  const cal = `${plan.calories.min}–${plan.calories.max} cal`;
-  const pro = `${plan.protein_g.min}–${plan.protein_g.max} g protein`;
   return `          <button type="button" class="choice" data-goal="${esc(plan.id)}" aria-pressed="false">
             <span class="choice-name">${esc(plan.name)}</span>
             <span class="choice-line">Per meal</span>
-            <span class="facts"><span class="fact">${cal}</span><span class="fact">${pro}</span></span>
+            ${factsBlock(plan)}
           </button>`;
 }
 
@@ -334,7 +386,7 @@ export async function devSlots(plans, { save, zips, siteKey, eventId, offers, me
   // One source each, inlined as written: the Worker's ZIP check, the calculator's arithmetic, and (§ 2a) the
   // Worker's choice of offer with the zoned date it chooses on. FORMATTERS is zoned-time.js's cache, empty.
   const shared = [
-    ...[classifyZip, shareLines, parseTarget].map(declaration),
+    ...[classifyZip, shareLines, parseTarget, mealsADayOf].map(declaration),
     "const FORMATTERS = new Map();",
     ...[isLive, currentGeneral, offerForSave, ...ZONED_DATE_HELPERS].map(declaration),
   ].join("\n");
@@ -378,21 +430,23 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
   messages ??= await loadJson(MESSAGES_PATH);
   photos ??= await loadPhotos();
-  const words = planPageWords(messages, plans);
+  checkSelection(plans);
+  const words = planPageWords(messages);
   const slots = {
     ...messageSlots(messages),
     CAROUSEL: carouselHtml(photos, dev.ASSET_PREFIX ?? PROD_SLOTS.ASSET_PREFIX),
     TOTAL_UNIT: esc(words.total_unit),
+    MEALS_UNIT: esc(words.meals_unit),
     PER_MEAL_UNIT: esc(words.per_meal_unit),
     FOOTNOTE: esc(fillPhrase(words.prices_as_of, { date: plans.read_on })),
     GOALS: plans.individual.map(goalButton).join("\n"),
-    COUNTS: plans.shown_counts.map((c) => countButton(c, words)).join("\n"),
+    MEAL_QUESTIONS: mealQuestions(plans, words),
     GRID_HEAD: gridHead(plans),
     GRID_ROWS: gridRows(plans),
     FAMILY: familySection(plans),
     READ_FROM_TEXT: esc(plans.read_from.replace(/^https?:\/\//, "")),
     READ_ON: esc(plans.read_on),
-    DATA: scriptJson(clientData(plans)),
+    DATA: scriptJson(clientData(plans, words)),
     SCRIPT: script.trim(),
     ...dev,
     ...picks,
@@ -505,6 +559,8 @@ export async function build({
   if (target !== "prod" && target !== "dev") throw new Error(`unknown build target: ${target}`);
   outDir ??= target === "dev" ? DIST_DEV : DIST;
   const plans = await loadJson(plansPath);
+  // SPEC-meal-selection § 2: a broken meal selection stops the build here, before anything is written.
+  checkSelection(plans);
   const events = await loadJson(eventsPath);
   const messages = await loadJson(messagesPath);
   const photos = await loadPhotos(photosPath);
@@ -537,7 +593,8 @@ function report(out) {
   for (const p of out.pages) console.log(`wrote ${p.path} (${p.bytes} bytes)`);
   for (const f of [...out.files, ...out.qr]) console.log(`wrote ${f}`);
   for (const w of out.picks.weeks) {
-    console.log(`picks: ${w.delivery} (open ${w.valid_from} to ${w.valid_to}; counts ${w.counts.join(", ")}), built on ${out.picks.on}`);
+    const snacks = w.snacks.length ? `; snacks for ${w.snacks.join(", ")}` : "";
+    console.log(`picks: ${w.delivery} (open ${w.valid_from} to ${w.valid_to}; carts ${w.carts.join(", ")}${snacks}), built on ${out.picks.on}`);
   }
 }
 
@@ -548,7 +605,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const at = process.argv.indexOf(name);
     return at === -1 ? undefined : process.argv[at + 1];
   };
-  build({ target: flag("--env") ?? "prod", on: flag("--on"), outDir: flag("--out") }).then(report, (err) => {
+  build({ target: flag("--env") ?? "prod", on: flag("--on"), outDir: flag("--out"), picksDir: flag("--picks") }).then(report, (err) => {
     console.error(err);
     process.exitCode = 1;
   });

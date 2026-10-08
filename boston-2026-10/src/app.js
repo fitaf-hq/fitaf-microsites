@@ -4,36 +4,78 @@
   var $ = function (sel) { return document.querySelector(sel); };
   var $$ = function (sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); };
   var CAROUSEL_MS = 4000; // one photo every 4 s (SPEC-plan-page-refinement § 2 item 1)
+  // The fragment's answer part (SPEC-meal-selection § 3): Q1, Q2's days, then breakfast and snacks, in that order.
+  var ANSWERS = /^(or|and)-(7d|5d)(-b)?(-s)?$/;
 
   function findGoal(id) {
     for (var i = 0; i < data.plans.length; i++) if (data.plans[i].id === id) return data.plans[i];
     return null;
   }
-  function validCount(n) { return data.counts.indexOf(n) !== -1; }
 
-  // "#family" | "#lean" | "#lean-7" | "#meals-7" | "" -> state
+  // The answer set's key, a row of data.answers ("or-5d", "and-7d-b"); with "-s" when snacks are chosen, the fragment's
+  // answer part, which the result card carries as data-selection (§ 8 item 2).
+  function answerKey(s) { return s.ld + "-" + (s.weekends ? "7d" : "5d") + (s.breakfast ? "-b" : ""); }
+  function answerPart(s) { return answerKey(s) + (s.snacks ? "-s" : ""); }
+
+  // Nothing chosen: no size, Q1 not answered, Q2–Q4 at their defaults (data/plans.json's selection_defaults).
+  function start() {
+    return { tab: "individual", goal: null, ld: null, weekends: data.defaults.weekends, breakfast: data.defaults.breakfast, snacks: data.defaults.snacks };
+  }
+  function copy(s) {
+    var next = {};
+    for (var k in s) next[k] = s[k];
+    return next;
+  }
+
+  // "or-5d-b-s" (or today's "7" / "14") -> the answers into `s`; false when it is not an answer set the page offers.
+  function readAnswers(part, s) {
+    var m = ANSWERS.exec(Object.prototype.hasOwnProperty.call(data.legacy, part) ? data.legacy[part] : part);
+    if (!m || (m[4] && !data.snacks)) return false;
+    var a = { ld: m[1], weekends: m[2] === "7d", breakfast: !!m[3], snacks: !!m[4] };
+    if (!data.answers[answerKey(a)]) return false;
+    for (var k in a) s[k] = a[k];
+    return true;
+  }
+
+  // "#family" | "#lean" | "#lean-or-5d-b" | "#meals-and-7d" | "#lean-7" (today's) | "#individual" | "" -> state. A part
+  // the page does not know is dropped, as today's "#lean-9" kept the size alone.
   function parse(hash) {
     var h = hash.replace(/^#/, "");
     if (h === "family") return { tab: "family" };
-    var m = /^([a-z]+)(?:-(\d+))?$/.exec(h);
-    var goal = m && findGoal(m[1]) ? m[1] : null;
-    var count = m && m[2] && validCount(+m[2]) ? +m[2] : null;
-    return { tab: "individual", goal: goal, count: count };
+    var s = start();
+    var m = /^([a-z]+)(?:-(.+))?$/.exec(h);
+    if (!m) return s;
+    if (findGoal(m[1])) s.goal = m[1];
+    if (m[2]) readAnswers(m[2], s); // answers it does not know leave the size alone, if any
+    return s;
   }
   function serialise(s) {
     if (s.tab === "family") return "family";
-    if (s.goal && s.count) return s.goal + "-" + s.count;
+    var a = s.ld ? answerPart(s) : null;
+    if (s.goal && a) return s.goal + "-" + a;
     if (s.goal) return s.goal;
-    if (s.count) return "meals-" + s.count;
+    if (a) return "meals-" + a;
     return "individual";
   }
 
   var state = parse(location.hash);
-  var lastIndividual = { tab: "individual", goal: null, count: null };
+  var lastIndividual = state.tab === "individual" ? state : start();
   function go(next) {
     var h = "#" + serialise(next);
     if (h === location.hash) render(next);
     else location.hash = h; // pushes a history entry; hashchange renders
+  }
+
+  // Whether an answer button is the state's answer (Q1 "or"/"and"; Q2–Q4 "yes"/"no").
+  function pressed(s, q, a) {
+    if (q === "lunch_dinner") return s.ld === a;
+    return s.ld !== null && (s[q] ? "yes" : "no") === a;
+  }
+  function answered(s, q, a) {
+    var next = copy(s);
+    if (q === "lunch_dinner") next.ld = a;
+    else next[q] = a === "yes";
+    return next;
   }
 
   function render(s) {
@@ -49,29 +91,38 @@
     $$("[data-goal]").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-goal") === s.goal));
     });
-    $$("[data-count]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(+b.getAttribute("data-count") === s.count));
+    $$("[data-q]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(s.tab === "individual" && pressed(s, b.getAttribute("data-q"), b.getAttribute("data-a"))));
     });
+    $("#more").hidden = !s.ld;
     var plan = s.goal && findGoal(s.goal);
-    var cell = plan && s.count && plan.cells[s.count];
-    $("#result").hidden = !cell;
-    if (plan) $("#result").setAttribute("data-accent", plan.id);
+    var row = plan && s.ld && data.answers[answerKey(s)];
+    var cell = row && plan.cells[row.plan];
+    var result = $("#result");
+    result.hidden = !cell;
+    if (plan) result.setAttribute("data-accent", plan.id);
+    result.setAttribute("data-selection", cell ? answerPart(s) : "");
     $("#all-link").hidden = s.tab !== "individual";
     if (cell) {
       $("#result-per-meal").textContent = cell.per_meal;
       $("#result-total").textContent = cell.total;
+      $("#result-meals").textContent = String(row.plan);
+      $("#result-rounded").textContent = row.rounded;
+      $("#result-rounded").hidden = !row.rounded;
       $("#result-cta").href = data.base + "?mpid=" + cell.mpid;
     }
   }
 
   $$("[data-goal]").forEach(function (b) {
     b.addEventListener("click", function () {
-      go({ tab: "individual", goal: b.getAttribute("data-goal"), count: state.count });
+      var next = copy(state.tab === "individual" ? state : lastIndividual);
+      next.goal = b.getAttribute("data-goal");
+      go(next);
     });
   });
-  $$("[data-count]").forEach(function (b) {
+  $$("[data-q]").forEach(function (b) {
     b.addEventListener("click", function () {
-      go({ tab: "individual", goal: state.goal, count: +b.getAttribute("data-count") });
+      go(answered(state.tab === "individual" ? state : lastIndividual, b.getAttribute("data-q"), b.getAttribute("data-a")));
     });
   });
   var tabs = $$(".tab");

@@ -1,0 +1,138 @@
+{
+  "about": "SPEC-meal-selection MS-3, MS-13 and MS-14: the plan page as it was before the meal selection, recorded at 985f777 (the branch before any of its code) by building that tree: `grid`, the See all plans dialog and the Family panel of renderPage(data/plans.json) (no picks), as SHA-256 and byte counts, and the grid heads (MS-13); `cards`, for each of today's six fragments, the result card's figures and links with the fixture week test/fixtures/picks/2026-10-04.json open (built --on 2026-09-30, seen at 13:00 New York on 2026-09-29) and without picks (MS-3); `share`, the development page's share panel lines for 150 g protein and 2,600 cal (MS-14). Regenerate only if one of them is MEANT to change, in the commit that changes it, and say so.",
+  "recorded_at": "985f777",
+  "grid": {
+    "dialog_sha256": "715cbbfd02e1afff1f61fdde75562cdbe5b13a26ec88b7e6f1582083e1ea895b",
+    "dialog_bytes": 2331,
+    "heads": [
+      "7 meals<br>Lunch or dinner",
+      "14 meals<br>Lunch and dinner"
+    ],
+    "family_sha256": "ded4c7282c376256f763eec8ee81b1abf3d650c2e4cb7604bda0954423787af2",
+    "family_bytes": 526
+  },
+  "cards": {
+    "#lean-7": {
+      "total": "$87.50",
+      "per_meal": "$12.50",
+      "accent": "lean",
+      "result_cta": "https://fitafnutrition.com/order?mpid=21",
+      "cc_checkout": "https://fitafnutrition.com/order?mpid=21#fitaf=2.6us8b*2.4kfcz.2n5cw*2.fi73q.pkmkq",
+      "cc_own": "https://fitafnutrition.com/order?mpid=21",
+      "meals": [
+        "Smoked Paprika Chicken Bowl × 2",
+        "Lemon Herb Salmon with Greens",
+        "Turkey Chili Verde × 2",
+        "Maple Dijon Pork Tenderloin",
+        "Ginger Beef Bowl with Jasmine Rice"
+      ],
+      "no_picks_cta": "https://fitafnutrition.com/order?mpid=21"
+    },
+    "#lean-14": {
+      "total": "$168.00",
+      "per_meal": "$12.00",
+      "accent": "lean",
+      "result_cta": "https://fitafnutrition.com/order?mpid=23",
+      "cc_checkout": "https://fitafnutrition.com/order?mpid=23#fitaf=2.6us8b*3.4kfcz*2.2n5cw*2.fi73q*2.pkmkq.nkafg*2.4vf6v.yu9vo",
+      "cc_own": "https://fitafnutrition.com/order?mpid=23",
+      "meals": [
+        "Smoked Paprika Chicken Bowl × 3",
+        "Lemon Herb Salmon with Greens × 2",
+        "Turkey Chili Verde × 2",
+        "Maple Dijon Pork Tenderloin × 2",
+        "Ginger Beef Bowl with Jasmine Rice",
+        "Chipotle Shrimp Tacos × 2",
+        "Garden Pesto Penne",
+        "Jerk Chicken with Coconut Rice"
+      ],
+      "no_picks_cta": "https://fitafnutrition.com/order?mpid=23"
+    },
+    "#signature-7": {
+      "total": "$98.00",
+      "per_meal": "$14.00",
+      "accent": "signature",
+      "result_cta": "https://fitafnutrition.com/order?mpid=26",
+      "cc_checkout": "https://fitafnutrition.com/order?mpid=26#fitaf=2.6us8b*2.4kfcz.2n5cw*2.fi73q.pkmkq",
+      "cc_own": "https://fitafnutrition.com/order?mpid=26",
+      "meals": [
+        "Smoked Paprika Chicken Bowl × 2",
+        "Lemon Herb Salmon with Greens",
+        "Turkey Chili Verde × 2",
+        "Maple Dijon Pork Tenderloin",
+        "Ginger Beef Bowl with Jasmine Rice"
+      ],
+      "no_picks_cta": "https://fitafnutrition.com/order?mpid=26"
+    },
+    "#signature-14": {
+      "total": "$189.00",
+      "per_meal": "$13.50",
+      "accent": "signature",
+      "result_cta": "https://fitafnutrition.com/order?mpid=29",
+      "cc_checkout": "https://fitafnutrition.com/order?mpid=29#fitaf=2.6us8b*3.4kfcz*2.2n5cw*2.fi73q*2.pkmkq.nkafg*2.4vf6v.yu9vo",
+      "cc_own": "https://fitafnutrition.com/order?mpid=29",
+      "meals": [
+        "Smoked Paprika Chicken Bowl × 3",
+        "Lemon Herb Salmon with Greens × 2",
+        "Turkey Chili Verde × 2",
+        "Maple Dijon Pork Tenderloin × 2",
+        "Ginger Beef Bowl with Jasmine Rice",
+        "Chipotle Shrimp Tacos × 2",
+        "Garden Pesto Penne",
+        "Jerk Chicken with Coconut Rice"
+      ],
+      "no_picks_cta": "https://fitafnutrition.com/order?mpid=29"
+    },
+    "#performance-7": {
+      "total": "$105.00",
+      "per_meal": "$15.00",
+      "accent": "performance",
+      "result_cta": "https://fitafnutrition.com/order?mpid=31",
+      "cc_checkout": "https://fitafnutrition.com/order?mpid=31#fitaf=2.6us8b*2.4kfcz.2n5cw*2.fi73q.pkmkq",
+      "cc_own": "https://fitafnutrition.com/order?mpid=31",
+      "meals": [
+        "Smoked Paprika Chicken Bowl × 2",
+        "Lemon Herb Salmon with Greens",
+        "Turkey Chili Verde × 2",
+        "Maple Dijon Pork Tenderloin",
+        "Ginger Beef Bowl with Jasmine Rice"
+      ],
+      "no_picks_cta": "https://fitafnutrition.com/order?mpid=31"
+    },
+    "#performance-14": {
+      "total": "$203.00",
+      "per_meal": "$14.50",
+      "accent": "performance",
+      "result_cta": "https://fitafnutrition.com/order?mpid=33",
+      "cc_checkout": "https://fitafnutrition.com/order?mpid=33#fitaf=2.6us8b*3.4kfcz*2.2n5cw*2.fi73q*2.pkmkq.nkafg*2.4vf6v.yu9vo",
+      "cc_own": "https://fitafnutrition.com/order?mpid=33",
+      "meals": [
+        "Smoked Paprika Chicken Bowl × 3",
+        "Lemon Herb Salmon with Greens × 2",
+        "Turkey Chili Verde × 2",
+        "Maple Dijon Pork Tenderloin × 2",
+        "Ginger Beef Bowl with Jasmine Rice",
+        "Chipotle Shrimp Tacos × 2",
+        "Garden Pesto Penne",
+        "Jerk Chicken with Coconut Rice"
+      ],
+      "no_picks_cta": "https://fitafnutrition.com/order?mpid=33"
+    }
+  },
+  "share": {
+    "#lean-7": [
+      "Your targets: 150 g protein · 2,600 cal a day · Lean, 7 meals a week (1 a day)",
+      "Protein: each meal 17–23 % · your 1 meal 17–23 % of the day",
+      "Calories: each meal 10–17 % · your 1 meal 10–17 % · 2,150–2,350 cal from the rest of your day"
+    ],
+    "#lean-14": [
+      "Your targets: 150 g protein · 2,600 cal a day · Lean, 14 meals a week (2 a day)",
+      "Protein: each meal 17–23 % · your 2 meals 33–47 % of the day",
+      "Calories: each meal 10–17 % · your 2 meals 19–35 % · 1,700–2,100 cal from the rest of your day"
+    ],
+    "#signature-14": [
+      "Your targets: 150 g protein · 2,600 cal a day · Signature, 14 meals a week (2 a day)",
+      "Protein: each meal 23–40 % · your 2 meals 47–80 % of the day",
+      "Calories: each meal 17–25 % · your 2 meals 35–50 % · 1,300–1,700 cal from the rest of your day"
+    ]
+  }
+}

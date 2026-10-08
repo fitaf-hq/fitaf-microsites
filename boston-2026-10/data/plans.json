@@ -6,6 +6,18 @@
     { "meals_per_week": 7, "label": "Lunch or dinner" },
     { "meals_per_week": 14, "label": "Lunch and dinner" }
   ],
+  "selection": [
+    { "lunch_dinner": "or", "weekends": true, "breakfast": false, "meals": 7, "plan": 7 },
+    { "lunch_dinner": "or", "weekends": false, "breakfast": false, "meals": 5, "plan": 4 },
+    { "lunch_dinner": "and", "weekends": true, "breakfast": false, "meals": 14, "plan": 14 },
+    { "lunch_dinner": "and", "weekends": false, "breakfast": false, "meals": 10, "plan": 10 },
+    { "lunch_dinner": "or", "weekends": true, "breakfast": true, "meals": 14, "plan": 14 },
+    { "lunch_dinner": "or", "weekends": false, "breakfast": true, "meals": 10, "plan": 10 },
+    { "lunch_dinner": "and", "weekends": true, "breakfast": true, "meals": 21, "plan": 21 },
+    { "lunch_dinner": "and", "weekends": false, "breakfast": true, "meals": 15, "plan": 14 }
+  ],
+  "selection_defaults": { "weekends": true, "breakfast": false, "snacks": false },
+  "snacks": { "shown": true, "carted": false },
   "individual": [
     {
       "id": "lean",

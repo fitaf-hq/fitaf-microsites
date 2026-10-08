@@ -217,3 +217,122 @@ request beyond localhost; it listens on `[::1]:6016` only.
 
 **Not done here**: nothing published or deployed; Safari and Firefox not tried (a static build elsewhere, above); the
 page's own a11y; the screen's stories (§ 6).
+
+## 8. Amendment, 2026-10-07 — the hand-off's two faces: the interstitial and the checkout, as the Footer block ships them
+
+**Ruled by the Advisor, 2026-10-07** (Fit AF session 228): *"I have UI tweaks for the microsite, interstitial and
+checkout. This is where having Storybook available will be helpful if possible."*; asked when, *"Tonight, after
+picks"*. This revises § 6's *"The checkout: HMP's page; its styling is reviewed on the live store"* for the parts that
+are ours, and leaves the screen's module stories (`SPEC-storybook.md`, rung 2 § 14) where they are.
+
+### 8.1 What a story shows: the shipped block over the watch's synthetic store
+
+1. **The block is the build's**: `scripts/build-storefront.mjs`'s output (the Footer block's text), run at Storybook's
+   start as § 2 item 1 runs the site's build. ⛔ No line of the block is copied or edited under `tools/storybook/`.
+2. **The store is the watch's browser fixture**, `tools/storefront-watch/test/browser-store.mjs` (the synthetic order
+   page and checkout, with the store's class and element names and none of its code), **imported by path**, never
+   copied, and served by Storybook's development server and static build under `/store/`, with the block placed as the
+   store's Custom Scripts Footer places it. Its options (meal names, `hangAfter`, the subscription offer, the tip) are
+   the fixture's own.
+3. **A story opens the synthetic order page with a test link** (`#fitaf=2.…`, built by `scripts/handoff-link.mjs`'s
+   `handoffLink`, the meals the fixture's own `MEALS`), in a frame of the viewport's width, and lets the block run.
+4. **Photographs**: the screen and the checkout's lines show the photographs a link carries (rung 2 § 17, § 19); a story
+   carries **generated placeholders** (a tile of a token colour with the meal's initial, served by the story server),
+   ⛔ never a photograph file (SM-7).
+5. ⛔ **No request leaves the machine** (§ 2 item 5): the fixture's own off-host references (its font link) are refused
+   by the serve policy, as the development page's Turnstile script is.
+
+### 8.2 ⚠ What the checkout stories can and cannot show
+
+**The interstitial is entirely ours** (`#fitaf-screen` covers the page), so its stories are what a visitor sees, apart
+from the photographs. **The checkout is the store's page with our block's marks and style over it**, and the fixture
+is a stand-in carrying the store's names, **not its look**: a checkout story shows **which sections each step shows and
+hides, our step bar, Back and Continue, the recap line and our words**, over plain markup. The store's own fonts,
+colours and spacing are **only on the live store**: a tweak to how the store's own parts look is still checked live (the
+rehearsal of rung 2 § 29), and each checkout story's caption says so.
+
+### 8.3 The stories (group **Hand-off**, at 390 and 1280)
+
+| story | the state | how it is held |
+|---|---|---|
+| *Screen · A* | the screen up, no meal added yet | held before the first count: ⚠ the fixture's `hangAfter` reads `0` as *off* (`if (cfg.hangAfter && …)`), so this needs a fixture option of its own, added in the watch package with a case there (builder's choice, stated) |
+| *Screen · B* | meal *k* of *t* added (controls: *k*, *t* up to the fixture's meals) | `hangAfter: k` |
+| *Screen · C* | every meal added, CHECKOUT pressed, before the checkout is ready | the fixture routes to `/checkout` without drawing it until the story's control releases it (builder's choice, stated) |
+| *Checkout · 1 Your meals* | the deep-carted checkout, step 1 | after the hand-off, no press |
+| *Checkout · 2 Delivery* | step 2 | the story presses the block's own **Continue** once |
+| *Checkout · 3 Payment* | step 3 | **Continue** twice |
+| *Checkout · ordinary visit* | the checkout reached without the hand-off: the store's own, unchanged (R2-50) | the checkout URL with no link |
+
+A press is the block's own control in the frame, as § 2 item 2. ⛔ No story presses the pay button (the fixture logs
+`[fixture] ORDER PLACED` if anything does; a story that logs it fails).
+
+### 8.4 Cases (added to § 5)
+
+| | case | expect |
+|---|---|---|
+| SM-9 | ⭐ one source | the block a story's store page carries is **byte-identical** to `build-storefront.mjs`'s output; the store's files are `browser-store.mjs`'s. Mutant: a block served with one rule changed fails |
+| SM-10 | the states | in headless Chrome (SM-5's walk): *Screen · A* shows `#fitaf-screen` with no slide; *Screen · B* at *k* = 2 of 7 shows the step line for meal 2 of 7 (the screen's words, `handoff.step`); *Checkout · 1–3* show exactly § 25.2's sections for the step, the Total in each; *ordinary visit* shows no step bar |
+| SM-11 | never pays | no story's walk logs `[fixture] ORDER PLACED` |
+| SM-4, SM-7, SM-8 | extended | no copied rule or phrase of the block; no image file; no request beyond localhost, in the new stories too |
+
+### 8.5 Not decided here
+
+- Publishing a static build; the copy (the block's words stay `data/messages.json`'s `handoff`).
+- The screen's module stories (`SPEC-storybook.md`): with rung 2 § 14.
+
+### 8.6 Built, 2026-10-07 — found at the build, not ruled
+
+Built by an agent and re-gated by the orchestrator: the seven Hand-off stories at 390 and 1280 (`tools/storybook/handoff/`,
+`stories/handoff*.js`), cases SM-9–SM-11 and the SM-4/7/8 extensions (the package's suite **36 of 36**, re-run by the
+orchestrator), two fixture options in the watch's `browser-store.mjs` with their case P3. **Where § 8 was wrong**:
+
+1. **Not under `/store/`.** The block refuses any path but `/order` and finishes only on `/checkout`, so the synthetic
+   store is served at `/order`, `/checkout` and `/img/` on Storybook's own address (`?store=<id>` chooses the page);
+   only its files live under `store/`. One rule, `handoff/serve.mjs`, serves both the development server and the cases.
+   A static build served by anything else shows no Hand-off store.
+2. **Screen · C as written is not a state.** The block takes the path alone as *finished*: routed to `/checkout` before
+   the checkout is drawn, it removes the screen at once, and a checkout drawn afterwards gets no step bar, no Back /
+   Continue and no logo. Built instead: the store holds its route (still on `/order`) until the caption's **Release**;
+   unreleased, the block's own 30 s wait ends it. ⚠ **The same ordering on the live store would give an undecorated
+   checkout**; the rung 2 § 29 rehearsal passed, and how close it came is not measured.
+3. **The link's photographs cannot be shown**: the block fetches a photo sheet only from its two fixed hosts, which no
+   story may reach, so a story's link carries no photo part and each slide shows its card's image (a generated tile).
+   **The 220 × 220 sheet-cell look of a real microsite link is not in Storybook.** § 19 never puts the link's photos into
+   the checkout's lines either.
+4. **Checkout · 3 needs step 2 filled**: the fixture's default form state makes the block refuse the second Continue
+   while step 2 is empty, as the live store does, so the story types invented entries into the five required fields
+   first (R2-84's walk).
+5. Smaller: *Screen · B*'s *t* is a plan's count (7 or 14; the block refuses another), *k* 1–14; the fixture had no
+   off-host reference; the *ordinary visit* page carries no block (the fixture never places one on a directly opened
+   `/checkout`); Screens A and B still go after the block's own 90 s; `build-storefront.mjs` is called in-process
+   (`buildStorefront({ outDir })`), so the paste copy in `dist-storefront/` is never written; the logo shown is the
+   fixture's navy placeholder.
+
+### 8.7 Item 2 measured on the live store, 2026-10-07 20:56–20:59 PDT — the Advisor's *"Measure the margin first"*
+
+Four runs of the watch's own smoke (`--live`: the store's own Footer block; a 7-meal cart; never submitting; every width
+PASS), from a scratch copy of the watch at `21acd34` whose recorder (`recordFaces`) also noted the address as it
+changed (`history.pushState`/`replaceState` wrapped), the store's first `.checkout__section` and the block's `#fitaf-nav`
+arriving, and, scheduled at the address change, one timer (as the block's poll is) and one message task, each noting
+what was on the page when it ran. Milliseconds after the address became `/checkout`:
+
+| run (UTC) | width | CPU | `app-checkout` | first task after the change found | sections drawn | block finished |
+|---|---|---|---:|---|---:|---:|
+| 03:56:41 | 1280 | 1× | 13 | (not probed) | 24 | 180 |
+| 03:57:53 | 1280 | 1× | 11 | the component, no section | 22 | 158 |
+| 03:58:46 | 390 | 1× | 15 | the component, no section | 26 | 181 |
+| 03:59:21 | 390 | 4× (`emulateCPUThrottling`) | 59 | the component and its sections | 107 | 160 |
+
+1. ⭐ **Item 2's undecorated checkout did not occur and cannot as the runs show it**: in every probed run the store's
+   component was on the page by the first task after the address changed, and the block's poll is a timer, so it can
+   never find `/checkout` without `app-checkout`. Its logo and stepper (`mark()`, `fitaf-handoff.js:243–244`) always had
+   their component.
+2. ⚠ **A narrower window remains, and is inferred, not observed**: in two unthrottled runs the component was present
+   **without its sections** for about 10 ms after the first task. A poll landing there runs `stepper(c)` before the
+   store draws: the foot (`#fitaf-nav`, appended to `c`) would precede the store's content instead of ending it, and
+   Continue would go to the foot rather than beside PAY NOW until the next step or resize (`place()`). If the poll's
+   phase is uniform over its 200 ms, about 10 in 200, **some 5 % of visits**: arithmetic from the table, not a measured
+   rate. In all four runs the poll came 158–181 ms after the change. Throttled 4×, the store drew everything before the
+   first task, so no window.
+3. **Remedy, if wanted**: finish on the store's drawn checkout (`app-checkout .checkout__section` present), not the
+   address alone; a Footer block change, so the Advisor's paste and the rehearsal again. Not done here.

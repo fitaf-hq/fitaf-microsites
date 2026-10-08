@@ -8,12 +8,17 @@ export const BUILDS = [
   { id: "development", label: "development (the test address)", env: "dev" },
 ];
 
-/** The Date control (§ 2 item 4). `today` is the real clock and adds no script; the other two fix the frame's clock. */
+/** The Date control (§ 2 item 4). `today` is the real clock and adds no script; the others fix the frame's clock.
+ *  SPEC-meal-selection § 9: `fixture` is the site's fixture week of invented names in the picks file's version 2 (a cart
+ *  per answer set, and snacks), built from test/fixtures/picks-v2/ (the build's --picks) and seen inside its window. */
 export const DATES = [
   { id: "today", label: "today (the real clock)" },
   { id: "week", label: "a week with picks" },
   { id: "none", label: "no picks" },
+  { id: "fixture", label: "the fixture week (invented names, version 2)" },
 ];
+/** Where the fixture week's picks directory is, from the site (the build's --picks, as `npm run build` resolves it). */
+export const FIXTURE_PICKS = "test/fixtures/picks-v2";
 
 /** The two widths (§ 3), the storefront smoke's: 390 the default. */
 export const VIEWPORTS = {

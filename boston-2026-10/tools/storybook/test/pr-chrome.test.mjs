@@ -122,10 +122,12 @@ test("PR-13: the carousel spans the viewport's width with the logo inside it; no
   }
 });
 
-test("PR-14: the two question headings are centred (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
+// Updated (SPEC-meal-selection § 1): the page asks the goal and the four meal questions, five headings, all shown once Q1
+// is answered (#lean-7 answers it).
+test("PR-14: the question headings are centred (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
   for (const { width } of Object.values(VIEWPORTS)) {
     const gaps = await withPage({ width, hash: "#lean-7" }, (page) => page.evaluate(textGaps, ".step-label"));
-    assert.equal(gaps.length, 2, `${width}: two headings`);
+    assert.equal(gaps.length, 5, `${width}: the goal's heading and the four questions'`);
     for (const g of gaps) assert.ok(g.left > 4 && Math.abs(g.left - g.right) <= 2, `${width}: ${g.text} centred: ${JSON.stringify(g)}`);
   }
 });

@@ -41,6 +41,11 @@ export const midday = (ymd) => Date.parse(`${ymd}T17:00:00Z`);
 export const mpidsFor = (count) =>
   PLANS.individual.map((plan) => plan.counts.find((c) => c.meals_per_week === Number(count)).mpid);
 
+/** SPEC-meal-selection § 8 item 2, § 5: the page's data is keyed by the answer set, and a version-1 file's counts are the
+ *  carts of two of them (7: or, every day, no breakfast; 14: and, every day, no breakfast). A week's cart for `count`. */
+export const ANSWER_OF_COUNT = { 7: "or-7d", 14: "and-7d" };
+export const cartFor = (week, count) => week.carts[ANSWER_OF_COUNT[count]];
+
 /** Every individual cell the page shows: [fragment, count, mpid]. */
 export const CELLS = PLANS.individual.flatMap((plan) =>
   PLANS.shown_counts.map(({ meals_per_week: n }) => [
@@ -173,7 +178,8 @@ export function openPlanPage(html, { hash = "", now, reducedMotion = false } = {
     return found;
   };
   const tick = () => timers.filter((t) => !t.cleared).forEach((t) => t.fn());
-  return { document, el, go: (h) => (location.hash = h), has: (id) => Boolean(document.getElementById(id)), timers, tick };
+  // `hash()` is the fragment as the page left it (SPEC-meal-selection MS-4, MS-12: a round trip writes nothing new).
+  return { document, el, go: (h) => (location.hash = h), hash: () => current, has: (id) => Boolean(document.getElementById(id)), timers, tick };
 }
 
 /** True when `node` or an ancestor carries `hidden`: not shown, and nothing inside it can take focus. */

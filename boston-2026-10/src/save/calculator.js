@@ -5,9 +5,13 @@
 //
 // Self-contained (no imports, every helper inside) because build.mjs inlines its source into the page;
 // the tests import it from here.
-export function shareLines(size, mealsPerWeek, targets) {
+//
+// SPEC-meal-selection § 8 item 7: the day is the ANSWERS', not meals a week ÷ 7: `perDay` meals a day (1 for lunch or
+// dinner, 2 for both, + 1 with breakfast) on `days` days a week (7, or 5 for weekdays). Today's #lean-7 is 1 a day on 7,
+// #lean-14 2 a day on 7, so their lines are today's.
+export function shareLines(size, perDay, days, targets) {
   var DAYS_PER_WEEK = 7;
-  var perDay = mealsPerWeek / DAYS_PER_WEEK;
+  var mealsPerWeek = perDay * days;
   var n = function (x) { return Math.round(x).toLocaleString("en-US"); };
   var pct = function (part, whole) { return Math.round((part / whole) * 100); };
   var range = function (lo, hi, unit) { return n(lo) + "–" + n(hi) + unit; };
@@ -20,7 +24,7 @@ export function shareLines(size, mealsPerWeek, targets) {
 
   var out = {
     targets: "Your targets: " + given.join(" · ") + " a day · " + size.name + ", " + mealsPerWeek +
-      " meals a week (" + perDay + " a day)",
+      " meals a week (" + perDay + " a day" + (days === DAYS_PER_WEEK ? "" : ", " + days + " days a week") + ")",
     protein: null,
     calories: null,
   };
@@ -44,4 +48,16 @@ export function parseTarget(text) {
   if (!/^\d+(\.\d+)?$/.test(t)) return null;
   var v = Number(t);
   return v > 0 ? v : null;
+}
+
+/**
+ * The plan page's answer part (#result's data-selection, SPEC-meal-selection § 3: "or-5d", "and-7d-b-s") -> meals a day
+ * and days a week, { perDay, days }; null when it is not one. Snacks are not meals: they change neither.
+ */
+export function mealsADayOf(part) {
+  var MEALS_A_DAY = { or: 1, and: 2 };
+  var BREAKFAST = 1;
+  var m = /^(or|and)-(7|5)d(-b)?(-s)?$/.exec(String(part));
+  if (!m) return null;
+  return { perDay: MEALS_A_DAY[m[1]] + (m[3] ? BREAKFAST : 0), days: Number(m[2]) };
 }

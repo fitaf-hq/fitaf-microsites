@@ -34,15 +34,16 @@ test("R2-72a: the link tool, given the week's sheet, writes each meal's cell fro
   assert.ok(NAMES.some((n) => !SHEET.cells[n]) && NAMES.some((n) => SHEET.cells[n]), "fixture control: some meals have a cell, some none");
 });
 
+// Updated (SPEC-meal-selection § 5): checkPicks returns carts by answer set; a version-1 week's 7 is the cart of or-7d.
 test("R2-72b: the plan page's links (chefs-choice, through the tool) carry the week's cells; with no sheet, the links of today", () => {
   const week = cc.checkPicks(structuredClone(fixtureWeek()), `${DELIVERY}.json`, PLANS, { photos: PHOTOS, host: 0 });
-  for (const href of Object.values(week.menus["7"].links)) {
+  for (const href of Object.values(week.carts["or-7d"].links)) {
     assert.deepEqual(readPhotoPart(href)?.cells, NAMES.map((n) => SHEET.cells[n] ?? null), href);
   }
   const plain = cc.checkPicks(structuredClone(fixtureWeek()), `${DELIVERY}.json`, PLANS);
-  for (const href of Object.values(plain.menus["7"].links)) assert.equal(readPhotoPart(href), null, `no sheet, no photo part: ${href}`);
+  for (const href of Object.values(plain.carts["or-7d"].links)) assert.equal(readPhotoPart(href), null, `no sheet, no photo part: ${href}`);
   const noBase = cc.checkPicks(structuredClone(fixtureWeek()), `${DELIVERY}.json`, PLANS, { photos: { ...PHOTOS, base: null }, host: 0 });
-  for (const href of Object.values(noBase.menus["7"].links)) assert.equal(readPhotoPart(href), null, `base null, no photo part: ${href}`);
+  for (const href of Object.values(noBase.carts["or-7d"].links)) assert.equal(readPhotoPart(href), null, `base null, no photo part: ${href}`);
 });
 
 test("R2-72c: the block's reader decodes the same cells — each slide shows its meal's cell, none for a meal without one", async () => {

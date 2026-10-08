@@ -12,13 +12,19 @@
 // § 7: each meal is { name, display, qty }. `name` (the store's card name) is the ONLY key: the link tool's --item, the
 // tile's cell and the --photos payload read it. `display` (the KMS's name) is what the list shows, as the tool reads a
 // name (whitespace collapsed and trimmed), and nothing else: it is not keyed, and nothing is checked between displays.
+//
+// SPEC-meal-selection § 5: a file is version 1 (`menus` by count, as above) or version 2 (`version: 2`, `lists`, of which
+// the page shows `chefs-choice` only: a CART per answer set of data/plans.json's `selection`, through the row's plan, and
+// the week's snacks for 7 and 5 days). Either becomes the same thing, carts keyed by the answer set (`or-7d`,
+// `and-5d-b`): a version-1 `7` is the cart of or, every day, no breakfast, and its `14` of and, every day, no breakfast.
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join, relative, sep } from "node:path";
 import { declaration, esc, NO_PICKS, ROOT, scriptJson, sheetUrl, shownCounts, ZONED_DATE_HELPERS } from "../build.mjs";
 import { isLive } from "../src/worker/offers.js";
 import { addDays, daysBetween } from "../src/worker/zoned-time.js";
 import { countTable } from "./build-storefront.mjs";
-import { asShown, handoffLink, payloadFromArgs } from "./handoff-link.mjs";
+import { asShown, handoffLink, itemsFromArgs, payloadFromArgs } from "./handoff-link.mjs";
+import { answerKey, answerWords, checkSelection, daysOf, dayToken, legacyKey, LUNCH_DINNER, soldCounts } from "./selection.mjs";
 
 export const CHEFS_CHOICE_SRC = join(ROOT, "src", "chefs-choice");
 /** § 2: delivery Sunday S is open to order from S − 9 (a Friday: the store's switch) through S − 3 (a Thursday). */
@@ -30,9 +36,17 @@ const SUNDAY = 0;
 /** § 1 (and § 7.1): the only fields, each required: a file's, and a meal's. Anything else refuses the build. */
 const FILE_FIELDS = ["delivery", "menus"];
 const MEAL_FIELDS = ["name", "display", "qty"];
+/** SPEC-meal-selection § 5: the versions the page reads (a file without `version` is version 1), version 2's fields, a
+ *  cart's, and the one list the page shows (⛔ the file carries only the lists the page shows: § 4). */
+const VERSIONS = [1, 2];
+const V2_FILE_FIELDS = ["delivery", "version", "lists"];
+const SHOWN_LIST = "chefs-choice";
+const LIST_FIELDS = ["carts", "snacks"];
+const CART_FIELDS = ["lunch_dinner", "weekends", "breakfast", "plan", "items"];
 /** § 3's phrases in data/messages.json's `chefs_choice` the card shows, and the placeholders each must carry. Since
- *  SPEC-plan-page-refinement § 1–2 the list is always open: `open` (its button) and `note` are kept there, not read. */
-const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] };
+ *  SPEC-plan-page-refinement § 1–2 the list is always open: `open` (its button) and `note` are kept there, not read.
+ *  SPEC-meal-selection § 9 item 3: the snack block's heading and its not-carted line. */
+const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [] };
 
 /** A path as a person finds it: from the package when it is inside it. */
 const shown = (path) => (path.startsWith(ROOT + sep) ? relative(ROOT, path) : path);
@@ -94,46 +108,133 @@ function mealsOf(menu, where) {
 }
 
 /**
- * One picks file (already parsed), checked against § 1: the file's name is its delivery Sunday; the fields are exactly
- * `delivery` and `menus`; each menu is for a count the page shows, and for each size of that count the link tool takes
- * it. Returns { delivery, menus: { count: { meals: [{ name, display, qty }], links: { mpid: url } } } }, `name` as the
- * tool keys it and `display` as the page shows it (each with whitespace collapsed and trimmed: § 7.1); only `name`
- * reaches the tool. `photo` ({ photos, host }: the photo sheets' manifest and
- * the code of the host the page is served from) gives each link the week's cells, by the tool's own --photos
- * (SPEC-rung2-progress-and-checkout § 17.1); without it, or with no sheet for the week, the links are today's.
+ * One list of meals for `count` (a plan's meals a week), checked by the link tool at every size: for each size, the
+ * tool's own payloadFromArgs (qty 1..MAX_QTY, names distinct and no two sharing a key, the counts making the plan's
+ * count) and its handoffLink. Returns { meals: [{ name, display, qty }], links: { mpid: url } }, `name` as the tool keys it
+ * and `display` as the page shows it (§ 7.1); only `name` reaches the tool. `photo` ({ photos, host }) gives each link
+ * the week's cells by the tool's own --photos (SPEC-rung2-progress-and-checkout § 17.1). `where` names it in a refusal.
+ */
+function cartOf(meals, count, where, { plans, needs, photo, date }) {
+  const links = {};
+  let items = null;
+  for (const plan of plans.individual) {
+    const { mpid } = plan.counts.find((c) => c.meals_per_week === count);
+    const argv = ["--mpid", String(mpid), ...meals.flatMap((m) => ["--item", `${m.name}:${m.qty}`])];
+    if (photo?.photos?.chefs_choice?.[date]) argv.push("--photos", date, "--host", String(photo.host));
+    let payload;
+    try {
+      payload = payloadFromArgs(argv, needs, photo?.photos);
+    } catch (err) {
+      throw new Error(`${where}: ${err.message}`);
+    }
+    links[mpid] = handoffLink(plans, payload);
+    // The tool's items are the list's meals in order (one --item each), so each takes its own display.
+    items ??= payload.items.map(({ name, qty }, i) => ({ name, display: asShown(meals[i].display), qty }));
+  }
+  return { meals: items, links };
+}
+
+/** Version 1 (§ 1): `menus` by a count the page shows; each menu the cart of that count's answer set (SPEC-meal-selection
+ *  § 5: 7 is or, every day, no breakfast; 14 is and, every day, no breakfast). */
+function v1Carts(json, rows, ctx) {
+  if (!isObject(json.menus)) throw new Error(`menus must be an object, a list of meals per count`);
+  if (!Object.keys(json.menus).length) throw new Error(`no menu: "menus" names no count`);
+  const counts = shownCounts(ctx.plans).map(String);
+  const carts = {};
+  for (const [count, menu] of Object.entries(json.menus)) {
+    if (!counts.includes(count)) throw new Error(`count ${JSON.stringify(count)} is not a count the page shows (${counts.join(", ")})`);
+    const key = legacyKey(rows, Number(count));
+    if (!key) throw new Error(`menus.${count}: no answer set of data/plans.json's selection is ${count} meals every day without breakfast`);
+    carts[key] = cartOf(mealsOf(menu, `menus.${count}`), Number(count), `menus.${count}`, ctx);
+  }
+  return { carts, snacks: {} };
+}
+
+/** A cart's answer set, if it is one data/plans.json's selection has: Q1 "or"/"and", the two others true or false. */
+function rowOfCart(cart, rows) {
+  const valid = LUNCH_DINNER.includes(cart.lunch_dinner) && typeof cart.weekends === "boolean" && typeof cart.breakfast === "boolean";
+  return valid ? rows.get(answerKey(cart)) : undefined;
+}
+
+/** Version 2's snack lists (SPEC-meal-selection § 5): by days, "7" or "5", each the link tool's item checks, their qty
+ *  making the days (one snack a day); no mpid. Keyed as the fragment names the days: "7d", "5d". */
+function snackLists(snacks, at) {
+  const out = {};
+  if (snacks === undefined) return out;
+  if (!isObject(snacks)) throw new Error(`${at} must be an object, a list of snacks per number of days`);
+  const days = [true, false].map((weekends) => String(daysOf(weekends)));
+  for (const [d, list] of Object.entries(snacks)) {
+    if (!days.includes(d)) throw new Error(`${at}: ${JSON.stringify(d)} is not ${days.join(" or ")} days`);
+    const where = `${at}.${d}`;
+    const meals = mealsOf(list, where);
+    let items;
+    try {
+      items = itemsFromArgs(meals.map((m) => `${m.name}:${m.qty}`));
+    } catch (err) {
+      throw new Error(`${where}: ${err.message}`);
+    }
+    const total = items.reduce((sum, it) => sum + it.qty, 0);
+    if (total !== Number(d)) throw new Error(`${where}: the snacks for ${d} days are ${d}; the list has ${total}`);
+    out[dayToken(Number(d) === daysOf(true))] = items.map(({ name, qty }, i) => ({ name, display: asShown(meals[i].display), qty }));
+  }
+  return out;
+}
+
+/** Version 2 (SPEC-meal-selection § 5): the `chefs-choice` list's carts, each a row of the selection through that row's
+ *  plan, at most one per row (a row without one falls back, § 4), and its snacks. */
+function v2Carts(json, rows, ctx) {
+  const lists = json.lists;
+  if (!isObject(lists)) throw new Error("lists must be an object, the lists by name");
+  for (const name of Object.keys(lists)) {
+    if (name !== SHOWN_LIST) throw new Error(`lists: ${JSON.stringify(name)} is not a list the page shows (${SHOWN_LIST})`);
+  }
+  if (!(SHOWN_LIST in lists)) throw new Error(`lists: no ${JSON.stringify(SHOWN_LIST)}`);
+  const list = lists[SHOWN_LIST];
+  const at = `lists.${SHOWN_LIST}`;
+  if (!isObject(list)) throw new Error(`${at} must be an object`);
+  for (const key of Object.keys(list)) if (!LIST_FIELDS.includes(key)) throw new Error(`${at}: unknown field ${JSON.stringify(key)}`);
+  if (!Array.isArray(list.carts)) throw new Error(`${at}.carts must be a list of carts`);
+  const sold = soldCounts(ctx.plans);
+  const carts = {};
+  const first = {};
+  list.carts.forEach((cart, i) => {
+    const place = `${at}.carts[${i}]`;
+    onlyFields(cart, CART_FIELDS, place);
+    const row = rowOfCart(cart, rows);
+    if (!row) {
+      const answers = ["lunch_dinner", "weekends", "breakfast"].map((k) => `${k} ${JSON.stringify(cart[k])}`).join(", ");
+      throw new Error(`${place}: ${answers} is not a row of data/plans.json's selection`);
+    }
+    const key = answerKey(cart);
+    const where = `${place} (${answerWords(cart)})`;
+    if (key in first) throw new Error(`${where}: a second cart for ${key} (the first is carts[${first[key]}])`);
+    first[key] = i;
+    if (!sold.includes(cart.plan)) throw new Error(`${where}: plan ${JSON.stringify(cart.plan)} is not a plan the store sells (${sold.join(", ")})`);
+    if (cart.plan !== row.plan) throw new Error(`${where}: plan ${cart.plan} is not its row's plan (${row.plan})`);
+    carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx);
+  });
+  return { carts, snacks: snackLists(list.snacks, `${at}.snacks`) };
+}
+
+/**
+ * One picks file (already parsed), checked against § 1 and SPEC-meal-selection § 5: the file's name is its delivery
+ * Sunday; a version-1 file's fields are exactly `delivery` and `menus`, a version-2 file's `delivery`, `version` and
+ * `lists`. Returns { delivery, carts: { answerKey: { meals, links } }, snacks: { "7d"|"5d": meals } }. `photo`
+ * ({ photos, host }: the photo sheets' manifest and the code of the host the page is served from) gives each link the
+ * week's cells, by the tool's own --photos; without it, or with no sheet for the week, the links are today's.
  */
 export function checkPicks(json, fileName, plans, photo = null) {
   const date = PICKS_FILE.exec(fileName)?.[1];
   if (!date || !isSunday(date)) throw new Error(`the file name is not a Sunday's date (YYYY-MM-DD.json)`);
-  onlyFields(json, FILE_FIELDS, "the file");
+  if (!isObject(json)) throw new Error("the file must be an object");
+  const version = json.version ?? 1;
+  if (!VERSIONS.includes(version)) throw new Error(`version ${JSON.stringify(json.version)} is not one the page reads (${VERSIONS.join(", ")})`);
+  onlyFields(json, version === 1 ? [...FILE_FIELDS, ...("version" in json ? ["version"] : [])] : V2_FILE_FIELDS, "the file");
   if (json.delivery !== date) throw new Error(`delivery ${JSON.stringify(json.delivery)} is not the file's date (${date})`);
-  if (!isObject(json.menus)) throw new Error(`menus must be an object, a list of meals per count`);
-  if (!Object.keys(json.menus).length) throw new Error(`no menu: "menus" names no count`);
-  const counts = shownCounts(plans).map(String);
+  const { rows } = checkSelection(plans);
   const needs = new Map(Object.entries(countTable(plans)).map(([mpid, n]) => [Number(mpid), n]));
-  const menus = {};
-  for (const [count, menu] of Object.entries(json.menus)) {
-    if (!counts.includes(count)) throw new Error(`count ${JSON.stringify(count)} is not a count the page shows (${counts.join(", ")})`);
-    const meals = mealsOf(menu, `menus.${count}`);
-    const links = {};
-    let items = null;
-    for (const plan of plans.individual) {
-      const { mpid } = plan.counts.find((c) => c.meals_per_week === Number(count));
-      const argv = ["--mpid", String(mpid), ...meals.flatMap((m) => ["--item", `${m.name}:${m.qty}`])];
-      if (photo?.photos?.chefs_choice?.[date]) argv.push("--photos", date, "--host", String(photo.host));
-      let payload;
-      try {
-        payload = payloadFromArgs(argv, needs, photo?.photos);
-      } catch (err) {
-        throw new Error(`menus.${count}: ${err.message}`);
-      }
-      links[mpid] = handoffLink(plans, payload);
-      // The tool's items are the menu's meals in order (one --item each), so each takes its own display.
-      items ??= payload.items.map(({ name, qty }, i) => ({ name, display: asShown(meals[i].display), qty }));
-    }
-    menus[count] = { meals: items, links };
-  }
-  return { delivery: date, menus };
+  const ctx = { plans, needs, photo, date };
+  return { delivery: date, ...(version === 1 ? v1Carts(json, rows, ctx) : v2Carts(json, rows, ctx)) };
 }
 
 /** Every picks file in `dir`, each checked; a file breaking a rule throws, naming it. Sorted by delivery. */
@@ -184,43 +285,43 @@ function thumbStyle(url, sheet, name) {
   );
 }
 
-/** What the page's script reads: the zone, and per open week its window and, per count, the heading, the list (with each
- *  meal's tile style, or null), and one checkout link per size (by mpid). Every word is a phrase of data/messages.json
- *  filled here. `photos` is the photo sheets' manifest; every URL in it is built from its `base` (sheetUrl). § 7.2: each
- *  line shows the meal's `display`; its tile is the cell of its `name`, the key. */
-export function pageData(weeks, { words, zone, photos = null, assetPrefix = "" }) {
+/** What the page's script reads: the zone, and per open week its window and, per answer set with a cart
+ *  (SPEC-meal-selection § 8 item 2: `or-5d`, `and-5d-b`), the heading, the list (with each meal's tile style, or null),
+ *  and one checkout link per size (by mpid); with `snacks` (data/plans.json's `snacks.shown`), the week's snack lists by
+ *  days (`7d`, `5d`), shown and never linked (§ 9 item 3). Every word is a phrase of data/messages.json filled here.
+ *  `photos` is the photo sheets' manifest; every URL in it is built from its `base` (sheetUrl). § 7.2: each line shows
+ *  the meal's `display`; its tile is the cell of its `name`, the key. */
+export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", snacks = false }) {
   return {
     zone,
-    weeks: weeks.map((w) => ({
-      delivery: w.delivery,
-      ...windowOf(w.delivery),
-      counts: Object.fromEntries(
-        Object.entries(w.menus).map(([count, menu]) => {
-          const sheet = photos?.chefs_choice?.[w.delivery];
-          const url = sheetUrl(photos, sheet, assetPrefix);
-          return [
-            count,
-            {
-              heading: fill(words.heading, { week: weekRange(w.delivery) }),
-              meals: menu.meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.display, n: m.qty }) : m.display)),
-              thumbs: menu.meals.map((m) => thumbStyle(url, sheet, m.name)),
-              links: menu.links,
-            },
-          ];
-        }),
-      ),
-    })),
+    weeks: weeks.map((w) => {
+      const sheet = photos?.chefs_choice?.[w.delivery];
+      const url = sheetUrl(photos, sheet, assetPrefix);
+      const lines = (meals) => meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.display, n: m.qty }) : m.display));
+      const thumbs = (meals) => meals.map((m) => thumbStyle(url, sheet, m.name));
+      return {
+        delivery: w.delivery,
+        ...windowOf(w.delivery),
+        carts: Object.fromEntries(
+          Object.entries(w.carts).map(([key, cart]) => [
+            key,
+            { heading: fill(words.heading, { week: weekRange(w.delivery) }), meals: lines(cart.meals), thumbs: thumbs(cart.meals), links: cart.links },
+          ]),
+        ),
+        ...(snacks ? { snacks: Object.fromEntries(Object.entries(w.snacks).map(([d, meals]) => [d, { meals: lines(meals), thumbs: thumbs(meals) }])) } : {}),
+      };
+    }),
   };
 }
 
-/** The card's markup (src/chefs-choice/card.html) with its words; a `{{…}}` left over refuses the build. */
-function cardHtml(template, words) {
-  const values = { CHECKOUT: words.checkout, OWN: words.own };
+/** A piece of the card's markup (src/chefs-choice/<file>) with its words; a `{{…}}` left over refuses the build. */
+function cardHtml(template, words, file = "card.html") {
+  const values = { CHECKOUT: words.checkout, OWN: words.own, SNACKS_HEADING: words.snacks_heading, SNACKS_NOT_CARTED: words.snacks_not_carted };
   const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
-    if (!(key in values)) throw new Error(`src/chefs-choice/card.html: ${whole} has no value`);
+    if (!(key in values)) throw new Error(`src/chefs-choice/${file}: ${whole} has no value`);
     return esc(values[key]);
   });
-  if (/\{\{|\}\}/.test(html)) throw new Error("src/chefs-choice/card.html: a {{…}} is not a valid slot name");
+  if (/\{\{|\}\}/.test(html)) throw new Error(`src/chefs-choice/${file}: a {{…}} is not a valid slot name`);
   return html;
 }
 
@@ -231,17 +332,20 @@ function cardHtml(template, words) {
 export async function chefsChoice({ plans, messages, dir, on, zone, photos = null, assetPrefix = "", photoHost = 0 }) {
   const all = await readPicks(dir, plans, { photos, host: photoHost });
   const weeks = openOn(all, on);
-  const summary = weeks.map((w) => ({ delivery: w.delivery, ...windowOf(w.delivery), counts: Object.keys(w.menus) }));
+  const summary = weeks.map((w) => ({ delivery: w.delivery, ...windowOf(w.delivery), carts: Object.keys(w.carts), snacks: Object.keys(w.snacks) }));
   if (!weeks.length) return { slots: NO_PICKS, weeks: summary };
   const words = chefsChoiceWords(messages);
   const read = (name) => readFile(join(CHEFS_CHOICE_SRC, name), "utf8");
   const helpers = ["const FORMATTERS = new Map();", ...[...ZONED_DATE_HELPERS, isLive].map(declaration)].join("\n");
+  // SPEC-meal-selection § 9 item 3: the snack block only while Q4 is on the page.
+  const snacks = checkSelection(plans).snacks.shown;
+  const snackBlock = snacks ? "\n" + cardHtml(await read("snacks.html"), words, "snacks.html").trimEnd() : "";
   return {
     slots: {
       PICKS_STYLE: "\n" + (await read("style.css")).trim(),
-      PICKS_CARD: "\n" + cardHtml(await read("card.html"), words).trimEnd(),
+      PICKS_CARD: "\n" + cardHtml(await read("card.html"), words).trimEnd() + snackBlock,
       PICKS_SCRIPT:
-        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, photos, assetPrefix }))}</script>` +
+        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, photos, assetPrefix, snacks }))}</script>` +
         `\n<script>\n(function () {\n"use strict";\n${helpers}\n${(await read("chefs-choice.js")).trim()}\n})();\n</script>`,
     },
     weeks: summary,
