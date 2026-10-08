@@ -3,6 +3,7 @@ import * as Individual from "./individual.stories.js";
 import * as Family from "./family.stories.js";
 import * as WholePage from "./whole-page.stories.js";
 import * as HandOff from "./handoff.stories.js";
+import * as MealSelection from "./meal-selection.stories.js";
 import { storyList } from "./story-list.js";
 
 <Meta title="Microsite/About these stories" />
@@ -19,6 +20,16 @@ clock is the only thing a story adds to a page**: on *a week with picks* and *no
 own starts the frame's clock at noon on that date (the caption names it), so the page chooses that week's Chef's Choice
 as it would then; *today* adds nothing. Storybook serves the pages with a policy that refuses any request to another
 host (the development page's Turnstile script), so nothing leaves this machine.
+
+## The meal selection
+
+The **Meal selection** stories show the plan page's four questions and what each answer set's card shows: the goal
+buttons, the eight answer sets with *No snacks*, and snacks chosen (Q4) with the week's snack list and without one. They open on
+the Date control's **fixture week**: a week of invented meal names written as the picks file's version 2, a cart for
+every answer set and snacks for every day only, built into the page as the site's build reads any week (its `--picks`),
+so every answer set shows its own cart; on a real week most answer sets have none yet and show *Choose your meals* alone.
+Each opens scrolled to its subject (the questions, or the snacks). Name a state as *Meal selection · and · weekdays ·
+breakfast · 390: …*.
 
 ## The hand-off
 
@@ -37,7 +48,7 @@ policy, so nothing leaves this machine.
 
 ## Every story, by group
 
-{storyList([Individual, Family, WholePage, HandOff]).map(({ group, stories }) => (
+{storyList([Individual, Family, WholePage, MealSelection, HandOff]).map(({ group, stories }) => (
   <div key={group}>
     <h3>{group}</h3>
     <ul>{stories.map((name) => <li key={name}>{name}</li>)}</ul>

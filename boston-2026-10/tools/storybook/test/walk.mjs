@@ -51,6 +51,12 @@ function inspect() {
     gridLinks: shown("#all") ? all("#all a").length : 0,
     family: shown("#panel-family"),
     individual: shown("#panel-individual"),
+    // SPEC-meal-selection § 9: the card's answer set, the answers shown pressed, the snack block, the goals' facts blocks.
+    selection: doc?.getElementById("result")?.getAttribute("data-selection") ?? null,
+    pressed: all('[data-q][aria-pressed="true"]').map((b) => `${b.dataset.q}:${b.dataset.a}`),
+    snackLines: all("#cc-snack-list li").map((li) => li.textContent),
+    snackNote: shown("#cc-snacks-note"),
+    facts: all(".goals .facts").length,
   };
 }
 
@@ -135,8 +141,16 @@ export async function walk({ base, visits, docs = [] }) {
   return { results, outside };
 }
 
-/** SM-5's reading of a walk: one line per thing a story does not show; [] when every story shows its state. */
-export function statesProblems(results, { menus, defaultMeals, gridLinks }) {
+/** The answers a fragment's answer part presses (SPEC-meal-selection § 3), "q:a" each, Q1 first. */
+export function pressedOf(part) {
+  const [, ld, days, b, s] = /^(or|and)-(7d|5d)(-b)?(-s)?$/.exec(part);
+  const yes = (x) => (x ? "yes" : "no");
+  return [`lunch_dinner:${ld}`, `weekends:${yes(days === "7d")}`, `breakfast:${yes(b)}`, `snacks:${yes(s)}`];
+}
+
+/** SM-5's reading of a walk: one line per thing a story does not show; [] when every story shows its state. `carts` and
+ *  `snacks` are the fixture week's lines by answer set and by days (SPEC-meal-selection § 9's stories). */
+export function statesProblems(results, { menus, defaultMeals, gridLinks, carts = {}, snacks = {} }) {
   const problems = [];
   for (const r of results) {
     const where = `${r.story} · ${r.width} · ${r.build}${r.extra?.meals ? ` · ${r.extra.meals} meals` : ""}`;
@@ -154,6 +168,18 @@ export function statesProblems(results, { menus, defaultMeals, gridLinks }) {
     if (r.story === "All plans" && r.gridLinks !== gridLinks) fail(`${r.gridLinks} of the grid's ${gridLinks} links shown`);
     if (r.story === "Family" && (!r.family || r.individual)) fail("not the Family panel");
     if (r.story === "Scroll" && !(r.frameHeight >= r.pageHeight)) fail(`frame ${r.frameHeight} tall, its page ${r.pageHeight}`);
+    if (r.story === "Goal buttons" && r.facts !== 3) fail(`${r.facts} facts blocks shown, not one per goal`);
+    if (r.answers) {
+      const key = r.answers.replace(/-s$/, "");
+      if (r.selection !== r.answers) fail(`the card's answer set is ${r.selection}, not ${r.answers}`);
+      if (JSON.stringify(r.pressed) !== JSON.stringify(pressedOf(r.answers))) fail(`pressed ${JSON.stringify(r.pressed)}`);
+      if (!r.ccList || JSON.stringify(r.meals) !== JSON.stringify(carts[key])) fail(`shows ${JSON.stringify(r.meals)}, not ${key}'s cart`);
+      if (r.answers.endsWith("-s")) {
+        const list = snacks[/-(\d+d)/.exec(r.answers)[1]] ?? [];
+        if (JSON.stringify(r.snackLines) !== JSON.stringify(list)) fail(`snacks ${JSON.stringify(r.snackLines)}, not ${JSON.stringify(list)}`);
+        if (!r.snackNote) fail("no not-carted line");
+      } else if (r.snackLines.length || r.snackNote) fail("snacks shown with No snacks");
+    }
   }
   return problems;
 }

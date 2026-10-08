@@ -19,10 +19,11 @@ import { BUILD_SCRIPT, PAGES_DIR, PLANS_PATH, SAVE_PATH, SITE } from "./paths.mj
 const run = promisify(execFile);
 const OUTPUT_LIMIT_BYTES = 16 * 1024 * 1024;
 
-/** One build of the site on `on`, into `out`: `node build.mjs [--env dev] --on <on> --out <out>`, run in the site. */
-export async function siteBuild({ build, on, out }) {
+/** One build of the site on `on`, into `out`: `node build.mjs [--env dev] --on <on> --out <out> [--picks <picks>]`, run in
+ *  the site (`picks`, a picks directory from the site: the fixture week's, SPEC-meal-selection § 9). */
+export async function siteBuild({ build, on, out, picks = null }) {
   const { env } = BUILDS.find((b) => b.id === build);
-  const args = [BUILD_SCRIPT, ...(env ? ["--env", env] : []), "--on", on, "--out", out];
+  const args = [BUILD_SCRIPT, ...(env ? ["--env", env] : []), "--on", on, "--out", out, ...(picks ? ["--picks", picks] : [])];
   try {
     await run(process.execPath, args, { cwd: SITE, maxBuffer: OUTPUT_LIMIT_BYTES });
   } catch (err) {
@@ -33,7 +34,7 @@ export async function siteBuild({ build, on, out }) {
 /** One page: the build's, then (for a fixed date) the clock script before the page's own. */
 async function onePage(outDir, build, date) {
   const out = join(outDir, build, date.id);
-  await siteBuild({ build, on: date.on, out });
+  await siteBuild({ build, on: date.on, out, picks: date.picks });
   if (!date.instant) return;
   const page = join(outDir, pagePath(build, date.id));
   await writeFile(page, withClock(await readFile(page, "utf8"), date.instant));

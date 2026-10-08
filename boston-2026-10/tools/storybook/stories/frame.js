@@ -63,6 +63,8 @@ async function reach(frame, state, { keepTop }) {
     await until(() => shown(el(state.opens)), WHY.opens(state.opens));
     if (!keepTop) el(state.press).scrollIntoView({ block: "start" });
   }
+  // SPEC-meal-selection § 9's stories: where the state's subject is (the questions, the snacks), at the frame's top.
+  if (state.scrollTo && !keepTop) el(state.scrollTo)?.scrollIntoView({ block: "start" });
 }
 
 /** Make the frame as tall as its page, and keep it so (the Scroll story: no inner scroll). */
@@ -118,8 +120,9 @@ export function showPage({ context, state, args, whole = false }) {
   return root;
 }
 
-/** The controls every story has (§ 3): Build and Date; and Goal and Meals where the state is a chosen plan. */
-export function controls({ plan }) {
+/** The controls every story has (§ 3): Build and Date; and Goal and Meals where the state is a chosen plan (Meals not
+ *  where the story's own answers are the state: SPEC-meal-selection's stories). */
+export function controls({ plan, meals = plan }) {
   const radio = (labels) => ({ type: "inline-radio", labels });
   const byId = (list, label) => Object.fromEntries(list.map((x) => [x.id, x[label]]));
   const hidden = { table: { disable: true } };
@@ -127,7 +130,7 @@ export function controls({ plan }) {
     build: { name: "Build", options: pages.builds.map((b) => b.id), control: radio(byId(pages.builds, "label")) },
     date: { name: "Date", options: pages.dates.map((d) => d.id), control: radio(byId(pages.dates, "label")) },
     goal: plan ? { name: "Goal", options: pages.goals.map((g) => g.id), control: radio(byId(pages.goals, "name")) } : hidden,
-    meals: plan ? { name: "Meals", options: pages.counts, control: radio({}) } : hidden,
+    meals: meals ? { name: "Meals", options: pages.counts, control: radio({}) } : hidden,
   };
 }
 

@@ -15,6 +15,20 @@ const STORIES = {
   Individual: ["Start", "Chosen", "Chef's Choice", "No picks this week", "All plans"],
   Family: ["Family"],
   "Whole page": ["Scroll"],
+  // SPEC-meal-selection § 6 last line and § 9: the goal buttons, the eight answer sets, snacks chosen (Q4) with and without a list.
+  "Meal selection": [
+    "Goal buttons",
+    "or · every day",
+    "or · weekdays",
+    "and · every day",
+    "and · weekdays",
+    "or · every day · breakfast",
+    "or · weekdays · breakfast",
+    "and · every day · breakfast",
+    "and · weekdays · breakfast",
+    "and · every day · breakfast · snacks",
+    "or · weekdays · snacks, no list",
+  ],
   // § 8.3: the hand-off's two faces.
   "Hand-off": [
     "Screen · A",

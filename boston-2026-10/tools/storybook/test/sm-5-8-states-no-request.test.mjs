@@ -9,6 +9,10 @@
 // tall as its page; every story ready, on the page of its build and date, its frame at the viewport's width. Since
 // SPEC-plan-page-refinement § 4: *Chef's Choice* (always open, one story) shows the week's meals for the count, a tile
 // each; *All plans* presses the link and the grid shows in its modal.
+// SPEC-meal-selection § 9 (in SM-5's walk): the Meal selection stories at 390 and 1280, both builds: *Goal buttons* one
+// facts block per goal; each answer set on the fixture week's date its own answer set on the card (data-selection), its
+// answers pressed, its cart's lines; snacks chosen (Q4) the week's snack list for its days (none for weekdays) and the
+// not-carted line; *No snacks* none.
 // SM-10: each Hand-off story of § 8.3 at 390 and 1280 (Screen · B at 2 of 7, its default, and at 10 of 14):
 // test/handoff-expect.mjs says what each must show.
 // SM-11: no visit's console carries the fixture's "[fixture] ORDER PLACED" (its control: every visit that ran the
@@ -53,7 +57,7 @@ const DIRECT_VISIT_MS = 4_000;
 const MUTANT_STOP = ['checkout2: checkout(2, "The deep-carted checkout at step 2."', 'checkout2: checkout(1, "The deep-carted checkout at step 2."'];
 const MUTANT_PAY_AT = "      await until(() => atStep(now + 1), WHY.step(now + 1), PRESS_TIMEOUT_MS);\n    }\n";
 const MUTANT_PAY = '    if (state.step === 3) el(".checkout__submit button").click();\n';
-/** Each story of § 3 and the date § 3 gives it (its default). */
+/** Each story of § 3 and the date § 3 gives it (its default); and SPEC-meal-selection § 9's, each with its answer part. */
 const STORY_DATES = {
   "Individual · Start": "today",
   "Individual · Chosen": "today",
@@ -62,7 +66,21 @@ const STORY_DATES = {
   "Individual · All plans": "today",
   "Family · Family": "today",
   "Whole page · Scroll": "today",
+  "Meal selection · Goal buttons": "today",
 };
+const MEAL_SELECTION = {
+  "or · every day": "or-7d",
+  "or · weekdays": "or-5d",
+  "and · every day": "and-7d",
+  "and · weekdays": "and-5d",
+  "or · every day · breakfast": "or-7d-b",
+  "or · weekdays · breakfast": "or-5d-b",
+  "and · every day · breakfast": "and-7d-b",
+  "and · weekdays · breakfast": "and-5d-b",
+  "and · every day · breakfast · snacks": "and-7d-b-s",
+  "or · weekdays · snacks, no list": "or-5d-s",
+};
+for (const name of Object.keys(MEAL_SELECTION)) STORY_DATES[`Meal selection · ${name}`] = "fixture";
 const OPEN = "Individual · Chef's Choice";
 const MUTANT_DATE = ['cc: { name: "Chef\'s Choice", fragment: chosen, date: "week"', 'cc: { name: "Chef\'s Choice", fragment: chosen, date: "none"'];
 
@@ -89,7 +107,14 @@ async function expectations(manifest) {
   };
   const menus = Object.fromEntries(Object.entries(picks.menus).map(([count, meals]) => [count, meals.map(line)]));
   const plans = await readJson(join(SITE, "data", "plans.json"));
-  return { menus, defaultMeals: String(plans.shown_counts[0].meals_per_week), gridLinks: plans.individual.length * plans.shown_counts.length };
+  // SPEC-meal-selection § 9: the fixture week's carts by answer set, its snacks by days, as the card shows them.
+  const fixture = manifest.dates.find((d) => d.id === "fixture");
+  assert.ok(fixture.delivery && fixture.picks, "fixture control: the fixture week (version 2)");
+  const list = (await readJson(join(SITE, fixture.picks, `${fixture.delivery}.json`))).lists["chefs-choice"];
+  const keyOf = (c) => `${c.lunch_dinner}-${c.weekends ? "7d" : "5d"}${c.breakfast ? "-b" : ""}`;
+  const carts = Object.fromEntries(list.carts.map((c) => [keyOf(c), c.items.map(line)]));
+  const snacks = Object.fromEntries(Object.entries(list.snacks ?? {}).map(([d, meals]) => [`${d}d`, meals.map(line)]));
+  return { menus, defaultMeals: String(plans.shown_counts[0].meals_per_week), gridLinks: plans.individual.length * plans.shown_counts.length, carts, snacks };
 }
 
 function visitsFor(stories, { builds, viewports, only = Object.keys(STORY_DATES), menus }) {
@@ -97,7 +122,9 @@ function visitsFor(stories, { builds, viewports, only = Object.keys(STORY_DATES)
   for (const build of builds) {
     for (const viewport of viewports) {
       for (const story of only) {
-        const visit = { story: story.split(" · ").slice(1).join(" · "), id: stories[story], viewport, build, date: STORY_DATES[story] };
+        const name = story.split(" · ").slice(1).join(" · ");
+        const answers = story.startsWith("Meal selection · ") ? MEAL_SELECTION[name] : undefined;
+        const visit = { story: name, id: stories[story], viewport, build, date: STORY_DATES[story], ...(answers ? { answers } : {}) };
         assert.ok(visit.id, `index.json lists ${story}`);
         visits.push(visit);
         if (story === OPEN) for (const meals of Object.keys(menus).slice(1)) visits.push({ ...visit, extra: { meals } });
@@ -151,6 +178,22 @@ function theWalk() {
 test("SM-5: every story of § 3 shows its state at 390 and 1280, for both builds", { timeout: WALK_TIMEOUT_MS }, async () => {
   const { results, expected } = await theWalk();
   assert.deepEqual(statesProblems(results.filter((r) => !r.handoff), expected), [], "SM-5");
+});
+
+test("SM-5 (SPEC-meal-selection § 9, control): the walk's reading refuses a wrong cart, wrong answers and a missing snack line", () => {
+  const expected = { menus: {}, defaultMeals: "7", gridLinks: 6, carts: { "and-7d-b": ["A × 2", "B"], "or-5d": ["C"] }, snacks: { "7d": ["S × 3"] } };
+  const base = { state: "ready", width: 390, frameWidth: 390, innerWidth: 390, build: "production", date: "fixture", path: "/microsite/production/fixture/index.html", ccList: true, snackLines: [], snackNote: false };
+  const right = { ...base, story: "and · every day · breakfast · snacks", answers: "and-7d-b-s", selection: "and-7d-b-s", pressed: ["lunch_dinner:and", "weekends:yes", "breakfast:yes", "snacks:yes"], meals: ["A × 2", "B"], snackLines: ["S × 3"], snackNote: true };
+  assert.deepEqual(statesProblems([right], expected), [], "control: the right reading passes");
+  const wrong = [
+    { ...right, meals: ["C"] },
+    { ...right, selection: "and-7d-b" },
+    { ...right, pressed: ["lunch_dinner:and", "weekends:yes", "breakfast:no", "snacks:yes"] },
+    { ...right, snackLines: [] },
+    { ...right, snackNote: false },
+    { ...base, story: "or · weekdays", answers: "or-5d", selection: "or-5d", pressed: ["lunch_dinner:or", "weekends:no", "breakfast:no", "snacks:no"], meals: ["C"], snackNote: true },
+  ];
+  for (const r of wrong) assert.equal(statesProblems([r], expected).length, 1, JSON.stringify(r));
 });
 
 test("SM-8: during the walk (§ 3's stories, § 8.3's, the docs page), no request leaves 127.0.0.1", { timeout: WALK_TIMEOUT_MS }, async () => {

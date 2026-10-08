@@ -16,6 +16,8 @@ export const PAGES_DIR = resolve(process.env.MICROSITE_PAGES_DIR ?? join(TOOL, "
 
 export const siteFile = (...parts) => join(SITE, ...parts);
 export const PICKS_DIR = siteFile("data", "picks");
+/** SPEC-meal-selection § 9: the fixture week of the Date control's `fixture` (microsite/layout.js FIXTURE_PICKS). */
+export const FIXTURE_PICKS_DIR = siteFile("test", "fixtures", "picks-v2");
 export const SAVE_PATH = siteFile("data", "save.json");
 export const PLANS_PATH = siteFile("data", "plans.json");
 export const BUILD_SCRIPT = siteFile("build.mjs");

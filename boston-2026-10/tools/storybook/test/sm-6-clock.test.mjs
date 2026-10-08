@@ -54,6 +54,16 @@ test("SM-6: a week with picks is the latest committed week's Thursday at noon; n
   assert.equal(dates.today.on, wallClock(A_DATE_INSIDE_NO_WINDOW, z).slice(0, 10), "today is the date in the zone");
 });
 
+test("SM-6 (SPEC-meal-selection § 9): the fixture week is the version-2 fixture's Thursday at noon, built from its directory", async () => {
+  const sundays = (await readdir(join(SITE, "test", "fixtures", "picks-v2"))).map((f) => SUNDAY_FILE.exec(f)?.[1]).filter(Boolean).sort();
+  assert.ok(sundays.length > 0, "fixture control: the version-2 fixture week");
+  const z = await zone();
+  const { fixture } = byId(await clockDates({ now: A_DATE_INSIDE_NO_WINDOW }));
+  assert.equal(fixture.on, plusDays(sundays.at(-1), -3));
+  assert.equal(wallClock(Date.parse(fixture.instant), z), `${plusDays(sundays.at(-1), -3)} ${NOON}`);
+  assert.deepEqual([fixture.delivery, fixture.picks], [sundays.at(-1), "test/fixtures/picks-v2"]);
+});
+
 test("SM-6: the latest of several weeks; without a picks file, no dated choice", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "fitaf-storybook-sm-6-"));
   t.after(() => rm(dir, { recursive: true, force: true }));
@@ -69,13 +79,13 @@ test("SM-6: the latest of several weeks; without a picks file, no dated choice",
   }
 });
 
-test("SM-6: today adds no script; a week with picks and no picks each add one, their own date's", { timeout: PAGES_TIMEOUT_MS }, async (t) => {
+test("SM-6: today adds no script; a week with picks, no picks and the fixture week each add one, their own date's", { timeout: PAGES_TIMEOUT_MS }, async (t) => {
   const out = await mkdtemp(join(tmpdir(), "fitaf-storybook-sm-6-pages-"));
   t.after(() => rm(out, { recursive: true, force: true }));
   const manifest = await buildPages({ outDir: out });
   const dates = byId(manifest.dates);
   for (const build of BUILDS.map((b) => b.id)) {
-    for (const id of ["today", "week", "none"]) {
+    for (const id of ["today", "week", "none", "fixture"]) {
       const html = await readFile(join(out, pageUrl(build, id).slice(PAGES_ROUTE.length + 1)), "utf8");
       const clocks = [...html.matchAll(CLOCK)].map((m) => m[1]);
       assert.deepEqual(clocks, dates[id].instant ? [dates[id].instant] : [], `${build}/${id}`);
