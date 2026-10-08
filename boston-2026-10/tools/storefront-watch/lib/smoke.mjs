@@ -30,7 +30,7 @@
 import { readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
 import { LOG_PREFIX, MPID, SITE_DIR, STORE_ORIGIN, VIEWPORTS, WIDTHS } from "./config.mjs";
 import { extrasReport, facesVerdict, LOGO, logoVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
@@ -263,6 +263,14 @@ export function linkChoice(href, menu, code) {
   return { mpid, chosen, snacks, path: url.pathname + url.search + url.hash };
 }
 
+/** A path as the report names it: from the repository's root when it is inside it (a report may be public; a home path
+ *  is not), else as given. */
+const REPO_DIR = resolve(SITE_DIR, "..");
+const fromRepo = (path) => {
+  const r = relative(REPO_DIR, resolve(path));
+  return r.startsWith("..") || isAbsolute(r) ? path : r;
+};
+
 /** A Footer block file (<script>…</script>) gives the text between its tags; a console file is used as it is. */
 export function scriptFromFile(text) {
   const m = /^\s*<script\b[^>]*>([\s\S]*)<\/script>\s*$/i.exec(text);
@@ -275,7 +283,7 @@ const describe = (text) => parseBlock(text)?.versionLine ?? "no version line";
 export async function scriptMode({ liveBlocks = [], scriptFile = null, code, why = "F3 found no block of ours on the live page" }) {
   if (scriptFile) {
     const text = scriptFromFile(await readFile(scriptFile, "utf8"));
-    return { kind: "paste", text, label: `${scriptFile} (${describe(text)}), pasted in the console; any block of ours on the live page held off` };
+    return { kind: "paste", text, label: `${fromRepo(scriptFile)} (${describe(text)}), pasted in the console; any block of ours on the live page held off` };
   }
   if (liveBlocks.length) return { kind: "live", label: `the store's own Footer block (${liveBlocks.join("; ")}): the link alone` };
   const dir = await mkdtemp(join(tmpdir(), "storefront-watch-build-"));
@@ -380,12 +388,13 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
   return { width, verdict: { pass: reasons.length === 0, reasons }, outcome };
 }
 
-/** The page as the window shows it, the summary scrolled into view: `<dir>/<UTC time>-<width>-checkout.png`. */
+/** The page as the window shows it, the snacks' group (SPEC-snacks-in-the-cart § 1a: .summary__additions-section, "Add-On
+ *  & Extra Meals") scrolled to its top, else the summary: `<dir>/<UTC time>-<width>-checkout.png`. */
 async function shotOf(page, dir, width) {
   const file = join(dir, `${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z")}-${width}-checkout.png`);
   try {
     await mkdir(dir, { recursive: true });
-    await page.evaluate(() => document.querySelector(".summary__items, .checkout__summary")?.scrollIntoView({ block: "start" }));
+    await page.evaluate(() => (document.querySelector(".summary__additions-section") ?? document.querySelector(".summary__items, .checkout__summary"))?.scrollIntoView({ block: "start" }));
     await page.screenshot({ path: file, captureBeyondViewport: false });
     return file;
   } catch (err) {
