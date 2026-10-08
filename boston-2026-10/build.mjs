@@ -16,6 +16,7 @@ import { parseTarget, shareLines } from "./src/save/calculator.js";
 import { currentGeneral, isLive, offerForSave } from "./src/worker/offers.js";
 import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
+import { checkSelection } from "./scripts/selection.mjs";
 import { addDays, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -505,6 +506,8 @@ export async function build({
   if (target !== "prod" && target !== "dev") throw new Error(`unknown build target: ${target}`);
   outDir ??= target === "dev" ? DIST_DEV : DIST;
   const plans = await loadJson(plansPath);
+  // SPEC-meal-selection § 2: a broken meal selection stops the build here, before anything is written.
+  checkSelection(plans);
   const events = await loadJson(eventsPath);
   const messages = await loadJson(messagesPath);
   const photos = await loadPhotos(photosPath);
