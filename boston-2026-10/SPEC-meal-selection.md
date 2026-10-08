@@ -320,3 +320,36 @@ that hands it over. **To be re-gated by the orchestrator.** §§ 0–9 are uncha
   passed on the next run. A case that times out should not keep its file alive.
 - MS-13's "before" (`test/ms-golden.json`) and MS-3's and MS-14's were recorded by building `985f777` itself, before any
   change.
+
+## 11. Snacks into the cart: measured on the live store, 2026-10-08 — the contract to write next
+
+**The Advisor**, 2026-10-08: *"let's try to get the snack question resolved before we publish"*, then, once today's week
+was seen to carry no snack list (version 1), *"Release now, snacks for 10-18"*: the page went out with the snacks question
+shown and not carted (§ 9 item 3), and **carting is the next contract, for the week delivered 10-18**.
+
+**Measured** (an anonymous, throwaway browser session on `/order?mpid=21`, the watch's own launcher; nothing submitted,
+CHECKOUT never pressed; 09:47–09:49 PDT):
+
+1. The plan's order page lists **27 meal cards** (*All Meals*) and **28 *Additions*** (*Additions (Additions)*), all
+   `app-product-card`: the snacks (Superfood Bites, Smart Oats, Protein Dirt and Sand, ProNuts), and the bulk proteins and
+   sides (cod, shrimp, rice, green beans, …).
+2. **A snack card shows *Select Options***; pressed, it **expands in place** (no dialog, no navigation) to *"Size \* 1"*
+   and **Add to Cart** with its price (*Smart Oats: Cookies & Cream* $4.00; *Relaxation Superfood Bites: Apple Crisp &
+   Reishi* $10.00). Some additions show Add to Cart directly (*Cheesecake Brownie Bites* $9.00, the bulk items).
+3. **Pressed, the snack is counted on its own card** (the counter reads 1, at 1280 and at 390) and listed under
+   *"Add-On & Extra Meals … One Time Order"*; **the meals' minimum is untouched** (*"ADD 7 MORE MEALS TO CHECKOUT"*,
+   disabled).
+4. ⚠⚠ **The plan's count, as the block reads it (`plan()`), differs by width**: at **1280** the sidebar's
+   `.cart__items-count` reads **"1 item"** (the add-on counted); at **390** the cart bar's `.mobile-cart-summary__stat-value`
+   reads **"0"** (meals only). The block's CHECKOUT condition (`plan() === p.total`) must therefore expect *meals + snack
+   units* on the sidebar and *meals* on the cart bar, or read the meals another way.
+
+**What the contract must settle** (not settled here): the link's snack part (after the meals, `key*qty`, refused when a
+snack key collides with a meal's); the press (Select Options when shown, then Add to Cart, the counter's "+" for more,
+each confirmed by the card's own counter); the CHECKOUT condition per width (item 4); the Footer block's size (17,617
+bytes against the refusal at 20,480); the stripped checkout's recap (*"{n} meals"*); the snack price on the page (still
+unruled); the live proof: the watch's smoke with the built block pasted (`--script`) and a snack link (`--link`), at both
+widths, never submitting; then the Advisor's paste, `snacks.carted: true`, and a version-2 picks file for 10-18 with its
+snack lists (Fit AF's emitter, `emit_microsite_picks.spec.md` § 6, from his approval).
+⚠ **The suites assume the committed data shows snacks** (MS-7, MS-16 *"as committed"*): flipping `snacks.shown` breaks
+16 cases (measured on a release worktree, 2026-10-08). Make them build their own copy of `data/plans.json` before any flip.
