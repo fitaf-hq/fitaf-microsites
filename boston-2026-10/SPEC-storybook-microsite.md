@@ -217,3 +217,65 @@ request beyond localhost; it listens on `[::1]:6016` only.
 
 **Not done here**: nothing published or deployed; Safari and Firefox not tried (a static build elsewhere, above); the
 page's own a11y; the screen's stories (§ 6).
+
+## 8. Amendment, 2026-10-07 — the hand-off's two faces: the interstitial and the checkout, as the Footer block ships them
+
+**Ruled by the Advisor, 2026-10-07** (Fit AF session 228): *"I have UI tweaks for the microsite, interstitial and
+checkout. This is where having Storybook available will be helpful if possible."*; asked when, *"Tonight, after
+picks"*. This revises § 6's *"The checkout: HMP's page; its styling is reviewed on the live store"* for the parts that
+are ours, and leaves the screen's module stories (`SPEC-storybook.md`, rung 2 § 14) where they are.
+
+### 8.1 What a story shows: the shipped block over the watch's synthetic store
+
+1. **The block is the build's**: `scripts/build-storefront.mjs`'s output (the Footer block's text), run at Storybook's
+   start as § 2 item 1 runs the site's build. ⛔ No line of the block is copied or edited under `tools/storybook/`.
+2. **The store is the watch's browser fixture**, `tools/storefront-watch/test/browser-store.mjs` (the synthetic order
+   page and checkout, with the store's class and element names and none of its code), **imported by path**, never
+   copied, and served by Storybook's development server and static build under `/store/`, with the block placed as the
+   store's Custom Scripts Footer places it. Its options (meal names, `hangAfter`, the subscription offer, the tip) are
+   the fixture's own.
+3. **A story opens the synthetic order page with a test link** (`#fitaf=2.…`, built by `scripts/handoff-link.mjs`'s
+   `handoffLink`, the meals the fixture's own `MEALS`), in a frame of the viewport's width, and lets the block run.
+4. **Photographs**: the screen and the checkout's lines show the photographs a link carries (rung 2 § 17, § 19); a story
+   carries **generated placeholders** (a tile of a token colour with the meal's initial, served by the story server),
+   ⛔ never a photograph file (SM-7).
+5. ⛔ **No request leaves the machine** (§ 2 item 5): the fixture's own off-host references (its font link) are refused
+   by the serve policy, as the development page's Turnstile script is.
+
+### 8.2 ⚠ What the checkout stories can and cannot show
+
+**The interstitial is entirely ours** (`#fitaf-screen` covers the page), so its stories are what a visitor sees, apart
+from the photographs. **The checkout is the store's page with our block's marks and style over it**, and the fixture
+is a stand-in carrying the store's names, **not its look**: a checkout story shows **which sections each step shows and
+hides, our step bar, Back and Continue, the recap line and our words**, over plain markup. The store's own fonts,
+colours and spacing are **only on the live store**: a tweak to how the store's own parts look is still checked live (the
+rehearsal of rung 2 § 29), and each checkout story's caption says so.
+
+### 8.3 The stories (group **Hand-off**, at 390 and 1280)
+
+| story | the state | how it is held |
+|---|---|---|
+| *Screen · A* | the screen up, no meal added yet | held before the first count: ⚠ the fixture's `hangAfter` reads `0` as *off* (`if (cfg.hangAfter && …)`), so this needs a fixture option of its own, added in the watch package with a case there (builder's choice, stated) |
+| *Screen · B* | meal *k* of *t* added (controls: *k*, *t* up to the fixture's meals) | `hangAfter: k` |
+| *Screen · C* | every meal added, CHECKOUT pressed, before the checkout is ready | the fixture routes to `/checkout` without drawing it until the story's control releases it (builder's choice, stated) |
+| *Checkout · 1 Your meals* | the deep-carted checkout, step 1 | after the hand-off, no press |
+| *Checkout · 2 Delivery* | step 2 | the story presses the block's own **Continue** once |
+| *Checkout · 3 Payment* | step 3 | **Continue** twice |
+| *Checkout · ordinary visit* | the checkout reached without the hand-off: the store's own, unchanged (R2-50) | the checkout URL with no link |
+
+A press is the block's own control in the frame, as § 2 item 2. ⛔ No story presses the pay button (the fixture logs
+`[fixture] ORDER PLACED` if anything does; a story that logs it fails).
+
+### 8.4 Cases (added to § 5)
+
+| | case | expect |
+|---|---|---|
+| SM-9 | ⭐ one source | the block a story's store page carries is **byte-identical** to `build-storefront.mjs`'s output; the store's files are `browser-store.mjs`'s. Mutant: a block served with one rule changed fails |
+| SM-10 | the states | in headless Chrome (SM-5's walk): *Screen · A* shows `#fitaf-screen` with no slide; *Screen · B* at *k* = 2 of 7 shows the step line for meal 2 of 7 (the screen's words, `handoff.step`); *Checkout · 1–3* show exactly § 25.2's sections for the step, the Total in each; *ordinary visit* shows no step bar |
+| SM-11 | never pays | no story's walk logs `[fixture] ORDER PLACED` |
+| SM-4, SM-7, SM-8 | extended | no copied rule or phrase of the block; no image file; no request beyond localhost, in the new stories too |
+
+### 8.5 Not decided here
+
+- Publishing a static build; the copy (the block's words stay `data/messages.json`'s `handoff`).
+- The screen's module stories (`SPEC-storybook.md`): with rung 2 § 14.
