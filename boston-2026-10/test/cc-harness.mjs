@@ -173,7 +173,8 @@ export function openPlanPage(html, { hash = "", now, reducedMotion = false } = {
     return found;
   };
   const tick = () => timers.filter((t) => !t.cleared).forEach((t) => t.fn());
-  return { document, el, go: (h) => (location.hash = h), has: (id) => Boolean(document.getElementById(id)), timers, tick };
+  // `hash()` is the fragment as the page left it (SPEC-meal-selection MS-4, MS-12: a round trip writes nothing new).
+  return { document, el, go: (h) => (location.hash = h), hash: () => current, has: (id) => Boolean(document.getElementById(id)), timers, tick };
 }
 
 /** True when `node` or an ancestor carries `hidden`: not shown, and nothing inside it can take focus. */
