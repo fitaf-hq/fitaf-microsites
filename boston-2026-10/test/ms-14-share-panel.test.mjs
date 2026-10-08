@@ -3,7 +3,8 @@
 // shareLines takes meals a day and days. `#lean-7` and `#lean-14` (and S19's `#signature-14`) give today's lines exactly
 // (test/ms-golden.json, recorded at 985f777); `#lean-or-7d` and `#lean-and-7d` give the same; *or*, weekdays gives ONE a
 // day (never 5 ÷ 7); breakfast adds one a day; snacks change nothing. The page is run by page-sim (its own scripts).
-// Development build only: the production page carries no share panel (S20).
+// Development build only: the production page carries no share panel (S20). "Snacks change nothing" needs a `-s` answer
+// set, so that case renders from its own data with snacks shown (ms-harness withSnacks, § 11).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -11,6 +12,7 @@ import { mealsADayOf, shareLines } from "../src/save/calculator.js";
 import { devPage } from "./dev-page.mjs";
 import { simulatePage } from "./page-sim.mjs";
 import { PLANS } from "./cc-harness.mjs";
+import { SNACKS_SHOWN, withSnacks } from "./ms-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./ms-golden.json", import.meta.url), "utf8"));
 const IDS = ["share-targets", "share-protein-line", "share-calories-line"];
@@ -32,7 +34,7 @@ test("MS-14: today's fragments give today's lines, byte for byte; the same answe
 });
 
 test("MS-14: or, weekdays gives one a day on five days; breakfast adds one a day; snacks change nothing", async () => {
-  const html = await devPage();
+  const html = await devPage({ plans: withSnacks(SNACKS_SHOWN) });
   const lean = PLANS.individual.find((p) => p.id === "lean");
   const sevenDay = linesAt(html, "#lean-or-7d");
   const weekdays = linesAt(html, "#lean-or-5d");

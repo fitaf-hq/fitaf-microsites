@@ -3,12 +3,13 @@
 // `#family` the Family tab; every new fragment `#<size>-<or|and>-<7d|5d>[-b][-s]` opens its answers and round-trips (a
 // press that changes nothing writes no new fragment; a press that changes one answer writes the fragment the grammar
 // gives); an unknown fragment opens the start, and one whose size is known but whose answers are not opens that size
-// alone, as today's `#lean-9` does.
+// alone, as today's `#lean-9` does. The two cases that press or read Q4 build from their own data with snacks shown
+// (ms-harness SNACKS_SHOWN, § 11), never the committed flags.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { card } from "./cc-harness.mjs";
-import { answer, chooseGoal, fragmentOf, GOALS, open, pageOf, questionsOf, resultOf, TABLE, V1_DIR } from "./ms-harness.mjs";
+import { answer, chooseGoal, fragmentOf, GOALS, open, pageOf, questionsOf, resultOf, SNACKS_SHOWN, TABLE, V1_DIR } from "./ms-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./ms-golden.json", import.meta.url), "utf8"));
 const yesNo = (b) => (b ? "yes" : "no");
@@ -36,7 +37,7 @@ test("MS-4: today's fragments open as today (the result card and the week's link
 });
 
 test("MS-4: every new fragment opens its answers, and round-trips", async () => {
-  const html = await pageOf();
+  const html = await pageOf({ snacks: SNACKS_SHOWN });
   let checked = 0;
   for (const goal of GOALS) {
     for (const row of TABLE) {
@@ -62,7 +63,7 @@ test("MS-4: every new fragment opens its answers, and round-trips", async () => 
 });
 
 test("MS-4: a press writes the fragment the grammar gives", async () => {
-  const page = open(await pageOf(), "#lean-or-7d");
+  const page = open(await pageOf({ snacks: SNACKS_SHOWN }), "#lean-or-7d");
   const steps = [
     [() => answer(page, "weekends", "no"), "#lean-or-5d"],
     [() => answer(page, "breakfast", "yes"), "#lean-or-5d-b"],

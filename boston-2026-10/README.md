@@ -65,6 +65,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 ```sh
 npm --prefix boston-2026-10 install
 npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-71, P1–P6, F1, CC-1–CC-9, PR-1–PR-10, MS-1–MS-16
+node boston-2026-10/test/suite-in-mirror.mjs --set snacks.shown=false  # the same suite in a mirror, data/plans.json changed there (no --set: the control)
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
 npm --prefix boston-2026-10 run build   # writes dist/ (-- --on YYYY-MM-DD: the date for data/picks/; default today in New York)
 npm --prefix boston-2026-10 run email:tokens    # after a :root token change: the emails' copy (M17 fails until then)

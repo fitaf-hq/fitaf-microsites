@@ -1,18 +1,19 @@
 // MS-3 (SPEC-meal-selection.md § 6, § 1): defaults. Answering Q1 alone gives TODAY's result: *or* is 7, *and* is 14, with
 // Q2–Q4 at their defaults (every day, no breakfast, no snacks), shown as pressed; the result card's figures and Choose
 // your meals, and with a week open the Chef's Choice links, byte-identical to the page before the meal selection
-// (test/ms-golden.json, recorded at 985f777 from that tree's own build).
+// (test/ms-golden.json, recorded at 985f777 from that tree's own build). Q4 is asserted, so the first case builds from
+// its own data with snacks shown (ms-harness SNACKS_SHOWN, § 11), never the committed flags.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { card } from "./cc-harness.mjs";
-import { answer, GOALS, open, pageOf, questionsOf, resultOf, V1_DIR } from "./ms-harness.mjs";
+import { answer, GOALS, open, pageOf, questionsOf, resultOf, SNACKS_SHOWN, V1_DIR } from "./ms-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./ms-golden.json", import.meta.url), "utf8"));
 const TODAY = [["or", 7], ["and", 14]];
 
 test("MS-3: Q1 alone gives today's 7 and 14 results, and Q2–Q4 their defaults, pressed", async () => {
-  const html = await pageOf();
+  const html = await pageOf({ snacks: SNACKS_SHOWN });
   for (const goal of GOALS) {
     for (const [ld, n] of TODAY) {
       const page = open(html, `#${goal}`);

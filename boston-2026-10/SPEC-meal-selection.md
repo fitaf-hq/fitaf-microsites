@@ -351,5 +351,15 @@ bytes against the refusal at 20,480); the stripped checkout's recap (*"{n} meals
 unruled); the live proof: the watch's smoke with the built block pasted (`--script`) and a snack link (`--link`), at both
 widths, never submitting; then the Advisor's paste, `snacks.carted: true`, and a version-2 picks file for 10-18 with its
 snack lists (Fit AF's emitter, `emit_microsite_picks.spec.md` § 6, from his approval).
-⚠ **The suites assume the committed data shows snacks** (MS-7, MS-16 *"as committed"*): flipping `snacks.shown` breaks
-16 cases (measured on a release worktree, 2026-10-08). Make them build their own copy of `data/plans.json` before any flip.
+✅ **The site's suite no longer reads the committed snack flags** (2026-10-08). Measured first in a mirror of the
+repository with `snacks.shown: false`: 16 of 615 failed, MS-3, MS-4 (2), MS-7's shown half, MS-8 (2), MS-9, MS-12 (2),
+MS-14, MS-16 (2), PR-14, PR-15, S20 and CC-4 (prod). Now every case that asserts about snacks builds from its own copy of
+`data/plans.json` with the flags it asserts (`test/ms-harness.mjs`: `pageOf({ snacks: SNACKS_SHOWN })` writes the copy
+to a temporary directory and removes it; `withSnacks(flags)` is the same data for `renderPage` and `devPage`): those
+fourteen and MS-7's hidden half, 15 cases. `node test/suite-in-mirror.mjs --set snacks.shown=false` runs the whole suite
+in a mirror with the data changed there (no `--set`: the control, 615 of 615); it gives **613 of 615**, and the two are
+**S20 and CC-4 (prod), by design**: they pin the production page's bytes (`test/s20-production-golden.json`, *"regenerate
+only when production is MEANT to change"*), so a flip's own commit re-records that golden (`index.html` `6a548cd7…` →
+`03fcc0c1…`), and with it the suite was 615 of 615 (in a mirror). ⚠ Storybook's stories build from the committed data
+(the site's build takes no other plans file), and SM-5's walk of the *"… · snacks"* stories expects Q4: read, not run;
+it moves with the flag too. `carted: true` is still refused by the build (§ 10 item 1), so that flip stops every build.
