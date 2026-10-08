@@ -195,3 +195,38 @@ changes point here.
 | MS-14 | share panel (development page) | meals a day and days from the answers; `#lean-7` and `#lean-14` give today's lines; *or*, weekdays gives one a day |
 
 MS-10 gains: a card that chooses its cart by `mpid` fails MS-11.
+
+## 9. The Advisor's tweaks, 2026-10-07 21:36 PDT — ride with this build
+
+Given against Storybook (`ts=2026-10-08T04:36:01.979Z`, two screenshots: the goal buttons at 390 px, and today's meals
+buttons):
+
+1. **The goal buttons' facts become one unit**: *"Please unify the calorie and protein data into a single unit (e.g.,
+   common background color/treatment)."* Today each fact is its own tile (`goalButton`, `build.mjs:107`; `.fact` in
+   `src/template.html`), and at 390 px *"25–35 g protein"* wraps inside its tile, so the three buttons' tiles differ in
+   height. Now: **one block** per button with one background (today's fact background, a token), calories on its
+   first line and protein on its second, **each line whole** (no break inside *"25–35 g protein"*: the line may set
+   smaller before it breaks), the three blocks the same height at 390 and 1280. The words are unchanged.
+2. **The meals buttons lose their numeral**: *"these numbers change whether or not weekends are included"*: § 8 item 4,
+   as ruled.
+3. ⭐ **Breakfast and snacks on the page**: *"We need to add the breakfast and snack options. Let's get the on the page
+   and we'll see how they look?"* Q3 is shown as § 1 has it. **Q4 is shown too**, which changes § 4: `data/plans.json`'s
+   `snacks` gains **`shown: true`** beside **`carted: false`**. While `carted` is false: Q4 shows; *Add snacks* shows the
+   chosen week's snack list on the card (§ 5's `snacks`, by Q2: 7 or 5) under its own heading
+   (`chefs_choice.snacks_heading`) and one line (`chefs_choice.snacks_not_carted`, a placeholder: *"Snacks aren't added
+   to your cart yet."*); **no snack reaches any link** (MS-7's second half holds). With no snack list for the week,
+   *Add snacks* shows the line alone. `shown: false` is § 4 as written (Q4 hidden).
+   ⚠ **Not for eatfitaf.com in this state**: the production release of this page waits for the Advisor's go (§ 7), and a
+   Q4 that adds nothing to the cart is for his review, not for a visitor.
+4. **The carousel's photographs become Image Gauge's glam set** (*"Replace the slideshow with the Image Gauge "glam"
+   ladder"*): a data change only (`data/photo-sheets.json` and `src/assets/photo-sheets/carousel.jpg`, re-emitted by
+   Fit AF's emitter), made on the dev line outside this build. Nothing here changes for it.
+
+Storybook's stories (§ 6's last line) include, at 390 and 1280: the goal buttons; the eight answer sets with Q4
+answered *No snacks*; *and*, every day, with breakfast and *Add snacks* (snack list shown); and *or*, weekdays, with
+*Add snacks* and no snack list. A fixture week (invented names, as `fixtures/picks/`) carries version 2 with snacks.
+
+| | case | expect |
+|---|---|---|
+| MS-15 | one unit | each goal button has one facts block holding both lines, one background, no per-fact background; *"25–35 g protein"* on one line at 390 (Chrome, computed: one line box) |
+| MS-16 | snacks shown, not carted | `shown: true`, `carted: false`: Q4 in the page; *Add snacks* shows the list and the not-carted line; every link byte-identical to the same answers with *No snacks* |
