@@ -38,8 +38,8 @@ style (`SPEC-plan-page-refinement.md` § 8 item 4):
 
 ## 2. Meals, plans and snacks — `data/plans.json`
 
-The file gains a **`selection`** table, one row per answer set, and a **`snacks`** row; `shown_counts` is retired with
-the two buttons.
+The file gains a **`selection`** table, one row per answer set, and a **`snacks`** row. The two buttons are retired;
+⚠ **`shown_counts` stays**, read by *See all plans*' grid and the version-1 picks reader only (§ 8 item 1).
 
 | Q1 | Q2 | Q3 | meals | plan |
 |---|---|---|---:|---:|
@@ -57,20 +57,22 @@ the two buttons.
   whose `plan` is above its `meals`.
 - **Snacks**: 7 with *every day*, 5 with *weekdays*, **beside** the plan, never in its count (the store sells snacks as
   add-ons, not as plan meals).
-- **The result card shows the plan**: its meals a week, its price per meal and its weekly total, as today. When `plan` is
-  below `meals`, one line says so (`plan_page.rounded`, a placeholder: *"{meals} meals go through as our {plan}-meal plan
+- **The result card shows the plan**: its meals a week (⚠ **new**: today the count is on the button, not the card;
+  § 8 item 4), its price per meal and its weekly total. When `plan` is below `meals`, one line says so (`plan_page.rounded`, a placeholder: *"{meals} meals go through as our {plan}-meal plan
   for now."*). ⚠ The snack price is not in `data/plans.json`; the card shows no snack price until a ruling says where it
   comes from.
 
 ## 3. The fragment
 
 `#<size>-<or|and>-<7d|5d>[-b][-s]`, e.g. `#lean-or-7d`, `#signature-and-5d-b`. **Today's fragments keep working**:
-`#<size>-7` opens *or*, every day; `#<size>-14` opens *and*, every day (a saved offer's link reopens the same choice);
-`#family` is unchanged. An unknown fragment opens the page at its start, as today.
+`#<size>-7` opens *or*, every day; `#<size>-14` opens *and*, every day (Storybook's stories and any bookmark carry them;
+⚠ not a saved offer, whose emails link `#from-email` and carry no choice: § 8 item 6); `#family` is unchanged. An
+unknown fragment opens the page at its start, as today. The partial states keep a fragment too (§ 8 item 3).
 
 ## 4. Chef's Choice for the answers
 
-- The card shows **the cart for the chosen answers** from the week's picks file (§ 5): the heading as today
+- The card shows **the cart for the chosen answers** (found by the answers, never by the plan's `mpid`: § 8 item 2)
+  from the week's picks file (§ 5): the heading as today
   (`chefs_choice.heading`), the meals with their counts, *Continue to checkout* (the size's `mpid` **for the row's
   `plan`**, built by `handoffLink` through `payloadFromArgs`, as today), and *Choose my own meals*.
 - **No cart for those answers** (or no file, or a v1 file without that combination): today's rule, *Choose your meals*
@@ -123,8 +125,73 @@ Storybook's stories gain the eight answer sets (Chosen, at 390 and 1280), so the
 
 ## 7. Not decided here
 
-- The question words and the defaults (placeholders), and whether Q2–Q4 show before Q1 is answered.
+- The question words and the defaults (placeholders). ✅ **Ruled 2026-10-07** (the Advisor, `AskUserQuestion`,
+  `ts=2026-10-08T03:54:05.161Z`): **Q2–Q4 appear once Q1 is answered** (*"After Q1"*), and **Q1's buttons are words
+  alone** (*"Words only"*: no numeral; the card shows the meals a week, § 8 item 4).
 - The snack price and whether snacks are carted (§ 4).
 - Which other pick lists a visitor is offered, and by what names.
 - The 3 × 2 grid: whether it grows to the store's other counts (4, 10, 21).
 - **Prod**: the dev line and the test address first; eatfitaf.com only on the Advisor's go.
+
+## 8. Read against the code, 2026-10-07 (session 229) — before any build
+
+The contract above was written from the contracts it extends. Read against the page's code on the dev line
+(`21acd34`), it was wrong in six places and silent in three. Each item names the lines; the clauses above that it
+changes point here.
+
+1. ⭐ **`shown_counts` has five readers, not one.** The meals buttons (`build.mjs:389`) and their phrase check
+   (`build.mjs:128`) go; but *See all plans*' grid reads it for its columns and heads (*"7 meals / Lunch or dinner"*:
+   `gridCells`, `build.mjs:86`; `gridHead`, `build.mjs:207`), the page script's fragment check reads it
+   (`clientData`, `build.mjs:229`, then `validCount` in `src/app.js`), and so does the version-1 picks reader
+   (`scripts/chefs-choice.mjs:112`). § 0 keeps the grid unchanged, so **`shown_counts` stays**, read by the grid and the
+   version-1 reader; the questions read `selection`.
+2. ⭐⭐ **The Chef's Choice card finds its menu by the `mpid` in the result's link** (`src/chefs-choice/chefs-choice.js:17`,
+   `chosen()`). Under `selection` the 14-meal plan is the plan of **three** answer sets (*and*, every day; *or*, every day
+   with breakfast; *and*, weekdays with breakfast) and the 10-meal plan of two, so **an `mpid` cannot name a cart**.
+   `src/app.js` writes the chosen answer set on `#result` (`data-selection`, the fragment's answer part: `or-5d`,
+   `and-5d-b`) and the card reads that; the page data's carts are keyed by it, each with one link per size by `mpid`,
+   as today. The card script's header (*"app.js is not changed"*) no longer holds.
+3. **The fragment has partial states today** (`src/app.js:14–29`): a goal alone (`#lean`), meals without a goal
+   (`#meals-14`), neither (`#individual`). They become `#<goal>`, `#meals-<answers>` and `#individual`, `<answers>` being
+   `<or|and>-<7d|5d>[-b][-s]`. ⚠ **A state with Q2–Q4 answered and Q1 not has no fragment** under this grammar; that is
+   why Q2–Q4 show only once Q1 is answered (✅ ruled, § 7).
+4. **Q1 "in the count buttons' style" has no fixed numeral.** A count button today is a numeral, its unit and a line
+   of words (`countButton`, `build.mjs:137`); Q1's meals are 7, 5, 14 or 10 by Q2 and Q3. ✅ **Ruled: Q1 is words alone**
+   (§ 7), and **the card shows the meals a week** (§ 2): today it does not, so that is a new figure and a new phrase
+   (`plan_page.meals_unit`, a placeholder).
+5. **Not every word is a phrase today**: the second question's heading (*"Which meals should we cover?"*,
+   `src/template.html:210`) and *Choose your meals* (`:222`) are literals in the template. The new questions' headings
+   and answers, `plan_page.rounded` and `plan_page.meals_unit` are phrases (new `plan_page` keys, placeholders, refused
+   when missing); the heading at `:210` becomes Q1's phrase; *Choose your meals* stays a literal (this release does not
+   move it).
+6. **No saved offer carries a choice.** § 3 said a saved offer's link reopens the same choice; rung 4's emails open
+   `#from-email` (`src/save/flow1.js:147`) and nothing writes a plan fragment. Today's fragments are kept for Storybook's
+   stories and bookmarks, which is reason enough.
+7. **The development page's share panel reads today's fragment** (`src/save/share.js:10`, `^#([a-z]+)-(\d+)$`) and
+   divides by seven (`src/save/calculator.js:9`, meals a day = meals a week ÷ 7). Under a new fragment it shows its hint
+   and never a figure; under *weekdays* ÷ 7 is wrong (a lunch or a dinner each weekday is one a day on five days, not
+   0.71 a day). Amended: the panel reads the answers, **meals a day = 1 or 2 (Q1) + 1 with breakfast (Q3)** on 7 or 5
+   days (Q2), and `shareLines` takes meals a day and days; today's fragments give today's figures. Development build
+   only: the production page is unchanged by it (S20).
+8. **Photographs.** The week's photo sheet is written by Fit AF's emitter (its `emit_microsite_photos.py`), which binds
+   the store names of the week's 7 and 14 only. A cart's meal outside those (every breakfast) has no cell: its tile on
+   the card is plain (`thumbStyle` returns null) and the hand-off's screen shows the store card's own image for it
+   (`photoPart` allows a null cell: `scripts/handoff-link.mjs:61–66`). Nothing here refuses; the sheet's binding grows
+   to version 2's carts on Fit AF's side, in the same release as the first version-2 file.
+9. **Live.** The Footer block takes every plan's count (`COUNTS`, `src/storefront/fitaf-handoff.js:529`), so § 0
+   holds: a 4-, 10- or 21-meal cart needs no change to it. The watch's smoke carts the Lean 7 by default; its W17
+   `--link` carts any link. **Before the release**, the smoke runs with `--link` on the week's 4-meal and 21-meal
+   carts (never submitting); the 21 is the longest fill C has to make.
+10. **Order.** `boston/storybook-faces` merges into the dev line first (Hand-off stories), and this builds on that,
+    so Storybook carries both the eight answer sets and the hand-off.
+
+### 8.1 Cases added (to § 6)
+
+| | case | expect |
+|---|---|---|
+| MS-11 | ⭐ one plan, three carts | the three answer sets on the 14-meal plan each show their own cart and link (a fixture where the three differ); a card choosing by `mpid` fails it |
+| MS-12 | partial fragments | `#lean`, `#meals-or-7d`, `#individual` open as their states and round-trip |
+| MS-13 | the grid | *See all plans* byte-identical to today's (its heads still *"7 meals / Lunch or dinner"*) |
+| MS-14 | share panel (development page) | meals a day and days from the answers; `#lean-7` and `#lean-14` give today's lines; *or*, weekdays gives one a day |
+
+MS-10 gains: a card that chooses its cart by `mpid` fails MS-11.
