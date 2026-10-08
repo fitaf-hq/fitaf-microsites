@@ -8,10 +8,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build } from "../build.mjs";
+import { build, ROOT } from "../build.mjs";
+import { ON, picksDir } from "./cc-harness.mjs";
 import { noPicksDir, plansCopy } from "./ms-harness.mjs";
 
 /** Build with a changed copy of data/plans.json; the error (or null) and whether the output directory was written. */
@@ -71,6 +72,75 @@ for (const [label, change, reason] of PLAN_CASES) {
     const { error, wrote } = await attemptPlans(change);
     assert.ok(error, "the build fails");
     assert.ok(error.message.startsWith("data/plans.json: "), `the message names the file: ${error.message}`);
+    assert.match(error.message, reason);
+    assert.equal(wrote, false, "nothing is written");
+  });
+}
+
+// The version-2 picks file (§ 5): each cart is checked as today's menus are (the link tool's own payloadFromArgs with
+// the cart's plan as the count), its (lunch_dinner, weekends, breakfast) must be a row of data/plans.json's selection
+// and its plan that row's; two carts for one row, a plan not sold, an unknown field or list, a version other than 1 or 2,
+// and a snack list whose meals do not make its days (7 or 5) are refused. The refusal names the file and the cart. A
+// missing cart is allowed (§ 4's fallback).
+const V2 = JSON.parse(await readFile(join(ROOT, "test", "fixtures", "picks-v2", "2026-10-04.json"), "utf8"));
+const FILE = "2026-10-04.json";
+const changedV2 = (change) => {
+  const week = structuredClone(V2);
+  change(week);
+  return week;
+};
+const carts = (w) => w.lists["chefs-choice"].carts;
+const cartFor = (w, ld, weekends, breakfast) =>
+  carts(w).find((c) => c.lunch_dinner === ld && c.weekends === weekends && c.breakfast === breakfast);
+
+/** Build with one picks file, the week open on --on; the error (or null) and whether anything was written. */
+async function attemptPicks(body) {
+  const dir = await picksDir({ [FILE]: body });
+  const outDir = join(await mkdtemp(join(tmpdir(), "boston-ms-06-picks-")), "out");
+  try {
+    let error = null;
+    try {
+      await build({ target: "prod", outDir, picksDir: dir, on: ON });
+    } catch (err) {
+      error = err;
+    }
+    return { error, wrote: existsSync(outDir) };
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+    await rm(join(outDir, ".."), { recursive: true, force: true });
+  }
+}
+
+test("MS-6 (control): the version-2 fixture builds; so does it with a cart missing (§ 4's fallback)", async () => {
+  assert.equal((await attemptPicks(V2)).error, null);
+  const missing = changedV2((w) => w.lists["chefs-choice"].carts.splice(1, 1));
+  assert.equal((await attemptPicks(missing)).error, null);
+});
+
+const PICKS_CASES = [
+  ["a cart whose qty does not make its plan", (w) => (cartFor(w, "or", false, false).items[0].qty += 1), /carts\[1\] \(or, weekdays, no breakfast\): the plan needs 4 meals; the link has 5/],
+  ["a combination not in selection (Q1 both)", (w) => (carts(w)[0].lunch_dinner = "both"), /carts\[0\]: lunch_dinner "both", weekends true, breakfast false is not a row of data\/plans\.json's selection/],
+  ["a combination not in selection (weekends as text)", (w) => (carts(w)[0].weekends = "yes"), /carts\[0\]: lunch_dinner "or", weekends "yes", breakfast false is not a row/],
+  ["two carts for one row", (w) => carts(w).push(structuredClone(carts(w)[0])), /carts\[8\] \(or, every day, no breakfast\): a second cart for or-7d \(the first is carts\[0\]\)/],
+  ["a plan not sold (5)", (w) => (cartFor(w, "or", false, false).plan = 5), /carts\[1\] \(or, weekdays, no breakfast\): plan 5 is not a plan the store sells \(4, 7, 10, 14, 21\)/],
+  ["a plan sold but not the row's (7 for 5 meals)", (w) => (cartFor(w, "or", false, false).plan = 7), /carts\[1\] \(or, weekdays, no breakfast\): plan 7 is not its row's plan \(4\)/],
+  ["an unknown field on a cart (a price)", (w) => (carts(w)[2].price_cents = 1250), /carts\[2\]: unknown field "price_cents"/],
+  ["an unknown field on a meal (an internal id)", (w) => (carts(w)[2].items[0].slug = "x"), /carts\[2\] \(and, every day, no breakfast\)\.items\[0\] "Smoked Paprika Chicken Bowl": unknown field "slug"/],
+  ["an unknown field on the file", (w) => (w.menus = {}), /the file: unknown field "menus"/],
+  ["a list the page does not show", (w) => (w.lists["family-favourites"] = w.lists["chefs-choice"]), /lists: "family-favourites" is not a list the page shows \(chefs-choice\)/],
+  ["no list", (w) => (w.lists = {}), /lists: no "chefs-choice"/],
+  ["a version the page does not read", (w) => (w.version = 3), /version 3 is not one the page reads \(1, 2\)/],
+  ["a cart with no meals", (w) => (carts(w)[0].items = []), /carts\[0\] \(or, every day, no breakfast\)\.items must be a list of meals/],
+  ["snacks that do not make their days", (w) => (w.lists["chefs-choice"].snacks["7"][0].qty += 1), /snacks\.7: the snacks for 7 days are 7; the list has 8/],
+  ["snacks for days the page does not offer", (w) => (w.lists["chefs-choice"].snacks["6"] = w.lists["chefs-choice"].snacks["7"]), /snacks: "6" is not 7 or 5 days/],
+  ["a snack named twice", (w) => (w.lists["chefs-choice"].snacks["7"][1].name = w.lists["chefs-choice"].snacks["7"][0].name), /snacks\.7: .*named twice/],
+];
+
+for (const [label, change, reason] of PICKS_CASES) {
+  test(`MS-6 (version 2): ${label}: the build fails, naming the file and the cart, and writes nothing`, async () => {
+    const { error, wrote } = await attemptPicks(changedV2(change));
+    assert.ok(error, "the build fails");
+    assert.ok(error.message.includes(FILE), `the message names the file: ${error.message}`);
     assert.match(error.message, reason);
     assert.equal(wrote, false, "nothing is written");
   });

@@ -1,0 +1,89 @@
+{
+  "delivery": "2026-10-04",
+  "version": 2,
+  "lists": {
+    "chefs-choice": {
+      "carts": [
+        {"lunch_dinner": "or", "weekends": true, "breakfast": false, "plan": 7, "items": [
+          {"name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 2},
+          {"name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 1},
+          {"name": "Turkey Chili Verde", "display": "Turkey Chili Verde", "qty": 2},
+          {"name": "🟠NEW: Maple Dijon Pork Tenderloin", "display": "Maple Dijon Pork Tenderloin", "qty": 1},
+          {"name": "Ginger Beef Rice Bowl", "display": "Ginger Beef Bowl with Jasmine Rice", "qty": 1}
+        ] },
+        {"lunch_dinner": "or", "weekends": false, "breakfast": false, "plan": 4, "items": [
+          {"name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 1},
+          {"name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 1},
+          {"name": "Turkey Chili Verde", "display": "Turkey Chili Verde", "qty": 1},
+          {"name": "Ginger Beef Rice Bowl", "display": "Ginger Beef Bowl with Jasmine Rice", "qty": 1}
+        ] },
+        {"lunch_dinner": "and", "weekends": true, "breakfast": false, "plan": 14, "items": [
+          {"name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 3},
+          {"name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 2},
+          {"name": "Turkey Chili Verde", "display": "Turkey Chili Verde", "qty": 2},
+          {"name": "🟠NEW: Maple Dijon Pork Tenderloin", "display": "Maple Dijon Pork Tenderloin", "qty": 2},
+          {"name": "Ginger Beef Rice Bowl", "display": "Ginger Beef Bowl with Jasmine Rice", "qty": 1},
+          {"name": "Chipotle Shrimp Tacos", "display": "Chipotle Shrimp Tacos", "qty": 2},
+          {"name": "Garden Pesto Penne", "display": "Garden Pesto Penne", "qty": 1},
+          {"name": "Jerk Chicken with Coconut Rice", "display": "Jerk Chicken with Coconut Rice", "qty": 1}
+        ] },
+        {"lunch_dinner": "and", "weekends": false, "breakfast": false, "plan": 10, "items": [
+          {"name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 2},
+          {"name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 2},
+          {"name": "Turkey Chili Verde", "display": "Turkey Chili Verde", "qty": 2},
+          {"name": "🟠NEW: Maple Dijon Pork Tenderloin", "display": "Maple Dijon Pork Tenderloin", "qty": 1},
+          {"name": "Chipotle Shrimp Tacos", "display": "Chipotle Shrimp Tacos", "qty": 2},
+          {"name": "Jerk Chicken with Coconut Rice", "display": "Jerk Chicken with Coconut Rice", "qty": 1}
+        ] },
+        {"lunch_dinner": "or", "weekends": true, "breakfast": true, "plan": 14, "items": [
+          {"name": "Sunrise Egg White Scramble", "display": "Sunrise Egg White Scramble", "qty": 3},
+          {"name": "Blueberry Protein Oat Bake", "display": "Blueberry Protein Oat Bake", "qty": 2},
+          {"name": "Turkey Sausage Breakfast Burrito", "display": "Turkey Sausage Breakfast Burrito", "qty": 2},
+          {"name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 2},
+          {"name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 2},
+          {"name": "Turkey Chili Verde", "display": "Turkey Chili Verde", "qty": 1},
+          {"name": "🟠NEW: Maple Dijon Pork Tenderloin", "display": "Maple Dijon Pork Tenderloin", "qty": 1},
+          {"name": "Ginger Beef Rice Bowl", "display": "Ginger Beef Bowl with Jasmine Rice", "qty": 1}
+        ] },
+        {"lunch_dinner": "or", "weekends": false, "breakfast": true, "plan": 10, "items": [
+          {"name": "Sunrise Egg White Scramble", "display": "Sunrise Egg White Scramble", "qty": 2},
+          {"name": "Blueberry Protein Oat Bake", "display": "Blueberry Protein Oat Bake", "qty": 2},
+          {"name": "Turkey Sausage Breakfast Burrito", "display": "Turkey Sausage Breakfast Burrito", "qty": 1},
+          {"name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 2},
+          {"name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 1},
+          {"name": "Chipotle Shrimp Tacos", "display": "Chipotle Shrimp Tacos", "qty": 2}
+        ] },
+        {"lunch_dinner": "and", "weekends": true, "breakfast": true, "plan": 21, "items": [
+          {"name": "Sunrise Egg White Scramble", "display": "Sunrise Egg White Scramble", "qty": 3},
+          {"name": "Blueberry Protein Oat Bake", "display": "Blueberry Protein Oat Bake", "qty": 2},
+          {"name": "Turkey Sausage Breakfast Burrito", "display": "Turkey Sausage Breakfast Burrito", "qty": 2},
+          {"name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 3},
+          {"name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 2},
+          {"name": "Turkey Chili Verde", "display": "Turkey Chili Verde", "qty": 2},
+          {"name": "🟠NEW: Maple Dijon Pork Tenderloin", "display": "Maple Dijon Pork Tenderloin", "qty": 2},
+          {"name": "Ginger Beef Rice Bowl", "display": "Ginger Beef Bowl with Jasmine Rice", "qty": 2},
+          {"name": "Chipotle Shrimp Tacos", "display": "Chipotle Shrimp Tacos", "qty": 1},
+          {"name": "Garden Pesto Penne", "display": "Garden Pesto Penne", "qty": 1},
+          {"name": "Jerk Chicken with Coconut Rice", "display": "Jerk Chicken with Coconut Rice", "qty": 1}
+        ] },
+        {"lunch_dinner": "and", "weekends": false, "breakfast": true, "plan": 14, "items": [
+          {"name": "Sunrise Egg White Scramble", "display": "Sunrise Egg White Scramble", "qty": 2},
+          {"name": "Blueberry Protein Oat Bake", "display": "Blueberry Protein Oat Bake", "qty": 2},
+          {"name": "Turkey Sausage Breakfast Burrito", "display": "Turkey Sausage Breakfast Burrito", "qty": 1},
+          {"name": "Smoked Paprika Chicken Bowl", "display": "Smoked Paprika Chicken Bowl", "qty": 2},
+          {"name": "Lemon Herb Salmon with Greens", "display": "Lemon Herb Salmon with Greens", "qty": 2},
+          {"name": "Chipotle Shrimp Tacos", "display": "Chipotle Shrimp Tacos", "qty": 2},
+          {"name": "Garden Pesto Penne", "display": "Garden Pesto Penne", "qty": 1},
+          {"name": "Jerk Chicken with Coconut Rice", "display": "Jerk Chicken with Coconut Rice", "qty": 2}
+        ] }
+      ],
+      "snacks": {
+        "7": [
+          {"name": "Dark Chocolate Protein Bites", "display": "Dark Chocolate Protein Bites", "qty": 3},
+          {"name": "Almond Butter Energy Balls", "display": "Almond Butter Energy Balls", "qty": 2},
+          {"name": "Sea Salt Edamame Crisps", "display": "Sea Salt Edamame Crunch", "qty": 2}
+        ]
+      }
+    }
+  }
+}

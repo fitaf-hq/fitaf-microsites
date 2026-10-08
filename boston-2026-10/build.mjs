@@ -591,7 +591,8 @@ function report(out) {
   for (const p of out.pages) console.log(`wrote ${p.path} (${p.bytes} bytes)`);
   for (const f of [...out.files, ...out.qr]) console.log(`wrote ${f}`);
   for (const w of out.picks.weeks) {
-    console.log(`picks: ${w.delivery} (open ${w.valid_from} to ${w.valid_to}; counts ${w.counts.join(", ")}), built on ${out.picks.on}`);
+    const snacks = w.snacks.length ? `; snacks for ${w.snacks.join(", ")}` : "";
+    console.log(`picks: ${w.delivery} (open ${w.valid_from} to ${w.valid_to}; carts ${w.carts.join(", ")}${snacks}), built on ${out.picks.on}`);
   }
 }
 

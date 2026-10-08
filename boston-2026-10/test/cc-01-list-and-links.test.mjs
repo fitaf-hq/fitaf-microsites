@@ -9,7 +9,9 @@ import { handoffLink } from "../scripts/handoff-link.mjs";
 import { mealKey } from "../src/storefront/meal-key.js";
 import { simulatePage } from "./page-sim.mjs";
 import {
+  ANSWER_OF_COUNT,
   builtPage,
+  cartFor,
   CELLS,
   DAYS,
   FIXTURE,
@@ -34,9 +36,10 @@ test("CC-1a: the page built on --on carries the week: for each count, the list a
   assert.equal(data.zone, "America/New_York", "the enterprise's zone, data/save.json send_time_zone");
   assert.deepEqual(data.weeks.map((w) => w.delivery), [S], "one week: the fixture's");
   const [week] = data.weeks;
-  assert.deepEqual(Object.keys(week.counts).sort(), Object.keys(FIXTURE.menus).sort(), "each count with picks");
+  // Updated (SPEC-meal-selection § 8 item 2): the page's data is keyed by answer set; a version-1 count is its cart.
+  assert.deepEqual(Object.keys(week.carts).sort(), Object.keys(FIXTURE.menus).map((c) => ANSWER_OF_COUNT[c]).sort(), "each count with picks");
   for (const [count, menu] of Object.entries(FIXTURE.menus)) {
-    const shown = week.counts[count];
+    const shown = cartFor(week, count);
     assert.equal(shown.heading, headingFor(count, S), `${count}: the heading`);
     assert.deepEqual(shown.meals, menu.map((m) => mealLine(m)), `${count}: the list, in the file's order`);
     assert.deepEqual(Object.keys(shown.links).map(Number).sort(), [...mpidsFor(count)].sort(), `${count}: one link per size`);
@@ -60,7 +63,7 @@ test("CC-1b: the plan page opens it from the result card, for every size and cou
     assert.equal(state.list, true, `${hash}: the list is shown, with no press`);
     assert.equal(state.heading, headingFor(count, S), `${hash}: the heading`);
     assert.deepEqual(state.meals, FIXTURE.menus[count].map((m) => mealLine(m)), `${hash}: the meals`);
-    assert.equal(state.checkout, picksData(html).weeks[0].counts[count].links[mpid], `${hash}: Continue to checkout is the size's link`);
+    assert.equal(state.checkout, cartFor(picksData(html).weeks[0], count).links[mpid], `${hash}: Continue to checkout is the size's link`);
   }
 });
 

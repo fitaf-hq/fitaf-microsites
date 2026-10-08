@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
-import { DAYS, midday, openPlanPage, PLANS } from "./cc-harness.mjs";
+import { card, DAYS, midday, openPlanPage, PLANS } from "./cc-harness.mjs";
 
 /** § 2's table, as the contract writes it: [answer key, Q1, every day, breakfast, meals, plan]. */
 export const TABLE = [
@@ -128,3 +128,34 @@ export function chooseGoal(page, goal) {
 
 /** The fragment an answer set takes (§ 3), written here from the contract: `<size>-<or|and>-<7d|5d>[-b][-s]`. */
 export const fragmentOf = (goal, row, snacks = false) => `#${goal}-${row.key}${snacks ? "-s" : ""}`;
+
+/** The v2 fixture, parsed, and its carts by answer key (written here from the cart's own fields, as § 5 names them). */
+export const V2 = JSON.parse(await readFile(V2_FILE, "utf8"));
+const keyOfCart = (c) => `${c.lunch_dinner}-${c.weekends ? "7d" : "5d"}${c.breakfast ? "-b" : ""}`;
+export const V2_CARTS = Object.fromEntries(V2.lists["chefs-choice"].carts.map((c) => [keyOfCart(c), c]));
+export const V2_SNACKS = V2.lists["chefs-choice"].snacks;
+
+/** What the card offers: cc-harness's reading (the list, the links) and the snack block (§ 9 item 3). */
+export function cardOf(page) {
+  const { document } = page;
+  const el = (id) => document.getElementById(id);
+  const shown = (id) => {
+    if (!el(id)) return false;
+    for (let n = el(id); n && n.getAttribute; n = n.parentElement) if (n.hasAttribute("hidden")) return false;
+    return true;
+  };
+  const text = (id) => el(id)?.textContent.replace(/\s+/g, " ").trim() ?? null;
+  return {
+    ...card(page),
+    snacks: shown("cc-snacks"),
+    snackHeading: shown("cc-snacks-heading") ? text("cc-snacks-heading") : null,
+    snackLines: shown("cc-snack-list") ? [...el("cc-snack-list").querySelectorAll("li")].map((li) => li.textContent) : null,
+    snackNote: shown("cc-snacks-note") ? text("cc-snacks-note") : null,
+  };
+}
+
+/** The keys a link's meal part carries, with their counts: { key: qty } (the photo part, after "!", is not read). */
+export function keysOf(href) {
+  const tokens = new URL(href).hash.slice("#fitaf=".length).split("!")[0].split(".").slice(1);
+  return Object.fromEntries(tokens.map((t) => [t.split("*")[0], Number(t.split("*")[1] ?? 1)]));
+}

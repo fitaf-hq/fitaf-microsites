@@ -91,6 +91,22 @@ function checkDistinct(items) {
 }
 
 /**
+ * `--item "NAME:QTY"` values -> the meals `[{ name, key, qty }]`: each name as shown and keyed, its count 1..MAX_QTY, none
+ * named twice and no two sharing a key. The item rules of payloadFromArgs, alone: the plan page's build checks a week's
+ * snack list by them (SPEC-meal-selection § 5: "the same item checks … no mpid").
+ */
+export function itemsFromArgs(itemArgs) {
+  const items = itemArgs.map((arg) => {
+    const [given, qty] = splitLast(arg, ":", `--item wants "NAME:QTY", got ${JSON.stringify(arg)}`);
+    const name = asShown(given);
+    if (!name) throw new Error(`--item ${JSON.stringify(arg)} has an empty meal name`);
+    return { name, key: mealKey(name), qty: wholeNumber(qty, `qty for ${name}`, 1, MAX_QTY) };
+  });
+  checkDistinct(items);
+  return items;
+}
+
+/**
  * Command-line arguments -> the payload `{ mpid, items: [{ name, key, qty }], code? }`. Throws on anything the shipped
  * script would refuse. `counts` maps each mpid in data/plans.json to its meals a week: the counts must add up to exactly
  * that (the full-plan rule, § 7).
@@ -106,13 +122,7 @@ export function payloadFromArgs(argv, counts, photos = null) {
   const mpid = wholeNumber(flags["--mpid"][0], "--mpid", 1, Number.MAX_SAFE_INTEGER);
   if (!counts.has(mpid)) throw new Error(`mpid ${mpid} is not in data/plans.json`);
   if (!flags["--item"].length) throw new Error('give at least one --item "NAME:QTY"');
-  const items = flags["--item"].map((arg) => {
-    const [given, qty] = splitLast(arg, ":", `--item wants "NAME:QTY", got ${JSON.stringify(arg)}`);
-    const name = asShown(given);
-    if (!name) throw new Error(`--item ${JSON.stringify(arg)} has an empty meal name`);
-    return { name, key: mealKey(name), qty: wholeNumber(qty, `qty for ${name}`, 1, MAX_QTY) };
-  });
-  checkDistinct(items);
+  const items = itemsFromArgs(flags["--item"]);
   // The same rule and message as the shipped script: the store will not check out short of the plan.
   const need = counts.get(mpid);
   const total = items.reduce((sum, it) => sum + it.qty, 0);

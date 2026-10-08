@@ -3,12 +3,15 @@
 // quantities and the size's mpid. And the links are built THROUGH the link tool's handoffLink and the one mealKey: a
 // mirror of the package whose meal-key.js and link encoder are changed builds links that follow the change, which a key
 // function or an encoder copied into the build would not.
+// Updated (SPEC-meal-selection § 8 item 2): the page's data is keyed by answer set (cc-harness cartFor: 7 is or-7d, 14
+// is and-7d); the links and their checks are unchanged.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
+  cartFor,
   expectedFragment,
   FIXTURE,
   mirror,
@@ -30,7 +33,7 @@ test("CC-2a: every link is the size's order page with a v2 fragment of the menu'
   let links = 0;
   for (const [count, menu] of Object.entries(FIXTURE.menus)) {
     for (const mpid of mpidsFor(count)) {
-      const url = new URL(data.weeks[0].counts[count].links[mpid]);
+      const url = new URL(cartFor(data.weeks[0], count).links[mpid]);
       assert.equal(`${url.origin}${url.pathname}${url.search}`, `${ORDER}?mpid=${mpid}`, `${count}: the size's order page`);
       assert.match(url.hash, V2_FRAGMENT, "a v2 fragment");
       assert.equal(url.hash, expectedFragment(menu), `${count}, mpid ${mpid}: the keys (independently computed) and counts`);
@@ -45,7 +48,7 @@ test("CC-2b: fill B reads each link: every meal pressed its count, the size's mp
   assert.ok(data, "the page carries the week's picks");
   for (const [count, menu] of Object.entries(FIXTURE.menus)) {
     for (const mpid of mpidsFor(count)) {
-      const link = data.weeks[0].counts[count].links[mpid];
+      const link = cartFor(data.weeks[0], count).links[mpid];
       const { page, h, path } = await readWithFillB(link, menu.map((m) => m.name));
       assert.deepEqual(
         Object.fromEntries([...page.presses].map(([name, list]) => [name, list.length])),
@@ -91,7 +94,7 @@ test("CC-2c: built through the one mealKey and the link tool's encoder: a mirror
   const control = picksData(await mirrorPage());
   assert.ok(control, "control: the mirror's own build carries the week (data/picks/ in the package)");
   const expected = picksData((await builtPage({ on: ON })).html);
-  assert.deepEqual(control.weeks[0].counts, expected.weeks[0].counts, "control: the unchanged mirror's links are the package's");
+  assert.deepEqual(control.weeks[0].carts, expected.weeks[0].carts, "control: the unchanged mirror's links are the package's");
 
   const changed = picksData(
     await mirrorPage(async (dir) => {
@@ -104,7 +107,7 @@ test("CC-2c: built through the one mealKey and the link tool's encoder: a mirror
     for (const mpid of mpidsFor(count)) {
       const tokens = menu.map((m) => (m.qty === 1 ? altKey(m.name) : `${altKey(m.name)}*${m.qty}`));
       assert.equal(
-        changed.weeks[0].counts[count].links[mpid],
+        cartFor(changed.weeks[0], count).links[mpid],
         `${ORDER}?mpid=${mpid}#fitaf=${["2", ...tokens].join("_")}`,
         `${count}, mpid ${mpid}: the link follows src/storefront/meal-key.js and scripts/handoff-link.mjs's encoder`,
       );
