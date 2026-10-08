@@ -114,8 +114,11 @@ function mealsOf(menu, where) {
  * and `display` as the page shows it (§ 7.1); only `name` reaches the tool. `photo` ({ photos, host }) gives each link
  * the week's cells by the tool's own --photos (SPEC-rung2-progress-and-checkout § 17.1). `where` names it in a refusal.
  */
-function cartOf(meals, count, where, { plans, needs, photo, date }) {
+function cartOf(meals, count, where, { plans, needs, photo, date }, snacks = null) {
   const links = {};
+  // SPEC-snacks-in-the-cart § 4.2: while snacks are carted, a second link per size, the cart's meals and then the week's
+  // snack list for the cart's days as snack items (the tool's own --snack, so its refusals are the block's).
+  const snackLinks = snacks ? {} : null;
   let items = null;
   for (const plan of plans.individual) {
     const { mpid } = plan.counts.find((c) => c.meals_per_week === count);
@@ -128,10 +131,17 @@ function cartOf(meals, count, where, { plans, needs, photo, date }) {
       throw new Error(`${where}: ${err.message}`);
     }
     links[mpid] = handoffLink(plans, payload);
+    if (snacks) {
+      try {
+        snackLinks[mpid] = handoffLink(plans, payloadFromArgs([...argv, ...snacks.flatMap((m) => ["--snack", `${m.name}:${m.qty}`])], needs, photo?.photos));
+      } catch (err) {
+        throw new Error(`${where} with its snacks: ${err.message}`);
+      }
+    }
     // The tool's items are the list's meals in order (one --item each), so each takes its own display.
     items ??= payload.items.map(({ name, qty }, i) => ({ name, display: asShown(meals[i].display), qty }));
   }
-  return { meals: items, links };
+  return { meals: items, links, ...(snackLinks ? { snackLinks } : {}) };
 }
 
 /** Version 1 (§ 1): `menus` by a count the page shows; each menu the cart of that count's answer set (SPEC-meal-selection
@@ -197,6 +207,9 @@ function v2Carts(json, rows, ctx) {
   const sold = soldCounts(ctx.plans);
   const carts = {};
   const first = {};
+  const snacks = snackLists(list.snacks, `${at}.snacks`);
+  // SPEC-snacks-in-the-cart § 4.2: while carted, a cart's snack links carry the list for its days (7 or 5), if any.
+  const carted = ctx.plans.snacks?.shown && ctx.plans.snacks?.carted;
   list.carts.forEach((cart, i) => {
     const place = `${at}.carts[${i}]`;
     onlyFields(cart, CART_FIELDS, place);
@@ -211,9 +224,9 @@ function v2Carts(json, rows, ctx) {
     first[key] = i;
     if (!sold.includes(cart.plan)) throw new Error(`${where}: plan ${JSON.stringify(cart.plan)} is not a plan the store sells (${sold.join(", ")})`);
     if (cart.plan !== row.plan) throw new Error(`${where}: plan ${cart.plan} is not its row's plan (${row.plan})`);
-    carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx);
+    carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null);
   });
-  return { carts, snacks: snackLists(list.snacks, `${at}.snacks`) };
+  return { carts, snacks };
 }
 
 /**
@@ -291,9 +304,12 @@ function thumbStyle(url, sheet, name) {
  *  days (`7d`, `5d`), shown and never linked (§ 9 item 3). Every word is a phrase of data/messages.json filled here.
  *  `photos` is the photo sheets' manifest; every URL in it is built from its `base` (sheetUrl). § 7.2: each line shows
  *  the meal's `display`; its tile is the cell of its `name`, the key. */
-export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", snacks = false }) {
+export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", snacks = false, carted = false }) {
   return {
     zone,
+    // SPEC-snacks-in-the-cart § 4: while carted, the card takes an answer set's snack link and hides Q4 where the week
+    // has no snack list for the days.
+    ...(snacks && carted ? { carted: true } : {}),
     weeks: weeks.map((w) => {
       const sheet = photos?.chefs_choice?.[w.delivery];
       const url = sheetUrl(photos, sheet, assetPrefix);
@@ -305,7 +321,13 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", 
         carts: Object.fromEntries(
           Object.entries(w.carts).map(([key, cart]) => [
             key,
-            { heading: fill(words.heading, { week: weekRange(w.delivery) }), meals: lines(cart.meals), thumbs: thumbs(cart.meals), links: cart.links },
+            {
+              heading: fill(words.heading, { week: weekRange(w.delivery) }),
+              meals: lines(cart.meals),
+              thumbs: thumbs(cart.meals),
+              links: cart.links,
+              ...(snacks && cart.snackLinks ? { snack_links: cart.snackLinks } : {}),
+            },
           ]),
         ),
         ...(snacks ? { snacks: Object.fromEntries(Object.entries(w.snacks).map(([d, meals]) => [d, { meals: lines(meals), thumbs: thumbs(meals) }])) } : {}),
@@ -337,15 +359,17 @@ export async function chefsChoice({ plans, messages, dir, on, zone, photos = nul
   const words = chefsChoiceWords(messages);
   const read = (name) => readFile(join(CHEFS_CHOICE_SRC, name), "utf8");
   const helpers = ["const FORMATTERS = new Map();", ...[...ZONED_DATE_HELPERS, isLive].map(declaration)].join("\n");
-  // SPEC-meal-selection § 9 item 3: the snack block only while Q4 is on the page.
-  const snacks = checkSelection(plans).snacks.shown;
-  const snackBlock = snacks ? "\n" + cardHtml(await read("snacks.html"), words, "snacks.html").trimEnd() : "";
+  // SPEC-meal-selection § 9 item 3: the snack block only while Q4 is on the page. SPEC-snacks-in-the-cart § 4.3: while
+  // snacks are carted, without the not-carted line (the list keeps its heading).
+  const { shown: snacks, carted } = checkSelection(plans).snacks;
+  const snackHtml = (await read("snacks.html")).replace(carted ? /\n[^\n]*id="cc-snacks-note"[^\n]*/ : /(?!)/, "");
+  const snackBlock = snacks ? "\n" + cardHtml(snackHtml, words, "snacks.html").trimEnd() : "";
   return {
     slots: {
       PICKS_STYLE: "\n" + (await read("style.css")).trim(),
       PICKS_CARD: "\n" + cardHtml(await read("card.html"), words).trimEnd() + snackBlock,
       PICKS_SCRIPT:
-        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, photos, assetPrefix, snacks }))}</script>` +
+        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, photos, assetPrefix, snacks, carted }))}</script>` +
         `\n<script>\n(function () {\n"use strict";\n${helpers}\n${(await read("chefs-choice.js")).trim()}\n})();\n</script>`,
     },
     weeks: summary,

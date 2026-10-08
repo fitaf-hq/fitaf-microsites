@@ -28,9 +28,9 @@
 // The pass rule is lib/smoke-verdict.mjs (W6), AND lib/faces.mjs's (W10–W14, and W16's logoVerdict): a width passes only
 // if all do.
 import { readFileSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
 import { LOG_PREFIX, MPID, SITE_DIR, STORE_ORIGIN, VIEWPORTS, WIDTHS } from "./config.mjs";
 import { extrasReport, facesVerdict, LOGO, logoVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
@@ -98,11 +98,20 @@ function readMenu(need) {
   const names = [];
   const chosen = [];
   const priced = [];
+  // SPEC-snacks-in-the-cart § 6: a snack's card shows the store's Select Options (button.product__toggle) and no Add to
+  // Cart until it is pressed (§ 1a); it is priced as the phone card shows its Add (the store's default size), else by its
+  // card's price, and is never one of the meals chosen.
+  const mobile = new Map([...document.querySelectorAll("app-product-card-mobile")].map((m) => [text(m.querySelector(".product-card-mobile__title")), m]));
   for (const card of document.querySelectorAll("app-product-card")) {
     const name = text(card.querySelector(".product__content-title"));
     if (!name) continue;
     if (!names.includes(name)) names.push(name);
     const add = [...card.querySelectorAll(".product__actions button")].find((b) => text(b).includes("Add to Cart"));
+    if (!add && card.querySelector(".product__toggle") && !priced.some((c) => c.name === name)) {
+      const phone = mobile.get(name)?.querySelector(".product-card-mobile__actions");
+      priced.push({ name, priceCents: price(phone) ?? price(card.querySelector(".product__content-price")), snack: true });
+      continue;
+    }
     if (!add || add.disabled) continue;
     const meal = { name, priceCents: price(add) ?? price(card.querySelector(".product__price-now")) };
     if (!priced.some((c) => c.name === name)) priced.push(meal);
@@ -232,23 +241,35 @@ async function facesOf(page, outcome) {
 
 /**
  * W17: a given link (`--link`) as the smoke's choice. Its plan (?mpid=), its meals (the fragment's meal part: each key,
- * read against `menu` [{ name, priceCents }] with the site's own key function, as many times as its count) and the path
- * the smoke opens on the origin (the link's path, query and whole fragment, photo part included). Throws on a link with
- * no #fitaf= fragment, and on a meal that is not on the menu.
+ * read against `menu` [{ name, priceCents }] with the site's own key function, as many times as its count), its snacks
+ * (SPEC-snacks-in-the-cart § 2: the items with a leading "_", read the same way) and the path the smoke opens on the
+ * origin (the link's path, query and whole fragment, photo part included). Throws on a link with no #fitaf= fragment,
+ * and on a meal or a snack that is not on the menu.
  */
 export function linkChoice(href, menu, code) {
   const url = new URL(href);
   if (!url.hash.startsWith("#fitaf=")) throw new Error(`--link has no #fitaf= fragment: ${href}`);
   const mpid = Number(url.searchParams.get("mpid"));
   const items = url.hash.slice("#fitaf=".length).split("!")[0].split(".").slice(1).filter((t) => !t.startsWith("~"));
-  const chosen = items.flatMap((item) => {
-    const [key, n = "1"] = item.split("*");
-    const meal = menu.find((m) => code.mealKey(m.name) === key);
-    if (!meal) throw new Error(`--link names a meal not on the menu: ${key}`);
-    return Array(Number(n)).fill(meal);
-  });
-  return { mpid, chosen, path: url.pathname + url.search + url.hash };
+  const units = (item) => {
+    const snack = item.startsWith("_");
+    const [key, n = "1"] = item.slice(snack ? 1 : 0).split("*");
+    const found = menu.find((m) => code.mealKey(m.name) === key);
+    if (!found) throw new Error(`--link names a ${snack ? "snack" : "meal"} not on the menu: ${key}`);
+    return Array(Number(n)).fill(found);
+  };
+  const chosen = items.filter((t) => !t.startsWith("_")).flatMap(units);
+  const snacks = items.filter((t) => t.startsWith("_")).flatMap(units);
+  return { mpid, chosen, snacks, path: url.pathname + url.search + url.hash };
 }
+
+/** A path as the report names it: from the repository's root when it is inside it (a report may be public; a home path
+ *  is not), else as given. */
+const REPO_DIR = resolve(SITE_DIR, "..");
+const fromRepo = (path) => {
+  const r = relative(REPO_DIR, resolve(path));
+  return r.startsWith("..") || isAbsolute(r) ? path : r;
+};
 
 /** A Footer block file (<script>…</script>) gives the text between its tags; a console file is used as it is. */
 export function scriptFromFile(text) {
@@ -262,7 +283,7 @@ const describe = (text) => parseBlock(text)?.versionLine ?? "no version line";
 export async function scriptMode({ liveBlocks = [], scriptFile = null, code, why = "F3 found no block of ours on the live page" }) {
   if (scriptFile) {
     const text = scriptFromFile(await readFile(scriptFile, "utf8"));
-    return { kind: "paste", text, label: `${scriptFile} (${describe(text)}), pasted in the console; any block of ours on the live page held off` };
+    return { kind: "paste", text, label: `${fromRepo(scriptFile)} (${describe(text)}), pasted in the console; any block of ours on the live page held off` };
   }
   if (liveBlocks.length) return { kind: "live", label: `the store's own Footer block (${liveBlocks.join("; ")}): the link alone` };
   const dir = await mkdtemp(join(tmpdir(), "storefront-watch-build-"));
@@ -275,10 +296,10 @@ export async function scriptMode({ liveBlocks = [], scriptFile = null, code, why
   }
 }
 
-export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, executablePath, link = null, onPage = null }) {
+export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, executablePath, link = null, onPage = null, shots = null }) {
   const mpid = link ? Number(new URL(link).searchParams.get("mpid")) : MPID;
   const need = code.counts.get(mpid);
-  const outcome = { width, need, menu: 0, menuNames: [], chosen: [], link: null, console: [], errors: [], checkout: null, faces: null, evidence: null };
+  const outcome = { width, need, menu: 0, menuNames: [], chosen: [], snacks: [], link: null, console: [], errors: [], checkout: null, faces: null, evidence: null, shot: null };
   const { browser, close } = await freshBrowser({ executablePath });
   try {
     const menuContext = await browser.createBrowserContext();
@@ -299,7 +320,7 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
     let path = null;
     if (link) {
       try {
-        ({ chosen: outcome.chosen, path } = linkChoice(link, menu?.priced ?? [], code));
+        ({ chosen: outcome.chosen, snacks: outcome.snacks, path } = linkChoice(link, menu?.priced ?? [], code));
       } catch (err) {
         outcome.chosen = [];
         outcome.errors.push(String(err.message));
@@ -343,6 +364,10 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
       outcome.checkout = outcome.console.includes(DONE_LINE)
         ? await poll(page, readCheckout, outcome.menuNames, (c) => c.path === "/checkout" && c.totalCents !== null && c.names.length > 0, { timeoutMs: CHECKOUT_MS })
         : await page.evaluate(() => ({ path: location.pathname, names: [], itemCounts: [], totalCents: null, totalFrom: null }));
+      // SPEC-snacks-in-the-cart § 6: with `shots` (a directory), the stripped checkout as the visitor first sees it (step
+      // 1: the order lines and the Total), before the faces walk its steps. A picture of the store's page carries its
+      // photographs: the directory is never one git tracks (§ 6; P1).
+      if (shots && outcome.checkout?.path === "/checkout") outcome.shot = await shotOf(page, shots, width);
       outcome.faces = await facesOf(page, outcome);
       outcome.evidence = await evidenceOf(page, "the page the link ended on", outcome.console, outcome.errors);
       await context.close();
@@ -353,6 +378,7 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
   const base = smokeVerdict({
     need,
     chosen: outcome.chosen,
+    snacks: outcome.snacks,
     console: outcome.console.filter((l) => l.startsWith(LOG_PREFIX)),
     checkout: outcome.checkout,
   });
@@ -362,11 +388,26 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
   return { width, verdict: { pass: reasons.length === 0, reasons }, outcome };
 }
 
-/** Both widths (or those given), one mode. `live` forces the link alone. */
-export async function smoke({ liveBlocks = [], scriptFile = null, live = false, widths = WIDTHS, origin = STORE_ORIGIN, executablePath, why, link = null } = {}) {
+/** The page as the window shows it, the snacks' group (SPEC-snacks-in-the-cart § 1a: .summary__additions-section, "Add-On
+ *  & Extra Meals") scrolled to its top, else the summary: `<dir>/<UTC time>-<width>-checkout.png`. */
+async function shotOf(page, dir, width) {
+  const file = join(dir, `${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z")}-${width}-checkout.png`);
+  try {
+    await mkdir(dir, { recursive: true });
+    await page.evaluate(() => (document.querySelector(".summary__additions-section") ?? document.querySelector(".summary__items, .checkout__summary"))?.scrollIntoView({ block: "start" }));
+    await page.screenshot({ path: file, captureBeyondViewport: false });
+    return file;
+  } catch (err) {
+    return `not taken: ${String(err?.message ?? err).slice(0, 160)}`;
+  }
+}
+
+/** Both widths (or those given), one mode. `live` forces the link alone. `shots`: a directory for SPEC-snacks-in-the-cart
+ *  § 6's picture of each width's stripped checkout. */
+export async function smoke({ liveBlocks = [], scriptFile = null, live = false, widths = WIDTHS, origin = STORE_ORIGIN, executablePath, why, link = null, shots = null } = {}) {
   const code = await siteCode();
   const mode = await scriptMode({ liveBlocks: live ? ["as asked, with --live"] : liveBlocks, scriptFile, code, why });
   const runs = [];
-  for (const width of widths) runs.push(await smokeRun({ origin, width, mode, code, executablePath, link }));
+  for (const width of widths) runs.push(await smokeRun({ origin, width, mode, code, executablePath, link, shots }));
   return { flag: runs.some((r) => !r.verdict.pass), script: mode.label, runs };
 }

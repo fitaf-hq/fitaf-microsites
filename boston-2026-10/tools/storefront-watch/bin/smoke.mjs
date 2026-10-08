@@ -8,10 +8,13 @@
 //   --link <url>     run THIS checkout link (the microsite's own, its photo part included: SPEC-rung2-progress-and-
 //                    checkout § 17, W17) instead of one built from the menu; the report says, per slide, whether the
 //                    screen showed Fit AF's sheet
+//   --shots <dir>    SPEC-snacks-in-the-cart § 6: a picture of each width's stripped checkout (step 1, the order lines),
+//                    saved in <dir>; a picture of the store's page carries its photographs, so <dir> is never tracked
 //   --origin <url>   a local synthetic store (http://127.0.0.1:<port> or localhost) instead of the store, to test
 //                    the smoke itself; no other origin is accepted
 // Exit 0 if every width passed, 1 otherwise, 2 if the smoke itself failed.
 import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { STORE_ORIGIN, WIDTHS } from "../lib/config.mjs";
 import { renderSmokeReport } from "../lib/report.mjs";
@@ -28,6 +31,7 @@ async function main() {
       report: { type: "string" },
       origin: { type: "string" },
       link: { type: "string" },
+      shots: { type: "string" },
     },
   });
   const origin = values.origin ?? STORE_ORIGIN;
@@ -36,7 +40,7 @@ async function main() {
   const widths = values.width ? values.width.map(Number) : WIDTHS;
   for (const w of widths) if (!WIDTHS.includes(w)) throw new Error(`--width must be one of ${WIDTHS.join(", ")}, got ${w}`);
   if (values.link && !/^https:\/\/[^/]+\/order\?mpid=\d+#fitaf=/.test(values.link)) throw new Error(`--link must be a checkout link (https://<store>/order?mpid=N#fitaf=...), got ${values.link}`);
-  const result = await smoke({ scriptFile: values.script ?? null, live: values.live, widths, origin, why: "neither --script nor --live given", link: values.link ?? null });
+  const result = await smoke({ scriptFile: values.script ?? null, live: values.live, widths, origin, why: "neither --script nor --live given", link: values.link ?? null, shots: values.shots ? resolve(process.env.INIT_CWD ?? process.cwd(), values.shots) : null });
   // For a width that failed, the report carries the page as text (SPEC-storefront-watch § 7 item 2), redacted.
   const report = renderSmokeReport(result);
   process.stdout.write(`${report}\n`);

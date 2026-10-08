@@ -59,9 +59,10 @@ const HOSTS_SLOT = "/*HOSTS*/ []";
  * § 1.6: the line at a stop of its own). A build requires and inlines, in this order, those the source reads (`UI.<word>`),
  * so a source from before `stopped` (R2-71 rebuilds the live block from its own commit) builds its own text unchanged.
  * Since SPEC-rung2-progress-and-checkout § 25, the three-step checkout's: the bar's names (`steps`), Continue at steps 1
- * and 2 (`to_delivery`, `to_payment`), `back`, and the recap before the Total (`recap`, with {n}).
+ * and 2 (`to_delivery`, `to_payment`), `back`, and the recap before the Total (`recap`, with {n}). Since
+ * SPEC-snacks-in-the-cart § 3.6, the recap with snacks (`recap_snacks`, with {n} and {s}), read only by a source that carts them.
  */
-const UI_WORDS = ["title", "step", "checkout", "stopped", "steps", "to_delivery", "to_payment", "back", "recap"];
+const UI_WORDS = ["title", "step", "checkout", "stopped", "steps", "to_delivery", "to_payment", "back", "recap", "recap_snacks"];
 /** § 25: the step bar's names are `steps` split at this separator (the block splits it the same way), exactly three. */
 const STEPS_SEPARATOR = " \u00b7 ";
 const STEPS_COUNT = 3;
@@ -107,6 +108,9 @@ export function screenWords(messages, used = UI_WORDS) {
     throw new Error(`data/messages.json: handoff.steps is not three names joined by "${STEPS_SEPARATOR}"`);
   }
   if (used.includes("recap") && !words.recap.includes("{n}")) throw new Error("data/messages.json: handoff.recap has no {n}");
+  for (const p of used.includes("recap_snacks") ? ["{n}", "{s}"] : []) {
+    if (!words.recap_snacks.includes(p)) throw new Error(`data/messages.json: handoff.recap_snacks has no ${p}`);
+  }
   return Object.fromEntries(used.map((key) => [key, words[key]]));
 }
 

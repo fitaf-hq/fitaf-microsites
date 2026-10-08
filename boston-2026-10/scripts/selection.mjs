@@ -102,8 +102,10 @@ export function checkSelection(plans) {
   }
   exactly(plans.snacks, SNACK_FIELDS, "snacks");
   for (const key of SNACK_FIELDS) if (typeof plans.snacks[key] !== "boolean") fail(`snacks.${key} must be true or false`);
-  // § 4: a snack is carted only once the hand-off is shown carting one on the live store; no link carries a snack yet.
-  if (plans.snacks.carted) fail("snacks.carted is true, but no link carries a snack in this build (SPEC-meal-selection § 4)");
+  // SPEC-snacks-in-the-cart § 4.1: `carted` is allowed now that a link carries snacks (§ 2) and the block presses them
+  // (§ 3); this build's own refusal of it (SPEC-meal-selection § 10 item 1, MS-6) is gone. Carting what the page does not
+  // offer is refused: with Q4 hidden, nothing could reach a link.
+  if (plans.snacks.carted && !plans.snacks.shown) fail("snacks.carted is true while snacks are not shown");
   if (plans.selection_defaults.snacks && !plans.snacks.shown) fail("selection_defaults.snacks is true while snacks are not shown");
   return { rows, defaults: plans.selection_defaults, snacks: plans.snacks };
 }

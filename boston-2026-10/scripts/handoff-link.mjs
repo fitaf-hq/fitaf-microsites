@@ -16,6 +16,11 @@
 // order, "x,y,w,h" in base 36, or empty for a meal with no cell. A week whose sheet has no cell for any of its meals, or
 // a manifest whose base is null or absolute (a host not on the list), gives the link of today, with no photo part.
 //   https://fitafnutrition.com/order?mpid=21#fitaf=2.t1fkl*2.eh97u*5!0!/assets/photo-sheets/x.jpg!5s!g,g,4w,4w!g,68,4w,4w
+// SPEC-snacks-in-the-cart § 2: `--snack "NAME:QTY"` (repeatable) adds a SNACK item, the meal grammar with a leading "_"
+// (`_<key>`, `_<key>*<n>`), written after every meal and before `~<code>`; a snack is never in the plan's count (the
+// full-plan rule reads the meals only), and a name or key given twice is refused across meals and snacks alike, as the
+// block refuses it. The photo part's cells stay the meals' (a snack has none). With no --snack, the link is as before.
+//   https://fitafnutrition.com/order?mpid=21#fitaf=2.t1fkl*2.eh97u*5._a1b2c*2
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { loadJson, orderUrl, PHOTOS_PATH, PLANS_PATH } from "../build.mjs";
@@ -45,9 +50,18 @@ const photoText = (photos) => {
   return ["", photos.host, photos.path, photos.width.toString(BASE_36), ...photos.cells.map(cell)].join("!");
 };
 
-/** The meal part: "2", each meal, then "~<code>" if there is one, dot-separated. */
+/** SPEC-snacks-in-the-cart § 2: a snack's item, the meal's with a leading "_". */
+export const SNACK_MARK = "_";
+const snackToken = (it) => SNACK_MARK + token(it);
+
+/** The meal part: "2", each meal, each snack (§ 2), then "~<code>" if there is one, dot-separated. */
 const mealPart = (payload) =>
-  [PAYLOAD_VERSION, ...payload.items.map(token), ...(payload.code === undefined ? [] : [`~${payload.code}`])].join(".");
+  [
+    PAYLOAD_VERSION,
+    ...payload.items.map(token),
+    ...(payload.snacks ?? []).map(snackToken),
+    ...(payload.code === undefined ? [] : [`~${payload.code}`]),
+  ].join(".");
 
 /** The text after `#fitaf=`: the meal part, then the photo part (§ 17.1), if there is one. */
 export const encodePayload = (payload) => mealPart(payload) + (payload.photos ? photoText(payload.photos) : "");
@@ -93,13 +107,14 @@ function checkDistinct(items) {
 /**
  * `--item "NAME:QTY"` values -> the meals `[{ name, key, qty }]`: each name as shown and keyed, its count 1..MAX_QTY, none
  * named twice and no two sharing a key. The item rules of payloadFromArgs, alone: the plan page's build checks a week's
- * snack list by them (SPEC-meal-selection § 5: "the same item checks … no mpid").
+ * snack list by them (SPEC-meal-selection § 5: "the same item checks … no mpid"). `flag` names the flag in a refusal
+ * (`--snack` for SPEC-snacks-in-the-cart § 2's snacks; the rules and the words are otherwise the same).
  */
-export function itemsFromArgs(itemArgs) {
+export function itemsFromArgs(itemArgs, flag = "--item") {
   const items = itemArgs.map((arg) => {
-    const [given, qty] = splitLast(arg, ":", `--item wants "NAME:QTY", got ${JSON.stringify(arg)}`);
+    const [given, qty] = splitLast(arg, ":", `${flag} wants "NAME:QTY", got ${JSON.stringify(arg)}`);
     const name = asShown(given);
-    if (!name) throw new Error(`--item ${JSON.stringify(arg)} has an empty meal name`);
+    if (!name) throw new Error(`${flag} ${JSON.stringify(arg)} has an empty ${flag === "--snack" ? "snack" : "meal"} name`);
     return { name, key: mealKey(name), qty: wholeNumber(qty, `qty for ${name}`, 1, MAX_QTY) };
   });
   checkDistinct(items);
@@ -107,12 +122,13 @@ export function itemsFromArgs(itemArgs) {
 }
 
 /**
- * Command-line arguments -> the payload `{ mpid, items: [{ name, key, qty }], code? }`. Throws on anything the shipped
- * script would refuse. `counts` maps each mpid in data/plans.json to its meals a week: the counts must add up to exactly
- * that (the full-plan rule, § 7).
+ * Command-line arguments -> the payload `{ mpid, items: [{ name, key, qty }], snacks?: [{ name, key, qty }], code? }`.
+ * Throws on anything the shipped script would refuse. `counts` maps each mpid in data/plans.json to its meals a week:
+ * the MEALS' counts must add up to exactly that (the full-plan rule, § 7); snacks (`--snack`, SPEC-snacks-in-the-cart
+ * § 2) are beside the plan, and `snacks` is present only when one is given, so a link without one is as before.
  */
 export function payloadFromArgs(argv, counts, photos = null) {
-  const flags = { "--mpid": [], "--item": [], "--code": [], "--photos": [], "--host": [] };
+  const flags = { "--mpid": [], "--item": [], "--snack": [], "--code": [], "--photos": [], "--host": [] };
   for (let i = 0; i < argv.length; i += 2) {
     if (!(argv[i] in flags)) throw new Error(`unknown flag ${argv[i]}`);
     if (argv[i + 1] === undefined) throw new Error(`${argv[i]} needs a value`);
@@ -123,11 +139,14 @@ export function payloadFromArgs(argv, counts, photos = null) {
   if (!counts.has(mpid)) throw new Error(`mpid ${mpid} is not in data/plans.json`);
   if (!flags["--item"].length) throw new Error('give at least one --item "NAME:QTY"');
   const items = itemsFromArgs(flags["--item"]);
+  const snacks = itemsFromArgs(flags["--snack"], "--snack");
+  // § 2: a name or a key given twice is refused across meals and snacks alike, as the block refuses it.
+  checkDistinct([...items, ...snacks]);
   // The same rule and message as the shipped script: the store will not check out short of the plan.
   const need = counts.get(mpid);
   const total = items.reduce((sum, it) => sum + it.qty, 0);
   if (total !== need) throw new Error(`the plan needs ${need} meals; the link has ${total}`);
-  const payload = { mpid, items };
+  const payload = { mpid, items, ...(snacks.length ? { snacks } : {}) };
   if (flags["--code"].length) {
     const [code] = flags["--code"];
     if (!CODE_RE.test(code)) throw new Error(`--code must match ${CODE_RE}`);
@@ -149,7 +168,7 @@ export const handoffLink = (plans, payload) => `${orderUrl(plans, payload.mpid)}
 
 /** § 11 item 6: under the link, each token it carries beside what it stands for, in the link's order. */
 export function legend(payload) {
-  const rows = payload.items.map((it) => [token(it), it.name]);
+  const rows = [...payload.items.map((it) => [token(it), it.name]), ...(payload.snacks ?? []).map((it) => [snackToken(it), `${it.name} (a snack)`])];
   if (payload.code !== undefined) rows.push([`~${payload.code}`, "the offer code (checked, not applied)"]);
   if (payload.photos) rows.push([`!${payload.photos.host}`, `each meal's cell of ${PHOTO_HOSTS[payload.photos.host]}${payload.photos.path}`]);
   const width = Math.max(...rows.map(([t]) => t.length));

@@ -16,8 +16,10 @@
 // presses), cbc6d1ec… (6b5f19b; pasted 2026-10-01, live as 5d5fb72), and, by SPEC-rung2-fill-c (fill C: each press
 // confirmed by the store's count; fill B's press loop replaced), 1e3802b8… (b5220b0; pasted 2026-10-01, live as
 // e85b95a), and, by § 25 (the three-step checkout: a CSS state over the store's own sections on a deep-carted checkout;
-// the ceiling 20,480), b65fb47f… (ba9eabc), and, by its § 27 (the steps by the live release's section modifiers), the
-// hash below. The block live in the store's
+// the ceiling 20,480), b65fb47f… (ba9eabc), and, by its § 27 (the steps by the live release's section modifiers),
+// 76871ff9… (pasted by the Advisor; the watch's expectedFooter on 2026-10-08), and, by SPEC-snacks-in-the-cart § 3 (snack
+// items after the meals, each pressed on its own card; CHECKOUT's count by the element the store displays), the hash
+// below. The block live in the store's
 // Footer is the old text until a new one is smoked and pasted.
 // ⭐ The mutant: a copy of the source with ONE byte of fill B's code changed builds a text R2-32 refuses. The copy is
 // made in a temporary directory; no file in the repository is edited. The control: an unmutated copy passes.
@@ -29,8 +31,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
 
-/** Fill C's text SHA-256 with the three-step checkout (SPEC-rung2-progress-and-checkout §§ 25, 27). Was b65fb47f… (§ 25), 1e3802b8… (fill C). */
-const SHIPPED_SHA256 = "76871ff95ab458a2453625efa0d8b8d8dd4ea330d9f02d0232ca6713c06a36d7";
+/** Fill C's text SHA-256 with snacks (SPEC-snacks-in-the-cart § 3). Was 76871ff9… (§ 27, pasted), b65fb47f… (§ 25), 1e3802b8… (fill C). */
+const SHIPPED_SHA256 = "ad25f93d3dcd616c20c53046df0441ad7f2f63ad72337ca069db48658a70b457";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -79,7 +81,7 @@ async function withCopy(edit, fn) {
   }
 }
 
-test("R2-32: both built files' text SHA-256 (the version line's own) is 76871ff9…, fill C's with rung 2's two faces and the three steps", async () => {
+test("R2-32: both built files' text SHA-256 (the version line's own) is ad25f93d…, fill C's with rung 2's two faces, the three steps and snacks", async () => {
   await shippedTextCase(STOREFRONT_SOURCE);
 });
 

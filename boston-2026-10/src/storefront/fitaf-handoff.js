@@ -22,6 +22,10 @@
 // presses each meal's own Add to Cart on the plan's order page (and its counter's "+" for a count above 1), each press
 // confirmed by the store's count before the next, then the store's own CHECKOUT (§ 8), which takes the visitor to
 // /checkout. Any failure removes the fragment and stops: the visitor keeps the plan's order page, as rung 1 leaves it.
+// SPEC-snacks-in-the-cart (§ 3, measured by its § 1a): a link may carry SNACKS after its meals (`_<key>[*n]`); each is
+// pressed on its own Additions card after every meal's units (its Select Options first, then the expansion's Add to
+// Cart, its "+" for more), confirmed by the card's own count as a meal's, never counted toward the plan, and CHECKOUT's
+// count check reads the element the store displays (the sidebar counts snack units, the bar meals only).
 // The body of the one function below is not indented, to spend the 5 KB on code rather than spaces; for the same
 // reason, neighbouring declarations share one `var`. And since SPEC-rung2-progress-and-checkout § 15 (the Fit AF logo,
 // the wait for the cards and the key's tag took the Footer past its 10,240-byte ceiling), every line inside it is
@@ -219,7 +223,9 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 // it (the visitor left and came back in the app), the step class alone hides nothing, and the visitor has the whole
 // stripped checkout, never a step with no way on. The recap (steps 2 and 3, "N meals" before the store's own Total) is
 // mark()'s one rule that adds rather than hides: a ::before of the Total, its words data/messages.json's.
-var Q2 = ".checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests)", Q3 = ".checkout__section:is(.tip,.payment,.checkout__consent)", N, AT, PAID;
+// SPEC-snacks-in-the-cart § 3.6: N stays the meals' count; V is the link's snack units, and with any the recap reads
+// data/messages.json's `recap_snacks` ({n} meals, {s} snacks) in place of `recap`.
+var Q2 = ".checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests)", Q3 = ".checkout__section:is(.tip,.payment,.checkout__consent)", N, V, AT, PAID;
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
 ".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
 ".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return," +
@@ -236,7 +242,7 @@ var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.ap
 function mark() {
 var d = w.document, s = d.createElement("style"), c, i;
 s.id = "fitaf-deep";
-s.textContent = DEEP + "html.fitaf-deep:has(app-checkout) :is(:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__total)::before{content:" + JSON.stringify(UI.recap.replace("{n}", N)) + ";margin-right:.4em}";
+s.textContent = DEEP + "html.fitaf-deep:has(app-checkout) :is(:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__total)::before{content:" + JSON.stringify((V ? UI.recap_snacks.replace("{s}", V) : UI.recap).replace("{n}", N)) + ";margin-right:.4em}";
 d.head.appendChild(s);
 d.documentElement.classList.add("fitaf-deep");
 if (CODE) d.documentElement.classList.add("fitaf-code");
@@ -338,9 +344,14 @@ g.src = SHEET;
 // item 2, the KEY slot below). Checked whole, before anything is touched; any fault refuses all of it. 2048 characters
 // is § 6's "over 2 KB", kept: 21 items never come near it. The plan is NOT in the payload: the guard at the bottom
 // reads it from the page's own ?mpid=, and applies the full-plan rule (§ 7) there, last.
+// SPEC-snacks-in-the-cart § 2: a SNACK item is a meal item with a leading "_" (`_<key>` or `_<key>*<n>`), after every
+// meal and before `~<code>`; a meal after a snack is refused (`units > total` once a snack is read), and a key named twice
+// is refused across meals and snacks alike. `p.items` holds both, in the link's order, a snack marked `s` ("_"); `p.total`
+// is the MEALS' count, the only one the full-plan rule reads, and `p.units` meals and snack units together. A block from
+// before this change reads `_…` as a bad meal and refuses the whole link, pressing nothing: no version bump.
 function payload(s) {
 if (s.length > 2048) fail("payload over 2 KB");
-var parts = s.split("."), items = [], keys = [], total = 0, code;
+var parts = s.split("."), items = [], keys = [], total = 0, units = 0, code;
 if (parts.shift() !== "2") fail("unknown version");
 // The offer code is the last item, if any, and is checked but NOT applied in this build: how the store takes one is
 // not yet proven.
@@ -348,14 +359,16 @@ if (/^~/.test(parts[parts.length - 1])) code = parts.pop().slice(1);
 if (code !== undefined && !/^[A-Za-z0-9-]{1,40}$/.test(code)) fail("bad code");
 if (!parts.length) fail("no items");
 parts.forEach(function (part) {
-  var m = /^([0-9a-z]{5})(?:\*([2-9]|1\d|2[01]))?$/.exec(part) || fail("bad meal: " + part), n = +(m[2] || 1);
+  var m = /^(_?)([0-9a-z]{5})(?:\*([2-9]|1\d|2[01]))?$/.exec(part) || fail("bad meal: " + part), n = +(m[3] || 1);
   // A meal named twice would be two meals to B, pressing one card twice over; its count belongs in one item.
-  if (keys.indexOf(m[1]) >= 0) fail("named twice: " + m[1]);
-  keys.push(m[1]);
-  items.push({ key: m[1], qty: n });
-  total += n;
+  if (keys.indexOf(m[2]) >= 0) fail("named twice: " + m[2]);
+  if (units > total && !m[1]) fail("a meal after a snack: " + m[2]);
+  keys.push(m[2]);
+  items.push({ key: m[2], qty: n, s: m[1] });
+  units += n;
+  if (!m[1]) total += n;
 });
-return { items: items, total: total, code: code };
+return { items: items, total: total, units: units, code: code };
 }
 
 // The fill polls every 200 ms: for at most 10 s before its first press (the meal cards render after the store's own
@@ -396,16 +409,19 @@ function plus(c) { return c && c.querySelector('.product__actions .counter__butt
 // § 1.4: the plan's own count, as the store displays it at this width (§ 2a): the cart sidebar's "N items"
 // (.cart__items-count, 1025 px and wider) or the cart bar's "Items" value (.mobile-cart-summary__stat-value; its other
 // value, the cart's total, is a price, which the pattern refuses). 0 when neither is displayed.
+// SPEC-snacks-in-the-cart § 3.5 and § 1a: it also says WHICH it read, [count, sidebar?]: the sidebar's .cart__items-count
+// counts snack units beside the meals (14, 15, 16 items on 2026-10-08), the bar's value the plan's meals only (14).
 function plan() {
 var e = first(w.document, ".cart__items-count,.mobile-cart-summary__stat-value", function (e) { return e.getClientRects().length && /^\d+( items?)?$/.test(text(e)); });
-return e ? parseInt(text(e), 10) : 0;
+return e ? [parseInt(text(e), 10), /items-c/.test(e.className)] : [0];
 }
 // § 1.6: what every stop of fill C's own names, the store's counts: "the store counted K of N" (K the sum of the cards'
 // counts, N the link's), then "; short: <keys>" and "; over: <keys>", each meal by its key, in the link's order.
+// SPEC-snacks-in-the-cart § 3.4: snacks too, each by its key; N is `p.units` (the link's meals with no snack: as before).
 function said(p) {
 var k = 0, s = [], o = [];
 p.items.forEach(function (it) { var n = count(card(it.key)); k += n; if (it.qty > n) s.push(it.key); if (n > it.qty) o.push(it.key); });
-return "the store counted " + k + " of " + p.total + (s.length ? "; short: " + s : "") + (o.length ? "; over: " + o : "");
+return "the store counted " + k + " of " + p.units + (s.length ? "; short: " + s : "") + (o.length ? "; over: " + o : "");
 }
 // SPEC-rung2 § 10: the fill presses the plan's whole count, so it starts only on a plan that holds NOTHING yet, and never
 // removes a visitor's meals. Read from the store's public code (§ 10's build note): the store displays a control in its
@@ -424,12 +440,15 @@ var HELD = /checkout|more meal|limit exceeded/i;
 // the 50) and on, whatever the page does after; `idle` counts the polls before it, and at NO_CARDS of them (the 150th,
 // 29.8 s after the first, as the wait after CHECKOUT counts) the fill stops, `no meal cards on this page`, pressing
 // nothing. The § 10 check runs on every poll of both. The screen's logo is tried on each (brand, above: never a stop).
+// SPEC-snacks-in-the-cart § 3.2 and § 1a: a snack's card is ready when it shows Add to Cart OR the store's Select Options
+// (.product__toggle, outside .product__actions: until it is pressed the card has no Add to Cart at all, every snack on
+// 2026-10-08). A meal's rule is unchanged.
 function fillC(p) {
 var polls = 0, idle = 0;
 guard(function poll() {
   ui(brand);
   if (control(HELD, 1)) fail("the plan already holds meals");
-  var missing = p.items.filter(function (it) { return !addButton(card(it.key)); });
+  var missing = p.items.filter(function (it) { var c = card(it.key); return !(addButton(c) || it.s && c && c.querySelector(".product__toggle")); });
   if (!missing.length) return fill(p, steps(p.items), settle);
   if (!polls && !first(w.document, "app-product-card .product__content-title", text)) { if (++idle >= NO_CARDS) fail("no meal cards on this page"); }
   else if (++polls >= MAX_POLLS) fail("not on this page: " + missing.map(function (it) { return it.key; }));
@@ -438,10 +457,12 @@ guard(function poll() {
 }
 // The units, [key, n, qty]: a meal's n-th press of its qty. Every meal's first press comes before any meal's second,
 // as fill B ordered them. (No `<` in the shipped text, SPEC-rung2-progress-and-checkout § 11: the loop's test is written
-// the other way round.)
+// the other way round.) SPEC-snacks-in-the-cart § 3.3: every meal's units first, exactly as before; then each snack's,
+// all of one snack's before the next (snacks come after the meals in `items`). With no snack, the list is as before.
 function steps(items) {
-var list = items.map(function (it) { return [it.key, 0, it.qty]; });
-items.forEach(function (it) { for (var n = 1; it.qty > n; n++) list.push([it.key, n, it.qty]); });
+var list = [];
+items.forEach(function (it) { if (!it.s) list.push([it.key, 0, it.qty]); });
+items.forEach(function (it) { for (var n = it.s ? 0 : 1; it.qty > n; n++) list.push([it.key, n, it.qty]); });
 return list;
 }
 // SPEC-rung2-fill-c § 1.1, 1.2 and 1.5: the units of `list` one at a time, then `then(p)`. At every read: any meal the
@@ -452,20 +473,31 @@ return list;
 // "+" once it shows a count), at most RETRIES times; then stop. ⛔ Never a second press on a clock alone: each re-press
 // comes from a read that showed the meal short. F marks that a press was made (a stop now says so on the screen).
 // ⚠ A press cannot be taken back: a stop here leaves the presses made in the visitor's plan.
+// SPEC-snacks-in-the-cart § 3.3: a card with neither Add to Cart nor a "+" but the store's Select Options (a snack's,
+// § 1a) has it pressed once, not counted as a unit's press (`x`, the wait for its expansion: MIN_GAP_MS, then polls to
+// ACK_MS), and the expansion's Add to Cart (inside .product__actions, so addButton()) is pressed as any unit's; no
+// expansion within ACK_MS: the stop, `; no control`. The toggle is pressed at most ONCE per unit (`x` is reset only when
+// the fill moves to the next unit: a store slow to expand is waited for, never pressed again on a clock), and only while
+// it is not expanded (aria-expanded), so the block never closes an expansion; nothing in the expansion is touched: the
+// size is the store's default, never chosen (§ 8). The slide's place and the bar are out of `p.units`.
 function fill(p, list, then) {
-var k = 0, tries = 0, waited = 0;
+var k = 0, tries = 0, waited = 0, x = 0;
 guard(function poll() {
-  var s = said(p), c, n, b;
+  var s = said(p), c, n, b, o;
   if (/; over:/.test(s)) fail(s);
   if (k === list.length) return then(p);
   c = card(list[k][0]); n = count(c);
-  if (n > list[k][1]) { k++; tries = 0; return poll(); }
+  if (n > list[k][1]) { k++; tries = x = 0; return poll(); }
   if (tries && ACK_MS > waited) { waited += POLL_MS; return w.setTimeout(guard(poll), POLL_MS); }
   if (tries > RETRIES) fail(s);
-  b = addButton(c) || plus(c) || fail(s + "; no control");
-  b.click();
+  b = addButton(c) || plus(c);
+  if (!b && c && (o = c.querySelector(".product__toggle"))) {
+    if (!x && o.getAttribute("aria-expanded") != "true") { o.click(); x = MIN_GAP_MS; return w.setTimeout(guard(poll), MIN_GAP_MS); }
+    if (ACK_MS > x) { x += POLL_MS; return w.setTimeout(guard(poll), POLL_MS); }
+  }
+  (b || fail(s + "; no control")).click();
   F = 1; tries++; waited = MIN_GAP_MS;
-  ui(function () { added(list[k][0], c, p.total - list.length + k + 1, p.total); });
+  ui(function () { added(list[k][0], c, p.units - list.length + k + 1, p.units); });
   w.setTimeout(guard(poll), MIN_GAP_MS);
 })();
 }
@@ -509,13 +541,15 @@ return first(w.document, "button", function (b) {
 // it itself when its order page starts; a store that ignores it opens its pop-up, invisible under the screen, and the
 // fill presses its CONTINUE TO CHECKOUT as before (§ 10). A storage that throws changes nothing (ui()). F goes at the
 // press of CHECKOUT: a stop after it (/checkout not reached) removes the screen as before.
+// SPEC-snacks-in-the-cart § 3.5: the plan's count is checked as the element plan() read counts: the sidebar's, meals and
+// snack units (`p.units`); the bar's, meals (`p.total`). With no snack the two are one, and the rule is as before.
 function checkout(p) {
 var k = 0, polls = 0;
 guard(function poll() {
   if (k && loc.pathname === "/checkout") { ui(mark); return end("done: /checkout"); }
   var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]), n = plan();
-  if (b && (k || n === p.total)) { if (!k) { drop(); ui(function () { w.sessionStorage.setItem("ecc_additions_prompt_handled", "true"); }); F = 0; } b.click(); if (!k) ui(last); k++; polls = 0; }
-  else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? end("stopped: /checkout not reached") : fail(said(p) + "; the plan shows " + n + (b ? "" : "; no checkout control"));
+  if (b && (k || n[0] === (n[1] ? p.units : p.total))) { if (!k) { drop(); ui(function () { w.sessionStorage.setItem("ecc_additions_prompt_handled", "true"); }); F = 0; } b.click(); if (!k) ui(last); k++; polls = 0; }
+  else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? end("stopped: /checkout not reached") : fail(said(p) + "; the plan shows " + n[0] + (b ? "" : "; no checkout control"));
   w.setTimeout(guard(poll), POLL_MS);
 })();
 }
@@ -533,6 +567,7 @@ log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" :
 // their checks, and before the fill's first poll. A link refused above shows nothing new.
 CODE = p.code;
 N = p.total;
+V = p.units - p.total;
 if (f.length) ui(function () { photos(f, p.items); });
 ui(screen);
 // The two-fill source's dispatch, kept because it ships (SPEC-rung2 § 12 item 3): FILL is "C", so the line after it

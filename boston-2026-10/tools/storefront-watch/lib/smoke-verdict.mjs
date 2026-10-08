@@ -1,7 +1,8 @@
 // SPEC-storefront-watch § 4: the smoke test's pass rule, over what one run recorded (lib/smoke.mjs), so that it is
 // tested without a browser (W6). Pass: the console shows `[fitaf-handoff] done: /checkout` and no `stopped:` line;
 // the page is /checkout; it lists exactly the chosen names and "<need> items"; and its total is the sum of the
-// line prices the order page showed for them (7 × the line price, when the meals cost the same).
+// line prices the order page showed for them (7 × the line price, when the meals cost the same). SPEC-snacks-in-the-cart
+// § 6: a link's snacks are chosen too: listed on /checkout by name, priced into the total, never in the meals' count.
 
 export const DONE_LINE = "[fitaf-handoff] done: /checkout";
 const STOPPED = "[fitaf-handoff] stopped:";
@@ -9,14 +10,15 @@ const STOPPED = "[fitaf-handoff] stopped:";
 const money = (cents) => `$${(cents / 100).toFixed(2)}`;
 
 /**
- * `outcome`: { need, chosen: [{ name, priceCents }], console: [lines],
+ * `outcome`: { need, chosen: [{ name, priceCents }], snacks?: [{ name, priceCents }], console: [lines],
  *              checkout: { path, names: [listed menu names], itemCounts: [N of each "N items"], totalCents } }
  */
 export function smokeVerdict(outcome) {
   const { need } = outcome;
   const reasons = [];
-  const chosen = outcome.chosen.map((c) => c.name);
-  if (chosen.length < need) reasons.push(`only ${chosen.length} of ${need} meals could be chosen from the order page`);
+  if (outcome.chosen.length < need) reasons.push(`only ${outcome.chosen.length} of ${need} meals could be chosen from the order page`);
+  const all = [...outcome.chosen, ...(outcome.snacks ?? [])];
+  const chosen = all.map((c) => c.name);
 
   for (const line of outcome.console) if (line.startsWith(STOPPED)) reasons.push(`the console says "${line}"`);
   if (!outcome.console.includes(DONE_LINE)) reasons.push(`the console never says "${DONE_LINE}"`);
@@ -32,8 +34,8 @@ export function smokeVerdict(outcome) {
     reasons.push(`/checkout does not say "${need} items" (it says: ${(c.itemCounts ?? []).map((n) => `${n} items`).join(", ") || "nothing"})`);
   }
 
-  const prices = outcome.chosen.map((m) => m.priceCents);
-  const unpriced = outcome.chosen.filter((m) => typeof m.priceCents !== "number").map((m) => m.name);
+  const prices = all.map((m) => m.priceCents);
+  const unpriced = all.filter((m) => typeof m.priceCents !== "number").map((m) => m.name);
   if (unpriced.length) {
     reasons.push(`the order page showed no line price for: ${unpriced.join(", ")}`);
   } else if (prices.length) {

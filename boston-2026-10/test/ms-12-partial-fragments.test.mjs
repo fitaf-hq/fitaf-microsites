@@ -1,15 +1,16 @@
 // MS-12 (SPEC-meal-selection.md § 8 item 3, § 8.1): partial fragments. `#lean` (a size, Q1 not answered),
 // `#meals-or-7d` (the answers, no size) and `#individual` (neither) open as their states and round-trip; today's
 // `#meals-14` opens the answers of *and*, every day. Q2–Q4 are not shown until Q1 is answered (§ 7, ruled "After Q1").
+// The two cases that read Q4 build from their own data with snacks shown (ms-harness SNACKS_SHOWN, § 11).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { answer, chooseGoal, open, pageOf, questionsOf, resultOf } from "./ms-harness.mjs";
+import { answer, chooseGoal, open, pageOf, questionsOf, resultOf, SNACKS_SHOWN } from "./ms-harness.mjs";
 
 const pressedGoals = (page) =>
   [...page.document.querySelectorAll("[data-goal]")].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.getAttribute("data-goal"));
 
 test("MS-12: #lean is the size alone: Q1 waits, Q2–Q4 hidden, no card; pressing Lean again writes nothing", async () => {
-  const page = open(await pageOf(), "#lean");
+  const page = open(await pageOf({ snacks: SNACKS_SHOWN }), "#lean");
   const q = questionsOf(page);
   assert.deepEqual(pressedGoals(page), ["lean"]);
   assert.equal(q.lunch_dinner.shown, true, "Q1 shown");
@@ -21,7 +22,7 @@ test("MS-12: #lean is the size alone: Q1 waits, Q2–Q4 hidden, no card; pressin
 });
 
 test("MS-12: #meals-or-7d is the answers alone: Q2–Q4 shown at the fragment's answers, no size, no card", async () => {
-  const page = open(await pageOf(), "#meals-or-7d");
+  const page = open(await pageOf({ snacks: SNACKS_SHOWN }), "#meals-or-7d");
   const q = questionsOf(page);
   assert.deepEqual(pressedGoals(page), []);
   assert.deepEqual([q.lunch_dinner.pressed, q.weekends.pressed, q.breakfast.pressed, q.snacks.pressed], ["or", "yes", "no", "no"]);

@@ -3,14 +3,15 @@
 // marker with no letters (its placeholders kept) and every shown meal and snack name (`display`) another, the four
 // questions, the result card's meals a week and rounded line, and the snack block show no letter. And the build refuses a
 // missing phrase: each new one removed in a copy fails the build, naming it. Copies only; no file in the repository is
-// edited.
+// edited. The two cases that read the four questions and the snack block build from their own data with snacks shown
+// (ms-harness SNACKS_SHOWN, § 11), never the committed flags.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { MESSAGES, picksDir } from "./cc-harness.mjs";
-import { open, pageOf, V2 } from "./ms-harness.mjs";
+import { open, pageOf, SNACKS_SHOWN, V2 } from "./ms-harness.mjs";
 
 const LETTER = /\p{L}/u;
 const SENTINEL = /⟦\d+⟧/g;
@@ -59,7 +60,7 @@ test("MS-8: with every phrase and every shown name a letterless marker, the adde
   const copy = await messagesCopy(messages);
   const picks = await picksDir({ "2026-10-04.json": week });
   try {
-    const html = await pageOf({ picks, messagesPath: copy.path });
+    const html = await pageOf({ picks, messagesPath: copy.path, snacks: SNACKS_SHOWN });
     const seen = new Set();
     for (const hash of ["#lean-and-5d-b-s", "#lean-and-7d-b-s"]) {
       const text = addedText(open(html, hash));
@@ -88,7 +89,7 @@ test("MS-8 (control): a word typed into the added parts is caught", async () => 
   markAll(messages.plan_page, markers);
   const copy = await messagesCopy(messages);
   try {
-    const built = await pageOf({ messagesPath: copy.path });
+    const built = await pageOf({ messagesPath: copy.path, snacks: SNACKS_SHOWN });
     const html = built.replace('id="q-weekends">', 'id="q-weekends">Weekends! ');
     assert.notEqual(html, built, "the mutation anchor is present");
     assert.match(addedText(open(html, "#lean-or-5d")).replace(SENTINEL, ""), /Weekends!/);

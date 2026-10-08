@@ -6,12 +6,24 @@
 //
 // ⭐ The expectations are the CONTRACT's, written here from its § 2 table, never read back from data/plans.json: a page
 // that rounds 5 up to 7, or a plans.json that says so, fails against them (MS-10).
+//
+// ⭐ The snack flags (SPEC-meal-selection § 11): a case that asserts anything about snacks builds from ITS OWN copy of
+// data/plans.json with the flags it asserts, never the committed `snacks`: `pageOf({ snacks: SNACKS_SHOWN })` writes the
+// copy to a temporary directory and removes it; `withSnacks(flags)` is the same data as an object, for the entry points
+// that take one (`renderPage`, `devPage`). So `snacks.shown` can be flipped in data/plans.json without moving MS-3, MS-4,
+// MS-7, MS-8, MS-9, MS-12, MS-14, MS-16, PR-14 or PR-15 (`carted: true` is refused by the build today, § 10 item 1, so
+// that flip stops every build until the code that carts a snack lands). ⚠ S20 and CC-4 (prod) still move:
+// they pin the PRODUCTION page's bytes (test/s20-production-golden.json, "regenerate only when production is MEANT to
+// change"), and a flip is such a change, so its commit re-records that golden.
+// The whole suite on other data, in a mirror and never the tree: `node test/suite-in-mirror.mjs --set snacks.shown=false`
+// (its header says how; with no --set it is the control, the data as committed).
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { card, DAYS, midday, openPlanPage, PLANS } from "./cc-harness.mjs";
+import { refKey } from "./r2-harness.mjs";
 
 /** § 2's table, as the contract writes it: [answer key, Q1, every day, breakfast, meals, plan]. */
 export const TABLE = [
@@ -51,6 +63,16 @@ export async function plansCopy(change) {
   return { path, plans, done: () => rm(dir, { recursive: true, force: true }) };
 }
 
+/** The snack flags the cases assert (SPEC-meal-selection § 9 item 3; § 4 as written): Q4 shown and nothing carted, the
+ *  state § 9 rules; Q4 hidden; and (SPEC-snacks-in-the-cart § 4) Q4 shown and the snacks carted, which the build allows
+ *  since the block presses snacks. The committed data stays `carted: false`: the carted cases build from their own. */
+export const SNACKS_SHOWN = Object.freeze({ shown: true, carted: false });
+export const SNACKS_HIDDEN = Object.freeze({ shown: false, carted: false });
+export const SNACKS_CARTED = Object.freeze({ shown: true, carted: true });
+
+/** `plans` (by default the committed data) as a new object with its `snacks` set to `flags`: a case's own data. */
+export const withSnacks = (flags, plans = PLANS) => ({ ...structuredClone(plans), snacks: { ...flags } });
+
 /** An empty picks directory (the page without a week), and its remover. */
 export async function noPicksDir() {
   const dir = await mkdtemp(join(tmpdir(), "boston-ms-no-picks-"));
@@ -60,17 +82,23 @@ export async function noPicksDir() {
 /**
  * build() into a temporary directory: the page it wrote. `root` is a package to build from (a mirror, MS-10), its own
  * build.mjs imported; by default this package's. `picks`, `on`, `plansPath`, `messagesPath`, `target` are the build's.
+ * `snacks` (SNACKS_SHOWN, SNACKS_HIDDEN) builds from a copy of the committed data with those flags, written to a
+ * temporary directory and removed after; it and `plansPath` are not given together.
  */
-export async function pageOf({ root = ROOT, target = "prod", picks, on = "2026-09-30", plansPath, messagesPath } = {}) {
+export async function pageOf({ root = ROOT, target = "prod", picks, on = "2026-09-30", plansPath, messagesPath, snacks } = {}) {
+  if (snacks && plansPath) throw new Error("pageOf: give `snacks` or `plansPath`, not both");
   const { build } = await import(pathToFileURL(join(root, "build.mjs")).href);
   const outDir = await mkdtemp(join(tmpdir(), `boston-ms-${target}-`));
   const empty = picks ? null : await noPicksDir();
+  const own = snacks ? await plansCopy((p) => (p.snacks = { ...snacks })) : null;
+  const plans = own?.path ?? plansPath;
   try {
-    await build({ target, outDir, on, picksDir: picks ?? empty.dir, ...(plansPath ? { plansPath } : {}), ...(messagesPath ? { messagesPath } : {}) });
+    await build({ target, outDir, on, picksDir: picks ?? empty.dir, ...(plans ? { plansPath: plans } : {}), ...(messagesPath ? { messagesPath } : {}) });
     return await readFile(join(outDir, "index.html"), "utf8");
   } finally {
     await rm(outDir, { recursive: true, force: true });
     await empty?.done();
+    await own?.done();
   }
 }
 
@@ -154,8 +182,26 @@ export function cardOf(page) {
   };
 }
 
-/** The keys a link's meal part carries, with their counts: { key: qty } (the photo part, after "!", is not read). */
+/** The keys a link's meal part carries, with their counts: { key: qty } (the photo part, after "!", is not read). A
+ *  snack's key keeps its leading "_" (SPEC-snacks-in-the-cart § 2), so it never reads as a meal's. */
 export function keysOf(href) {
   const tokens = new URL(href).hash.slice("#fitaf=".length).split("!")[0].split(".").slice(1);
   return Object.fromEntries(tokens.map((t) => [t.split("*")[0], Number(t.split("*")[1] ?? 1)]));
+}
+
+/** The link's items in order, as written: ["k1*2", "k2", "_s1*3", …] (the photo part not read). */
+export const tokensOf = (href) => new URL(href).hash.slice("#fitaf=".length).split("!")[0].split(".").slice(1);
+
+/** SPEC-snacks-in-the-cart: a week's lists as the link must carry them, { key: qty } by store name (refKey). */
+export const listKeys = (list, prefix = "") => Object.fromEntries(list.map((m) => [prefix + refKey(m.name), m.qty]));
+
+/** The v2 fixture week with a snack list for 5 days too (the committed fixture has 7 only): a temporary picks directory
+ *  holding it, and its remover. The 5 are the 7's first three, 2 + 2 + 1, so their keys are the fixture's own. */
+export const V2_SNACKS_FIVE = V2.lists["chefs-choice"].snacks["7"].slice(0, 3).map((m, i) => ({ ...m, qty: [2, 2, 1][i] }));
+export async function v2WithFiveDays() {
+  const week = structuredClone(V2);
+  week.lists["chefs-choice"].snacks["5"] = V2_SNACKS_FIVE;
+  const dir = await mkdtemp(join(tmpdir(), "boston-ms-picks-5d-"));
+  await writeFile(join(dir, "2026-10-04.json"), JSON.stringify(week, null, 2));
+  return { dir, done: () => rm(dir, { recursive: true, force: true }) };
 }

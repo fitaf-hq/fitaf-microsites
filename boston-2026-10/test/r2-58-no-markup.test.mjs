@@ -18,7 +18,7 @@ const { buildStorefront, STOREFRONT_SOURCE } = build;
 const FOOTER = "fitaf-handoff.html";
 const CONSOLE = "fitaf-handoff.fill-B.console.js";
 /** A comparison as fill B wrote it until the amendment, and as it is written now (the other way round). */
-const COMPARISON = { now: "for (var n = 1; it.qty > n; n++)", was: "for (var n = 1; n < it.qty; n++)" };
+const COMPARISON = { now: "for (var n = it.s ? 0 : 1; it.qty > n; n++)", was: "for (var n = it.s ? 0 : 1; n < it.qty; n++)" };
 /** The statement that built the screen until § 11 (at ed422ad … 75dc67e), a markup string. */
 const MARKUP =
   'S.innerHTML = "<style>" + CSS + "</style><div><h2></h2><div class=b><i></i></div><div class=c></div><p role=status aria-live=polite></p></div>";';

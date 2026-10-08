@@ -2,17 +2,18 @@
 // at body weight, faked: uppercase, smaller), then the meals line; centred, as the goal buttons.
 // Updated (SPEC-meal-selection § 9 item 2, ruled "Words only": "these numbers change whether or not weekends are
 // included"): the numeral and its unit are gone. Every answer of the four questions is its words alone, in the count
-// buttons' style: centred, as the goal buttons, the check above.
+// buttons' style: centred, as the goal buttons, the check above. Four questions are counted, so the page renders from its
+// own data with snacks shown (ms-harness withSnacks, § 11).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { parseHTML } from "linkedom";
 import { renderPage } from "../build.mjs";
-import { PLANS } from "./cc-harness.mjs";
+import { SNACKS_SHOWN, withSnacks } from "./ms-harness.mjs";
 
 const rule = (css, selector) => new RegExp(`${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? "";
 
 test("PR-15: each answer is its words alone, centred as the goal buttons; no numeral and no unit are left", async () => {
-  const html = await renderPage(PLANS);
+  const html = await renderPage(withSnacks(SNACKS_SHOWN));
   const { document } = parseHTML(html);
   const answers = [...document.querySelectorAll(".counts [data-q]")];
   assert.equal(answers.length, 8, "four questions, two answers each");
