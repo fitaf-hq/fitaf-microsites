@@ -307,3 +307,32 @@ orchestrator), two fixture options in the watch's `browser-store.mjs` with their
    `/checkout`); Screens A and B still go after the block's own 90 s; `build-storefront.mjs` is called in-process
    (`buildStorefront({ outDir })`), so the paste copy in `dist-storefront/` is never written; the logo shown is the
    fixture's navy placeholder.
+
+### 8.7 Item 2 measured on the live store, 2026-10-07 20:56–20:59 PDT — the Advisor's *"Measure the margin first"*
+
+Four runs of the watch's own smoke (`--live`: the store's own Footer block; a 7-meal cart; never submitting; every width
+PASS), from a scratch copy of the watch at `21acd34` whose recorder (`recordFaces`) also noted the address as it
+changed (`history.pushState`/`replaceState` wrapped), the store's first `.checkout__section` and the block's `#fitaf-nav`
+arriving, and, scheduled at the address change, one timer (as the block's poll is) and one message task, each noting
+what was on the page when it ran. Milliseconds after the address became `/checkout`:
+
+| run (UTC) | width | CPU | `app-checkout` | first task after the change found | sections drawn | block finished |
+|---|---|---|---:|---|---:|---:|
+| 03:56:41 | 1280 | 1× | 13 | (not probed) | 24 | 180 |
+| 03:57:53 | 1280 | 1× | 11 | the component, no section | 22 | 158 |
+| 03:58:46 | 390 | 1× | 15 | the component, no section | 26 | 181 |
+| 03:59:21 | 390 | 4× (`emulateCPUThrottling`) | 59 | the component and its sections | 107 | 160 |
+
+1. ⭐ **Item 2's undecorated checkout did not occur and cannot as the runs show it**: in every probed run the store's
+   component was on the page by the first task after the address changed, and the block's poll is a timer, so it can
+   never find `/checkout` without `app-checkout`. Its logo and stepper (`mark()`, `fitaf-handoff.js:243–244`) always had
+   their component.
+2. ⚠ **A narrower window remains, and is inferred, not observed**: in two unthrottled runs the component was present
+   **without its sections** for about 10 ms after the first task. A poll landing there runs `stepper(c)` before the
+   store draws: the foot (`#fitaf-nav`, appended to `c`) would precede the store's content instead of ending it, and
+   Continue would go to the foot rather than beside PAY NOW until the next step or resize (`place()`). If the poll's
+   phase is uniform over its 200 ms, about 10 in 200, **some 5 % of visits**: arithmetic from the table, not a measured
+   rate. In all four runs the poll came 158–181 ms after the change. Throttled 4×, the store drew everything before the
+   first task, so no window.
+3. **Remedy, if wanted**: finish on the store's drawn checkout (`app-checkout .checkout__section` present), not the
+   address alone; a Footer block change, so the Advisor's paste and the rehearsal again. Not done here.
