@@ -230,3 +230,93 @@ answered *No snacks*; *and*, every day, with breakfast and *Add snacks* (snack l
 |---|---|---|
 | MS-15 | one unit | each goal button has one facts block holding both lines, one background, no per-fact background; *"25–35 g protein"* on one line at 390 (Chrome, computed: one line box) |
 | MS-16 | snacks shown, not carted | `shown: true`, `carted: false`: Q4 in the page; *Add snacks* shows the list and the not-carted line; every link byte-identical to the same answers with *No snacks* |
+
+## 10. Built, 2026-10-08 — found at the build, not ruled
+
+Built by an agent on `boston/meal-selection` from `985f777` (the site's suite 522 of 522 there), in six steps, each its
+own commit with its suite green: `843683f` (`data/plans.json`'s selection, the build's checks, MS-6's data half),
+`1debec4` (the questions, the fragments, the result card; S20 re-recorded), `a36f7ef` (the picks file's version 2, the card
+by the answer set, the snack block), `c0ca035` (the share panel), `ff8e8b5` (Storybook's Meal selection stories, MS-15 in
+Chrome) and `fb4ab36` (MS-10's mutants); this note and the READMEs after them. Each case was seen red for its own reason
+before its code, except where said below. On the last code commit: the site's suite **615 of 615**, Storybook's **40 of
+40**, `npm run contrast` 70 pairs, 0 fail; the watch's suite and the counts on this note's own commit are in the report
+that hands it over. **To be re-gated by the orchestrator.** §§ 0–9 are unchanged; where they were wrong or silent:
+
+**Wrong, or wrong once § 9 landed**
+
+1. **MS-7 was written when `carted` hid Q4; § 9 split it.** Read as § 9 amends it: `snacks.shown` decides whether Q4 and
+   the snack block are on the page (false: no Q4, no snack list in the page's data, a `-s` fragment not an answer set the
+   page offers); `snacks.carted` decides whether a snack reaches a link. ⚠ **`carted: true` is refused by the build**
+   (MS-6): no link format carries a snack and the hand-off has not been shown carting one (§ 4), so a `true` would only
+   remove the not-carted line from a cart that still has no snack. Turning it on is a code change as well as a data
+   change: the link's snack part, fill C's press of an add-on, and this refusal.
+2. **MS-10's "a link built on meals instead of plan fails MS-2" cannot fail on a decoded link**: 5 and 15 are no plan the
+   store sells, so no size has an mpid for them and the build stops at the first such cart (*"Cannot destructure
+   property 'mpid'"*). MS-2 fails it because there is no page. Every variant tried (the nearest sold count above) is
+   refused by the full-plan rule the same way.
+3. **MS-10's "rounding up (5 → 7)" is not a code change**: `plan` is data. The mutant is `data/plans.json` sending 5
+   through the 7 **and** the build's refusal of a plan above its meals removed (else the refusal kills it first), the
+   week's or-weekdays cart following with the 7's meals. MS-1 and MS-2 fail it on the card's meals and the link's mpid.
+4. **§ 8 item 7's "today's fragments give today's figures" holds only for 7 and 14**: the panel's day is now the answers'
+   (`shareLines(size, perDay, days, targets)`), and its targets line names the days when they are not 7 (*"Lean, 5 meals
+   a week (1 a day, 5 days a week)"*): new words, literals in `src/save/calculator.js` as all its words are (never phrases;
+   development page only). The panel's meals a week are the **answers'** (15), not the plan's (14), beside the card's
+   rounded line.
+5. **Storybook's index reads a story's name from the source.** A name computed by a function (`story("or-7d")`) was indexed
+   under its export name, so SM-2 and SM-5 failed on the first run; every name is now written where it is exported, as
+   `individual.stories.js` already did.
+
+**Silent, and what was done**
+
+6. **Where the defaults live**: `data/plans.json`'s `selection_defaults` (`weekends`, `breakfast`, `snacks`), beside
+   `selection`; the build refuses a missing or non-boolean default, and snacks on by default while not shown.
+7. **More refusals than § 2 names**: besides a plan not sold at every size and a plan above its meals, a row missing or
+   twice, a row's `meals` not (1 or 2, + 1 with breakfast) × (7 or 5), an unknown field. **Not refused**: a plan below the
+   largest sold count at or below its meals (15 → 10 would build); § 2 defines `plan` that way but names only the two
+   refusals.
+8. **The snacks' counts are not in `data/plans.json`**: one a day on Q2's days (`scripts/selection.mjs`'s constants), so 7
+   or 5; the picks file's snack lists are keyed `"7"` and `"5"`, the page's data `7d` and `5d` (the fragment's day token).
+9. **An unknown fragment**: as today's `#lean-9` kept the size, a known size with answers the page does not know opens
+   that size alone (`#lean-or-9d`, `#lean-and-7d-s` while snacks are not shown); only a fragment with no known part opens
+   the start (MS-4).
+10. **`data-selection` carries the snacks mark** (`and-7d-b-s`, the fragment's whole answer part); the card's cart is
+    the answer set without it. It is `""` while the card is hidden.
+11. **Add snacks with no week open shows nothing.** The snack block (`src/chefs-choice/snacks.html`) is part of the week's
+    card, inlined only when a week is open (and only while `snacks.shown`); with no week the page writes no word of the
+    week's. ⬜ **For the Advisor**: the not-carted line without a week, if wanted, is the base page's.
+12. **Where the snacks sit on the card**: their own box after *Choose my own meals*, shown whether or not the answers have
+    a cart (a fallback card shows them too); with no list for the days, the heading goes with the list and the line
+    stands alone. Snack tiles are looked up on the week's sheet by store name, as the meals' are (plain until Fit AF's
+    emitter binds them, like every breakfast: § 8 item 8).
+13. **"The same item checks" for snacks had no entry point**: `checkDistinct` was private to the link tool and
+    `payloadFromArgs` needs an mpid. The tool now exports `itemsFromArgs` (the item rules alone), which `payloadFromArgs`
+    calls; its rules, refusals and words are unchanged (R2-13's and CC-5's cases unmoved).
+14. **Version numbers**: a file without `version` is version 1; `"version": 1` with `menus` is also read; any other is
+    refused (*"version 3 is not one the page reads (1, 2)"*). A version-2 list other than `chefs-choice` is refused by name.
+15. **The phrases' keys**: `plan_page.questions.<question>.heading` and its two answers (`or`/`and`; `yes`/`no`),
+    `plan_page.meals_unit` (*"meals/week"*, the retired `per_week`'s words), `plan_page.rounded`,
+    `chefs_choice.snacks_heading` (*"Snacks this week"*) and `snacks_not_carted`; Q2–Q4's headings are new placeholders
+    (*"Which days?"*, *"Breakfast too?"*, *"Snacks too?"*). `plan_page.counts` and `per_week` are **removed**: nothing
+    reads them once the buttons are gone.
+16. **Where the meals a week sit**: the third line of the price block (*"14 meals/week"*, the per-meal line's size), and
+    the rounded line under the block, muted. Q1–Q4's answers are words at the goal names' size (15 px at 390).
+17. **§ 9 item 1's "may set smaller"**: the goals' facts set at `clamp(10px, 2.8vw, 12px)`, 10.92 px at 390 and 12 px at
+    1280, each line `nowrap`; measured one line box each, the blocks 39.66 px and 42.78 px tall, none overflowing (MS-15).
+    MS-15's Chrome half was written after the markup; its mutant (lines that may break, at 14 px) shows it failing.
+18. **Storybook needs a week the committed data does not have**: the Date control gains a fourth date, *the fixture
+    week* (test/fixtures/picks-v2/, version 2, invented names, a cart per answer set, snacks for 7 days only), and the
+    site's build gains `--picks DIR` to build it (Storybook's pages only, as `--out`; SPEC-storybook-microsite § 2 item
+    1's "nothing else of the site changes" no longer holds by one flag). The Meal selection stories open on it, scrolled
+    to the questions or the snacks; *Goal buttons* opens on today. Their names use the contract's table words, never a
+    phrase of `data/messages.json` (SM-4 counts "Add snacks", ten characters, as a copy).
+19. **The production page now carries Q4** (`shown: true` is committed), which § 9 says is not for eatfitaf.com in this
+    state. Nothing here deploys; S20's golden records it (`index.html` `6a548cd7…`, the only moved file), and the release
+    stays a pin change on the Advisor's go (§ 7).
+
+**Found, not changed**
+
+- PR-13 (Chrome) timed out once at 120 s with the machine's load average near 30, and its process then held the
+  Storybook suite open (the case's `finally` never ran, so its server and Chrome stayed), until stopped by hand; it
+  passed on the next run. A case that times out should not keep its file alive.
+- MS-13's "before" (`test/ms-golden.json`) and MS-3's and MS-14's were recorded by building `985f777` itself, before any
+  change.
