@@ -1,0 +1,4771 @@
+{
+  "probe": "probe-snacks (SPEC-snacks-in-the-cart § 1)",
+  "at": "2026-10-08T21:37:26.656Z",
+  "origin": "https://fitafnutrition.com",
+  "path": "/order?mpid=23",
+  "width": 1280,
+  "viewport": {
+    "width": 1280,
+    "height": 900,
+    "deviceScaleFactor": 1,
+    "isMobile": false,
+    "hasTouch": false
+  },
+  "mpid": 23,
+  "need": 14,
+  "block": {
+    "file": "src/storefront/fitaf-handoff.js",
+    "sha256": "7768dfe6e0e32c06dbe7d09d456c5d1548e2541620e9debb5ef579c8ba72ed44",
+    "keySha256": "ce2ed1b2b72617bb895f989cff835c9faaef9fb2243d021acd7ab9087939b75c",
+    "functions": [
+      "text",
+      "first",
+      "card",
+      "addButton",
+      "count",
+      "plus",
+      "plan",
+      "control"
+    ],
+    "deepSha256": "8f92d0bdc87be8af3580b13adbfb878849312f03f627df009b95de589b3fef96"
+  },
+  "hideRules": {
+    "rules": [
+      {
+        "h": "H1",
+        "selector": ".sticky-header:not(app-checkout *)"
+      },
+      {
+        "h": "H2",
+        "selector": ".footer:not(app-checkout *)"
+      },
+      {
+        "h": "H2",
+        "selector": ".app-hmp-credit:not(app-checkout *)"
+      },
+      {
+        "h": "H5",
+        "selector": "app-storefront-popup-host:not(app-checkout *)"
+      },
+      {
+        "h": "H8",
+        "selector": ".smartbanner:not(app-checkout *)"
+      },
+      {
+        "h": "H3",
+        "selector": "a.checkout__guest-signin-banner"
+      },
+      {
+        "h": "H4",
+        "selector": "a.contact__sign-in"
+      },
+      {
+        "h": "H6",
+        "selector": ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))"
+      },
+      {
+        "h": "H7",
+        "selector": ".checkout-discounts:not(.fitaf-code *)"
+      },
+      {
+        "h": "H9",
+        "selector": ".summary__row:not(.summary__row--discount,:has(.summary__total))"
+      },
+      {
+        "h": "H10",
+        "selector": ":is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))"
+      },
+      {
+        "h": "H11",
+        "selector": ".summary__item-price"
+      },
+      {
+        "h": "H12",
+        "selector": ".summary__item-addons"
+      },
+      {
+        "h": "H13",
+        "selector": ".summary__item-quantity-controls"
+      },
+      {
+        "h": "H14",
+        "selector": ".summary__item-remove"
+      },
+      {
+        "h": "H15",
+        "selector": ".summary__plan-total"
+      },
+      {
+        "h": "H16",
+        "selector": ".summary__plan-group-header"
+      },
+      {
+        "h": "H17",
+        "selector": ".summary__plan-return"
+      }
+    ],
+    "stepRulesNotEvaluated": [
+      ".fitaf-step-1:has(#fitaf-nav) .checkout__form",
+      ":is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item",
+      ".fitaf-step-2:has(#fitaf-nav) :is(.checkout__form>:not(.checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests),:has(.checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests))),.checkout__section:is(.tip,.payment,.checkout__consent),.checkout__submit)",
+      ".fitaf-step-3:has(#fitaf-nav) .checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests)",
+      ":is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) .summary__pay-button:has(+#fitaf-go)"
+    ],
+    "missing": [],
+    "unlabelled": []
+  },
+  "selectors": {
+    "card": "app-product-card",
+    "cardTitle": ".product__content-title",
+    "cardPrice": ".product__content-price",
+    "additionTag": ".product__content-tag--addition",
+    "sectionTitle": ".products__section-title",
+    "toggle": "button.product__toggle",
+    "toggleLabel": ".product__toggle-label",
+    "addons": ".product__addons",
+    "addonItem": ".product__addons-item",
+    "addonTitle": ".product__addons-item-title",
+    "addonRequired": ".product__addons-item-required",
+    "dropdown": "app-dropdown",
+    "combobox": "[role=combobox]",
+    "dropdownTrigger": ".dropdown__trigger",
+    "dropdownValue": ".dropdown__value-text",
+    "dropdownClear": ".dropdown__clear",
+    "listboxOption": ".cdk-overlay-pane [role=listbox] [role=option]",
+    "actions": ".product__actions",
+    "addLabel": ".product__actions-add_label",
+    "addPrice": ".product__actions-add_price",
+    "counter": "app-counter",
+    "counterValue": ".counter__value",
+    "increase": ".counter__button[aria-label=\"Increase value\"]",
+    "decrease": ".counter__button[aria-label=\"Decrease value\"]",
+    "mobileCard": "app-product-card-mobile",
+    "mobileTitle": ".product-card-mobile__title",
+    "mobileActions": ".product-card-mobile__actions",
+    "itemsCount": ".cart__items-count",
+    "cart": "app-cart",
+    "cartRow": "app-cart-product-card",
+    "phoneSummary": ".mobile-cart-summary",
+    "phoneStat": ".mobile-cart-summary__stat",
+    "phoneStatLabel": ".mobile-cart-summary__stat-label",
+    "phoneStatValue": ".mobile-cart-summary__stat-value",
+    "sideCheckout": ".cart__checkout button",
+    "barCheckout": ".mobile-cart-summary__checkout-button button",
+    "progressLabel": ".cart__progress-label",
+    "overlayPane": ".cdk-overlay-pane",
+    "extrasDialog": "app-extra-products-dialog",
+    "checkout": "app-checkout",
+    "line": ".summary__item",
+    "lineName": ".summary__item-name",
+    "linePrice": ".summary__item-price",
+    "lineAddons": ".summary__item-addons",
+    "lineQuantity": ".summary__item-quantity-controls",
+    "lineRemove": ".summary__item-remove",
+    "total": ".summary__total",
+    "row": ".summary__row",
+    "storeLists": [
+      "hmp_pending_plan_items",
+      "hmp_local_cart"
+    ]
+  },
+  "release": "main-UMGPHR2R.js",
+  "catalog": {
+    "from": "backend.happymealprep.com/api/v1/tenant/catalog/products",
+    "params": [
+      "paginate",
+      "meal_plan_id",
+      "limit",
+      "store_api_key",
+      "tenant",
+      "device_type"
+    ],
+    "products": 55,
+    "snacks": [
+      {
+        "name": "Golden Oreo Protein Sand",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 9,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "1",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 16
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Cookies & Cream Protein Dirt",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 9,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "1",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 16
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Smart Oats: Cookies & Cream",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 4,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "1",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Smart Oats: Almond Joy",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 4,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "1",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+        "categories": [
+          "migrated",
+          "snacks",
+          "upsells"
+        ],
+        "price": 10,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "5",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "10",
+                "isDefault": true,
+                "amount": 8
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Smart Oats: S'mores",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 4,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "1",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Smart Oats: Apple Cinnamon",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 4,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "1",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Smart Oats: Strawberry Banana",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 4,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "1",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Smart Oats: Blueberry Muffin",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 4,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "1",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+        "categories": [
+          "migrated",
+          "snacks",
+          "upsells"
+        ],
+        "price": 0,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "5",
+                "isDefault": true,
+                "amount": 10
+              },
+              {
+                "name": "10",
+                "isDefault": true,
+                "amount": 18
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+        "categories": [
+          "migrated",
+          "snacks",
+          "upsells"
+        ],
+        "price": 0,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "5",
+                "isDefault": true,
+                "amount": 10
+              },
+              {
+                "name": "10",
+                "isDefault": true,
+                "amount": 18
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Organic Bone Broth Soup: Southwest Chicken",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 12,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "radio",
+            "options": [
+              {
+                "name": "Quart",
+                "isDefault": false,
+                "amount": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Organic Bone Broth Soup: Hearty Chicken & Garden Veggie",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 12,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "Quart",
+                "isDefault": false,
+                "amount": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "🟠NEW: Caramel Apple ProNuts",
+        "categories": [
+          "snacks",
+          "upsells"
+        ],
+        "price": 7,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": true,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "3",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "6 (Two packs of 3)",
+                "isDefault": true,
+                "amount": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "🟠NEW: Cheesecake Brownie Bites",
+        "categories": [
+          "migrated",
+          "snacks",
+          "upsells"
+        ],
+        "price": 9,
+        "hasVariants": false,
+        "fields": [
+          {
+            "title": "Size",
+            "required": false,
+            "display": "dropdown",
+            "options": [
+              {
+                "name": "5",
+                "isDefault": true,
+                "amount": 0
+              },
+              {
+                "name": "10",
+                "isDefault": false,
+                "amount": 7
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "names": [
+    {
+      "title": "Golden Oreo Protein Sand",
+      "mobileTitle": "Golden Oreo Protein Sand",
+      "catalogName": "Golden Oreo Protein Sand",
+      "sameText": true,
+      "snack": true,
+      "key": "e2te4",
+      "catalogKey": "e2te4"
+    },
+    {
+      "title": "Cookies & Cream Protein Dirt",
+      "mobileTitle": "Cookies & Cream Protein Dirt",
+      "catalogName": "Cookies & Cream Protein Dirt",
+      "sameText": true,
+      "snack": true,
+      "key": "oeo2k",
+      "catalogKey": "oeo2k"
+    },
+    {
+      "title": "Smart Oats: Cookies & Cream",
+      "mobileTitle": "Smart Oats: Cookies & Cream",
+      "catalogName": "Smart Oats: Cookies & Cream",
+      "sameText": true,
+      "snack": true,
+      "key": "6bmyc",
+      "catalogKey": "6bmyc"
+    },
+    {
+      "title": "Smart Oats: Almond Joy",
+      "mobileTitle": "Smart Oats: Almond Joy",
+      "catalogName": "Smart Oats: Almond Joy",
+      "sameText": true,
+      "snack": true,
+      "key": "snggo",
+      "catalogKey": "snggo"
+    },
+    {
+      "title": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+      "mobileTitle": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+      "catalogName": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+      "sameText": true,
+      "snack": true,
+      "key": "7zip8",
+      "catalogKey": "7zip8"
+    },
+    {
+      "title": "Smart Oats: S'mores",
+      "mobileTitle": "Smart Oats: S'mores",
+      "catalogName": "Smart Oats: S'mores",
+      "sameText": true,
+      "snack": true,
+      "key": "o9y0r",
+      "catalogKey": "o9y0r"
+    },
+    {
+      "title": "Smart Oats: Apple Cinnamon",
+      "mobileTitle": "Smart Oats: Apple Cinnamon",
+      "catalogName": "Smart Oats: Apple Cinnamon",
+      "sameText": true,
+      "snack": true,
+      "key": "c58c2",
+      "catalogKey": "c58c2"
+    },
+    {
+      "title": "Smart Oats: Strawberry Banana",
+      "mobileTitle": "Smart Oats: Strawberry Banana",
+      "catalogName": "Smart Oats: Strawberry Banana",
+      "sameText": true,
+      "snack": true,
+      "key": "2ppo5",
+      "catalogKey": "2ppo5"
+    },
+    {
+      "title": "Smart Oats: Blueberry Muffin",
+      "mobileTitle": "Smart Oats: Blueberry Muffin",
+      "catalogName": "Smart Oats: Blueberry Muffin",
+      "sameText": true,
+      "snack": true,
+      "key": "fqxas",
+      "catalogKey": "fqxas"
+    },
+    {
+      "title": "93% Lean Free-Range Plain Ground Turkey",
+      "mobileTitle": "93% Lean Free-Range Plain Ground Turkey",
+      "catalogName": "93% Lean Free-Range Plain Ground Turkey",
+      "sameText": true,
+      "snack": false,
+      "key": "qkbdd",
+      "catalogKey": "qkbdd"
+    },
+    {
+      "title": "Antibiotic & Hormone Free Honey Mustard Grilled Chicken",
+      "mobileTitle": "Antibiotic & Hormone Free Honey Mustard Grilled Chicken",
+      "catalogName": "Antibiotic & Hormone Free Honey Mustard Grilled Chicken",
+      "sameText": true,
+      "snack": false,
+      "key": "i554u",
+      "catalogKey": "i554u"
+    },
+    {
+      "title": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+      "mobileTitle": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+      "catalogName": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+      "sameText": true,
+      "snack": true,
+      "key": "0wx0s",
+      "catalogKey": "0wx0s"
+    },
+    {
+      "title": "Wild Caught Cod",
+      "mobileTitle": "Wild Caught Cod",
+      "catalogName": "Wild Caught Cod",
+      "sameText": true,
+      "snack": false,
+      "key": "2ofvd",
+      "catalogKey": "2ofvd"
+    },
+    {
+      "title": "Sustainably Caught Shrimp",
+      "mobileTitle": "Sustainably Caught Shrimp",
+      "catalogName": "Sustainably Caught Shrimp",
+      "sameText": true,
+      "snack": false,
+      "key": "o33f5",
+      "catalogKey": "o33f5"
+    },
+    {
+      "title": "Roasted Diced Sweet Potatoes",
+      "mobileTitle": "Roasted Diced Sweet Potatoes",
+      "catalogName": "Roasted Diced Sweet Potatoes",
+      "sameText": true,
+      "snack": false,
+      "key": "ggii9",
+      "catalogKey": "ggii9"
+    },
+    {
+      "title": "Roasted Broccoli Florets",
+      "mobileTitle": "Roasted Broccoli Florets",
+      "catalogName": "Roasted Broccoli Florets",
+      "sameText": true,
+      "snack": false,
+      "key": "4mdyd",
+      "catalogKey": "4mdyd"
+    },
+    {
+      "title": "Roasted Asparagus Tips",
+      "mobileTitle": "Roasted Asparagus Tips",
+      "catalogName": "Roasted Asparagus Tips",
+      "sameText": true,
+      "snack": false,
+      "key": "k1fna",
+      "catalogKey": "k1fna"
+    },
+    {
+      "title": "Pulled ABF Chicken Breast",
+      "mobileTitle": "Pulled ABF Chicken Breast",
+      "catalogName": "Pulled ABF Chicken Breast",
+      "sameText": true,
+      "snack": false,
+      "key": "ekp68",
+      "catalogKey": "ekp68"
+    },
+    {
+      "title": "Maple BBQ ABF Pulled Chicken Breast",
+      "mobileTitle": "Maple BBQ ABF Pulled Chicken Breast",
+      "catalogName": "Maple BBQ ABF Pulled Chicken Breast",
+      "sameText": true,
+      "snack": false,
+      "key": "89uoo",
+      "catalogKey": "89uoo"
+    },
+    {
+      "title": "Steamed White Rice",
+      "mobileTitle": "Steamed White Rice",
+      "catalogName": "Steamed White Rice",
+      "sameText": true,
+      "snack": false,
+      "key": "vlbe4",
+      "catalogKey": "vlbe4"
+    },
+    {
+      "title": "Honey Buffalo Pulled ABF Chicken Breast",
+      "mobileTitle": "Honey Buffalo Pulled ABF Chicken Breast",
+      "catalogName": "Honey Buffalo Pulled ABF Chicken Breast",
+      "sameText": true,
+      "snack": false,
+      "key": "y9b8y",
+      "catalogKey": "y9b8y"
+    },
+    {
+      "title": "Garlic Roasted Green Beans",
+      "mobileTitle": "Garlic Roasted Green Beans",
+      "catalogName": "Garlic Roasted Green Beans",
+      "sameText": true,
+      "snack": false,
+      "key": "hjbqz",
+      "catalogKey": "hjbqz"
+    },
+    {
+      "title": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+      "mobileTitle": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+      "catalogName": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+      "sameText": true,
+      "snack": true,
+      "key": "xgi99",
+      "catalogKey": "xgi99"
+    },
+    {
+      "title": "Organic Bone Broth Soup: Southwest Chicken",
+      "mobileTitle": "Organic Bone Broth Soup: Southwest Chicken",
+      "catalogName": "Organic Bone Broth Soup: Southwest Chicken",
+      "sameText": true,
+      "snack": true,
+      "key": "tculz",
+      "catalogKey": "tculz"
+    },
+    {
+      "title": "Organic Bone Broth Soup: Hearty Chicken & Garden Veggie",
+      "mobileTitle": "Organic Bone Broth Soup: Hearty Chicken & Garden Veggie",
+      "catalogName": "Organic Bone Broth Soup: Hearty Chicken & Garden Veggie",
+      "sameText": true,
+      "snack": true,
+      "key": "8upbi",
+      "catalogKey": "8upbi"
+    },
+    {
+      "title": "Roasted Sweet Potato Mash",
+      "mobileTitle": "Roasted Sweet Potato Mash",
+      "catalogName": "Roasted Sweet Potato Mash",
+      "sameText": true,
+      "snack": false,
+      "key": "fhlef",
+      "catalogKey": "fhlef"
+    },
+    {
+      "title": "🟠NEW: Caramel Apple ProNuts",
+      "mobileTitle": "🟠NEW: Caramel Apple ProNuts",
+      "catalogName": "🟠NEW: Caramel Apple ProNuts",
+      "sameText": true,
+      "snack": true,
+      "key": "1pupx",
+      "catalogKey": "1pupx"
+    },
+    {
+      "title": "🟠NEW: Cheesecake Brownie Bites",
+      "mobileTitle": "🟠NEW: Cheesecake Brownie Bites",
+      "catalogName": "🟠NEW: Cheesecake Brownie Bites",
+      "sameText": true,
+      "snack": true,
+      "key": "ckqkl",
+      "catalogKey": "ckqkl"
+    }
+  ],
+  "inventory": {
+    "release": "main-UMGPHR2R.js",
+    "cards": [
+      {
+        "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+        "key": "nfelz",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+        "key": "6t0uy",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+        "key": "qeom6",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Honey Mustard Glazed Coho Salmon",
+        "key": "1vb7k",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Honey Mustard Glazed Coho Salmon",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+        "key": "8s8vg",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+        "key": "oqhxo",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Grass-fed Steak Carnitas Burrito Bowl",
+        "key": "s7umt",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Grass-fed Steak Carnitas Burrito Bowl",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+        "key": "h0u29",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Free-Range Chicken Parm Over Protein Penne",
+        "key": "3eaxx",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Free-Range Chicken Parm Over Protein Penne",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+        "key": "m8q7r",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Sizzling Chorizo & Organic Egg Scramble",
+        "key": "t0gkc",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Sizzling Chorizo & Organic Egg Scramble",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Free-Range BBQ Turkey Bowl",
+        "key": "hpyxi",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Free-Range BBQ Turkey Bowl",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Grass-Fed Beef Taco Salad",
+        "key": "9d7jd",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Grass-Fed Beef Taco Salad",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Grilled Chipotle Free-Range Chicken",
+        "key": "g5d3h",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Grilled Chipotle Free-Range Chicken",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Buffalo Chicken Quesadilla on Low Carb Wrap",
+        "key": "l8z4l",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Buffalo Chicken Quesadilla on Low Carb Wrap",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Chicken Marsala with Wild Rice",
+        "key": "i7l4s",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Chicken Marsala with Wild Rice",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Thai Peanut Noodle Salad with Chicken",
+        "key": "f4fyd",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Thai Peanut Noodle Salad with Chicken",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Balsamic Grilled Free-Range Chicken",
+        "key": "vepzb",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Balsamic Grilled Free-Range Chicken",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Grilled Pork Chops with Cranberry Apple Chutney",
+        "key": "ibx3f",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Grilled Pork Chops with Cranberry Apple Chutney",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "BBQ Brisket Mac & Cheese",
+        "key": "f9qga",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "BBQ Brisket Mac & Cheese",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "BBQ Brisket Cauliflower Mac & Cheese",
+        "key": "j3amj",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "BBQ Brisket Cauliflower Mac & Cheese",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Sesame Chicken Teriyaki with Fried Rice",
+        "key": "xbv73",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Sesame Chicken Teriyaki with Fried Rice",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Mixed Berry Protein Waffles",
+        "key": "dj13f",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Mixed Berry Protein Waffles",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Blackened Shrimp Caesar Salad",
+        "key": "p18bt",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Blackened Shrimp Caesar Salad",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "🟠NEW: Sweet Chili BBQ Sloppy Joe Sliders",
+        "key": "a7gxw",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "🟠NEW: Sweet Chili BBQ Sloppy Joe Sliders",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "🟠NEW: Nashville Hot Chicken Mac & Cheese",
+        "key": "chzc5",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "🟠NEW: Nashville Hot Chicken Mac & Cheese",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "🟠NEW: Thai Basil Beef (Pad Kra Pao) with Coconut Rice",
+        "key": "14x4i",
+        "addition": false,
+        "section": "All Meals",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "🟠NEW: Thai Basil Beef (Pad Kra Pao) with Coconut Rice",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Golden Oreo Protein Sand",
+        "key": "e2te4",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$9.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Golden Oreo Protein Sand",
+          "action": "Add $9.00",
+          "size": "1",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Cookies & Cream Protein Dirt",
+        "key": "oeo2k",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$9.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Cookies & Cream Protein Dirt",
+          "action": "Add $9.00",
+          "size": "1",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Smart Oats: Cookies & Cream",
+        "key": "6bmyc",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$4.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Smart Oats: Cookies & Cream",
+          "action": "Add $4.00",
+          "size": "1",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Smart Oats: Almond Joy",
+        "key": "snggo",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$4.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Smart Oats: Almond Joy",
+          "action": "Add $4.00",
+          "size": "1",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+        "key": "7zip8",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$10.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+          "action": "Add $10.00",
+          "size": "5",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Smart Oats: S'mores",
+        "key": "o9y0r",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$4.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Smart Oats: S'mores",
+          "action": "Add $4.00",
+          "size": "1",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Smart Oats: Apple Cinnamon",
+        "key": "c58c2",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$4.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Smart Oats: Apple Cinnamon",
+          "action": "Add $4.00",
+          "size": "1",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Smart Oats: Strawberry Banana",
+        "key": "2ppo5",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$4.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Smart Oats: Strawberry Banana",
+          "action": "Add $4.00",
+          "size": "1",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Smart Oats: Blueberry Muffin",
+        "key": "fqxas",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$4.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Smart Oats: Blueberry Muffin",
+          "action": "Add $4.00",
+          "size": "1",
+          "displayed": false
+        }
+      },
+      {
+        "title": "93% Lean Free-Range Plain Ground Turkey",
+        "key": "qkbdd",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$13.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $13.00",
+        "displayed": true,
+        "mobile": {
+          "title": "93% Lean Free-Range Plain Ground Turkey",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Antibiotic & Hormone Free Honey Mustard Grilled Chicken",
+        "key": "i554u",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Antibiotic & Hormone Free Honey Mustard Grilled Chicken",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+        "key": "0wx0s",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$0.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+          "action": "Add $10.00",
+          "size": "5 +$10.00",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Wild Caught Cod",
+        "key": "2ofvd",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$21.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $21.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Wild Caught Cod",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Sustainably Caught Shrimp",
+        "key": "o33f5",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$19.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $19.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Sustainably Caught Shrimp",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Roasted Diced Sweet Potatoes",
+        "key": "ggii9",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$8.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $8.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Roasted Diced Sweet Potatoes",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Roasted Broccoli Florets",
+        "key": "4mdyd",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Roasted Broccoli Florets",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Roasted Asparagus Tips",
+        "key": "k1fna",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$14.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $14.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Roasted Asparagus Tips",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Pulled ABF Chicken Breast",
+        "key": "ekp68",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$15.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $15.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Pulled ABF Chicken Breast",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Maple BBQ ABF Pulled Chicken Breast",
+        "key": "89uoo",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$14.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $14.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Maple BBQ ABF Pulled Chicken Breast",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Steamed White Rice",
+        "key": "vlbe4",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$5.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $5.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Steamed White Rice",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Honey Buffalo Pulled ABF Chicken Breast",
+        "key": "y9b8y",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$14.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $14.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Honey Buffalo Pulled ABF Chicken Breast",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Garlic Roasted Green Beans",
+        "key": "hjbqz",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$12.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $12.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Garlic Roasted Green Beans",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+        "key": "xgi99",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$0.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+          "action": "Add $10.00",
+          "size": "5 +$10.00",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Organic Bone Broth Soup: Southwest Chicken",
+        "key": "tculz",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$12.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Organic Bone Broth Soup: Southwest Chicken",
+          "action": "Add $12.00",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "Organic Bone Broth Soup: Hearty Chicken & Garden Veggie",
+        "key": "8upbi",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$12.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "Organic Bone Broth Soup: Hearty Chicken & Garden Veggie",
+          "action": "Add $12.00",
+          "size": "Quart",
+          "displayed": false
+        }
+      },
+      {
+        "title": "Roasted Sweet Potato Mash",
+        "key": "fhlef",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$7.00",
+        "toggle": null,
+        "addToCart": "Add to Cart $7.00",
+        "displayed": true,
+        "mobile": {
+          "title": "Roasted Sweet Potato Mash",
+          "action": "Add",
+          "size": null,
+          "displayed": false
+        }
+      },
+      {
+        "title": "🟠NEW: Caramel Apple ProNuts",
+        "key": "1pupx",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$7.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "🟠NEW: Caramel Apple ProNuts",
+          "action": "Add $7.00",
+          "size": "3",
+          "displayed": false
+        }
+      },
+      {
+        "title": "🟠NEW: Cheesecake Brownie Bites",
+        "key": "ckqkl",
+        "addition": true,
+        "section": "Bulk & Snacks (Additions)",
+        "price": "$9.00",
+        "toggle": "Select Options",
+        "addToCart": null,
+        "displayed": true,
+        "mobile": {
+          "title": "🟠NEW: Cheesecake Brownie Bites",
+          "action": "Add $9.00",
+          "size": "5",
+          "displayed": false
+        }
+      }
+    ],
+    "sharedKeys": [],
+    "sections": [
+      "All Meals",
+      "Bulk & Snacks (Additions)"
+    ]
+  },
+  "chosen": {
+    "meals": [
+      "Wild Salmon Cake with Cucumber-Dill Crema",
+      "Grass-fed Balsamic Steak & Roasted Potatoes",
+      "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+      "Honey Mustard Glazed Coho Salmon",
+      "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+      "Smokehouse BBQ Gouda Grass-Fed Burger",
+      "Grass-fed Steak Carnitas Burrito Bowl",
+      "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+      "Free-Range Chicken Parm Over Protein Penne",
+      "Free-Range Chicken Parm Over Spiralized Noodles",
+      "Sizzling Chorizo & Organic Egg Scramble",
+      "Free-Range BBQ Turkey Bowl",
+      "Grass-Fed Beef Taco Salad",
+      "Grilled Chipotle Free-Range Chicken"
+    ],
+    "snack": "Golden Oreo Protein Sand",
+    "choicesCard": "🟠NEW: Cheesecake Brownie Bites",
+    "direct": {
+      "title": "93% Lean Free-Range Plain Ground Turkey",
+      "snack": false,
+      "why": "no snack card shows Add to Cart directly; the first addition that does"
+    }
+  },
+  "steps": [
+    {
+      "step": "start",
+      "t": 1791495450460,
+      "snack": {
+        "found": true,
+        "displayed": true,
+        "toggle": {
+          "element": "button.product__toggle[aria-expanded=\"false\"][type=\"button\"]",
+          "label": "Select Options",
+          "ariaExpanded": "false",
+          "insideActions": false,
+          "displayed": true
+        },
+        "addons": null,
+        "actions": null,
+        "counter": null,
+        "block": {
+          "card": "this card",
+          "addButton": null,
+          "count": 0,
+          "plus": null
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "Add $9.00",
+          "counter": null,
+          "size": "1"
+        },
+        "errors": [],
+        "toasts": []
+      },
+      "plan": {
+        "path": "/order",
+        "itemsCount": null,
+        "phoneStats": [
+          {
+            "label": "Items",
+            "value": "0",
+            "displayed": false
+          },
+          {
+            "label": "Cart Total",
+            "value": "$0.00",
+            "displayed": false
+          }
+        ],
+        "blockPlan": 0,
+        "blockCheckout": null,
+        "sideCheckout": null,
+        "barCheckout": {
+          "text": "Add 14 more meals",
+          "enabled": false,
+          "displayed": false
+        },
+        "progressLabel": "Please add at least 14 meals to continue",
+        "sidebarRows": [],
+        "lists": {
+          "hmp_pending_plan_items": "absent",
+          "hmp_local_cart": "absent"
+        },
+        "oneTime": [],
+        "overlays": []
+      }
+    },
+    {
+      "step": "choices card",
+      "t": 1791495451576,
+      "title": "🟠NEW: Cheesecake Brownie Bites",
+      "before": {
+        "found": true,
+        "displayed": true,
+        "toggle": {
+          "element": "button.product__toggle[aria-expanded=\"false\"][type=\"button\"]",
+          "label": "Select Options",
+          "ariaExpanded": "false",
+          "insideActions": false,
+          "displayed": true
+        },
+        "addons": null,
+        "actions": null,
+        "counter": null,
+        "block": {
+          "card": "this card",
+          "addButton": null,
+          "count": 0,
+          "plus": null
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "Add $9.00",
+          "counter": null,
+          "size": "5"
+        },
+        "errors": [],
+        "toasts": []
+      },
+      "pressed": [
+        {
+          "pressed": true,
+          "what": "Select Options / Hide Options",
+          "element": "button.product__toggle[aria-expanded=\"false\"][type=\"button\"]",
+          "text": "Select Options",
+          "at": 2510.399999976158
+        },
+        {
+          "pressed": true,
+          "what": "Select Options / Hide Options",
+          "element": "button.product__toggle[aria-expanded=\"true\"][type=\"button\"]",
+          "text": "Hide Options",
+          "at": 3122.399999976158
+        }
+      ],
+      "expanded": {
+        "found": true,
+        "displayed": true,
+        "toggle": {
+          "element": "button.product__toggle[aria-expanded=\"true\"][type=\"button\"]",
+          "label": "Hide Options",
+          "ariaExpanded": "true",
+          "insideActions": false,
+          "displayed": true
+        },
+        "addons": {
+          "element": "div.product__addons",
+          "displayed": true,
+          "items": [
+            {
+              "title": "Size",
+              "required": false,
+              "kind": "dropdown",
+              "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+              "value": "5",
+              "radios": [],
+              "marked": [],
+              "chosen": true,
+              "clearButton": "button.dropdown__clear[aria-label=\"Clear selection\"][type=\"button\"]",
+              "formState": "ng-untouched ng-pristine ng-valid",
+              "errors": [],
+              "shape": null
+            }
+          ],
+          "formState": "ng-valid"
+        },
+        "actions": {
+          "element": "div.product__actions",
+          "displayed": true,
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$9.00",
+              "disabled": false
+            }
+          ],
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$9.00",
+            "text": "Add to Cart$9.00"
+          }
+        },
+        "counter": null,
+        "block": {
+          "card": "this card",
+          "addButton": "Add to Cart$9.00",
+          "count": 0,
+          "plus": null
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "Add $9.00",
+          "counter": null,
+          "size": "5"
+        },
+        "errors": [],
+        "toasts": []
+      },
+      "choices": {
+        "opened": true,
+        "valueBefore": "5",
+        "listbox": "div.dropdown__panel[role=\"listbox\"]",
+        "options": [
+          {
+            "text": "5",
+            "selected": true
+          },
+          {
+            "text": "10 +$7.00",
+            "selected": false
+          }
+        ],
+        "valueAfter": "5",
+        "overlaysAfterClose": 0
+      },
+      "after": {
+        "found": true,
+        "displayed": true,
+        "toggle": {
+          "element": "button.product__toggle[aria-expanded=\"false\"][type=\"button\"]",
+          "label": "Select Options",
+          "ariaExpanded": "false",
+          "insideActions": false,
+          "displayed": true
+        },
+        "addons": null,
+        "actions": null,
+        "counter": null,
+        "block": {
+          "card": "this card",
+          "addButton": null,
+          "count": 0,
+          "plus": null
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "Add $9.00",
+          "counter": null,
+          "size": "5"
+        },
+        "errors": [],
+        "toasts": []
+      }
+    },
+    {
+      "step": "survey",
+      "t": 1791495455582,
+      "cards": [
+        {
+          "title": "Cookies & Cream Protein Dirt",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "1",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$9.00",
+            "text": "Add to Cart$9.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$9.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Smart Oats: Cookies & Cream",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "1",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$4.00",
+            "text": "Add to Cart$4.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$4.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Smart Oats: Almond Joy",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "1",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$4.00",
+            "text": "Add to Cart$4.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$4.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "5",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$10.00",
+            "text": "Add to Cart$10.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$10.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Smart Oats: S'mores",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "1",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$4.00",
+            "text": "Add to Cart$4.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$4.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Smart Oats: Apple Cinnamon",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "1",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$4.00",
+            "text": "Add to Cart$4.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$4.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Smart Oats: Strawberry Banana",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "1",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$4.00",
+            "text": "Add to Cart$4.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$4.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Smart Oats: Blueberry Muffin",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "1",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$4.00",
+            "text": "Add to Cart$4.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$4.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "5 +$10.00",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$10.00",
+            "text": "Add to Cart$10.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$10.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "5 +$10.00",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$10.00",
+            "text": "Add to Cart$10.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$10.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Organic Bone Broth Soup: Southwest Chicken",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "radio",
+                "control": "div.radio[role=\"radiogroup\"]",
+                "value": null,
+                "radios": [
+                  {
+                    "element": "input.radio__input[type=\"radio\"]",
+                    "label": "Quart",
+                    "checked": true
+                  }
+                ],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": [
+                  "div.product__addons-item",
+                  "  h4.product__addons-item-title \"Size\"",
+                  "    span.product__addons-item-required \"*\"",
+                  "  app-addon-controls",
+                  "    div.addon-controls",
+                  "      app-radio.",
+                  "        div.radio[role=\"radiogroup\"]",
+                  "          label.radio__option",
+                  "            input.radio__input[type=\"radio\"]",
+                  "            span.radio__indicator",
+                  "              span.radio__dot",
+                  "            span.radio__content",
+                  "              span.addon-controls__option-label \"Quart\""
+                ]
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$12.00",
+            "text": "Add to Cart$12.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$12.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "Organic Bone Broth Soup: Hearty Chicken & Garden Veggie",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "Quart",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$12.00",
+            "text": "Add to Cart$12.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$12.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        },
+        {
+          "title": "🟠NEW: Caramel Apple ProNuts",
+          "toggle": "Hide Options",
+          "addons": {
+            "element": "div.product__addons",
+            "displayed": true,
+            "items": [
+              {
+                "title": "Size *",
+                "required": true,
+                "kind": "dropdown",
+                "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+                "value": "3",
+                "radios": [],
+                "marked": [],
+                "chosen": true,
+                "clearButton": null,
+                "formState": "ng-untouched ng-pristine ng-valid",
+                "errors": [],
+                "shape": null
+              }
+            ],
+            "formState": "ng-valid"
+          },
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$7.00",
+            "text": "Add to Cart$7.00"
+          },
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$7.00",
+              "disabled": false
+            }
+          ],
+          "collapsedTo": "Select Options",
+          "addonsAfter": false
+        }
+      ]
+    },
+    {
+      "step": "meals",
+      "t": 1791495461076,
+      "presses": [
+        {
+          "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+          "pressed": true,
+          "counted": true,
+          "ms": 14
+        },
+        {
+          "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+          "pressed": true,
+          "counted": true,
+          "ms": 6
+        },
+        {
+          "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+          "pressed": true,
+          "counted": true,
+          "ms": 6
+        },
+        {
+          "title": "Honey Mustard Glazed Coho Salmon",
+          "pressed": true,
+          "counted": true,
+          "ms": 7
+        },
+        {
+          "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+          "pressed": true,
+          "counted": true,
+          "ms": 5
+        },
+        {
+          "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+          "pressed": true,
+          "counted": true,
+          "ms": 5
+        },
+        {
+          "title": "Grass-fed Steak Carnitas Burrito Bowl",
+          "pressed": true,
+          "counted": true,
+          "ms": 6
+        },
+        {
+          "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+          "pressed": true,
+          "counted": true,
+          "ms": 10
+        },
+        {
+          "title": "Free-Range Chicken Parm Over Protein Penne",
+          "pressed": true,
+          "counted": true,
+          "ms": 8
+        },
+        {
+          "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+          "pressed": true,
+          "counted": true,
+          "ms": 8
+        },
+        {
+          "title": "Sizzling Chorizo & Organic Egg Scramble",
+          "pressed": true,
+          "counted": true,
+          "ms": 6
+        },
+        {
+          "title": "Free-Range BBQ Turkey Bowl",
+          "pressed": true,
+          "counted": true,
+          "ms": 8
+        },
+        {
+          "title": "Grass-Fed Beef Taco Salad",
+          "pressed": true,
+          "counted": true,
+          "ms": 11
+        },
+        {
+          "title": "Grilled Chipotle Free-Range Chicken",
+          "pressed": true,
+          "counted": true,
+          "ms": 10
+        }
+      ],
+      "plan": {
+        "path": "/order",
+        "itemsCount": {
+          "text": "14 items",
+          "displayed": true
+        },
+        "phoneStats": [
+          {
+            "label": "Items",
+            "value": "14",
+            "displayed": false
+          },
+          {
+            "label": "Cart Total",
+            "value": "$168.00",
+            "displayed": false
+          }
+        ],
+        "blockPlan": 14,
+        "blockCheckout": "CHECKOUT NOW",
+        "sideCheckout": {
+          "text": "CHECKOUT NOW",
+          "enabled": true,
+          "displayed": true
+        },
+        "barCheckout": {
+          "text": "CHECKOUT",
+          "enabled": true,
+          "displayed": false
+        },
+        "progressLabel": "Minimum Met",
+        "sidebarRows": [
+          {
+            "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+            "count": "1"
+          },
+          {
+            "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+            "count": "1"
+          },
+          {
+            "title": "Honey Mustard Glazed Coho Salmon",
+            "count": "1"
+          },
+          {
+            "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+            "count": "1"
+          },
+          {
+            "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Steak Carnitas Burrito Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Protein Penne",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+            "count": "1"
+          },
+          {
+            "title": "Sizzling Chorizo & Organic Egg Scramble",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range BBQ Turkey Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Grass-Fed Beef Taco Salad",
+            "count": "1"
+          },
+          {
+            "title": "Grilled Chipotle Free-Range Chicken",
+            "count": "1"
+          }
+        ],
+        "lists": {
+          "hmp_pending_plan_items": 14,
+          "hmp_local_cart": "absent"
+        },
+        "oneTime": [
+          {
+            "element": "span.segment-label",
+            "text": "$168.00 One Time Order",
+            "displayed": true
+          }
+        ],
+        "overlays": []
+      }
+    },
+    {
+      "step": "snack Select Options",
+      "t": 1791495461486,
+      "before": {
+        "found": true,
+        "displayed": true,
+        "toggle": {
+          "element": "button.product__toggle[aria-expanded=\"false\"][type=\"button\"]",
+          "label": "Select Options",
+          "ariaExpanded": "false",
+          "insideActions": false,
+          "displayed": true
+        },
+        "addons": null,
+        "actions": null,
+        "counter": null,
+        "block": {
+          "card": "this card",
+          "addButton": null,
+          "count": 0,
+          "plus": null
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "Add $9.00",
+          "counter": null,
+          "size": "1"
+        },
+        "errors": [],
+        "toasts": [
+          "Grilled Chipotle Free-Range Chicken added to cart",
+          "Grass-Fed Beef Taco Salad added to cart",
+          "Free-Range BBQ Turkey Bowl added to cart",
+          "Sizzling Chorizo & Organic Egg Scramble added to cart",
+          "Free-Range Chicken Parm Over Spiralized Noodles added to cart",
+          "Free-Range Chicken Parm Over Protein Penne added to cart",
+          "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy added to cart"
+        ]
+      },
+      "pressed": {
+        "pressed": true,
+        "what": "Select Options / Hide Options",
+        "element": "button.product__toggle[aria-expanded=\"false\"][type=\"button\"]",
+        "text": "Select Options",
+        "at": 13126.099999964237
+      },
+      "expandMs": 103,
+      "after": {
+        "found": true,
+        "displayed": true,
+        "toggle": {
+          "element": "button.product__toggle[aria-expanded=\"true\"][type=\"button\"]",
+          "label": "Hide Options",
+          "ariaExpanded": "true",
+          "insideActions": false,
+          "displayed": true
+        },
+        "addons": {
+          "element": "div.product__addons",
+          "displayed": true,
+          "items": [
+            {
+              "title": "Size *",
+              "required": true,
+              "kind": "dropdown",
+              "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+              "value": "1",
+              "radios": [],
+              "marked": [],
+              "chosen": true,
+              "clearButton": null,
+              "formState": "ng-untouched ng-pristine ng-valid",
+              "errors": [],
+              "shape": null
+            }
+          ],
+          "formState": "ng-valid"
+        },
+        "actions": {
+          "element": "div.product__actions",
+          "displayed": true,
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart$9.00",
+              "disabled": false
+            }
+          ],
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$9.00",
+            "text": "Add to Cart$9.00"
+          }
+        },
+        "counter": null,
+        "block": {
+          "card": "this card",
+          "addButton": "Add to Cart$9.00",
+          "count": 0,
+          "plus": null
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "Add $9.00",
+          "counter": null,
+          "size": "1"
+        },
+        "errors": [],
+        "toasts": [
+          "Grilled Chipotle Free-Range Chicken added to cart",
+          "Grass-Fed Beef Taco Salad added to cart",
+          "Free-Range BBQ Turkey Bowl added to cart",
+          "Sizzling Chorizo & Organic Egg Scramble added to cart",
+          "Free-Range Chicken Parm Over Spiralized Noodles added to cart"
+        ]
+      },
+      "plan": {
+        "path": "/order",
+        "itemsCount": {
+          "text": "14 items",
+          "displayed": true
+        },
+        "phoneStats": [
+          {
+            "label": "Items",
+            "value": "14",
+            "displayed": false
+          },
+          {
+            "label": "Cart Total",
+            "value": "$168.00",
+            "displayed": false
+          }
+        ],
+        "blockPlan": 14,
+        "blockCheckout": "CHECKOUT NOW",
+        "sideCheckout": {
+          "text": "CHECKOUT NOW",
+          "enabled": true,
+          "displayed": true
+        },
+        "barCheckout": {
+          "text": "CHECKOUT",
+          "enabled": true,
+          "displayed": false
+        },
+        "progressLabel": "Minimum Met",
+        "sidebarRows": [
+          {
+            "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+            "count": "1"
+          },
+          {
+            "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+            "count": "1"
+          },
+          {
+            "title": "Honey Mustard Glazed Coho Salmon",
+            "count": "1"
+          },
+          {
+            "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+            "count": "1"
+          },
+          {
+            "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Steak Carnitas Burrito Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Protein Penne",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+            "count": "1"
+          },
+          {
+            "title": "Sizzling Chorizo & Organic Egg Scramble",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range BBQ Turkey Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Grass-Fed Beef Taco Salad",
+            "count": "1"
+          },
+          {
+            "title": "Grilled Chipotle Free-Range Chicken",
+            "count": "1"
+          }
+        ],
+        "lists": {
+          "hmp_pending_plan_items": 14,
+          "hmp_local_cart": "absent"
+        },
+        "oneTime": [
+          {
+            "element": "span.segment-label",
+            "text": "$168.00 One Time Order",
+            "displayed": true
+          }
+        ],
+        "overlays": []
+      }
+    },
+    {
+      "step": "snack Add to Cart",
+      "t": 1791495462521,
+      "pressed": {
+        "pressed": true,
+        "what": "Add to Cart",
+        "element": "button.button[type=\"button\"]",
+        "text": "Add to Cart$9.00",
+        "at": 13537.199999988079
+      },
+      "counted": true,
+      "countMs": 11,
+      "after": {
+        "found": true,
+        "displayed": true,
+        "toggle": {
+          "element": "button.product__toggle[aria-expanded=\"true\"][type=\"button\"]",
+          "label": "Hide Options",
+          "ariaExpanded": "true",
+          "insideActions": false,
+          "displayed": true
+        },
+        "addons": {
+          "element": "div.product__addons",
+          "displayed": true,
+          "items": [
+            {
+              "title": "Size *",
+              "required": true,
+              "kind": "dropdown",
+              "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+              "value": "1",
+              "radios": [],
+              "marked": [],
+              "chosen": true,
+              "clearButton": null,
+              "formState": "ng-untouched ng-pristine ng-valid",
+              "errors": [],
+              "shape": null
+            }
+          ],
+          "formState": "ng-valid"
+        },
+        "actions": {
+          "element": "div.product__actions",
+          "displayed": true,
+          "buttons": [
+            {
+              "element": "button.counter__button[aria-label=\"Decrease value\"][type=\"button\"]",
+              "text": "",
+              "disabled": false
+            },
+            {
+              "element": "button.counter__button[aria-label=\"Increase value\"][type=\"button\"]",
+              "text": "",
+              "disabled": false
+            }
+          ],
+          "addToCart": null
+        },
+        "counter": {
+          "element": "div.product > div.product__actions > app-counter",
+          "insideActions": true,
+          "value": "1",
+          "valuePath": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > span.counter__value",
+          "increase": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > button.counter__button[aria-label=\"Increase value\"][type=\"button\"]",
+          "decrease": true
+        },
+        "block": {
+          "card": "this card",
+          "addButton": null,
+          "count": 1,
+          "plus": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > button.counter__button[aria-label=\"Increase value\"][type=\"button\"]"
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "1",
+          "counter": "1",
+          "size": "1"
+        },
+        "errors": [],
+        "toasts": [
+          "Golden Oreo Protein Sand added to cart",
+          "Grilled Chipotle Free-Range Chicken added to cart",
+          "Grass-Fed Beef Taco Salad added to cart"
+        ]
+      },
+      "plan": {
+        "path": "/order",
+        "itemsCount": {
+          "text": "15 items",
+          "displayed": true
+        },
+        "phoneStats": [
+          {
+            "label": "Items",
+            "value": "14",
+            "displayed": false
+          },
+          {
+            "label": "Cart Total",
+            "value": "$177.00",
+            "displayed": false
+          }
+        ],
+        "blockPlan": 15,
+        "blockCheckout": "CHECKOUT NOW",
+        "sideCheckout": {
+          "text": "CHECKOUT NOW",
+          "enabled": true,
+          "displayed": true
+        },
+        "barCheckout": {
+          "text": "CHECKOUT",
+          "enabled": true,
+          "displayed": false
+        },
+        "progressLabel": "Minimum Met",
+        "sidebarRows": [
+          {
+            "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+            "count": "1"
+          },
+          {
+            "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+            "count": "1"
+          },
+          {
+            "title": "Honey Mustard Glazed Coho Salmon",
+            "count": "1"
+          },
+          {
+            "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+            "count": "1"
+          },
+          {
+            "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Steak Carnitas Burrito Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Protein Penne",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+            "count": "1"
+          },
+          {
+            "title": "Sizzling Chorizo & Organic Egg Scramble",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range BBQ Turkey Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Grass-Fed Beef Taco Salad",
+            "count": "1"
+          },
+          {
+            "title": "Grilled Chipotle Free-Range Chicken",
+            "count": "1"
+          },
+          {
+            "title": "Golden Oreo Protein Sand",
+            "count": "1"
+          }
+        ],
+        "lists": {
+          "hmp_pending_plan_items": 14,
+          "hmp_local_cart": 1
+        },
+        "oneTime": [
+          {
+            "element": "span.segment-label",
+            "text": "$177.00 One Time Order",
+            "displayed": true
+          }
+        ],
+        "overlays": []
+      }
+    },
+    {
+      "step": "snack \"+\"",
+      "t": 1791495463631,
+      "pressed": {
+        "pressed": true,
+        "what": "the counter's \"+\"",
+        "element": "button.counter__button[aria-label=\"Increase value\"][type=\"button\"]",
+        "text": "",
+        "at": 14570.699999988079
+      },
+      "counted": true,
+      "countMs": 102,
+      "after": {
+        "found": true,
+        "displayed": true,
+        "toggle": {
+          "element": "button.product__toggle[aria-expanded=\"true\"][type=\"button\"]",
+          "label": "Hide Options",
+          "ariaExpanded": "true",
+          "insideActions": false,
+          "displayed": true
+        },
+        "addons": {
+          "element": "div.product__addons",
+          "displayed": true,
+          "items": [
+            {
+              "title": "Size *",
+              "required": true,
+              "kind": "dropdown",
+              "control": "app-dropdown > div.dropdown[role=\"combobox\"][aria-expanded=\"false\"]",
+              "value": "1",
+              "radios": [],
+              "marked": [],
+              "chosen": true,
+              "clearButton": null,
+              "formState": "ng-untouched ng-pristine ng-valid",
+              "errors": [],
+              "shape": null
+            }
+          ],
+          "formState": "ng-valid"
+        },
+        "actions": {
+          "element": "div.product__actions",
+          "displayed": true,
+          "buttons": [
+            {
+              "element": "button.counter__button[aria-label=\"Decrease value\"][type=\"button\"]",
+              "text": "",
+              "disabled": false
+            },
+            {
+              "element": "button.counter__button[aria-label=\"Increase value\"][type=\"button\"]",
+              "text": "",
+              "disabled": false
+            }
+          ],
+          "addToCart": null
+        },
+        "counter": {
+          "element": "div.product > div.product__actions > app-counter",
+          "insideActions": true,
+          "value": "2",
+          "valuePath": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > span.counter__value",
+          "increase": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > button.counter__button[aria-label=\"Increase value\"][type=\"button\"]",
+          "decrease": true
+        },
+        "block": {
+          "card": "this card",
+          "addButton": null,
+          "count": 2,
+          "plus": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > button.counter__button[aria-label=\"Increase value\"][type=\"button\"]"
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "2",
+          "counter": "2",
+          "size": "1"
+        },
+        "errors": [],
+        "toasts": [
+          "Golden Oreo Protein Sand added to cart"
+        ]
+      },
+      "plan": {
+        "path": "/order",
+        "itemsCount": {
+          "text": "16 items",
+          "displayed": true
+        },
+        "phoneStats": [
+          {
+            "label": "Items",
+            "value": "14",
+            "displayed": false
+          },
+          {
+            "label": "Cart Total",
+            "value": "$186.00",
+            "displayed": false
+          }
+        ],
+        "blockPlan": 16,
+        "blockCheckout": "CHECKOUT NOW",
+        "sideCheckout": {
+          "text": "CHECKOUT NOW",
+          "enabled": true,
+          "displayed": true
+        },
+        "barCheckout": {
+          "text": "CHECKOUT",
+          "enabled": true,
+          "displayed": false
+        },
+        "progressLabel": "Minimum Met",
+        "sidebarRows": [
+          {
+            "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+            "count": "1"
+          },
+          {
+            "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+            "count": "1"
+          },
+          {
+            "title": "Honey Mustard Glazed Coho Salmon",
+            "count": "1"
+          },
+          {
+            "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+            "count": "1"
+          },
+          {
+            "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Steak Carnitas Burrito Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Protein Penne",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+            "count": "1"
+          },
+          {
+            "title": "Sizzling Chorizo & Organic Egg Scramble",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range BBQ Turkey Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Grass-Fed Beef Taco Salad",
+            "count": "1"
+          },
+          {
+            "title": "Grilled Chipotle Free-Range Chicken",
+            "count": "1"
+          },
+          {
+            "title": "Golden Oreo Protein Sand",
+            "count": "2"
+          }
+        ],
+        "lists": {
+          "hmp_pending_plan_items": 14,
+          "hmp_local_cart": 1
+        },
+        "oneTime": [
+          {
+            "element": "span.segment-label",
+            "text": "$186.00 One Time Order",
+            "displayed": true
+          }
+        ],
+        "overlays": []
+      }
+    },
+    {
+      "step": "direct Add to Cart",
+      "t": 1791495464661,
+      "title": "93% Lean Free-Range Plain Ground Turkey",
+      "before": {
+        "found": true,
+        "displayed": true,
+        "toggle": null,
+        "addons": null,
+        "actions": {
+          "element": "div.product__actions",
+          "displayed": true,
+          "buttons": [
+            {
+              "element": "button.button[type=\"button\"]",
+              "text": "Add to Cart $13.00",
+              "disabled": false
+            }
+          ],
+          "addToCart": {
+            "element": "div.product > div.product__actions > app-button.full-width > button.button[type=\"button\"]",
+            "label": "Add to Cart",
+            "price": "$13.00",
+            "text": "Add to Cart $13.00"
+          }
+        },
+        "counter": null,
+        "block": {
+          "card": "this card",
+          "addButton": "Add to Cart $13.00",
+          "count": 0,
+          "plus": null
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "Add",
+          "counter": null,
+          "size": null
+        },
+        "errors": [],
+        "toasts": [
+          "Golden Oreo Protein Sand added to cart"
+        ]
+      },
+      "pressed": {
+        "pressed": true,
+        "what": "Add to Cart",
+        "element": "button.button[type=\"button\"]",
+        "text": "Add to Cart $13.00",
+        "at": 15681.299999952316
+      },
+      "counted": true,
+      "countMs": 11,
+      "after": {
+        "found": true,
+        "displayed": true,
+        "toggle": null,
+        "addons": null,
+        "actions": {
+          "element": "div.product__actions",
+          "displayed": true,
+          "buttons": [
+            {
+              "element": "button.counter__button[aria-label=\"Decrease value\"][type=\"button\"]",
+              "text": "",
+              "disabled": false
+            },
+            {
+              "element": "button.counter__button[aria-label=\"Increase value\"][type=\"button\"]",
+              "text": "",
+              "disabled": false
+            }
+          ],
+          "addToCart": null
+        },
+        "counter": {
+          "element": "div.product > div.product__actions > app-counter",
+          "insideActions": true,
+          "value": "1",
+          "valuePath": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > span.counter__value",
+          "increase": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > button.counter__button[aria-label=\"Increase value\"][type=\"button\"]",
+          "decrease": true
+        },
+        "block": {
+          "card": "this card",
+          "addButton": null,
+          "count": 1,
+          "plus": "div.product > div.product__actions > app-counter > div.counter[role=\"spinbutton\"] > button.counter__button[aria-label=\"Increase value\"][type=\"button\"]"
+        },
+        "mobile": {
+          "displayed": false,
+          "action": "1",
+          "counter": "1",
+          "size": null
+        },
+        "errors": [],
+        "toasts": [
+          "93% Lean Free-Range Plain Ground Turkey added to cart",
+          "Golden Oreo Protein Sand added to cart"
+        ]
+      },
+      "plan": {
+        "path": "/order",
+        "itemsCount": {
+          "text": "17 items",
+          "displayed": true
+        },
+        "phoneStats": [
+          {
+            "label": "Items",
+            "value": "14",
+            "displayed": false
+          },
+          {
+            "label": "Cart Total",
+            "value": "$199.00",
+            "displayed": false
+          }
+        ],
+        "blockPlan": 17,
+        "blockCheckout": "CHECKOUT NOW",
+        "sideCheckout": {
+          "text": "CHECKOUT NOW",
+          "enabled": true,
+          "displayed": true
+        },
+        "barCheckout": {
+          "text": "CHECKOUT",
+          "enabled": true,
+          "displayed": false
+        },
+        "progressLabel": "Minimum Met",
+        "sidebarRows": [
+          {
+            "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+            "count": "1"
+          },
+          {
+            "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+            "count": "1"
+          },
+          {
+            "title": "Honey Mustard Glazed Coho Salmon",
+            "count": "1"
+          },
+          {
+            "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+            "count": "1"
+          },
+          {
+            "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Steak Carnitas Burrito Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Protein Penne",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+            "count": "1"
+          },
+          {
+            "title": "Sizzling Chorizo & Organic Egg Scramble",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range BBQ Turkey Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Grass-Fed Beef Taco Salad",
+            "count": "1"
+          },
+          {
+            "title": "Grilled Chipotle Free-Range Chicken",
+            "count": "1"
+          },
+          {
+            "title": "Golden Oreo Protein Sand",
+            "count": "2"
+          },
+          {
+            "title": "93% Lean Free-Range Plain Ground Turkey",
+            "count": "1"
+          }
+        ],
+        "lists": {
+          "hmp_pending_plan_items": 14,
+          "hmp_local_cart": 2
+        },
+        "oneTime": [
+          {
+            "element": "span.segment-label",
+            "text": "$199.00 One Time Order",
+            "displayed": true
+          }
+        ],
+        "overlays": []
+      }
+    },
+    {
+      "step": "before CHECKOUT",
+      "t": 1791495464667,
+      "control": "CHECKOUT NOW",
+      "plan": {
+        "path": "/order",
+        "itemsCount": {
+          "text": "17 items",
+          "displayed": true
+        },
+        "phoneStats": [
+          {
+            "label": "Items",
+            "value": "14",
+            "displayed": false
+          },
+          {
+            "label": "Cart Total",
+            "value": "$199.00",
+            "displayed": false
+          }
+        ],
+        "blockPlan": 17,
+        "blockCheckout": "CHECKOUT NOW",
+        "sideCheckout": {
+          "text": "CHECKOUT NOW",
+          "enabled": true,
+          "displayed": true
+        },
+        "barCheckout": {
+          "text": "CHECKOUT",
+          "enabled": true,
+          "displayed": false
+        },
+        "progressLabel": "Minimum Met",
+        "sidebarRows": [
+          {
+            "title": "Wild Salmon Cake with Cucumber-Dill Crema",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Balsamic Steak & Roasted Potatoes",
+            "count": "1"
+          },
+          {
+            "title": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+            "count": "1"
+          },
+          {
+            "title": "Honey Mustard Glazed Coho Salmon",
+            "count": "1"
+          },
+          {
+            "title": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+            "count": "1"
+          },
+          {
+            "title": "Smokehouse BBQ Gouda Grass-Fed Burger",
+            "count": "1"
+          },
+          {
+            "title": "Grass-fed Steak Carnitas Burrito Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Protein Penne",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range Chicken Parm Over Spiralized Noodles",
+            "count": "1"
+          },
+          {
+            "title": "Sizzling Chorizo & Organic Egg Scramble",
+            "count": "1"
+          },
+          {
+            "title": "Free-Range BBQ Turkey Bowl",
+            "count": "1"
+          },
+          {
+            "title": "Grass-Fed Beef Taco Salad",
+            "count": "1"
+          },
+          {
+            "title": "Grilled Chipotle Free-Range Chicken",
+            "count": "1"
+          },
+          {
+            "title": "Golden Oreo Protein Sand",
+            "count": "2"
+          },
+          {
+            "title": "93% Lean Free-Range Plain Ground Turkey",
+            "count": "1"
+          }
+        ],
+        "lists": {
+          "hmp_pending_plan_items": 14,
+          "hmp_local_cart": 2
+        },
+        "oneTime": [
+          {
+            "element": "span.segment-label",
+            "text": "$199.00 One Time Order",
+            "displayed": true
+          }
+        ],
+        "overlays": []
+      }
+    },
+    {
+      "step": "CHECKOUT",
+      "t": 1791495467715,
+      "pressed": {
+        "pressed": true,
+        "what": "control /^checkout( now)?$/i",
+        "element": "button.button[type=\"button\"]",
+        "text": "CHECKOUT NOW",
+        "at": 16717.799999952316
+      },
+      "label": "^checkout( now)?$",
+      "path": "/checkout",
+      "ms": 3042
+    }
+  ],
+  "recorder": [
+    [
+      2502,
+      "path",
+      "/order"
+    ],
+    [
+      2502,
+      "plan",
+      "0"
+    ],
+    [
+      2502,
+      "items",
+      null
+    ],
+    [
+      2502,
+      "phone:Items",
+      "0"
+    ],
+    [
+      2502,
+      "phone:Cart Total",
+      "$0.00"
+    ],
+    [
+      2502,
+      "card0",
+      "toggle:Select Options|no addons|no add|count:0"
+    ],
+    [
+      2502,
+      "card1",
+      "no toggle|no addons|add|count:0"
+    ],
+    [
+      2502,
+      "overlays",
+      "0"
+    ],
+    [
+      2604,
+      "overlays",
+      "1"
+    ],
+    [
+      2703,
+      "overlays",
+      "0"
+    ],
+    [
+      7703,
+      "plan",
+      "1"
+    ],
+    [
+      7703,
+      "items",
+      "1 item"
+    ],
+    [
+      7703,
+      "phone:Items",
+      "1"
+    ],
+    [
+      7703,
+      "phone:Cart Total",
+      "$12.00"
+    ],
+    [
+      8003,
+      "plan",
+      "2"
+    ],
+    [
+      8003,
+      "items",
+      "2 items"
+    ],
+    [
+      8003,
+      "phone:Items",
+      "2"
+    ],
+    [
+      8003,
+      "phone:Cart Total",
+      "$24.00"
+    ],
+    [
+      8306,
+      "plan",
+      "3"
+    ],
+    [
+      8306,
+      "items",
+      "3 items"
+    ],
+    [
+      8306,
+      "phone:Items",
+      "3"
+    ],
+    [
+      8306,
+      "phone:Cart Total",
+      "$36.00"
+    ],
+    [
+      8618,
+      "plan",
+      "4"
+    ],
+    [
+      8618,
+      "items",
+      "4 items"
+    ],
+    [
+      8618,
+      "phone:Items",
+      "4"
+    ],
+    [
+      8618,
+      "phone:Cart Total",
+      "$48.00"
+    ],
+    [
+      9011,
+      "plan",
+      "5"
+    ],
+    [
+      9011,
+      "items",
+      "5 items"
+    ],
+    [
+      9011,
+      "phone:Items",
+      "5"
+    ],
+    [
+      9011,
+      "phone:Cart Total",
+      "$60.00"
+    ],
+    [
+      9311,
+      "plan",
+      "6"
+    ],
+    [
+      9311,
+      "items",
+      "6 items"
+    ],
+    [
+      9311,
+      "phone:Items",
+      "6"
+    ],
+    [
+      9311,
+      "phone:Cart Total",
+      "$72.00"
+    ],
+    [
+      9611,
+      "plan",
+      "7"
+    ],
+    [
+      9611,
+      "items",
+      "7 items"
+    ],
+    [
+      9611,
+      "phone:Items",
+      "7"
+    ],
+    [
+      9611,
+      "phone:Cart Total",
+      "$84.00"
+    ],
+    [
+      9911,
+      "plan",
+      "8"
+    ],
+    [
+      9911,
+      "items",
+      "8 items"
+    ],
+    [
+      9911,
+      "phone:Items",
+      "8"
+    ],
+    [
+      9911,
+      "phone:Cart Total",
+      "$96.00"
+    ],
+    [
+      10210,
+      "plan",
+      "9"
+    ],
+    [
+      10210,
+      "items",
+      "9 items"
+    ],
+    [
+      10210,
+      "phone:Items",
+      "9"
+    ],
+    [
+      10210,
+      "phone:Cart Total",
+      "$108.00"
+    ],
+    [
+      10610,
+      "plan",
+      "10"
+    ],
+    [
+      10610,
+      "items",
+      "10 items"
+    ],
+    [
+      10610,
+      "phone:Items",
+      "10"
+    ],
+    [
+      10610,
+      "phone:Cart Total",
+      "$120.00"
+    ],
+    [
+      10910,
+      "plan",
+      "11"
+    ],
+    [
+      10910,
+      "items",
+      "11 items"
+    ],
+    [
+      10910,
+      "phone:Items",
+      "11"
+    ],
+    [
+      10910,
+      "phone:Cart Total",
+      "$132.00"
+    ],
+    [
+      11210,
+      "plan",
+      "12"
+    ],
+    [
+      11210,
+      "items",
+      "12 items"
+    ],
+    [
+      11210,
+      "phone:Items",
+      "12"
+    ],
+    [
+      11210,
+      "phone:Cart Total",
+      "$144.00"
+    ],
+    [
+      11510,
+      "plan",
+      "13"
+    ],
+    [
+      11510,
+      "items",
+      "13 items"
+    ],
+    [
+      11510,
+      "phone:Items",
+      "13"
+    ],
+    [
+      11510,
+      "phone:Cart Total",
+      "$156.00"
+    ],
+    [
+      11819,
+      "plan",
+      "14"
+    ],
+    [
+      11819,
+      "items",
+      "14 items"
+    ],
+    [
+      11819,
+      "phone:Items",
+      "14"
+    ],
+    [
+      11819,
+      "phone:Cart Total",
+      "$168.00"
+    ],
+    [
+      13211,
+      "card0",
+      "toggle:Hide Options|addons|add|count:0"
+    ],
+    [
+      13610,
+      "plan",
+      "15"
+    ],
+    [
+      13610,
+      "items",
+      "15 items"
+    ],
+    [
+      13610,
+      "phone:Cart Total",
+      "$177.00"
+    ],
+    [
+      13610,
+      "card0",
+      "toggle:Hide Options|addons|no add|count:1"
+    ],
+    [
+      14609,
+      "plan",
+      "16"
+    ],
+    [
+      14609,
+      "items",
+      "16 items"
+    ],
+    [
+      14609,
+      "phone:Cart Total",
+      "$186.00"
+    ],
+    [
+      14609,
+      "card0",
+      "toggle:Hide Options|addons|no add|count:2"
+    ],
+    [
+      15705,
+      "plan",
+      "17"
+    ],
+    [
+      15705,
+      "items",
+      "17 items"
+    ],
+    [
+      15705,
+      "phone:Cart Total",
+      "$199.00"
+    ],
+    [
+      15705,
+      "card1",
+      "no toggle|no addons|no add|count:1"
+    ]
+  ],
+  "extras": {
+    "opened": true,
+    "afterMs": 205,
+    "dialog": {
+      "element": "app-extra-products-dialog",
+      "heading": "Wait, don't forget these extras!",
+      "buttons": [
+        "CONTINUE TO CHECKOUT"
+      ],
+      "displayed": true
+    },
+    "pressed": {
+      "pressed": true,
+      "what": "control /^continue to checkout$/i",
+      "element": "button.button[type=\"button\"]",
+      "text": "CONTINUE TO CHECKOUT",
+      "at": 16937.599999964237
+    }
+  },
+  "checkout": {
+    "path": "/checkout",
+    "checkoutFound": true,
+    "lines": [
+      {
+        "name": "Free-Range BBQ Turkey Bowl",
+        "key": "hpyxi",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Free-Range Chicken Parm Over Protein Penne",
+        "key": "3eaxx",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Free-Range Chicken Parm Over Spiralized Noodles",
+        "key": "m8q7r",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Grass-fed Balsamic Steak & Roasted Potatoes",
+        "key": "6t0uy",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Grass-Fed Beef Taco Salad",
+        "key": "9d7jd",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Grass-fed Steak Carnitas Burrito Bowl",
+        "key": "s7umt",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Grilled Chipotle Free-Range Chicken",
+        "key": "g5d3h",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+        "key": "h0u29",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Honey Mustard Glazed Coho Salmon",
+        "key": "1vb7k",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Huevos Rancheros Breakfast Taquito on Low Carb Tortilla",
+        "key": "qeom6",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+        "key": "8s8vg",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Sizzling Chorizo & Organic Egg Scramble",
+        "key": "t0gkc",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Smokehouse BBQ Gouda Grass-Fed Burger",
+        "key": "oqhxo",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "Wild Salmon Cake with Cucumber-Dill Crema",
+        "key": "nfelz",
+        "meal": true,
+        "price": "$12.00",
+        "addons": "Portion: Lean",
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": null
+      },
+      {
+        "name": "93% Lean Free-Range Plain Ground Turkey Add-on",
+        "key": "8tbuk",
+        "meal": false,
+        "price": "$13.00",
+        "addons": null,
+        "quantity": "1",
+        "remove": true,
+        "displayed": true,
+        "group": "Add-On & Extra Meals"
+      },
+      {
+        "name": "Golden Oreo Protein Sand Add-on",
+        "key": "mb5f3",
+        "meal": false,
+        "price": "$18.00 2 × $9.00",
+        "addons": "Size: 1",
+        "quantity": "2",
+        "remove": true,
+        "displayed": true,
+        "group": "Add-On & Extra Meals"
+      }
+    ],
+    "snack": {
+      "line": {
+        "name": "Golden Oreo Protein Sand Add-on",
+        "key": "mb5f3",
+        "meal": false,
+        "price": "$18.00 2 × $9.00",
+        "addons": "Size: 1",
+        "quantity": "2",
+        "remove": true,
+        "displayed": true,
+        "nameParts": {
+          "whole": "Golden Oreo Protein Sand Add-on",
+          "own": "Golden Oreo Protein Sand",
+          "children": [
+            {
+              "element": "span.summary__item-tag",
+              "text": "Add-on"
+            }
+          ]
+        },
+        "matchedBy": "the name's own text",
+        "element": "div.summary__item",
+        "shape": [
+          "div.summary__item",
+          "  div.summary__item-image",
+          "    img.img-skeleton",
+          "  div.summary__item-info",
+          "    div.summary__item-name \"Golden Oreo Protein Sand\"",
+          "      span.summary__item-tag \"Add-on\"",
+          "    div.summary__item-addons",
+          "      span.summary__item-addon \"Size: 1\"",
+          "    div.summary__item-quantity-controls",
+          "      app-counter",
+          "        div.counter[role=\"spinbutton\"]",
+          "          button.counter__button[aria-label=\"Decrease value\"][type=\"button\"]",
+          "          span.counter__value \"2\"",
+          "          button.counter__button[aria-label=\"Increase value\"][type=\"button\"]",
+          "      button.summary__item-remove[aria-label=\"Remove item\"][type=\"button\"]",
+          "  div.summary__item-price",
+          "    span.summary__item-price-current \"$18.00\"",
+          "    span.summary__item-price-unit \"2 × $9.00\""
+        ],
+        "hiddenBy": [],
+        "partsHiddenBy": [
+          {
+            "element": "div.summary__item-image",
+            "text": "",
+            "hiddenBy": []
+          },
+          {
+            "element": "img.img-skeleton",
+            "text": "",
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item-info",
+            "text": "Golden Oreo Protein Sand Add-onSize: 12",
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item-name",
+            "text": "Golden Oreo Protein Sand Add-on",
+            "hiddenBy": []
+          },
+          {
+            "element": "span.summary__item-tag",
+            "text": "Add-on",
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item-addons",
+            "text": "Size: 1",
+            "hiddenBy": [
+              "H12"
+            ]
+          },
+          {
+            "element": "span.summary__item-addon",
+            "text": "Size: 1",
+            "hiddenBy": [
+              "H12"
+            ]
+          },
+          {
+            "element": "div.summary__item-quantity-controls",
+            "text": "2",
+            "hiddenBy": [
+              "H13"
+            ]
+          },
+          {
+            "element": "path",
+            "text": "",
+            "hiddenBy": [
+              "H13"
+            ]
+          },
+          {
+            "element": "span.counter__value",
+            "text": "2",
+            "hiddenBy": [
+              "H13"
+            ]
+          },
+          {
+            "element": "path",
+            "text": "",
+            "hiddenBy": [
+              "H13"
+            ]
+          },
+          {
+            "element": "button.summary__item-remove[aria-label=\"Remove item\"][type=\"button\"]",
+            "text": "",
+            "hiddenBy": [
+              "H13",
+              "H14"
+            ]
+          },
+          {
+            "element": "path",
+            "text": "",
+            "hiddenBy": [
+              "H13",
+              "H14"
+            ]
+          },
+          {
+            "element": "path",
+            "text": "",
+            "hiddenBy": [
+              "H13",
+              "H14"
+            ]
+          },
+          {
+            "element": "div.summary__item-price",
+            "text": "$18.00 2 × $9.00",
+            "hiddenBy": [
+              "H11"
+            ]
+          },
+          {
+            "element": "span.summary__item-price-current",
+            "text": "$18.00",
+            "hiddenBy": [
+              "H11"
+            ]
+          },
+          {
+            "element": "span.summary__item-price-unit",
+            "text": "2 × $9.00",
+            "hiddenBy": [
+              "H11"
+            ]
+          }
+        ]
+      },
+      "group": {
+        "element": "div.summary__additions-section",
+        "pathFromCheckout": "div.checkout > form.checkout__wrapper > div.checkout__summary > div.summary > div.summary__drawer-wrapper > div.summary__drawer-scroll > div.summary__content > div.summary__items > section.summary__plan-group > div.summary__additions-section",
+        "hiddenBy": [],
+        "header": [
+          {
+            "element": "h4.summary__additions-header",
+            "text": "Add-On & Extra Meals",
+            "displayed": true,
+            "hiddenBy": []
+          }
+        ],
+        "lines": [
+          "93% Lean Free-Range Plain Ground Turkey Add-on",
+          "Golden Oreo Protein Sand Add-on"
+        ],
+        "outline": [
+          "div.summary__additions-section",
+          "  h4.summary__additions-header \"Add-On & Extra Meals\"",
+          "  div.summary__item [line: 93% Lean Free-Range Plain Ground Turkey Add-on]",
+          "  div.summary__item [line: Golden Oreo Protein Sand Add-on]"
+        ]
+      },
+      "container": {
+        "element": "section.summary__plan-group",
+        "hiddenBy": [],
+        "children": [
+          {
+            "element": "div.summary__plan-group-header.summary__plan-group-header--expanded",
+            "text": "Lean Plan 14 Meals Remove plan",
+            "displayed": true,
+            "hiddenBy": [
+              "H16"
+            ]
+          },
+          {
+            "element": "a.summary__plan-return",
+            "text": "← Return to Lean Plan 14 Meals",
+            "displayed": true,
+            "hiddenBy": [
+              "H17"
+            ]
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Free-Range BBQ Turkey Bowl]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Free-Range Chicken Parm Over Protein Penne]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Free-Range Chicken Parm Over Spiralized Noodles]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Grass-fed Balsamic Steak & Roasted Potatoes]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Grass-Fed Beef Taco Salad]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Grass-fed Steak Carnitas Burrito Bowl]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Grilled Chipotle Free-Range Chicken]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Honey Mustard Glazed Coho Salmon]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Huevos Rancheros Breakfast Taquito on Low Carb Tortilla]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Sizzling Chorizo & Organic Egg Scramble]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Smokehouse BBQ Gouda Grass-Fed Burger]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__item",
+            "text": "[line: Wild Salmon Cake with Cucumber-Dill Crema]",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__additions-section",
+            "text": "Add-On & Extra Meals 93% Lean Free-Range Plain Ground Turkey Add-on1 $13.00 Golden Oreo Protein Sand Add-onSize: 12 $18.",
+            "displayed": true,
+            "hiddenBy": []
+          },
+          {
+            "element": "div.summary__plan-total",
+            "text": "Plan Total (14 items)$199.00",
+            "displayed": true,
+            "hiddenBy": [
+              "H15"
+            ]
+          }
+        ]
+      }
+    },
+    "oneTime": [],
+    "mealGroup": null,
+    "total": {
+      "element": "div.summary__total",
+      "text": "Total $199.00",
+      "displayed": true
+    },
+    "rows": [
+      "Subtotal | 17 items$199.00",
+      "Shipping—",
+      "Tax$0.00"
+    ],
+    "planTotal": "Plan Total (14 items)$199.00",
+    "hide": [
+      {
+        "h": "H1",
+        "selector": ".sticky-header:not(app-checkout *)",
+        "matches": 1,
+        "elsewhere": 1,
+        "near": []
+      },
+      {
+        "h": "H2",
+        "selector": ".footer:not(app-checkout *)",
+        "matches": 2,
+        "elsewhere": 2,
+        "near": []
+      },
+      {
+        "h": "H2",
+        "selector": ".app-hmp-credit:not(app-checkout *)",
+        "matches": 0,
+        "elsewhere": 0,
+        "near": []
+      },
+      {
+        "h": "H5",
+        "selector": "app-storefront-popup-host:not(app-checkout *)",
+        "matches": 1,
+        "elsewhere": 1,
+        "near": []
+      },
+      {
+        "h": "H8",
+        "selector": ".smartbanner:not(app-checkout *)",
+        "matches": 0,
+        "elsewhere": 0,
+        "near": []
+      },
+      {
+        "h": "H3",
+        "selector": "a.checkout__guest-signin-banner",
+        "matches": 1,
+        "elsewhere": 1,
+        "near": []
+      },
+      {
+        "h": "H4",
+        "selector": "a.contact__sign-in",
+        "matches": 1,
+        "elsewhere": 1,
+        "near": []
+      },
+      {
+        "h": "H6",
+        "selector": ".summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))",
+        "matches": 0,
+        "elsewhere": 0,
+        "near": []
+      },
+      {
+        "h": "H7",
+        "selector": ".checkout-discounts:not(.fitaf-code *)",
+        "matches": 2,
+        "elsewhere": 2,
+        "near": []
+      },
+      {
+        "h": "H9",
+        "selector": ".summary__row:not(.summary__row--discount,:has(.summary__total))",
+        "matches": 3,
+        "elsewhere": 3,
+        "near": []
+      },
+      {
+        "h": "H10",
+        "selector": ":is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))",
+        "matches": 2,
+        "elsewhere": 2,
+        "near": []
+      },
+      {
+        "h": "H11",
+        "selector": ".summary__item-price",
+        "matches": 16,
+        "elsewhere": 14,
+        "near": [
+          {
+            "where": "inside the group",
+            "element": "div.summary__item-price",
+            "text": "$13.00",
+            "displayed": true
+          },
+          {
+            "where": "inside the line",
+            "element": "div.summary__item-price",
+            "text": "$18.00 2 × $9.00",
+            "displayed": true
+          }
+        ]
+      },
+      {
+        "h": "H12",
+        "selector": ".summary__item-addons",
+        "matches": 15,
+        "elsewhere": 14,
+        "near": [
+          {
+            "where": "inside the line",
+            "element": "div.summary__item-addons",
+            "text": "Size: 1",
+            "displayed": true
+          }
+        ]
+      },
+      {
+        "h": "H13",
+        "selector": ".summary__item-quantity-controls",
+        "matches": 16,
+        "elsewhere": 14,
+        "near": [
+          {
+            "where": "inside the group",
+            "element": "div.summary__item-quantity-controls",
+            "text": "1",
+            "displayed": true
+          },
+          {
+            "where": "inside the line",
+            "element": "div.summary__item-quantity-controls",
+            "text": "2",
+            "displayed": true
+          }
+        ]
+      },
+      {
+        "h": "H14",
+        "selector": ".summary__item-remove",
+        "matches": 16,
+        "elsewhere": 14,
+        "near": [
+          {
+            "where": "inside the group",
+            "element": "button.summary__item-remove[aria-label=\"Remove item\"][type=\"button\"]",
+            "text": "",
+            "displayed": true
+          },
+          {
+            "where": "inside the line",
+            "element": "button.summary__item-remove[aria-label=\"Remove item\"][type=\"button\"]",
+            "text": "",
+            "displayed": true
+          }
+        ]
+      },
+      {
+        "h": "H15",
+        "selector": ".summary__plan-total",
+        "matches": 1,
+        "elsewhere": 1,
+        "near": []
+      },
+      {
+        "h": "H16",
+        "selector": ".summary__plan-group-header",
+        "matches": 1,
+        "elsewhere": 1,
+        "near": []
+      },
+      {
+        "h": "H17",
+        "selector": ".summary__plan-return",
+        "matches": 1,
+        "elsewhere": 1,
+        "near": []
+      }
+    ]
+  },
+  "screenshots": [],
+  "fitafLines": [],
+  "pageErrors": [],
+  "error": null,
+  "file": "run-20261008T213726Z-1280.json",
+  "command": "npm --prefix boston-2026-10/tools/storefront-watch run probe-snacks -- --runs 1 --shots none --out boston-2026-10/storefront/probe-snacks/2026-10-08"
+}

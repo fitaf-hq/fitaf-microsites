@@ -37,6 +37,89 @@ Each selector and text becomes an entry in `storefront/dependencies.json`, so th
 snack cannot be confirmed on its own card** (no count the store keeps current), or a size must be chosen that the link
 cannot name, **this contract returns to the Advisor before any code.**
 
+## 1a. Measured, 2026-10-08: found, not ruled
+
+**The probe**: `tools/storefront-watch/bin/probe-snacks.mjs` (its run in `lib/probe-snacks.mjs`), headless, the watch's
+own launcher, a fresh profile per run, `/order?mpid=23` (Lean, 14 meals a week) with no fragment; every press a
+`.click()` on `app-product-card`'s own control, as the block presses; every read by **the block's own functions**
+(`card`, `addButton`, `count`, `plus`, `plan`, `control` and the key, their text read from `fitaf-handoff.js` at
+`7768dfe6…` and `meal-key.js`). **The batch**: [`storefront/probe-snacks/2026-10-08/`](storefront/probe-snacks/2026-10-08/README.md),
+4 runs, 21:35–21:38Z, release `main-UMGPHR2R.js`, 2 at 1280 × 900 and 2 at 390 × 844; each answer below is the same in
+all four runs unless a width is named. Nothing submitted: PAY never pressed, nothing typed, no size chosen.
+
+**§ 1's stop condition does not hold.** The snack pressed (*Golden Oreo Protein Sand*, in 4 of 4 runs) is confirmed on
+its own card by a count the store keeps current (`.product__actions .counter__value`, which `count()` reads unchanged: 1,
+then 2; the other 14 snacks were opened and read, not pressed), and **every snack's Size already has a value when its
+options open**: 15 of 15 snack cards, each opened and read, nothing chosen (14
+dropdowns showing a value, the one radio, *Organic Bone Broth Soup: Southwest Chicken*'s *"Quart"*, checked; every form
+`ng-valid`). ⚠ That value is the store's default, and it is a choice: two snacks' defaults carry a charge (*"5 +$10.00"*,
+the Cognition and Relaxation Superfood Bites, whose cards show *"$0.00"*), and 13 of the 15 offer a larger size the link
+cannot name (*"3 +$6.00"*, *"10 +$7.00"*, …). § 8 keeps choosing a size out of this contract; the per-snack table is the
+batch's README.
+
+1. **Select Options** (every snack card, 15 of 15): a `button.product__toggle` (label `span.product__toggle-label`
+   *"Select Options"*, `aria-expanded="false"`) **outside `.product__actions`**; before it is pressed `addButton()`
+   finds nothing on any of the 15 (the pressed snack's card has no `.product__actions` at all). Pressed, it expands in
+   place (no overlay, the path still `/order`):
+   the toggle reads *"Hide Options"*; `div.product__addons` holds the Size (`h4.product__addons-item-title` *"Size"*, its
+   `span.product__addons-item-required` *"\*"*; `app-addon-controls > app-dropdown > div.dropdown[role=combobox]`, its
+   `span.dropdown__value-text` *"1"* already; its choices a `div.dropdown__panel[role=listbox]` of
+   `div.dropdown__option[role=option]` in a `.cdk-overlay-pane`, read on Cheesecake Brownie Bites: *"5"*
+   `aria-selected="true"`, *"10 +$7.00"*); and **inside `.product__actions`**, `app-button > button.button` reading
+   *"Add to Cart"* (`.product__actions-add_label`) and *"$9.00"* (`.product__actions-add_price`), which `addButton()`
+   finds. After *Add to Cart* the button is replaced by the store's counter, `.product__actions > app-counter >
+   div.counter[role=spinbutton]`, `span.counter__value` *"1"*, its "+" `button.counter__button[aria-label="Increase
+   value"]` (`count()` and `plus()` read both); **the expansion stays open** (*"Hide Options"*, Size *"1"*). Both widths
+   alike; at 390 on the hidden card, while the displayed `app-product-card-mobile` shows the Size inline and *"Add
+   $9.00"*, with no *Select Options*, and counts with it.
+2. **Add to Cart directly**: **no snack card shows it** (0 of 15); this morning's *Cheesecake Brownie Bites* (§ 11 of the
+   meal selection, item 2) now shows *Select Options*, its Size the only optional one (no `*`, default *"5"*, a
+   `button.dropdown__clear` *"Clear selection"*). The 13 other additions (bulk proteins and sides) do: on *93% Lean
+   Free-Range Plain Ground Turkey*, `.product__actions … button.button` *"Add to Cart $13.00"*, pressed, the same counter
+   as item 1, *"1"*, with its "+".
+3. **Two units** (*Golden Oreo Protein Sand*, *Add to Cart* then its "+"): the card reads 1, then 2. The sidebar's
+   `.cart__items-count` reads *"14 items"* after the meals, then *"15 items"*, *"16 items"* (and *"17 items"* with the
+   turkey): **it counts units**, not lines (its rows went 14, 15, 15, 16). The bar's `.mobile-cart-summary__stat-value`
+   (*"Items"*) reads **14 throughout: the plan's meals only** (its *"Cart Total"* went $168.00, $177.00, $186.00,
+   $199.00). ⭐ **Both are in the page at both widths and each reads the same at both**; the width only decides which is
+   displayed, so `plan()` reads 14, 15, 16, 17 at 1280 and 14 throughout at 390. The meals are in `hmp_pending_plan_items`
+   (14 throughout), the snack in `hmp_local_cart` (1 entry at 1 unit and at 2). CHECKOUT stayed enabled.
+4. **The checkout** (the store's CHECKOUT, then its extras dialog's *CONTINUE TO CHECKOUT*: see the notes): the snack's
+   line is a `div.summary__item`, its `div.summary__item-name` *"Golden Oreo Protein Sand"* plus a child
+   `span.summary__item-tag` *"Add-on"*, `div.summary__item-addons` *"Size: 1"*, the quantity *"2"*,
+   `div.summary__item-price` *"$18.00"* / *"2 × $9.00"*. Its group is `div.summary__additions-section`, header
+   `h4.summary__additions-header` *"Add-On & Extra Meals"* (both add-ons in it), **inside the plan's own
+   `section.summary__plan-group`**, after the 14 meal lines and before `.summary__plan-total` *"Plan Total (14 items)
+   $199.00"*. The Total, *"Total $199.00"*, includes the snack (14 × $12.00 + 2 × $9.00 + $13.00). **The hide rules**,
+   evaluated without the class: on the snack's line **H11** (its price), **H12** (*"Size: 1"*), **H13** (its quantity
+   control, which holds the remove button) and **H14** (the remove button); **nothing matches the line itself, its
+   photograph, its name or its *Add-on* tag, the group, or the group's header**. In the same plan group H15, H16
+   (*"Lean Plan 14 Meals"*, *"Remove plan"*) and H17 (*"← Return to Lean Plan 14 Meals"*) match.
+   ⚠ **No *"One Time Order"* on the checkout**: no element of `app-checkout` says one-time, renews, recurring or
+   subscription (H6 matched nothing). Those words are the order page's sidebar's, `span.segment-label` *"One Time
+   Order"* under its total; so § 3 item 7 finds no one-time statement on the checkout for any rule to hide.
+5. **The names**: 15 of 15 snack cards' `.product__content-title` equals the catalog's `name` exactly (the page's own
+   `/catalog/products` response, read, never requested), two with the store's tag (*"🟠NEW: Caramel Apple ProNuts"*,
+   *"🟠NEW: Cheesecake Brownie Bites"*, which `meal-key.js` strips); the phone cards' `.product-card-mobile__title`
+   reads the same; no two of the page's 55 cards share a key. The 15 keys are in the batch's README (Golden Oreo
+   Protein Sand `e2te4`). ⚠ The checkout's whole name, *"… Add-on"*, keys differently (`mb5f3`): a line is matched by
+   the name element's own text, never its whole text.
+
+**Notes for § 3, not ruled.** § 3 item 2's "ready" for a snack is its `button.product__toggle` (outside
+`.product__actions`, so not `addButton()`'s); item 3's wait after it finds *Add to Cart* inside `.product__actions`;
+item 5's sidebar rule is **meals plus snack units**; the bar's is meals. **The extras dialog opened in 4 of 4 runs**
+(`app-extra-products-dialog`, *"Wait, don't forget these extras!"*, *CONTINUE TO CHECKOUT*; it lists the snacks, the one
+in the cart with its counter, seen in its pictures, which are not committed): the probe does not write
+`ecc_additions_prompt_handled` as the block does, so whether that write keeps it shut with a snack in the cart is for
+§ 6's live proof. Candidates for `dependencies.json` (F2 needs each found in the release's files first; this probe
+fetched none): `product__toggle`, `Select Options`, `product__addons`, `summary__additions-section`,
+`summary__additions-header`.
+
+**Not measured**: a snack's press the store drops or takes back (none was); more than 2 units, or two snacks; the
+drawn size lists of 14 of the 15 snacks (the catalog's are in the table); the block's own run; 2560; a slowed network;
+a signed-in visitor or the Advisor's devices; another week's menu. ⚠ At 390 the probe's cart-bar pictures failed (it
+clipped to `.mobile-cart-summary`'s own box, which has no height); the bar's values are in every run file.
+
 ## 2. The link: snack items in the version-2 payload
 
 - **A snack item is `_<key>` or `_<key>*<n>`**: the meal grammar with a leading `_`, `n` from 2 to 21 as for a meal.

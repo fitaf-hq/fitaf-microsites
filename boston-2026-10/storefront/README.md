@@ -25,6 +25,10 @@ hashes and a few literal strings of the store's public bundle, never its code or
 - **[`probe-counts/`](probe-counts/README.md)** is **not an input**: measurements of how the live store shows a press
   counted ([`../SPEC-rung2-fill-c.md`](../SPEC-rung2-fill-c.md) § 2), one dated directory per batch, written by the
   watch package's `probe-counts`. Nothing reads them; the contract quotes them.
+- **[`probe-snacks/`](probe-snacks/README.md)** is **not an input** either: measurements of a snack in the store's cart
+  (its *Select Options*, Size, count and "+", the plan's counts, its line and group on `/checkout` and the hide rules
+  that touch them; [`../SPEC-snacks-in-the-cart.md`](../SPEC-snacks-in-the-cart.md) § 1), one dated directory per
+  batch, written by the watch package's `probe-snacks`. Nothing reads them; the contract quotes them.
 
 ## What a reader would misread
 
