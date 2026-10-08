@@ -116,6 +116,8 @@ function smokeRun(run) {
     "",
     ...run.verdict.reasons.map((why) => `- ${scrub(why)}`),
     `- chosen from the order page (${o.chosen.length} of ${o.need}; ${o.menu} meals listed): ${o.chosen.map((c) => `${c.name} (${money(c.priceCents)})`).join("; ") || "none"}`,
+    ...(o.snacks?.length ? [`- snacks (SPEC-snacks-in-the-cart § 6; ${o.snacks.length} units): ${o.snacks.map((c) => `${c.name} (${money(c.priceCents)})`).join("; ")}`] : []),
+    ...(o.shot ? [`- the stripped checkout's picture (not committed: it carries the store's photographs): ${o.shot}`] : []),
   ];
   if (o.checkout) {
     out.push(

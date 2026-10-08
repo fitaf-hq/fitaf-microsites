@@ -172,9 +172,9 @@ ${buttons.join("\n")}
 }
 
 /** Q1, then Q2–Q4 in one group the page shows once Q1 is answered (§ 7, ruled "After Q1"); Q4 only while snacks are
- *  shown (§ 9 item 3: data/plans.json's `snacks.shown`). */
-function mealQuestions(plans, words) {
-  const more = ["weekends", "breakfast", ...(plans.snacks.shown ? ["snacks"] : [])];
+ *  offered (`offer`: § 9 item 3's `snacks.shown`, and SPEC-snacks-in-the-cart § 4.5: not while carted with no week). */
+function mealQuestions(plans, words, offer = plans.snacks.shown) {
+  const more = ["weekends", "breakfast", ...(offer ? ["snacks"] : [])];
   return `${question("lunch_dinner", words)}
 
       <div class="more" id="more" hidden>
@@ -273,8 +273,8 @@ function familySection(plans) {
  * each size's cells for every plan an answer set goes through; the defaults; today's two counts as answer sets (§ 3:
  * `#lean-7`, `#meals-14`); and whether Q4 is on the page.
  */
-function clientData(plans, words) {
-  const { rows, defaults, snacks } = checkSelection(plans);
+function clientData(plans, words, offer = plans.snacks.shown) {
+  const { rows, defaults } = checkSelection(plans);
   const counts = [...new Set([...rows.values()].map((r) => r.plan))].sort((a, b) => a - b);
   const legacy = shownCounts(plans).map((n) => [n, legacyKey(rows, n)]).filter(([, key]) => key);
   return {
@@ -284,7 +284,7 @@ function clientData(plans, words) {
     ),
     defaults,
     legacy: Object.fromEntries(legacy),
-    snacks: snacks.shown,
+    snacks: offer,
     plans: plans.individual.map((plan) => ({
       id: plan.id,
       name: plan.name,
@@ -432,6 +432,9 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
   photos ??= await loadPhotos();
   checkSelection(plans);
   const words = planPageWords(messages);
+  // SPEC-snacks-in-the-cart § 4.5: while snacks are carted, a page with no week (no snack list to cart) never offers Q4;
+  // a page with a week leaves it to the card, which hides Q4 for days the week has no list for.
+  const offer = plans.snacks.shown && !(plans.snacks.carted && picks === NO_PICKS);
   const slots = {
     ...messageSlots(messages),
     CAROUSEL: carouselHtml(photos, dev.ASSET_PREFIX ?? PROD_SLOTS.ASSET_PREFIX),
@@ -440,13 +443,13 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
     PER_MEAL_UNIT: esc(words.per_meal_unit),
     FOOTNOTE: esc(fillPhrase(words.prices_as_of, { date: plans.read_on })),
     GOALS: plans.individual.map(goalButton).join("\n"),
-    MEAL_QUESTIONS: mealQuestions(plans, words),
+    MEAL_QUESTIONS: mealQuestions(plans, words, offer),
     GRID_HEAD: gridHead(plans),
     GRID_ROWS: gridRows(plans),
     FAMILY: familySection(plans),
     READ_FROM_TEXT: esc(plans.read_from.replace(/^https?:\/\//, "")),
     READ_ON: esc(plans.read_on),
-    DATA: scriptJson(clientData(plans, words)),
+    DATA: scriptJson(clientData(plans, words, offer)),
     SCRIPT: script.trim(),
     ...dev,
     ...picks,

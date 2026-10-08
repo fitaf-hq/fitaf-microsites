@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { clockTimers, fakeWindow, fragmentFor, LOG_PREFIX, MEALS, run, script, untouchableStorage } from "./r2-harness.mjs";
 import { assertDone, assertFullPlan, fcPage, fcRun, FC_PATH, FC_PAYLOAD, FC_TOTAL, keyOf } from "./fc-harness.mjs";
 
-const PLAN_CHECKED = "b && (k || n === p.total)";
+const PLAN_CHECKED = "b && (k || n[0] === (n[1] ? p.units : p.total))";
 
 /** Fill C until its last press, then `meanwhile(page)` (as another tab, or the store), then to its end. */
 async function untilLastPress(text, meanwhile, options = {}) {

@@ -86,8 +86,8 @@ test("MS-10: rounding up (5 -> 7) fails MS-1 and MS-2", async () => {
 });
 
 // A cart's link built on what the answers come to instead of the row's plan (version 2's reader).
-const CART_ON_PLAN = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx);";
-const CART_ON_MEALS = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), row.meals, where, ctx);";
+const CART_ON_PLAN = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null);";
+const CART_ON_MEALS = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), row.meals, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null);";
 
 test("MS-10: a cart's link built on meals instead of plan fails MS-2", async (t) => {
   await withMirror(
@@ -123,7 +123,8 @@ const CHOSEN = `  function chosen(sel) {
     var key = sel.replace(/-s$/, "");
     var cart = has(week.carts, key) ? week.carts[key] : null;
     var m = cart && /[?&]mpid=(\\d+)$/.exec(choose.getAttribute("href") || "");
-    return m && has(cart.links, m[1]) ? { menu: cart, link: cart.links[m[1]] } : null;
+    var links = cart && ((/-s$/.test(sel) && cart.snack_links) || cart.links);
+    return m && has(links, m[1]) ? { menu: cart, link: links[m[1]] } : null;
   }`;
 const CHOSEN_BY_MPID = `  function chosen(sel) {
     var m = sel && /[?&]mpid=(\\d+)$/.exec(choose.getAttribute("href") || "");
@@ -139,6 +140,35 @@ test("MS-10: a card that chooses its cart by mpid fails MS-11", async () => {
       assert.ok(ms11.some((p) => /^#lean-or-7d-b: shows /.test(p)), `MS-11 fails it:\n${ms11.join("\n")}`);
       assert.ok(ms11.some((p) => /^#lean-and-5d-b: shows /.test(p)), ms11.join("\n"));
       assert.ok(!ms11.some((p) => p.startsWith("#lean-and-7d:")), `the first of the three is still right by chance: ${ms11.join("\n")}`);
+    },
+  );
+});
+
+// SPEC-snacks-in-the-cart § 4.2 (MS-7, carted): the card ignoring the snack links, so *Add snacks* takes the link without
+// snacks. Read as MS-7's carted half reads it: the every-day answer sets' Continue to checkout carries the week's list.
+const SNACK_LINKS = "var links = cart && ((/-s$/.test(sel) && cart.snack_links) || cart.links);";
+const NO_SNACK_LINKS = "var links = cart && cart.links;";
+async function snackLinkProblems(dir) {
+  const { cardOf, fragmentOf, GOALS, open, SNACKS_CARTED, TABLE, tokensOf } = await import("./ms-harness.mjs");
+  const html = await pageOf({ root: dir, picks: V2_DIR, snacks: SNACKS_CARTED });
+  const problems = [];
+  for (const goal of GOALS) {
+    for (const row of TABLE.filter((r) => r.weekends)) {
+      const where = fragmentOf(goal, row, true);
+      const snacks = tokensOf(cardOf(open(html, where)).checkout).filter((t) => t.startsWith("_"));
+      if (snacks.length !== V2.lists["chefs-choice"].snacks["7"].length) problems.push(`${where}: ${snacks.length} snack items`);
+    }
+  }
+  return problems;
+}
+
+test("MS-10 (SPEC-snacks-in-the-cart): a card that ignores the snack links fails MS-7 (carted)", async () => {
+  await withMirror(async () => {}, async (dir) => assert.deepEqual(await snackLinkProblems(dir), [], "control: the unchanged mirror carts the snacks"));
+  await withMirror(
+    (dir) => edit(dir, "src/chefs-choice/chefs-choice.js", SNACK_LINKS, NO_SNACK_LINKS),
+    async (dir) => {
+      const problems = await snackLinkProblems(dir);
+      assert.ok(problems.length > 0 && problems.every((p) => / 0 snack items$/.test(p)), problems.join("\n"));
     },
   );
 });

@@ -163,6 +163,58 @@ clipped to `.mobile-cart-summary`'s own box, which has no height); the bar's val
 8. **Size**: the built Footer block is reported in bytes against the refusal at 20,480 (17,617 before this change).
 9. Nothing else changes: no new write to storage, no new timer kind, no `<` before a letter in the shipped text (R2-58).
 
+## 3a. Built, 2026-10-08: found at the build, not ruled
+
+Built on `boston/meal-selection` after `f415f33` (§ 1a), following § 1a where it and §§ 2–5 differ. The Footer block's
+text is `ad25f93d…` (R2-32, PR-10 and CC-8 re-recorded for it, CC-8's golden `replaces` naming the pasted `76871ff9…`):
+**18,323 bytes** as the Footer block (17,617 before, +706) and 18,304 as the console file, against the refusal at
+20,480; every character ASCII, no `<` but the block's own two.
+
+1. **Ready (§ 3.2)**: every snack showed Select Options on 2026-10-08, `button.product__toggle`, outside
+   `.product__actions`; the block's wait takes it, or Add to Cart, for a snack. The Add to Cart path stays for a snack
+   that shows it (SN-2's direct card); none did.
+2. **The press (§ 3.3)**: Select Options is pressed **at most once per unit**, and only while its `aria-expanded` is not
+   `"true"`; then the expansion's Add to Cart is waited for (MIN_GAP_MS, then polls to ACK_MS) and pressed as any unit's;
+   none within ACK_MS is the stop `; no control`. ⚠ The first text pressed it again at every read while a slow store had
+   not yet expanded (seven presses in SN-2c, without end in SN-2d): a second press on a clock alone. A lost Select
+   Options is therefore a stop, never a re-press.
+3. **The order (§ 3.3)**: every meal's units exactly as before, then each snack's, all of one snack's before the next.
+   With no snack, the presses, the delays and the stop lines are byte for byte as before (SN-2b, FC-1 to FC-7, R2-*).
+4. **K of N (§ 3.4)**: a stop's N is the link's units (meals and snack units); with no snack it is the meals', as before.
+5. **CHECKOUT (§ 3.5)**: `plan()` returns `[count, sidebar?]`; the sidebar's count is checked against meals and snack
+   units, the bar's against meals (SN-4, with a mutant each way).
+6. **The words (§ 3.6)**: `handoff.recap_snacks` is *"{n} meals · {s} snacks ·"*, with the trailing separator `recap`
+   has before the store's Total; the build requires `{n}` and `{s}` in it. The step line's words are unchanged, so a
+   snack's slide reads *"… · 15 of 17 meals"*; that word is the copy review's.
+7. **The stripped checkout (§ 3.7)**: no rule changed. § 1a found no one-time statement on the checkout to keep; on a
+   snack's line H12 hides *"Size: 1"* as it hides a meal's portion, and the store's *Add-on* tag stays.
+8. **The link (§ 2)**: `--snack` refuses with the item rules and words of `--item`; a name or key given twice across
+   meals and snacks is refused; with no `--snack` the link is byte-identical (SN-6). The photo part's cells stay the
+   meals'.
+9. **The page (§ 4)**: `carted: true` is allowed; `carted` while not `shown` is refused (MS-6). **§ 4.5 is read per
+   days**: while carted, Q4 is shown only where the live week has a snack list for the chosen Q2 (the committed fixture
+   has none for 5 days, so Q4 hides on weekdays), and is hidden with no live week; a page built with no week omits Q4
+   and the `-s` fragment (that page is byte-identical to the one with snacks not shown, `03fcc0c1…`). Each *Add snacks*
+   link is the link tool's own, from `payloadFromArgs` with `--snack`, so a snack sharing a key with one of the cart's
+   meals stops the build. Only *Continue to checkout* carries snacks; *Choose your meals* and *Choose my own meals* do
+   not.
+10. **Tests (§ 5)**: SN-1 to SN-6 (`test/sn-*.test.mjs`); the synthetic store's snack cards are `r2-harness.mjs`'s
+    `snacks` (written from § 1a's names); MS-6's carted case replaced, MS-7 rewritten with its carted halves, MS-16 a
+    carted case, MS-10 a mutant (the card ignoring the snack links fails MS-7); FC-4's and R2-58's anchors moved with the
+    text; MS-6's *"snacks by default while not shown"* case now sets its own `carted` (in the mirror with `carted=true`
+    it hit the new refusal first). ⚠ The block's code was written before its cases, not after; SN-2c and SN-2d were red
+    on that first text for the reason they name, and SN-4's two mutants and MS-10's are each shown failing.
+11. **Storybook (§ 5 item 5)**: unchanged; its stories read the committed `carted: false`. When `carted` flips, the
+    *"or · weekdays · snacks, no list"* story moves with it (Q4 hidden on weekdays with no list).
+12. **F2**: `storefront/dependencies.json` gains `"product__toggle"` and `"aria-expanded"`, each found in
+    `main-UMGPHR2R.js`'s chunks by a read with the watch's own fetcher on 2026-10-08 (not by `watch --full`).
+13. **The gates**: the site's suite 654 of 654; the mirror with `--set snacks.carted=true` and with
+    `--set snacks.shown=false` 652 of 654 each, the two being S20 and CC-4 (prod), which pin the production page;
+    `npm run contrast` 70 of 70; Storybook 40 of 40; the watch 169 of 169 (W21 added).
+14. ⚠ **Phase 1's pictures (`f415f33`) broke P1**: they carry the store's food photographs and this repository is
+    public. Untracked by `7ffe7ee` and ignored beside their run files; `f415f33` still holds them and is to be rewritten
+    before any push.
+
 ## 4. The page
 
 1. **`snacks.carted: true` is allowed** once § 3 exists: `scripts/selection.mjs`'s refusal (MS-6) is removed in the same

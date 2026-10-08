@@ -5,11 +5,17 @@
 // follows its hashchange: whether the card is shown, the ANSWER SET it carries (#result's data-selection: SPEC-meal-
 // selection § 8 item 2, "or-5d-b-s"), which names the cart, and the mpid of Choose your meals, which names the size's
 // link within it. ⛔ Never the cart by the mpid: one plan is the plan of several answer sets (the 14 of three).
+// SPEC-snacks-in-the-cart § 4: while snacks are carted (#picks-data's `carted`), *Add snacks* takes the answer set's
+// snack link (its cart's meals, then the week's snack list for its days), and Q4 is shown only where the week has a
+// snack list for the chosen days: never an answer the cart cannot hold. With no week live, Q4 is hidden.
 var picks = JSON.parse(document.getElementById("picks-data").textContent);
 var today = zonedDate(Date.now(), picks.zone);
 var week = null;
+var snackQuestion = document.getElementById("q-snacks");
+snackQuestion = snackQuestion && snackQuestion.parentNode;
 for (var i = 0; !week && picks.weeks.length > i; i++) if (isLive(picks.weeks[i], today)) week = picks.weeks[i];
 if (week) start(week);
+else if (picks.carted && snackQuestion) snackQuestion.hidden = true;
 
 function start(week) {
   var $ = function (id) { return document.getElementById(id); };
@@ -22,12 +28,14 @@ function start(week) {
     return result.hidden ? "" : result.getAttribute("data-selection") || "";
   }
 
-  // The chosen answers' cart (the selection without its snacks mark), and in it the chosen size's link (by its mpid).
+  // The chosen answers' cart (the selection without its snacks mark), and in it the chosen size's link (by its mpid):
+  // with snacks chosen and carted, the cart's snack link (SPEC-snacks-in-the-cart § 4.2), else today's.
   function chosen(sel) {
     var key = sel.replace(/-s$/, "");
     var cart = has(week.carts, key) ? week.carts[key] : null;
     var m = cart && /[?&]mpid=(\d+)$/.exec(choose.getAttribute("href") || "");
-    return m && has(cart.links, m[1]) ? { menu: cart, link: cart.links[m[1]] } : null;
+    var links = cart && ((/-s$/.test(sel) && cart.snack_links) || cart.links);
+    return m && has(links, m[1]) ? { menu: cart, link: links[m[1]] } : null;
   }
 
   // A list of meals, each with a tile to the left of its name: its cell of the week's photo sheet (the build's style,
@@ -49,14 +57,17 @@ function start(week) {
   }
 
   // Add snacks (§ 9 item 3): the week's snacks for the chosen days under their heading, and the not-carted line; with no
-  // list for those days, the line alone. Snacks are shown, never in a link.
+  // list for those days, the line alone. While not carted, snacks are shown, never in a link. While carted
+  // (SPEC-snacks-in-the-cart § 4.3–4.5) the line is not on the page, the list is in the link, and Q4 is hidden for days
+  // with no list (so is the box, whatever the fragment says).
   function renderSnacks(sel) {
     if (!snackBox) return;
-    var on = /-s$/.test(sel);
+    var days = /-(\d+d)(?:-|$)/.exec(sel);
+    var snacks = days && week.snacks && has(week.snacks, days[1]) ? week.snacks[days[1]] : null;
+    if (picks.carted && snackQuestion) snackQuestion.hidden = !snacks;
+    var on = /-s$/.test(sel) && !(picks.carted && !snacks);
     snackBox.hidden = !on;
     if (!on) return;
-    var days = /-(\d+d)(?:-|$)/.exec(sel)[1];
-    var snacks = week.snacks && has(week.snacks, days) ? week.snacks[days] : null;
     $("cc-snacks-heading").hidden = $("cc-snack-list").hidden = !snacks;
     if (snacks) fill($("cc-snack-list"), snacks.meals, snacks.thumbs);
   }

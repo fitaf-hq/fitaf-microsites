@@ -4,7 +4,8 @@
 //
 // data/plans.json (§ 2, § 4, § 9 item 3): a `plan` not sold at every size, a `plan` above its `meals`, a row missing or
 // twice, a row's `meals` not what its answers come to, an unknown field, a default or a snacks flag that is not a
-// boolean, and `snacks.carted` true (no link carries a snack in this build: § 4).
+// boolean, and (SPEC-snacks-in-the-cart § 4.1, which allows `carted: true` now that a link carries snacks and the block
+// presses them) `snacks.carted` true while snacks are not shown: nothing the page offers could reach a link.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
@@ -46,6 +47,12 @@ test("MS-6 (control): the committed data/plans.json builds", async () => {
   assert.ok(wrote);
 });
 
+test("MS-6 (control, SPEC-snacks-in-the-cart § 4.1): snacks shown and carted builds", async () => {
+  const { error, wrote } = await attemptPlans((p) => Object.assign(p.snacks, { shown: true, carted: true }));
+  assert.equal(error, null);
+  assert.ok(wrote);
+});
+
 const PLAN_CASES = [
   ["a plan not sold (5)", (p) => (row(p, "or-5d").plan = 5), /selection\[1\] \(or, weekdays, no breakfast\): plan 5 is not a count every individual plan sells \(4, 7, 10, 14, 21\)/],
   ["a plan above its meals (5 -> 7, rounded up)", (p) => (row(p, "or-5d").plan = 7), /selection\[1\] \(or, weekdays, no breakfast\): plan 7 is above its meals \(5\)/],
@@ -63,8 +70,8 @@ const PLAN_CASES = [
   ["an unknown default", (p) => (p.selection_defaults.lunch_dinner = "or"), /selection_defaults: unknown field "lunch_dinner"/],
   ["no snacks row", (p) => delete p.snacks, /snacks must be an object/],
   ["snacks.shown not a boolean", (p) => (p.snacks.shown = 1), /snacks\.shown must be true or false/],
-  ["snacks carted (§ 4: not until the hand-off is shown carting one)", (p) => (p.snacks.carted = true), /snacks\.carted is true, but no link carries a snack/],
-  ["snacks chosen by default while not shown", (p) => Object.assign(p.snacks, { shown: false }) && (p.selection_defaults.snacks = true), /selection_defaults\.snacks is true while snacks are not shown/],
+  ["snacks carted while not shown (SPEC-snacks-in-the-cart § 4.1)", (p) => Object.assign(p.snacks, { shown: false, carted: true }), /snacks\.carted is true while snacks are not shown/],
+  ["snacks chosen by default while not shown", (p) => Object.assign(p.snacks, { shown: false, carted: false }) && (p.selection_defaults.snacks = true), /selection_defaults\.snacks is true while snacks are not shown/],
 ];
 
 for (const [label, change, reason] of PLAN_CASES) {

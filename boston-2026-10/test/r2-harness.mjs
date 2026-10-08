@@ -113,12 +113,13 @@ export const refKey = (name) => (refFnv1a(refUntagged(name).replace(/\s+/g, " ")
 const itemToken = ({ name, qty }) => (qty === 1 ? refKey(name) : `${refKey(name)}*${qty}`);
 
 /**
- * `{ items: [{ name, qty }], code? }` -> the text after `#fitaf=`: "2", each item, then "~<code>" if there is one,
- * dot-separated (§ 11 item 1). Any `mpid` is ignored: v2 reads the plan's id from the page's own query. A count the
- * script refuses (0, 22) is written all the same, so a test can show the refusal.
+ * `{ items: [{ name, qty }], snacks?: [{ name, qty }], code? }` -> the text after `#fitaf=`: "2", each item, each snack
+ * with a leading "_" (SPEC-snacks-in-the-cart § 2, written here from the contract, not by the link tool), then
+ * "~<code>" if there is one, dot-separated (§ 11 item 1). Any `mpid` is ignored: v2 reads the plan's id from the page's
+ * own query. A count the script refuses (0, 22) is written all the same, so a test can show the refusal.
  */
-export const payloadText = ({ items, code }) =>
-  ["2", ...items.map(itemToken), ...(code === undefined ? [] : [`~${code}`])].join(".");
+export const payloadText = ({ items, snacks = [], code }) =>
+  ["2", ...items.map(itemToken), ...snacks.map((it) => `_${itemToken(it)}`), ...(code === undefined ? [] : [`~${code}`])].join(".");
 export const fragmentFor = (payload) => `#fitaf=${payloadText(payload)}`;
 /** A fragment carrying any text as it is, for payloads the link tool would never write. */
 export const rawFragment = (text) => `#fitaf=${text}`;
@@ -409,6 +410,17 @@ const AFTER_FIRST_PRESS = {
 };
 export const DECOY_LABELS = ["Add to favourites", "Wishlist", "Add one more", "Increase value (outside actions)"];
 
+/** SPEC-snacks-in-the-cart § 1a, by the live store's names (2026-10-08), written by hand: a snack card's Select Options
+ *  (outside .product__actions), its expansion (the Size, its value already chosen, then .product__actions with Add to
+ *  Cart and its price), and a snack card with Add to Cart directly. */
+const SNACK_TOGGLE =
+  '<button type="button" class="product__toggle" aria-expanded="false"><span class="product__toggle-label">Select Options</span></button>';
+const SNACK_ACTIONS = '<div class="product__actions"><button type="button">Add to Cart $9.00</button></div>';
+const EXPANSION =
+  '<div class="product__addons"><h4 class="product__addons-item-title">Size <span>*</span></h4>' +
+  '<app-dropdown><div class="dropdown" role="combobox" aria-expanded="false"><button type="button" class="dropdown__trigger">1</button></div></app-dropdown></div>' +
+  SNACK_ACTIONS;
+
 const control = (id, html, disabled = false) =>
   `<button type="button" data-id="${id}"${disabled ? " disabled" : ""}>${html}</button>`;
 /**
@@ -435,7 +447,7 @@ const plural = (n, s) => (n === 1 ? "" : s);
  *   CHECKOUT ", " CHECKOUT NOW ", or a disabled " REMOVE N MEAL(S) TO CHECKOUT ". `label` replaces CHECKOUT NOW's text.
  * Written by hand from those labels; not the store's markup.
  */
-function slot(width, layout, { held, short, busy, label }) {
+function slot(width, layout, { held, units = held, short, busy, label }) {
   if (width === "bar") {
     // The bar's "Items" stat (SPEC-rung2-fill-c § 2a: .mobile-cart-summary__stat, its value the plan's count).
     const stat = '<div class="mobile-cart-summary__stat"><span class="mobile-cart-summary__stat-label">Items</span> ' +
@@ -444,9 +456,10 @@ function slot(width, layout, { held, short, busy, label }) {
     if (short < 0) return stat + control(`limit:${layout}`, " Limit Exceeded ", true);
     return stat + control(`checkout:${layout}`, `${label}<i class="icon"></i>`, busy);
   }
-  if (!held) return "<p>Your cart is empty</p> <p>Add some delicious meals to get started!</p>";
-  // The item count is span.cart__items-count (SPEC-rung2-fill-c § 2a), "N item(s)".
-  const header = `<div class="cart__items-header"><span class="cart__items-count">${held} item${plural(held, "s")}</span> ${control("clear", "Clear cart")}</div> `;
+  if (!units) return "<p>Your cart is empty</p> <p>Add some delicious meals to get started!</p>";
+  // The item count is span.cart__items-count (SPEC-rung2-fill-c § 2a), "N item(s)". SPEC-snacks-in-the-cart § 1a: it
+  // counts the snacks' units beside the meals (`units`); the bar's "Items" above counts the meals only (`held`).
+  const header = `<div class="cart__items-header"><span class="cart__items-count">${units} item${plural(units, "s")}</span> ${control("clear", "Clear cart")}</div> `;
   if (short > 0) return header + control(`more:${layout}`, ` ADD ${short} MORE MEAL${plural(short, "S")} TO CHECKOUT `, true);
   if (short < 0) return header + control(`limit:${layout}`, ` REMOVE ${-short} MEAL${plural(-short, "S")} TO CHECKOUT `, true);
   return header + control(`checkout:${layout}`, label, busy);
@@ -485,6 +498,17 @@ function slot(width, layout, { held, short, busy, label }) {
  * the dialog's CONTINUE routes; pressing "Clear cart" empties the pending list. Routing is
  * history.pushState("/checkout") `syncTicks` ticks later, or never if `routes` is false. A page control stays
  * enabled after its press, so a second press would be seen. Unbound, the summaries stay empty.
+ *
+ * `snacks` (SPEC-snacks-in-the-cart § 1a, written by hand from its names, not the store's markup): one card per
+ * `{ name, toggle = true, expands = true, expandMs = 0 }`, after the meals. A toggle card shows only the store's Select
+ * Options (`button.product__toggle`, aria-expanded "false", OUTSIDE any .product__actions) until it is pressed; pressed,
+ * it expands in place `expandMs` later (on the clock), or never (`expands: false`): "Hide Options", aria-expanded
+ * "true", a Size whose value is already chosen (`.product__addons`, its trigger a button the block must never press),
+ * and .product__actions with Add to Cart; pressed again it closes (which the block must never do). Without a toggle the
+ * card shows Add to Cart directly. A snack is counted as a meal is (the same `fates`, the store's counter in its
+ * .product__actions, the expansion staying open), into `store.cart`, NOT the plan: the bar's "Items" and the CHECKOUT
+ * rule read the plan's meals; the sidebar's "N items" reads meals and snack units together. `cartAtCheckout` is the
+ * cart as it stood at CHECKOUT.
  */
 export async function orderPage({
   afterFirstPress = "counter",
@@ -499,8 +523,13 @@ export async function orderPage({
   syncTicks = 3,
   routes = true,
   fates = null,
+  snacks = [],
 } = {}) {
   assert.ok(["bar", "sidebar"].includes(width), `width: ${width}`);
+  assert.ok(!snacks.length || afterFirstPress === "counter", "snack cards are the store's own: the counter");
+  store.cart ??= [];
+  const snackNames = new Set(snacks.map((sn) => sn.name));
+  const snackOf = (name) => snacks.find((sn) => sn.name === name);
   assert.ok(afterFirstPress === "counter" || afterFirstPress in AFTER_FIRST_PRESS, `afterFirstPress: ${afterFirstPress}`);
   const { document } = parseHTML(await readFile(FIXTURE, "utf8"));
   const counts = countTable(await loadJson(PLANS_PATH));
@@ -520,21 +549,25 @@ export async function orderPage({
   const at = [];
   const takenBack = [];
   let atCheckout = null;
+  let cartAtCheckout = null;
   let storePresses = 0;
   const original = new WeakMap();
-  const countOf = (name) => store.pending.filter((n) => n === name).length;
+  /** Where the store keeps a name: a snack in the cart, a meal in the plan's pending list. */
+  const listOf = (name) => (snackNames.has(name) ? store.cart : store.pending);
+  const countOf = (name) => listOf(name).filter((n) => n === name).length;
 
   function render() {
     const held = store.pending.length;
+    const units = held + store.cart.length;
     const short = required - held;
     const busy = short <= 0 && loadingTicks > 0;
     for (const summary of document.querySelectorAll(".summary")) {
       const layout = summary.getAttribute("data-layout");
       const shown = layout === "shown";
       const label = shown ? shownLabel : " CHECKOUT ";
-      summary.innerHTML = slot(shown ? width : "bar", layout, { held, short, busy, label });
-      // The store's bar is hidden while the plan holds nothing (its control still rendered inside it).
-      if (shown && width === "bar") summary.toggleAttribute("hidden", held === 0);
+      summary.innerHTML = slot(shown ? width : "bar", layout, { held, units, short, busy, label });
+      // The store's bar is hidden while the plan and the cart hold nothing (its control still rendered inside it).
+      if (shown && width === "bar") summary.toggleAttribute("hidden", units === 0);
     }
     if (!busy) return;
     const ticks = loadingTicks;
@@ -558,7 +591,10 @@ export async function orderPage({
     controls.push(entry);
     all.push([PAGE, entry]);
     if (button.disabled) return;
-    if (id.startsWith("checkout:") && !atCheckout) atCheckout = [...store.pending];
+    if (id.startsWith("checkout:") && !atCheckout) {
+      atCheckout = [...store.pending];
+      cartAtCheckout = [...store.cart];
+    }
     bound?.events.push(["press", id]);
     if (id.startsWith("checkout:")) return extras ? openDialog() : route();
     if (id === "continue") route();
@@ -570,14 +606,16 @@ export async function orderPage({
   /** "counter": the card's actions as the store draws them for its meal's count (Add to Cart at 0, the counter above). */
   function draw(card) {
     const actions = card.querySelector(".product__actions");
+    if (!actions) return; // a snack's card before its Select Options: no actions yet
     if (!original.has(card)) original.set(card, actions.innerHTML);
     const n = countOf(titleOf(card));
     actions.innerHTML = n ? COUNTER(n) : original.get(card);
   }
   /** The store counts a meal, or takes one count of it back, then redraws its card and (bound) its summaries. */
   function change(name, card, by) {
-    if (by > 0) store.pending.push(name);
-    else store.pending.splice(store.pending.lastIndexOf(name), 1);
+    const list = listOf(name);
+    if (by > 0) list.push(name);
+    else list.splice(list.lastIndexOf(name), 1);
     max.set(name, Math.max(max.get(name) ?? 0, countOf(name)));
     draw(card);
     if (bound) tick(late, render);
@@ -610,12 +648,30 @@ export async function orderPage({
     outside.textContent = "+";
     card.appendChild(outside);
   }
+  /** A snack's Select Options: expand in place `expandMs` later (or never); pressed while expanded, close. */
+  function toggle(button, card) {
+    const sn = snackOf(titleOf(card));
+    if (button.getAttribute("aria-expanded") === "true") {
+      button.setAttribute("aria-expanded", "false");
+      button.querySelector(".product__toggle-label").textContent = "Select Options";
+      for (const el of card.querySelectorAll(".product__addons, .product__actions")) el.remove();
+      return;
+    }
+    if (sn.expands === false) return;
+    after(sn.expandMs ?? 0, () => {
+      button.setAttribute("aria-expanded", "true");
+      button.querySelector(".product__toggle-label").textContent = "Hide Options";
+      button.insertAdjacentHTML("afterend", EXPANSION);
+      draw(card);
+    });
+  }
   function pressMeal(button, card) {
     const name = titleOf(card);
     presses.set(name, [...(presses.get(name) ?? []), labelOf(button)]);
     log.push([name, labelOf(button)]);
     all.push([name, labelOf(button)]);
     at.push(bound?.timers.now ?? null);
+    if (button.classList.contains("product__toggle")) return toggle(button, card);
     const adds = /Add to Cart/.test(button.textContent) || (labelOf(button) === INC && Boolean(button.closest(".product__actions")));
     if (!button.disabled && adds && afterFirstPress === "counter") return counted(name, card);
     if (!button.disabled && adds) {
@@ -633,6 +689,11 @@ export async function orderPage({
     if (store.pending.includes(titleOf(card))) chosen(card);
   }
   const main = document.querySelector("main");
+  for (const sn of snacks) {
+    const card = document.createElement("app-product-card");
+    card.innerHTML = `<div class="product__content-title">${sn.name}</div>` + (sn.toggle === false ? SNACK_ACTIONS : SNACK_TOGGLE);
+    main.appendChild(card);
+  }
   const cards = main.innerHTML;
   const text = (b) => b.textContent.replace(/\s+/g, " ").trim() + (b.disabled ? " (disabled)" : "");
   const slotButtons = () => [...document.querySelectorAll(".summary button")].filter((b) => b.getAttribute("data-id") !== "clear");
@@ -651,6 +712,10 @@ export async function orderPage({
     takenBack,
     get atCheckout() {
       return atCheckout;
+    },
+    /** SPEC-snacks-in-the-cart: the cart (the snacks) as it stood when the store's CHECKOUT was pressed. */
+    get cartAtCheckout() {
+      return cartAtCheckout;
     },
     countOf,
     /** A meal put in this plan by something other than this page's presses (another tab of the store: § 2b). */

@@ -380,6 +380,18 @@
       "literal": "\"ng-touched\"",
       "use": "§ 25.3: Angular's marker of a touched control: after a press of the store's pay button, a step-2 control ng-invalid AND ng-touched (the store's markAllAsTouched, or a refusal it receives) shows step 2",
       "spec": "SPEC-rung2-progress-and-checkout.md § 25.3; R2-88"
+    },
+    {
+      "id": "snack-toggle",
+      "literal": "\"product__toggle\"",
+      "use": "SPEC-snacks-in-the-cart § 3.2, § 3.3 (measured by § 1a): a snack's card is ready when it shows the store's Select Options, button.product__toggle (outside .product__actions), and a snack's first unit presses it once before the expansion's Add to Cart; read in the live release's files (main-UMGPHR2R.js, chunk-JYNIGECA.js) on 2026-10-08",
+      "spec": "SPEC-snacks-in-the-cart.md § 3.2, § 3.3, § 1a; SN-2"
+    },
+    {
+      "id": "snack-toggle-expanded",
+      "literal": "\"aria-expanded\"",
+      "use": "SPEC-snacks-in-the-cart § 3.3: the block presses a snack's Select Options only while its aria-expanded is not \"true\", so it never closes an expansion (the store binds it to isAddonsExpanded(); main-UMGPHR2R.js, chunk-IWW3GX6Q.js, 2026-10-08)",
+      "spec": "SPEC-snacks-in-the-cart.md § 3.3; SN-2"
     }
   ]
 }

@@ -23,6 +23,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { card, DAYS, midday, openPlanPage, PLANS } from "./cc-harness.mjs";
+import { refKey } from "./r2-harness.mjs";
 
 /** § 2's table, as the contract writes it: [answer key, Q1, every day, breakfast, meals, plan]. */
 export const TABLE = [
@@ -63,9 +64,11 @@ export async function plansCopy(change) {
 }
 
 /** The snack flags the cases assert (SPEC-meal-selection § 9 item 3; § 4 as written): Q4 shown and nothing carted, the
- *  state § 9 rules; and Q4 hidden. `carted: true` is refused by the build (MS-6), so no case asserts it. */
+ *  state § 9 rules; Q4 hidden; and (SPEC-snacks-in-the-cart § 4) Q4 shown and the snacks carted, which the build allows
+ *  since the block presses snacks. The committed data stays `carted: false`: the carted cases build from their own. */
 export const SNACKS_SHOWN = Object.freeze({ shown: true, carted: false });
 export const SNACKS_HIDDEN = Object.freeze({ shown: false, carted: false });
+export const SNACKS_CARTED = Object.freeze({ shown: true, carted: true });
 
 /** `plans` (by default the committed data) as a new object with its `snacks` set to `flags`: a case's own data. */
 export const withSnacks = (flags, plans = PLANS) => ({ ...structuredClone(plans), snacks: { ...flags } });
@@ -179,8 +182,26 @@ export function cardOf(page) {
   };
 }
 
-/** The keys a link's meal part carries, with their counts: { key: qty } (the photo part, after "!", is not read). */
+/** The keys a link's meal part carries, with their counts: { key: qty } (the photo part, after "!", is not read). A
+ *  snack's key keeps its leading "_" (SPEC-snacks-in-the-cart § 2), so it never reads as a meal's. */
 export function keysOf(href) {
   const tokens = new URL(href).hash.slice("#fitaf=".length).split("!")[0].split(".").slice(1);
   return Object.fromEntries(tokens.map((t) => [t.split("*")[0], Number(t.split("*")[1] ?? 1)]));
+}
+
+/** The link's items in order, as written: ["k1*2", "k2", "_s1*3", …] (the photo part not read). */
+export const tokensOf = (href) => new URL(href).hash.slice("#fitaf=".length).split("!")[0].split(".").slice(1);
+
+/** SPEC-snacks-in-the-cart: a week's lists as the link must carry them, { key: qty } by store name (refKey). */
+export const listKeys = (list, prefix = "") => Object.fromEntries(list.map((m) => [prefix + refKey(m.name), m.qty]));
+
+/** The v2 fixture week with a snack list for 5 days too (the committed fixture has 7 only): a temporary picks directory
+ *  holding it, and its remover. The 5 are the 7's first three, 2 + 2 + 1, so their keys are the fixture's own. */
+export const V2_SNACKS_FIVE = V2.lists["chefs-choice"].snacks["7"].slice(0, 3).map((m, i) => ({ ...m, qty: [2, 2, 1][i] }));
+export async function v2WithFiveDays() {
+  const week = structuredClone(V2);
+  week.lists["chefs-choice"].snacks["5"] = V2_SNACKS_FIVE;
+  const dir = await mkdtemp(join(tmpdir(), "boston-ms-picks-5d-"));
+  await writeFile(join(dir, "2026-10-04.json"), JSON.stringify(week, null, 2));
+  return { dir, done: () => rm(dir, { recursive: true, force: true }) };
 }
