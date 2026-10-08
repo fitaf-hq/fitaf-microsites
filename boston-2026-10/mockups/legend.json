@@ -9,7 +9,7 @@
     "data/offers.json": { "what": "Offer", "from": "the offer list" },
     "data/plans.json": { "what": "Plans and prices", "from": "the plan table" },
     "data/events.json": { "what": "Event and QR code", "from": "the event list" },
-    "mockups/photos.json": { "what": "Photos", "from": "the week's picks" },
+    "mockups/photos.json": { "what": "Photos", "from": "the photo sets" },
     "src/assets/fitaf-logo.png": { "what": "Logo", "from": "the brand's logo" },
     "src/template.html": { "what": "Colours and fonts", "from": "the brand" }
   }
