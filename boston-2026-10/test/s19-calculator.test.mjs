@@ -16,17 +16,18 @@ async function flowExample() {
   return block.split("\n").filter((l) => l.startsWith("> ")).map((l) => l.slice(2).replace(/\*\*/g, "").trim());
 }
 
+// Updated (SPEC-meal-selection § 8 item 7): shareLines takes meals a day and days a week; Signature × 14 is 2 a day on 7.
 test("S19: 150 g / 2,600 cal, Signature × 14 -> the ranges in flows/02 § 2 exactly", async () => {
   const [targets, protein, calories] = await flowExample();
   assert.equal(targets, "Your targets: 150 g protein · 2,600 cal a day · Signature, 14 meals a week (2 a day)", "control: the flow's example");
   const signature = (await loadPlans()).individual.find((p) => p.id === "signature");
-  assert.deepEqual(shareLines(signature, 14, { protein: 150, calories: 2600 }), { targets, protein, calories });
+  assert.deepEqual(shareLines(signature, 2, 7, { protein: 150, calories: 2600 }), { targets, protein, calories });
   assert.deepEqual(
-    shareLines(signature, 14, { protein: null, calories: 2600 }),
+    shareLines(signature, 2, 7, { protein: null, calories: 2600 }),
     { targets: "Your targets: 2,600 cal a day · Signature, 14 meals a week (2 a day)", protein: null, calories },
     "the two numbers are independent",
   );
-  assert.equal(shareLines(signature, 14, { protein: null, calories: null }), null);
+  assert.equal(shareLines(signature, 2, 7, { protein: null, calories: null }), null);
   assert.deepEqual([parseTarget("2,600"), parseTarget(" 150 "), parseTarget(""), parseTarget("abc"), parseTarget("0"), parseTarget("-5")], [2600, 150, null, null, null, null]);
 });
 

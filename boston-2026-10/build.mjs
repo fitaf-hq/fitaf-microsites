@@ -12,7 +12,7 @@ import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promi
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
-import { parseTarget, shareLines } from "./src/save/calculator.js";
+import { mealsADayOf, parseTarget, shareLines } from "./src/save/calculator.js";
 import { currentGeneral, isLive, offerForSave } from "./src/worker/offers.js";
 import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
@@ -384,7 +384,7 @@ export async function devSlots(plans, { save, zips, siteKey, eventId, offers, me
   // One source each, inlined as written: the Worker's ZIP check, the calculator's arithmetic, and (§ 2a) the
   // Worker's choice of offer with the zoned date it chooses on. FORMATTERS is zoned-time.js's cache, empty.
   const shared = [
-    ...[classifyZip, shareLines, parseTarget].map(declaration),
+    ...[classifyZip, shareLines, parseTarget, mealsADayOf].map(declaration),
     "const FORMATTERS = new Map();",
     ...[isLive, currentGeneral, offerForSave, ...ZONED_DATE_HELPERS].map(declaration),
   ].join("\n");
