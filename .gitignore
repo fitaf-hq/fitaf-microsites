@@ -16,6 +16,10 @@ debug-storybook.log
 # ⛔ Photographs. This repository is PUBLIC and a photo's usage rights are the Owner's: the mock-ups read
 # them from this folder, named by the committed mockups/photos.json, and none is ever committed.
 /boston-2026-10/mockups/photos/
+# The live store's pictures, taken by the watch's probes and its smoke (storefront/probe-*/, storefront/smoke-*/): they
+# carry the store's own food photographs, so they stay beside their run files and are never committed (P1).
+/boston-2026-10/storefront/**/*.png
+/boston-2026-10/storefront/**/*.jpg
 
 # The flow diagrams' PNGs (2x, for screen sharing) are rebuilt by `npm run render:flows`; the SVGs are committed
 boston-2026-10/flows/rendered/*.png

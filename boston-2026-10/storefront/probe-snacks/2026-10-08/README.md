@@ -63,14 +63,21 @@ plan and cart in it, discarded.
 
 | file | what |
 |---|---|
-| `run-<UTC time>-<width>.json` | one run: its settings and command; the block's file hash and its hide rules; the catalog's snack products; every addition card's title beside the catalog's name and both keys (`names`); the page's cards (`inventory`); each step's reads (`steps`: `start`, `choices card`, `survey`, `meals`, `snack Select Options`, `snack Add to Cart`, `snack "+"`, `direct Add to Cart`, `before CHECKOUT`, `CHECKOUT`); the recorder's log; the extras dialog; the checkout's reads (`checkout`); the pictures |
-| `run-…-1280-NN-<what>.png` | run 1's pictures, each of one element: the snack's card before, after *Select Options*, after *Add to Cart*, at 2 units; the sidebar (`app-cart`) after the meals and after each snack unit; the turkey's card; the checkout's snack line and its group |
-| `run-…-390-NN-<what>.png` | run 2's: the phone's card (`app-product-card-mobile`, the one displayed at 390; the presses are on the hidden `app-product-card`) at the same steps; the turkey's phone card; the checkout's snack line and its group |
+| `run-<UTC time>-<width>.json` | one run: its settings and command; the block's file hash and its hide rules; the catalog's snack products; every addition card's title beside the catalog's name and both keys (`names`); the page's cards (`inventory`); each step's reads (`steps`: `start`, `choices card`, `survey`, `meals`, `snack Select Options`, `snack Add to Cart`, `snack "+"`, `direct Add to Cart`, `before CHECKOUT`, `CHECKOUT`); the recorder's log; the extras dialog; the checkout's reads (`checkout`); the pictures' names |
 
-**Left out**: each first-round run's `09-extras-dialog.jpg` (taken mid fade-in, the page beneath showing through it;
-its heading and button are in the run file); at 390 the three cart-bar pictures were never made (the probe clipped to
-`.mobile-cart-summary`'s own box, which has no height in the viewport: `Cannot take screenshot with 0 height`, in the
-run file's `screenshots`); the bar's values are in every run file. Hence the gaps in run 2's numbering.
+
+**The pictures are not in the repository.** Each run file's `screenshots` names them (run 1's at 1280: the snack's card
+before, after *Select Options*, after *Add to Cart*, at 2 units; the sidebar after the meals and after each snack unit;
+the turkey's card; the checkout's snack line and its group; run 2's the phone's card at the same steps, and the
+checkout's line and group), and they were committed with this batch (`f415f33`), which was wrong: several carry the
+store's food photographs (the sidebar's rows, the checkout's line), and this repository is public and a photograph's
+usage rights are the Owner's (P1, `test/p1-no-photo-tracked.test.mjs`, failed on that commit). They were untracked in
+the next commit and are ignored here (`.gitignore`: pictures under `boston-2026-10/storefront/`), kept beside the run
+files on the machine that made them. ⚠ **`f415f33` still holds them in its history**: it is not pushed, and it must be
+rewritten without them before it is. Never made: each first-round run's extras dialog picture is kept out as well (taken
+mid fade-in); at 390 the three cart-bar pictures failed (the probe clipped to `.mobile-cart-summary`'s own box, which
+has no height in the viewport: `Cannot take screenshot with 0 height`, in the run file's `screenshots`); the bar's
+values are in every run file.
 
 ## The snacks, as the page showed them (run 1; the same in all four)
 

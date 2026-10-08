@@ -9,8 +9,9 @@ snacks. Nothing in the watch or the site reads these files.
 Each directory is written by a program,
 `npm --prefix boston-2026-10/tools/storefront-watch run probe-snacks -- --out <dir>`
 ([`../../tools/storefront-watch/bin/probe-snacks.mjs`](../../tools/storefront-watch/bin/probe-snacks.mjs)): a JSON
-file per run and, in the runs `--shots` names, a picture per step. Its own `README.md` is written by hand and says
-which batch it holds, under which commit of the probe, and which pictures were left out and why.
+file per run and, in the runs `--shots` names, a picture per step. ⛔ **The pictures are never committed** (they carry
+the store's food photographs; this repository is public: P1): `.gitignore` keeps them beside the run files that name
+them. Its own `README.md` is written by hand and says which batch it holds and under which commit of the probe.
 
 ## What a reader would misread
 
