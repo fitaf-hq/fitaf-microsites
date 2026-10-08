@@ -1,6 +1,7 @@
 # SPEC: snacks into the cart (the week delivered 10-18)
 
-**Status: contract, unbuilt.** It is `SPEC-meal-selection.md` § 11's *"the contract to write next"*, written from the
+**Status: built 2026-10-08** (§ 1a the probe, § 3a the build's notes, § 6a the live proof); ⛔ **not pasted**: the
+Footer block is the Advisor's to paste (§ 7 step 4), and `data/plans.json`'s `carted` stays false until then. It is `SPEC-meal-selection.md` § 11's *"the contract to write next"*, written from the
 code it constrains (`src/storefront/fitaf-handoff.js` at `6662baa`, `scripts/handoff-link.mjs`, `scripts/selection.mjs`)
 and from § 11's live measurements. **The Advisor**, 2026-10-08: *"Release now, snacks for 10-18"*. Two choices are
 his and open (§ 9); each has the default this contract proceeds under.
@@ -246,6 +247,28 @@ text is `ad25f93d…` (R2-32, PR-10 and CC-8 re-recorded for it, CC-8's golden `
 The watch's smoke gains **`--link <fragment>`**. With the built console file (`--script`): a 14-meal link with a 7-snack
 list, and one with 5, at **390 and 1280**, **5 runs each** (`SPEC-rung2-fill-c.md` § 7 d), reported as *K of R*; and a
 link with no snacks, to show nothing else moved. Each run ends on the stripped checkout, looked at, PAY never pressed.
+
+## 6a. The live proof, 2026-10-08: found, not ruled
+
+[`storefront/smoke-snacks/2026-10-08/`](storefront/smoke-snacks/2026-10-08/README.md): the watch's smoke (`a3ed3c9`)
+with `--script` the console file built at `1339c0a` (text `ad25f93d…`) and `--link` three links of the link tool on the
+14-meal Lean plan (`mpid` 23): its 14 meals with the store's first seven snack cards, with the first five, and alone;
+22:41–22:48Z, release `main-UMGPHR2R.js`; every run ended on the stripped checkout, looked at, PAY never pressed.
+
+| link | 1280 | 390 |
+|---|---|---|
+| 14 meals + 7 snacks | **5 of 5** | **5 of 5** |
+| 14 meals + 5 snacks | **5 of 5** | **5 of 5** |
+| 14 meals, no snack | **1 of 1** | **1 of 1** |
+
+Every run: `done: /checkout`; every meal and snack listed by name; *"Plan Total (14 items)"* beside the store's count
+of units (*"21 items"*, *"19 items"*); the total the meals' and the snacks' card prices ($212.00, $204.00, $168.00);
+the extras pop-up never opened (the block's key holds with snacks in the cart); the faces as before (W10–W20). Each
+snack's line on the stripped checkout is its photograph, its name and the store's *Add-on* tag under *"Add-On & Extra
+Meals"*, the Total after them (the pictures, one per width, are not committed: they carry the store's photographs). The
+smoke now reads a link's snack items and prices them (W21), and `--shots` takes those pictures. ⬜ **Not run**: the
+4-meal and 21-meal carts (SPEC-meal-selection § 8 item 9), a link with a photo part, `--live` (§ 7 step 5, after the
+Advisor's paste), and 2560.
 
 ## 7. Order of release
 
