@@ -73,6 +73,10 @@
 // page's setTimeout runs nothing, so a block's first poll, which runs as its text does, is its last, and it presses
 // nothing; and `routeHeld`, a store that has CHECKOUT's press and has not yet routed: the route to /checkout waits until
 // something calls window.__fixtureRoute() (once), which the page sets at the press.
+// SPEC-storefront-watch § 12 (F6, the week's cutover), `catalog` (a URL; null by default, and then the page requests
+// nothing more): as the store's page asks its backend for the plan's products, the order page requests that URL once
+// as it starts (a plain GET, no credentials). The URL is the synthetic BACKEND's (startBackend below): a second server,
+// reached as `localhost` while the store is `127.0.0.1`, so it is another host, and its own log says who asked.
 import { createServer } from "node:http";
 
 export const MEALS = ["Birria de Res Bowl", "Chicken Pesto Pasta", "Jalapeño Lime Chicken", "Turkey Chili", "Salmon Rice Bowl",
@@ -516,6 +520,9 @@ function appHtml(cfg) {
     pop.showPopover();
   }
   if (location.pathname === "/checkout") { renderCheckout(); return; }
+  // § 12: the page's own request for its products, its body read as a page that uses it reads it (Chrome finishes
+  // loading a fetch's body only once the page consumes it; the watch only ever reads the response).
+  if (cfg.catalog) fetch(cfg.catalog, { credentials: "omit" }).then(function (r) { return r.json(); }).catch(function () {});
   setTimeout(function () {
     // hangAtStart: from here on the page's timers run nothing (the order page's own, set above, still comes), so the
     // block's first poll, run as its text is placed, is its last.
@@ -559,6 +566,7 @@ const DEFAULTS = {
   validity: true,
   payError: null,
   orderType: "delivery",
+  catalog: null,
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */
@@ -606,6 +614,51 @@ export async function startStore() {
       new Promise((resolve) => {
         for (const timer of held) clearTimeout(timer);
         held.clear();
+        server.closeAllConnections();
+        server.close(resolve);
+      }),
+  };
+}
+
+/** The backend's catalog path, as the store's page requests it (SPEC-snacks-in-the-cart § 1a read it there). */
+export const CATALOG_PATH = "/api/v1/tenant/catalog/products";
+
+/**
+ * SPEC-storefront-watch § 12: a SYNTHETIC backend for the page's own catalog request, on 127.0.0.1 and reached as
+ * `localhost` (another host than the store's 127.0.0.1). It answers `CATALOG_PATH` with `{ data: [products] }`, each
+ * `{ name, categories: [{ slug }], effective_price }` (the fields lib/probe-snacks.mjs reads on the live store): `menu`
+ * in the category `all-meals`, `snacks` in `snacks`, every price `priceCents`. CORS open, as a public API's. `requests`
+ * records each request as it arrived (its URL, method, user agent, Origin and Referer), so a test can say who asked.
+ * `url(params)` is the catalog's URL with those query parameters, for the store's `catalog` option.
+ */
+export async function startBackend() {
+  let cfg = { menu: [], snacks: [], priceCents: 1250 };
+  const requests = [];
+  const server = createServer((req, res) => {
+    requests.push({ url: req.url, method: req.method, userAgent: req.headers["user-agent"] ?? null, origin: req.headers.origin ?? null, referer: req.headers.referer ?? null });
+    const path = new URL(req.url, "http://localhost").pathname;
+    const cors = { "access-control-allow-origin": "*", "cache-control": "no-store" };
+    if (path !== CATALOG_PATH) {
+      res.writeHead(404, { "content-type": "text/plain", ...cors });
+      res.end("not found");
+      return;
+    }
+    const product = (slug) => (name) => ({ name, categories: [{ slug }], effective_price: cfg.priceCents });
+    res.writeHead(200, { "content-type": "application/json", ...cors });
+    res.end(JSON.stringify({ data: [...cfg.menu.map(product("all-meals")), ...cfg.snacks.map(product("snacks"))] }));
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  const origin = `http://localhost:${port}`;
+  return {
+    origin,
+    requests,
+    url: (params) => `${origin}${CATALOG_PATH}?${new URLSearchParams(params)}`,
+    set(next) {
+      cfg = { menu: [], snacks: [], priceCents: 1250, ...next };
+    },
+    close: () =>
+      new Promise((resolve) => {
         server.closeAllConnections();
         server.close(resolve);
       }),
