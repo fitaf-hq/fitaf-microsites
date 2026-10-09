@@ -9,7 +9,8 @@ itself between two four-backtick fence lines.
   `dist-storefront/fitaf-handoff.html`), byte for byte: the text between the fences hashes to `fragment_sha256`.
   Copy that text and nothing else; the fences are not part of it.
 - **Named** `YYYY-MM-DD-fitaf-handoff-<commit>.md`: the build's date and the seven-character commit its version line
-  names. A file is never edited after its block is pasted; a new build is a new file.
+  names. A file is edited once more, when its block is pasted (its `status` and `pasted` lines), and never after; a new
+  build is a new file.
 - **Not an input**: nothing in this repository reads these files. `watch-baseline.json`'s `expectedFooter` records
   what is pasted; `src/storefront/` is the source.
 - ⛔ **Pasted only by the Advisor**, in the store's admin (Custom Scripts, Footer). No agent types into that admin.

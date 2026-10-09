@@ -41,6 +41,11 @@ export const PREVIOUS_FOOTER = "fitaf-handoff a984fb5 sha256:914668ded95f6a8913e
  * C with fill B, so it names fill B's block rather than the baseline's, which names fill C itself after that accept. */
 export const FILL_B_FOOTER = "fitaf-handoff 5d5fb72 sha256:cbc6d1ecb340f818a39d1b3478e55e96f5cb9edf41033dc2b60a8ca4ef8c93cd";
 
+/** The last block live before snacks (SPEC-snacks-in-the-cart), pasted until the Advisor pasted 17c5693 on 2026-10-08:
+ * SN-5 is about IT (a block without snack support refuses a snack link, pressing nothing), not about whatever block the
+ * baseline names after that accept. */
+export const PRE_SNACK_FOOTER = "fitaf-handoff 42f4cb1 sha256:76871ff95ab458a2453625efa0d8b8d8dd4ea330d9f02d0232ca6713c06a36d7";
+
 /** A block's text: rebuilt from the commit its version line names (by default the baseline's, the live block), and
  * checked against its SHA-256. */
 export async function liveText(versionLine = undefined) {
