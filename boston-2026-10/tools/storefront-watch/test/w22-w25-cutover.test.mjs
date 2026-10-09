@@ -14,7 +14,7 @@
 // catalog from a synthetic backend (W26 and W27, in their own file, are about that request).
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -25,7 +25,6 @@ import { MEALS, startBackend, startStore } from "./browser-store.mjs";
 import { baselineText, DEPENDENCIES, fakeFetch, ORIGIN, PAGE, syntheticStore, w1Baseline } from "./synthetic-store.mjs";
 
 const LIB = new URL("../lib/", import.meta.url);
-const KEY_FILE = fileURLToPath(new URL("../../../src/storefront/meal-key.js", import.meta.url));
 const TZ = "America/New_York";
 /** Friday 2026-10-09, 00:00 in New York (EDT, UTC−4): the first minute F6 runs. */
 const FRIDAY_START = new Date("2026-10-09T04:00:00Z");
@@ -53,7 +52,7 @@ const recorded = (names) => ({
   menu: {
     responses: [{ at: "backend.synthetic/api/v1/tenant/catalog/products", params: ["paginate", "meal_plan_id", "store_api_key"] }],
     products: names.length + 2,
-    names,
+    meals: names.map((name) => ({ name, key: mealKey(name) })),
   },
 });
 
@@ -302,15 +301,12 @@ test("W25: filing — an open issue for this Friday's switch: nothing added; a r
 
 // ── ⭐ Mutants: a copy of lib/ in a temporary directory, the check replaced; no file in the repository is edited ─────
 
-/** lib/ and the meal key, laid out as in the repository (lib/ reaches the key at ../../../src/storefront/). */
+/** A copy of lib/ alone, as W3's and W7f's: the watch, its rule and its issues import nothing of the site's. */
 async function mutant(file, check, replacement, fn) {
   const dir = await mkdtemp(join(tmpdir(), "storefront-watch-f6-mutant-"));
   try {
-    const lib = join(dir, "tools", "storefront-watch", "lib");
+    const lib = join(dir, "lib");
     await cp(fileURLToPath(LIB), lib, { recursive: true });
-    await mkdir(join(dir, "src", "storefront"), { recursive: true });
-    await cp(KEY_FILE, join(dir, "src", "storefront", "meal-key.js"));
-    await writeFile(join(dir, "package.json"), '{ "type": "module" }\n');
     const source = await readFile(join(lib, file), "utf8");
     assert.equal(source.split(check).length, 2, `${file}: the check appears exactly once`);
     await writeFile(join(lib, file), source.replace(check, replacement));

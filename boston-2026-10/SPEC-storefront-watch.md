@@ -268,3 +268,66 @@ a Tuesday: F6 not run, and the run's requests are today's; W25 an open *"menu sw
 run; W26 the backend host is requested by the page and never by the watch's code (§ 2's planted request still refused);
 W27 the report and the issue carry no parameter value. **Mutants**: the half-rule inverted fails W22/W23; the day
 gate removed fails W24.
+
+## 12a. Built, found at the build, not ruled (2026-10-09)
+
+Red first at `687805b` (23 cases, each failing because F6 did not exist), built in the commit that adds this section.
+§ 12 above is unchanged; these are the build's choices and what it found.
+
+- **F6 has its own issue**, never the release's. A run's flags F1–F5 go to the release's issue as before (§ 5); a
+  flagged F6 opens the menu's issue (`lib/menu-issue.mjs`); F6 alone opens no release issue, and the release issue's
+  title and marker never carry F6 (`lib/run-issues.mjs`). The menu issue's body is the new names in the response's
+  order, the instruction to release and `accept --menu`, then the run's report; its marker is
+  `<!-- storefront-watch menu-switched friday=<date> -->`.
+- **"This Friday"** is the date in `send_time_zone` (New York: Friday 00:00 is 04:00 UTC in EDT, 05:00 in EST). A
+  dispatch on another day files under the Friday of its week (the latest Friday). **The Friday gate** reads the issue
+  record only on a Friday and only with `--issue` (one `gh issue list --state all`, the label's newest 100), and stops
+  F6 if an issue carries this Friday's `menu-switched` marker, **open or closed** (a switch accepted the same day was
+  still seen). Without `--issue` (a local run) F6 runs every Friday run. A record that cannot be read runs F6: a missed
+  switch costs more than a second issue. Filing adds nothing while an OPEN issue carries that Friday's marker.
+- **A menu that cannot be read is flagged, never a switch**: no catalog response seen in the visit, none of its
+  products in `all-meals`, or the visit failing (E1's rule: a check that cannot run is a flag). Its issue is titled
+  *"storefront-watch: the menu could not be read (Friday <date>)"*, marker `menu-unread`, which the Friday gate does
+  not read, so a failed visit never stops the watch for the rest of the day.
+- **A baseline with no `menu`** makes F6 informational, as F3 is before a paste. ⚠ **The committed
+  `watch-baseline.json` has no `menu`**: until `accept --menu` runs against the live store (no request to it was made
+  at this build), F6 lists the page's menu and can see no cutover.
+- **`accept --menu` stands alone** (with `--release` or `--footer`, a usage error, exit 2): one headless visit, the
+  baseline's `menu` set to the live menu's keys (one each, sorted), every other field as it was; a menu that cannot
+  be read is refused, nothing written, exit 1. **`accept --release` carries `menu` over**, as it carries
+  `expectedFooter`: before this build it rebuilt the file without it (red at `687805b`), so the next release's accept
+  would have silently emptied the week.
+- **The same visit**: on a run where F3 runs, F6 reads that visit (W22, W26: one visit, one page load). On a Friday
+  run without a release, the visit is F6's alone: **F3 and F4 keep their own schedule** (F1, a dispatch, the daily
+  run) and are not judged from it.
+- **The reading** (`lib/catalog-response.mjs`, which `lib/probe-snacks.mjs` now reads through too): every
+  `GET …/catalog/products` response the page receives during the visit, not only the first (the request carries
+  `paginate` and `limit`), their `all-meals` names joined, one per key, the first name a key is listed under kept.
+  **The visit keys each name** (`src/storefront/meal-key.js`), so `lib/watch.mjs` and `lib/baseline.mjs` import
+  nothing of the site's, as before this build: W3's and W7f's mutants copy `lib/` alone, and failed to load when the
+  rule imported the key function (found by the full suite, 190 of 192, and fixed by moving the keying, not the
+  harnesses). The visit waits up to 10 s after the cards for a first response, and up to 10 s for each body. ⚠ Chrome hands a fetch's
+  body over only once the page has consumed it: the synthetic store's page reads its catalog as the store's must
+  (found when the first fixture's body never arrived). **"The page's order"** is the response's order, not the cards'.
+- **The report** gives F6 a section: its verdict; the Friday and the record read; each response as host and path and
+  its parameters' names; the menu's count against the baseline's; the new names in order; the baseline's gone meals
+  as keys (the baseline keeps keys, not names). Names are redacted as every quoted page string (§ 7).
+- **The cases** (`test/w22-w25-cutover.test.mjs`, `test/w26-w27-backend.test.mjs`): W22–W25 on recorded visit
+  outcomes, plus the rule's edge (5 of 10 kept is not a switch, 4 of 10 is), the unread and informational cases, the
+  Thursday 23:59 and Saturday 00:00 boundaries in New York, a dispatch, the gate's open, closed and last-Friday issues,
+  and `accept --menu`; W22, W23, W26 and W27 in headless Chrome. The synthetic store's page gains `catalog`: it requests
+  its products from a synthetic backend reached as `localhost` while the store is `127.0.0.1`, so the backend is
+  another host and its own log says who asked (W26: one request, Chrome's agent, the store page's Origin; the watch's
+  own requests all to the store, the planted backend URL refused). W27's parameter values and the price are made at
+  run time and looked for in the run's result itself, not only in the redacted report. **The mutants** run on a copy
+  of `lib/`, as W3's and W7f's, beside a control (the unmutated copy passes): the half-rule inverted fails W22 and W23
+  (menu A reads as a switch), the day gate removed fails W24 (a Tuesday reads F6).
+- **The workflow needs no change**: the 10-minute schedule and `--issue` are what F6 uses, and a dispatch's `--full`
+  runs it on any day. ⚠ The watch README's copy of the workflow still read hourly (`17 * * * *`); `main`'s has run
+  every 10 minutes since `0a14529` (2026-10-02). The copy is brought to `main`'s text; § 1 above is left as written.
+- ⬜ **Not established at this build**: that the live response's meals carry a category whose slug is `all-meals`
+  (the 2026-10-08 probe recorded only the snacks' categories, `snacks` and `upsells`); if it is another, F6 says *"no
+  product in the all-meals category"*, flagged, never a switch. Whether the live page pages its catalog (one response
+  of 55 products on 2026-10-08). That consecutive weeks share fewer than half their meals, which the half-rule assumes:
+  only one week's picks are committed here.
+- ⬜ **Not run against the live store**: no request to it was made at this build.

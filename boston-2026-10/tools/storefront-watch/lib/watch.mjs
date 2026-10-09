@@ -5,8 +5,12 @@
 //   hourly            the cheap check (two requests); a change flags F1 and runs F1 in depth, then F2 to F5
 //   full (dispatch)   F1 in depth and F2 to F5, whatever the cheap check found
 //   daily             also F3 and F4, because the Footer can change without a release
+//   F6 (§ 12)         the week's menu, from the same visit: on Fridays in New York until a switch is seen, and on a
+//                     dispatch (lib/cutover.mjs); `cutover` is { timeZone, seen }, which bin/watch.mjs always passes
+import { cutoverDay, cutoverSchedule } from "./cutover.mjs";
 import { checkDependencies } from "./dependencies-check.mjs";
 import { footerVerdict, quietVerdict } from "./footer-check.mjs";
+import { menuVerdict } from "./menu-check.mjs";
 import { fileHashes, readEntry, readRelease } from "./read-store.mjs";
 
 const NOT_RUN = (note) => ({ ran: false, flag: false, note });
@@ -33,9 +37,10 @@ function compareFiles(baselineFiles, files) {
   return { added, removed, changed, count: Object.keys(files).length };
 }
 
-export async function runWatch({ fetcher, baseline, dependencies, page, full = false, daily = false, visit = null, smoke = null, now = () => new Date() }) {
+export async function runWatch({ fetcher, baseline, dependencies, page, full = false, daily = false, visit = null, smoke = null, now = () => new Date(), cutover = null }) {
   if (baseline.page !== page) throw new Error(`the baseline is for ${baseline.page}, not ${page}`);
-  const at = now().toISOString();
+  const when = now();
+  const at = when.toISOString();
   const flags = new Set();
 
   const { entryUrl, entryText, entryLastModified, live } = await readEntry({ fetcher, page });
@@ -57,25 +62,54 @@ export async function runWatch({ fetcher, baseline, dependencies, page, full = f
     if (f2.flag) flags.add("F2");
   }
 
+  // § 12: whether this run reads the week's menu (F6). The issue record is asked only on a Friday (W24, W25).
+  const day = cutover ? cutoverDay(when, cutover.timeZone) : null;
+  const schedule = cutover ? await cutoverSchedule({ full, day, seen: cutover.seen ?? null }) : { due: false, note: "not wired: no cutover settings" };
+  const footerDue = inDepth || daily;
+
+  // ONE ordinary visit serves F3, F4 and F6 (§ 12 item 1: on a run where F3 runs, the same visit).
+  let visited = null;
+  let visitError = null;
+  if (visit && (footerDue || schedule.due)) {
+    try {
+      visited = await visit({ menu: schedule.due });
+    } catch (err) {
+      visitError = err;
+    }
+  }
+
   let f3 = NOT_RUN("runs on F1, a dispatch, or the daily run");
   let f4 = NOT_RUN("runs on F1, a dispatch, or the daily run");
   let f5 = NOT_RUN("runs on F1 or a dispatch");
   // A browser check that cannot run is a flag with its error, never an abort: the run must still reach the issue.
-  if (inDepth || daily) {
+  if (footerDue) {
     if (visit) {
-      try {
-        const v = await visit();
-        f3 = { ran: true, ...footerVerdict(v, baseline.expectedFooter ?? null) };
-        f4 = { ran: true, ...quietVerdict(v) };
-      } catch (err) {
-        f3 = { ran: true, flag: true, blocks: [], summary: `could not run: ${err.message}` };
-        f4 = { ran: true, flag: true, lines: [], errors: [], otherErrors: [], summary: `could not run: ${err.message}` };
+      if (visitError) {
+        f3 = { ran: true, flag: true, blocks: [], summary: `could not run: ${visitError.message}` };
+        f4 = { ran: true, flag: true, lines: [], errors: [], otherErrors: [], summary: `could not run: ${visitError.message}` };
+      } else {
+        f3 = { ran: true, ...footerVerdict(visited, baseline.expectedFooter ?? null) };
+        f4 = { ran: true, ...quietVerdict(visited) };
       }
       if (f3.flag) flags.add("F3");
       if (f4.flag) flags.add("F4");
     } else {
       f3 = NOT_RUN("no browser: --no-browser");
       f4 = NOT_RUN("no browser: --no-browser");
+    }
+  }
+
+  // § 12, F6. A menu that cannot be read is a flag (unread), never a switch.
+  let f6 = NOT_RUN(schedule.note);
+  if (schedule.due) {
+    if (!visit) {
+      f6 = NOT_RUN("no browser: --no-browser");
+    } else {
+      const verdict = visitError
+        ? { ...menuVerdict(null, null), summary: `could not read the menu: could not run: ${visitError.message}` }
+        : menuVerdict(visited?.menu ?? null, baseline.menu);
+      f6 = { ran: true, friday: day.friday, timeZone: day.timeZone, record: schedule.record, ...verdict };
+      if (f6.flag) flags.add("F6");
     }
   }
   if (inDepth) {
@@ -108,6 +142,7 @@ export async function runWatch({ fetcher, baseline, dependencies, page, full = f
     f3,
     f4,
     f5,
+    f6,
     flags: [...flags].sort(),
   };
 }

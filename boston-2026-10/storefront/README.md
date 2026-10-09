@@ -21,7 +21,10 @@ hashes and a few literal strings of the store's public bundle, never its code or
   `npm --prefix boston-2026-10/tools/storefront-watch run accept -- --release main-<name>.js` (from the live store's
   public files, for the release the watch's issue names, and only while it is the live one: SPEC § 8), with
   `--footer <dist-storefront/fitaf-handoff.html>` once a build is pasted in the Footer. The commit that lands a new
-  baseline names the watch's issue.
+  baseline names the watch's issue. Since SPEC § 12 (F6), also `menu`: the accepted week's meal keys (each a public
+  name's key, `src/storefront/meal-key.js`; no name, no price), written by `accept -- --menu` alone, in the commit
+  that releases the next week, and kept across a release's accept. ⚠ Absent until that first `accept --menu`: F6 is
+  informational until then.
 - **[`probe-counts/`](probe-counts/README.md)** is **not an input**: measurements of how the live store shows a press
   counted ([`../SPEC-rung2-fill-c.md`](../SPEC-rung2-fill-c.md) § 2), one dated directory per batch, written by the
   watch package's `probe-counts`. Nothing reads them; the contract quotes them.

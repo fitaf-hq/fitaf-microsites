@@ -18,6 +18,8 @@ export const TOOL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 export const SITE_DIR = join(TOOL_DIR, "..", "..");
 export const BASELINE_PATH = join(SITE_DIR, "storefront", "watch-baseline.json");
 export const DEPENDENCIES_PATH = join(SITE_DIR, "storefront", "dependencies.json");
+/** The site's save settings: its `send_time_zone` is the time zone F6's Friday is read in (SPEC § 12 item 2). */
+export const SAVE_PATH = join(SITE_DIR, "data", "save.json");
 
 /** § 4: the two widths, each in a fresh profile. */
 export const VIEWPORTS = {
