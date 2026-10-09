@@ -45,6 +45,15 @@ dates **`S − 9` (a Friday) through `S − 3` (a Thursday)**.
 - The build embeds every picks file whose window has not ended on the build's date (`--on`, as the offer's), so a
   page built on a Thursday already carries Friday's week when its file exists.
 - ⚠ The switch's time of day on Friday is not known; the page switches at the start of Friday in that zone.
+- ⚠ **Measured 2026-10-09, the gap this leaves** (the first Friday of a version-2 week): at 01:19 EDT the store still
+  listed the week delivered 10-11's meals, every item of that week's two carts among them, while the page, past that
+  week's `S − 3`, showed no Chef's Choice on any answer set: *Choose your meals* alone (read in a browser on three
+  answer sets). The store's own Footer block carted a 7-meal link at both widths the same hour. So **from Friday's
+  midnight until the store switches and the next week's file is released, the page offers no cart**, and it will every
+  Friday, because the next week's file is made from the store's next menu. **The Advisor**, 2026-10-09
+  (`ts=2026-10-09T05:51:09.277Z`), asked whether to put the old week's carts back until the store switched (a change
+  and two releases, the old links failing safe once the store moved on): **no, the fallback stands** until the week
+  delivered 10-18 ships. The window against the store's switch is open (§ 5).
 
 ## 3. The plan page (Flow 2's `CHOSEN` state, individual plans only)
 
@@ -88,6 +97,8 @@ When the week has picks for the chosen **count**:
 - **Photographs in the list**, and Flow 8's full menu: later.
 - **Prod**: this lands on the dev line and the test address; the live page (rung 1) changes only with the Advisor's go.
 - The KMS-side "menus" as rules (a default pick, per customer): later, his details.
+- **The Friday gap** (§ 2, measured 2026-10-09): how the old week's end and the next week's start should meet the
+  store's own switch, whose time is not known. A contract, not a change made on the night.
 
 ## 6. Built, 2026-09-30 — found at the build, not ruled
 
