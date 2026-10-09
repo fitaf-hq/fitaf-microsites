@@ -219,6 +219,85 @@
           "h": 176
         }
       }
+    },
+    "2026-10-18": {
+      "file": "chefs-choice-2026-10-18.jpg",
+      "width": 208,
+      "height": 2496,
+      "cells": {
+        "Blackened Chicken Caesar Salad": {
+          "x": 16,
+          "y": 16,
+          "w": 176,
+          "h": 176
+        },
+        "Steakhouse Mac & Cheese": {
+          "x": 16,
+          "y": 224,
+          "w": 176,
+          "h": 176
+        },
+        "BBQ Brisket": {
+          "x": 16,
+          "y": 432,
+          "w": 176,
+          "h": 176
+        },
+        "Free-Range Turkey Ragu Over Protein Penne": {
+          "x": 16,
+          "y": 640,
+          "w": 176,
+          "h": 176
+        },
+        "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies": {
+          "x": 16,
+          "y": 848,
+          "w": 176,
+          "h": 176
+        },
+        "French Dip Sliders": {
+          "x": 16,
+          "y": 1056,
+          "w": 176,
+          "h": 176
+        },
+        "Southwest Blackened Salmon Bowl": {
+          "x": 16,
+          "y": 1264,
+          "w": 176,
+          "h": 176
+        },
+        "Shrimp Pad Thai": {
+          "x": 16,
+          "y": 1472,
+          "w": 176,
+          "h": 176
+        },
+        "Chipotle Chicken Carnitas Bowl": {
+          "x": 16,
+          "y": 1680,
+          "w": 176,
+          "h": 176
+        },
+        "Hot Honey Grass-fed Beef Bowl": {
+          "x": 16,
+          "y": 1888,
+          "w": 176,
+          "h": 176
+        },
+        "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla": {
+          "x": 16,
+          "y": 2096,
+          "w": 176,
+          "h": 176
+        },
+        "Maple Turkey & Organic Egg Scramble": {
+          "x": 16,
+          "y": 2304,
+          "w": 176,
+          "h": 176
+        }
+      }
     }
   }
 }

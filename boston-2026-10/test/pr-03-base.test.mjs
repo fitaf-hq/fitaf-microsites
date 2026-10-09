@@ -108,7 +108,13 @@ test("PR-3: the tree as committed carries the five carousel windows and a photo 
   // A row is matched to its meal by position: since SPEC-chefs-choice § 7.2 a row shows `display`, and the cell is `name`'s.
   const sheet = photos.chefs_choice[delivery];
   assert.ok(sheet, `control: the manifest has the committed week's sheet (${delivery})`);
-  const menu = JSON.parse(await readFile(join(PICKS_DIR, `${delivery}.json`), "utf8")).menus["14"].map((m) => m.name);
+  // The 14-meal list `#lean-14` opens: a version-1 file's `menus["14"]`, or a version-2 file's cart for *and*, every day,
+  // no breakfast (SPEC-meal-selection § 5, the default answers' cart; the week delivered 2026-10-18 is the first v2).
+  const picks = JSON.parse(await readFile(join(PICKS_DIR, `${delivery}.json`), "utf8"));
+  const list14 = picks.menus
+    ? picks.menus["14"]
+    : picks.lists["chefs-choice"].carts.find((c) => c.lunch_dinner === "and" && c.weekends && !c.breakfast).items;
+  const menu = list14.map((m) => m.name);
   const cells = menu.filter((name) => name in sheet.cells);
   assert.ok(cells.length > 0, "control: the manifest has a cell for some meal of the 14-meal list");
   const page = openPlanPage(html, { hash: "#lean-14", now: midday(addDays(delivery, -3)) });

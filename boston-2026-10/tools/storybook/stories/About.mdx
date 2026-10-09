@@ -28,8 +28,10 @@ buttons, the eight answer sets with *No snacks*, and snacks chosen (Q4) with the
 the Date control's **fixture week**: a week of invented meal names written as the picks file's version 2, a cart for
 every answer set and snacks for every day only, built into the page as the site's build reads any week (its `--picks`),
 so every answer set shows its own cart; on a real week most answer sets have none yet and show *Choose your meals* alone.
-Each opens scrolled to its subject (the questions, or the snacks). Name a state as *Meal selection · and · weekdays ·
-breakfast · 390: …*.
+Each opens scrolled to its subject (the questions, or the snacks). **While snacks are carted** (`data/plans.json`'s
+`snacks.carted`), the page offers Q4 only for days the week has a snack list for, so on the fixture week every weekday
+answer set shows no Q4, and *or · weekdays · snacks, no list* shows that: Q4 hidden, at the questions; with snacks not
+carted, it shows the not-carted line alone. Name a state as *Meal selection · and · weekdays · breakfast · 390: …*.
 
 ## The hand-off
 

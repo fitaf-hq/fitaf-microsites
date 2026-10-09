@@ -3,6 +3,7 @@
 // frame, at 390 and 1280 (the viewport), named so a comment can say which. The answer sets and the snacks are on the
 // fixture week's date (invented names, the picks file's version 2: a cart for every answer set, snacks for every day
 // only), so each shows its own cart; the Date control moves them to a real week (where most answer sets fall back).
+// While snacks are carted (data/plans.json), *snacks, no list* shows Q4 hidden (stories/states.js, `whileCarted`).
 import { controls, defaults, showPage } from "./frame.js";
 import { ANSWER_SETS, STATES } from "./states.js";
 

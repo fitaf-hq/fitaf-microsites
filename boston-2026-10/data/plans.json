@@ -17,7 +17,7 @@
     { "lunch_dinner": "and", "weekends": false, "breakfast": true, "meals": 15, "plan": 14 }
   ],
   "selection_defaults": { "weekends": true, "breakfast": false, "snacks": false },
-  "snacks": { "shown": true, "carted": false },
+  "snacks": { "shown": true, "carted": true },
   "individual": [
     {
       "id": "lean",

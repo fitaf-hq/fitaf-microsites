@@ -11,8 +11,10 @@
 // each; *All plans* presses the link and the grid shows in its modal.
 // SPEC-meal-selection § 9 (in SM-5's walk): the Meal selection stories at 390 and 1280, both builds: *Goal buttons* one
 // facts block per goal; each answer set on the fixture week's date its own answer set on the card (data-selection), its
-// answers pressed, its cart's lines; snacks chosen (Q4) the week's snack list for its days (none for weekdays) and the
-// not-carted line; *No snacks* none.
+// answers pressed, its cart's lines; snacks chosen (Q4) the week's snack list for its days (none for weekdays); *No
+// snacks* none. By the committed `snacks.carted` (SPEC-snacks-in-the-cart § 3a items 9 and 11, § 4 items 3 and 5): not
+// carted, Q4 pressed in every answer set and the not-carted line with snacks chosen; carted, no not-carted line, and Q4
+// neither shown nor pressed on days the week has no snack list for (the fixture's weekdays).
 // SM-10: each Hand-off story of § 8.3 at 390 and 1280 (Screen · B at 2 of 7, its default, and at 10 of 14):
 // test/handoff-expect.mjs says what each must show.
 // SM-11: no visit's console carries the fixture's "[fixture] ORDER PLACED" (its control: every visit that ran the
@@ -105,7 +107,13 @@ async function expectations(manifest) {
     const shown = display.replace(/\s+/g, " ").trim();
     return n > 1 ? qty.replace("{meal}", shown).replace("{n}", String(n)) : shown;
   };
-  const menus = Object.fromEntries(Object.entries(picks.menus).map(([count, meals]) => [count, meals.map(line)]));
+  // A version-1 week's `menus` by count; a version-2 week's (SPEC-meal-selection § 5; 2026-10-18 is the first committed)
+  // the carts the two default answers open: 7 is *or*, every day, no breakfast; 14 is *and*, every day, no breakfast.
+  const cartOfCount = (count) =>
+    picks.lists["chefs-choice"].carts.find((c) => c.weekends && !c.breakfast && c.lunch_dinner === (count === "7" ? "or" : "and")).items;
+  const menus = picks.menus
+    ? Object.fromEntries(Object.entries(picks.menus).map(([count, meals]) => [count, meals.map(line)]))
+    : Object.fromEntries(["7", "14"].map((count) => [count, cartOfCount(count).map(line)]));
   const plans = await readJson(join(SITE, "data", "plans.json"));
   // SPEC-meal-selection § 9: the fixture week's carts by answer set, its snacks by days, as the card shows them.
   const fixture = manifest.dates.find((d) => d.id === "fixture");
@@ -114,7 +122,10 @@ async function expectations(manifest) {
   const keyOf = (c) => `${c.lunch_dinner}-${c.weekends ? "7d" : "5d"}${c.breakfast ? "-b" : ""}`;
   const carts = Object.fromEntries(list.carts.map((c) => [keyOf(c), c.items.map(line)]));
   const snacks = Object.fromEntries(Object.entries(list.snacks ?? {}).map(([d, meals]) => [`${d}d`, meals.map(line)]));
-  return { menus, defaultMeals: String(plans.shown_counts[0].meals_per_week), gridLinks: plans.individual.length * plans.shown_counts.length, carts, snacks };
+  // SPEC-snacks-in-the-cart § 3a items 9 and 11: what the answer sets show moves with the committed `snacks.carted`.
+  const { carted } = plans.snacks;
+  assert.equal(typeof carted, "boolean", "fixture control: data/plans.json's snacks.carted");
+  return { menus, defaultMeals: String(plans.shown_counts[0].meals_per_week), gridLinks: plans.individual.length * plans.shown_counts.length, carts, snacks, carted };
 }
 
 function visitsFor(stories, { builds, viewports, only = Object.keys(STORY_DATES), menus }) {
@@ -180,20 +191,51 @@ test("SM-5: every story of § 3 shows its state at 390 and 1280, for both builds
   assert.deepEqual(statesProblems(results.filter((r) => !r.handoff), expected), [], "SM-5");
 });
 
+/** The control's week (a list for every day only, as the fixture's) and readings, for either value of `snacks.carted`. */
+const CONTROL = { menus: {}, defaultMeals: "7", gridLinks: 6, carts: { "and-7d-b": ["A × 2", "B"], "or-5d": ["C"] }, snacks: { "7d": ["S × 3"] } };
+const CONTROL_BASE = { state: "ready", width: 390, frameWidth: 390, innerWidth: 390, build: "production", date: "fixture", path: "/microsite/production/fixture/index.html", ccList: true, snackLines: [], snackNote: false };
+const OR_5D = ["lunch_dinner:or", "weekends:no", "breakfast:no"];
+
 test("SM-5 (SPEC-meal-selection § 9, control): the walk's reading refuses a wrong cart, wrong answers and a missing snack line", () => {
-  const expected = { menus: {}, defaultMeals: "7", gridLinks: 6, carts: { "and-7d-b": ["A × 2", "B"], "or-5d": ["C"] }, snacks: { "7d": ["S × 3"] } };
-  const base = { state: "ready", width: 390, frameWidth: 390, innerWidth: 390, build: "production", date: "fixture", path: "/microsite/production/fixture/index.html", ccList: true, snackLines: [], snackNote: false };
+  const expected = { ...CONTROL, carted: false };
+  const base = CONTROL_BASE;
   const right = { ...base, story: "and · every day · breakfast · snacks", answers: "and-7d-b-s", selection: "and-7d-b-s", pressed: ["lunch_dinner:and", "weekends:yes", "breakfast:yes", "snacks:yes"], meals: ["A × 2", "B"], snackLines: ["S × 3"], snackNote: true };
-  assert.deepEqual(statesProblems([right], expected), [], "control: the right reading passes");
+  const noList = { ...base, story: "or · weekdays · snacks, no list", answers: "or-5d-s", selection: "or-5d-s", pressed: [...OR_5D, "snacks:yes"], meals: ["C"], snackNote: true };
+  const weekdays = { ...base, story: "or · weekdays", answers: "or-5d", selection: "or-5d", pressed: [...OR_5D, "snacks:no"], meals: ["C"] };
+  assert.deepEqual(statesProblems([right, noList, weekdays], expected), [], "control: the right readings pass");
   const wrong = [
     { ...right, meals: ["C"] },
     { ...right, selection: "and-7d-b" },
     { ...right, pressed: ["lunch_dinner:and", "weekends:yes", "breakfast:no", "snacks:yes"] },
     { ...right, snackLines: [] },
     { ...right, snackNote: false },
-    { ...base, story: "or · weekdays", answers: "or-5d", selection: "or-5d", pressed: ["lunch_dinner:or", "weekends:no", "breakfast:no", "snacks:no"], meals: ["C"], snackNote: true },
+    { ...weekdays, snackNote: true },
+    // Not carted, Q4 is on the page for every answer set (SPEC-meal-selection § 9 item 3): carted's readings fail.
+    { ...noList, snackNote: false },
+    { ...weekdays, pressed: OR_5D },
   ];
   for (const r of wrong) assert.equal(statesProblems([r], expected).length, 1, JSON.stringify(r));
+});
+
+test("SM-5 (SPEC-snacks-in-the-cart § 3a items 9 and 11, control): carted, the reading refuses the not-carted line and Q4 on days with no list", () => {
+  const expected = { ...CONTROL, carted: true };
+  const base = CONTROL_BASE;
+  const right = { ...base, story: "and · every day · breakfast · snacks", answers: "and-7d-b-s", selection: "and-7d-b-s", pressed: ["lunch_dinner:and", "weekends:yes", "breakfast:yes", "snacks:yes"], meals: ["A × 2", "B"], snackLines: ["S × 3"] };
+  // Weekdays, with no list for them: Q4 hidden (its buttons not shown pressed), no snack box, no line (§ 4 items 3 and 5).
+  const noList = { ...base, story: "or · weekdays · snacks, no list", answers: "or-5d-s", selection: "or-5d-s", pressed: OR_5D, meals: ["C"] };
+  const weekdays = { ...base, story: "or · weekdays", answers: "or-5d", selection: "or-5d", pressed: OR_5D, meals: ["C"] };
+  assert.deepEqual(statesProblems([right, noList, weekdays], expected), [], "control: the right readings pass");
+  const wrong = [
+    { ...right, snackNote: true },
+    { ...right, snackLines: [] },
+    { ...right, pressed: ["lunch_dinner:and", "weekends:yes", "breakfast:yes"] },
+    // Each the page as it was before snacks were carted, now wrong (8ac8098's expectations).
+    { ...noList, snackNote: true },
+    { ...noList, pressed: [...OR_5D, "snacks:yes"] },
+    { ...weekdays, pressed: [...OR_5D, "snacks:no"] },
+  ];
+  for (const r of wrong) assert.equal(statesProblems([r], expected).length, 1, JSON.stringify(r));
+  assert.throws(() => statesProblems([right], CONTROL), TypeError, "no carted given: refused, never read as not carted");
 });
 
 test("SM-8: during the walk (§ 3's stories, § 8.3's, the docs page), no request leaves 127.0.0.1", { timeout: WALK_TIMEOUT_MS }, async () => {
