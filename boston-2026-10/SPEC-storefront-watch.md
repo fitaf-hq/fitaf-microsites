@@ -233,3 +233,38 @@ The three-step checkout's build (`ba9eabc`); its § 26 has the whole of it. In s
   Total, a line in the report. A block without steps (the live one before the paste): one reading, W20 *"no steps"*, not
   a failure.
 - ⬜ Not run against the live store.
+
+## 12. Amendment, 2026-10-09 — F6, the week's cutover. CONTRACT, before any code
+
+**Why**: the store switches to the next week's menu on a Friday at a time nobody knows, and until the next week is
+released the plan page offers no cart (`SPEC-chefs-choice.md` § 2). On 2026-10-09 the switch was watched by a loop on
+one machine, outside any repository. **The Advisor**, 2026-10-09: *"we're supposed to have a process that's watching the
+store for a cutover. This should be a FAST redeployment"*; and (2026-10-02) a ten-minute loop is the default for this
+kind of check. The watch already runs every ten minutes, so the cutover becomes one of its checks.
+
+1. **F6 — the menu**: one headless visit of `/order?mpid=21` with no fragment (the F3 visit's own launcher, a fresh
+   profile; on a run where F3 runs, the same visit), reading **the page's own** `/catalog/products` response, as
+   `lib/probe-snacks.mjs` reads it: **the watch's code never requests the backend's host** (§ 2's refusal stands and its
+   test still passes), and the request's URL is recorded as host, path and parameter **names** only, never a value
+   (the storefront's key travels in it). From the response: the names of the products in the `all-meals` category,
+   each reduced to its key by `src/storefront/meal-key.js`.
+2. **When**: on every scheduled run **from Friday 00:00 in New York** (`data/save.json`'s `send_time_zone`) **until
+   a switch has been seen that Friday**, and on a dispatch. On any other day F6 does not run and the run fetches what it
+   fetches today. A seen switch is recorded by its issue (item 4), so later Friday runs find it and stop.
+3. **The flag**: `watch-baseline.json` gains `menu`: the accepted week's keys. **F6 flags when fewer than half of the
+   baseline's keys are still in the page's menu** (a new week). Any smaller change (a meal added or renamed mid-week,
+   as Thai Basil Beef was on 2026-10-09) is reported in the run's text and not flagged.
+4. **The alert**: a flagged F6 opens an issue labelled `storefront-watch` titled *"storefront-watch: the menu switched
+   (N of M keys new)"*, its body the new names in the page's order. It is a signal to start the next week's release,
+   not a fault: the run fails so the issue opens, as every flag does (§ 5).
+5. **Accepting**: `accept --menu` writes the live menu's keys into the baseline, in the commit that releases the next
+   week; it names the issue, which closes it.
+6. **Public**: names only (the store's own, as any visitor reads them); no price, no photograph, no key, no internal
+   figure. Nothing is pressed and nothing is typed.
+
+**Cases** (§ 6's synthetic store, no network): W22 the synthetic store serving menu A and the baseline A: F6 green;
+serving B (a new week): F6 flags, the title counts the new keys; W23 one meal added to A: not flagged, reported; W24
+a Tuesday: F6 not run, and the run's requests are today's; W25 an open *"menu switched"* issue for this Friday: F6 not
+run; W26 the backend host is requested by the page and never by the watch's code (§ 2's planted request still refused);
+W27 the report and the issue carry no parameter value. **Mutants**: the half-rule inverted fails W22/W23; the day
+gate removed fails W24.
