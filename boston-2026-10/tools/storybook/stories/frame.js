@@ -80,8 +80,10 @@ function fitToPage(frame) {
 /**
  * The story's element. `context` is Storybook's (the story's title and name, the viewport global); `state` one of
  * STATES; `args` the controls (build, date, goal, meals); `whole`, the frame as tall as the page (the state named too).
+ * A state with `whileCarted` takes those fields while snacks are carted (the manifest's `carted`, data/plans.json's).
  */
-export function showPage({ context, state, args, whole = false }) {
+export function showPage({ context, state: given, args, whole = false }) {
+  const state = pages.carted && given.whileCarted ? { ...given, ...given.whileCarted } : given;
   const group = context.title.split("/").at(-1);
   const story = whole ? `${context.name} (${state.name})` : context.name;
   const width = viewportWidth(context.globals);

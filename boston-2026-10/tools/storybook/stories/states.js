@@ -45,8 +45,16 @@ export const STATES = {
   goals: { name: "Goal buttons", fragment: (args) => `#${args.goal}`, date: "today", waits: "#panel-individual", scrollTo: "#q-goal" },
   ...Object.fromEntries(ANSWER_SETS.map(([part, name]) => [part, answerSet(part, name)])),
   // § 9 item 3: snacks chosen (Q4) with the week's snack list (every day), and with none (weekdays: the fixture has no list for 5).
+  // `whileCarted` is the state while data/plans.json's `snacks.carted` is true (the pages' manifest): SPEC-snacks-in-the-cart
+  // § 3a items 9 and 11, the page hides Q4 for days the week has no list for, and the not-carted line is not on the page,
+  // so the story without a list shows Q4 hidden, at the questions. Not carted, it shows the not-carted line alone.
   snacks: answerSet("and-7d-b-s", "and · every day · breakfast · snacks", { needs: "#cc-snack-list", scrollTo: "#cc-snacks" }),
-  snacksNoList: answerSet("or-5d-s", "or · weekdays · snacks, no list", { needs: "#cc-snacks-note", lacks: "#cc-snack-list", scrollTo: "#cc-snacks" }),
+  snacksNoList: answerSet("or-5d-s", "or · weekdays · snacks, no list", {
+    needs: "#cc-snacks-note",
+    lacks: "#cc-snack-list",
+    scrollTo: "#cc-snacks",
+    whileCarted: { needs: "#cc-list", lacks: "#q-snacks", scrollTo: "#q-lunch_dinner" },
+  }),
 };
 
 /** Why each state cannot be shown, in the tool's words, for its caption. */

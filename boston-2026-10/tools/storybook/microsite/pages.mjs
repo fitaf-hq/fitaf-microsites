@@ -40,7 +40,8 @@ async function onePage(outDir, build, date) {
   await writeFile(page, withClock(await readFile(page, "utf8"), date.instant));
 }
 
-/** What the stories read (pages.json): the zone, the builds, the dates with their labels, the goals and counts. */
+/** What the stories read (pages.json): the zone, the builds, the dates with their labels, the goals and counts, and
+ *  whether snacks are carted (`snacks.carted`: a story that moves with it, SPEC-snacks-in-the-cart § 3a item 11). */
 async function manifestOf(dates) {
   const plans = JSON.parse(await readFile(PLANS_PATH, "utf8"));
   return {
@@ -49,6 +50,7 @@ async function manifestOf(dates) {
     dates: dates.map((d) => ({ ...d, label: DATES.find((x) => x.id === d.id).label })),
     goals: plans.individual.map(({ id, name }) => ({ id, name })),
     counts: plans.shown_counts.map((c) => String(c.meals_per_week)),
+    carted: plans.snacks.carted === true,
   };
 }
 
