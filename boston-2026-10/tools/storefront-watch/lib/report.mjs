@@ -147,6 +147,30 @@ function f5Section(r) {
   return out;
 }
 
+/**
+ * § 12, F6: the week's menu. Names only (the store's own, redacted as every quoted page string); of the page's request
+ * its host, path and parameter NAMES; the baseline's gone meals as their keys (the baseline keeps keys, not names).
+ */
+function f6Section(r) {
+  const out = ["## F6 — the week's menu (SPEC § 12)", ""];
+  if (!r.f6) return [...out, "not run (this run did not know of F6)"];
+  if (!r.f6.ran) return [...out, `not run (${r.f6.note})`];
+  out.push(`${r.f6.flag ? "⛔ " : ""}${r.f6.summary}`);
+  out.push(`- Friday ${r.f6.friday} in ${r.f6.timeZone}; ${r.f6.record}`);
+  for (const x of r.f6.responses) {
+    out.push(`- read from the page's own response (the watch requests nothing of it): \`${x.at}\`, parameter names only: ${list(x.params)}${x.error ? `; ${x.error}` : ""}`);
+  }
+  if (!r.f6.live.length) return out;
+  if (r.f6.informational) {
+    out.push(`- the page's menu (\`all-meals\`), in its order: ${r.f6.live.map((m) => quote(m.name)).join(", ")}`);
+    return out;
+  }
+  out.push(`- the page's menu (\`all-meals\`): ${r.f6.live.length} meals; the baseline's: ${r.f6.baseline} keys, ${r.f6.kept} still listed`);
+  out.push(`- new, in the page's order: ${r.f6.added.map((m) => quote(m.name)).join(", ") || "none"}`);
+  out.push(`- gone (the baseline's keys no longer listed): ${list(r.f6.removed)}`);
+  return out;
+}
+
 /** The smoke's own report (bin/smoke.mjs): each width's verdict, and for a width that failed, the page as text. */
 export function renderSmokeReport(result, at = new Date().toISOString()) {
   const out = [`# storefront-watch smoke: ${result.flag ? "⛔ FAIL" : "PASS"}`, "", `${at} · script: ${result.script}`, ""];
@@ -161,6 +185,6 @@ export function renderReport(r) {
     `${r.at} · ${r.page} · ${mode(r)} · ${r.fetches} request(s), every one to the store's origin`,
     "",
   ];
-  const body = [f1Section(r), f2Section(r), f3Section(r), f4Section(r), f5Section(r)].map((s) => s.join("\n"));
+  const body = [f1Section(r), f2Section(r), f3Section(r), f4Section(r), f5Section(r), f6Section(r)].map((s) => s.join("\n"));
   return scrub(`${head.join("\n")}\n${body.join("\n\n")}\n`);
 }

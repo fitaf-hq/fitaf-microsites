@@ -21,6 +21,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import vm from "node:vm";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
+import { catalogProducts, catalogRequest, isCatalogResponse } from "./catalog-response.mjs";
 import { LOG_PREFIX, SITE_DIR, VIEWPORTS } from "./config.mjs";
 import { cutLine, redact } from "./redact.mjs";
 import { mealKey } from "../../../src/storefront/meal-key.js";
@@ -606,8 +607,7 @@ function probeHelpers(B, S) {
 
 /** The page's own catalog response (never a request of ours): each product's name, categories, price and Size field. */
 function catalogOf(body) {
-  const data = Array.isArray(body?.data) ? body.data : [];
-  return data.map((p) => ({
+  return catalogProducts(body).map((p) => ({
     name: p.name,
     categories: (p.categories ?? []).map((c) => c.slug),
     price: p.effective_price ?? null,
@@ -667,9 +667,8 @@ export async function probeSnacksRun({ origin, width, mpid, need, snack, choices
     let catalogBody = null;
     page.on("response", async (r) => {
       try {
-        const u = new URL(r.url());
-        if (/\/catalog\/products$/.test(u.pathname) && !catalogBody) {
-          catalogBody = { at: `${u.host}${u.pathname}`, params: [...u.searchParams.keys()], body: await r.json() };
+        if (isCatalogResponse(r) && !catalogBody) {
+          catalogBody = { ...catalogRequest(r.url()), body: await r.json() };
         }
       } catch {
         // a response with no body (a redirect, a preflight) is not the catalog

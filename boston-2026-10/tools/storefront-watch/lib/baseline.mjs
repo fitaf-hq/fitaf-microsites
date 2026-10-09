@@ -4,8 +4,12 @@
 // block>, cleared with --footer null, and otherwise carried over, so F3 compares what is live with what is kept.
 // § 8: accept names the release it accepts (`main-<name>.js`, as the watch's issue title names it), and refuses,
 // writing nothing, unless that release is the live entry both before and after its files are read.
+// § 12 item 5: `menu`, the accepted week's meal keys, is what is KEPT too: carried over by a release's accept (as
+// expectedFooter), and written only by `accept --menu` (acceptMenu), from one headless visit's reading of the page's own
+// catalog response, with nothing else in the file changed.
 import { readFile, writeFile } from "node:fs/promises";
 import { parseBlock } from "./footer-check.mjs";
+import { menuKeys, menuVerdict } from "./menu-check.mjs";
 import { ENTRY_NAME } from "./page-scripts.mjs";
 import { fileHashes, readEntry, readEntryName, readRelease } from "./read-store.mjs";
 
@@ -64,8 +68,32 @@ export async function acceptBaseline({ fetcher, path, page, footer, release }) {
   if (!ENTRY_NAME.test(release ?? "")) {
     throw new Error(`accept names the release it accepts, --release main-<name>.js (SPEC-storefront-watch § 8); got ${release}`);
   }
-  const expectedFooter = footer === undefined ? ((await existing(path))?.expectedFooter ?? null) : footer === null ? null : footerFromBlock(footer);
+  const prior = await existing(path);
+  const expectedFooter = footer === undefined ? (prior?.expectedFooter ?? null) : footer === null ? null : footerFromBlock(footer);
   const baseline = await captureBaseline({ fetcher, page, expectedFooter, release });
+  if (prior?.menu) baseline.menu = prior.menu;
   await writeFile(path, baselineText(baseline));
   return baseline;
+}
+
+/** § 12 item 5: the live menu could not be read (no catalog response, none in all-meals). Nothing is written. */
+export class MenuUnread extends Error {
+  constructor(why) {
+    super(why);
+    this.name = "MenuUnread";
+  }
+}
+
+/**
+ * `accept --menu`: `visit({ menu: true })` (lib/visit.mjs, one headless visit) read, and the baseline file's `menu`
+ * replaced by the live menu's keys; every other field as it was. Returns { baseline, live: [{ name, key }] }.
+ */
+export async function acceptMenu({ path, visit }) {
+  const prior = await existing(path);
+  if (!prior) throw new Error(`${path} does not exist: accept a release first (--release main-<name>.js)`);
+  const verdict = menuVerdict((await visit({ menu: true }))?.menu ?? null, null);
+  if (verdict.unread) throw new MenuUnread(verdict.summary);
+  const baseline = { ...prior, menu: menuKeys(verdict.live) };
+  await writeFile(path, baselineText(baseline));
+  return { baseline, live: verdict.live };
 }

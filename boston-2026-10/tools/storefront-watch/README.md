@@ -1,11 +1,13 @@
 # tools/storefront-watch — the storefront watch
 
-[`../../SPEC-storefront-watch.md`](../../SPEC-storefront-watch.md) is the contract (§§ 1–8, cases W1–W9 and W7b–W7f), with
+[`../../SPEC-storefront-watch.md`](../../SPEC-storefront-watch.md) is the contract (§§ 1–8, cases W1–W9 and W7b–W7f; § 12,
+F6, the week's cutover, cases W22–W27, § 12a its build's notes), with
 W10–W13 from [`../../SPEC-rung2-progress-and-checkout.md`](../../SPEC-rung2-progress-and-checkout.md) § 5 (W14, W15 and
 W16 from its §§ 10, 12 and 15; the watch contract's §§ 9 and 10 are the build's notes). HMP
 releases the store's app without notice; the cart hand-off ([`../../SPEC-rung2-cart-handoff.md`](../../SPEC-rung2-cart-handoff.md))
-presses the store's own buttons, so a release can break it. This package flags every release within the hour and
-smoke-tests the hand-off on the live store on each one.
+presses the store's own buttons, so a release can break it. This package flags every release within ten minutes and
+smoke-tests the hand-off on the live store on each one; and on Fridays it watches for the store's switch to the next
+week's menu (F6), the signal to release the next week.
 
 **Why this is its own package**: it needs `puppeteer-core` (a browser driver, no browser download), and the site
 never does. The site's install and the deploy never get it (the rule of [`../README.md`](../README.md)). It pins
@@ -17,54 +19,61 @@ never does. The site's install and the deploy never get it (the rule of [`../REA
 
 ```sh
 npm --prefix boston-2026-10/tools/storefront-watch ci          # once, and after this lockfile changes
-npm --prefix boston-2026-10/tools/storefront-watch test        # W1–W16 (no network), F3/F4 verdicts, E1, P1–P2, W9d,
+npm --prefix boston-2026-10/tools/storefront-watch test        # W1–W27 (no network), F3/F4 verdicts, E1, P1–P2, W9d,
                                                                # W10b–W16b, rung 2's browser cases R2-41c, R2-45–R2-61 (a local
                                                                # synthetic store in headless Chrome; skipped without Chrome;
                                                                # W9d waits out fill B's real 30 s; about 2 minutes in all)
-npm --prefix boston-2026-10/tools/storefront-watch run watch                  # the hourly check (§ 2)
-npm --prefix boston-2026-10/tools/storefront-watch run watch -- --full        # F1–F5 regardless (as a dispatch)
+npm --prefix boston-2026-10/tools/storefront-watch run watch                  # the cheap check (§ 2); on a Friday, F6 too
+npm --prefix boston-2026-10/tools/storefront-watch run watch -- --full        # F1–F6 regardless (as a dispatch)
 npm --prefix boston-2026-10/tools/storefront-watch run watch -- --daily       # plus F3 and F4 (as at 07:17 UTC)
 npm --prefix boston-2026-10/tools/storefront-watch run watch -- --full --no-browser   # F1 and F2 only: static
 npm --prefix boston-2026-10/tools/storefront-watch run smoke -- --script <built file>  # § 4: a build before it is pasted
 npm --prefix boston-2026-10/tools/storefront-watch run smoke -- --live --width 1280   # the store's own Footer block
 npm --prefix boston-2026-10/tools/storefront-watch run accept -- --release main-<name>.js   # §§ 5, 8: the baseline, for that release
+npm --prefix boston-2026-10/tools/storefront-watch run accept -- --menu      # § 12: the week's menu (one headless visit)
 npm --prefix boston-2026-10/tools/storefront-watch run probe-counts              # SPEC-rung2-fill-c § 2: the store's count, probed
 npm --prefix boston-2026-10/tools/storefront-watch run probe-snacks              # SPEC-snacks-in-the-cart § 1: a snack in the cart, probed
 npm --prefix boston-2026-10/tools/storefront-watch run accept -- --release main-<name>.js \
     --footer boston-2026-10/dist-storefront/fitaf-handoff.html                               # and the Footer block pasted
 ```
 
-`watch` exits 0 green, 1 flagged, 2 if it failed itself; `--issue` (CI) opens or updates the issue with `gh`,
+`watch` exits 0 green, 1 flagged, 2 if it failed itself; `--issue` (CI) opens or updates the issue with `gh` (the
+release's for F1–F5, the menu's own for F6) and, on a Friday, first asks whether this Friday's switch was already seen;
 `--report <file>` writes the report. `smoke` exits 0 if every width passed. `accept` exits 0 once it has written the
 baseline (its first line: `accepted <entry>`), 1 when it refuses because the release named is not the live entry (on
 its first read, or on a second read after the release's files), 2 on a usage error (no request made) or its own
-failure; it writes nothing unless it exits 0. Chrome: `CHROME_PATH` (or
+failure; it writes nothing unless it exits 0. `accept --menu` stands alone: exit 0 once it has written the menu (its
+first line: `accepted the menu: N meals`), 1 when the live menu could not be read, 2 with `--release` or `--footer`. Chrome: `CHROME_PATH` (or
 `PUPPETEER_EXECUTABLE_PATH`, or `CHROME_BIN`), else the usual install path.
 
 | path | what |
 |---|---|
-| `bin/watch.mjs` | §§ 2–3 and 5: the hourly check; on a flag, F1–F5; the report; the issue |
+| `bin/watch.mjs` | §§ 2–3 and 5: the cheap check; on a flag, F1–F5; on a Friday in New York (`data/save.json`'s `send_time_zone`) until a switch is seen, and on a dispatch, F6 (§ 12); the report; the issues |
 | `bin/smoke.mjs` | § 4 on its own: `--script`, `--live`, `--width`, `--report` (`--origin` accepts only a local fixture); `--link` a given checkout link, its snack items too (`SPEC-snacks-in-the-cart.md` § 6: listed and priced on /checkout, W21); `--shots <dir>` a picture of each width's stripped checkout (it carries the store's photographs: never a tracked directory) |
-| `bin/accept.mjs` | § 5, § 8: the baseline from the live store's public files (static only), for the release `--release main-<name>.js` names and only while it is live; `--footer <file>` / `--footer null` |
+| `bin/accept.mjs` | § 5, § 8: the baseline from the live store's public files (static only), for the release `--release main-<name>.js` names and only while it is live; `--footer <file>` / `--footer null`; `--menu` alone (§ 12 item 5): the live menu's keys, from one headless visit, and nothing else |
 | `bin/probe-counts.mjs` | [`../../SPEC-rung2-fill-c.md`](../../SPEC-rung2-fill-c.md) § 2, not a check: on the live store (`/order?mpid=23`, no fragment, a fresh profile per run), presses each of the first 14 meals' Add to Cart and nothing else, and records every 50 ms how the store shows each press counted (the card's stepper, the phone card's, the sidebar's row, "N items", the phone's "Items", CHECKOUT's state) and any count taken back; `--ack-runs`, `--gap-runs`, `--nowait-runs`, `--width`, `--out` (default `../../storefront/probe-counts/<date in Boston>/`, a JSON per run and `summary.md`), `--origin` a local fixture only |
 | `lib/probe-counts.mjs`, `lib/probe-analysis.mjs`, `lib/probe-summary.mjs` | the probe's run in Chrome (its recorder in the page, logging each value as it changes), its reading of a run's log (each press's times, take-backs), and the summary over a directory's runs |
 | `bin/probe-snacks.mjs`, `lib/probe-snacks.mjs` | [`../../SPEC-snacks-in-the-cart.md`](../../SPEC-snacks-in-the-cart.md) § 1, not a check: on the live store (`/order?mpid=23`, no fragment, a fresh profile per run), the plan's 14 meals, then a snack's *Select Options*, *Add to Cart* and "+", an addition's *Add to Cart*, the store's CHECKOUT (and its extras dialog's *CONTINUE TO CHECKOUT* if it opens), and `/checkout` read; every snack card's Size surveyed (opened and closed, nothing chosen). Reads by the Footer block's OWN functions (`card`, `addButton`, `count`, `plus`, `plan`, `control` and the key, their text read from `src/storefront/`) and its hide rules H1–H17 (`DEEP`, evaluated with `querySelectorAll`, never applied). Never PAY, never typing, never a size chosen. `--runs`, `--width`, `--snack`, `--choices`, `--direct`, `--shots first\|all\|none`, `--out` (default `../../storefront/probe-snacks/<date in Boston>/`), `--origin` a local fixture only. ⚠ At 390 its cart-bar pictures fail (0 height; 2026-10-08): the bar's values are in each run file. No suite of its own |
-| `lib/accept-command.mjs`, `lib/baseline.mjs` | `accept` itself (its arguments, lines and exit code; the tests run it against the synthetic store), and the baseline it writes, with § 8's name check before and after the release's files are read |
+| `lib/accept-command.mjs`, `lib/baseline.mjs` | `accept` itself (its arguments, lines and exit code; the tests run it against the synthetic store), and the baseline it writes, with § 8's name check before and after the release's files are read; `menu` kept across a release's accept, written by `--menu` alone |
 | `lib/store-fetch.mjs` | every request the watch makes: to `https://fitafnutrition.com`, nothing else, redirects included |
 | `lib/page-scripts.mjs`, `lib/bundle-imports.mjs`, `lib/read-store.mjs` | the page's scripts, the entry, the import closure, the hashes |
-| `lib/watch.mjs` | one run: which checks run when, and what flags |
+| `lib/watch.mjs` | one run: which checks run when, and what flags; one visit serves F3, F4 and F6 |
+| `lib/cutover.mjs` | § 12 item 2, when F6 runs: the day in `send_time_zone`, the Friday of its week, and the Friday gate (asked of the issue record only on a Friday) |
+| `lib/menu-check.mjs` | F6's rule, on the visit's record alone (no site code): a switch when fewer than half of the baseline's keys are still listed; a smaller change reported; unread and informational |
+| `lib/catalog-response.mjs` | the page's own `/catalog/products` response, read as it arrives (never a request of ours): host, path and parameter NAMES only, the `all-meals` names. `lib/probe-snacks.mjs` reads through it too |
+| `lib/menu-issue.mjs`, `lib/run-issues.mjs` | § 12 item 4: the menu's own issue (one per Friday, a marker naming it), the Friday gate's reading of it; and a run's filing, the release's flags to the release's issue, F6 to the menu's |
 | `lib/dependencies-check.mjs` | F2 |
 | `lib/footer-check.mjs` | F3 (the block's version line and its text's SHA-256) and F4 (our console lines, our page errors) |
-| `lib/visit.mjs` | the one ordinary headless visit F3 and F4 judge |
+| `lib/visit.mjs` | the one ordinary headless visit F3, F4 and F6 judge; for F6 it also reads the page's catalog response(s), each `all-meals` name with its key (`src/storefront/meal-key.js`) |
 | `lib/smoke.mjs`, `lib/smoke-verdict.mjs` | F5: the run at each width, and its pass rule (W6); before each page closes, the page read as text (§ 7, W9) |
 | `lib/faces.mjs` | rung 2's two faces, live (W10–W13, added to F5's pass): a recorder from before the page's scripts (the progress screen coming and going, its step lines, our style and mark); on `/checkout` after done, the displayed controls in `app-checkout` with our style enabled and disabled (W11), each of H1–H6 found and hidden (W12), and no active subscription switch nor *"renews every"* (W13); the rule, `facesVerdict` |
 | `lib/redact.mjs` | § 7: every quoted page string redacted (`AIza…`, `sk_…`, a long base64 run → `[REDACTED]`), each console line then cut to 200 characters |
 | `lib/site-code.mjs`, `lib/site-deps-hook.mjs` | the site's payload code and storefront build, imported, never re-implemented |
-| `lib/issue.mjs` | § 5: one issue per release (a marker in each body and comment carries the entry and the flags) |
-| `lib/report.mjs` | the report: printed, the issue's body, the CI job summary; a new entry's `Last-Modified` (§ 7, W8); a failed smoke width's page as text; the smoke's own report (`bin/smoke.mjs`) |
-| `test/` | `w1`–`w7` (§ 6), `w8`–`w9` (§ 7), `w7-accept-release` (§ 8: W7b–W7f, W7f a mutant), `w10-w13-faces` (W10a–W13a on recorded outcomes, W10b–W13b in Chrome, and F2 carrying the hide list's names), `w14`, `w15`, `w16-logo` (W16a on recorded outcomes, W16b in Chrome: the Fit AF logo on the screen and the checkout, and the header's image never fetched again), `f3-f4-verdicts`, `e1` (a browser check that cannot run is a flag, not an abort), `p1`/`p2` and W9d (plumbing in a real browser, against `test/browser-store.mjs` on 127.0.0.1), `p3` (the fixture's two holds for the Storybook's Hand-off stories, `hangAtStart` and `routeHeld`, each with its control), `fc2-probe-counts` (the probe's CLI on the synthetic store's `counter` mode: shape, times, a dropped press, a take-back, spacing), `w21-snack-link` (SPEC-snacks-in-the-cart § 6: `--link`'s snack items and the pass rule with snacks, on recorded outcomes), `fc-06c-stop-screen` (fill C's stop in Chrome: the screen's words and its own 4 s clock; the smoke reading a stopped run after it) |
+| `lib/issue.mjs` | § 5: one issue per release (a marker in each body and comment carries the entry and the flags); the label |
+| `lib/report.mjs` | the report: printed, the issue's body, the CI job summary; a new entry's `Last-Modified` (§ 7, W8); a failed smoke width's page as text; F6's section (names, the request's parameter names, never a value); the smoke's own report (`bin/smoke.mjs`) |
+| `test/` | `w1`–`w7` (§ 6), `w8`–`w9` (§ 7), `w7-accept-release` (§ 8: W7b–W7f, W7f a mutant), `w10-w13-faces` (W10a–W13a on recorded outcomes, W10b–W13b in Chrome, and F2 carrying the hide list's names), `w14`, `w15`, `w16-logo` (W16a on recorded outcomes, W16b in Chrome: the Fit AF logo on the screen and the checkout, and the header's image never fetched again), `f3-f4-verdicts`, `e1` (a browser check that cannot run is a flag, not an abort), `p1`/`p2` and W9d (plumbing in a real browser, against `test/browser-store.mjs` on 127.0.0.1), `p3` (the fixture's two holds for the Storybook's Hand-off stories, `hangAtStart` and `routeHeld`, each with its control), `fc2-probe-counts` (the probe's CLI on the synthetic store's `counter` mode: shape, times, a dropped press, a take-back, spacing), `w21-snack-link` (SPEC-snacks-in-the-cart § 6: `--link`'s snack items and the pass rule with snacks, on recorded outcomes), `fc-06c-stop-screen` (fill C's stop in Chrome: the screen's words and its own 4 s clock; the smoke reading a stopped run after it), `w22-w25-cutover` (§ 12: W22–W25 on recorded visit outcomes, the two mutants on a copy of `lib/`, `accept --menu`, and W22–W23 in Chrome), `w26-w27-backend` (§ 12 in Chrome: the backend requested by the page and never by the watch; no parameter value and no price in the report or the issues) |
 | `test/r2-*.test.mjs`, `test/r2-browser.mjs` | ⭐ **the SITE's rung 2 cases that need a browser** (SPEC-rung2-progress-and-checkout § 5 and its § 8: R2-41c, the screen above a pop-up in the top layer, with its mutant; R2-45 and its mutant R2-46, R2-47, R2-48, R2-49, R2-51 with its mutants and R2-51b, R2-52 with real images): here because this package drives Chrome and the site's install never gets puppeteer-core. They run the site's own built text on the synthetic store, with their own readers (not `lib/faces.mjs`); the site's suite has the rest |
-| `test/browser-store.mjs` | the synthetic store on 127.0.0.1: the order page, the app's shell (H1, H2, H5: links and text only), and a synthetic `app-checkout` with the contract's names only (none of the store's code or markup); options for the subscription's state, a missing shell part, generated card images (loaded, no src, still loading), a route delay, a planted hang (after N meals, or `hangAtStart`: before the first press) and a route held until `window.__fixtureRoute()` (`routeHeld`; both for the Storybook's Hand-off stories, SPEC-storybook-microsite § 8.3), and a pop-up in the browser's top layer; and in its header the store's logo, `img.header__logo-image`, a generated rectangle at `/img/logo.svg` (`missing: ["logo"]` leaves it out); by default since fill C (`counter`; `counter: null` the store of before), the store's count by the live names (the card's counter, its "+", "N items", the phone's "Items") on a schedule of its own (a delay, dropped presses, counts taken back) |
+| `test/browser-store.mjs` | the synthetic store on 127.0.0.1: the order page, the app's shell (H1, H2, H5: links and text only), and a synthetic `app-checkout` with the contract's names only (none of the store's code or markup); options for the subscription's state, a missing shell part, generated card images (loaded, no src, still loading), a route delay, a planted hang (after N meals, or `hangAtStart`: before the first press) and a route held until `window.__fixtureRoute()` (`routeHeld`; both for the Storybook's Hand-off stories, SPEC-storybook-microsite § 8.3), and a pop-up in the browser's top layer; and in its header the store's logo, `img.header__logo-image`, a generated rectangle at `/img/logo.svg` (`missing: ["logo"]` leaves it out); by default since fill C (`counter`; `counter: null` the store of before), the store's count by the live names (the card's counter, its "+", "N items", the phone's "Items") on a schedule of its own (a delay, dropped presses, counts taken back); and (§ 12, `catalog`, null by default) the page's own request for its products, to `startBackend()`, a synthetic backend reached as `localhost` (another host) that logs who asked |
 
 **Inputs** (committed, beside the script they protect): [`../../storefront/`](../../storefront/README.md),
 `dependencies.json` and `watch-baseline.json`.
@@ -73,9 +82,10 @@ failure; it writes nothing unless it exits 0. Chrome: `CHROME_PATH` (or
 
 | run | fetches | then |
 |---|---|---|
-| hourly | the page and its entry (two requests) | unchanged: green. Changed: **F1**, then F1 in depth, F2–F5 |
-| daily, 07:17 UTC | the same | also F3 and F4 (one headless visit), because the Footer can change without a release |
-| dispatch | the page and every JS file reachable from its entry | F1–F5 |
+| every 10 minutes | the page and its entry (two requests) | unchanged: green. Changed: **F1**, then F1 in depth, F2–F5 |
+| the same, on a Friday in New York | the same, and no other | until this Friday's switch has an issue: **F6**, the week's menu (one headless visit; the page's own catalog response read, never requested) |
+| daily, 07:17 UTC | the same | also F3 and F4 (one headless visit, F6's too on a Friday), because the Footer can change without a release |
+| dispatch | the page and every JS file reachable from its entry | F1–F6 |
 
 - **F3 picks the smoke's script.** Our block on the live page: the link alone runs it (the store's own block).
   None: `fitaf-handoff.fill-B.console.js`, built from the checked-out source, is evaluated in the page once the
@@ -119,7 +129,7 @@ GitHub runs a schedule only from the default branch, so `.github/workflows/store
 `main`, alone, and checks out the dev line for this code and its inputs. This is its text:
 
 ```yaml
-# The storefront watch (boston-2026-10/SPEC-storefront-watch.md). Each hour: has the store released a new build of
+# The storefront watch (boston-2026-10/SPEC-storefront-watch.md). Every 10 minutes: has the store released a new build of
 # its public bundle? On a release (or a dispatch): check what the cart hand-off depends on, and smoke-test the
 # hand-off on the live store at two widths (never submitting anything). Once a day: check Fit AF's Footer block.
 # A flagged run fails and opens (or updates) an issue labelled storefront-watch.
@@ -131,7 +141,7 @@ name: storefront-watch
 
 on:
   schedule:
-    - cron: "17 * * * *" # hourly, at 17 minutes past (UTC)
+    - cron: "7-59/10 * * * *" # every 10 minutes, at :07, :17, :27 ... (UTC); was hourly at :17 until 2026-10-02
     - cron: "17 7 * * *" # daily, 07:17 UTC (03:17 in Boston): also F3 and F4
   workflow_dispatch:
     inputs:
@@ -191,4 +201,10 @@ jobs:
   change renames the files up to the entry, and a new entry name is a release. F1 in depth compares bytes.
 - **`runtime-config.js` is listed, not hashed.** It is in the page's script list the hourly check compares, but it
   is not reachable from the entry, so F1 does not hash it (SPEC § 3: "every JS file reachable from the entry").
-- **The workflow's copy above is a copy.** The file on `main` is what runs; change both, in the same breath.
+- **The workflow's copy above is a copy.** The file on `main` is what runs; change both, in the same breath. (The
+  copy read hourly for a week after `main` moved to every 10 minutes, `0a14529`; brought back with § 12's build.)
+- **F6 green is not "no switch" until the baseline has a menu.** With no `menu` in `watch-baseline.json`, F6 only
+  lists the page's menu (informational): run `accept --menu` once against the live store. And F6 runs only on
+  Fridays in New York: a switch the store makes on a Saturday is seen by a dispatch, or by the next Friday's runs.
+- **A "menu switched" issue is a signal, not a fault**: it starts the next week's release. It also stops F6 for the
+  rest of that Friday, even once closed; a "menu could not be read" issue never does.

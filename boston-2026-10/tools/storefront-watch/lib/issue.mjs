@@ -29,7 +29,11 @@ export function decideIssue(open, { entry, flags }) {
   return { action: "comment", number: issue.number };
 }
 
-function clip(report) {
+/** The label, made if it does not exist (gh's --force updates it in place). */
+export const ensureLabel = (gh) =>
+  gh(["label", "create", LABEL, "--force", "--color", "B60205", "--description", "A store release, a Footer change or the week's menu switching, flagged by the storefront watch"]);
+
+export function clip(report) {
   if (report.length <= MAX_BODY) return report;
   return `${report.slice(0, MAX_BODY)}\n\n… (the report is ${report.length} characters; the rest is in the run's log and job summary)\n`;
 }
@@ -41,7 +45,7 @@ export async function fileIssue({ gh, entry, flags, report }) {
   const decision = decideIssue(open, { entry, flags });
   const body = `${clip(report)}\n${marker(entry, flags)}\n`;
   if (decision.action === "open") {
-    await gh(["label", "create", LABEL, "--force", "--color", "B60205", "--description", "A store release or Footer change flagged by the storefront watch"]);
+    await ensureLabel(gh);
     await gh(["issue", "create", "--title", issueTitle(entry, flags), "--label", LABEL, "--body-file", "-"], body);
   } else if (decision.action === "comment") {
     await gh(["issue", "comment", String(decision.number), "--body-file", "-"], body);
