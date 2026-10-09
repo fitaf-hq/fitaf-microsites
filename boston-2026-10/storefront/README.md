@@ -32,6 +32,9 @@ hashes and a few literal strings of the store's public bundle, never its code or
 - **[`smoke-snacks/`](smoke-snacks/README.md)** is **not an input** either: the live proof of snacks in the cart
   ([`../SPEC-snacks-in-the-cart.md`](../SPEC-snacks-in-the-cart.md) § 6), the watch's smoke with a built console file and
   links carrying snacks, its reports one dated directory per batch. Pictures beside them are never committed.
+- **[`footer-block/`](footer-block/README.md)** is **not an input** either: each Footer block built for the Advisor to
+  paste, as Markdown with YAML front matter and the fragment byte for byte between fences, so the pasted text is version
+  controlled and the KMS can ingest it.
 
 ## What a reader would misread
 
