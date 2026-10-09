@@ -105,7 +105,13 @@ async function expectations(manifest) {
     const shown = display.replace(/\s+/g, " ").trim();
     return n > 1 ? qty.replace("{meal}", shown).replace("{n}", String(n)) : shown;
   };
-  const menus = Object.fromEntries(Object.entries(picks.menus).map(([count, meals]) => [count, meals.map(line)]));
+  // A version-1 week's `menus` by count; a version-2 week's (SPEC-meal-selection § 5; 2026-10-18 is the first committed)
+  // the carts the two default answers open: 7 is *or*, every day, no breakfast; 14 is *and*, every day, no breakfast.
+  const cartOfCount = (count) =>
+    picks.lists["chefs-choice"].carts.find((c) => c.weekends && !c.breakfast && c.lunch_dinner === (count === "7" ? "or" : "and")).items;
+  const menus = picks.menus
+    ? Object.fromEntries(Object.entries(picks.menus).map(([count, meals]) => [count, meals.map(line)]))
+    : Object.fromEntries(["7", "14"].map((count) => [count, cartOfCount(count).map(line)]));
   const plans = await readJson(join(SITE, "data", "plans.json"));
   // SPEC-meal-selection § 9: the fixture week's carts by answer set, its snacks by days, as the card shows them.
   const fixture = manifest.dates.find((d) => d.id === "fixture");

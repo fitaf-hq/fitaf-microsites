@@ -1,0 +1,555 @@
+{
+  "delivery": "2026-10-18",
+  "version": 2,
+  "lists": {
+    "chefs-choice": {
+      "carts": [
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 4,
+          "items": [
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Steakhouse Mac & Cheese",
+              "display": "Steakhouse Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Brisket",
+              "display": "BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Turkey Ragu Over Protein Penne",
+              "display": "Free-Range Turkey Ragu Over Protein Penne",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 7,
+          "items": [
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Steakhouse Mac & Cheese",
+              "display": "Steakhouse Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Brisket",
+              "display": "BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "French Dip Sliders",
+              "display": "French Dip Sliders",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Turkey Ragu Over Protein Penne",
+              "display": "Free-Range Turkey Ragu Over Protein Penne",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Steakhouse Mac & Cheese",
+              "display": "Steakhouse Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Brisket",
+              "display": "BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "French Dip Sliders",
+              "display": "French Dip Sliders",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Turkey Ragu Over Protein Penne",
+              "display": "Free-Range Turkey Ragu Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Southwest Blackened Salmon Bowl",
+              "display": "Southwest Blackened Salmon Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Shrimp Pad Thai",
+              "display": "Shrimp Pad Thai",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Steakhouse Mac & Cheese",
+              "display": "Steakhouse Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Brisket",
+              "display": "BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "French Dip Sliders",
+              "display": "French Dip Sliders",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Grilled Chicken with Glass Noodle Stir Fry",
+              "display": "Sesame Grilled Chicken with Glass Noodle Stir Fry",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Turkey Ragu Over Protein Penne",
+              "display": "Free-Range Turkey Ragu Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Hot Honey Grass-fed Beef Bowl",
+              "display": "Hot Honey Grass-fed Beef Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Southwest Blackened Salmon Bowl",
+              "display": "Southwest Blackened Salmon Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Shrimp Pad Thai",
+              "display": "Shrimp Pad Thai",
+              "qty": 1
+            },
+            {
+              "name": "Low Carb BBQ Brisket",
+              "display": "Low Carb BBQ Brisket",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Steakhouse Mac & Cheese",
+              "display": "Steakhouse Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Brisket",
+              "display": "BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Turkey Ragu Over Protein Penne",
+              "display": "Free-Range Turkey Ragu Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla",
+              "display": "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla",
+              "qty": 2
+            },
+            {
+              "name": "Maple Turkey & Organic Egg Scramble",
+              "display": "Maple Turkey & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Buttermilk Protein Waffles with Scrambled Eggs",
+              "display": "Buttermilk Protein Waffles with Scrambled Eggs",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Steakhouse Mac & Cheese",
+              "display": "Steakhouse Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Brisket",
+              "display": "BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "French Dip Sliders",
+              "display": "French Dip Sliders",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Turkey Ragu Over Protein Penne",
+              "display": "Free-Range Turkey Ragu Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla",
+              "display": "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla",
+              "qty": 3
+            },
+            {
+              "name": "Maple Turkey & Organic Egg Scramble",
+              "display": "Maple Turkey & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Buttermilk Protein Waffles with Scrambled Eggs",
+              "display": "Buttermilk Protein Waffles with Scrambled Eggs",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Steakhouse Mac & Cheese",
+              "display": "Steakhouse Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Brisket",
+              "display": "BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "French Dip Sliders",
+              "display": "French Dip Sliders",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Turkey Ragu Over Protein Penne",
+              "display": "Free-Range Turkey Ragu Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Southwest Blackened Salmon Bowl",
+              "display": "Southwest Blackened Salmon Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Shrimp Pad Thai",
+              "display": "Shrimp Pad Thai",
+              "qty": 1
+            },
+            {
+              "name": "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla",
+              "display": "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla",
+              "qty": 2
+            },
+            {
+              "name": "Maple Turkey & Organic Egg Scramble",
+              "display": "Maple Turkey & Organic Egg Scramble",
+              "qty": 1
+            },
+            {
+              "name": "Buttermilk Protein Waffles with Scrambled Eggs",
+              "display": "Buttermilk Protein Waffles with Scrambled Eggs",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 21,
+          "items": [
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Steakhouse Mac & Cheese",
+              "display": "Steakhouse Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Brisket",
+              "display": "BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "French Dip Sliders",
+              "display": "French Dip Sliders",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Grilled Chicken with Glass Noodle Stir Fry",
+              "display": "Sesame Grilled Chicken with Glass Noodle Stir Fry",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Turkey Ragu Over Protein Penne",
+              "display": "Free-Range Turkey Ragu Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Hot Honey Grass-fed Beef Bowl",
+              "display": "Hot Honey Grass-fed Beef Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Southwest Blackened Salmon Bowl",
+              "display": "Southwest Blackened Salmon Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Shrimp Pad Thai",
+              "display": "Shrimp Pad Thai",
+              "qty": 1
+            },
+            {
+              "name": "Low Carb BBQ Brisket",
+              "display": "Low Carb BBQ Brisket",
+              "qty": 1
+            },
+            {
+              "name": "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla",
+              "display": "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla",
+              "qty": 3
+            },
+            {
+              "name": "Maple Turkey & Organic Egg Scramble",
+              "display": "Maple Turkey & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Buttermilk Protein Waffles with Scrambled Eggs",
+              "display": "Buttermilk Protein Waffles with Scrambled Eggs",
+              "qty": 2
+            }
+          ]
+        }
+      ],
+      "snacks": {
+        "7": [
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Cheesecake Brownie Bites",
+            "display": "Cheesecake Brownie Bites",
+            "qty": 1
+          },
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Triple Chocolate & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Triple Chocolate & Ashwagandha",
+            "qty": 1
+          },
+          {
+            "name": "Golden Oreo Protein Sand",
+            "display": "Golden Oreo Protein Sand",
+            "qty": 1
+          },
+          {
+            "name": "Performance Superfood Bites: Orange Creamsicle & Cordyceps",
+            "display": "Performance Superfood Bites: Orange Creamsicle & Cordyceps",
+            "qty": 1
+          }
+        ],
+        "5": [
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Cheesecake Brownie Bites",
+            "display": "Cheesecake Brownie Bites",
+            "qty": 1
+          },
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Triple Chocolate & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Triple Chocolate & Ashwagandha",
+            "qty": 1
+          }
+        ]
+      }
+    }
+  }
+}
