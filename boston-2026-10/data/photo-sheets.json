@@ -223,7 +223,7 @@
     "2026-10-18": {
       "file": "chefs-choice-2026-10-18.jpg",
       "width": 208,
-      "height": 2496,
+      "height": 4992,
       "cells": {
         "Blackened Chicken Caesar Salad": {
           "x": 16,
@@ -249,51 +249,123 @@
           "w": 176,
           "h": 176
         },
-        "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies": {
+        "Chipotle Chicken Mac & Cheese": {
           "x": 16,
           "y": 848,
           "w": 176,
           "h": 176
         },
-        "French Dip Sliders": {
+        "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies": {
           "x": 16,
           "y": 1056,
           "w": 176,
           "h": 176
         },
-        "Southwest Blackened Salmon Bowl": {
+        "French Dip Sliders": {
           "x": 16,
           "y": 1264,
           "w": 176,
           "h": 176
         },
-        "Shrimp Pad Thai": {
+        "Bison Chili": {
           "x": 16,
           "y": 1472,
           "w": 176,
           "h": 176
         },
-        "Chipotle Chicken Carnitas Bowl": {
+        "Southwest Blackened Salmon Bowl": {
           "x": 16,
           "y": 1680,
           "w": 176,
           "h": 176
         },
-        "Hot Honey Grass-fed Beef Bowl": {
+        "Shrimp Pad Thai": {
           "x": 16,
           "y": 1888,
           "w": 176,
           "h": 176
         },
-        "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla": {
+        "Sesame Grilled Chicken with Glass Noodle Stir Fry": {
           "x": 16,
           "y": 2096,
           "w": 176,
           "h": 176
         },
-        "Maple Turkey & Organic Egg Scramble": {
+        "Chipotle Chicken Carnitas Bowl": {
           "x": 16,
           "y": 2304,
+          "w": 176,
+          "h": 176
+        },
+        "Hot Honey Grass-fed Beef Bowl": {
+          "x": 16,
+          "y": 2512,
+          "w": 176,
+          "h": 176
+        },
+        "Low Carb BBQ Brisket": {
+          "x": 16,
+          "y": 2720,
+          "w": 176,
+          "h": 176
+        },
+        "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla": {
+          "x": 16,
+          "y": 2928,
+          "w": 176,
+          "h": 176
+        },
+        "Maple Turkey & Organic Egg Scramble": {
+          "x": 16,
+          "y": 3136,
+          "w": 176,
+          "h": 176
+        },
+        "Buttermilk Protein Waffles with Scrambled Eggs": {
+          "x": 16,
+          "y": 3344,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Caramel Apple ProNuts": {
+          "x": 16,
+          "y": 3552,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Cheesecake Brownie Bites": {
+          "x": 16,
+          "y": 3760,
+          "w": 176,
+          "h": 176
+        },
+        "Cookies & Cream Protein Dirt": {
+          "x": 16,
+          "y": 3968,
+          "w": 176,
+          "h": 176
+        },
+        "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha": {
+          "x": 16,
+          "y": 4176,
+          "w": 176,
+          "h": 176
+        },
+        "De-Stress Superfood Bites: Triple Chocolate & Ashwagandha": {
+          "x": 16,
+          "y": 4384,
+          "w": 176,
+          "h": 176
+        },
+        "Golden Oreo Protein Sand": {
+          "x": 16,
+          "y": 4592,
+          "w": 176,
+          "h": 176
+        },
+        "Performance Superfood Bites: Orange Creamsicle & Cordyceps": {
+          "x": 16,
+          "y": 4800,
           "w": 176,
           "h": 176
         }
