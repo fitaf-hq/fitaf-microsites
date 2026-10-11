@@ -630,10 +630,15 @@ export const CATALOG_PATH = "/api/v1/tenant/catalog/products";
  * in the category `all-meals`, `snacks` in `snacks`, every price `priceCents`. CORS open, as a public API's. `requests`
  * records each request as it arrived (its URL, method, user agent, Origin and Referer), so a test can say who asked.
  * `url(params)` is the catalog's URL with those query parameters, for the store's `catalog` option.
+ * § 13 (the week's catalog, saved): `replies`, when set, answers the catalog's requests in turn, the last one repeated
+ * (`set` starts the turn again): each `{ status = 200, contentType = "application/json", body }`, the body's text sent
+ * byte for byte. `served` holds the bytes of every catalog body sent, in order, so a test can compare what was saved.
  */
 export async function startBackend() {
-  let cfg = { menu: [], snacks: [], priceCents: 1250 };
+  let cfg = { menu: [], snacks: [], priceCents: 1250, replies: null };
+  let answered = 0;
   const requests = [];
+  const served = [];
   const server = createServer((req, res) => {
     requests.push({ url: req.url, method: req.method, userAgent: req.headers["user-agent"] ?? null, origin: req.headers.origin ?? null, referer: req.headers.referer ?? null });
     const path = new URL(req.url, "http://localhost").pathname;
@@ -644,8 +649,11 @@ export async function startBackend() {
       return;
     }
     const product = (slug) => (name) => ({ name, categories: [{ slug }], effective_price: cfg.priceCents });
-    res.writeHead(200, { "content-type": "application/json", ...cors });
-    res.end(JSON.stringify({ data: [...cfg.menu.map(product("all-meals")), ...cfg.snacks.map(product("snacks"))] }));
+    const reply = cfg.replies ? cfg.replies[Math.min(answered++, cfg.replies.length - 1)] : null;
+    const body = Buffer.from(reply ? reply.body : JSON.stringify({ data: [...cfg.menu.map(product("all-meals")), ...cfg.snacks.map(product("snacks"))] }));
+    served.push(body);
+    res.writeHead(reply?.status ?? 200, { "content-type": reply?.contentType ?? "application/json", ...cors });
+    res.end(body);
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address();
@@ -653,9 +661,11 @@ export async function startBackend() {
   return {
     origin,
     requests,
+    served,
     url: (params) => `${origin}${CATALOG_PATH}?${new URLSearchParams(params)}`,
     set(next) {
-      cfg = { menu: [], snacks: [], priceCents: 1250, ...next };
+      cfg = { menu: [], snacks: [], priceCents: 1250, replies: null, ...next };
+      answered = 0;
     },
     close: () =>
       new Promise((resolve) => {
