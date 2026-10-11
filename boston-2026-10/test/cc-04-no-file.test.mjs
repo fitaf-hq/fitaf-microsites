@@ -4,6 +4,8 @@
 // SPEC-plan-page-refinement § 3 (the Advisor's ruling on the photos) that page carries the committed photo sheets, so the
 // pin moved with S20's re-recording and this case follows it unchanged.
 // The control: the same build with the fixture's week open does differ, so the comparison can see a change.
+// Since SPEC-week-content § 2.1 the page of no data/picks/ carries the Chef's Choice card holding no week, hidden (its
+// visible page is the one before: WC-8), so S20's pin moved once; the three builds still agree byte for byte.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

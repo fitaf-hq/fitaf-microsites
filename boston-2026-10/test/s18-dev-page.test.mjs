@@ -161,7 +161,8 @@ test("S18: Flow 2 reframed — question 1 is Meal size, each size with its per-m
 });
 
 // The page the tests read (devPage) has no week's Chef's Choice, so this build has an EMPTY picks directory (build()'s
-// `picksDir`), as S20's and S24's do (SPEC-chefs-choice § 6, ruled 2026-09-30); Chef's Choice is CC-1–CC-8's.
+// `picksDir`), as S20's and S24's do (SPEC-chefs-choice § 6, ruled 2026-09-30); Chef's Choice is CC-1–CC-8's. Since
+// SPEC-week-content § 2.1 that build carries the card holding no week, so it is compared with devPage({ card: true }).
 test("S18: the dev build writes /<event-id>/index.html per event, with its event id; / is the first event", async () => {
   const out = await mkdtemp(join(tmpdir(), "boston-dev-"));
   const noPicks = await mkdtemp(join(tmpdir(), "boston-dev-no-picks-"));
@@ -172,7 +173,9 @@ test("S18: the dev build writes /<event-id>/index.html per event, with its event
       assert.match(html, new RegExp(`"event_id":"${e.id}"`));
     }
     assert.equal(await readFile(join(out, "index.html"), "utf8"), await readFile(join(out, events[0].id, "index.html"), "utf8"));
-    assert.equal(await readFile(join(out, "index.html"), "utf8"), devHtml, "what the tests read is what the build writes");
+    // SPEC-week-content § 2.1: the build always carries the Chef's Choice card; with no week it holds none, hidden. The
+    // page the other cases read (devHtml) is the page without the card, which WC-8 shows is the same visible page.
+    assert.equal(await readFile(join(out, "index.html"), "utf8"), await devPage({ card: true }), "what the tests read (the card holding no week) is what the build writes");
     await readFile(join(out, "fonts", "poppins-latin-700-normal.woff2"));
     assert.match(devHtml, /src="\/assets\/fitaf-logo\.png"/, "assets addressed from the root, so /<event-id>/ finds them");
   } finally {
