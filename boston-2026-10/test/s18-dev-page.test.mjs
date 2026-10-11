@@ -160,14 +160,13 @@ test("S18: Flow 2 reframed — question 1 is Meal size, each size with its per-m
   assert.match(devHtml, /data-goal="lean"/, "the fragment keys are unchanged (#lean-14)");
 });
 
-// The page the tests read (devPage) has no week's Chef's Choice, so this build has an EMPTY picks directory (build()'s
-// `picksDir`), as S20's and S24's do (SPEC-chefs-choice § 6, ruled 2026-09-30); Chef's Choice is CC-1–CC-8's. Since
-// SPEC-week-content § 2.1 that build carries the card holding no week, so it is compared with devPage({ card: true }).
+// The page the tests read (devPage) has no week's Chef's Choice; since SPEC-week-content § 7's ruling no build embeds one
+// (until then this build had an empty picks directory, SPEC-chefs-choice § 6). Since its § 2.1 the build carries the card
+// holding no week, so it is compared with devPage({ card: true }).
 test("S18: the dev build writes /<event-id>/index.html per event, with its event id; / is the first event", async () => {
   const out = await mkdtemp(join(tmpdir(), "boston-dev-"));
-  const noPicks = await mkdtemp(join(tmpdir(), "boston-dev-no-picks-"));
   try {
-    await build({ target: "dev", outDir: out, picksDir: noPicks });
+    await build({ target: "dev", outDir: out });
     for (const e of events) {
       const html = await readFile(join(out, e.id, "index.html"), "utf8");
       assert.match(html, new RegExp(`"event_id":"${e.id}"`));
@@ -180,6 +179,5 @@ test("S18: the dev build writes /<event-id>/index.html per event, with its event
     assert.match(devHtml, /src="\/assets\/fitaf-logo\.png"/, "assets addressed from the root, so /<event-id>/ finds them");
   } finally {
     await rm(out, { recursive: true, force: true });
-    await rm(noPicks, { recursive: true, force: true });
   }
 });

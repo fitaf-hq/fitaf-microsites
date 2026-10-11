@@ -19,7 +19,6 @@ import {
   mealLine,
   midday,
   mpidsFor,
-  ON,
   openedCard,
   picksData,
   S,
@@ -30,7 +29,7 @@ import {
 const PLANS_FOR_LINK = await loadJson(PLANS_PATH);
 
 test("CC-1a: the page built on --on carries the week: for each count, the list and one checkout link per size", async () => {
-  const { html } = await builtPage({ on: ON });
+  const { html } = await builtPage();
   const data = picksData(html);
   assert.ok(data, "the page carries the week's picks (#picks-data)");
   assert.equal(data.zone, "America/New_York", "the enterprise's zone, data/save.json send_time_zone");
@@ -54,7 +53,7 @@ test("CC-1a: the page built on --on carries the week: for each count, the list a
 });
 
 test("CC-1b: the plan page opens it from the result card, for every size and count", async () => {
-  const { html } = await builtPage({ on: ON });
+  const { html } = await builtPage();
   assert.ok(picksData(html), "the page carries the week's picks");
   for (const [hash, count, mpid] of CELLS) {
     const { state } = openedCard(html, { hash, now: midday(DAYS["S-5"]) });
@@ -68,8 +67,8 @@ test("CC-1b: the plan page opens it from the result card, for every size and cou
 });
 
 test("CC-1c: the development page carries the same week, and all its scripts run with it", async () => {
-  const prod = picksData((await builtPage({ on: ON })).html);
-  const { html } = await builtPage({ target: "dev", on: ON });
+  const prod = picksData((await builtPage()).html);
+  const { html } = await builtPage({ target: "dev" });
   assert.deepEqual(picksData(html), prod, "the same embedded week as the production page");
   assert.ok(words(), "data/messages.json has the phrases");
   // page-sim runs every inline script in ONE context, as a browser does: a second top-level declaration of a helper

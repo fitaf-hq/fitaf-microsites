@@ -20,9 +20,8 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
-import { card, DAYS, midday, openPlanPage, PLANS } from "./cc-harness.mjs";
+import { card, DAYS, midday, openPlanPage, pageWithPicks, PLANS } from "./cc-harness.mjs";
 import { refKey } from "./r2-harness.mjs";
 
 /** § 2's table, as the contract writes it: [answer key, Q1, every day, breakfast, meals, plan]. */
@@ -73,31 +72,20 @@ export const SNACKS_CARTED = Object.freeze({ shown: true, carted: true });
 /** `plans` (by default the committed data) as a new object with its `snacks` set to `flags`: a case's own data. */
 export const withSnacks = (flags, plans = PLANS) => ({ ...structuredClone(plans), snacks: { ...flags } });
 
-/** An empty picks directory (the page without a week), and its remover. */
-export async function noPicksDir() {
-  const dir = await mkdtemp(join(tmpdir(), "boston-ms-no-picks-"));
-  return { dir, done: () => rm(dir, { recursive: true, force: true }) };
-}
 
 /**
- * build() into a temporary directory: the page it wrote. `root` is a package to build from (a mirror, MS-10), its own
- * build.mjs imported; by default this package's. `picks`, `on`, `plansPath`, `messagesPath`, `target` are the build's.
- * `snacks` (SNACKS_SHOWN, SNACKS_HIDDEN) builds from a copy of the committed data with those flags, written to a
- * temporary directory and removed after; it and `plansPath` are not given together.
+ * The page of the package at `root` (a mirror, MS-10; by default this one) with the weeks of `picks` in it, or none:
+ * cc-harness pageWithPicks (the build, which embeds no week, then the content of every week in `picks` put into
+ * #picks-data, as the Workers put the bucket's). `plansPath`, `messagesPath`, `target` are the inputs'. `snacks`
+ * (SNACKS_SHOWN, SNACKS_HIDDEN) builds from a copy of the committed data with those flags, written to a temporary
+ * directory and removed after; it and `plansPath` are not given together.
  */
-export async function pageOf({ root = ROOT, target = "prod", picks, on = "2026-09-30", plansPath, messagesPath, snacks } = {}) {
+export async function pageOf({ root = ROOT, target = "prod", picks, plansPath, messagesPath, snacks } = {}) {
   if (snacks && plansPath) throw new Error("pageOf: give `snacks` or `plansPath`, not both");
-  const { build } = await import(pathToFileURL(join(root, "build.mjs")).href);
-  const outDir = await mkdtemp(join(tmpdir(), `boston-ms-${target}-`));
-  const empty = picks ? null : await noPicksDir();
   const own = snacks ? await plansCopy((p) => (p.snacks = { ...snacks })) : null;
-  const plans = own?.path ?? plansPath;
   try {
-    await build({ target, outDir, on, picksDir: picks ?? empty.dir, ...(plans ? { plansPath: plans } : {}), ...(messagesPath ? { messagesPath } : {}) });
-    return await readFile(join(outDir, "index.html"), "utf8");
+    return (await pageWithPicks({ root, target, picks: picks ?? null, plansPath: own?.path ?? plansPath, messagesPath })).html;
   } finally {
-    await rm(outDir, { recursive: true, force: true });
-    await empty?.done();
     await own?.done();
   }
 }

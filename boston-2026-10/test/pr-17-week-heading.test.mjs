@@ -4,10 +4,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { weekRange } from "../scripts/chefs-choice.mjs";
-import { builtPage, card, DAYS, MESSAGES, midday, ON, openPlanPage } from "./cc-harness.mjs";
+import { builtPage, card, DAYS, MESSAGES, midday, openPlanPage } from "./cc-harness.mjs";
 
 test("PR-17: the heading for the fixture week, and the cross-month form", async () => {
-  const { html } = await builtPage({ on: ON });
+  const { html } = await builtPage();
   for (const hash of ["#lean-7", "#performance-14"]) {
     assert.equal(card(openPlanPage(html, { hash, now: midday(DAYS["S-5"]) })).heading, "Chef's Choice (October 5–11)", hash);
   }

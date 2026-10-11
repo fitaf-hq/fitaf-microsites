@@ -1,5 +1,8 @@
-// CC-5 (SPEC-chefs-choice § 1, § 4): refusals. A picks file breaking any rule, or carrying any other field, fails the
-// build, naming the file, before anything is written: a wrong list must never reach a customer. The rules on the menus
+// CC-5 (SPEC-chefs-choice § 1, § 4): refusals. A picks file breaking any rule, or carrying any other field, is refused,
+// naming the file, before anything is written: a wrong list must never reach a customer. Since SPEC-week-content § 7's
+// ruling (no build embeds a week) the build reads no picks file, so the refusal is the CONTENT command's
+// (scripts/week-content.mjs: weekContent, then writeContent, as the program runs them), which reads every file in the
+// directory, the build's own checks. The rules on the menus
 // are the link tool's own (scripts/handoff-link.mjs: qty 1..MAX_QTY, names distinct and no two sharing a key, the
 // counts making the plan's count), so each refusal carries the tool's own words. Every case changes ONE thing in the
 // fixture, which builds (the control), so each fails for its own reason. § 7 (extended): a meal's `display` missing,
@@ -11,9 +14,9 @@ import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build } from "../build.mjs";
 import { MAX_QTY } from "../scripts/handoff-link.mjs";
-import { DAYS, FIXTURE, mirror, ON, picksDir } from "./cc-harness.mjs";
+import { weekContent, writeContent } from "../scripts/week-content.mjs";
+import { FIXTURE, mirror, picksDir } from "./cc-harness.mjs";
 import { COLLIDING } from "./r2-harness.mjs";
 
 const FILE = "2026-10-04.json";
@@ -23,14 +26,15 @@ const changed = (change) => {
   return week;
 };
 
-/** Build with one picks file; resolves to the error (or null), and whether the output directory was written. */
-async function attempt(name, body, on = ON) {
-  const dir = await picksDir({ [name]: body });
+/** The content of week `week` from a picks directory holding `files` (name: body), made and written as the program
+ *  makes and writes it; resolves to the error (or null), and whether the output directory was written. */
+async function attempt(name, body, { week = "2026-10-04", more = {} } = {}) {
+  const dir = await picksDir({ [name]: body, ...more });
   const outDir = join(await mkdtemp(join(tmpdir(), "boston-cc-05-")), "out");
   try {
     let error = null;
     try {
-      await build({ target: "prod", outDir, picksDir: dir, on });
+      await writeContent((await weekContent({ week, picksDir: dir })).files, outDir);
     } catch (err) {
       error = err;
     }
@@ -41,7 +45,7 @@ async function attempt(name, body, on = ON) {
   }
 }
 
-test("CC-5 (control): the fixture itself builds", async () => {
+test("CC-5 (control): the fixture itself makes its content", async () => {
   const { error, wrote } = await attempt(FILE, FIXTURE);
   assert.equal(error, null);
   assert.ok(wrote);
@@ -87,9 +91,9 @@ const CASES = [
 ];
 
 for (const [label, name, body, reason] of CASES) {
-  test(`CC-5: ${label}: the build fails, naming the file, and writes nothing`, async () => {
+  test(`CC-5: ${label}: refused, naming the file, and nothing written`, async () => {
     const { error, wrote } = await attempt(name, body);
-    assert.ok(error, "the build fails");
+    assert.ok(error, "refused");
     assert.ok(error.message.includes(name), `the message names the file: ${error.message}`);
     assert.match(error.message, reason);
     assert.equal(wrote, false, "nothing is written");
@@ -109,12 +113,12 @@ const DISPLAY_CASES = [
 ];
 
 for (const [label, change, reason] of DISPLAY_CASES) {
-  test(`CC-5 (§ 7): ${label}: the build fails, naming the file and the meal, and writes nothing`, async () => {
+  test(`CC-5 (§ 7): ${label}: refused, naming the file and the meal, and nothing written`, async () => {
     assert.ok(TAGGED >= 0, "fixture control: menus.7 has a tagged meal");
     const meal = FIXTURE.menus["7"][TAGGED];
     assert.notEqual(meal.display, meal.name, "fixture control: its display is not its name");
     const { error, wrote } = await attempt(FILE, changed((w) => change(w.menus["7"][TAGGED])));
-    assert.ok(error, "the build fails");
+    assert.ok(error, "refused");
     assert.ok(error.message.includes(FILE), `the message names the file: ${error.message}`);
     assert.ok(error.message.includes(meal.name), `the message names the meal: ${error.message}`);
     assert.match(error.message, reason);
@@ -122,32 +126,33 @@ for (const [label, change, reason] of DISPLAY_CASES) {
   });
 }
 
-test("CC-5: a broken file fails the build even when its week has ended on --on (every file is checked)", async () => {
-  const { error } = await attempt(FILE, changed((w) => (w.menus["7"][0].qty = 1)), DAYS["S-2"]);
-  assert.ok(error, "the build fails");
+test("CC-5: a broken file is refused when another week's content is asked for (every file is checked)", async () => {
+  const next = structuredClone(FIXTURE);
+  next.delivery = "2026-10-11";
+  const { error, wrote } = await attempt(FILE, changed((w) => (w.menus["7"][0].qty = 1)), { week: "2026-10-11", more: { "2026-10-11.json": next } });
+  assert.ok(error, "refused");
   assert.match(error.message, /2026-10-04\.json: .*the plan needs 7 meals; the link has 6/);
+  assert.equal(wrote, false);
 });
 
-test("CC-5: `npm run build` with a broken data/picks/ file exits non-zero, naming it, and writes no dist/", async () => {
+test("CC-5: with a broken data/picks/ file, `npm run build` builds (it reads no picks) and `npm run content` refuses, naming it", async () => {
   const dir = await mirror();
+  const out = join(await mkdtemp(join(tmpdir(), "boston-cc-05-content-")), "out");
   try {
     await mkdir(join(dir, "data", "picks"), { recursive: true });
     await writeFile(join(dir, "data", "picks", FILE), JSON.stringify(changed((w) => (w.menus["7"][0].qty = 1))));
-    const r = spawnSync(process.execPath, [join(dir, "build.mjs"), "--on", ON], { cwd: dir, encoding: "utf8" });
-    assert.notEqual(r.status, 0, "the build exits non-zero");
+    execFileSync(process.execPath, [join(dir, "build.mjs")], { cwd: dir, stdio: "pipe" });
+    assert.ok(existsSync(join(dir, "dist", "index.html")), "the build does not read data/picks/ (SPEC-week-content § 7's ruling)");
+    const r = spawnSync(process.execPath, [join(dir, "scripts", "week-content.mjs"), "--week", "2026-10-04", "--out", out], { cwd: dir, encoding: "utf8" });
+    assert.notEqual(r.status, 0, "the content command exits non-zero");
     assert.match(r.stderr, /data\/picks\/2026-10-04\.json: .*the plan needs 7 meals; the link has 6/);
-    assert.equal(existsSync(join(dir, "dist")), false, "no dist/ written");
-    // Control: the same mirror with the file mended builds.
+    assert.equal(existsSync(out), false, "nothing written");
+    // Control: the same mirror with the file mended makes its content.
     await writeFile(join(dir, "data", "picks", FILE), JSON.stringify(FIXTURE));
-    execFileSync(process.execPath, [join(dir, "build.mjs"), "--on", ON], { cwd: dir, stdio: "pipe" });
-    assert.ok(existsSync(join(dir, "dist", "index.html")), "control: the mended file builds");
+    execFileSync(process.execPath, [join(dir, "scripts", "week-content.mjs"), "--week", "2026-10-04", "--out", out], { cwd: dir, stdio: "pipe" });
+    assert.ok(existsSync(join(out, "week", "picks-data.json")), "control: the mended file makes its content");
   } finally {
     await rm(dir, { recursive: true, force: true });
+    await rm(join(out, ".."), { recursive: true, force: true });
   }
-});
-
-test("CC-5: a bad --on is refused", async () => {
-  const { error } = await attempt(FILE, FIXTURE, "2026-9-30");
-  assert.ok(error, "the build fails");
-  assert.match(error.message, /--on/);
 });

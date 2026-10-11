@@ -26,9 +26,12 @@ npm --prefix boston-2026-10/tools/storybook test                 # SM-1 to SM-11
 ```
 
 **When Storybook starts (and when it builds)** it runs the site's build, `node build.mjs` as the deploy runs it
-(`--env dev` for development), once per build and date, with that date's `--on` and an `--out` of its own:
+(`--env dev` for development), once per build and date, with an `--out` of its own:
 `node_modules/.cache/fitaf-microsite/<build>/<date>/` (git-ignored with the install; `MICROSITE_PAGES_DIR` moves it).
-Storybook serves them under `/microsite/`. A change to `src/template.html`, a stylesheet or `data/messages.json` shows
+⭐ No build embeds a week (the site's SPEC-week-content § 7, ruled 2026-10-11): for a date with a week, the site's
+content command makes it as the Workers' bucket gets it (`node scripts/week-content.mjs --week <S> [--env dev]`, the
+fixture with `--picks`), and the site's own `pageWithWeek` puts it in the page's `#picks-data`, as the Workers do; its
+sheets are served at `/week/`, where the Workers serve the bucket's. Storybook serves the pages under `/microsite/`. A change to `src/template.html`, a stylesheet or `data/messages.json` shows
 after a restart, or after `npm run pages` and a reload of the story (a new picks file needs a restart: the dates are
 read at the start).
 
@@ -50,7 +53,7 @@ block's source or words shows after a restart, or after `npm run pages` and a re
 | `.storybook/middleware.js` | the development server sends the pages with `microsite/serve.mjs`'s policy, and serves the Hand-off stories' store at `/order`, `/checkout` and `/img/` by `handoff/serve.mjs`'s rule |
 | `.storybook/preview.js` | the two widths as viewports, 390 (the default) and 1280; a full-bleed canvas |
 | `microsite/pages.mjs` | the build hook: the site's build for each build × date, the clock script where the date is fixed, and `pages.json` beside them (`npm run pages` runs it) |
-| `microsite/dates.mjs` | the Date control's dates from `data/picks/` and `data/save.json`, with the site's own `src/worker/zoned-time.js`; since SPEC-meal-selection § 9 a fourth, the fixture week (the site's `test/fixtures/picks-v2/`, invented names in the picks file's version 2), built with the site build's `--picks` |
+| `microsite/dates.mjs` | the Date control's dates from `data/picks/` and `data/save.json`, with the site's own `src/worker/zoned-time.js`, each naming the week its page carries (*today*: the committed week whose window holds it, if any); since SPEC-meal-selection § 9 a fourth, the fixture week (the site's `test/fixtures/picks-v2/`, invented names in the picks file's version 2), its content made with the content command's `--picks` |
 | `microsite/clock.mjs` | the one script a story adds to a page, placed before the page's own first script |
 | `microsite/serve.mjs` | the policy the pages are served with: nothing from another host |
 | `microsite/layout.js`, `paths.mjs` | the builds, dates, widths and URLs the stories and the hook share; where the site and the pages are |

@@ -1,5 +1,7 @@
-// MS-6 (SPEC-meal-selection.md § 6): refusals. A broken meal selection or a broken version-2 picks file fails the build,
-// naming the file (and the row or the cart), before anything is written. Every case changes ONE thing in an input that
+// MS-6 (SPEC-meal-selection.md § 6): refusals. A broken meal selection fails the build, and a broken version-2 picks file
+// is refused, naming the file (and the row or the cart), before anything is written. Since SPEC-week-content § 7's
+// ruling (no build embeds a week) the build reads no picks file: a picks file's refusal is the CONTENT command's
+// (scripts/week-content.mjs: weekContent, then writeContent, as the program runs them), with the build's own checks. Every case changes ONE thing in an input that
 // builds (the control), so each fails for its own reason.
 //
 // data/plans.json (§ 2, § 4, § 9 item 3): a `plan` not sold at every size, a `plan` above its `meals`, a row missing or
@@ -13,25 +15,24 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, ROOT } from "../build.mjs";
-import { ON, picksDir } from "./cc-harness.mjs";
-import { noPicksDir, plansCopy } from "./ms-harness.mjs";
+import { weekContent, writeContent } from "../scripts/week-content.mjs";
+import { picksDir } from "./cc-harness.mjs";
+import { plansCopy } from "./ms-harness.mjs";
 
 /** Build with a changed copy of data/plans.json; the error (or null) and whether the output directory was written. */
 async function attemptPlans(change) {
   const plans = await plansCopy(change);
-  const picks = await noPicksDir();
   const outDir = join(await mkdtemp(join(tmpdir(), "boston-ms-06-")), "out");
   try {
     let error = null;
     try {
-      await build({ target: "prod", outDir, plansPath: plans.path, picksDir: picks.dir });
+      await build({ target: "prod", outDir, plansPath: plans.path });
     } catch (err) {
       error = err;
     }
     return { error, wrote: existsSync(outDir) };
   } finally {
     await plans.done();
-    await picks.done();
     await rm(join(outDir, ".."), { recursive: true, force: true });
   }
 }
@@ -100,14 +101,15 @@ const carts = (w) => w.lists["chefs-choice"].carts;
 const cartFor = (w, ld, weekends, breakfast) =>
   carts(w).find((c) => c.lunch_dinner === ld && c.weekends === weekends && c.breakfast === breakfast);
 
-/** Build with one picks file, the week open on --on; the error (or null) and whether anything was written. */
+/** The content of the one picks file's week, made and written as the program makes and writes it; the error (or null)
+ *  and whether anything was written. */
 async function attemptPicks(body) {
   const dir = await picksDir({ [FILE]: body });
   const outDir = join(await mkdtemp(join(tmpdir(), "boston-ms-06-picks-")), "out");
   try {
     let error = null;
     try {
-      await build({ target: "prod", outDir, picksDir: dir, on: ON });
+      await writeContent((await weekContent({ week: FILE.slice(0, 10), picksDir: dir })).files, outDir);
     } catch (err) {
       error = err;
     }
@@ -118,7 +120,7 @@ async function attemptPicks(body) {
   }
 }
 
-test("MS-6 (control): the version-2 fixture builds; so does it with a cart missing (§ 4's fallback)", async () => {
+test("MS-6 (control): the version-2 fixture makes its content; so does it with a cart missing (§ 4's fallback)", async () => {
   assert.equal((await attemptPicks(V2)).error, null);
   const missing = changedV2((w) => w.lists["chefs-choice"].carts.splice(1, 1));
   assert.equal((await attemptPicks(missing)).error, null);
@@ -144,9 +146,9 @@ const PICKS_CASES = [
 ];
 
 for (const [label, change, reason] of PICKS_CASES) {
-  test(`MS-6 (version 2): ${label}: the build fails, naming the file and the cart, and writes nothing`, async () => {
+  test(`MS-6 (version 2): ${label}: refused, naming the file and the cart, and nothing written`, async () => {
     const { error, wrote } = await attemptPicks(changedV2(change));
-    assert.ok(error, "the build fails");
+    assert.ok(error, "refused");
     assert.ok(error.message.includes(FILE), `the message names the file: ${error.message}`);
     assert.match(error.message, reason);
     assert.equal(wrote, false, "nothing is written");

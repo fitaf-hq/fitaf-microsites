@@ -1,16 +1,21 @@
 // Shared by the cc-*.test.mjs files (SPEC-chefs-choice.md: this week's Chef's Choice on the plan page). Not a test file
-// itself. Every case builds through build.mjs's own build() into a temporary directory, with a picks directory it names
-// (the committed fixture, or a temporary copy): no file in the repository is written, and nothing is requested.
+// itself. Every case builds through build.mjs's own build() into a temporary directory: no file in the repository is
+// written, and nothing is requested. ⛔ No build embeds a week (SPEC-week-content § 7's ruling): a page WITH a week is
+// made as production makes it, the content of a picks directory (the committed fixture, or a temporary copy; every week
+// in it) made by scripts/week-content.mjs's own weekData() and put into the built page's #picks-data (pageWithWeek,
+// the Workers' rewrite done on a file).
 // The plan page is run as a browser runs it: its inline scripts, in order, in one `vm` context over linkedom's DOM, with
 // the browser's clock fixed at an instant.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import vm from "node:vm";
 import { parseHTML } from "linkedom";
-import { build, ROOT } from "../build.mjs";
+import { ROOT } from "../build.mjs";
 import { fakeWindow, orderPage, refKey, run, script } from "./r2-harness.mjs";
 
 /** The committed fixture: invented meal names, the week delivered Sunday 2026-10-04 (week B of § 2's ruling). Since
@@ -31,7 +36,8 @@ export const DAYS = {
   "S-3": "2026-10-01",
   "S-2": "2026-10-02",
 };
-/** The build's date for the cases that want the week open: the day this contract was ruled, inside S's window. */
+/** The day this contract was ruled, inside S's window: the date a case's browser clock reads when it wants one there
+ *  (since SPEC-week-content § 2.2 no date decides the week, and since its § 7 no build reads one). */
 export const ON = "2026-09-30";
 
 /** 17:00 UTC on `ymd`: 13:00 in New York, the same date in either zone. */
@@ -78,18 +84,30 @@ export function otherWeek(delivery, suffix = " (next week)") {
 }
 
 /**
- * build() into a temporary directory; returns the page it wrote (index.html) and the result. `picksDir` and `on` are the
- * build's own options (SPEC-chefs-choice § 2); `messagesPath` replaces data/messages.json (CC-7).
+ * The page of the package at `root` (this one, or a mirror) with the weeks of `picks` in it: build() into a temporary
+ * directory (the page holding no week, as every build writes it), then, when `picks` is a directory, the content of
+ * EVERY week in it, or of `week` alone (scripts/week-content.mjs's weekData, its refusals included: a broken file
+ * rejects, naming it) put
+ * into #picks-data by pageWithWeek, the Workers' rewrite done on a file. `messagesPath`, `plansPath`, `photosPath`,
+ * `sheetsDir` replace those inputs for the build and the content alike. Returns the page and the build's result.
  */
-export async function builtPage({ target = "prod", picks = FIXTURE_DIR, on = ON, messagesPath } = {}) {
+export async function pageWithPicks({ root = ROOT, target = "prod", picks = null, week, messagesPath, plansPath, photosPath, sheetsDir } = {}) {
+  const { build: buildOf } = await import(pathToFileURL(join(root, "build.mjs")).href);
+  const { pageWithWeek, weekData } = await import(pathToFileURL(join(root, "scripts", "week-content.mjs")).href);
+  const inputs = Object.fromEntries(Object.entries({ messagesPath, plansPath, photosPath, sheetsDir }).filter(([, v]) => v !== undefined));
   const outDir = await mkdtemp(join(tmpdir(), `boston-cc-${target}-`));
   try {
-    const result = await build({ target, outDir, picksDir: picks, on, ...(messagesPath ? { messagesPath } : {}) });
-    return { html: await readFile(join(outDir, "index.html"), "utf8"), result };
+    const result = await buildOf({ target, outDir, ...inputs });
+    let html = await readFile(join(outDir, "index.html"), "utf8");
+    if (picks && existsSync(picks)) html = pageWithWeek(html, (await weekData({ picksDir: picks, week, target, ...inputs })).data);
+    return { html, result };
   } finally {
     await rm(outDir, { recursive: true, force: true });
   }
 }
+
+/** pageWithPicks() of this package, the fixture week by default; `messagesPath` replaces data/messages.json (CC-7). */
+export const builtPage = ({ target = "prod", picks = FIXTURE_DIR, messagesPath } = {}) => pageWithPicks({ target, picks, messagesPath });
 
 /** The page's embedded picks (`<script type="application/json" id="picks-data">`), or null when it carries none. */
 export function picksData(html) {

@@ -17,7 +17,7 @@ export const DATES = [
   { id: "none", label: "no picks" },
   { id: "fixture", label: "the fixture week (invented names, version 2)" },
 ];
-/** Where the fixture week's picks directory is, from the site (the build's --picks, as `npm run build` resolves it). */
+/** Where the fixture week's picks directory is, from the site (the content command's --picks, resolved in the site). */
 export const FIXTURE_PICKS = "test/fixtures/picks-v2";
 
 /** The two widths (§ 3), the storefront smoke's: 390 the default. */

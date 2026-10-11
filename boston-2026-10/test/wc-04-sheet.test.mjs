@@ -39,10 +39,9 @@ for (const entry of ["site", "index"]) {
 for (const [env, target] of [[undefined, "prod"], ["dev", "dev"]]) {
   test(`WC-4c: as wrangler.jsonc configures ${env ?? "production"}: /week/<sheet> reaches the script and is served from the bucket`, async () => {
     const outDir = await mkdtemp(join(tmpdir(), `boston-wc-dist-${target}-`));
-    const picksDir = await mkdtemp(join(tmpdir(), "boston-wc-no-picks-"));
     let site;
     try {
-      await build({ target, outDir, picksDir });
+      await build({ target, outDir });
       site = await configured({ env, distDir: outDir, objects: { [sheetKeyOf(SHEET_1018)]: SHEET } });
       const res = await site.get(sheetPath(SHEET_1018));
       assert.equal(res.status, 200);
@@ -52,7 +51,6 @@ for (const [env, target] of [[undefined, "prod"], ["dev", "dev"]]) {
     } finally {
       await site?.dispose();
       await rm(outDir, { recursive: true, force: true });
-      await rm(picksDir, { recursive: true, force: true });
     }
   });
 }

@@ -21,4 +21,6 @@ export const FIXTURE_PICKS_DIR = siteFile("test", "fixtures", "picks-v2");
 export const SAVE_PATH = siteFile("data", "save.json");
 export const PLANS_PATH = siteFile("data", "plans.json");
 export const BUILD_SCRIPT = siteFile("build.mjs");
+/** The site's content command (SPEC-week-content § 3): a page's week, since no build embeds one. */
+export const CONTENT_SCRIPT = siteFile("scripts", "week-content.mjs");
 export const ZONED_TIME = siteFile("src", "worker", "zoned-time.js");

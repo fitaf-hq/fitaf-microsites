@@ -35,7 +35,8 @@ async function until(test, why) {
 
 /** The date's line in the caption: the real clock, or the fixed one in the enterprise's zone. */
 function dateLine(date) {
-  if (!date.instant) return `Date: ${date.label}, the page built --on ${date.on}`;
+  const week = date.delivery ? `the week delivered ${date.delivery}` : "no week";
+  if (!date.instant) return `Date: ${date.label}, ${week}`;
   const wall = new Intl.DateTimeFormat("en-CA", {
     timeZone: pages.zone,
     weekday: "short",
@@ -46,7 +47,7 @@ function dateLine(date) {
     minute: "2-digit",
     hourCycle: "h23",
   }).format(new Date(date.instant));
-  return `Date: ${date.label}: the frame's clock starts at ${wall} ${pages.zone} (the page built --on ${date.on})`;
+  return `Date: ${date.label}: the frame's clock starts at ${wall} ${pages.zone} (${week})`;
 }
 
 /** Reach `state` in the frame's page: wait, check, press. Throws Unreachable with the reason. A pressed control is

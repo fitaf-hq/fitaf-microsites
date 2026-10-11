@@ -16,5 +16,5 @@ test("MS-5: the version-1 fixture builds; its 7 and 14 are the two default rows'
 });
 
 test("MS-5: the committed week (version 1) builds under the new questions", async () => {
-  await assert.doesNotReject(pageOf({ picks: PICKS_DIR, on: "2026-10-01" }));
+  await assert.doesNotReject(pageOf({ picks: PICKS_DIR }));
 });

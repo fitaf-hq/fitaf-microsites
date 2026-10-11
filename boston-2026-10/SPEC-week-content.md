@@ -160,27 +160,25 @@ change: CC-4, S18's page cases, WC-8's and WC-9's controls, WC-9b), green at the
    with no `..` and no `/`. Only a GET is served: a HEAD, like any other method under `/week/`, is a 404, as § 4.3's
    letter says ("any other /week/ request").
 7. **The content file** is the element's text as the build writes it: `scriptJson`'s compact JSON, every `<` as
-   `<`, no trailing newline. For 2026-10-18 it is 31,134 bytes, `3a7b7b5d…`.
+   `\u003c`, no trailing newline. For 2026-10-18 it is 31,134 bytes, `3a7b7b5d…`.
 8. **"Every photo-sheet URL" (§ 1) includes the checkout links' photo part** (SPEC-rung2-progress-and-checkout § 17.1),
    `!0!/week/<file>!…` where the build writes `!0!/assets/photo-sheets/<file>!…`: the store's Footer block asks the
    link's host for that path (it takes any `^/[\w/.-]{1,200}$`), so the progress screen's photograph comes from the
    bucket too. A manifest whose `base` is null (no photograph) is kept; an absolute one (a CDN) is kept as written and
    nothing is copied.
-9. **`--env dev`, added**: the development Worker's content, its links naming the test address's photo host (code 1),
-   as `build:dev`'s do; the default is production's (code 0), so `npm run content -- --week … --out …` is the
-   contract's command unchanged. ⚠ fitaf-infra's content job should pass `--env dev` for the dev bucket; without it the
-   dev page works, but its progress screen asks eatfitaf.com for the sheet (no photograph if production's bucket lacks
-   that week yet; it fails safe).
+9. **`--env dev`, added** (accepted by the rulings below, with exactly what it changes in the output): the development
+   Worker's content; the default is production's, so `npm run content -- --week … --out …` is the contract's command
+   unchanged. fitaf-infra's content job passes it for the dev bucket.
 10. **The content's refusals** are the build's that bear on it: every picks file read and checked as the build does (a
     broken one beside the week refuses), `checkSelection`, the `chefs_choice` words, and every sheet the manifest names
     present (`copyStatic`'s refusal); and a week with no picks file, a `--week` not a Sunday, a missing `--week` or
     `--out`, an unknown argument, and a `--out` already holding `week/` (so two weeks' objects never meet). Everything
     is made in memory first; a refusal writes nothing (WC-10). The template and the QR codes are not built.
 11. **The build** needs `data/messages.json`'s `chefs_choice` words always now (the card is always carried); they were
-    needed only with a week. It still embeds every week whose window has not ended on `--on` (CC-3e kept).
+    needed only with a week. ⛔ It embeds no week at all: the rulings below, ruling 1.
 
 **Mutation results (WC-11, each in a mirror, `mutate-in-a-mirror`)**: the control (the unchanged mirror) passes WC-1,
-WC-3, WC-5 and WC-7. The rewrite skipped: WC-1 red (`/: the asset unchanged`). The shape check always passing: WC-3 red
+WC-3, WC-5 and WC-7 (and, since the rulings, WC-12; its mutant is in § 7.1). The rewrite skipped: WC-1 red (`/: the asset unchanged`). The shape check always passing: WC-3 red
 on 15 of its 17 shapes (`two weeks`, `a week without carts`, `weeks: []` among them); `not JSON` and `JSON null` survive
 it, as they should: the parse fails, or there is nothing to put in, before the shape check is asked.
 The date filter kept in the script (the week only until its `valid_to`): WC-7 red (`after valid_to: the week's list is
@@ -210,15 +208,13 @@ holding no week; Q4's markup; `plan-data`'s `snacks` true); CC-8's Worker map (`
   fragment is then taken as its answer set without snacks (*Choose your meals*), where today's no-picks page takes it as
   the size alone. SPEC-snacks-in-the-cart § 4.5's "a page with no week never offers Q4" holds visibly (Q4 is never
   shown), not in the markup. MS-7's no-week case is rewritten to that; WC-8 reads no `-s` fragment and says why.
-- ⚠ **A no-bucket build carrying two weeks shows none** (§ 2.2's refusal meets CC-3e's window: a build on or before a
-  week's `S − 3` with the next week's file committed embeds both). Storybook's PR-14 met it: it built `--on 2026-09-30`
-  from `data/picks/`, which embeds 10-11's and 10-18's weeks, and so read Q4 hidden; it read Q4 shown before only
-  because the browser chose 10-18's week by the real clock (it would have failed from 2026-10-16 anyway). It now builds
-  from the fixture week (one week, a snack list for 7 days), as Storybook's own fixture date does.
-- ⚠ **The deployed asset still carries the week of its build's date.** CI's `npm run build` embeds every week whose
-  window has not ended that day; with the bucket empty or its object invalid, the page shows THAT week (or none, if
-  two), and no date retires it. § 4.2's "(no week, no card)" holds only for a build with no open week. Whether the
-  deployed builds should embed no week (an empty `--picks` in CI, or a flag) is open; nothing here decides it.
+- ✅ ruled (ruling 4) **A page carrying two weeks shows none.** Storybook's PR-14 met it first: built `--on 2026-09-30`
+  from `data/picks/`, the page carried 10-11's and 10-18's weeks, and so read Q4 hidden; it read Q4 shown before only
+  because the browser chose 10-18's week by the real clock (it would have failed from 2026-10-16 anyway). Its file's
+  page now carries the fixture week as content (one week, a snack list for 7 days), as Storybook's fixture date does.
+- ✅ ruled (ruling 1) **The deployed asset carried the week of its build's date**: CI's `npm run build` embedded every
+  week whose window had not ended that day, so with the bucket empty or its object invalid the page would have shown
+  THAT week, with no date to retire it. No build embeds a week now.
 - **WC-3's `weeks: []`**, written as the content with no week (`{ zone, carted, weeks: [] }`), is byte for byte the
   no-week build's own `#picks-data`, so a Worker that took it would still serve the asset's bytes: the case could not see
   it. WC-11's shape mutant showed it (that subcase survived it); the case uses `{ "weeks": [] }`.
@@ -228,3 +224,60 @@ holding no week; Q4's markup; `plan-data`'s `snacks` true); CC-8's Worker map (`
   10-18's picks file or sheet) turns it red, and it is then re-recorded (`node test/wc-09-record.mjs`) or retired.
 - **Not done here**: nothing deployed, no `wrangler deploy`, no bucket written, no Cloudflare login; the page was not
   looked at in a browser on Cloudflare (Miniflare's workerd and asset router only).
+
+### 7.1 Rulings on § 7's open questions (the orchestrator's, engineering, 2026-10-11), and what was built for them
+
+1. **The deployed builds embed NO week.** `npm run build` and `npm run build:dev` emit `#picks-data` with `weeks: []`
+   whatever `--on` is and whatever `data/picks/` holds; the bucket is the only source of a served week, so an empty or
+   invalid bucket means no card, as § 4.2 says. `data/picks/` stays, and only the content command reads it.
+   - **Built**: `build.mjs` reads nothing of `data/picks/`; `chefsChoice()` (scripts/chefs-choice.mjs) takes
+     `{ plans, messages, zone }` and its `#picks-data` is `pageData([])`. **Removed**: the build's `--on` and `--picks`
+     (and `build()`'s `on` and `picksDir`, its `picks` result and its `picks: …` report lines), `openOn`, and the test
+     harness's `noPicksDir`. Nothing in the build depends on a date now. The build has always ignored an argument it does
+     not know, so a command that still passes `--on` builds the same page (WC-12 runs it so). **Moved**: `--picks DIR`
+     to the content command (`npm run content -- … --picks DIR`, relative to the working directory), for Storybook's
+     fixture week and the cases, never the bucket's job.
+   - **The case**: WC-12, `npm run build` and `npm run build:dev` run as programs in the package (`node build.mjs [--env
+     dev] --on 2026-10-11 --out <tmp>`), with `data/picks/2026-10-18.json` committed (its window, 2026-10-09 to
+     2026-10-15, holds 2026-10-11; a control says so): `#picks-data` holds `weeks: []` for both. Its mirror mutant, in
+     WC-11: `chefsChoice` made to embed `data/picks/`'s week whose window has not ended on 2026-10-11, red on WC-12 for
+     both builds (`build: #picks-data holds ["2026-10-18"], not []`). And the case run on `f4b0845`'s own tree (git
+     archive, this package's node_modules linked), the commit before the ruling: red the same way.
+   - **The cases that relied on a build-embedded week, and where each now takes its week.** One mechanism: the page
+     the build writes (no week) with a week's CONTENT put in its `#picks-data` by `pageWithWeek`
+     (scripts/week-content.mjs: the Workers' rewrite done on a file), the content made by `weekData` (the content
+     command's own reading of a picks directory, every week in it, or one).
+     - From a **fixture** (test/fixtures/picks, picks-v2, or a temporary picks directory a case writes): every case
+       through `test/cc-harness.mjs`'s `builtPage`/`pageWithPicks`, `test/ms-harness.mjs`'s `pageOf` and
+       `test/pr-harness.mjs`'s `photoPage`: CC-1, CC-2, CC-3, CC-6, CC-7, CC-8c, CC-9, MS-2–MS-5, MS-7–MS-11, MS-13,
+       MS-16, PR-2, PR-7, PR-12, PR-13, PR-17; and WC-1, WC-3 and WC-7 (the content by `weekContent`, or `pageOf`). CC-2c's and CC-9's mirror cases and PR-3's run the two
+       programs in their mirror (`pr-harness`'s `programBuild`: `node build.mjs`, then `node scripts/week-content.mjs
+       --week S`). Storybook's fixture date and its PR Chrome cases: the content command with `--picks` the fixture.
+     - From the **content command's reading of the committed weeks** (`data/picks/`, the latest committed, never a
+       literal): PR-1's `bothPages`, PR-3's committed-tree case, MS-5's control (every committed week, read), and
+       Storybook's *a week with picks* and *today* (the committed week whose window holds today, if any) dates.
+     - **Expectations that moved with it**: a tile's sheet is the content's URL, `/week/<file>` (CC-9, PR-3, PR-7);
+       CC-3e now reads the window as the content's `valid_from`/`valid_to` (the build's window cases, S − 2 and S + 5,
+       are gone); CC-4 builds four mirrors (`data/picks/` as committed, removed, emptied, the fixture alone) and finds
+       one page holding no week; CC-5's and MS-6's picks-file refusals are the content command's (CC-5's "a bad --on"
+       case is removed with `--on`; its "ended week" case asks another week's content; its program case finds
+       `npm run build` building and `npm run content` refusing); WC-8 reads the build as it is; WC-9b (the build still
+       embeds the week) is removed, WC-12 being its inversion. Storybook: `microsite/pages.mjs` builds, then runs the
+       content command for a date with a week and serves its sheets at `/week/`; `dates.mjs` names *today*'s week;
+       SM-3's fresh page is `npm run build` then `npm run content`; a caption names the page's week, not `--on`.
+     - **S20 did not move**: the page with no week is the page it was (`84e54136…`); the build no longer reads
+       `data/picks/`, which S20's empty picks directory already kept out. Its empty directory (and S18's and S24's) is
+       gone with `picksDir`.
+2. **The `-s` fragment with no week**: accepted as built (Found, the first item).
+3. **`--env dev` on the content command**: accepted; fitaf-infra's job passes it for the dev bucket. **What it changes
+   in the output, exactly** (§ 3): only `week/picks-data.json`, and in it only the host code of each checkout link's
+   photo part (SPEC-rung2-progress-and-checkout § 17.1): `!0!/week/<file>!` (eatfitaf.com, `PHOTO_HOSTS[0]`) becomes
+   `!1!/week/<file>!` (the test address, `PHOTO_HOSTS[1]`), so the progress screen asks the development Worker, and its
+   bucket, for the sheet. Nothing else: not the tiles' URLs, not the link's path, mpid or keys, not the size; the sheets
+   are byte-identical. For 2026-10-18: 48 links (8 carts × 3 sizes × a link and a snack link), both files 31,134 bytes,
+   `3a7b7b5d…` (production) and `931a963b…` (`--env dev`), equal once `!0!/week/` is read as `!1!/week/`.
+4. **`HEAD /week/…` a 404, two weeks no card, WC-9's re-record path**: accepted as built.
+
+**Counts after the rulings**: the site 690 → 691 (WC-12's two cases and WC-11's new mutant added; WC-9b removed; CC-5's
+three window and program cases became two, "a bad --on" going with `--on`). Contrast 70/70, Storybook 41/41 and the
+watch 192/192, their counts unchanged. S20's golden did not move.

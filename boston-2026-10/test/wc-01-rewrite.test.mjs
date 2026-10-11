@@ -80,12 +80,11 @@ test("WC-1d: the development Worker (index.js) does the same at / and at every e
   }
 });
 
-/** A build of this package into a temporary directory, with no week (an empty picks directory). */
+/** A build of this package into a temporary directory (holding no week, as every build does). */
 async function noWeekBuild(target) {
   const outDir = await mkdtemp(join(tmpdir(), `boston-wc-dist-${target}-`));
-  const picksDir = await mkdtemp(join(tmpdir(), "boston-wc-no-picks-"));
-  await build({ target, outDir, picksDir });
-  return { outDir, done: () => Promise.all([rm(outDir, { recursive: true, force: true }), rm(picksDir, { recursive: true, force: true })]) };
+  await build({ target, outDir });
+  return { outDir, done: () => rm(outDir, { recursive: true, force: true }) };
 }
 
 for (const [env, target, pages] of [

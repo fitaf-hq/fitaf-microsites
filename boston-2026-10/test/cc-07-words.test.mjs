@@ -16,7 +16,6 @@ import {
   MESSAGES,
   midday,
   DAYS,
-  ON,
   openPlanPage,
   picksData,
   picksDir,
@@ -45,7 +44,7 @@ async function withCopies(messages, picks, fn) {
   try {
     const messagesPath = join(dir, "messages.json");
     await writeFile(messagesPath, JSON.stringify(messages, null, 2));
-    return await fn((await builtPage({ picks: picksPath, on: ON, messagesPath })).html);
+    return await fn((await builtPage({ picks: picksPath, messagesPath })).html);
   } finally {
     await rm(dir, { recursive: true, force: true });
     await rm(picksPath, { recursive: true, force: true });
@@ -124,7 +123,7 @@ test("CC-7b (control): a word typed into the card is caught", async () => {
 
 test("CC-7c: a phrase changed in a copy of data/messages.json changes the card; the committed one shows its own", async () => {
   assert.ok(MESSAGES.chefs_choice, "data/messages.json has a chefs_choice key");
-  const shipped = cardText((await builtPage({ on: ON })).html, "#lean-7");
+  const shipped = cardText((await builtPage()).html, "#lean-7");
   for (const key of ["checkout", "own"]) {
     assert.ok(shipped.includes(MESSAGES.chefs_choice[key]), `the card shows chefs_choice.${key} as committed`);
   }

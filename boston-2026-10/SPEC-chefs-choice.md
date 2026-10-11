@@ -35,12 +35,13 @@ person's picks, made outside this repository). **Public fields only**:
 
 ## 2. Which week the page shows
 
-> ⚠ **Superseded for the served page by [`SPEC-week-content.md`](SPEC-week-content.md) § 2.2 (2026-10-11).** The page
-> shows the week its `#picks-data` holds (one; none if two) and **no date decides it**: the browser no longer chooses by
-> the window below, and the deployed Workers put the week in `#picks-data` from their bucket. **The window now only
-> decides what the content command (`npm run content`, SPEC-week-content § 3) and a no-bucket build embed**: the build
-> still embeds every week whose window has not ended on `--on`, and the content carries a week's `valid_from` and
-> `valid_to` as the build computes them, which the page does not read. The text below is kept as it was ruled.
+> ⚠ **Superseded by [`SPEC-week-content.md`](SPEC-week-content.md) § 2.2 and § 7 (2026-10-11).** The page shows the
+> week its `#picks-data` holds (one; none if two) and **no date decides it**: the browser no longer chooses by the
+> window below, and the deployed Workers put the week in `#picks-data` from their bucket. **The window now only decides
+> what the content command (`npm run content`, SPEC-week-content § 3) writes as a week's `valid_from` and `valid_to`**,
+> which the page does not read; and since § 7's ruling (the orchestrator's) **no build embeds a week** (the build reads
+> no `data/picks/` and has no `--on`), so it no longer decides what a build carries either. The text below is kept as
+> it was ruled.
 
 The store switches to the next week on a **Friday** (the Advisor, 2026-09-25), and week B, delivered Sunday
 2026-10-04, was open from Friday 2026-09-25 (his ruling, 2026-09-30). So a delivery Sunday `S` is open to order on the

@@ -1,7 +1,8 @@
 // PR-7 (SPEC-plan-page-refinement § 2 item 5, § 5): Chef's Choice, always open. With the fixture week on the page, the
 // list shows on load with no press and there is no toggle; each meal has a tile to the left of its name: its cell of the
 // week's sheet (the fixture manifest, by the store name exactly as the picks file writes it, a 🟠NEW: tag included), or
-// a plain tile.
+// a plain tile. The week is on the page as its content (no build embeds one: SPEC-week-content § 7), so the cell's sheet
+// is at the content's URL, /week/<file> (§ 1).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { card, DAYS, FIXTURE as picks, midday, openPlanPage } from "./cc-harness.mjs";
@@ -21,7 +22,7 @@ test("PR-7: the list visible on load with no press; no toggle; a thumbnail cell 
     assert.ok(expected.includes("photo") && expected.includes("plain"), `control: ${count} has both kinds`);
     const tiles = state.tiles.map((t) => {
       assert.ok(t && t.parentElement.firstElementChild === t, `${count}: each meal's tile is first, left of its name`);
-      return /background-image:url\("([^"]+)"\)/.exec(t.getAttribute("style") ?? "")?.[1] === photos.base + sheet.file ? "photo" : "plain";
+      return /background-image:url\("([^"]+)"\)/.exec(t.getAttribute("style") ?? "")?.[1] === `/week/${sheet.file}` ? "photo" : "plain";
     });
     assert.deepEqual(tiles, expected, `${count}: the sheet's meals have its cell, the others a plain tile`);
   }

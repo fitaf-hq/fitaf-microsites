@@ -2,19 +2,21 @@
 // `base`: set to a CDN, every one starts with it (and no sheet is copied); null, with src/assets/photo-sheets/ deleted,
 // the page builds with no photograph: no carousel, no URL naming a sheet, the list's tiles plain. Each in a mirror (a
 // copy of the package's inputs with the FIXTURE manifest and sheets put in data/ and src/assets/photo-sheets/, and the
-// fixture week in data/picks/), built by the program (`node build.mjs`), both builds. With no data/photo-sheets.json at
+// fixture week in data/picks/), built by the program (`node build.mjs`), both builds, the week put in as the content
+// command makes it (`node scripts/week-content.mjs`: no build embeds a week, SPEC-week-content § 7's ruling; a relative
+// base's tiles are then at /week/<file>, where the Workers serve the bucket's sheet). With no data/photo-sheets.json at
 // all (a mirror without it or the directory): the same page as base null. And the tree as committed, which since the
 // KMS-side emitter's sheets landed carries the five carousel windows and a photo tile for each meal of the committed
 // week the manifest has a cell for (the count read from the manifest, never a literal).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseHTML } from "linkedom";
 import { loadPhotos, PICKS_DIR, ROOT } from "../build.mjs";
 import { addDays } from "../src/worker/zoned-time.js";
-import { builtPage, card, DAYS, midday, mirror, ON, openPlanPage, withFixtureInData } from "./cc-harness.mjs";
-import { FIXTURE_PHOTOS_PATH, FIXTURE_SHEETS_DIR, photoUrls, programBuild } from "./pr-harness.mjs";
+import { card, DAYS, midday, mirror, openPlanPage, pageWithPicks, withFixtureInData } from "./cc-harness.mjs";
+import { FIXTURE_PHOTOS_PATH, FIXTURE_SHEETS_DIR, latestCommittedWeek, photoUrls, programBuild } from "./pr-harness.mjs";
 
 const CDN = "https://cdn.example/x/";
 const SHEETS = ["carousel.jpg", "chefs-choice-2026-10-04.jpg"];
@@ -39,11 +41,12 @@ test("PR-3: base a CDN: every photo URL in the page starts with it, and no sheet
   const dir = await withBase(CDN);
   try {
     for (const target of ["prod", "dev"]) {
-      const { html, files } = await programBuild(dir, target);
+      const { html, files, contentFiles } = await programBuild(dir, target);
       const urls = photoUrls(html);
       assert.ok(SHEETS.every((s) => urls.some((u) => u.endsWith(s))), `${target}: control: the page names both sheets`);
       assert.deepEqual(urls.filter((u) => !u.startsWith(CDN)), [], `${target}: every photo URL starts with the base`);
       assert.deepEqual(files.filter((f) => f.endsWith(".jpg")), [], `${target}: no sheet beside the page`);
+      assert.deepEqual(contentFiles, ["week/picks-data.json"], `${target}: nor in the week's content (the CDN serves it)`);
     }
   } finally {
     await rm(dir, { recursive: true, force: true });
@@ -93,15 +96,11 @@ test("PR-3: no data/photo-sheets.json and no directory (a mirror) builds the pag
 
 test("PR-3: the tree as committed carries the five carousel windows and a photo tile for each meal the manifest has a cell for", async () => {
   const photos = await loadPhotos();
-  // The committed week (the latest data/picks/ file, never a literal: SPEC-chefs-choice § 7.3 removed week B's), built on
-  // the first day of its window (S − 9) and seen on its last (S − 3), SPEC-chefs-choice § 2.
-  const delivery = (await readdir(PICKS_DIR))
-    .map((f) => /^(\d{4}-\d{2}-\d{2})\.json$/.exec(f)?.[1])
-    .filter(Boolean)
-    .sort()
-    .at(-1);
+  // The committed week (the latest data/picks/ file, never a literal: SPEC-chefs-choice § 7.3 removed week B's), its
+  // content put in the built page as the Workers put the bucket's (SPEC-week-content § 7's ruling), seen on its S − 3.
+  const delivery = await latestCommittedWeek();
   assert.ok(delivery, "control: a committed week in data/picks/");
-  const { html } = await builtPage({ picks: PICKS_DIR, on: addDays(delivery, -9) });
+  const { html } = await pageWithPicks({ picks: PICKS_DIR, week: delivery });
   const windows = [...parseHTML(html).document.querySelectorAll("#carousel .slide img")];
   assert.deepEqual(windows.map((img) => img.getAttribute("src")), Array(5).fill(photos.base + photos.carousel.file), "five windows onto the carousel sheet");
   // The counts are the manifest's and the picks file's own, never literals: the emitter decides which meals have a photo.
@@ -120,7 +119,8 @@ test("PR-3: the tree as committed carries the five carousel windows and a photo 
   const page = openPlanPage(html, { hash: "#lean-14", now: midday(addDays(delivery, -3)) });
   const rows = [...page.document.querySelectorAll("#cc-meals li")];
   assert.equal(rows.length, menu.length, "control: the list shows the 14-meal menu");
-  const photo = (li) => (li.querySelector(".cc-thumb").getAttribute("style") ?? "").includes(photos.base + sheet.file);
+  // The content's URL for the sheet (SPEC-week-content § 1: /week/<file>, the Workers serving the bucket's object).
+  const photo = (li) => (li.querySelector(".cc-thumb").getAttribute("style") ?? "").includes(`/week/${sheet.file}`);
   const withPhoto = menu.filter((name, i) => photo(rows[i]));
   assert.deepEqual(withPhoto.sort(), [...cells].sort(), `the ${cells.length} meals with a cell show their photo`);
   assert.equal(rows.length - withPhoto.length, menu.length - cells.length, `and ${menu.length - cells.length} plain tiles`);

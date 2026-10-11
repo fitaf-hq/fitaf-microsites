@@ -66,10 +66,9 @@ test("WC-6b: wrangler.jsonc, production: main is site.js; its bindings ASSETS an
 
 test("WC-6c: as configured, production's page routes reach the script first; every other asset is served without it", async () => {
   const outDir = await mkdtemp(join(tmpdir(), "boston-wc-dist-prod-"));
-  const picksDir = await mkdtemp(join(tmpdir(), "boston-wc-no-picks-"));
   let site;
   try {
-    await build({ target: "prod", outDir, picksDir });
+    await build({ target: "prod", outDir });
     site = await configured({ env: undefined, distDir: outDir });
     await site.log();
     const assetsFirst = ["/fonts/poppins-latin-700-normal.woff2", "/assets/fitaf-logo.png", "/qr/demo.png", "/assets/photo-sheets/carousel.jpg"];
@@ -92,6 +91,5 @@ test("WC-6c: as configured, production's page routes reach the script first; eve
   } finally {
     await site?.dispose();
     await rm(outDir, { recursive: true, force: true });
-    await rm(picksDir, { recursive: true, force: true });
   }
 });

@@ -67,17 +67,16 @@ export async function contentOf({ root = ROOT, week, picksDir, target } = {}) {
   return { data: JSON.parse(text), text, files };
 }
 
-/** The page a build writes with NO week (an empty picks directory): what the assets serve. `root` is the package. */
+/** The page a build writes, holding no week as every build does (§ 7's ruling): what the assets serve. `root` is the
+ *  package. */
 export async function noWeekPage({ root = ROOT, target = "prod" } = {}) {
   const { build } = await import(pathToFileURL(join(root, "build.mjs")).href);
   const outDir = await mkdtemp(join(tmpdir(), `boston-wc-${target}-`));
-  const picksDir = await mkdtemp(join(tmpdir(), "boston-wc-no-picks-"));
   try {
-    await build({ target, outDir, picksDir });
+    await build({ target, outDir });
     return await readFile(join(outDir, "index.html"), "utf8");
   } finally {
     await rm(outDir, { recursive: true, force: true });
-    await rm(picksDir, { recursive: true, force: true });
   }
 }
 

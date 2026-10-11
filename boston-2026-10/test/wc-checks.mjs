@@ -1,9 +1,14 @@
-// The checks of WC-1, WC-3, WC-5 and WC-7 (SPEC-week-content.md § 5) as functions over a PACKAGE (`root`: this one, or
+// The checks of WC-1, WC-3, WC-5, WC-7 and WC-12 (SPEC-week-content.md § 5, § 7) as functions over a PACKAGE (`root`: this one, or
 // a mirror of it), each returning one line per thing the package gets wrong ([] when it is right). The cases run them on
 // this package; WC-11's mutants run THE SAME checks on a mirror carrying one mutation (test/wc-11-mutants.test.mjs).
 // Not a test file itself. Every expectation is the contract's, written here, never read back from the code under test.
+import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 import { ROOT } from "../build.mjs";
 import { card, openPlanPage } from "./cc-harness.mjs";
 import { pageOf, V2_DIR } from "./ms-harness.mjs";
@@ -23,7 +28,7 @@ import {
 } from "./wc-harness.mjs";
 
 /** § 4.2: "escaped exactly as scriptJson escapes it at build" — the build's rule (build.mjs), written here on its own:
- *  JSON with every "<" as <, so nothing in it can close the element. WC-1 also checks the build agrees. */
+ *  JSON with every "<" as the escape \u003c, so nothing in it can close the element. WC-1 also checks the build agrees. */
 export const scriptJsonRef = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
 
 /** Where two texts first differ, for a problem line. */
@@ -192,7 +197,7 @@ export const BEFORE = Date.parse("2026-01-15T17:00:00Z");
 export async function dateProblems(root = ROOT) {
   const problems = [];
   try {
-    const html = await pageOf({ root, picks: V2_DIR, on: "2026-09-30" });
+    const html = await pageOf({ root, picks: V2_DIR });
     const data = JSON.parse(picksText(html));
     if (data.weeks.length !== 1 || data.weeks[0].valid_to !== "2026-10-01") problems.push(`control: the page carries ${data.weeks.length} week(s)`);
     for (const [label, now] of [["after valid_to", AFTER], ["before valid_from", BEFORE]]) {
@@ -202,6 +207,41 @@ export async function dateProblems(root = ROOT) {
     }
   } catch (err) {
     problems.push(`no page to check: ${err.message}`);
+  }
+  return problems;
+}
+
+/** WC-12's week and date (§ 7's ruling: "a build with data/picks/2026-10-18.json present and --on 2026-10-11"). */
+export const RULING_WEEK = "2026-10-18";
+export const RULING_ON = "2026-10-11";
+const run = promisify(execFile);
+
+/**
+ * WC-12 (§ 7, the orchestrator's ruling on its first open question): the build embeds NO week. With
+ * data/picks/2026-10-18.json in the package and `--on 2026-10-11` given (the week's window open that day), the programs
+ * `npm run build` and `npm run build:dev` run (`node build.mjs [--env dev] --on 2026-10-11 --out <tmp>`, in the package)
+ * write a page whose #picks-data holds `weeks: []`. The development build needs the package's wrangler.jsonc.
+ */
+export async function buildWeekProblems(root = ROOT) {
+  const problems = [];
+  if (!existsSync(join(root, "data", "picks", `${RULING_WEEK}.json`))) return [`control: no data/picks/${RULING_WEEK}.json in the package`];
+  for (const env of [[], ["--env", "dev"]]) {
+    const label = env.length ? "build:dev" : "build";
+    const out = await mkdtemp(join(tmpdir(), "boston-wc12-"));
+    try {
+      await run(process.execPath, [join(root, "build.mjs"), ...env, "--on", RULING_ON, "--out", out], { cwd: root });
+      const text = picksText(await readFile(join(out, "index.html"), "utf8"));
+      if (text === null) {
+        problems.push(`${label}: no #picks-data on the page`);
+        continue;
+      }
+      const weeks = JSON.parse(text).weeks;
+      if (!Array.isArray(weeks) || weeks.length) problems.push(`${label}: #picks-data holds ${JSON.stringify(weeks?.map?.((w) => w.delivery) ?? weeks)}, not []`);
+    } catch (err) {
+      problems.push(`${label}: no page to check: ${err.message}`);
+    } finally {
+      await rm(out, { recursive: true, force: true });
+    }
   }
   return problems;
 }

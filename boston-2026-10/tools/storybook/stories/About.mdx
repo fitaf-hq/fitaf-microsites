@@ -17,8 +17,9 @@ a state needs a press, the story presses the page's own button in the frame as a
 reach on the chosen date says so in red in its caption. To name a state in feedback, give its **group · story · width ·
 build**, as each caption does: *Individual · Chef's Choice · 390 · production: …*. **The Date control's fixed
 clock is the only thing a story adds to a page**: on *a week with picks* and *no picks*, one script before the page's
-own starts the frame's clock at noon on that date (the caption names it), so the page chooses that week's Chef's Choice
-as it would then; *today* adds nothing. Storybook serves the pages with a policy that refuses any request to another
+own starts the frame's clock at noon on that date (the caption names it and the page's week); the week itself is the
+site's content for that date, put into the page as the Workers put the bucket's, since no build embeds one; *today*
+adds nothing. Storybook serves the pages with a policy that refuses any request to another
 host (the development page's Turnstile script), so nothing leaves this machine.
 
 ## The meal selection
@@ -26,7 +27,7 @@ host (the development page's Turnstile script), so nothing leaves this machine.
 The **Meal selection** stories show the plan page's four questions and what each answer set's card shows: the goal
 buttons, the eight answer sets with *No snacks*, and snacks chosen (Q4) with the week's snack list and without one. They open on
 the Date control's **fixture week**: a week of invented meal names written as the picks file's version 2, a cart for
-every answer set and snacks for every day only, built into the page as the site's build reads any week (its `--picks`),
+every answer set and snacks for every day only, put into the page as the Workers put any week (the site's content command, its `--picks`),
 so every answer set shows its own cart; on a real week most answer sets have none yet and show *Choose your meals* alone.
 Each opens scrolled to its subject (the questions, or the snacks). **While snacks are carted** (`data/plans.json`'s
 `snacks.carted`), the page offers Q4 only for days the week has a snack list for, so on the fixture week every weekday

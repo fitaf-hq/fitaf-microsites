@@ -20,7 +20,7 @@ test("WC-7b: two weeks on the page, or none: no card at any date, and nothing th
   const next = { ...structuredClone(week), delivery: "2026-10-11" };
   const two = await picksDir({ "2026-10-04.json": week, "2026-10-11.json": next });
   try {
-    const both = await pageOf({ picks: two, on: "2026-09-30" });
+    const both = await pageOf({ picks: two });
     assert.equal(JSON.parse(picksText(both)).weeks.length, 2, "control: the build embedded both");
     const none = await pageOf({});
     assert.equal(JSON.parse(picksText(none)).weeks.length, 0, "control: no week");

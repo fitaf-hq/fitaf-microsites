@@ -16,7 +16,6 @@ import {
   FIXTURE,
   hiddenInTree,
   midday,
-  ON,
   openPlanPage,
   PLANS,
   picksDir,
@@ -35,7 +34,7 @@ function tabbable(node) {
 }
 
 test("CC-6a (updated, SPEC-plan-page-refinement § 2 item 5): the list is shown with no press; there is no button", async () => {
-  const { html } = await builtPage({ on: ON });
+  const { html } = await builtPage();
   const page = openPlanPage(html, { hash: "#signature-14", now: NOW });
   assert.equal(page.has("cc-toggle"), false, "no Chef's Choice button");
   assert.doesNotMatch(html, /aria-controls="cc-list"/, "nothing opens or closes the list");
@@ -45,7 +44,7 @@ test("CC-6a (updated, SPEC-plan-page-refinement § 2 item 5): the list is shown 
 });
 
 test("CC-6b: Choose my own meals is the rung 1 link for every size and count; Choose your meals gives way to both", async () => {
-  const { html } = await builtPage({ on: ON });
+  const { html } = await builtPage();
   const grid = Object.fromEntries(anchors(html).filter((a) => a["data-cell"]).map((a) => [a["data-cell"], a.href]));
   for (const [hash, , mpid] of CELLS) {
     const s = card(openPlanPage(html, { hash, now: NOW }));
@@ -58,7 +57,7 @@ test("CC-6b: Choose my own meals is the rung 1 link for every size and count; Ch
 });
 
 test("CC-6c: both links are reachable by keyboard, in the card's order, nothing hiding them (no button since § 2 item 5)", async () => {
-  const { html } = await builtPage({ on: ON });
+  const { html } = await builtPage();
   const page = openPlanPage(html, { hash: "#lean-7", now: NOW });
   const own = page.el("cc-own");
   assert.ok(tabbable(page.el("cc-checkout")), "Continue to checkout takes focus, with no press");
@@ -76,7 +75,7 @@ test("CC-6d: a count with no picks keeps today's card; no JavaScript shows no ca
   delete onlySeven.menus["14"];
   const dir = await picksDir({ "2026-10-04.json": onlySeven });
   try {
-    const { html } = await builtPage({ picks: dir, on: ON });
+    const { html } = await builtPage({ picks: dir });
     const seven = card(openPlanPage(html, { hash: "#lean-7", now: NOW }));
     assert.deepEqual([seven.choose, seven.list, seven.own], [false, true, true], "control: 7 has picks");
     const fourteen = card(openPlanPage(html, { hash: "#lean-14", now: NOW }));
@@ -108,7 +107,7 @@ test("CC-6d: a count with no picks keeps today's card; no JavaScript shows no ca
 });
 
 test("CC-6e: the grid's links and the Family card are rung 1's, byte for byte", async () => {
-  const withPicks = (await builtPage({ on: ON })).html;
+  const withPicks = (await builtPage()).html;
   const today = await renderPage(PLANS);
   assert.ok(withPicks.includes('id="cc-list"'), "control: the page carries the Chef's Choice card");
   assert.deepEqual(hrefs(withPicks), hrefs(today), "the same seven order links, no more (the card's are set by the script)");

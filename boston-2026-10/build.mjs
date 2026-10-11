@@ -1,17 +1,16 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
 //
-//   node build.mjs [--env dev] [--on YYYY-MM-DD] [--out DIR] [--picks DIR]
+//   node build.mjs [--env dev] [--out DIR]
 //
-// --on is the build's date for this week's Chef's Choice, SPEC-chefs-choice § 2: every data/picks/<sunday>.json whose
-// window has not ended on it is embedded. Default: today in the send time zone (data/save.json). Since SPEC-week-content
-// § 2 the page shows the week its #picks-data holds (one; none if two), no date deciding it, and the deployed Workers
-// replace that element with the bucket's week; so the window decides only what a build without a bucket shows. Without
-// data/picks/, or with no week open on --on, the page carries the Chef's Choice card holding no week, hidden: the visible
-// page is the one before (WC-8).
+// ⛔ THE BUILD EMBEDS NO WEEK (SPEC-week-content § 7, the orchestrator's ruling of 2026-10-11 on § 7's first open
+// question): the page always carries the Chef's Choice card with a #picks-data holding `weeks: []`, hidden, and reads
+// nothing of data/picks/. The deployed Workers put the week in that element from their bucket, the only source of a
+// served week; data/picks/ is read by the content command (scripts/week-content.mjs) alone. The visible page with no week
+// is the page before the card existed (WC-8). `--on` (the date that chose the embedded weeks) and `--picks` (the picks
+// directory read instead of data/picks/) are removed with that: nothing in the build depends on a date. An argument the
+// build does not know is ignored, as it always was, so a command that still passes `--on` builds the same page.
 // --out is the directory written instead of dist/ (or dist-dev/): Storybook's pages (tools/storybook), never a deploy.
-// --picks is the picks directory read instead of data/picks/: Storybook's fixture week (SPEC-meal-selection § 9, a week of
-// invented names in version 2, test/fixtures/picks-v2/), never a deploy.
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -23,7 +22,7 @@ import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
 import { scriptJson } from "./src/worker/script-json.js";
 import { checkSelection, legacyKey } from "./scripts/selection.mjs";
-import { addDays, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
+import { formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
 export const PLANS_PATH = join(ROOT, "data", "plans.json");
@@ -37,7 +36,8 @@ export const ZIPS_PATH = join(ROOT, "data", "delivery-zips.json");
 export const OFFERS_PATH = join(ROOT, "data", "offers.json");
 /** The weekly menu input of Flow 8. It does not exist yet, so the "See this week's menu" link is absent. */
 export const MENU_PATH = join(ROOT, "data", "menu.json");
-/** The week's Chef's Choice, one file per delivery Sunday (SPEC-chefs-choice § 1): read by scripts/chefs-choice.mjs. */
+/** The week's Chef's Choice, one file per delivery Sunday (SPEC-chefs-choice § 1): read by the content command alone
+ *  (scripts/week-content.mjs; SPEC-week-content § 7's ruling), never by the build. */
 export const PICKS_DIR = join(ROOT, "data", "picks");
 /** The plan page's photographs (SPEC-plan-page-refinement § 3): the manifest and the one directory holding every sheet it
  *  names, both produced outside this repository (the producer, § 3's tool, is held: Fit AF's own pipeline makes them).
@@ -310,7 +310,8 @@ function clientData(plans, words, offer = plans.snacks.shown) {
 }
 
 // JSON inside <script>: neutralise "<" so no "</script>" can close the element. One function, in src/worker/ since
-// SPEC-week-content § 4.2: the Worker writes the bucket's week into #picks-data with it, as the build embeds one.
+// SPEC-week-content § 4.2: the Worker writes the bucket's week into #picks-data with it, and the content command
+// writes the bucket's object with it (the build's own #picks-data holds no week).
 export { scriptJson };
 
 /**
@@ -537,20 +538,13 @@ async function writeDevPages(plans, events, outDir, offersPath, messages, picks,
   return written;
 }
 
-const YMD = /^\d{4}-\d{2}-\d{2}$/;
-
-/**
- * This week's Chef's Choice for the page (SPEC-chefs-choice): every file in the picks directory checked (a file breaking
- * a rule throws, naming it) and the weeks still open on `on` made into the page's slots. SPEC-week-content § 2.1: the
- * card is always carried; without a picks directory, or with no week open, it holds no week (and nothing more is read).
- */
-async function picksFor({ plans, messages, picksDir, on, photos, assetPrefix, photoHost }) {
-  if (on !== undefined && !(YMD.test(on) && addDays(on, 0) === on)) throw new Error(`--on must be a date, YYYY-MM-DD; got ${on}`);
+/** The Chef's Choice card for the page (SPEC-chefs-choice; SPEC-week-content § 2.1): always carried, holding NO week
+ *  (§ 7's ruling: the bucket is the only source of a served week). Its words are checked here, so a missing phrase
+ *  refuses the build. */
+async function cardSlots({ plans, messages }) {
   const zone = (await loadJson(SAVE_PATH)).send_time_zone;
-  const dir = existsSync(picksDir) ? picksDir : null;
-  if (dir) on ??= zonedDate(Date.now(), zone);
   const { chefsChoice } = await import("./scripts/chefs-choice.mjs");
-  return { ...(await chefsChoice({ plans, messages, dir, on, zone, photos, assetPrefix, photoHost })), on };
+  return (await chefsChoice({ plans, messages, zone })).slots;
 }
 
 export async function build({
@@ -558,10 +552,8 @@ export async function build({
   eventsPath = EVENTS_PATH,
   offersPath = OFFERS_PATH,
   messagesPath = MESSAGES_PATH,
-  picksDir = PICKS_DIR,
   photosPath = PHOTOS_PATH,
   sheetsDir = PHOTO_SHEETS_DIR,
-  on = undefined,
   target = "prod",
   outDir,
 } = {}) {
@@ -573,20 +565,16 @@ export async function build({
   const events = await loadJson(eventsPath);
   const messages = await loadJson(messagesPath);
   const photos = await loadPhotos(photosPath);
-  const assetPrefix = target === "dev" ? DEV_ASSET_PREFIX : PROD_SLOTS.ASSET_PREFIX;
-  // Before anything is written: a picks file that breaks a rule stops the build here (a wrong list never ships).
-  // SPEC-rung2-progress-and-checkout § 17.1: the checkout links name the sheet's host by its code in the block's fixed
-  // list (scripts/handoff-link.mjs PHOTO_HOSTS): the production site for this build, the test address for dev.
-  const photoHost = target === "dev" ? DEV_PHOTO_HOST : PROD_PHOTO_HOST;
-  const picks = await picksFor({ plans, messages, picksDir, on, photos, assetPrefix, photoHost });
+  // Before anything is written: the card's words checked (a missing phrase stops the build here).
+  const card = await cardSlots({ plans, messages });
   // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
   if (target === "dev") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
   let pages;
   if (target === "dev") {
-    pages = await writeDevPages(plans, events, outDir, offersPath, messages, picks.slots, photos);
+    pages = await writeDevPages(plans, events, outDir, offersPath, messages, card, photos);
   } else {
-    const html = await renderPage(plans, PROD_SLOTS, messages, picks.slots, photos);
+    const html = await renderPage(plans, PROD_SLOTS, messages, card, photos);
     const path = join(outDir, "index.html");
     await writeFile(path, html);
     pages = [{ path, bytes: Buffer.byteLength(html) }];
@@ -594,27 +582,23 @@ export async function build({
   const files = await copyStatic(outDir, photos, sheetsDir);
   // QR codes point at the production URL, so only the production build writes them.
   const qr = target === "prod" ? await writeQrCodes(events, outDir) : [];
-  return { indexPath: pages[0].path, bytes: pages[0].bytes, pages, files, qr, picks: { on: picks.on, weeks: picks.weeks } };
+  return { indexPath: pages[0].path, bytes: pages[0].bytes, pages, files, qr };
 }
 
-/** What `node build.mjs` prints: every file written, then each Chef's Choice week the page carries. */
+/** What `node build.mjs` prints: every file written. */
 function report(out) {
   for (const p of out.pages) console.log(`wrote ${p.path} (${p.bytes} bytes)`);
   for (const f of [...out.files, ...out.qr]) console.log(`wrote ${f}`);
-  for (const w of out.picks.weeks) {
-    const snacks = w.snacks.length ? `; snacks for ${w.snacks.join(", ")}` : "";
-    console.log(`picks: ${w.delivery} (open ${w.valid_from} to ${w.valid_to}; carts ${w.carts.join(", ")}${snacks}), built on ${out.picks.on}`);
-  }
 }
 
-// Run as a program. NOT a top-level await: scripts/chefs-choice.mjs (imported by build() when data/picks/ exists)
+// Run as a program. NOT a top-level await: scripts/chefs-choice.mjs (imported by build() for the card's slots)
 // imports this module, which must have finished evaluating first, or the two wait on each other and Node exits.
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const flag = (name) => {
     const at = process.argv.indexOf(name);
     return at === -1 ? undefined : process.argv[at + 1];
   };
-  build({ target: flag("--env") ?? "prod", on: flag("--on"), outDir: flag("--out"), picksDir: flag("--picks") }).then(report, (err) => {
+  build({ target: flag("--env") ?? "prod", outDir: flag("--out") }).then(report, (err) => {
     console.error(err);
     process.exitCode = 1;
   });

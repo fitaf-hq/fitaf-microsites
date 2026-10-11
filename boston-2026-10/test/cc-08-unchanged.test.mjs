@@ -10,7 +10,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
 import { storefrontText } from "../scripts/build-storefront.mjs";
-import { builtPage, ON, picksData, workerFiles } from "./cc-harness.mjs";
+import { builtPage, picksData, workerFiles } from "./cc-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./cc-08-unchanged-golden.json", import.meta.url), "utf8"));
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -36,7 +36,7 @@ test("CC-8b: the Worker, every file its entry reaches, is unchanged", async () =
 });
 
 test("CC-8c: a build carrying the week leaves the Footer's text and the Worker as they were", async () => {
-  const { html } = await builtPage({ on: ON });
+  const { html } = await builtPage();
   assert.ok(picksData(html), "control: the build carried the week");
   assert.equal(sha256(Buffer.from(await storefrontText(), "utf8")), golden.footer_text_sha256);
   assert.deepEqual(await workerFiles(), golden.worker);

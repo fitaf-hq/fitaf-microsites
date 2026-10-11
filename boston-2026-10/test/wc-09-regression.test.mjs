@@ -2,20 +2,19 @@
 // week/picks-data.json equal to the #picks-data the production build of 409b805, built --on 2026-10-11, embeds for that
 // week, except the photo sheet's URL (now /week/…); and the sheet byte-identical to
 // src/assets/photo-sheets/chefs-choice-2026-10-18.jpg. The "before" is test/wc-09-golden.json, recorded from 409b805's
-// own tree by test/wc-09-record.mjs (re-run it and diff to check the golden). Also: the build at this commit, --on
-// 2026-10-11, still embeds that week (the window decides what a no-bucket build embeds, § 2.2); and the PAGE a visitor
+// own tree by test/wc-09-record.mjs (re-run it and diff to check the golden). Also the PAGE a visitor
 // gets from production's Worker (the no-week build, the content in the bucket) is, visibly, the page of 409b805 at noon
 // on 2026-10-11 in New York, at every fragment of REGRESSION_HASHES (§ 2.3: everything else on the page is unchanged).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { copyFile, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build, PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
+import { PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
 import { scriptJsonRef } from "./wc-checks.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW, sheetUrlCount, WEEK_SHEET_URL } from "./wc-regression.mjs";
-import { contentOf, noWeekPage, pageAsset, picksText, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
+import { contentOf, noWeekPage, pageAsset, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./wc-09-golden.json", import.meta.url), "utf8"));
 const SHEET = await readFile(join(PHOTO_SHEETS_DIR, SHEET_1018));
@@ -47,22 +46,6 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
     assert.equal(sha256(sheet), golden.sheet.sha256, "and to 409b805's");
   } finally {
     await rm(out, { recursive: true, force: true });
-  }
-});
-
-test("WC-9b: the build at this commit, --on 2026-10-11, embeds the same week (the window still decides a no-bucket build)", async () => {
-  const out = await mkdtemp(join(tmpdir(), "boston-wc9-build-"));
-  // The committed week's file alone, so a later week committed beside it (its window open on 2026-10-11 too) is not
-  // what this case measures.
-  const picks = await mkdtemp(join(tmpdir(), "boston-wc9-picks-"));
-  try {
-    await copyFile(join(ROOT, "data", "picks", `${WEEK_1018}.json`), join(picks, `${WEEK_1018}.json`));
-    await build({ target: "prod", outDir: out, on: "2026-10-11", picksDir: picks });
-    const embedded = picksText(await readFile(join(out, "index.html"), "utf8"));
-    assert.deepEqual(JSON.parse(embedded), golden.picks_data);
-  } finally {
-    await rm(out, { recursive: true, force: true });
-    await rm(picks, { recursive: true, force: true });
   }
 });
 

@@ -14,7 +14,7 @@
 // /order and /checkout (handoff/serve.mjs says why: .storybook/middleware.js here, test/serve-static.mjs for the cases).
 // The links and the counts reach the stories as virtual:handoff-store, the store's own manifest.
 import { join } from "node:path";
-import { buildPages, report } from "../microsite/pages.mjs";
+import { buildPages, report, WEEK_SHEETS } from "../microsite/pages.mjs";
 import { PAGES_ROUTE, ROOT_STATIC } from "../microsite/layout.js";
 import { PAGES_DIR } from "../microsite/paths.mjs";
 import { buildStore, report as reportStore } from "../handoff/store.mjs";
@@ -65,6 +65,9 @@ export default {
       ...dirs,
       { from: PAGES_DIR, to: `/${PAGES_ROUTE}` },
       ...ROOT_STATIC.map((dir) => ({ from: join(ROOT_FILES_FROM, dir), to: `/${dir}` })),
+      // SPEC-week-content § 1: a week's photo sheets are at /week/<file>.jpg, where the Workers serve the bucket's; here,
+      // the sheets of the weeks the pages carry (microsite/pages.mjs).
+      { from: join(PAGES_DIR, WEEK_SHEETS), to: `/${WEEK_SHEETS}` },
       { from: STORE_DIR, to: `/${STORE_ROUTE}` },
     ];
   },
