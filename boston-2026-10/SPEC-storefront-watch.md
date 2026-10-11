@@ -331,3 +331,40 @@ Red first at `687805b` (23 cases, each failing because F6 did not exist), built 
   of 55 products on 2026-10-08). That consecutive weeks share fewer than half their meals, which the half-rule assumes:
   only one week's picks are committed here.
 - ⬜ **Not run against the live store**: no request to it was made at this build.
+
+## 13. Amendment, 2026-10-11 — the week's catalog, saved when the store has settled. CONTRACT, before any code
+
+**Why**: at the store's switch the week's release starts from the store's catalog (the names its cards show, which deep
+carting keys on, and its snacks): Fit AF's `scripts/menus/week_menu.py --storefront products.json`. On 2026-10-09 that
+file was saved by a loop on one machine, outside any repository (Fit AF's
+`responses/2026-10-09-live-catalog-products/README.md`): one anonymous visit, the page's own `/catalog/products`
+response saved byte for byte, repeated until two reads agreed, because **the store switched over about an hour** (17,
+16, 10, 8, 10, 20, 24, 24 meals). The Advisor, 2026-10-11 (Fit AF's decision record `2026-10-11-the-week-is-content.md`):
+the switch is *"a simple trigger"*, downtime *"on the order of minutes"*. So the capture becomes a command of the watch,
+which already reads that response (§ 12 item 1).
+
+1. **`npm run catalog -- --out <dir> [--mpid 26] [--every <minutes>] [--max <minutes>]`**: one headless visit of
+   `/order?mpid=<N>` (default 26, the plan the 2026-10-02 and 2026-10-09 captures used), F6's own launcher and visit,
+   reading **the page's own** catalog response (`lib/catalog-response.mjs`); the watch's code never requests the
+   backend (§ 2, § 12 item 1).
+2. **Settled**: with `--every M` (M ≥ 2: a person's pace), it visits every M minutes, each a fresh profile, until **two
+   consecutive reads carry the same names** in `all-meals` and in `snacks` (as sets of the names the cards show), then
+   writes the **last** read; after `--max` minutes without two agreeing reads it writes nothing and exits non-zero,
+   printing each read's counts. Without `--every`, one read, written as it is.
+3. **What it writes** into `<dir>` (which must exist and must not already hold either file): `products.json`, the
+   response body **byte for byte**; and `visit.json`: the page's URL, the time the page loaded and the response arrived
+   (ISO 8601, UTC), the HTTP status, the content type, the body's bytes and SHA-256, the request's host, path and
+   **parameter names only**, the browser's user agent, and per read the counts of `all-meals` and `snacks`.
+4. **Refusals** (exit non-zero, nothing written): no catalog response within the visit's deadline; a status other than
+   200; a body that is not JSON with a `data` array; ⛔ **a body containing `sk_` followed by a letter or digit** (the
+   storefront's key travels in the request, and it must never be saved; the 2026-10-09 body held none); `<dir>` absent
+   or already holding either file.
+5. **Public**: the command and its code are in this repository; **what it writes is not**: `--out` is required and a path
+   inside this repository is refused.
+
+**Cases** (§ 6's synthetic store, no network): CT-1 one read: `products.json` byte-identical to what the synthetic
+backend served, `visit.json` with no parameter value; CT-2 `--every`: a store serving A, then B, then B: writes B
+after the third read, and the counts of all three are printed; CT-3 A, B, C until `--max`: nothing written, non-zero;
+CT-4 each refusal of item 4, nothing written; CT-5 the backend's host requested by the page and never by the command's
+code (W26's control); CT-6 an `--out` inside the repository refused. **Mutants**: the settle rule that writes the first
+read (CT-2 red); the `sk_` check that always passes (CT-4 red); a `visit.json` that keeps the query string (CT-1 red).
