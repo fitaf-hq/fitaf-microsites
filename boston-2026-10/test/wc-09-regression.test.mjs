@@ -1,0 +1,67 @@
+// WC-9 (SPEC-week-content.md § 5), ⭐ the regression: `npm run content -- --week 2026-10-18` at this commit writes a
+// week/picks-data.json equal to the #picks-data the production build of 409b805, built --on 2026-10-11, embeds for that
+// week, except the photo sheet's URL (now /week/…); and the sheet byte-identical to
+// src/assets/photo-sheets/chefs-choice-2026-10-18.jpg. The "before" is test/wc-09-golden.json, recorded from 409b805's
+// own tree by test/wc-09-record.mjs (re-run it and diff to check the golden). Also the PAGE a visitor
+// gets from production's Worker (the no-week build, the content in the bucket) is, visibly, the page of 409b805 at noon
+// on 2026-10-11 in New York, at every fragment of REGRESSION_HASHES (§ 2.3: everything else on the page is unchanged).
+import test from "node:test";
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
+import { scriptJsonRef } from "./wc-checks.mjs";
+import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW, sheetUrlCount, WEEK_SHEET_URL } from "./wc-regression.mjs";
+import { contentOf, noWeekPage, pageAsset, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
+
+const golden = JSON.parse(await readFile(new URL("./wc-09-golden.json", import.meta.url), "utf8"));
+const SHEET = await readFile(join(PHOTO_SHEETS_DIR, SHEET_1018));
+
+test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11, carrying the one week 2026-10-18", () => {
+  assert.equal(golden.recorded_at, "409b805");
+  assert.equal(golden.on, "2026-10-11");
+  assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
+  assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
+});
+
+test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {
+  const out = await mkdtemp(join(tmpdir(), "boston-wc9-"));
+  try {
+    execFileSync(process.execPath, [join(ROOT, "scripts", "week-content.mjs"), "--week", WEEK_1018, "--out", out], { stdio: "pipe" });
+    const written = (await readdir(join(out, "week"))).sort();
+    assert.deepEqual(written, ["chefs-choice-2026-10-18.jpg", "picks-data.json"], "the week's data and its one sheet");
+    const text = await readFile(join(out, WEEK_DATA_KEY), "utf8");
+    const before = JSON.stringify(golden.picks_data);
+    const after = asWeekUrls(before);
+    assert.ok(sheetUrlCount(before) > 0 && sheetUrlCount(after) === 0, "control: the URLs were rewritten");
+    assert.equal(sheetUrlCount(text), 0, "no URL of the build's sheet path is left");
+    assert.ok(text.includes(WEEK_SHEET_URL), `the sheet at ${WEEK_SHEET_URL}`);
+    assert.deepEqual(JSON.parse(text), JSON.parse(after), "the JSON value, the sheet's URL apart");
+    assert.equal(text, scriptJsonRef(JSON.parse(after)), "the bytes: the element's text as the build writes it, the URL apart");
+    assert.notDeepEqual(JSON.parse(text), golden.picks_data, "control: the URL is the one difference");
+    const sheet = await readFile(join(out, sheetKeyOf(SHEET_1018)));
+    assert.ok(sheet.equals(SHEET), "the sheet byte-identical to src/assets/photo-sheets/");
+    assert.equal(sha256(sheet), golden.sheet.sha256, "and to 409b805's");
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+});
+
+test("WC-9c: the page production's Worker serves with that content is, visibly, 409b805's page at every fragment", async () => {
+  const asset = await noWeekPage();
+  const { text, files } = await contentOf({ week: WEEK_1018 });
+  const site = await startSite({ assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheetKeyOf(SHEET_1018)]: files[sheetKeyOf(SHEET_1018)] } });
+  try {
+    const served = (await site.get("/")).text;
+    assert.notEqual(served, asset, "control: the week reached the page");
+    for (const hash of REGRESSION_HASHES) {
+      assert.equal(sha256(visible(served, { hash, now: REGRESSION_NOW })), golden.visible[hash], `${hash || "(none)"}: the visible page`);
+    }
+    const tile = await site.get(WEEK_SHEET_URL);
+    assert.ok(tile.body.equals(SHEET), "the tiles' sheet is served at its new URL");
+  } finally {
+    await site.dispose();
+  }
+});

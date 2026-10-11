@@ -1,5 +1,5 @@
 {
-  // Wrangler config for this microsite: a static-assets Worker serving dist/.
+  // Wrangler config for this microsite: a static-assets Worker serving dist/, with a script for the week (below).
   // ⛔ Since 2026-09-29 nothing here is DEPLOYED by wrangler: both Workers and their secrets are managed as
   // infrastructure as code, applied by CI, which MIRRORS these settings (README, "Deploys are not run from
   // here"). This file drives local preview and `db:migrate:dev` only; a change here reaches nothing live
@@ -7,7 +7,20 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fitaf-microsites",
   "compatibility_date": "2026-09-26",
-  "assets": { "directory": "./dist" },
+
+  // SPEC-week-content § 4 (2026-10-11): production gains a script, src/worker/site.js, doing ONLY two things: the week
+  // from the WEEK bucket put into the page's #picks-data, and the photo sheets at /week/<file>.jpg. Nothing else (no D1,
+  // no rate limiter, no cron, no other route). The names below (WEEK, the bucket, the objects) are the interface with
+  // the infrastructure code, which mirrors this file; they change only with both.
+  "main": "src/worker/site.js",
+  // The page's routes run the script BEFORE the assets (`run_worker_first`, the platform's setting; patterns are matched
+  // against the path, "*" any characters): "/" is the only path the assets answer with the page (measured: "/index.html"
+  // and "/index" are their 307 to "/", passed on unchanged). Every other route stays assets-first: an asset is served
+  // without the script; a path no asset matches (/week/…, or anything else) reaches the script, which hands all but
+  // /week/ back to the assets.
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/", "/index.html"] },
+  // The week's content (SPEC-week-content § 1): read only through this binding; the bucket is not public.
+  "r2_buckets": [{ "binding": "WEEK", "bucket_name": "fitaf-microsite-content-prod" }],
 
   // ⛔ No per-version preview URLs (<version>-<name>.<subdomain>.workers.dev). On 2026-09-27 a version
   // uploaded by mistake stayed PUBLIC at its preview URL after later deploys replaced it on the main
@@ -25,8 +38,8 @@
     { "pattern": "www.eatfitaf.com", "custom_domain": true }
   ],
 
-  // ⛔ The top level above is PRODUCTION and is deliberately unchanged by rungs 3 and 4: no `main`, no
-  // bindings, so the production build is still the rung-1 page and nothing else.
+  // ⛔ The top level above is PRODUCTION. Rungs 3 and 4 left it unchanged (no script, no bindings); since
+  // SPEC-week-content § 4 it has one script and two bindings (ASSETS, WEEK), for the week and nothing else.
   "env": {
     // Rungs 3–4 (SPEC-rung4-save-offer.md): development only, dummy data only.
     "dev": {
@@ -37,8 +50,13 @@
       // No per-version preview URLs here either (see the top level).
       "preview_urls": false,
       "main": "src/worker/index.js",
-      // Assets first; a request no asset matches (/api/save, /confirm/*, /o/*) reaches the Worker script.
-      "assets": { "directory": "./dist-dev", "binding": "ASSETS" },
+      // Assets first; a request no asset matches (/api/save, /confirm/*, /o/*, /week/*) reaches the Worker script.
+      // SPEC-week-content § 4.5: the page's routes run the script first, so it can put the week in: "/" and each event's
+      // "/<event-id>/" (the assets' "/index.html" and "/<event-id>/index.html" are their 307s, passed on). "/*/" is any
+      // path ending "/", which only an event page answers with an asset; every other asset stays assets-first.
+      "assets": { "directory": "./dist-dev", "binding": "ASSETS", "run_worker_first": ["/", "/index.html", "/*/", "/*/index.html"] },
+      // The week's content (SPEC-week-content § 1); bindings do not inherit, so dev names its own bucket.
+      "r2_buckets": [{ "binding": "WEEK", "bucket_name": "fitaf-microsite-content-dev" }],
       "d1_databases": [
         {
           "binding": "DB",

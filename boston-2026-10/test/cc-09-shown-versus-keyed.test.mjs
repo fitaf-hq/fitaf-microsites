@@ -10,8 +10,9 @@
 // REWORDED ("Ginger Beef Rice Bowl", shown "Ginger Beef Bowl with Jasmine Rice"), whose key differs from its name's.
 //
 // Two MIRROR MUTANTS (a copy of the package's inputs, never the tree: protocols/mutate-in-a-mirror.md), each a one-line
-// edit of the mirror's scripts/chefs-choice.mjs whose anchor must be present once, built by the program as the deploy
-// builds (`node build.mjs`): the link keyed on `display` (CC-9b) and the line showing `name` (CC-9c). Each must fail the
+// edit of the mirror's scripts/chefs-choice.mjs whose anchor must be present once, made by the programs (`node build.mjs`,
+// then the week's content by `node scripts/week-content.mjs`, put in the page as the Workers put it: no build embeds a
+// week, SPEC-week-content § 7's ruling): the link keyed on `display` (CC-9b) and the line showing `name` (CC-9c). Each must fail the
 // check the real page passes, for its own reason; the unchanged mirror (CC-9 control) passes it.
 // Updated (SPEC-meal-selection § 8 item 2): the page's data is keyed by answer set (cc-harness cartFor: 7 is or-7d, 14
 // is and-7d); the links and their checks are unchanged.
@@ -28,7 +29,6 @@ import {
   mealLine,
   midday,
   mirror,
-  ON,
   openPlanPage,
   picksData,
   picksDir,
@@ -37,13 +37,14 @@ import {
 } from "./cc-harness.mjs";
 import { FIXTURE_PHOTOS_PATH, FIXTURE_SHEETS_DIR, photoPage, programBuild } from "./pr-harness.mjs";
 import { assertCheckedOut, LOG_PREFIX, refKey } from "./r2-harness.mjs";
-import { PHOTOS, readPhotoPart, SHEET } from "./r2-photos.mjs";
+import { readPhotoPart, SHEET } from "./r2-photos.mjs";
 
 const NOW = midday(DAYS["S-5"]);
 const COUNTS = Object.keys(FIXTURE.menus);
 const TAGGED = FIXTURE.menus["7"].find((m) => m.name.startsWith("🟠NEW:"));
 const REWORDED = FIXTURE.menus["7"].find((m) => m.display !== m.name && !m.name.startsWith("🟠NEW:"));
-const SHEET_URL = `${PHOTOS.base}${SHEET.file}`;
+/** The tiles' sheet as the week's content addresses it (SPEC-week-content § 1: /week/<file>; no build embeds a week). */
+const SHEET_URL = `/week/${SHEET.file}`;
 
 /** The keys a link's meal part carries, in its order (the photo part, after "!", is not read here). */
 const keysOf = (href) =>
@@ -151,8 +152,9 @@ async function edit(path, from, to) {
   await writeFile(path, text.replace(from, to));
 }
 
-/** `node build.mjs --on ON` in a mirror holding only the fixture week in data/picks/ and the fixture photo sheets in
- *  data/photo-sheets.json and src/assets/photo-sheets/; `change(dir)` edits the mirror first. The page it writes. */
+/** The programs in a mirror holding only the fixture week in data/picks/ and the fixture photo sheets in
+ *  data/photo-sheets.json and src/assets/photo-sheets/ (pr-harness programBuild: `node build.mjs`, then the week's
+ *  content put in its #picks-data); `change(dir)` edits the mirror first. The page with the week. */
 async function mirrorPage(change = async () => {}) {
   const dir = await mirror(async (d) => {
     await rm(join(d, "data", "picks"), { recursive: true, force: true });
@@ -205,12 +207,12 @@ test("CC-9d: display is shown as the link tool reads a name (whitespace collapse
   week.menus["14"][1].display = week.menus["14"][0].display;
   const dir = await picksDir({ "2026-10-04.json": week });
   try {
-    const { html } = await builtPage({ picks: dir, on: ON });
+    const { html } = await builtPage({ picks: dir });
     const data = picksData(html);
     assert.ok(data, "the build takes the file");
     assert.equal(cartFor(data.weeks[0], "7").meals[i], "Maple Dijon Pork Tenderloin", "the line, collapsed and trimmed");
     assert.equal(cartFor(data.weeks[0], "14").meals[1], mealLine(week.menus["14"][1]), "a shared display is shown as written");
-    const fixture = picksData((await builtPage({ on: ON })).html);
+    const fixture = picksData((await builtPage()).html);
     for (const count of COUNTS) {
       assert.deepEqual(cartFor(data.weeks[0], count).links, cartFor(fixture.weeks[0], count).links, `${count}: the links do not move with display`);
     }

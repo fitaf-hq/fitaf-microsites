@@ -12,6 +12,7 @@
     "build:dev": "node build.mjs --env dev",
     "build:storefront": "node scripts/build-storefront.mjs",
     "handoff:link": "node scripts/handoff-link.mjs",
+    "content": "node scripts/week-content.mjs",
     "build:mockups": "node mockups/build-mockups.mjs",
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",

@@ -7,26 +7,32 @@
 //   § 8: PR-13, the carousel full bleed (its box the viewport's width, at 390 and 1280) with the logo inside it;
 //   PR-14, the two question headings centred; PR-16, the price one untinted block, the weekly total first and larger.
 // The page is the site's own production build (`node build.mjs --on --out`, as the stories' pages are built), served on
-// 127.0.0.1; nothing else is requested.
+// 127.0.0.1; nothing else is requested. It carries ONE week, the site's fixture week (a snack list for 7 days, so Q4 is
+// shown at #lean-7), put in as the Date control's fixture date puts it: no build embeds a week (SPEC-week-content § 7's
+// ruling), so the page is the build's and the week is the content command's (`--picks` the fixture), in its
+// #picks-data. Before that contract these cases built --on 2026-09-30 from data/picks/ and the browser chose a week by
+// the real clock, so what they read moved with the day they ran.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { siteBuild } from "../microsite/pages.mjs";
-import { VIEWPORTS } from "../microsite/layout.js";
+import { FIXTURE_PICKS, VIEWPORTS } from "../microsite/layout.js";
+import { FIXTURE_PICKS_DIR } from "../microsite/paths.mjs";
 import { freshChrome } from "./chrome.mjs";
 import { serveStatic } from "./serve-static.mjs";
 import { isLocal } from "./walk.mjs";
 
-const ON = "2026-09-30";
+/** The fixture week's delivery Sunday: its one picks file, by name. */
+const FIXTURE_WEEK = (await readdir(FIXTURE_PICKS_DIR)).map((f) => /^(\d{4}-\d{2}-\d{2})\.json$/.exec(f)?.[1]).filter(Boolean).sort().at(-1);
 const TIMEOUT_MS = 120_000;
 const out = await mkdtemp(join(tmpdir(), "fitaf-storybook-pr-"));
 after(() => rm(out, { recursive: true, force: true }));
 
 /** The production page at `hash`, `width` wide, in a fresh Chrome; `fn(page)` reads it. Refuses any request off 127.0.0.1. */
 async function withPage({ width, hash }, fn) {
-  await siteBuild({ build: "production", on: ON, out });
+  await siteBuild({ build: "production", out, week: FIXTURE_WEEK, picks: FIXTURE_PICKS });
   const server = await serveStatic(out);
   const chrome = await freshChrome();
   try {

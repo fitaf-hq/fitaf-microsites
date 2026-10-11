@@ -1,8 +1,10 @@
-// This week's Chef's Choice on the plan page (SPEC-chefs-choice.md), the build's side. build.mjs imports this module only
-// when data/picks/ exists. It reads every data/picks/<sunday>.json, checks each (§ 1), and turns the weeks still open on
-// the build's date (§ 2) into the page's three slots: PICKS_STYLE (src/chefs-choice/style.css), PICKS_CARD
-// (src/chefs-choice/card.html, its words from data/messages.json) and PICKS_SCRIPT (the week's data as JSON, then the
-// offer's zoned-date helpers inlined as the offer box inlines them, then src/chefs-choice/chefs-choice.js).
+// This week's Chef's Choice on the plan page (SPEC-chefs-choice.md). Two sides:
+// - the PAGE's (chefsChoice, for build.mjs): the three slots, PICKS_STYLE (src/chefs-choice/style.css), PICKS_CARD
+//   (src/chefs-choice/card.html, its words from data/messages.json) and PICKS_SCRIPT (the page's data as JSON, then
+//   src/chefs-choice/chefs-choice.js). ⛔ The build embeds NO week (SPEC-week-content § 7, the ruling on its first open
+//   question): `#picks-data` holds `weeks: []`, and the page shows the week the Workers put there from their bucket.
+// - the CONTENT's (readPicks, checkPicks, pageData, for scripts/week-content.mjs): every data/picks/<sunday>.json read
+//   and checked (§ 1), and one week made into the data the page's script reads, which is the bucket's object.
 //
 // ⛔ The menus are checked by the LINK TOOL'S OWN RULES, by importing it: each menu, for each size, goes through
 // payloadFromArgs (qty 1..MAX_QTY, names distinct and no two sharing a key, the counts making the plan's count) exactly
@@ -19,9 +21,8 @@
 // `and-5d-b`): a version-1 `7` is the cart of or, every day, no breakfast, and its `14` of and, every day, no breakfast.
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join, relative, sep } from "node:path";
-import { declaration, esc, NO_PICKS, ROOT, scriptJson, sheetUrl, shownCounts, ZONED_DATE_HELPERS } from "../build.mjs";
-import { isLive } from "../src/worker/offers.js";
-import { addDays, daysBetween } from "../src/worker/zoned-time.js";
+import { esc, ROOT, scriptJson, sheetUrl, shownCounts } from "../build.mjs";
+import { addDays } from "../src/worker/zoned-time.js";
 import { countTable } from "./build-storefront.mjs";
 import { asShown, handoffLink, itemsFromArgs, payloadFromArgs } from "./handoff-link.mjs";
 import { answerKey, answerWords, checkSelection, daysOf, dayToken, legacyKey, LUNCH_DINNER, soldCounts } from "./selection.mjs";
@@ -271,9 +272,6 @@ export async function readPicks(dir, plans, photo = null) {
   return weeks;
 }
 
-/** § 2: the weeks whose window has not ended on `on` (the build's date). A page built early carries next week's. */
-export const openOn = (weeks, on) => weeks.filter((w) => daysBetween(on, windowOf(w.delivery).valid_to) >= 0);
-
 /** SPEC-plan-page-refinement § 8 item 6: the week a delivery Sunday's meals are for, Monday to Sunday after it, as the
  *  heading's {week}: "October 5–11"; across a month "September 28 – October 4" (no year: a week is always this one). */
 export function weekRange(delivery) {
@@ -348,17 +346,13 @@ function cardHtml(template, words, file = "card.html") {
 }
 
 /**
- * The page's slots for the weeks open on `on`, or none (the page as before: CC-4). The script is one function scope, so
- * its copies of the helpers never meet the offer box's (the development page declares the same names at the top level).
+ * The page's three slots (SPEC-week-content § 2.1): always carried, `#picks-data` holding NO week. The script is one
+ * function scope, so its names never meet the development page's top-level ones.
  */
-export async function chefsChoice({ plans, messages, dir, on, zone, photos = null, assetPrefix = "", photoHost = 0 }) {
-  const all = await readPicks(dir, plans, { photos, host: photoHost });
-  const weeks = openOn(all, on);
-  const summary = weeks.map((w) => ({ delivery: w.delivery, ...windowOf(w.delivery), carts: Object.keys(w.carts), snacks: Object.keys(w.snacks) }));
-  if (!weeks.length) return { slots: NO_PICKS, weeks: summary };
+export async function chefsChoice({ plans, messages, zone }) {
+  const weeks = []; // ⛔ SPEC-week-content § 7's ruling: no build embeds a week; the bucket is the only source of one.
   const words = chefsChoiceWords(messages);
   const read = (name) => readFile(join(CHEFS_CHOICE_SRC, name), "utf8");
-  const helpers = ["const FORMATTERS = new Map();", ...[...ZONED_DATE_HELPERS, isLive].map(declaration)].join("\n");
   // SPEC-meal-selection § 9 item 3: the snack block only while Q4 is on the page. SPEC-snacks-in-the-cart § 4.3: while
   // snacks are carted, without the not-carted line (the list keeps its heading).
   const { shown: snacks, carted } = checkSelection(plans).snacks;
@@ -369,9 +363,8 @@ export async function chefsChoice({ plans, messages, dir, on, zone, photos = nul
       PICKS_STYLE: "\n" + (await read("style.css")).trim(),
       PICKS_CARD: "\n" + cardHtml(await read("card.html"), words).trimEnd() + snackBlock,
       PICKS_SCRIPT:
-        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, photos, assetPrefix, snacks, carted }))}</script>` +
-        `\n<script>\n(function () {\n"use strict";\n${helpers}\n${(await read("chefs-choice.js")).trim()}\n})();\n</script>`,
+        `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, snacks, carted }))}</script>` +
+        `\n<script>\n(function () {\n"use strict";\n${(await read("chefs-choice.js")).trim()}\n})();\n</script>`,
     },
-    weeks: summary,
   };
 }

@@ -7,28 +7,28 @@
 // is and-7d); the links and their checks are unchanged.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { ROOT } from "../build.mjs";
 import {
   cartFor,
   expectedFragment,
   FIXTURE,
   mirror,
   mpidsFor,
-  ON,
   builtPage,
   picksData,
   readWithFillB,
   withFixtureInData,
 } from "./cc-harness.mjs";
+import { programBuild } from "./pr-harness.mjs";
 import { assertCheckedOut, LOG_PREFIX, refFnv1a, refUntagged } from "./r2-harness.mjs";
 
 const V2_FRAGMENT = /^#fitaf=2(\.[0-9a-z]{5}(\*([2-9]|1\d|2[01]))?)+$/;
 const ORDER = "https://fitafnutrition.com/order";
 
 test("CC-2a: every link is the size's order page with a v2 fragment of the menu's keys and counts", async () => {
-  const data = picksData((await builtPage({ on: ON })).html);
+  const data = picksData((await builtPage()).html);
   assert.ok(data, "the page carries the week's picks");
   let links = 0;
   for (const [count, menu] of Object.entries(FIXTURE.menus)) {
@@ -44,7 +44,7 @@ test("CC-2a: every link is the size's order page with a v2 fragment of the menu'
 });
 
 test("CC-2b: fill B reads each link: every meal pressed its count, the size's mpid, then the store's CHECKOUT", async () => {
-  const data = picksData((await builtPage({ on: ON })).html);
+  const data = picksData((await builtPage()).html);
   assert.ok(data, "the page carries the week's picks");
   for (const [count, menu] of Object.entries(FIXTURE.menus)) {
     for (const mpid of mpidsFor(count)) {
@@ -78,13 +78,17 @@ async function edit(path, from, to) {
   await writeFile(path, text.replace(from, to));
 }
 
-/** `node build.mjs --on ON` in a mirror holding the fixture in data/picks/: the page it writes. */
+/** The programs in a mirror holding the fixture in data/picks/ (pr-harness programBuild: `node build.mjs`, which embeds
+ *  no week, then `node scripts/week-content.mjs --week S`, its data put in the page's #picks-data, as the Workers put the
+ *  bucket's): the page with the week. */
 async function mirrorPage(change) {
-  const dir = await mirror(change);
+  const dir = await mirror(async (d) => {
+    await copyFile(join(ROOT, "wrangler.jsonc"), join(d, "wrangler.jsonc"));
+    await change?.(d);
+  });
   try {
     await withFixtureInData(dir);
-    execFileSync(process.execPath, [join(dir, "build.mjs"), "--on", ON], { cwd: dir, stdio: "pipe" });
-    return await readFile(join(dir, "dist", "index.html"), "utf8");
+    return (await programBuild(dir, "prod")).html;
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -93,7 +97,7 @@ async function mirrorPage(change) {
 test("CC-2c: built through the one mealKey and the link tool's encoder: a mirror with both changed follows both", async () => {
   const control = picksData(await mirrorPage());
   assert.ok(control, "control: the mirror's own build carries the week (data/picks/ in the package)");
-  const expected = picksData((await builtPage({ on: ON })).html);
+  const expected = picksData((await builtPage()).html);
   assert.deepEqual(control.weeks[0].carts, expected.weeks[0].carts, "control: the unchanged mirror's links are the package's");
 
   const changed = picksData(

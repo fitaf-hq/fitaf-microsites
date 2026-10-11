@@ -17,11 +17,10 @@ import { freshChrome } from "./chrome.mjs";
 import { serveStatic } from "./serve-static.mjs";
 import { isLocal } from "./walk.mjs";
 
-const ON = "2026-09-30";
 const TIMEOUT_MS = 120_000;
 const out = await mkdtemp(join(tmpdir(), "fitaf-storybook-ms-15-"));
 after(() => rm(out, { recursive: true, force: true }));
-await siteBuild({ build: "production", on: ON, out });
+await siteBuild({ build: "production", out });
 
 /** Runs in the page: each goal button's facts, as the browser lays them out. */
 function readFacts() {
@@ -105,7 +104,7 @@ const GOAL_SIZE = /(\.goals \.facts\s*\{[^}]*?)font-size:[^;}]+/g;
 test("MS-15 (mutant): a copy whose lines may break and set larger fails at 390", { timeout: TIMEOUT_MS }, async (t) => {
   const copy = await mkdtemp(join(tmpdir(), "fitaf-storybook-ms-15-mutant-"));
   t.after(() => rm(copy, { recursive: true, force: true }));
-  await siteBuild({ build: "production", on: ON, out: copy });
+  await siteBuild({ build: "production", out: copy });
   const page = join(copy, "index.html");
   const html = await readFile(page, "utf8");
   assert.equal(html.match(LINE_RULE)?.length, 1, "fixture control: one rule for a facts line");

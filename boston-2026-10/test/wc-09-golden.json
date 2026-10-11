@@ -1,0 +1,387 @@
+{
+  "about": "WC-9's before (SPEC-week-content § 5): the production build of recorded_at, built --on `on` from that commit's own tree (test/wc-09-record.mjs, which wrote this file). picks_data is its #picks-data; visible is, per fragment, the SHA-256 of the visible page opened at opened_at, with the week's sheet URL rewritten to /week/<file>. Re-record only by running the recorder; never by hand.",
+  "recorded_at": "409b805",
+  "on": "2026-10-11",
+  "week": "2026-10-18",
+  "opened_at": "2026-10-11T16:00:00.000Z",
+  "page_sha256": "c60bad49de428002e1434f4f47c263dcdccd03c1dab26d628ebd6e062ba300ef",
+  "sheet": {
+    "file": "chefs-choice-2026-10-18.jpg",
+    "sha256": "57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
+  },
+  "visible": {
+    "": "217305befa46a962302e66528594982b38a97d09123e9b5adcf9646075980e31",
+    "#family": "a81c84d29ae383c383db565ae8f3735973cafa12a79da3bd434e3f48571cb592",
+    "#lean-7": "e6ef02eb1d7a62e346a0539102fbad234d5b814686705ae14cd18092999fe1fd",
+    "#signature-14": "db1fadc25706b91297d76cd515c21515ca452fde30a46e1cb766ee53ef739839",
+    "#lean-or-7d": "e6ef02eb1d7a62e346a0539102fbad234d5b814686705ae14cd18092999fe1fd",
+    "#lean-or-7d-s": "4c90f615505ef33671cfeaa918f0e5ae5d2e907c326385d90790bea917500c62",
+    "#lean-or-5d": "3dd4c1047fc5b916d09f2f3abaa1f8cf44e6059e13ae60607a5c12e27fd1e6b2",
+    "#lean-or-5d-s": "080c8eecc75bec22cca0ca3162b8240347556b8cd14932133ae7b8743e45a4fd",
+    "#lean-and-7d": "08af52fa22062fec34d1a916d8811ffb5b52197627bd4c08ded479076c15bfde",
+    "#lean-and-7d-s": "acc67681bfb0eddf594fb112d4b280a96aa7dc04195dc167da107723f7a650bc",
+    "#lean-and-5d": "c78b631bde84a35f5248af170c2380016c1866be47cb49920b3e4ba73f59ee16",
+    "#lean-and-5d-s": "ed2b3024b6e4118a6f058e8777b5d4175d25c181f4eaeb16265c7ceef95c0195",
+    "#lean-or-7d-b": "0186b72510ae3c77c57c679dbe89ffe96d61bb415f4e0f64419c539f1ae1b74f",
+    "#lean-or-7d-b-s": "a91dd46783403dbbfbdd8c3a749d261759baf51e22fce4cf5c53ec7c8a022b52",
+    "#lean-or-5d-b": "975dc47d2ceacd952cbebf94befadd903a94c38e909c48e3d799168051aeb27b",
+    "#lean-or-5d-b-s": "d3f6fe1bd44a12ca1855cba44cb04aac6f89cda594df1dcd0b19094457c9d509",
+    "#lean-and-7d-b": "8fbba87414292536c3a915c29a9df6b8405947d9bb65edd305307094b2a1e4f9",
+    "#lean-and-7d-b-s": "e1f4c184c0b5c065c71398338d6c9187ec9b5cf57482419faa45e8b75b1972a2",
+    "#lean-and-5d-b": "74663163484e2f952758fd4f82666bcd73696ac680a01d881e672e8534998cd5",
+    "#lean-and-5d-b-s": "9a2022b053ac5a7d79f6c25447fcda4c023651da2a8dd5857dcc93165d79543b"
+  },
+  "picks_data": {
+    "zone": "America/New_York",
+    "carted": true,
+    "weeks": [
+      {
+        "delivery": "2026-10-18",
+        "valid_from": "2026-10-09",
+        "valid_to": "2026-10-15",
+        "carts": {
+          "or-5d": {
+            "heading": "Chef's Choice (October 19–25)",
+            "meals": [
+              "Blackened Chicken Caesar Salad",
+              "Steakhouse Mac & Cheese",
+              "BBQ Brisket",
+              "Free-Range Turkey Ragu Over Protein Penne"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 0.3322%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 4.6512%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 8.9701%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 13.289%"
+            ],
+            "links": {
+              "20": "https://fitafnutrition.com/order?mpid=20#fitaf=2.34975.rbca7.2b3u8.h01rb!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,c0,4w,4w!g,hs,4w,4w",
+              "25": "https://fitafnutrition.com/order?mpid=25#fitaf=2.34975.rbca7.2b3u8.h01rb!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,c0,4w,4w!g,hs,4w,4w",
+              "30": "https://fitafnutrition.com/order?mpid=30#fitaf=2.34975.rbca7.2b3u8.h01rb!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,c0,4w,4w!g,hs,4w,4w"
+            },
+            "snack_links": {
+              "20": "https://fitafnutrition.com/order?mpid=20#fitaf=2.34975.rbca7.2b3u8.h01rb._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,c0,4w,4w!g,hs,4w,4w",
+              "25": "https://fitafnutrition.com/order?mpid=25#fitaf=2.34975.rbca7.2b3u8.h01rb._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,c0,4w,4w!g,hs,4w,4w",
+              "30": "https://fitafnutrition.com/order?mpid=30#fitaf=2.34975.rbca7.2b3u8.h01rb._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,c0,4w,4w!g,hs,4w,4w"
+            }
+          },
+          "or-7d": {
+            "heading": "Chef's Choice (October 19–25)",
+            "meals": [
+              "Blackened Chicken Caesar Salad",
+              "Steakhouse Mac & Cheese",
+              "Chipotle Chicken Mac & Cheese",
+              "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "BBQ Brisket",
+              "French Dip Sliders",
+              "Free-Range Turkey Ragu Over Protein Penne"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 0.3322%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 4.6512%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 17.608%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 21.9269%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 8.9701%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 26.2458%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 13.289%"
+            ],
+            "links": {
+              "21": "https://fitafnutrition.com/order?mpid=21#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w",
+              "26": "https://fitafnutrition.com/order?mpid=26#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w",
+              "31": "https://fitafnutrition.com/order?mpid=31#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w"
+            },
+            "snack_links": {
+              "21": "https://fitafnutrition.com/order?mpid=21#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w",
+              "26": "https://fitafnutrition.com/order?mpid=26#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w",
+              "31": "https://fitafnutrition.com/order?mpid=31#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w"
+            }
+          },
+          "and-5d": {
+            "heading": "Chef's Choice (October 19–25)",
+            "meals": [
+              "Blackened Chicken Caesar Salad",
+              "Steakhouse Mac & Cheese",
+              "Chipotle Chicken Mac & Cheese",
+              "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "BBQ Brisket",
+              "French Dip Sliders",
+              "Free-Range Turkey Ragu Over Protein Penne",
+              "Bison Chili",
+              "Southwest Blackened Salmon Bowl",
+              "Shrimp Pad Thai"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 0.3322%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 4.6512%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 17.608%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 21.9269%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 8.9701%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 26.2458%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 13.289%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 30.5648%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 34.8837%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 39.2027%"
+            ],
+            "links": {
+              "22": "https://fitafnutrition.com/order?mpid=22#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w",
+              "27": "https://fitafnutrition.com/order?mpid=27#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w",
+              "32": "https://fitafnutrition.com/order?mpid=32#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w"
+            },
+            "snack_links": {
+              "22": "https://fitafnutrition.com/order?mpid=22#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w",
+              "27": "https://fitafnutrition.com/order?mpid=27#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w",
+              "32": "https://fitafnutrition.com/order?mpid=32#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w"
+            }
+          },
+          "and-7d": {
+            "heading": "Chef's Choice (October 19–25)",
+            "meals": [
+              "Blackened Chicken Caesar Salad",
+              "Steakhouse Mac & Cheese",
+              "Chipotle Chicken Mac & Cheese",
+              "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "BBQ Brisket",
+              "French Dip Sliders",
+              "Sesame Grilled Chicken with Glass Noodle Stir Fry",
+              "Chipotle Chicken Carnitas Bowl",
+              "Free-Range Turkey Ragu Over Protein Penne",
+              "Bison Chili",
+              "Hot Honey Grass-fed Beef Bowl",
+              "Southwest Blackened Salmon Bowl",
+              "Shrimp Pad Thai",
+              "Low Carb BBQ Brisket"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 0.3322%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 4.6512%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 17.608%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 21.9269%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 8.9701%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 26.2458%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 43.5216%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 47.8405%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 13.289%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 30.5648%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 52.1595%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 34.8837%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 39.2027%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 56.4784%"
+            ],
+            "links": {
+              "23": "https://fitafnutrition.com/order?mpid=23#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w",
+              "29": "https://fitafnutrition.com/order?mpid=29#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w",
+              "33": "https://fitafnutrition.com/order?mpid=33#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w"
+            },
+            "snack_links": {
+              "23": "https://fitafnutrition.com/order?mpid=23#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w",
+              "29": "https://fitafnutrition.com/order?mpid=29#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w",
+              "33": "https://fitafnutrition.com/order?mpid=33#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w"
+            }
+          },
+          "or-5d-b": {
+            "heading": "Chef's Choice (October 19–25)",
+            "meals": [
+              "Blackened Chicken Caesar Salad",
+              "Steakhouse Mac & Cheese",
+              "Chipotle Chicken Mac & Cheese",
+              "BBQ Brisket",
+              "Free-Range Turkey Ragu Over Protein Penne",
+              "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla × 2",
+              "Maple Turkey & Organic Egg Scramble × 2",
+              "Buttermilk Protein Waffles with Scrambled Eggs"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 0.3322%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 4.6512%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 17.608%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 8.9701%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 13.289%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 60.7973%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 65.1163%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 69.4352%"
+            ],
+            "links": {
+              "22": "https://fitafnutrition.com/order?mpid=22#fitaf=2.34975.rbca7.tyv72.2b3u8.h01rb.hwab1*2.57skt*2.uhuni!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,c0,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "27": "https://fitafnutrition.com/order?mpid=27#fitaf=2.34975.rbca7.tyv72.2b3u8.h01rb.hwab1*2.57skt*2.uhuni!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,c0,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "32": "https://fitafnutrition.com/order?mpid=32#fitaf=2.34975.rbca7.tyv72.2b3u8.h01rb.hwab1*2.57skt*2.uhuni!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,c0,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w"
+            },
+            "snack_links": {
+              "22": "https://fitafnutrition.com/order?mpid=22#fitaf=2.34975.rbca7.tyv72.2b3u8.h01rb.hwab1*2.57skt*2.uhuni._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,c0,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "27": "https://fitafnutrition.com/order?mpid=27#fitaf=2.34975.rbca7.tyv72.2b3u8.h01rb.hwab1*2.57skt*2.uhuni._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,c0,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "32": "https://fitafnutrition.com/order?mpid=32#fitaf=2.34975.rbca7.tyv72.2b3u8.h01rb.hwab1*2.57skt*2.uhuni._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,c0,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w"
+            }
+          },
+          "or-7d-b": {
+            "heading": "Chef's Choice (October 19–25)",
+            "meals": [
+              "Blackened Chicken Caesar Salad",
+              "Steakhouse Mac & Cheese",
+              "Chipotle Chicken Mac & Cheese",
+              "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "BBQ Brisket",
+              "French Dip Sliders",
+              "Free-Range Turkey Ragu Over Protein Penne",
+              "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla × 3",
+              "Maple Turkey & Organic Egg Scramble × 2",
+              "Buttermilk Protein Waffles with Scrambled Eggs × 2"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 0.3322%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 4.6512%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 17.608%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 21.9269%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 8.9701%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 26.2458%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 13.289%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 60.7973%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 65.1163%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 69.4352%"
+            ],
+            "links": {
+              "23": "https://fitafnutrition.com/order?mpid=23#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.hwab1*3.57skt*2.uhuni*2!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "29": "https://fitafnutrition.com/order?mpid=29#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.hwab1*3.57skt*2.uhuni*2!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "33": "https://fitafnutrition.com/order?mpid=33#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.hwab1*3.57skt*2.uhuni*2!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w"
+            },
+            "snack_links": {
+              "23": "https://fitafnutrition.com/order?mpid=23#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.hwab1*3.57skt*2.uhuni*2._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "29": "https://fitafnutrition.com/order?mpid=29#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.hwab1*3.57skt*2.uhuni*2._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "33": "https://fitafnutrition.com/order?mpid=33#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.hwab1*3.57skt*2.uhuni*2._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w"
+            }
+          },
+          "and-5d-b": {
+            "heading": "Chef's Choice (October 19–25)",
+            "meals": [
+              "Blackened Chicken Caesar Salad",
+              "Steakhouse Mac & Cheese",
+              "Chipotle Chicken Mac & Cheese",
+              "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "BBQ Brisket",
+              "French Dip Sliders",
+              "Free-Range Turkey Ragu Over Protein Penne",
+              "Bison Chili",
+              "Southwest Blackened Salmon Bowl",
+              "Shrimp Pad Thai",
+              "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla × 2",
+              "Maple Turkey & Organic Egg Scramble",
+              "Buttermilk Protein Waffles with Scrambled Eggs"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 0.3322%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 4.6512%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 17.608%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 21.9269%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 8.9701%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 26.2458%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 13.289%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 30.5648%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 34.8837%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 39.2027%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 60.7973%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 65.1163%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 69.4352%"
+            ],
+            "links": {
+              "23": "https://fitafnutrition.com/order?mpid=23#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn.hwab1*2.57skt.uhuni!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "29": "https://fitafnutrition.com/order?mpid=29#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn.hwab1*2.57skt.uhuni!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "33": "https://fitafnutrition.com/order?mpid=33#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn.hwab1*2.57skt.uhuni!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w"
+            },
+            "snack_links": {
+              "23": "https://fitafnutrition.com/order?mpid=23#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn.hwab1*2.57skt.uhuni._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "29": "https://fitafnutrition.com/order?mpid=29#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn.hwab1*2.57skt.uhuni._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "33": "https://fitafnutrition.com/order?mpid=33#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.h01rb.m1oct.puf72.d1ejn.hwab1*2.57skt.uhuni._1pupx._ckqkl._oeo2k._bswfc._a8tpy!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w"
+            }
+          },
+          "and-7d-b": {
+            "heading": "Chef's Choice (October 19–25)",
+            "meals": [
+              "Blackened Chicken Caesar Salad",
+              "Steakhouse Mac & Cheese",
+              "Chipotle Chicken Mac & Cheese",
+              "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "BBQ Brisket",
+              "French Dip Sliders",
+              "Sesame Grilled Chicken with Glass Noodle Stir Fry",
+              "Chipotle Chicken Carnitas Bowl",
+              "Free-Range Turkey Ragu Over Protein Penne",
+              "Bison Chili",
+              "Hot Honey Grass-fed Beef Bowl",
+              "Southwest Blackened Salmon Bowl",
+              "Shrimp Pad Thai",
+              "Low Carb BBQ Brisket",
+              "Bacon Cheddar Breakfast Taquito on Low Carb Tortilla × 3",
+              "Maple Turkey & Organic Egg Scramble × 2",
+              "Buttermilk Protein Waffles with Scrambled Eggs × 2"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 0.3322%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 4.6512%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 17.608%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 21.9269%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 8.9701%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 26.2458%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 43.5216%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 47.8405%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 13.289%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 30.5648%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 52.1595%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 34.8837%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 39.2027%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 56.4784%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 60.7973%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 65.1163%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 69.4352%"
+            ],
+            "links": {
+              "24": "https://fitafnutrition.com/order?mpid=24#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0.hwab1*3.57skt*2.uhuni*2!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "28": "https://fitafnutrition.com/order?mpid=28#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0.hwab1*3.57skt*2.uhuni*2!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "34": "https://fitafnutrition.com/order?mpid=34#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0.hwab1*3.57skt*2.uhuni*2!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w"
+            },
+            "snack_links": {
+              "24": "https://fitafnutrition.com/order?mpid=24#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0.hwab1*3.57skt*2.uhuni*2._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "28": "https://fitafnutrition.com/order?mpid=28#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0.hwab1*3.57skt*2.uhuni*2._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w",
+              "34": "https://fitafnutrition.com/order?mpid=34#fitaf=2.34975.rbca7.tyv72.hm6nh.2b3u8.ubtve.13y7p.s3ga7.h01rb.m1oct.s2p01.puf72.d1ejn.nmib0.hwab1*3.57skt*2.uhuni*2._1pupx._ckqkl._oeo2k._bswfc._a8tpy._e2te4._ysfvr!0!/assets/photo-sheets/chefs-choice-2026-10-18.jpg!5s!g,g,4w,4w!g,68,4w,4w!g,nk,4w,4w!g,tc,4w,4w!g,c0,4w,4w!g,z4,4w,4w!g,1m8,4w,4w!g,1s0,4w,4w!g,hs,4w,4w!g,14w,4w,4w!g,1xs,4w,4w!g,1ao,4w,4w!g,1gg,4w,4w!g,23k,4w,4w!g,29c,4w,4w!g,2f4,4w,4w!g,2kw,4w,4w"
+            }
+          }
+        },
+        "snacks": {
+          "5d": {
+            "meals": [
+              "Caramel Apple ProNuts",
+              "Cheesecake Brownie Bites",
+              "Cookies & Cream Protein Dirt",
+              "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+              "De-Stress Superfood Bites: Triple Chocolate & Ashwagandha"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 73.7542%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 78.0731%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 82.392%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 86.711%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 91.0299%"
+            ]
+          },
+          "7d": {
+            "meals": [
+              "Caramel Apple ProNuts",
+              "Cheesecake Brownie Bites",
+              "Cookies & Cream Protein Dirt",
+              "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+              "De-Stress Superfood Bites: Triple Chocolate & Ashwagandha",
+              "Golden Oreo Protein Sand",
+              "Performance Superfood Bites: Orange Creamsicle & Cordyceps"
+            ],
+            "thumbs": [
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 73.7542%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 78.0731%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 82.392%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 86.711%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 91.0299%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 95.3488%",
+              "background-image:url(\"assets/photo-sheets/chefs-choice-2026-10-18.jpg\");background-size:118.1818% 2836.3636%;background-position:50% 99.6678%"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
