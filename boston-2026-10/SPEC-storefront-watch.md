@@ -368,3 +368,70 @@ after the third read, and the counts of all three are printed; CT-3 A, B, C unti
 CT-4 each refusal of item 4, nothing written; CT-5 the backend's host requested by the page and never by the command's
 code (W26's control); CT-6 an `--out` inside the repository refused. **Mutants**: the settle rule that writes the first
 read (CT-2 red); the `sk_` check that always passes (CT-4 red); a `visit.json` that keeps the query string (CT-1 red).
+
+## 13.1 Built — found at the build, not ruled (2026-10-11)
+
+Red first at `585fe06` (18 cases, each failing because the command did not exist; the other 192 green), built at
+`66c87e5`. § 13 above is unchanged; these are the build's choices and what it found.
+
+- **What was built**: `bin/catalog.mjs`, the process around `lib/catalog-command.mjs` (the command, as `accept`'s is
+  `lib/accept-command.mjs`), wired as the package's `catalog` script. The visit is F6's `ordinaryVisit`, which gains
+  `capture: true`: each catalog response as received (its arrival, its status, its content type, the body's bytes as
+  Chrome hands them over, decoded as the page reads them), the time `goto`'s `load` resolved, and `browser.userAgent()`.
+  Of the request it keeps only `catalogRequest`'s `{ at, params }`: the URL is never handed over, so the command never
+  holds a parameter value. The counts are the response reader's (`catalogProducts`, `namesIn` for `all-meals` and
+  `snacks`). Nothing of the visit or the reader is copied. `lib/config.mjs` gains `REPO_DIR`.
+- **`visit.json`**: `page` (the URL asked for, not the page's final URL), `loadedAt`, `receivedAt`, `status`,
+  `contentType`, `bytes`, `sha256`, `request: { at, params }` (F6's own record: `at` is the host and path joined, as the
+  report shows them), `userAgent`, and `reads`, one per read: `{ loadedAt, allMeals, snacks }` or `{ loadedAt, refused }`.
+  The times and the agent are the written read's. The counts are of named products in each category.
+- **Choices item 2 left open**: reads are due at 0, M, 2M … minutes from the first, while no later than `--max`
+  (`--every 10 --max 60`: at most 7 reads); a read that runs past the next due time is followed at once. **`--max`
+  defaults to 120** (the 2026-10-09 switch ran about an hour). `--max` without `--every`, or below it, `--every` below 2
+  or not a number, `--mpid` not a whole number above 0 (not checked against `data/plans.json`), an unknown option or an
+  extra argument: a usage error, before any visit.
+- **Choices item 4 left open**: under `--every`, **a read refused by item 4 agrees with nothing and the reads go on**
+  (the Advisor's downtime *"on the order of minutes"*), printed with its reason and kept in `reads`; without `--every` it
+  refuses. **A body holding the key stops the command at once in either mode.** The key check reads the body's text and,
+  once parsed, its re-serialised text, so a JSON-escaped key (`sk_…`) is refused too; it runs before the status
+  check, so a non-200 body holding a key also stops. **Two catalog responses in one visit are refused**: one file holds
+  one response, and a paged catalog saved in part would read as the whole week (the live page made one on 2026-10-08
+  and on 2026-10-09). "Within the visit's deadline" is F6's: up to 30 s for the cards, 3 s, then up to 10 s for a first
+  response and 10 s for its body.
+- **Exit codes**: 0 written; 1 nothing written because of what the store served (item 4, two responses, or no two reads
+  agreeing by `--max`, each read's counts then printed); 2 a usage error or an `--out` refused, both before any visit, or
+  the visit itself failing (no Chrome, a navigation error). `--out` is checked before any visit and again just before
+  writing, and both files are written with `wx`, so neither can replace a file.
+- **Item 5**: "inside this repository" is this checkout's root (`REPO_DIR`), compared by real path, so a symlink into
+  it is refused too. A relative `--out` is from where the command was typed (`INIT_CWD`, as `probe-snacks`).
+- ⚠ **What § 13 left loose, built as written**:
+  - **Item 4's key rule has no word boundary**, so `task_1` or `Whisk_a` in any product's text refuses the capture.
+    The 2026-10-09 body holds no `sk_` at all.
+  - **Two empty reads agree**: as sets, two reads with no `all-meals` and no `snacks` product carry "the same names", so
+    a store that showed an empty menu at two consecutive reads would be written. The printed counts show it.
+  - **Another checkout of this repository is not "inside" it**: a sibling worktree, or the main checkout seen from a
+    worktree, is another directory, and the refusal does not ask git.
+- **Cases** (`test/ct-catalog.test.mjs`, 18): CT-1 to CT-5 in headless Chrome against the synthetic store, the
+  command's clock scaled (`minuteMs` 5: `--every 2` is 10 ms, so the reads run back to back). CT-1's body is written so a
+  JSON round trip would change its bytes (its spacing, `12.50`, `\/`, an `ñ`), and is compared with the bytes the
+  backend sent; CT-2's third body is the second's names in another order with other bytes; CT-3's last reply repeats,
+  so a fourth read would agree and be written (this pins `--max`'s bound); CT-4 each refusal and the rule's edge
+  (`sk_ -` is written), and under `--every` the reads going on past a 503 and stopping at a key; CT-5 no `fetch` of the
+  command's own, and the backend's log (one GET, Chrome's agent, the store page's Origin); CT-6 absolute, relative,
+  through a symlink, and through `bin/catalog.mjs` itself, run with `CHROME_PATH` naming nothing so that a broken refusal
+  could reach no store. The cases decided before any visit run on recorded visits. The synthetic backend gains
+  `replies` (the page's requests answered in turn, the last repeated) and `served` (the bytes sent).
+- **Mutants**, each in a mirror (a temporary directory laid out as the repository: `lib/` copied, the site's
+  `src/storefront/meal-key.js` and `package.json` copied, `node_modules` linked), each caught only by the assertion
+  naming its fault: the settle rule writing **the run's first read** and **the first of the agreeing pair** (two
+  mutants for § 13's one; CT-2, *"the LAST read is written"*); `holdsKey` always false (CT-4, *"refused (/sk_/)"*);
+  `catalogRequest` keeping `u.search` (CT-1, *"visit.json carries paginate's value"*); and the unmutated mirror passing
+  CT-1, CT-2 and CT-4's key case. A copy of `lib/` alone, as W3's, W7f's and F6's mutants are, cannot load
+  `lib/visit.mjs` (it imports the site's key function and puppeteer-core), hence the layout. `lib/`'s hash did not move
+  across the full suite (37 samples) and the checkout stayed clean.
+- **Counts**: the watch's suite 192 → 210, all passing; the site's 654 → 654, all passing.
+- **A real input**: the 2026-10-09 capture's body (Fit AF's `responses/2026-10-09-live-catalog-products/products.json`,
+  read, never written) through the command on a recorded visit: written byte-identical (318,359 bytes), 24 `all-meals`
+  and 15 `snacks`, no key refusal.
+- ⬜ **Not run against the live store**: no request to it was made at this build. The first run on the live store is
+  the orchestrator's, at the switch.
