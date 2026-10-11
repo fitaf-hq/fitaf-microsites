@@ -18,7 +18,10 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
 /** index.html of the production build with no week, at 45549a9 (test/s20-production-golden.json there). */
 const TODAY_NO_PICKS_SHA256 = "03fcc0c145b4e4bc310c23f5d721241e5a461bb9b08a7a451fbd2b40e7b757c6";
 
-/** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none. */
+/** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
+ *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
+ *  size alone; the card's page carries Q4 (hidden by its script) and takes `-s` as its answer set without snacks, as
+ *  a page whose week was not live always did. MS-7's no-week case states that difference; SPEC-week-content § 7. */
 const HASHES = ["", "#family", "#individual", "#lean", "#lean-7", "#signature-14", "#meals-14", ...TABLE.map((r) => `#performance-${r.key}`)];
 const NOW = Date.parse("2026-10-11T16:00:00Z");
 

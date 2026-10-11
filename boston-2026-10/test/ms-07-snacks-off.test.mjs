@@ -12,7 +12,7 @@
 //   answers' link when not carted.
 // - Carted, a week with no list for 5 days (the committed fixture): Q4 hidden for the weekday answer sets (the page never
 //   offers what the cart cannot hold) and a `-s` fragment there gives the link without snacks; shown for every day.
-// - Carted, no week: Q4 is not on the page.
+// - Carted, no week: Q4 is never shown (since SPEC-week-content § 2.1 it is in the markup, hidden by the card's script).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { picksData } from "./cc-harness.mjs";
@@ -119,9 +119,19 @@ test("MS-7 (carted): a week with no list for 5 days — Q4 hidden on weekdays, a
   }
 });
 
-test("MS-7 (carted): no week — Q4 is not on the page, and a -s fragment is the size alone", async () => {
+// SPEC-week-content § 2.1 (2026-10-11): the build always carries the card, and so Q4 with it, because a week can reach
+// #picks-data at run time (the Worker puts the bucket's week in); with no week the card's script hides Q4, as it already
+// did on a page whose week was not live. So Q4 is never OFFERED with no week (SPEC-snacks-in-the-cart § 4.5 kept, by
+// the script), but it is in the markup, and a -s fragment is now taken as its answer set without snacks (Choose your
+// meals, the rung 1 link) where it was the size alone. Was: "Q4 is not on the page, and a -s fragment is the size alone".
+test("MS-7 (carted): no week — Q4 never shown, and a -s fragment is its answer set without snacks (SPEC-week-content § 2.1)", async () => {
   const html = await pageOf({ snacks: SNACKS_CARTED });
-  assert.doesNotMatch(html, /data-q="snacks"|id="q-snacks"/, "no Q4");
+  assert.deepEqual(picksData(html).weeks, [], "control: the card is carried, holding no week");
+  for (const hash of ["", "#lean", "#lean-and-7d", "#lean-and-7d-s", "#lean-or-5d-s"]) {
+    assert.equal(questionsOf(open(html, hash)).snacks.shown, false, `${hash || "(none)"}: Q4 not shown`);
+  }
   const page = open(html, "#lean-and-7d-s");
-  assert.deepEqual([questionsOf(page).lunch_dinner.pressed, cardOf(page).result], [null, false], "#lean-and-7d-s: the size alone");
+  const s = cardOf(page);
+  assert.deepEqual([questionsOf(page).lunch_dinner.pressed, s.result, s.choose, s.list, s.snacks], ["and", true, true, false, false], "#lean-and-7d-s: its answer set, Choose your meals alone, no snack box");
+  assert.equal(s.chooseHref, cardOf(open(html, "#lean-and-7d")).chooseHref, "the same link as without snacks");
 });

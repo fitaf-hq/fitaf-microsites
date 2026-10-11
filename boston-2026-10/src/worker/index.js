@@ -1,6 +1,9 @@
 // The rung-4 Worker (SPEC-rung4-save-offer.md §§ 3, 5, 6; its sender, SPEC-rung5-sending.md). Static
 // assets are served first; only a request no asset matches reaches this script: POST /api/save,
 // /confirm/<token>, /o/<code>. And one scheduled handler (the cron): send what is due, the lapse, the purge.
+// SPEC-week-content § 4: the same two behaviours as production's Worker, imported from site.js (never copied): the
+// week from the WEEK bucket put into the page's #picks-data (the page's routes reach this script first, by
+// wrangler.jsonc's assets.run_worker_first), and the photo sheets at /week/<file>.jpg. Its own routes come first.
 //
 // ⛔ /api/save returns { ok: true } only — never a code, a stored value or an id, new save or repeat.
 // ⛔ The IP (CF-Connecting-IP) is used as the rate-limit key and nothing else: not stored, not logged,
@@ -16,6 +19,7 @@ import { runSchedule } from "./scheduled.js";
 import { NullRedemptions } from "./senders.js";
 import { turnstilePasses } from "./turnstile.js";
 import { SaveError, validateSave } from "./validate-save.js";
+import { serveSite } from "./site.js";
 import { nextDayAt, zonedDate } from "./zoned-time.js";
 
 const MAX_BODY_BYTES = 8 * 1024;
@@ -82,7 +86,7 @@ export default {
     if (confirm) return lookup(request, env, (t) => handleConfirm(request, env, confirm[1], t));
     const offer = /^\/o\/([^/]*)$/.exec(pathname);
     if (offer) return lookup(request, env, (t) => handleOffer(env, offer[1], t));
-    return env.ASSETS.fetch(request);
+    return serveSite(request, env);
   },
 
   async scheduled(controller, env, ctx) {

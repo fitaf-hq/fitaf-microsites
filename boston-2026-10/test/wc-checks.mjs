@@ -94,7 +94,9 @@ export function badObjects(valid) {
     "not JSON": '{"weeks": [',
     "JSON null": "null",
     "a JSON array": JSON.stringify([valid]),
-    "weeks: []": JSON.stringify({ ...valid, weeks: [] }),
+    // Not `{ ...valid, weeks: [] }`: that is byte for byte the no-week build's own #picks-data, so a page that took it
+    // would still be the asset, and the case could not see it taken.
+    "weeks: []": JSON.stringify({ weeks: [] }),
     "two weeks": JSON.stringify({ ...valid, weeks: [week, week] }),
     "weeks not a list": JSON.stringify({ ...valid, weeks: week }),
     "no weeks": set((c) => delete c.weeks),

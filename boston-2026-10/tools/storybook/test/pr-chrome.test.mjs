@@ -7,14 +7,18 @@
 //   § 8: PR-13, the carousel full bleed (its box the viewport's width, at 390 and 1280) with the logo inside it;
 //   PR-14, the two question headings centred; PR-16, the price one untinted block, the weekly total first and larger.
 // The page is the site's own production build (`node build.mjs --on --out`, as the stories' pages are built), served on
-// 127.0.0.1; nothing else is requested.
+// 127.0.0.1; nothing else is requested. It carries ONE week, the site's fixture week (`--picks`, as the Date control's
+// fixture date builds it: a snack list for 7 days, so Q4 is shown at #lean-7). Since SPEC-week-content § 2.2 the page
+// shows the one week its data holds, no date deciding it, and none if it holds two; built --on 2026-09-30 from
+// data/picks/ it held two (10-11's and 10-18's), and before that contract the browser chose one by the real clock, so
+// what these cases read moved with the day they ran.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { siteBuild } from "../microsite/pages.mjs";
-import { VIEWPORTS } from "../microsite/layout.js";
+import { FIXTURE_PICKS, VIEWPORTS } from "../microsite/layout.js";
 import { freshChrome } from "./chrome.mjs";
 import { serveStatic } from "./serve-static.mjs";
 import { isLocal } from "./walk.mjs";
@@ -26,7 +30,7 @@ after(() => rm(out, { recursive: true, force: true }));
 
 /** The production page at `hash`, `width` wide, in a fresh Chrome; `fn(page)` reads it. Refuses any request off 127.0.0.1. */
 async function withPage({ width, hash }, fn) {
-  await siteBuild({ build: "production", on: ON, out });
+  await siteBuild({ build: "production", on: ON, out, picks: FIXTURE_PICKS });
   const server = await serveStatic(out);
   const chrome = await freshChrome();
   try {

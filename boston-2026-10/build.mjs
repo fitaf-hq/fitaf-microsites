@@ -4,8 +4,11 @@
 //   node build.mjs [--env dev] [--on YYYY-MM-DD] [--out DIR] [--picks DIR]
 //
 // --on is the build's date for this week's Chef's Choice, SPEC-chefs-choice § 2: every data/picks/<sunday>.json whose
-// window has not ended on it is embedded, and the page chooses among them in the browser. Default: today in the send
-// time zone (data/save.json). Without data/picks/, or with no week open on --on, the page is exactly as before.
+// window has not ended on it is embedded. Default: today in the send time zone (data/save.json). Since SPEC-week-content
+// § 2 the page shows the week its #picks-data holds (one; none if two), no date deciding it, and the deployed Workers
+// replace that element with the bucket's week; so the window decides only what a build without a bucket shows. Without
+// data/picks/, or with no week open on --on, the page carries the Chef's Choice card holding no week, hidden: the visible
+// page is the one before (WC-8).
 // --out is the directory written instead of dist/ (or dist-dev/): Storybook's pages (tools/storybook), never a deploy.
 // --picks is the picks directory read instead of data/picks/: Storybook's fixture week (SPEC-meal-selection § 9, a week of
 // invented names in version 2, test/fixtures/picks-v2/), never a deploy.
@@ -18,6 +21,7 @@ import { mealsADayOf, parseTarget, shareLines } from "./src/save/calculator.js";
 import { currentGeneral, isLive, offerForSave } from "./src/worker/offers.js";
 import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
+import { scriptJson } from "./src/worker/script-json.js";
 import { checkSelection, legacyKey } from "./scripts/selection.mjs";
 import { addDays, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 
@@ -305,8 +309,9 @@ function clientData(plans, words, offer = plans.snacks.shown) {
   };
 }
 
-// JSON inside <script>: neutralise "<" so no "</script>" can close the element.
-export const scriptJson = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
+// JSON inside <script>: neutralise "<" so no "</script>" can close the element. One function, in src/worker/ since
+// SPEC-week-content § 4.2: the Worker writes the bucket's week into #picks-data with it, as the build embeds one.
+export { scriptJson };
 
 /**
  * The production slot values. Each is either "" (a development-only section) or the exact text the page
@@ -322,8 +327,9 @@ export const PROD_SLOTS = {
   DEV_SCRIPT: "",
 };
 
-/** The page without this week's Chef's Choice, SPEC-chefs-choice § 3 (no picks for the week, or no file): every slot
- *  empty, so the page is byte-identical to the one before the slots existed (CC-4, S20). */
+/** The page without the Chef's Choice card at all: every slot empty, the page before the slots existed. Since
+ *  SPEC-week-content § 2.1 the build never writes it (with no week it carries the card holding none); renderPage's
+ *  default, the page the page cases read, whose visible page the build's equals (WC-8). */
 export const NO_PICKS = { PICKS_STYLE: "", PICKS_CARD: "", PICKS_SCRIPT: "" };
 
 /** Question 1 as a meal size (flows/02 § 2): what each size provides per meal, and no goal language. */
@@ -534,17 +540,17 @@ async function writeDevPages(plans, events, outDir, offersPath, messages, picks,
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * This week's Chef's Choice for the page (SPEC-chefs-choice): none without a picks directory; otherwise every file in it
- * checked (a file breaking a rule throws, naming it) and the weeks still open on `on` made into the page's slots.
- * Loaded only when the directory exists, so a build without it reads nothing more.
+ * This week's Chef's Choice for the page (SPEC-chefs-choice): every file in the picks directory checked (a file breaking
+ * a rule throws, naming it) and the weeks still open on `on` made into the page's slots. SPEC-week-content § 2.1: the
+ * card is always carried; without a picks directory, or with no week open, it holds no week (and nothing more is read).
  */
 async function picksFor({ plans, messages, picksDir, on, photos, assetPrefix, photoHost }) {
   if (on !== undefined && !(YMD.test(on) && addDays(on, 0) === on)) throw new Error(`--on must be a date, YYYY-MM-DD; got ${on}`);
-  if (!existsSync(picksDir)) return { slots: NO_PICKS, weeks: [], on };
   const zone = (await loadJson(SAVE_PATH)).send_time_zone;
-  on ??= zonedDate(Date.now(), zone);
+  const dir = existsSync(picksDir) ? picksDir : null;
+  if (dir) on ??= zonedDate(Date.now(), zone);
   const { chefsChoice } = await import("./scripts/chefs-choice.mjs");
-  return { ...(await chefsChoice({ plans, messages, dir: picksDir, on, zone, photos, assetPrefix, photoHost })), on };
+  return { ...(await chefsChoice({ plans, messages, dir, on, zone, photos, assetPrefix, photoHost })), on };
 }
 
 export async function build({

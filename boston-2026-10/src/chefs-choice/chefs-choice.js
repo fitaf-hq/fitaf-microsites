@@ -1,6 +1,7 @@
-// This week's Chef's Choice on the result card (SPEC-chefs-choice § 2, § 3). The build runs this text inside one
-// function, after the offer's own zoned-date helpers (zonedDate, isLive). The week is the one whose window holds
-// today's date in the enterprise's zone; with none, or none for the chosen answers, the card stays as rung 1 left it.
+// This week's Chef's Choice on the result card (SPEC-chefs-choice § 3). The build runs this text inside one function.
+// SPEC-week-content § 2.2: the week is the one #picks-data holds (the build's, or the bucket's, which the Worker puts in
+// that element); NO DATE DECIDES IT (no clock, no window: valid_from and valid_to may be in the data and are not read).
+// More than one week, or none, or none for the chosen answers: the card stays as rung 1 left it.
 // Every word shown is data: the card's markup, and #picks-data's heading and lists. This reads what app.js rendered and
 // follows its hashchange: whether the card is shown, the ANSWER SET it carries (#result's data-selection: SPEC-meal-
 // selection § 8 item 2, "or-5d-b-s"), which names the cart, and the mpid of Choose your meals, which names the size's
@@ -9,11 +10,9 @@
 // snack link (its cart's meals, then the week's snack list for its days), and Q4 is shown only where the week has a
 // snack list for the chosen days: never an answer the cart cannot hold. With no week live, Q4 is hidden.
 var picks = JSON.parse(document.getElementById("picks-data").textContent);
-var today = zonedDate(Date.now(), picks.zone);
-var week = null;
+var week = picks.weeks.length === 1 ? picks.weeks[0] : null;
 var snackQuestion = document.getElementById("q-snacks");
 snackQuestion = snackQuestion && snackQuestion.parentNode;
-for (var i = 0; !week && picks.weeks.length > i; i++) if (isLive(picks.weeks[i], today)) week = picks.weeks[i];
 if (week) start(week);
 else if (picks.carted && snackQuestion) snackQuestion.hidden = true;
 
