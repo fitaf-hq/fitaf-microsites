@@ -16,6 +16,8 @@ export const VERSION_PREFIX = "/* fitaf-handoff ";
 export const TOOL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 /** boston-2026-10/, the site package this tool sits inside but is not part of. */
 export const SITE_DIR = join(TOOL_DIR, "..", "..");
+/** The checkout this tool is in (the repository's root, public): `catalog` refuses to write inside it (SPEC § 13 item 5). */
+export const REPO_DIR = join(SITE_DIR, "..");
 export const BASELINE_PATH = join(SITE_DIR, "storefront", "watch-baseline.json");
 export const DEPENDENCIES_PATH = join(SITE_DIR, "storefront", "dependencies.json");
 /** The site's save settings: its `send_time_zone` is the time zone F6's Friday is read in (SPEC § 12 item 2). */

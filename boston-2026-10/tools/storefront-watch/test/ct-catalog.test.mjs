@@ -492,8 +492,10 @@ async function mirror(file, check, replacement, fn) {
   }
 }
 
-const caught = (err) => {
+/** A mutant is caught by the assertion that names its fault, not by any failure (a crash is not a catch). */
+const caughtBy = (fault) => (err) => {
   assert.ok(err instanceof assert.AssertionError, String(err?.stack ?? err));
+  assert.match(err.message, fault);
   return true;
 };
 
@@ -501,20 +503,20 @@ const caught = (err) => {
 const WRITES_LAST = "const written = reads.at(-1);";
 
 test("mutant: the settle rule writing the run's first read fails CT-2", { skip }, async () => {
-  await mirror("catalog-command.mjs", WRITES_LAST, "const written = reads[0];", (lib) => assert.rejects(ct2(lib), caught));
+  await mirror("catalog-command.mjs", WRITES_LAST, "const written = reads[0];", (lib) => assert.rejects(ct2(lib), caughtBy(/the LAST read is written/)));
 });
 
 test("mutant: the settle rule writing the first of the two agreeing reads fails CT-2", { skip }, async () => {
-  await mirror("catalog-command.mjs", WRITES_LAST, "const written = reads.at(-2);", (lib) => assert.rejects(ct2(lib), caught));
+  await mirror("catalog-command.mjs", WRITES_LAST, "const written = reads.at(-2);", (lib) => assert.rejects(ct2(lib), caughtBy(/the LAST read is written/)));
 });
 
 test("mutant: the sk_ check that always passes fails CT-4", { skip }, async () => {
-  await mirror("catalog-command.mjs", "const holdsKey = (text) => KEY.test(text);", "const holdsKey = (text) => false;", (lib) => assert.rejects(ct4Key(lib), caught));
+  await mirror("catalog-command.mjs", "const holdsKey = (text) => KEY.test(text);", "const holdsKey = (text) => false;", (lib) => assert.rejects(ct4Key(lib), caughtBy(/^refused \(\/sk_\/\)/)));
 });
 
 test("mutant: a visit.json that keeps the query string fails CT-1", { skip }, async () => {
   await mirror("catalog-response.mjs", "params: [...u.searchParams.keys()] }", "params: [...u.searchParams.keys()], query: u.search }", (lib) =>
-    assert.rejects(ct1(lib), caught),
+    assert.rejects(ct1(lib), caughtBy(/visit\.json carries \w+.s value/)),
   );
 });
 

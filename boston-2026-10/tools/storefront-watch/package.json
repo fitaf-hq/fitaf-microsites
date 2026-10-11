@@ -13,6 +13,7 @@
     "accept": "node bin/accept.mjs",
     "probe-counts": "node bin/probe-counts.mjs",
     "probe-snacks": "node bin/probe-snacks.mjs",
+    "catalog": "node bin/catalog.mjs",
     "test": "node --test \"test/*.test.mjs\""
   },
   "dependencies": {

@@ -8,6 +8,10 @@
 // (never a value: the storefront's key is one), and the `all-meals` products' names, in the response's order, each
 // with its key (src/storefront/meal-key.js, the hand-off's own function, imported here so that lib/watch.mjs and
 // lib/baseline.mjs stay free of the site's code). Nothing else of the response is kept: no price, no picture.
+// § 13, `npm run catalog` (`capture: true`): the same visit keeps each catalog response AS RECEIVED, for the command to
+// save: when it arrived, its status, its content type and its body's bytes, untouched; with the time the page loaded and
+// the browser's agent. Of the request, again only catalogRequest's host, path and parameter names: the URL itself is
+// never handed over. lib/catalog-command.mjs judges and writes it.
 import { mealKey } from "../../../src/storefront/meal-key.js";
 import { catalogProducts, catalogRequest, isCatalogResponse, namesIn } from "./catalog-response.mjs";
 import { STORE_PAGE, VERSION_PREFIX, VIEWPORTS } from "./config.mjs";
@@ -39,6 +43,24 @@ async function readCatalog(response) {
   }
 }
 
+/** § 13: one catalog response as received, its body's bytes untouched (Chrome's own, decoded as the page reads them). */
+async function captureCatalog(response) {
+  const head = { status: response.status(), contentType: response.headers()["content-type"] ?? null };
+  try {
+    return { ...head, body: await response.buffer() };
+  } catch {
+    return { ...head, error: `its body could not be read (HTTP ${response.status()})` };
+  }
+}
+
+/** The record lib/catalog-command.mjs judges: every catalog response the visit saw, as received. */
+async function captureRecord(captured, { page, loadedAt, userAgent }) {
+  const responses = await Promise.all(
+    captured.map((c) => within(c.read, BODY_MS, "its body").then((x) => ({ request: c.request, receivedAt: c.receivedAt, ...x }))),
+  );
+  return { page, loadedAt, userAgent, responses };
+}
+
 /** The record F6 judges (lib/menu-check.mjs), or null when no catalog response was seen. */
 async function menuRecord(reads) {
   if (!reads.length) return null;
@@ -50,7 +72,7 @@ async function menuRecord(reads) {
   };
 }
 
-export async function ordinaryVisit({ page: url = STORE_PAGE, executablePath, renderMs = 30_000, settleMs = 3_000, menu = false } = {}) {
+export async function ordinaryVisit({ page: url = STORE_PAGE, executablePath, renderMs = 30_000, settleMs = 3_000, menu = false, capture = false } = {}) {
   const { browser, close } = await freshBrowser({ executablePath });
   try {
     const page = await browser.newPage();
@@ -58,9 +80,13 @@ export async function ordinaryVisit({ page: url = STORE_PAGE, executablePath, re
     const consoleLines = [];
     page.on("console", (m) => consoleLines.push(m.text()));
     const reads = [];
-    if (menu) {
+    const captured = [];
+    if (menu || capture) {
       page.on("response", (r) => {
-        if (isCatalogResponse(r)) reads.push({ request: catalogRequest(r.url()), read: readCatalog(r) });
+        if (!isCatalogResponse(r)) return;
+        const request = catalogRequest(r.url());
+        if (menu) reads.push({ request, read: readCatalog(r) });
+        if (capture) captured.push({ request, receivedAt: new Date().toISOString(), read: captureCatalog(r) });
       });
     }
     const cdp = await page.createCDPSession();
@@ -71,9 +97,10 @@ export async function ordinaryVisit({ page: url = STORE_PAGE, executablePath, re
     cdp.on("Runtime.exceptionThrown", (e) => exceptions.push(e.exceptionDetails));
 
     await page.goto(url, { waitUntil: "load", timeout: NAV_MS });
+    const loadedAt = new Date().toISOString();
     const cards = await poll(page, () => document.querySelectorAll("app-product-card").length, null, (n) => n > 0, { timeoutMs: renderMs });
     await sleep(settleMs);
-    if (menu) for (let waited = 0; !reads.length && waited < CATALOG_MS; waited += 200) await sleep(200);
+    if (menu || capture) for (let waited = 0; !reads.length && !captured.length && waited < CATALOG_MS; waited += 200) await sleep(200);
     const scripts = await page.evaluate(
       (prefix) => [...document.querySelectorAll("script")].map((s) => s.text).filter((t) => t.replace(/^\s+/, "").startsWith(prefix)),
       VERSION_PREFIX,
@@ -94,6 +121,7 @@ export async function ordinaryVisit({ page: url = STORE_PAGE, executablePath, re
     }
     const out = { rendered: cards > 0, cards: cards ?? 0, scripts, console: consoleLines, errors };
     if (menu) out.menu = await menuRecord(reads);
+    if (capture) out.capture = await captureRecord(captured, { page: url, loadedAt, userAgent: await browser.userAgent() });
     return out;
   } finally {
     await close();
