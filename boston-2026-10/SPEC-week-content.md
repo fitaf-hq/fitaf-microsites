@@ -23,6 +23,7 @@ two objects written to a bucket.
 | the Worker's binding | `WEEK` | `WEEK` |
 | the week's data | object `week/picks-data.json` | the same |
 | a photo sheet | object `week/<file>.jpg`, served at `/week/<file>.jpg` | the same |
+| the Worker's entry module | `src/worker/index.js` (unchanged; gains § 4's two behaviours) | **`src/worker/site.js`** (new: § 4's two behaviours and nothing else; `index.js` imports its handlers rather than copying them) |
 
 - `week/picks-data.json` is **exactly the JSON the page's `#picks-data` element holds today** (`pageData()`'s output),
   for **one** week, with every photo-sheet URL in it pointing at `/week/<file>.jpg`.
