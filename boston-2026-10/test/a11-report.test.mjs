@@ -1,5 +1,5 @@
 // A11 (SPEC-analytics.md § 5, § 7): `npm run analytics` against a fixture SQL response: the per-day report, aggregates
-// only. The report (scripts/analytics.mjs) is run in this process with a stand-in for `fetch` that answers each of its
+// only, its days America/New_York's (§ 2's day, ruled 2026-10-13: grouped and bounded in that zone by the SQL itself). The report (scripts/analytics.mjs) is run in this process with a stand-in for `fetch` that answers each of its
 // queries from test/fixtures/analytics/<query>.json (invented numbers, in the SQL API's JSON format: `meta`, `data`,
 // `rows`; counts as the strings ClickHouse writes UInt64 as). Nothing is requested. The expected report is written
 // here, by hand, from the fixture. Every query asks for aggregates only: a visit's id (`s`) and a visitor's (`v`) are
@@ -17,7 +17,7 @@ const NAMES = ["visitors", "steps", "clicks", "length", "load", "devices", "view
 const ENV = { CLOUDFLARE_ANALYTICS_TOKEN: "test-token", CLOUDFLARE_ACCOUNT_ID: "test-account" };
 const SQL_URL = "https://api.cloudflare.com/client/v4/accounts/test-account/analytics_engine/sql";
 
-const EXPECTED = `Fit AF microsite analytics: fitaf_microsite_analytics_prod, 2026-10-23 to 2026-10-25 (UTC days; aggregates only)
+const EXPECTED = `Fit AF microsite analytics: fitaf_microsite_analytics_prod, 2026-10-23 to 2026-10-25 (days in America/New_York; aggregates only)
 
 2026-10-23
   unique visitors 12 · visits 15
@@ -95,8 +95,10 @@ test("A11: the per-day report from a fixture SQL response, aggregates only", asy
     assert.equal(r.method, "POST");
     assert.equal(r.headers.authorization, "Bearer test-token", "the token from the environment");
     assert.match(r.body, /\bFROM fitaf_microsite_analytics_prod\b/);
-    assert.match(r.body, /'2026-10-23 00:00:00'/, "from the first day's start");
-    assert.match(r.body, /'2026-10-26 00:00:00'/, "to the last day's end");
+    assert.match(r.body, /timestamp >= toDateTime\('2026-10-23 00:00:00', 'America\/New_York'\)/, "from the first New York day's start");
+    assert.match(r.body, /timestamp < toDateTime\('2026-10-26 00:00:00', 'America\/New_York'\)/, "to the last New York day's end");
+    assert.match(r.body, /formatDateTime\(timestamp, '%Y-%m-%d', 'America\/New_York'\) AS day/, "grouped by the New York date");
+    assert.doesNotMatch(r.body.replace(/'America\/New_York'/g, ""), /toDateTime\('[^']*'\)|formatDateTime\(timestamp, '[^']*'\)/, "no date read in UTC");
     assert.match(r.body, /\bGROUP BY\b/, "aggregated");
     const outside = r.body.replace(/count\(DISTINCT (blob2|index1)\)/g, "");
     assert.doesNotMatch(outside, /\b(blob2|index1)\b/, `s and v only inside count(DISTINCT …): ${r.body}`);

@@ -44,7 +44,11 @@ from here"*). We take its storage choice and write the rest small.
 ## 2. Visitors and visits, without a cookie
 
 - **A visitor** is `v` = the first 16 hex digits of SHA-256(`salt_d` ‖ IP ‖ user agent ‖ host). **`salt_d` is random, one
-  per UTC day**, held only in a KV namespace with an expiry of at most 48 hours, and created on the day's first event.
+  per day of `America/New_York`**, held only in a KV namespace with an expiry of at most 48 hours, and created on the
+  day's first event. *(Amended 2026-10-13, the orchestrator's ruling as this contract's author, on the build's finding:
+  it was one per UTC day, but a UTC day ends at 20:00 in Boston (19:00 after 2026-11-01), so an evening visit would
+  count as two visitors; the business and its events run on Eastern time. The day is the platform's time-zone
+  arithmetic, never a fixed offset, so across a DST change it is 23 or 25 hours.)*
   When a day's salt expires, nobody (including us) can link that day's visitors to another day's, or recompute a `v` from
   an IP. ⚠ Two isolates racing on a day's first events may create two salts; that counts some visitors twice on that
   day. The build measures how often, and states it.
@@ -79,7 +83,8 @@ pressed; the link itself is unchanged**, so the hand-off's URL and fragment are 
 ## 5. Reading it
 
 `npm run analytics -- --from YYYY-MM-DD --to YYYY-MM-DD [--env dev]`: Analytics Engine's SQL API, with a read-only token
-taken from the environment (the Advisor's, never in this public repository), printing per day:
+taken from the environment (the Advisor's, never in this public repository), printing per day (§ 2's day,
+`America/New_York`'s, since 2026-10-13; the dates given are New York dates):
 - unique visitors and visits;
 - the funnel (`open` → each `answer` → `result` → `click`) with counts and the drop between steps;
 - visit length (median and quartiles);
@@ -130,8 +135,9 @@ the page in Boston.
 
 ## 10. Built — found at the build, not ruled (2026-10-13, the agent)
 
-§§ 0–9 are unchanged. Red at `0749f8b` (the cases alone, on `a241cab`'s code), green at the commit that carries this
-section.
+§§ 0–9 are unchanged but for § 2's day and § 5's grouping (§ 10.1). Red at `0749f8b` (the cases alone, on `a241cab`'s
+code), green at `c2e7b5b`; the figures below are that commit's, and § 10.1 has the counts after the orchestrator's two
+changes.
 
 **Gates, before and after** (each command's result line):
 
@@ -228,9 +234,10 @@ not carry is `""` or `0` (`beacon.js` `BLOBS`, `DOUBLES`, which the report reads
    one call site is inside a `try`, so a browser without `sendBeacon` sends nothing either. The test environments
    (`page-sim.mjs`, `cc-harness`'s `openPlanPage`) have no Web Crypto, so every page case before this contract runs
    with the analytics off and is unchanged.
-7. **The salt** (§ 2): the KV key `salt:<YYYY-MM-DD>` (the UTC day of the Worker's clock), 32 random bytes in hex, written
-   on the day's first event with `expirationTtl` = the seconds to the end of its day + 60 (at least 60, KV's minimum;
-   86,460 at 00:00, 120 at 23:59; never more than 172,800: A6). One being made in an isolate is shared by that isolate's
+7. **The salt** (§ 2): the KV key `salt:<YYYY-MM-DD>` (since § 10.1, the New York date of the Worker's clock; it was the
+   UTC date), 32 random bytes in hex, written on the day's first event with `expirationTtl` = the seconds to the end of
+   its day + 60 (at least 60, KV's minimum; never more than 172,800: A6). At the New York day's 00:00 that is 86,460 on a
+   24-hour day, 90,060 on 2026-11-01's 25 hours, 82,860 on 2027-03-14's 23; 120 at 23:59. One being made in an isolate is shared by that isolate's
    concurrent first events; after its write the isolate reads the key back and uses what it reads, so two isolates in
    one location that both wrote use the last write. A failed write (KV's one write a second) reads it back too.
 8. **`v`** = the first 16 hex digits of SHA-256 over the salt, `CF-Connecting-IP`, `User-Agent` and the URL's host,
@@ -245,7 +252,9 @@ not carry is `""` or `0` (`beacon.js` `BLOBS`, `DOUBLES`, which the report reads
     and no name: wrangler's schema has no field for one (`binding`, `id`, `preview_id`, `remote`), so the namespaces'
     names (`fitaf-microsite-salts-prod`, `-dev`, the infrastructure's Amendment 1.8) are in its comment.
 13. **The report** reads the token from `CLOUDFLARE_ANALYTICS_TOKEN` and the account from `CLOUDFLARE_ACCOUNT_ID` (the
-    name the README already uses for wrangler). Eight `SELECT`s, each grouped by UTC day: visitors and visits
+    name the README already uses for wrangler). Eight `SELECT`s, each grouped by day (since § 10.1 the New York day:
+    `formatDateTime(timestamp, '%Y-%m-%d', 'America/New_York')`, bounded by `toDateTime('<date> 00:00:00',
+    'America/New_York')`; it was UTC's): visitors and visits
     (`count(DISTINCT index1)`, `count(DISTINCT blob2)`), the funnel's steps, the click-through by link, the visit length
     and **the load time** (median and quartiles, `quantileExactWeighted(…)(…, _sample_interval)`; the load time is § 0's
     diagnostic, not in § 5's list), and the device, viewport and country splits of `open`; and from the steps the
@@ -257,7 +266,8 @@ not carry is `""` or `0` (`beacon.js` `BLOBS`, `DOUBLES`, which the report reads
 case). Two isolates sharing one namespace in Miniflare (a measurement, not a case: 20 trials of 20 concurrent first
 events alternating between them): 24 salts written (4 trials wrote two), and **0 trials with two `v`**, the read-back
 after the write converging on the last. Not measurable here: across Cloudflare's locations KV is eventually consistent
-(*"up to 60 seconds"*), so in the first minute or two of a UTC day two locations can each make a salt, and a visitor
+(*"up to 60 seconds"*), so in the first minute or two of a day (since § 10.1, New York's midnight) two locations can
+each make a salt, and a visitor
 whose events in that window reach both is counted twice that day; after the last write has propagated every location
 reads the same salt.
 
@@ -277,17 +287,17 @@ byte for byte once the analytics slot and its newline are removed; CC-8's Worker
   addition to the development page will meet it.
 - ⚠ **CC-8's Worker map now moves with `data/plans.json` and `scripts/selection.mjs`**: the Worker accepts the answers,
   answer sets and mpids those files name, so re-reading the store's plans changes the Worker.
-- ⚠ **The suite already makes a network request** (before this contract): the WC harness starts Miniflare without a
-  `cf` option, and Miniflare then reads `node_modules/.mf/cf.json` or, when it is absent or older than 30 days, fetches
-  `https://workers.cloudflare.com/cf.json` (its `setupCf`). This build's first run on a fresh install fetched it (the
-  file carries the machine's own network's colo and ASN; it is in `node_modules`, git-ignored). The analytics harness
-  passes `cf: false`; `wc-harness.mjs` is unchanged.
+- ✅ fixed (§ 10.1) **The suite already made a network request** (before this contract): the WC harness started
+  Miniflare without a `cf` option, and Miniflare then reads `node_modules/.mf/cf.json` or, when it is absent or older
+  than 30 days, fetches `https://workers.cloudflare.com/cf.json` (its `setupCf`). This build's first run on a fresh
+  install fetched it (the file carries the machine's own network's colo and ASN; it is in `node_modules`, git-ignored).
+  The analytics harness passed `cf: false` from the start.
 - ⚠ **`wrangler.jsonc`'s comment that `env.dev` inherits no routes is not what wrangler 4.144 reads** (before this
   contract): `env.dev` resolves to the top level's custom domains, with the warning *"Deploying this environment will
   reassign these custom domains away from the top-level Worker"*. Nothing deploys with wrangler here; the infrastructure
   code is what is live.
-- **A UTC day ends at 20:00 in Boston** (19:00 after 2026-11-01): a visitor active across it is two visitors, one on
-  each day. § 2 says UTC; a day of `America/New_York` would be a change of one line and the report's grouping.
+- ✅ ruled (§ 10.1) **A UTC day ends at 20:00 in Boston** (19:00 after 2026-11-01): a visitor active across it was two
+  visitors, one on each day. The day is now `America/New_York`'s.
 - **An iPad on iPadOS reports a Mac's user agent** and is counted `desktop`.
 - **The SQL was read from Cloudflare's reference and never run against Cloudflare**: the first real run is the
   operator's, on dev, after the merge (§ 8). `count(DISTINCT …)` is not weighted by `_sample_interval`; were Analytics
@@ -297,3 +307,49 @@ byte for byte once the analytics slot and its newline are removed; CC-8's Worker
   127.0.0.1).
 - **Not done here**: nothing deployed, no `wrangler` command run (its configuration reader only, in-process, as the WC
   cases use it), no Cloudflare API, no bucket, namespace or dataset touched, no push, no merge.
+
+### 10.1 The orchestrator's two changes (2026-10-13), built
+
+Re-gated by the orchestrator at `c2e7b5b` (723/723), then two changes on the same branch; green at the commit that
+carries this section.
+
+**1. The day is `America/New_York`'s, not UTC's** (the orchestrator's ruling as this contract's author, on § 10's
+finding: a UTC day ends at 20:00 in Boston, so an evening visit counted twice; the business and its events run on
+Eastern time). § 2's sentence and § 5's grouping are amended in place, saying what they were.
+
+- **The Worker**: the salt's key is the New York date (`beacon.js` `saltDay`), and its expiry a minute after the next New
+  York midnight (`saltTtl`), both by `src/worker/zoned-time.js`'s `zonedDate` and `nextDayAt`, the Intl arithmetic the
+  save's send time already uses (two passes settle a DST change); never a fixed offset. Still at most 172,800 s: 86,460
+  at 00:00 of a 24-hour day, 90,060 on 2026-11-01's 25 hours, 82,860 on 2027-03-14's 23.
+- **The report**: `formatDateTime(timestamp, '%Y-%m-%d', 'America/New_York')` groups, and `toDateTime('<date> 00:00:00',
+  'America/New_York')` bounds, so `--from`/`--to` are New York dates and the engine's own zone arithmetic places each
+  day's ends; the heading says `days in America/New_York`. ⚠ The time-zone arguments are from Cloudflare's SQL
+  reference (its `toDateTime` example interprets *"a date relative to New York time"*), not run against Cloudflare.
+- **The cases**: A5, the same IP and user agent at 19:59 and 20:01 New York time are one `v` and at 23:59 and the next
+  day's 00:01 two, and across both DST changes (2026-11-01's 00:30 EDT and 23:30 EST one day; 2027-03-14's 23:30 EDT
+  and the 15th's 00:30 EDT two days); A6, the expiry at a New York day's first and last minute, and the salt living
+  through a 24-, a 25- and a 23-hour day; A11, every query's day and bounds in the zone and no date read in UTC. Every
+  instant is written in the cases with its own offset, from the calendar.
+- **Red on `c2e7b5b`'s UTC code** (a clean `git archive`, these cases overlaid): `ℹ tests 11` `ℹ pass 5` `ℹ fail 6`:
+  `19:59 and 20:01 in New York: the same v`, `2026-11-01 00:30 EDT and 23:30 EST: the same day`, `it lives the day's
+  24 hours (72060 s)` (and 25, and 23 hours: 68460 s), and A11's report (its first assertion, the heading naming UTC days; its
+  eight queries, read on their own, carry no New York bound); the five that pass do not depend on the day.
+- **A fixed offset is caught** (a measurement in a mirror, not a committed mutant): `saltDay` and `saltTtl` at a fixed
+  −04:00: green on 2026-10-23 (EDT), red on the 25-hour day, `2026-11-01 00:30 EDT and 23:30 EST: the same day` and
+  `it lives the day's 25 hours (86460 s)`.
+
+**2. The network fetch the suite made, fixed** (a pre-existing defect, § 10's Found): every Miniflare the suite starts
+now passes `cf: false` (Miniflare's own placeholder `request.cf`, never `https://workers.cloudflare.com/cf.json`):
+`test/wc-harness.mjs`'s two, as the orchestrator asked, and the two its aim ("no test reaches cf.json") also needed,
+which the message did not name: `test/worker-harness.mjs` (the S and M cases' Worker) and `test/s07-send-at.test.mjs`.
+Six of the six `new Miniflare(…)` in `test/` now pass it. **Measured**: `node_modules/.mf/cf.json` (written by the fetch
+on this install, 2026-10-13 19:17) removed, then the whole suite: `# tests 726` `# pass 726` `# fail 0`, the file not
+written again and no *"Unable to fetch the `Request.cf` object"* in the output. WC-1–WC-12 `39` of `39`, unchanged but
+for the harness's option.
+
+**Counts**: the site 723 → 726 (A5 two cases → three; A6 two → four). The mutants re-run on this tree, each in its
+mirror: the control 0 problems on A2, A3, A4 and A6; the IP into a blob, A4 red (12 problems, `data point 1 carries
+"203.0.113.7"`); `localStorage` for `s`, A2 red (7, `touched localStorage`); the salt without an expiry, A6 red (4,
+`2026-10-24T03:59:00.000Z: SALTS holds salt:2026-10-23 with no expiration`: the New York day's last minute keys the
+New York date); the vocabulary check removed, A3 red (54, `an event outside § 3: written (1 data point(s))`). CC-8's
+Worker map moved again (`beacon.js` only). Contrast 70/70.

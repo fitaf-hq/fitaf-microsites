@@ -1,5 +1,7 @@
 // `npm run analytics -- --from YYYY-MM-DD --to YYYY-MM-DD [--env dev]` (SPEC-analytics.md § 5): the page's analytics,
-// per UTC day, read from Workers Analytics Engine's SQL API. Aggregates only, never a row per visit: every query groups
+// per day of America/New_York (§ 2's day, the salt's: ruled 2026-10-13), read from Workers Analytics Engine's SQL API.
+// The dates are New York dates; the SQL reads them in that zone (formatDateTime's and toDateTime's time-zone argument,
+// the engine's own zone arithmetic, so a day across a DST change is 23 or 25 hours). Aggregates only, never a row per visit: every query groups
 // by day, and a visit's id (`s`, blob2) and a visitor's (`v`, index1) are read only inside count(DISTINCT …).
 //
 //   CLOUDFLARE_ANALYTICS_TOKEN   a read-only token ("Account Analytics Read"), the operator's, never in this repository
@@ -12,7 +14,7 @@
 // refused command line or a missing variable, before any request.
 // ⛔ Read-only: it sends SELECTs and nothing else, and never prints the token.
 import { fileURLToPath } from "node:url";
-import { BLOBS, DOUBLES, LINKS, QUESTIONS, STEPS, VIEWPORTS } from "../src/worker/beacon.js";
+import { ANALYTICS_ZONE, BLOBS, DOUBLES, LINKS, QUESTIONS, VIEWPORTS } from "../src/worker/beacon.js";
 
 /** The datasets (SPEC-analytics.md § 6; the infrastructure's Amendment 1.8). */
 export const DATASETS = { prod: "fitaf_microsite_analytics_prod", dev: "fitaf_microsite_analytics_dev" };
@@ -32,17 +34,19 @@ const col = (name) => {
   throw new Error(`no column for ${name}`);
 };
 
-/** A UTC date's next day, "YYYY-MM-DD". */
+/** A date's next day, "YYYY-MM-DD" (calendar arithmetic: a date is not an instant). */
 const nextDay = (ymd) => new Date(Date.parse(`${ymd}T00:00:00Z`) + DAY_MS).toISOString().slice(0, 10);
 const isDate = (ymd) => {
   const ms = DATE.test(ymd) ? Date.parse(`${ymd}T00:00:00Z`) : NaN;
   return !Number.isNaN(ms) && new Date(ms).toISOString().slice(0, 10) === ymd;
 };
 
-/** The report's queries over `dataset` for the UTC days `from`..`to`, by name. Dates are checked before they get here. */
+/** The report's queries over `dataset` for the New York days `from`..`to`, by name. Dates are checked before they get
+ *  here. */
 export function queries({ dataset, from, to }) {
-  const day = "formatDateTime(timestamp, '%Y-%m-%d')";
-  const range = `timestamp >= toDateTime('${from} 00:00:00') AND timestamp < toDateTime('${nextDay(to)} 00:00:00')`;
+  const zone = `'${ANALYTICS_ZONE}'`;
+  const day = `formatDateTime(timestamp, '%Y-%m-%d', ${zone})`;
+  const range = `timestamp >= toDateTime('${from} 00:00:00', ${zone}) AND timestamp < toDateTime('${nextDay(to)} 00:00:00', ${zone})`;
   const where = (event) => `WHERE ${range}${event ? ` AND ${col("event")} = '${event}'` : ""}`;
   const visits = `count(DISTINCT ${col("s")})`;
   const quartiles = (field) =>
@@ -120,7 +124,7 @@ function splitLine(rows, order, label = (v) => v) {
 /** The report's text, from each query's rows. */
 export function reportText({ dataset, from, to }, rows) {
   const days = Object.fromEntries(Object.entries(rows).map(([name, list]) => [name, byDay(list)]));
-  const lines = [`Fit AF microsite analytics: ${dataset}, ${from} to ${to} (UTC days; aggregates only)`, ""];
+  const lines = [`Fit AF microsite analytics: ${dataset}, ${from} to ${to} (days in ${ANALYTICS_ZONE}; aggregates only)`, ""];
   for (let day = from; day <= to; day = nextDay(day)) {
     lines.push(day);
     const visitors = days.visitors.get(day)?.[0];

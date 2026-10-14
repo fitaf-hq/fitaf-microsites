@@ -3,7 +3,7 @@
 // package; the mutants (a-mutants.test.mjs) run THE SAME checks on a mirror carrying one mutation each. Not a test file
 // itself. Every expectation is the contract's, written here, never read back from the code under test.
 import { ROOT } from "../build.mjs";
-import { BEACON, builtPage, S1, startBeacon, TEST_IP, TEST_UA, TEST_UA_TOKEN, utc, VALID, wholeVisit } from "./a-harness.mjs";
+import { BEACON, builtPage, S1, startBeacon, TEST_IP, TEST_UA, TEST_UA_TOKEN, VALID, wholeVisit } from "./a-harness.mjs";
 
 /** § 4: "at most 2 KB". */
 export const MAX_BODY_BYTES = 2048;
@@ -128,10 +128,11 @@ export async function ipUaProblems(root = ROOT) {
 }
 
 /** A6: the day's salt is written to SALTS with an expiry of at most 172,800 s (the KV write's own option, and the expiry
- *  the namespace then reports); control: an event did write a salt. Measured at two instants of a day. */
+ *  the namespace then reports); control: an event did write a salt. Measured at the first and the last minute of a New
+ *  York day (§ 2's day), each instant written with its own offset. */
 export async function saltExpiryProblems(root = ROOT) {
   const problems = [];
-  for (const clock of [utc(2026, 10, 23, 0, 0), utc(2026, 10, 23, 23, 59)]) {
+  for (const clock of [Date.parse("2026-10-23T00:00:00-04:00"), Date.parse("2026-10-23T23:59:00-04:00")]) {
     const site = await startBeacon({ root });
     try {
       const before = Date.now();

@@ -6,15 +6,18 @@
 //
 // ⛔ No IP and no user agent in any field (§ 1.2, § 4). They are read for two things only and then dropped with the
 //    request: `v` = the first 16 hex digits of SHA-256(salt_d ‖ IP ‖ user agent ‖ host), and the device class.
-// ⛔ The salt (§ 2): random, one per UTC day, held only in SALTS (KV) under salt:<YYYY-MM-DD>, written with an expiry
-//    a minute after its day ends (never more than 48 h), on the day's first event. Once it expires nobody can link that
-//    day's visitors to another day's, or recompute a `v` from an IP.
+// ⛔ The salt (§ 2): random, one per day of America/New_York (ruled 2026-10-13: a UTC day ends at 20:00 in Boston),
+//    held only in SALTS (KV) under salt:<YYYY-MM-DD>, the New York date, written with an expiry a minute after that day
+//    ends (never more than 48 h), on the day's first event. The day is the platform's time-zone arithmetic
+//    (zoned-time.js, Intl), never a fixed offset: 23 or 25 hours across a DST change. Once a salt expires nobody can
+//    link that day's visitors to another day's, or recompute a `v` from an IP.
 // The vocabulary is the page's and data's, never invented here: data/plans.json's goals and mpids, selection.mjs's
 // answer sets, data/events.json's QR ids, and the four meal questions' answers as build.mjs's QUESTIONS names them
 // (copied below because a Worker cannot import the build; A3 holds the two equal and equal to the built page's buttons).
 import plans from "../../data/plans.json" with { type: "json" };
 import events from "../../data/events.json" with { type: "json" };
 import { ANSWER_SETS, answerKey } from "../../scripts/selection.mjs";
+import { nextDayAt, zonedDate } from "./zoned-time.js";
 
 export const BEACON_PATH = "/a";
 /** § 4: a body over this many bytes is dropped unread. */
@@ -28,7 +31,8 @@ const SALT_MIN_TTL_S = 60;
 const SALT_GRACE_S = 60;
 const SALT_PREFIX = "salt:";
 const SALT_BYTES = 32;
-const DAY_MS = 86_400_000;
+/** § 2's day (and the report's, § 5): the business's and its events' own, Eastern time. */
+export const ANALYTICS_ZONE = "America/New_York";
 const V_HEX_DIGITS = 16;
 const VISIT_ID = /^[0-9a-f]{16}$/;
 const COUNTRY = /^[A-Z][A-Z0-9]$/;
@@ -108,9 +112,13 @@ export function dataPoint(event, { v, country, device }) {
 
 const hex = (bytes) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
 
-/** The salt's expiry for a write at `now`: a minute after its UTC day ends, within KV's minimum and § 2's 48 hours. */
+/** § 2's day of the instant `now`: its New York date, "YYYY-MM-DD". */
+export const saltDay = (now) => zonedDate(now, ANALYTICS_ZONE);
+
+/** The salt's expiry for a write at `now`: a minute after its New York day ends (the next New York midnight), within
+ *  KV's minimum and § 2's 48 hours. */
 export function saltTtl(now) {
-  const end = (Math.floor(now / DAY_MS) + 1) * DAY_MS;
+  const end = nextDayAt(now, { zone: ANALYTICS_ZONE, hour: 0 });
   return Math.min(SALT_MAX_TTL_S, Math.max(SALT_MIN_TTL_S, Math.ceil((end - now) / 1000) + SALT_GRACE_S));
 }
 
@@ -128,9 +136,9 @@ async function makeSalt(salts, key, now) {
   return (await salts.get(key)) ?? salt;
 }
 
-/** The salt of `now`'s UTC day, made on the day's first event. */
+/** The salt of `now`'s New York day, made on the day's first event. */
 export async function saltOf(salts, now) {
-  const key = SALT_PREFIX + new Date(now).toISOString().slice(0, 10);
+  const key = SALT_PREFIX + saltDay(now);
   const held = await salts.get(key);
   if (held) return held;
   if (!making.has(key)) making.set(key, makeSalt(salts, key, now).finally(() => making.delete(key)));
