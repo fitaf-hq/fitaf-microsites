@@ -45,6 +45,8 @@ export const PICKS_DIR = join(ROOT, "data", "picks");
 export const PHOTOS_PATH = join(ROOT, "data", "photo-sheets.json");
 export const PHOTO_SHEETS_DIR = join(ROOT, "src", "assets", "photo-sheets");
 export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
+/** The page's analytics (SPEC-analytics.md § 4): one inline script, inlined before app.js. */
+export const ANALYTICS_PATH = join(ROOT, "src", "analytics.js");
 /** Same-origin static files the page references, copied beside index.html: src/<dir> -> <out>/<dir>. */
 export const STATIC_DIRS = [
   { dir: "fonts", match: /\.woff2$/ },
@@ -430,13 +432,34 @@ export function messageSlots(messages) {
   };
 }
 
+/**
+ * The page's analytics (SPEC-analytics.md § 4), the ANALYTICS slot of every page, production's and development's alike:
+ * src/analytics.js in one inline <script>, data/events.json's ids (the QR events an `?e=` may name: § 9) written in place
+ * of its `/*QR_IDS*\/[]`, without its whole-line `//` comments, its blank lines and each line's indentation (they are
+ * for maintainers, and the development page is near T5's 60 KB; the script holds no multi-line string, so nothing it
+ * means changes). Before app.js, so its error listener is there first.
+ */
+export const QR_IDS_MARK = "/*QR_IDS*/[]";
+export async function analyticsSlot(events) {
+  const text = await readFile(ANALYTICS_PATH, "utf8");
+  if (text.split(QR_IDS_MARK).length !== 2) throw new Error(`src/analytics.js must hold ${QR_IDS_MARK} exactly once`);
+  const code = text
+    .replace(QR_IDS_MARK, () => scriptJson(events.map((e) => checkEventId(e.id))))
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("//"))
+    .join("\n");
+  return `<script>\n${code}\n</script>`;
+}
+
 /** `picks`: this week's Chef's Choice slots (scripts/chefs-choice.mjs), or none. `photos`: the photo sheets' manifest
- *  (data/photo-sheets.json when not given). */
-export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS, photos = undefined) {
+ *  (data/photo-sheets.json when not given). `events`: data/events.json when not given (the analytics' QR ids). */
+export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS, photos = undefined, events = undefined) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
   messages ??= await loadJson(MESSAGES_PATH);
   photos ??= await loadPhotos();
+  events ??= await loadJson(EVENTS_PATH);
   checkSelection(plans);
   const words = planPageWords(messages);
   // SPEC-snacks-in-the-cart § 4.5: while snacks are carted, a page with no week (no snack list to cart) never offers Q4;
@@ -457,6 +480,7 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
     READ_FROM_TEXT: esc(plans.read_from.replace(/^https?:\/\//, "")),
     READ_ON: esc(plans.read_on),
     DATA: scriptJson(clientData(plans, words, offer)),
+    ANALYTICS: await analyticsSlot(events),
     SCRIPT: script.trim(),
     ...dev,
     ...picks,
@@ -527,7 +551,7 @@ async function writeDevPages(plans, events, outDir, offersPath, messages, picks,
   const written = [];
   for (const [i, event] of events.entries()) {
     const dev = await devSlots(plans, { save, zips, siteKey, eventId: checkEventId(event.id), offers });
-    const html = await renderPage(plans, dev, messages, picks, photos);
+    const html = await renderPage(plans, dev, messages, picks, photos, events);
     await mkdir(join(outDir, event.id), { recursive: true });
     const paths = [join(outDir, event.id, "index.html"), ...(i === 0 ? [join(outDir, "index.html")] : [])];
     for (const path of paths) {
@@ -574,7 +598,7 @@ export async function build({
   if (target === "dev") {
     pages = await writeDevPages(plans, events, outDir, offersPath, messages, card, photos);
   } else {
-    const html = await renderPage(plans, PROD_SLOTS, messages, card, photos);
+    const html = await renderPage(plans, PROD_SLOTS, messages, card, photos, events);
     const path = join(outDir, "index.html");
     await writeFile(path, html);
     pages = [{ path, bytes: Buffer.byteLength(html) }];

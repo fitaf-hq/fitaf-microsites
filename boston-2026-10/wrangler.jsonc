@@ -21,6 +21,13 @@
   "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/", "/index.html"] },
   // The week's content (SPEC-week-content § 1): read only through this binding; the bucket is not public.
   "r2_buckets": [{ "binding": "WEEK", "bucket_name": "fitaf-microsite-content-prod" }],
+  // SPEC-analytics.md § 6 (the Advisor's word, 2026-10-13; the infrastructure's Amendment 1.8 mirrors these names): the
+  // page's analytics, POST /a (src/worker/beacon.js). ANALYTICS: a Workers Analytics Engine dataset, one per environment.
+  // SALTS: a KV namespace holding only the daily salt, every key expiring within 48 h; the namespace is
+  // fitaf-microsite-salts-prod, created by the infrastructure code, and wrangler's KV entry has no field for its name
+  // and needs no id for local preview (its id is the infrastructure's, never kept here).
+  "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "fitaf_microsite_analytics_prod" }],
+  "kv_namespaces": [{ "binding": "SALTS" }],
 
   // ⛔ No per-version preview URLs (<version>-<name>.<subdomain>.workers.dev). On 2026-09-27 a version
   // uploaded by mistake stayed PUBLIC at its preview URL after later deploys replaced it on the main
@@ -39,7 +46,8 @@
   ],
 
   // ⛔ The top level above is PRODUCTION. Rungs 3 and 4 left it unchanged (no script, no bindings); since
-  // SPEC-week-content § 4 it has one script and two bindings (ASSETS, WEEK), for the week and nothing else.
+  // SPEC-week-content § 4 it has one script and two bindings (ASSETS, WEEK), for the week and nothing else; since
+  // SPEC-analytics.md § 6 two more (ANALYTICS, SALTS), for the page's analytics and nothing else.
   "env": {
     // Rungs 3–4 (SPEC-rung4-save-offer.md): development only, dummy data only.
     "dev": {
@@ -57,6 +65,9 @@
       "assets": { "directory": "./dist-dev", "binding": "ASSETS", "run_worker_first": ["/", "/index.html", "/*/", "/*/index.html"] },
       // The week's content (SPEC-week-content § 1); bindings do not inherit, so dev names its own bucket.
       "r2_buckets": [{ "binding": "WEEK", "bucket_name": "fitaf-microsite-content-dev" }],
+      // SPEC-analytics.md § 6, as at the top level: the dev dataset, and the namespace fitaf-microsite-salts-dev.
+      "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "fitaf_microsite_analytics_dev" }],
+      "kv_namespaces": [{ "binding": "SALTS" }],
       "d1_databases": [
         {
           "binding": "DB",
