@@ -1,7 +1,8 @@
 // WC-6 (SPEC-week-content.md § 4.1, § 4.5, § 5): production's Worker does § 4's two behaviours and nothing else. Any
 // other route (/api/save, /confirm/x, /o/x, a POST anywhere) is the assets' answer, as today: the script hands the
 // request on and passes back what the assets say, and never reads the bucket. Then wrangler.jsonc: production's `main`
-// is src/worker/site.js and its bindings are the assets' and WEEK's alone (no D1, no rate limiter, no cron); the page's
+// is src/worker/site.js and its bindings are the assets' and WEEK's, and since SPEC-analytics.md § 6 ANALYTICS and SALTS,
+// alone (no D1, no rate limiter, no cron); the page's
 // routes run the Worker first (`assets.run_worker_first`) and every other route stays assets-first, measured through
 // wrangler's own translation of the file and the real asset router.
 import test from "node:test";
@@ -43,13 +44,16 @@ test("WC-6a: production's Worker hands every other route to the assets and retur
   }
 });
 
-test("WC-6b: wrangler.jsonc, production: main is site.js; its bindings ASSETS and WEEK (the prod bucket) alone; the page's routes run first", async () => {
+test("WC-6b: wrangler.jsonc, production: main is site.js; its bindings ASSETS and WEEK (the prod bucket), and ANALYTICS and SALTS (SPEC-analytics § 6), alone; the page's routes run first", async () => {
   const prod = await wranglerConfig(undefined);
   assert.equal(relative(ROOT, prod.main), join("src", "worker", "site.js"));
   assert.equal(prod.assets.binding, "ASSETS");
   assert.deepEqual(prod.assets.run_worker_first, ["/", "/index.html"]);
   assert.deepEqual(prod.r2_buckets, [{ binding: "WEEK", bucket_name: BUCKETS.prod }]);
-  for (const none of ["d1_databases", "ratelimits", "kv_namespaces", "durable_objects", "services", "queues"]) {
+  // SPEC-analytics.md § 6 (the Advisor's word, 2026-10-13): the analytics dataset and the salts' KV namespace, and no other.
+  assert.deepEqual(prod.analytics_engine_datasets, [{ binding: "ANALYTICS", dataset: "fitaf_microsite_analytics_prod" }]);
+  assert.deepEqual(prod.kv_namespaces.map((k) => k.binding), ["SALTS"]);
+  for (const none of ["d1_databases", "ratelimits", "durable_objects", "services", "queues"]) {
     const value = prod[none];
     const empty = value === undefined || (Array.isArray(value) && !value.length) || (value?.bindings && !value.bindings.length) || (value?.producers && !value.producers.length && !value.consumers?.length);
     assert.ok(empty, `production has no ${none}: ${JSON.stringify(value)}`);
@@ -59,6 +63,8 @@ test("WC-6b: wrangler.jsonc, production: main is site.js; its bindings ASSETS an
   assert.equal(relative(ROOT, dev.main), join("src", "worker", "index.js"));
   assert.equal(dev.assets.binding, "ASSETS");
   assert.deepEqual(dev.r2_buckets, [{ binding: "WEEK", bucket_name: BUCKETS.dev }]);
+  assert.deepEqual(dev.analytics_engine_datasets, [{ binding: "ANALYTICS", dataset: "fitaf_microsite_analytics_dev" }]);
+  assert.deepEqual(dev.kv_namespaces.map((k) => k.binding), ["SALTS"]);
   assert.deepEqual(dev.assets.run_worker_first, ["/", "/index.html", "/*/", "/*/index.html"]);
   assert.equal(dev.d1_databases.length, 1, "the development Worker keeps what it has");
   assert.deepEqual(dev.triggers.crons, ["*/5 * * * *"]);
