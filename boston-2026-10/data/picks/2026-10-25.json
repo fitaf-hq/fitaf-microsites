@@ -1,0 +1,555 @@
+{
+  "delivery": "2026-10-25",
+  "version": 2,
+  "lists": {
+    "chefs-choice": {
+      "carts": [
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 4,
+          "items": [
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Mac & Cheese",
+              "display": "BBQ Pulled Pork Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl",
+              "display": "Grass-Fed Beef Taco Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Elk Chili",
+              "display": "Elk Chili",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 7,
+          "items": [
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Honey-Chipotle Pulled Chicken",
+              "display": "Honey-Chipotle Pulled Chicken",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Mac & Cheese",
+              "display": "BBQ Pulled Pork Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl",
+              "display": "Grass-Fed Beef Taco Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Balsamic Grilled Free-Range Chicken",
+              "display": "Balsamic Grilled Free-Range Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "display": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "qty": 1
+            },
+            {
+              "name": "Elk Chili",
+              "display": "Elk Chili",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Honey-Chipotle Pulled Chicken",
+              "display": "Honey-Chipotle Pulled Chicken",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Mac & Cheese",
+              "display": "BBQ Pulled Pork Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl",
+              "display": "Grass-Fed Beef Taco Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "display": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "qty": 1
+            },
+            {
+              "name": "Elk Chili",
+              "display": "Elk Chili",
+              "qty": 1
+            },
+            {
+              "name": "Lemon Dill Coho Salmon",
+              "display": "Lemon Dill Coho Salmon",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Beef Bourguignon",
+              "display": "Grass-fed Beef Bourguignon",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap",
+              "display": "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Honey-Chipotle Pulled Chicken",
+              "display": "Honey-Chipotle Pulled Chicken",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Mac & Cheese",
+              "display": "BBQ Pulled Pork Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl",
+              "display": "Grass-Fed Beef Taco Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Balsamic Grilled Free-Range Chicken",
+              "display": "Balsamic Grilled Free-Range Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Buffalo Chicken Cheesesteak Bowl",
+              "display": "Buffalo Chicken Cheesesteak Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "display": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "qty": 1
+            },
+            {
+              "name": "Elk Chili",
+              "display": "Elk Chili",
+              "qty": 1
+            },
+            {
+              "name": "Lemon Dill Coho Salmon",
+              "display": "Lemon Dill Coho Salmon",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Beef Bourguignon",
+              "display": "Grass-fed Beef Bourguignon",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl with Cauliflower Rice",
+              "display": "Grass-Fed Beef Taco Bowl with Cauliflower Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap",
+              "display": "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Mac & Cheese",
+              "display": "BBQ Pulled Pork Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl",
+              "display": "Grass-Fed Beef Taco Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "display": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "qty": 1
+            },
+            {
+              "name": "Elk Chili",
+              "display": "Elk Chili",
+              "qty": 1
+            },
+            {
+              "name": "Steak & Eggs",
+              "display": "Steak & Eggs",
+              "qty": 2
+            },
+            {
+              "name": "Pumpkin Pie Greek Yogurt Parfait",
+              "display": "Pumpkin Pie Greek Yogurt Parfait",
+              "qty": 2
+            },
+            {
+              "name": "Strawberry Shortcake Protein Waffles",
+              "display": "Strawberry Shortcake Protein Waffles",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Honey-Chipotle Pulled Chicken",
+              "display": "Honey-Chipotle Pulled Chicken",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Mac & Cheese",
+              "display": "BBQ Pulled Pork Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl",
+              "display": "Grass-Fed Beef Taco Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Balsamic Grilled Free-Range Chicken",
+              "display": "Balsamic Grilled Free-Range Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "display": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "qty": 1
+            },
+            {
+              "name": "Elk Chili",
+              "display": "Elk Chili",
+              "qty": 1
+            },
+            {
+              "name": "Steak & Eggs",
+              "display": "Steak & Eggs",
+              "qty": 3
+            },
+            {
+              "name": "Pumpkin Pie Greek Yogurt Parfait",
+              "display": "Pumpkin Pie Greek Yogurt Parfait",
+              "qty": 2
+            },
+            {
+              "name": "Strawberry Shortcake Protein Waffles",
+              "display": "Strawberry Shortcake Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Honey-Chipotle Pulled Chicken",
+              "display": "Honey-Chipotle Pulled Chicken",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Mac & Cheese",
+              "display": "BBQ Pulled Pork Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl",
+              "display": "Grass-Fed Beef Taco Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "display": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "qty": 1
+            },
+            {
+              "name": "Elk Chili",
+              "display": "Elk Chili",
+              "qty": 1
+            },
+            {
+              "name": "Lemon Dill Coho Salmon",
+              "display": "Lemon Dill Coho Salmon",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Beef Bourguignon",
+              "display": "Grass-fed Beef Bourguignon",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap",
+              "display": "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap",
+              "qty": 1
+            },
+            {
+              "name": "Steak & Eggs",
+              "display": "Steak & Eggs",
+              "qty": 2
+            },
+            {
+              "name": "Pumpkin Pie Greek Yogurt Parfait",
+              "display": "Pumpkin Pie Greek Yogurt Parfait",
+              "qty": 1
+            },
+            {
+              "name": "Strawberry Shortcake Protein Waffles",
+              "display": "Strawberry Shortcake Protein Waffles",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 21,
+          "items": [
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Honey-Chipotle Pulled Chicken",
+              "display": "Honey-Chipotle Pulled Chicken",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Mac & Cheese",
+              "display": "BBQ Pulled Pork Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl",
+              "display": "Grass-Fed Beef Taco Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Balsamic Grilled Free-Range Chicken",
+              "display": "Balsamic Grilled Free-Range Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Buffalo Chicken Cheesesteak Bowl",
+              "display": "Buffalo Chicken Cheesesteak Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "display": "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy",
+              "qty": 1
+            },
+            {
+              "name": "Elk Chili",
+              "display": "Elk Chili",
+              "qty": 1
+            },
+            {
+              "name": "Lemon Dill Coho Salmon",
+              "display": "Lemon Dill Coho Salmon",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Beef Bourguignon",
+              "display": "Grass-fed Beef Bourguignon",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Bowl with Cauliflower Rice",
+              "display": "Grass-Fed Beef Taco Bowl with Cauliflower Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap",
+              "display": "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap",
+              "qty": 1
+            },
+            {
+              "name": "Steak & Eggs",
+              "display": "Steak & Eggs",
+              "qty": 3
+            },
+            {
+              "name": "Pumpkin Pie Greek Yogurt Parfait",
+              "display": "Pumpkin Pie Greek Yogurt Parfait",
+              "qty": 2
+            },
+            {
+              "name": "Strawberry Shortcake Protein Waffles",
+              "display": "Strawberry Shortcake Protein Waffles",
+              "qty": 2
+            }
+          ]
+        }
+      ],
+      "snacks": {
+        "7": [
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Cheesecake Brownie Bites",
+            "display": "Cheesecake Brownie Bites",
+            "qty": 1
+          },
+          {
+            "name": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+            "display": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+            "qty": 1
+          },
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "Golden Oreo Protein Sand",
+            "display": "Golden Oreo Protein Sand",
+            "qty": 1
+          },
+          {
+            "name": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+            "display": "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga",
+            "qty": 1
+          },
+          {
+            "name": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+            "display": "Relaxation Superfood Bites: Apple Crisp & Reishi",
+            "qty": 1
+          }
+        ],
+        "5": [
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Cheesecake Brownie Bites",
+            "display": "Cheesecake Brownie Bites",
+            "qty": 1
+          },
+          {
+            "name": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+            "display": "Cognition Superfood Bites: Blueberry Cream & Lion's Mane",
+            "qty": 1
+          },
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "Golden Oreo Protein Sand",
+            "display": "Golden Oreo Protein Sand",
+            "qty": 1
+          }
+        ]
+      }
+    }
+  }
+}
