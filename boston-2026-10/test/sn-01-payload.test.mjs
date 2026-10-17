@@ -32,7 +32,8 @@ const REFUSED = [
     new RegExp(`stopped: a meal after a snack: ${refKey(FC_PAYLOAD.items.at(-1).name)}$`),
   ],
   ["a snack after the offer code", rawFragment(`${meals}.~SPRING-10._${snack}`), /stopped: bad meal: ~SPRING-10$/],
-  ["13 meals and a snack for the 14-meal plan (the snack is not a meal)", null, /stopped: the plan needs 14 meals; the link has 13$/],
+  // SPEC-rung2-fill-c § 8: the 14 plan takes 14 or 15 meals, and the refusal names both.
+  ["13 meals and a snack for the 14-meal plan (the snack is not a meal)", null, /stopped: the plan takes 14 or 15 meals; the link has 13$/],
 ];
 
 for (const [what, fragment, reason] of REFUSED) {
