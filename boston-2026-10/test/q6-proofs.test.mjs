@@ -7,10 +7,10 @@ import assert from "node:assert/strict";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loadInputs, MOCKUPS_DIR, OFFERS_PATH } from "../mockups/build-mockups.mjs";
-import { buildPrint, stemOf } from "../print/build-print.mjs";
+import { stemOf } from "../print/build-print.mjs";
 import { offerIsPlaceholder, placeholdersOf } from "../print/pages.mjs";
 import { PRINT_PIECES } from "../print/sizes.mjs";
-import { CHROME, NO_CHROME, photoSet } from "./print-fixtures.mjs";
+import { lockedBuild, NO_CHROME, photoSet } from "./print-fixtures.mjs";
 
 const set = await photoSet();
 after(() => rm(set.dir, { recursive: true, force: true }));
@@ -63,7 +63,7 @@ test("Q6: photos and a named offer: nothing remains, and the files take the plai
 
 test("Q6: built with no photos, the files end -PROOF and the last line lists what remains", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-placeholders");
-  const built = await buildPrint({ outDir: out, chrome: CHROME, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, today: "2026-10-20" });
   assert.deepEqual((await readdir(out)).sort(), ["assignment.json", "flyer-PROOF.pdf", "flyer-PROOF.png", "tent-card-PROOF.pdf", "tent-card-PROOF.png"]);
   assert.equal(
     built.lines.at(-1),
@@ -73,7 +73,7 @@ test("Q6: built with no photos, the files end -PROOF and the last line lists wha
 
 test("Q6: built with photos and a named offer, the files take the plain names and the last line says none remain", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-final");
-  const built = await buildPrint({ outDir: out, chrome: CHROME, photosDir: set.dir, rungsPath: set.rungsPath, offersPath: namedOffersPath, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, photosDir: set.dir, rungsPath: set.rungsPath, offersPath: namedOffersPath, today: "2026-10-20" });
   assert.deepEqual((await readdir(out)).sort(), ["assignment.json", "flyer.pdf", "flyer.png", "tent-card.pdf", "tent-card.png"]);
   assert.equal(built.lines.at(-1), "placeholders remain: none (flyer.pdf, tent-card.pdf)");
 });

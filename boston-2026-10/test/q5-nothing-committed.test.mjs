@@ -9,8 +9,8 @@ import { spawnSync } from "node:child_process";
 import { readFile, rm } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import { ROOT } from "../build.mjs";
-import { buildPrint, DIST_PRINT } from "../print/build-print.mjs";
-import { CHROME, NO_CHROME, photoSet } from "./print-fixtures.mjs";
+import { DIST_PRINT } from "../print/build-print.mjs";
+import { lockedBuild, NO_CHROME, photoSet } from "./print-fixtures.mjs";
 
 const REPO = join(ROOT, "..");
 const git = (...args) => spawnSync("git", ["-C", REPO, ...args], { encoding: "utf8" });
@@ -38,7 +38,7 @@ test("Q5: after a build with fixture photos, git status shows no change, every f
   const before = status();
   const out = join(set.dir, "dist-print"); // the default folder's ignore is shown above; the build writes here so a
   // real build's output in the default folder is not emptied by the suite
-  const built = await buildPrint({ outDir: out, chrome: CHROME, photosDir: set.dir, rungsPath: set.rungsPath, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, photosDir: set.dir, rungsPath: set.rungsPath, today: "2026-10-20" });
   assert.equal(status(), before, "git status is unchanged by the build");
 
   const names = built.written.map((f) => basename(f)).sort();

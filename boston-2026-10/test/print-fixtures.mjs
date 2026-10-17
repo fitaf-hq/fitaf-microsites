@@ -5,14 +5,46 @@
 // run, so no committed file can name one (Q5 checks that none does).
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
+import { buildPrint } from "../print/build-print.mjs";
 import { CHROME_DEFAULT } from "../mockups/png.mjs";
 
 export const CHROME = process.env.CHROME || CHROME_DEFAULT;
 /** Why a Chrome case skips, or false when it runs (the cases say so in the run's output). */
 export const NO_CHROME = existsSync(CHROME) ? false : `no Chrome found at ${CHROME} (set CHROME=<path to the Chrome binary>)`;
+
+/**
+ * One printed-piece build at a time across the suite's processes (node --test runs files in parallel): each build runs
+ * Chrome six times, and several at once beside the rest of the suite starved Chrome past its timeout on a loaded machine
+ * (2026-10-17). A directory made atomically is the lock; one older than LOCK_STALE_MS is a crashed run's, and is removed.
+ */
+const LOCK = join(tmpdir(), "boston-print-chrome.lock");
+const LOCK_STALE_MS = 10 * 60_000;
+const LOCK_POLL_MS = 250;
+async function oneAtATime(work) {
+  for (;;) {
+    try {
+      await mkdir(LOCK);
+      break;
+    } catch (err) {
+      if (err.code !== "EEXIST") throw err;
+      const age = await stat(LOCK).then((s) => Date.now() - s.mtimeMs, () => 0);
+      if (age > LOCK_STALE_MS) await rm(LOCK, { recursive: true, force: true });
+      await sleep(LOCK_POLL_MS);
+    }
+  }
+  try {
+    return await work();
+  } finally {
+    await rm(LOCK, { recursive: true, force: true });
+  }
+}
+
+/** buildPrint with the cases' Chrome, one build at a time. */
+export const lockedBuild = (options) => oneAtATime(() => buildPrint({ chrome: CHROME, ...options }));
 
 const segment = (marker, body) => {
   const head = Buffer.from([0xff, marker, 0, 0]);

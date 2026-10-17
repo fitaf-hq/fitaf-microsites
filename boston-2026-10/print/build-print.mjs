@@ -38,6 +38,7 @@ export const DIST_PRINT = join(ROOT, "dist-print");
 export const PROOF_SUFFIX = "-PROOF";
 const PROOF_SCALE = 1;
 const MEASURED = /<script\b[^>]*\bid="print-measure"[^>]*>([\s\S]*?)<\/script>/;
+const DUMPED_UNMEASURED = Symbol("the page was dumped without its measurement");
 const PDF_END = /%%EOF\s*$/;
 const PDF_TAIL_BYTES = 64;
 
@@ -73,9 +74,11 @@ async function measure(chrome, html, measureJs) {
     chrome,
     html: copy,
     args: [`--virtual-time-budget=${SETTLE_MS}`, "--dump-dom"],
-    ready: ({ stdout }) => MEASURED.exec(stdout)?.[1],
+    // A whole page dumped without the measurement will never gain it: say so at once rather than wait out the timeout
+    ready: ({ stdout }) => MEASURED.exec(stdout)?.[1] ?? (stdout.includes("</html>") ? DUMPED_UNMEASURED : undefined),
     what: `measure ${basename(html)}`,
   });
+  if (json === DUMPED_UNMEASURED) throw new Error(`Chrome dumped ${basename(copy)} before the measuring pass wrote its result`);
   return JSON.parse(json);
 }
 

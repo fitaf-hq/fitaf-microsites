@@ -7,10 +7,9 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildPrint } from "../print/build-print.mjs";
 import { layoutRefusals } from "../print/checks.mjs";
 import { pageOf, pagePoints, PRINT_PIECES } from "../print/sizes.mjs";
-import { CHROME, NO_CHROME, pdfPages } from "./print-fixtures.mjs";
+import { lockedBuild, NO_CHROME, pdfPages } from "./print-fixtures.mjs";
 
 const piece = (id) => PRINT_PIECES.find((p) => p.id === id);
 const tmp = await mkdtemp(join(tmpdir(), "boston-q1-"));
@@ -25,7 +24,7 @@ test("Q1: § 2's sizes, in points: the flyer 324 × 414, the tent card 450 × 59
 
 test("Q1: each PDF is one page, its media box the trim plus twice the bleed; each face's trim measured at its size", { skip: NO_CHROME }, async () => {
   const out = join(tmp, "dist-print");
-  const built = await buildPrint({ outDir: out, chrome: CHROME, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, today: "2026-10-20" });
   for (const p of built.planned) {
     const { pages, boxes } = pdfPages(await readFile(join(out, `${p.stem}.pdf`)));
     const { w, h } = pagePoints(p.piece);

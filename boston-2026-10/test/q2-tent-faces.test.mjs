@@ -9,11 +9,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PNG } from "pngjs";
 import { loadInputs, MOCKUPS_DIR } from "../mockups/build-mockups.mjs";
-import { buildPrint, PRINT_DIR } from "../print/build-print.mjs";
+import { PRINT_DIR } from "../print/build-print.mjs";
 import { printPage } from "../print/pages.mjs";
 import { PRINT_PIECES } from "../print/sizes.mjs";
 import { placedElements } from "./mockup-html.mjs";
-import { CHROME, NO_CHROME } from "./print-fixtures.mjs";
+import { lockedBuild, NO_CHROME } from "./print-fixtures.mjs";
 
 const tent = PRINT_PIECES.find((p) => p.id === "tent-card");
 const printCss = await readFile(join(PRINT_DIR, "print.css"), "utf8");
@@ -54,7 +54,7 @@ test("Q2: the turned face is turned 180°, and nothing else is", () => {
 
 test("Q2: rendered, the upper face is the lower face turned 180°; the fold is the sheet's centre line", { skip: NO_CHROME }, async () => {
   const out = join(tmp, "dist-print");
-  const built = await buildPrint({ outDir: out, chrome: CHROME, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, today: "2026-10-20" });
   const planned = built.planned.find((p) => p.piece.id === "tent-card");
   const [upper, lower] = planned.measured.faces.map((f) => f.trim);
   const fold = planned.measured.page.h / 2;

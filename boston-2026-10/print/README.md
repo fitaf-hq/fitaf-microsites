@@ -72,4 +72,6 @@ No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (Â
 
 The cases that render (Q1, Q2, and parts of Q4â€“Q6) need Chrome (`CHROME=<path>`, else the macOS default) and **skip,
 saying so, when none is found**. Their photos are synthetic JPEGs made at test time (`test/print-fixtures.mjs`) with IDs
-made at random, and they build into a temporary folder, so `npm test` never empties a real `dist-print/`.
+made at random, and they build into a temporary folder, so `npm test` never empties a real `dist-print/`. They build
+one at a time across the suite's parallel processes (a lock directory in the system's temporary folder): several builds
+at once, beside the rest of the suite, starved Chrome past its 90 s timeout on a loaded machine.

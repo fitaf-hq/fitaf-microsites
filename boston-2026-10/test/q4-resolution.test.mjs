@@ -6,11 +6,10 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { buildPrint } from "../print/build-print.mjs";
 import { effectivePpi, resolution } from "../print/checks.mjs";
 import { jpegSize } from "../print/jpeg.mjs";
 import { MIN_PPI } from "../print/sizes.mjs";
-import { CHROME, fixtureJpeg, NO_CHROME, photoSet } from "./print-fixtures.mjs";
+import { fixtureJpeg, lockedBuild, NO_CHROME, photoSet } from "./print-fixtures.mjs";
 
 const set = await photoSet({ sizes: { flyer: [900, 400] } }); // the flyer's photo is far below 300 ppi across 4.5 in
 after(() => rm(set.dir, { recursive: true, force: true }));
@@ -52,7 +51,7 @@ test("Q4: the build refuses a fixture photo below 300 ppi at its window, naming 
   await mkdir(out, { recursive: true });
   await writeFile(join(out, "flyer.pdf"), "a stale piece from an earlier run");
   await assert.rejects(
-    buildPrint({ outDir: out, chrome: CHROME, photosDir: set.dir, rungsPath: set.rungsPath, today: "2026-10-20" }),
+    lockedBuild({ outDir: out, photosDir: set.dir, rungsPath: set.rungsPath, today: "2026-10-20" }),
     (err) => {
       assert.match(err.message, /^refused, nothing printed:/);
       assert.match(err.message, /flyer: photo position flyer: 900 × 400 px over its window of 4\.50 × \d\.\d\d in is \d+ ppi, below 300/);
