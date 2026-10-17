@@ -10,7 +10,7 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { parseHTML } from "linkedom";
 import { loadJson, PLANS_PATH } from "../build.mjs";
-import { countTable, storefrontText } from "../scripts/build-storefront.mjs";
+import { planCounts, storefrontText } from "../scripts/build-storefront.mjs";
 
 export const ORIGIN = "https://fitafnutrition.com";
 /** The store's cart key: a visitor's own cart there must be left exactly as it was (R2-14). */
@@ -446,12 +446,14 @@ const plural = (n, s) => (n === 1 ? "" : s);
  *   item count and a "Clear cart" button (which B must never press), then a disabled " ADD N MORE MEAL(S) TO
  *   CHECKOUT ", " CHECKOUT NOW ", or a disabled " REMOVE N MEAL(S) TO CHECKOUT ". `label` replaces CHECKOUT NOW's text.
  * Written by hand from those labels; not the store's markup.
+ * `cap` (SPEC-rung2-fill-c § 8, FC-8e): the most either displayed count shows (the bar's "Items", the sidebar's "N
+ * items"), whatever the plan holds; the controls still follow `short`. By default no cap: each shows what it counts.
  */
-function slot(width, layout, { held, units = held, short, busy, label }) {
+function slot(width, layout, { held, units = held, short, busy, label, cap = Infinity }) {
   if (width === "bar") {
     // The bar's "Items" stat (SPEC-rung2-fill-c § 2a: .mobile-cart-summary__stat, its value the plan's count).
     const stat = '<div class="mobile-cart-summary__stat"><span class="mobile-cart-summary__stat-label">Items</span> ' +
-      `<span class="mobile-cart-summary__stat-value">${held}</span></div> `;
+      `<span class="mobile-cart-summary__stat-value">${Math.min(held, cap)}</span></div> `;
     if (short > 0) return stat + control(`more:${layout}`, ` Add ${short} more meal${plural(short, "s")} `, true);
     if (short < 0) return stat + control(`limit:${layout}`, " Limit Exceeded ", true);
     return stat + control(`checkout:${layout}`, `${label}<i class="icon"></i>`, busy);
@@ -459,7 +461,8 @@ function slot(width, layout, { held, units = held, short, busy, label }) {
   if (!units) return "<p>Your cart is empty</p> <p>Add some delicious meals to get started!</p>";
   // The item count is span.cart__items-count (SPEC-rung2-fill-c § 2a), "N item(s)". SPEC-snacks-in-the-cart § 1a: it
   // counts the snacks' units beside the meals (`units`); the bar's "Items" above counts the meals only (`held`).
-  const header = `<div class="cart__items-header"><span class="cart__items-count">${units} item${plural(units, "s")}</span> ${control("clear", "Clear cart")}</div> `;
+  const shown = Math.min(units, cap);
+  const header = `<div class="cart__items-header"><span class="cart__items-count">${shown} item${plural(shown, "s")}</span> ${control("clear", "Clear cart")}</div> `;
   if (short > 0) return header + control(`more:${layout}`, ` ADD ${short} MORE MEAL${plural(short, "S")} TO CHECKOUT `, true);
   if (short < 0) return header + control(`limit:${layout}`, ` REMOVE ${-short} MEAL${plural(-short, "S")} TO CHECKOUT `, true);
   return header + control(`checkout:${layout}`, label, busy);
@@ -509,6 +512,13 @@ function slot(width, layout, { held, units = held, short, busy, label }) {
  * .product__actions, the expansion staying open), into `store.cart`, NOT the plan: the bar's "Items" and the CHECKOUT
  * rule read the plan's meals; the sidebar's "N items" reads meals and snack units together. `cartAtCheckout` is the
  * cart as it stood at CHECKOUT.
+ *
+ * SPEC-rung2-fill-c § 8 (a plan carries the extra meal its `selection` row gives, 5 on the 4 plan): `above` is how many
+ * meals the store takes above the plan's count, so its CHECKOUT is enabled from `need` to `need + above` and its
+ * "Limit Exceeded" / "REMOVE N MEAL(S)" start above that. 0 (the default) is the store as every other case models it,
+ * the plan's count exactly; 1 is a store that takes a fifth meal on the 4 plan. Whether the live store does is § 8 item
+ * 6's smoke, not this page. `planShowsAtMost` caps the plan's own displayed count (the bar's "Items", the sidebar's "N
+ * items") whatever the plan holds: FC-8e's store, whose cards count a fifth meal while its plan's count reads 4.
  */
 export async function orderPage({
   afterFirstPress = "counter",
@@ -524,6 +534,8 @@ export async function orderPage({
   routes = true,
   fates = null,
   snacks = [],
+  above = 0,
+  planShowsAtMost = Infinity,
 } = {}) {
   assert.ok(["bar", "sidebar"].includes(width), `width: ${width}`);
   assert.ok(!snacks.length || afterFirstPress === "counter", "snack cards are the store's own: the counter");
@@ -532,7 +544,9 @@ export async function orderPage({
   const snackOf = (name) => snacks.find((sn) => sn.name === name);
   assert.ok(afterFirstPress === "counter" || afterFirstPress in AFTER_FIRST_PRESS, `afterFirstPress: ${afterFirstPress}`);
   const { document } = parseHTML(await readFile(FIXTURE, "utf8"));
-  const counts = countTable(await loadJson(PLANS_PATH));
+  // The store's own minimum ("Please add at least N meals"): the plan's count, not the link's allowed totals
+  // (SPEC-rung2-fill-c § 8: those are the block's check; this is the store).
+  const counts = planCounts(await loadJson(PLANS_PATH));
   const presses = new Map();
   const log = [];
   const controls = [];
@@ -559,13 +573,14 @@ export async function orderPage({
   function render() {
     const held = store.pending.length;
     const units = held + store.cart.length;
-    const short = required - held;
+    // Short of the plan's count, short; above the most the store takes (`above` more than it), over; else neither.
+    const short = held < required ? required - held : held > required + above ? required + above - held : 0;
     const busy = short <= 0 && loadingTicks > 0;
     for (const summary of document.querySelectorAll(".summary")) {
       const layout = summary.getAttribute("data-layout");
       const shown = layout === "shown";
       const label = shown ? shownLabel : " CHECKOUT ";
-      summary.innerHTML = slot(shown ? width : "bar", layout, { held, units, short, busy, label });
+      summary.innerHTML = slot(shown ? width : "bar", layout, { held, units, short, busy, label, cap: planShowsAtMost });
       // The store's bar is hidden while the plan and the cart hold nothing (its control still rendered inside it).
       if (shown && width === "bar") summary.toggleAttribute("hidden", units === 0);
     }

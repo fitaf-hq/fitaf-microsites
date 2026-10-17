@@ -28,7 +28,8 @@ test("MS-9: the Footer block already knows every plan an answer set goes through
   for (const plan of PLANS.individual) {
     for (const n of [4, 7, 10, 14, 21]) {
       const { mpid } = plan.counts.find((c) => c.meals_per_week === n);
-      assert.equal(table[mpid], n, `${plan.id} ${n}: mpid ${mpid}`);
+      // SPEC-rung2-fill-c § 8 item 1: mpid -> the plan's allowed totals, its own count first.
+      assert.equal(table[mpid]?.[0], n, `${plan.id} ${n}: mpid ${mpid}`);
     }
   }
 });

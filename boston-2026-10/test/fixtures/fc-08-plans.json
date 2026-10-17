@@ -1,0 +1,22 @@
+{
+  "about": "FC-8h (SPEC-rung2-fill-c § 8 item 5): a fixture plans.json whose selection maps 9 meals to plan 8, so countTable gives 8 -> 8 or 9. Invented plans and mpids, only the fields countTable reads (individual, family, selection); no build reads this file.",
+  "individual": [
+    {
+      "id": "fixture",
+      "counts": [
+        { "meals_per_week": 7, "mpid": 101 },
+        { "meals_per_week": 8, "mpid": 102 }
+      ]
+    }
+  ],
+  "family": {
+    "id": "family",
+    "counts": [
+      { "meals_per_week": 1, "mpid": 103 }
+    ]
+  },
+  "selection": [
+    { "lunch_dinner": "or", "weekends": true, "breakfast": false, "meals": 7, "plan": 7 },
+    { "lunch_dinner": "or", "weekends": false, "breakfast": false, "meals": 9, "plan": 8 }
+  ]
+}

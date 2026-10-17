@@ -95,7 +95,7 @@ async function main() {
   if (!SHOTS.includes(shots)) throw new Error(`--shots must be one of ${SHOTS.join(", ")}, got ${shots}`);
   const mpid = count(values.mpid ?? DEFAULT_MPID, "--mpid");
   const code = await siteCode();
-  const need = code.counts.get(mpid);
+  const need = code.planCounts.get(mpid); // the plan's own count (SPEC-rung2-fill-c § 8: `counts` holds its allowed totals)
   if (!need) throw new Error(`--mpid ${mpid} is not a plan in data/plans.json`);
   const out = values.out ? resolve(WHERE, values.out) : join(SITE_DIR, "storefront", "probe-snacks", bostonDate());
   await mkdir(out, { recursive: true });

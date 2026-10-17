@@ -127,7 +127,8 @@ test("MS-6 (control): the version-2 fixture makes its content; so does it with a
 });
 
 const PICKS_CASES = [
-  ["a cart whose qty does not make its plan", (w) => (cartFor(w, "or", false, false).items[0].qty += 1), /carts\[1\] \(or, weekdays, no breakfast\): the plan needs 4 meals; the link has 5/],
+  // SPEC-rung2-fill-c § 8: the 4 plan takes 4 or 5 meals (5 is or, weekdays' own count), so 6 is the cart that does not.
+  ["a cart whose qty does not make its plan", (w) => (cartFor(w, "or", false, false).items[0].qty += 2), /carts\[1\] \(or, weekdays, no breakfast\): the plan takes 4 or 5 meals; the link has 6/],
   ["a combination not in selection (Q1 both)", (w) => (carts(w)[0].lunch_dinner = "both"), /carts\[0\]: lunch_dinner "both", weekends true, breakfast false is not a row of data\/plans\.json's selection/],
   ["a combination not in selection (weekends as text)", (w) => (carts(w)[0].weekends = "yes"), /carts\[0\]: lunch_dinner "or", weekends "yes", breakfast false is not a row/],
   ["two carts for one row", (w) => carts(w).push(structuredClone(carts(w)[0])), /carts\[8\] \(or, every day, no breakfast\): a second cart for or-7d \(the first is carts\[0\]\)/],

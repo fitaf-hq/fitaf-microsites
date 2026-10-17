@@ -109,6 +109,13 @@ exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.ha
   `ad25f93d…`** (R2-32, PR-10, CC-8; the Footer block 18,323 bytes of 20,480), **not yet pasted**: CC-8's golden names
   `76871ff9…`, the block the watch expects live, as the text it `replaces`. A link carrying a snack is refused by that
   pasted block with nothing pressed (SN-5), so none is published before the Advisor's paste.
+  ⭐ **The extra meal** (`SPEC-rung2-fill-c.md` § 8, its build notes § 8.1): a plan takes its own count and the `meals` of
+  every `data/plans.json` `selection` row that goes through it, **5 meals on the 4 plan, 15 on the 14** (7, 10, 21 and
+  Family their own count alone); the block carries that table as `COUNTS` (the build's `countTable`, at the source's
+  `/*TOTALS*/` slot), its decode, `handoff:link` and the Chef's Choice cart check take it, and § 1.4 waits for the link's
+  own total. Cases FC-8a–FC-8h and their three mirror mutants (`fc-08-*.mjs`), FC-8w in the watch. **The text is
+  `efcbc570…`** (R2-32, PR-10, CC-8; the Footer block 18,423 bytes), **not yet pasted**: CC-8's golden names the live
+  `ad25f93d…` (`17c5693`) as the text it `replaces`.
 - **The link, payload version 2 (§ 11)**: `#fitaf=2.<key>[*n].<key>[*n]…[.~CODE]`, ASCII, dot-separated. Each meal
   is its **key**, 5 base-36 characters: 32-bit FNV-1a over the UTF-8 bytes of its name as the page shows it
   (whitespace collapsed and trimmed), the last 5 characters (`src/storefront/meal-key.js`, the one function
@@ -117,7 +124,10 @@ exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.ha
   `https://fitafnutrition.com/order?mpid=21#fitaf=2.t1fkl.8avab.ihshe.1i5s0.tyv72.rgr2m.6uf54`. **Version 1
   (base64 JSON) is retired**: a v1 link is refused as an unknown version.
 
-- **The full-plan rule** (fill B, and `handoff:link`): the counts must add up to **exactly** the plan's
+- **The full-plan rule** (fill B, and `handoff:link`; ⚠ amended by `SPEC-rung2-fill-c.md` § 8: the counts must add up
+  to one of the plan's **allowed totals**, its own count or the `meals` of a `selection` row through it, so 4 or 5 on
+  the 4 plan and 14 or 15 on the 14, refused as *"the plan takes 4 or 5 meals; the link has 6"*; a plan with one total
+  keeps the words below): the counts must add up to **exactly** the plan's
   `meals_per_week` in `data/plans.json` (7 for mpid 21; Family, mpid 35, is 1), else the payload is refused before
   any press or write with *"the plan needs N meals; the link has M"*. The store's order page will not check out
   short of the plan (*"Please add at least 7 meals to continue"*): the one-browser run of 2026-09-29 (fill B,

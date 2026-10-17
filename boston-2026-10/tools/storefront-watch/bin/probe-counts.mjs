@@ -66,7 +66,7 @@ async function main() {
   const runs = { ack: count(values["ack-runs"] ?? 4, "--ack-runs"), gap: count(values["gap-runs"] ?? 1, "--gap-runs"), nowait: count(values["nowait-runs"] ?? 1, "--nowait-runs") };
   const gapMs = count(values["gap-ms"] ?? GAP_MS, "--gap-ms");
   const code = await siteCode();
-  const need = code.counts.get(mpid);
+  const need = code.planCounts.get(mpid); // the plan's own count (SPEC-rung2-fill-c § 8: `counts` holds its allowed totals)
   if (!need) throw new Error(`--mpid ${mpid} is not a plan in data/plans.json`);
   const out = values.out ? resolve(WHERE, values.out) : join(SITE_DIR, "storefront", "probe-counts", bostonDate());
   await mkdir(out, { recursive: true });

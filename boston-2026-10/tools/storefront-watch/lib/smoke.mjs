@@ -240,6 +240,18 @@ async function facesOf(page, outcome) {
 }
 
 /**
+ * SPEC-rung2-fill-c § 8: the meals a given link checks out, the units of its meal part (`<key>` 1, `<key>*<n>` n; its
+ * snacks and its code not counted), or null for a link with no #fitaf= fragment. A link is no longer always its plan's
+ * count (5 meals on the 4 plan), so the run's `need` is the link's own when it has one.
+ */
+export function linkMeals(href) {
+  const url = new URL(href);
+  if (!url.hash.startsWith("#fitaf=")) return null;
+  const items = url.hash.slice("#fitaf=".length).split("!")[0].split(".").slice(1).filter((t) => !t.startsWith("~") && !t.startsWith("_"));
+  return items.reduce((sum, t) => sum + Number(t.split("*")[1] ?? 1), 0);
+}
+
+/**
  * W17: a given link (`--link`) as the smoke's choice. Its plan (?mpid=), its meals (the fragment's meal part: each key,
  * read against `menu` [{ name, priceCents }] with the site's own key function, as many times as its count), its snacks
  * (SPEC-snacks-in-the-cart § 2: the items with a leading "_", read the same way) and the path the smoke opens on the
@@ -298,7 +310,8 @@ export async function scriptMode({ liveBlocks = [], scriptFile = null, code, why
 
 export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, executablePath, link = null, onPage = null, shots = null }) {
   const mpid = link ? Number(new URL(link).searchParams.get("mpid")) : MPID;
-  const need = code.counts.get(mpid);
+  // The meals the run checks out: a given link's own (SPEC-rung2-fill-c § 8: 5 on the 4 plan), else the plan's count.
+  const need = (link && linkMeals(link)) || code.planCounts.get(mpid);
   const outcome = { width, need, menu: 0, menuNames: [], chosen: [], snacks: [], link: null, console: [], errors: [], checkout: null, faces: null, evidence: null, shot: null };
   const { browser, close } = await freshBrowser({ executablePath });
   try {

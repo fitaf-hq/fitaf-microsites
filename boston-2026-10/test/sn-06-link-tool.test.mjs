@@ -76,5 +76,5 @@ for (const [what, extra, reason] of REFUSALS) {
 test("SN-6: the full-plan rule reads the meals: 13 meals and a snack for the 14-meal plan is refused", () => {
   const r = refuses("--mpid", "23", ...mealArgs.slice(0, -2), "--snack", `${TOGGLED}:1`);
   assert.notEqual(r.status, 0);
-  assert.match(r.stderr, /the plan needs 14 meals; the link has 13/);
+  assert.match(r.stderr, /the plan takes 14 or 15 meals; the link has 13/); // SPEC-rung2-fill-c § 8: 14 takes 14 or 15
 });

@@ -10,8 +10,9 @@
 // the store's admin reads the text inside the block as HTML, and `<` before a letter, even across a space, as a tag).
 // Its own directory and its own npm script, NOT `npm run build`: the production build stays byte-identical (S20).
 // The version line is `/* fitaf-handoff <commit> sha256:<hex of the text after it> */`, so what is live can be
-// compared with what is kept. The text is the source without its full-line `//` comments, with the plan counts inlined
-// from data/plans.json (the per-meal prices, which only fill A wrote, are inlined nowhere) and the meal-key function
+// compared with what is kept. The text is the source without its full-line `//` comments, with each plan's allowed
+// totals inlined from data/plans.json (SPEC-rung2-fill-c § 8: its own count and the `meals` of every `selection` row that
+// goes through it; the per-meal prices, which only fill A wrote, are inlined nowhere) and the meal-key function
 // from src/storefront/meal-key.js (§ 11 item 2: the link tool imports the same one); and, for rung 2's two faces
 // (SPEC-rung2-progress-and-checkout § 1), the progress screen's words from data/messages.json (`handoff`) at the UI
 // slot and its colours, the page's own tokens from src/template.html, at the TOKENS slot. R2-32 pins the text's SHA-256.
@@ -42,6 +43,12 @@ export const MAX_SHIPPED_BYTES = 20480;
 /** The Footer block, and the same text for a browser console. */
 const FOOTER_FILE = "fitaf-handoff.html";
 const CONSOLE_FILE = "fitaf-handoff.fill-B.console.js";
+/**
+ * SPEC-rung2-fill-c § 8 item 1: the slot for the plan table, mpid -> its allowed totals (countTable). A source from
+ * before § 8 carries COUNTS_SLOT instead, and gets mpid -> the plan's own count (planCounts), as it was built: R2-71
+ * rebuilds the live block from its own commit, byte for byte. A source carries exactly one of the two.
+ */
+const TOTALS_SLOT = "/*TOTALS*/ {}";
 const COUNTS_SLOT = "/*COUNTS*/ {}";
 /** The slot for the meal-key function: its text, exactly as src/storefront/meal-key.js has it. */
 const KEY_SLOT = "/*KEY*/ null";
@@ -81,11 +88,36 @@ const bytesText = (n) => n.toLocaleString("en-US");
 export const sha256 = (text) => createHash("sha256").update(text, "utf8").digest("hex");
 export const versionLine = (text, commit) => `/* fitaf-handoff ${commit} sha256:${sha256(text)} */\n`;
 
-/** mpid -> meals a week, every plan (Family too): the full-plan rule (SPEC-rung2 § 7). */
+/** Every plan's counts, individual and Family. */
+const cellsOf = (plans) => [...plans.individual, plans.family].flatMap((plan) => plan.counts);
+
+/**
+ * mpid -> the plan's own count, meals a week (SPEC-rung2 § 7's full-plan rule as it stood before SPEC-rung2-fill-c § 8).
+ * What a source from before § 8 inlines (COUNTS_SLOT), and the store's own minimum ("Please add at least N meals"),
+ * which the synthetic stores of the cases model. Never a link's check since § 8: that is countTable's.
+ */
+export function planCounts(plans) {
+  return Object.fromEntries(cellsOf(plans).map((c) => [c.mpid, c.meals_per_week]));
+}
+
+const isCount = (n) => Number.isInteger(n) && n > 0;
+
+/**
+ * SPEC-rung2-fill-c § 8 item 1: mpid -> the plan's ALLOWED TOTALS, ascending: its own count P, and the `meals` of every
+ * row of data/plans.json's `selection` whose `plan` is P (today 4 -> 4 or 5, 14 -> 14 or 15; 7, 10, 21 and Family's
+ * own count alone). Every check of a link's count takes these (the block's decode, the link tool, the Chef's Choice cart
+ * check). Data, never a literal. Only the rows' `plan` and `meals` are read here, each a whole number or the build
+ * refuses; the selection's own rules are scripts/selection.mjs's.
+ */
 export function countTable(plans) {
-  return Object.fromEntries(
-    [...plans.individual, plans.family].flatMap((plan) => plan.counts.map((c) => [c.mpid, c.meals_per_week])),
-  );
+  const rows = plans.selection ?? [];
+  rows.forEach((row, i) => {
+    if (!isCount(row?.plan) || !isCount(row?.meals)) {
+      throw new Error(`data/plans.json: selection[${i}]: plan and meals must be whole numbers, got ${JSON.stringify(row?.plan)} and ${JSON.stringify(row?.meals)}`);
+    }
+  });
+  const totalsOf = (P) => [...new Set([P, ...rows.filter((row) => row.plan === P).map((row) => row.meals)])].sort((a, b) => a - b);
+  return Object.fromEntries(cellsOf(plans).map((c) => [c.mpid, totalsOf(c.meals_per_week)]));
 }
 
 /** JSON with every character outside printable ASCII, and `<`, written as \u escapes: the text stays ASCII. */
@@ -128,9 +160,10 @@ export function screenTokens(templateHtml, used = SCREEN_TOKENS) {
 }
 
 /**
- * The shipped text: the source without its full-line `//` comments, the plan counts inlined at COUNTS, the screen's
- * words at UI and its colours at TOKENS, and the meal-key function's own text at KEY (inlined last, so it is exactly
- * the module's). The source's `//` lines explain it to a maintainer; they stay in the repository.
+ * The shipped text: the source without its full-line `//` comments, the plans' allowed totals inlined at TOTALS (a
+ * source from before SPEC-rung2-fill-c § 8: the plans' own counts at COUNTS), the screen's words at UI and its colours
+ * at TOKENS, and the meal-key function's own text at KEY (inlined last, so it is exactly the module's). The source's
+ * `//` lines explain it to a maintainer; they stay in the repository.
  */
 export async function storefrontText({
   sourcePath = STOREFRONT_SOURCE,
@@ -139,7 +172,9 @@ export async function storefrontText({
   templatePath = TEMPLATE_PATH,
 } = {}) {
   const source = await readFile(sourcePath, "utf8");
-  for (const slot of [COUNTS_SLOT, KEY_SLOT, UI_SLOT, TOKENS_SLOT]) {
+  const tables = [TOTALS_SLOT, COUNTS_SLOT].filter((slot) => source.includes(slot));
+  if (tables.length !== 1) throw new Error(`${sourcePath}: expected one ${TOTALS_SLOT} (or, before SPEC-rung2-fill-c § 8, one ${COUNTS_SLOT})`);
+  for (const slot of [tables[0], KEY_SLOT, UI_SLOT, TOKENS_SLOT]) {
     if (source.split(slot).length !== 2) throw new Error(`${sourcePath}: expected one ${slot}`);
   }
   const plans = await loadJson(plansPath);
@@ -148,7 +183,7 @@ export async function storefrontText({
   const table = (rows) => `/* data/plans.json, read_on ${plans.read_on} */ ${JSON.stringify(rows)}`;
   return source
     .replace(SOURCE_ONLY_COMMENT, "")
-    .replace(COUNTS_SLOT, () => table(countTable(plans)))
+    .replace(tables[0], () => table(tables[0] === TOTALS_SLOT ? countTable(plans) : planCounts(plans)))
     .replace(UI_SLOT, () => asciiJson(words))
     .replace(TOKENS_SLOT, () => tokens)
     .replace(HOSTS_SLOT, () => JSON.stringify(PHOTO_HOSTS))
