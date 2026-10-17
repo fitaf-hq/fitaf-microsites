@@ -13,11 +13,12 @@
 //                                                case's date, 2026-10-11, put in #picks-data)
 import test from "node:test";
 import assert from "node:assert/strict";
-import { copyFile, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
+import { windowOf } from "../scripts/chefs-choice.mjs";
 import { mirror } from "./cc-harness.mjs";
-import { buildWeekProblems, dateProblems, pathProblems, rewriteProblems, shapeProblems } from "./wc-checks.mjs";
+import { buildWeekProblems, dateProblems, pathProblems, rewriteProblems, RULING_ON, shapeProblems } from "./wc-checks.mjs";
 
 /** Replace `from` (present exactly once) with `to` in the mirror's file `rel`. */
 async function edit(dir, rel, from, to) {
@@ -118,13 +119,22 @@ test("WC-11: the '..' refusal alone removed fails WC-5", async () => {
 const NO_WEEK_LINE = "  const weeks = []; // ⛔ SPEC-week-content § 7's ruling: no build embeds a week; the bucket is the only source of one.\n";
 const OPEN_WEEK = '  const weeks = (await readPicks(join(ROOT, "data", "picks"), plans)).filter((w) => windowOf(w.delivery).valid_to >= "2026-10-11");\n';
 
+// The weeks that mutant embeds: every committed week whose window has not ended by WC-12's date (2026-10-11), computed
+// from data/picks/ as the mutant reads it (once 2026-10-25.json was committed, two: a literal ["2026-10-18"] went stale).
+const OPEN_WEEKS = (await readdir(join(ROOT, "data", "picks")))
+  .filter((name) => /^\d{4}-\d{2}-\d{2}\.json$/.test(name))
+  .map((name) => name.slice(0, 10))
+  .filter((delivery) => windowOf(delivery).valid_to >= RULING_ON)
+  .sort();
+
 test("WC-11: the build embedding the open week fails WC-12", async () => {
+  assert.ok(OPEN_WEEKS.includes("2026-10-18"), `control: WC-12's week is among the open ones: ${OPEN_WEEKS}`);
   await withMirror(
     (dir) => edit(dir, join("scripts", "chefs-choice.mjs"), NO_WEEK_LINE, OPEN_WEEK),
     async (dir) => {
       const problems = await buildWeekProblems(dir);
       for (const label of ["build", "build:dev"]) {
-        assert.ok(problems.includes(`${label}: #picks-data holds ["2026-10-18"], not []`), `WC-12 fails it (${label}):\n${problems.join("\n")}`);
+        assert.ok(problems.includes(`${label}: #picks-data holds ${JSON.stringify(OPEN_WEEKS)}, not []`), `WC-12 fails it (${label}):\n${problems.join("\n")}`);
       }
     },
   );
