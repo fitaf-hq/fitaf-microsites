@@ -281,3 +281,27 @@ holding no week; Q4's markup; `plan-data`'s `snacks` true); CC-8's Worker map (`
 **Counts after the rulings**: the site 690 → 691 (WC-12's two cases and WC-11's new mutant added; WC-9b removed; CC-5's
 three window and program cases became two, "a bad --on" going with `--on`). Contrast 70/70, Storybook 41/41 and the
 watch 192/192, their counts unchanged. S20's golden did not move.
+
+## 8. Amendment, 2026-10-16: an *updating* week, the fallback at a stop after the store's switch. CONTRACT, before any code
+
+**Why.** Fit AF's `scripts/switch/menu-mismatch.spec.md` § 5, ruled by the Advisor (`ts=2026-10-16T23:44:50.877Z`):
+*"Any stop after the switch"*: once the store has turned over, last week's carts no longer work, so the page must not
+keep offering them. Built by Fit AF's `scripts/switch/menu-bands.spec.md` § 5, whose file shape is the interface here.
+
+1. **A week's picks file may be exactly** `{"delivery": "<Sunday>", "version": 2, "updating": true, "lists": {}}`
+   (`data/picks/<delivery>.json`, written by Fit AF's emitter, `--updating`). The Chef's Choice check (`checkPicks`)
+   accepts it; it refuses `updating` with any value but `true`, and an `updating` file with any list.
+2. **The content command** (§ 3) over it writes `week/picks-data.json`: that one week, `"updating": true`, **no carts
+   and no links**, no photo sheet; deterministic, as § 3.
+3. **The page**: a week whose data says `updating` shows, in the Chef's Choice card's place, a card reading *"We're
+   updating this week's menu."* (its words in the build's words file, `data/messages.json`, never a literal in the
+   script), and the page's existing fallback stays as it is (*Choose your meals*, the store's own order page). **No
+   form**: the menu-open alert's consent wording is not ruled (Fit AF `menu-mismatch.spec.md` § 5 item 5), so its form
+   is a later amendment. A week without `updating` is unchanged (CC-1 to CC-9 and WC-1 to WC-12 green as they are).
+4. **The Worker is unchanged**: it serves `week/picks-data.json` whatever it holds.
+5. **Cases** (written first, run red; `node --test`, no network): **U1** the page over an updating week: the card shown
+   with its words, no Chef's Choice cart, no checkout link anywhere in the card · **U2** the content command over an
+   updating file: exit 0, `"updating": true`, no carts, no photo sheet, byte-identical on a second run · **U3** an
+   updating file with a list, and `updating: "yes"`, refused by `checkPicks` · **U4** a normal week byte-identical to
+   before (the page and the content). **Mutants** (each in a copy of the package): `updating` ignored by the page (U1);
+   lists allowed beside `updating` (U3).
