@@ -43,8 +43,13 @@ async function oneAtATime(work) {
   }
 }
 
-/** buildPrint with the cases' Chrome, one build at a time. */
-export const lockedBuild = (options) => oneAtATime(() => buildPrint({ chrome: CHROME, ...options }));
+/** buildPrint with the cases' Chrome, one build at a time; any Chrome run it had to retry is printed into the suite's output. */
+export const lockedBuild = (options) =>
+  oneAtATime(async () => {
+    const built = await buildPrint({ chrome: CHROME, ...options });
+    for (const note of built.retries) console.log(`print build: ${note}`);
+    return built;
+  });
 
 const segment = (marker, body) => {
   const head = Buffer.from([0xff, marker, 0, 0]);

@@ -41,6 +41,13 @@ const MEASURED = /<script\b[^>]*\bid="print-measure"[^>]*>([\s\S]*?)<\/script>/;
 const DUMPED_UNMEASURED = Symbol("the page was dumped without its measurement");
 const PDF_END = /%%EOF\s*$/;
 const PDF_TAIL_BYTES = 64;
+/**
+ * A Chrome run silent this long has stalled (a healthy one took at most 2.0 s, measured 2026-10-17 over 270 runs at loads
+ * to 137); it is run again, fresh, up to STALL_ATTEMPTS runs in all, each retry named in the report. A hang that is the
+ * page's stalls every attempt and still fails (mockups/png.mjs runChrome; test/qc-chrome-stall.test.mjs).
+ */
+const STALL_MS = 30_000;
+const STALL_ATTEMPTS = 3;
 
 /** The file name before its extension: a piece with a placeholder left is a proof. */
 export const stemOf = (piece, placeholders) => piece.stem + (placeholders.length ? PROOF_SUFFIX : "");
@@ -66,12 +73,12 @@ async function stagePhotos({ photosDir, rungsPath, manifest, stagedPhotos }) {
 }
 
 /** The measuring pass: a copy of the page with measure.js, its DOM dumped by Chrome, the measurement read back. */
-async function measure(chrome, html, measureJs) {
+async function measure(run, html, measureJs) {
   const copy = html.replace(/\.html$/, ".measure.html");
   const page = await readFile(html, "utf8");
   await writeFile(copy, page.replace("</body>", `<script>\n${measureJs.trim()}\n</script>\n</body>`));
   const json = await runChrome({
-    chrome,
+    ...run,
     html: copy,
     args: [`--virtual-time-budget=${SETTLE_MS}`, "--dump-dom"],
     // A whole page dumped without the measurement will never gain it: say so at once rather than wait out the timeout
@@ -84,9 +91,9 @@ async function measure(chrome, html, measureJs) {
 
 const completePdf = (path) => existsSync(path) && PDF_END.test(readFileSync(path).subarray(-PDF_TAIL_BYTES).toString("latin1"));
 
-async function printPdf(chrome, html, pdf) {
+async function printPdf(run, html, pdf) {
   await runChrome({
-    chrome,
+    ...run,
     html,
     args: [`--virtual-time-budget=${SETTLE_MS}`, "--no-pdf-header-footer", `--print-to-pdf=${pdf}`],
     ready: () => completePdf(pdf),
@@ -96,14 +103,14 @@ async function printPdf(chrome, html, pdf) {
 }
 
 /** The pages, each measured and checked; nothing printed. Throws the refusals, every piece's, when there are any. */
-async function planPieces({ chrome, stage, inputs, pixels }) {
+async function planPieces({ run, stage, inputs, pixels }) {
   const printCss = await readFile(join(PRINT_DIR, "print.css"), "utf8");
   const measureJs = await readFile(join(PRINT_DIR, "measure.js"), "utf8");
   const planned = [];
   for (const piece of PRINT_PIECES) {
     const html = join(stage, `${piece.id}.html`);
     await writeFile(html, printPage(piece, inputs, printCss));
-    const measured = await measure(chrome, html, measureJs);
+    const measured = await measure(run, html, measureJs);
     const photos = resolution(measured.faces.flatMap((f) => f.photos), pixels);
     const refusals = [...layoutRefusals(piece, measured), ...photos.refusals];
     const placeholders = placeholdersOf(piece, inputs);
@@ -131,7 +138,7 @@ function assignmentRecord(chosen, planned) {
 }
 
 /** The report: a line per file, the photos, the offer, the QR code, and LAST what placeholders remain. */
-function reportLines({ written, chosen, planned, inputs, eventId }) {
+function reportLines({ written, chosen, planned, inputs, eventId, retries }) {
   const { offer } = campaign(inputs);
   const event = inputs.data.events[inputs.eventIndex];
   const lines = written.map((f) => `wrote ${f}`);
@@ -142,6 +149,7 @@ function reportLines({ written, chosen, planned, inputs, eventId }) {
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
   const which = eventId === undefined ? "the first in data/events.json" : "--event";
   lines.push(`QR: event "${event.id}" (${which}) carries ${event.url} (qr/${event.id}.svg, written by build.mjs writeQrCodes)`);
+  lines.push(...retries);
   const proofs = planned.filter((p) => p.placeholders.length);
   lines.push(
     proofs.length
@@ -166,6 +174,8 @@ export async function buildPrint({
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
   const stage = await mkdtemp(join(tmpdir(), "boston-print-"));
+  const retries = [];
+  const run = { chrome, timeoutMs: STALL_MS, attempts: STALL_ATTEMPTS, onRetry: (note) => retries.push(note) };
   try {
     const stagedPhotos = join(stage, "photos");
     const manifest = await readManifest(manifestPath);
@@ -173,18 +183,21 @@ export async function buildPrint({
     const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
-    const planned = await planPieces({ chrome, stage, inputs, pixels: chosen?.pixels ?? {} });
+    const planned = await planPieces({ run, stage, inputs, pixels: chosen?.pixels ?? {} });
     const written = [];
     for (const p of planned) {
-      written.push(await printPdf(chrome, p.html, join(outDir, `${p.stem}.pdf`)));
+      written.push(await printPdf(run, p.html, join(outDir, `${p.stem}.pdf`)));
       const page = pageOf(p.piece);
       const size = { width: Math.round(page.w * CSS_PX_PER_INCH), height: Math.round(page.h * CSS_PX_PER_INCH) };
-      written.push(await screenshot({ chrome, html: p.html, png: join(outDir, `${p.stem}.png`), ...size, scale: PROOF_SCALE }));
+      written.push(await screenshot({ ...run, html: p.html, png: join(outDir, `${p.stem}.png`), ...size, scale: PROOF_SCALE }));
     }
     const assignment = join(outDir, "assignment.json");
     await writeFile(assignment, `${JSON.stringify(assignmentRecord(chosen, planned), null, 2)}\n`);
     written.push(assignment);
-    return { written, planned, inputs, chosen, lines: reportLines({ written, chosen, planned, inputs, eventId }) };
+    return { written, planned, inputs, chosen, retries, lines: reportLines({ written, chosen, planned, inputs, eventId, retries }) };
+  } catch (err) {
+    if (retries.length) err.message += `\n(and Chrome runs retried before it: ${retries.join("; ")})`;
+    throw err;
   } finally {
     await rm(stage, { recursive: true, force: true });
   }

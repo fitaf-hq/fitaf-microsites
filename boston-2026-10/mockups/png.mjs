@@ -61,13 +61,16 @@ const BASE_FLAGS = [
   "--disable-extensions",
 ];
 
-/**
- * Run headless Chrome on a file with `args`, in its own process group, until `ready({ stdout })` gives a value (polled);
- * then stop the group and return that value. `what` completes "Chrome did not ..." in a failure. A Chrome that exits
- * without the value, or never gives it, fails (after `timeoutMs`).
- */
-export async function runChrome({ chrome = CHROME_DEFAULT, html, args, ready, what, timeoutMs = CHROME_TIMEOUT_MS }) {
-  if (!existsSync(chrome)) throw new Error(`Chrome not found at ${chrome}: set CHROME=<path to the Chrome binary>`);
+/** A run that gave no value before its deadline while Chrome still ran: a stall, which a fresh Chrome may not repeat. */
+class ChromeStalled extends Error {
+  constructor(what, timeoutMs, stderr) {
+    super(`Chrome did not ${what} within ${timeoutMs} ms: ${stderr}`);
+    Object.assign(this, { what, timeoutMs, stderr });
+  }
+}
+
+/** One run: Chrome in its own process group until `ready` gives a value, a stall (ChromeStalled) or an exit without it. */
+async function runOnce({ chrome, html, args, ready, what, timeoutMs }) {
   const profile = mkdtempSync(join(tmpdir(), "boston-mockup-chrome-"));
   const child = spawn(chrome, [...BASE_FLAGS, `--user-data-dir=${profile}`, ...args, pathToFileURL(html).href], {
     detached: true,
@@ -84,7 +87,7 @@ export async function runChrome({ chrome = CHROME_DEFAULT, html, args, ready, wh
     const deadline = Date.now() + timeoutMs;
     let value = look();
     while (!value) {
-      if (Date.now() > deadline) throw new Error(`Chrome did not ${what} within ${timeoutMs} ms: ${stderr}`);
+      if (Date.now() > deadline) throw new ChromeStalled(what, timeoutMs, stderr);
       const gone = child.exitCode !== null;
       await Promise.race([sleep(POLL_MS), failed]);
       value = look();
@@ -97,7 +100,32 @@ export async function runChrome({ chrome = CHROME_DEFAULT, html, args, ready, wh
   }
 }
 
-export async function screenshot({ chrome = CHROME_DEFAULT, html, png, width, height, scale = DEVICE_SCALE }) {
+/**
+ * Run headless Chrome on a file with `args`, in its own process group, until `ready({ stdout })` gives a value (polled);
+ * then stop the group and return that value. `what` completes "Chrome did not ..." in a failure. A Chrome that exits
+ * without the value fails at once. One that gives nothing within `timeoutMs` while still running has stalled: it is
+ * stopped and, up to `attempts` runs in all, run again in a fresh profile, each retry told to `onRetry`; a stall on
+ * every attempt fails. (The printed pieces take 3 attempts of 30 s, SPEC-print-pieces.md: a healthy run took at most
+ * 2.0 s, measured 2026-10-17 over 270 runs at loads to 137, and three suite runs met a Chrome that stalled, silent, for
+ * 90 s. A hang that is the page's or the flags' stalls every attempt, so it still fails, after attempts × timeoutMs.)
+ */
+export async function runChrome({ chrome = CHROME_DEFAULT, html, args, ready, what, timeoutMs = CHROME_TIMEOUT_MS, attempts = 1, onRetry = () => {} }) {
+  if (!existsSync(chrome)) throw new Error(`Chrome not found at ${chrome}: set CHROME=<path to the Chrome binary>`);
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await runOnce({ chrome, html, args, ready, what, timeoutMs });
+    } catch (err) {
+      if (!(err instanceof ChromeStalled)) throw err;
+      if (attempt >= attempts) {
+        if (attempts === 1) throw err;
+        throw new Error(`Chrome did not ${what} within ${timeoutMs} ms on any of ${attempts} attempts: ${err.stderr}`);
+      }
+      onRetry(`Chrome stalled (nothing within ${timeoutMs} ms) and was run again, attempt ${attempt + 1} of ${attempts}: ${what}`);
+    }
+  }
+}
+
+export async function screenshot({ chrome = CHROME_DEFAULT, html, png, width, height, scale = DEVICE_SCALE, ...retry }) {
   if (!existsSync(chrome)) {
     throw new Error(`Chrome not found at ${chrome}: set CHROME=<path to the Chrome binary>, or run with --no-png`);
   }
@@ -108,6 +136,7 @@ export async function screenshot({ chrome = CHROME_DEFAULT, html, png, width, he
     args: [`--force-device-scale-factor=${scale}`, `--window-size=${width},${height}`, `--virtual-time-budget=${SETTLE_MS}`, `--screenshot=${png}`],
     ready: () => completePng(png),
     what: `write ${png}`,
+    ...retry,
   });
   const [w, h] = [bytes.readUInt32BE(16), bytes.readUInt32BE(20)];
   if (w !== width * scale || h !== height * scale) {

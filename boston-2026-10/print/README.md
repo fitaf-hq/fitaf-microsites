@@ -46,6 +46,11 @@ stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the 
    to the page's edge; or a page or trim is not § 2's size.
 4. **The PDF** (`--print-to-pdf`, `@page` sized) and **the PNG proof** (`--screenshot`), by `mockups/png.mjs`'s
    `runChrome`: one way to run Chrome in this package.
+5. **A stalled Chrome run is run again.** Each run (measure, PDF, PNG) gets 30 s; one silent that long while Chrome
+   still runs is stopped and run again in a fresh profile, up to 3 runs, and **the report names every retry**. Measured
+   2026-10-17: a healthy run takes at most 2.0 s (270 runs, at loads up to 137), and three suite runs on a loaded machine
+   met a Chrome that stayed alive and silent for 90 s, which did not recur in 240 runs alone. A hang that is the page's,
+   or the flags', stalls every attempt and still fails, after 90 s, as before (test QC).
 
 ## Sizes ([`sizes.mjs`](sizes.mjs), one place, to change when the vendor's specification is known)
 
