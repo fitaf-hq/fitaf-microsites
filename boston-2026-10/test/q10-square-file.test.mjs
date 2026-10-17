@@ -46,7 +46,7 @@ test("Q10: a photo the deliverable lacks, one with no square, or a key that is n
 
 test("Q10: built, the tiles are printed from their square files, at the squares' own resolution", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-print");
-  await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20" });
+  await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20", variants: ["b"], fourFlyers: false });
   const { positions } = JSON.parse(await readFile(join(out, "assignment.json"), "utf8"));
   const { ids } = set;
   assert.deepEqual(

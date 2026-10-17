@@ -61,25 +61,45 @@ ${inputs.scripts.sheet.trim()}
 `;
 }
 
-function scanBlock(parts, c, cls) {
+/** The QR code with the scan prompt and the address beside it; `under` (SPEC-print-pieces.md § 8): the address alone, under it. */
+function scanBlock(parts, c, cls, { under = false } = {}) {
+  if (under) return `<div class="scan scan-under ${cls}">${parts.qr(c)}${parts.text("p", "address", c.address, "web address")}</div>`;
   return `<div class="scan ${cls}">${parts.qr(c)}<div class="scan-text">${parts.text("p", "scan-prompt", c.scan, "scan prompt")}${parts.text("p", "address", c.address, "web address")}</div></div>`;
 }
+
+/**
+ * The printed tent card's options (SPEC-print-pieces.md § 8, the Advisor, 2026-10-17), which the mock-ups never pass:
+ * `short` drops the words § 8 drops and puts the address under the QR code; `logo` places the logo: "bar" (a, in the navy
+ * bar at its left), "photo" (b, on a plate over the large photo's corner), "large" (c, larger, above the headline). The
+ * flyer's are its own (§ 9, below). Without them a face is exactly the mock-up's, its parts made in the mock-up's order,
+ * so its legend is unchanged.
+ */
+const barLine = (parts, c, logo) =>
+  parts.line("p", "event-bar", c.eventLine, "event line", logo === "bar" ? `<b class="bar-plate">${parts.logo()}</b>` : "");
 
 /**
  * The tent card's face: three photos, the logo, the headline, the offer and the QR code. The face's markup alone, shared by
  * the mock-up's sheet and the printed tent card (print/, SPEC-print-pieces.md), so one change reaches both.
  */
-export function tentFace(c, parts) {
+export function tentFace(c, parts, { short = false, logo } = {}) {
+  const bar = barLine(parts, c, logo);
+  const photos = `${parts.photo("tent-large")}${parts.photo("tent-top")}${parts.photo("tent-bottom")}`;
+  const plate = logo === "photo" ? `<div class="logo-plate">${parts.logo()}</div>` : "";
+  const bodyLogo = logo === undefined ? parts.logo("tent-logo") : logo === "large" ? parts.logo("tent-logo logo-large") : "";
+  const headline = parts.text("h1", "headline", c.headline, "headline");
+  const subhead = short ? "" : `
+  ${parts.text("p", "subhead", c.subhead, "subhead")}`;
+  const offer = parts.text("p", "offer", c.offer, "the offer");
+  const scan = scanBlock(parts, c, "tent-scan", { under: short });
   return `
-${parts.line("p", "event-bar", c.eventLine, "event line")}
-<div class="tent-photos">${parts.photo("tent-large")}${parts.photo("tent-top")}${parts.photo("tent-bottom")}</div>
+${bar}
+<div class="tent-photos">${photos}${plate}</div>
 <div class="tent-body">
-  ${parts.logo("tent-logo")}
+  ${bodyLogo}
   <span class="rule"></span>
-  ${parts.text("h1", "headline", c.headline, "headline")}
-  ${parts.text("p", "subhead", c.subhead, "subhead")}
-  ${parts.text("p", "offer", c.offer, "the offer")}
-  ${scanBlock(parts, c, "tent-scan")}
+  ${headline}${subhead}
+  ${offer}
+  ${scan}
 </div>`;
 }
 
@@ -91,19 +111,31 @@ export function tentCard(inputs) {
 
 /**
  * The flyer: one hero photo, the offer, a short line on the plans, the QR code. Its markup alone, shared by the mock-up's
- * sheet and the printed flyer (print/).
+ * sheet and the printed flyer (print/). The printed flyer's options (SPEC-print-pieces.md §§ 8–9), which the mock-up never
+ * passes: `short` keeps the photo, the offer and the QR code with the address; `header: false` drops the navy bar and its
+ * words; `logo: "corner"` puts the one logo at the bottom right of the face, after the QR code, instead of on the photo.
  */
-export function flyerFace(c, parts) {
-  return `
-${parts.line("p", "event-bar", c.eventLine, "event line")}
-<div class="flyer-hero">${parts.photo("flyer")}<div class="logo-plate">${parts.logo()}</div></div>
-<div class="flyer-body">
+export function flyerFace(c, parts, { short = false, header = true, logo } = {}) {
+  const bar = header ? parts.line("p", "event-bar", c.eventLine, "event line") : "";
+  const photo = parts.photo("flyer");
+  const plate = logo === undefined ? `<div class="logo-plate">${parts.logo()}</div>` : "";
+  const headlineBlock = short
+    ? ""
+    : `
   <span class="rule"></span>
   ${parts.text("h1", "headline", c.headline, "headline")}
   ${parts.text("p", "tagline", c.tagline, "tagline")}
-  <div class="plans-line">${parts.planNames(c.plans, "plan names")}${parts.text("p", "from-price", c.fromPrice, "lowest price per meal")}</div>
-  ${parts.text("p", "offer", c.offer, "the offer")}
-  ${scanBlock(parts, c, "flyer-scan")}
+  <div class="plans-line">${parts.planNames(c.plans, "plan names")}${parts.text("p", "from-price", c.fromPrice, "lowest price per meal")}</div>`;
+  const offer = parts.text("p", "offer", c.offer, "the offer");
+  const scan = scanBlock(parts, c, "flyer-scan", { under: short });
+  const corner = logo === "corner" ? `
+  ${parts.logo("flyer-logo logo-corner")}` : "";
+  return `
+${bar}
+<div class="flyer-hero">${photo}${plate}</div>
+<div class="flyer-body">${headlineBlock}
+  ${offer}
+  ${scan}${corner}
 </div>`;
 }
 

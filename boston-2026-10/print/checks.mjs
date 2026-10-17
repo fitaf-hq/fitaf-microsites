@@ -78,3 +78,19 @@ export function layoutFindings(piece, measure) {
   });
   return { refusals, warnings };
 }
+
+/**
+ * § 9 item 2: how a photo shows in its window. It covers its box (the window and its bleed), centred, so it is scaled by
+ * the larger of the two ratios; what shows is the box's part inside the trim, the window. Returns the photo's shape (width
+ * over height), the window's, and the fractions of the photo's width and height that show.
+ */
+export function showing(pixels, box, trim) {
+  const inchesPerPixel = Math.max(box.w / pixels.width, box.h / pixels.height);
+  const shown = { w: Math.min(box.x + box.w, trim.x + trim.w) - Math.max(box.x, trim.x), h: Math.min(box.y + box.h, trim.y + trim.h) - Math.max(box.y, trim.y) };
+  return {
+    shape: pixels.width / pixels.height,
+    window: shown.w / shown.h,
+    width: shown.w / (pixels.width * inchesPerPixel),
+    height: shown.h / (pixels.height * inchesPerPixel),
+  };
+}
