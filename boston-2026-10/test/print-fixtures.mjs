@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { buildPrint } from "../print/build-print.mjs";
+import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT } from "../mockups/png.mjs";
 
 export const CHROME = process.env.CHROME || CHROME_DEFAULT;
@@ -111,6 +112,17 @@ export function pdfPages(bytes) {
   return { pages, boxes };
 }
 
+/**
+ * The words SPEC-print-pieces.md § 8 drops, read from the pieces' own data (never typed here): the tent's subhead and scan
+ * prompt (item 1); the flyer's headline block, its headline, tagline, four plan names and lowest price, and its scan prompt
+ * (item 2: the flyer is the bar, the photo, the offer and the QR code with the address).
+ */
+export function droppedWords(inputs, pieceId) {
+  const c = campaign(inputs);
+  if (pieceId === "tent-card") return [c.subhead.value, c.scan.value];
+  return [c.headline.value, c.tagline.value, ...c.plans.map((p) => p.name.value), c.fromPrice.value, c.scan.value];
+}
+
 /** A photo ID in Image Gauge's form (p + six hex digits), new each run. */
 export const randomId = () => `p${randomBytes(3).toString("hex")}`;
 
@@ -140,11 +152,12 @@ export const deliverableDoc = (ids, keys = SQUARE_KEYS) => ({
  * A folder of synthetic photos, the rungs file that names them and the deliverable that lists their squares. Each photo
  * is there as composed (`<id>.jpg`, 3000 × 2000, landscape, unless `sizes` maps its role to another [width, height]) and
  * as each square (`<id>-sq-<key>.jpg`, 1200 × 1200, or `squareSizes[role]`). Rung 1 is the flyer's photo then another;
- * rung 3's first array holds the flyer's photo (so the rule must skip it), its second does not.
+ * rung 3's first array holds the flyer's photo (so the rule must skip it), its second does not; rung 4's first array
+ * holds one of the tent's photos (so § 8's rule must skip it), its second (`one` to `four`) does not.
  */
 export async function photoSet({ sizes = {}, squareSizes = {}, rung1 = ["flyer", "other"] } = {}) {
   const dir = await mkdtemp(join(tmpdir(), "boston-print-photos-"));
-  const roles = ["flyer", "other", "large", "top", "bottom", "spare", "portrait"];
+  const roles = ["flyer", "other", "large", "top", "bottom", "spare", "portrait", "one", "two", "three", "four"];
   const ids = Object.fromEntries(roles.map((role) => [role, randomId()]));
   for (const [role, id] of Object.entries(ids)) {
     await writeFile(join(dir, `${id}.jpg`), fixtureJpeg(...(sizes[role] ?? (role === "portrait" ? [2000, 3000] : [3000, 2000]))));
@@ -153,7 +166,10 @@ export async function photoSet({ sizes = {}, squareSizes = {}, rung1 = ["flyer",
   const doc = rungsDoc({
     strongest: [],
     alsoGood: rung1.map((role) => ids[role]),
-    arrays: { 3: [[ids.spare, ids.flyer, ids.other], [ids.large, ids.top, ids.bottom]] },
+    arrays: {
+      3: [[ids.spare, ids.flyer, ids.other], [ids.large, ids.top, ids.bottom]],
+      4: [[ids.spare, ids.top, ids.other, ids.flyer], [ids.one, ids.two, ids.three, ids.four]],
+    },
   });
   const rungsPath = join(dir, "image-rungs.json");
   await writeFile(rungsPath, JSON.stringify(doc, null, 1));

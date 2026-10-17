@@ -11,6 +11,22 @@ checks. The legend (*"Where each part comes from"*) is a screen-share device and
 The print build re-lays out no face: its rules set the page, the bleed and the safe margin, and **nothing that moves a
 part** (Q9 measures every part against the mock-up's sheet). The first tent proof, a landscape re-layout, was wrong.
 
+⭐ **§ 8 (the Advisor, on the § 7 proofs): fewer words, the logo in three places, four flyers.** The faces are still the
+mock-ups' own (`tentFace`, `flyerFace`), given § 8's options, which **the mock-ups never take: they are unchanged**.
+- **The words**: the tent drops its subhead and its scan prompt; the flyer drops its headline block (the rule, the
+  headline, the tagline, the four plan names, the lowest price) and its scan prompt, and is the bar, the photo, the offer
+  and the QR code. On both, `eatfitaf.com` sits directly under the QR code, centred on it. Emptied space stays empty.
+- **The logo, three variants**, each piece in each, each its own proof named by its letter: **(a)** in the navy bar at its
+  left, on a small white plate (the logo's ink is dark), the bar's words beside it, the bar's height unchanged; **(b)** on
+  a plate over the main photo's top-left corner (the flyer's hero, as in the mock-up; the tent's large photo); **(c)**
+  larger, above the tent's headline (136px, the most its body holds) and the flyer's offer (168px).
+  ⭐ **The variant is ONE named value, `VARIANTS` in [`pages.mjs`](pages.mjs)**: set it to the chosen letter and that
+  variant is the build's only output.
+- **Four flyers**, `flyer-1` to `flyer-4`, each a full single flyer with its own bleed and its own photo, as composed: the
+  first array of rung 4 without the tent's three photos (else the first), in its order. The vendor imposes them; a PNG
+  preview shows the four side by side (`flyer-1-4-<letter>.png`).
+- The photos' crops are unchanged by § 8 (the Advisor is choosing how the windows and Image Gauge's crops are reconciled).
+
 ## Build
 
 ```sh
@@ -19,9 +35,10 @@ npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --d
 npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --deliverable FILE --on 2026-10-23 --event demo
 ```
 
-`dist-print/` (**git-ignored, emptied at every run, never hand-edited**): `flyer.pdf`, `tent-card.pdf`, a PNG proof of
-each at 1× (one pixel per CSS pixel, 96 per inch: the PDF's page as Chrome draws it), and `assignment.json` (which photo
-went where, by ID, with its pixels, its window and its ppi). **A piece carrying any placeholder** (a photo position
+`dist-print/` (**git-ignored, emptied at every run, never hand-edited**), per variant letter: `tent-card-<l>.pdf`,
+`flyer-<l>.pdf` and `flyer-1-<l>.pdf` to `flyer-4-<l>.pdf`, a PNG proof of each at 1× (one pixel per CSS pixel, 96 per
+inch: the PDF's page as Chrome draws it), `flyer-1-4-<l>.png` (the four side by side); and `assignment.json` (which photo
+went where, by ID, with its pixels, its window and its ppi; the four flyers' photos; the rung-1 photos skipped). **A piece carrying any placeholder** (a photo position
 without a photo, or the offer while `data/offers.json` says `"status": "placeholder"` or its label is a bracketed
 stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the report's last line names what remains.
 
@@ -90,12 +107,16 @@ No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (�
 | Q6 | `-PROOF` with no photos, and with photos while the offer is a placeholder; plain names with photos and a named offer; the last line |
 | Q7 | a word changed in a mirror of `data/messages.json` changes the mock-up's flyer and the printed one alike; every printed text run is the mock-up's own; the build's QR; no colour of the print's own |
 | Q8 | no legend, switch, caption or script on a printed piece (the mock-ups' as the control) |
-| Q9 | each printed face's parts sit where the mock-up's sheet puts them, the same boxes scaled, within half a mock-up pixel: every cited part, photo and run of text, clipped to the trim, both tent faces (the upper turned back) and the flyer |
+| Q9 | each printed face's parts sit where the mock-up's sheet puts them, the same boxes scaled, within half a mock-up pixel, but for those § 8 drops, adds and moves (a table per piece and variant: every part it says moves must have moved, every other must not): every cited part, photo and run of text, clipped to the trim, both tent faces (the upper turned back) and the flyer |
 | Q10 | the tiles print `<id>-sq-<key>.jpg` for the deliverable's first key, the large photo and the hero `<id>.jpg`; a photo or square missing, or a bad key, refused; built, each tile at its square's own resolution |
 | Q11 | the flyer is rung 1's first landscape photo, a portrait and a square before it skipped and named; none landscape refused; built, the report and `assignment.json` name the skipped |
+| Q12 | § 8's dropped words are in no printed page's markup (every variant, the four flyers too), no printed page carries a word its mock-up lacks, and the mock-ups (and the banner and slideshow) still carry them |
+| Q13 | `eatfitaf.com`'s glyphs centred under the QR code and directly under it (within 0.1 in), on every face of every page, measured in Chrome |
+| Q14 | three variants, one named value; every page named by its letter; (a) the logo in the bar's plate, (b) on a plate over the main photo, (c) larger and first in the body; built, each piece in each variant its own proof |
+| Q15 | the four flyers' rule (the first rung-4 array without the tent's photos, else the first; refusals); built, four different photos from it, each a one-page flyer at the flyer's size, and the preview of the four |
 | QC | a Chrome run silent 30 s is run again (up to 3), each retry reported; a stall on every attempt still fails (a stand-in Chrome) |
 
-The cases that render (Q1, Q2, Q9, and parts of Q4–Q6, Q10 and Q11) need Chrome (`CHROME=<path>`, else the macOS default) and **skip,
+The cases that render (Q1, Q2, Q9, Q13, and parts of Q4–Q6, Q10, Q11, Q14 and Q15) need Chrome (`CHROME=<path>`, else the macOS default) and **skip,
 saying so, when none is found**. Their photos are synthetic JPEGs made at test time (`test/print-fixtures.mjs`) with IDs
 made at random, and they build into a temporary folder, so `npm test` never empties a real `dist-print/`. They build
 one at a time across the suite's parallel processes (a lock directory in the system's temporary folder): several builds

@@ -49,7 +49,7 @@ test("Q11: no landscape photo in rung 1 is refused; a photo whose size cannot be
 
 test("Q11: built, the report names the skipped photo and assignment.json records it", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-print");
-  const built = await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20", variants: ["b"], fourFlyers: false });
   assert.ok(built.lines.includes("flyer: skipped rung 1, photo 1 (2000 × 3000 px, not landscape)"), built.lines.join("\n"));
   const record = JSON.parse(await readFile(join(out, "assignment.json"), "utf8"));
   assert.equal(record.positions.flyer.id, set.ids.flyer);

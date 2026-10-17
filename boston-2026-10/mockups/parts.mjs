@@ -77,10 +77,10 @@ export function makeParts(inputs) {
       note(value.src, label);
       return `<${tag} class="${cls}" ${cite(value.src)}>${esc(value.value)}</${tag}>`;
     },
-    /** A line of values; the separating dot is drawn by the stylesheet, so it is not text. */
-    line(tag, cls, values, label) {
+    /** A line of values; the separating dot is drawn by the stylesheet, so it is not text. `lead`: markup before them. */
+    line(tag, cls, values, label, lead = "") {
       note(values.flatMap((v) => v.src), label);
-      return `<${tag} class="parts ${cls}">${values.map((v) => `<span ${cite(v.src)}>${esc(v.value)}</span>`).join("")}</${tag}>`;
+      return `<${tag} class="parts ${cls}">${lead}${values.map((v) => `<span ${cite(v.src)}>${esc(v.value)}</span>`).join("")}</${tag}>`;
     },
     /** The plan names as the page's cards: each with its plan colour as a top bar (an accent, never behind text). */
     planNames(plans, label) {

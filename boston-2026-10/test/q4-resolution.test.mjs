@@ -51,10 +51,10 @@ test("Q4: the build refuses a fixture photo below 300 ppi at its window, naming 
   await mkdir(out, { recursive: true });
   await writeFile(join(out, "flyer.pdf"), "a stale piece from an earlier run");
   await assert.rejects(
-    lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20" }),
+    lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20", variants: ["a"], fourFlyers: false }),
     (err) => {
       assert.match(err.message, /^refused, nothing printed:/);
-      assert.match(err.message, /flyer: photo position flyer: 900 × 400 px over its window of 4\.50 × \d\.\d\d in is \d+ ppi, below 300/);
+      assert.match(err.message, /flyer-a: photo position flyer: 900 × 400 px over its window of 4\.50 × \d\.\d\d in is \d+ ppi, below 300/);
       assert.doesNotMatch(err.message, /tent-(large|top|bottom)/, "the tent's photos (2400 px) pass");
       return true;
     },

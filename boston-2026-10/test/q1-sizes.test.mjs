@@ -27,7 +27,8 @@ test("Q1: the sizes, in points: the flyer 324 × 414, the tent card 306 × 882 (
 
 test("Q1: each PDF is one page, its media box the sheet plus twice the bleed; each face's trim measured at its size", { skip: NO_CHROME }, async () => {
   const out = join(tmp, "dist-print");
-  const built = await lockedBuild({ outDir: out, today: "2026-10-20" });
+  // One variant, the flyer and the tent (variant c keeps the bar as the mock-up has it); Q15 holds the four flyers' sizes
+  const built = await lockedBuild({ outDir: out, today: "2026-10-20", variants: ["c"], fourFlyers: false });
   for (const p of built.planned) {
     const { pages, boxes } = pdfPages(await readFile(join(out, `${p.stem}.pdf`)));
     const { w, h } = pagePoints(p.piece);
@@ -40,7 +41,8 @@ test("Q1: each PDF is one page, its media box the sheet plus twice the bleed; ea
     for (const face of p.measured.faces) {
       assert.ok(Math.abs(face.trim.w - p.piece.face.w) < 0.01 && Math.abs(face.trim.h - p.piece.face.h) < 0.01, `${p.piece.id}: a face's trim`);
     }
-    assert.ok(p.measured.faces.every((f) => f.texts.length >= 5 && f.qrs.length === 1), `${p.piece.id}: the pass measured its text and its QR code (control)`);
+    // § 8's flyer carries four runs (the bar's two, the offer, the address); the tent five (and its headline)
+    assert.ok(p.measured.faces.every((f) => f.texts.length >= 4 && f.qrs.length === 1), `${p.piece.id}: the pass measured its text and its QR code (control)`);
     const { refusals, warnings } = layoutFindings(p.piece, p.measured);
     assert.deepEqual(refusals, [], `${p.piece.id}: nothing refused`);
     // The one known finding: the approved flyer's bar words sit 0.10 in below the top trim (§ 7 forbids moving them)

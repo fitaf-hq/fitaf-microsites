@@ -2,7 +2,9 @@
 
 **Mock-ups for a SCREEN SHARE at an Owner meeting. Nothing here is printed and nothing is print-ready.**
 The printed tent card and flyer are [`print/`](../print/README.md)'s (`SPEC-print-pieces.md`): it prints these same
-faces (`pieces.mjs` `tentFace` and `flyerFace`, with `parts.mjs` and `inputs.mjs`), so a change here reaches both.
+faces (`pieces.mjs` `tentFace` and `flyerFace`, with `parts.mjs` and `inputs.mjs`), so a change here reaches both. It
+gives them `SPEC-print-pieces.md` § 8's options (fewer words, a logo variant), which the mock-ups never take: they are as
+they were.
 A tabletop tent card, a quarter-page flyer, a retractable banner and a slideshow, built to carry two
 messages:
 

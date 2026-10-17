@@ -116,3 +116,28 @@ export function photoFiles(assignment, deliverable) {
     }),
   );
 }
+
+/** § 8 item 4: how many flyers, and so how many photos in a rung-4 array. */
+export const FOUR = 4;
+
+/**
+ * § 8 item 4: the four flyers' photos, flyer-1 to flyer-4 in order: the first array of rung 4 that holds none of the
+ * tent's three photos, if one exists, else the first array. A missing rung 4, an empty one, or an array that is not four
+ * photo IDs is refused, naming it. Returns { ids, from }.
+ */
+export function fourFlyerPhotos(doc, tentIds, pool = POOL) {
+  const rungs = doc?.pools?.[pool]?.rungs;
+  if (!rungs || typeof rungs !== "object") throw new Error(`the rungs file has no pool "${pool}" (pools.${pool}.rungs)`);
+  const four = rungs[String(FOUR)];
+  if (!four || !Array.isArray(four.arrays)) throw new Error(`pool "${pool}" has no rung ${FOUR} (its "arrays")`);
+  if (four.arrays.length === 0) throw new Error(`pool "${pool}", rung ${FOUR} has no array`);
+  four.arrays.forEach((array, i) => {
+    const where = `pool "${pool}", rung ${FOUR}, array ${i + 1}`;
+    if (!Array.isArray(array) || array.length !== FOUR) throw new Error(`${where}: not ${FOUR} photo IDs`);
+    array.forEach((id, j) => checkId(id, `${where}, photo ${j + 1}`));
+  });
+  const index = four.arrays.findIndex((array) => !array.some((id) => tentIds.includes(id)));
+  const why = index === -1 ? "every array holds one of the tent's photos" : "the first without the tent's photos";
+  const chosen = index === -1 ? 0 : index;
+  return { ids: [...four.arrays[chosen]], from: `rung ${FOUR}, array ${chosen + 1} (${why})` };
+}

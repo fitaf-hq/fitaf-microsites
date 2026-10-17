@@ -1,9 +1,10 @@
 // `npm run build:print`: the printed tent card and quarter-sheet flyer (SPEC-print-pieces.md), written to dist-print/
-// (git-ignored, emptied at every run): tent-card.pdf and flyer.pdf, a PNG proof of each at 1× (one pixel per CSS pixel,
-// 96 per inch), and assignment.json (which photo went where). A piece still carrying a placeholder (a photo, or the
-// offer) is a proof: its files end "-PROOF", and the report's last line says what remains. The pieces are OUTPUTS of the
-// mock-ups' own faces, parts and inputs (mockups/), so a change to a shared file changes the mock-up and the printed piece
-// alike; the legend is not printed.
+// (git-ignored, emptied at every run). For each logo variant (§ 8: pages.mjs VARIANTS, the one named value): the tent card,
+// the flyer and the four flyers flyer-1 to flyer-4, each a PDF and a PNG proof at 1× (one pixel per CSS pixel, 96 per
+// inch), named by its letter (tent-card-a.pdf, flyer-3-b.pdf), and a PNG preview of the four flyers side by side
+// (flyer-1-4-a.png); and assignment.json (which photo went where). A page still carrying a placeholder (a photo, or the
+// offer) is a proof: its files end "-PROOF", and the report's last line says what remains. The pages are OUTPUTS of the
+// mock-ups' own faces, parts and inputs (mockups/), with § 8's words and logo; the legend is not printed.
 //
 //   node print/build-print.mjs [--photos-dir DIR --rungs FILE --deliverable FILE] [--on YYYY-MM-DD] [--event ID]
 //
@@ -24,15 +25,15 @@ import { existsSync, readFileSync } from "node:fs";
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { copyStatic, loadJson, ROOT, writeQrCodes } from "../build.mjs";
 import { loadInputs, MANIFEST_PATH, readManifest } from "../mockups/inputs.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
-import { assignPhotos, photoFiles, skippedLines } from "./assign.mjs";
+import { assignPhotos, fourFlyerPhotos, photoFiles, skippedLines, TENT_POSITIONS } from "./assign.mjs";
 import { layoutFindings, resolution } from "./checks.mjs";
 import { jpegSize } from "./jpeg.mjs";
-import { placeholdersOf, printPage } from "./pages.mjs";
+import { pagesToPrint, placeholdersOf, printPage, VARIANTS } from "./pages.mjs";
 import { CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
 
 export const PRINT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -51,8 +52,10 @@ const PDF_TAIL_BYTES = 64;
 const STALL_MS = 30_000;
 const STALL_ATTEMPTS = 3;
 
-/** The file name before its extension: a piece with a placeholder left is a proof. */
-export const stemOf = (piece, placeholders) => piece.stem + (placeholders.length ? PROOF_SUFFIX : "");
+/** The file name before its extension: a page with a placeholder left is a proof. */
+export const stemOf = (page, placeholders) => page.base + (placeholders.length ? PROOF_SUFFIX : "");
+/** § 8 item 4's preview of the four flyers: their PNG proofs side by side, this far apart and from the edge (CSS px). */
+const PREVIEW_GUTTER_PX = 24;
 
 /** A photo file's upright pixel size, from its header; a file missing or unreadable is refused, naming it. */
 function sizeOfFile(photosDir, file) {
@@ -66,11 +69,13 @@ function sizeOfFile(photosDir, file) {
 }
 
 /**
- * §§ 3 and 7: the rule's photos (the flyer's rung-1 photo read for its shape), each position's file (a tile's square, by
- * the deliverable), each checked to be in --photos-dir and read for its pixel size, copied under its position's name.
+ * §§ 3, 7 and 8: the rule's photos (the flyer's rung-1 photo read for its shape), each position's file (a tile's square, by
+ * the deliverable), each checked to be in --photos-dir and read for its pixel size, copied under its position's name; and,
+ * with the four flyers, rung 4's four (as composed), copied as flyer-1.jpg to flyer-4.jpg.
  */
-async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos }) {
-  const assignment = assignPhotos(await loadJson(rungsPath), { sizeOf: (id) => sizeOfFile(photosDir, `${id}.jpg`) });
+async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers }) {
+  const rungs = await loadJson(rungsPath);
+  const assignment = assignPhotos(rungs, { sizeOf: (id) => sizeOfFile(photosDir, `${id}.jpg`) });
   const files = photoFiles(assignment, await loadJson(deliverablePath));
   await mkdir(stagedPhotos, { recursive: true });
   const pixels = {};
@@ -84,7 +89,38 @@ async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, st
     }
     await copyFile(join(photosDir, file), join(stagedPhotos, staged));
   }
-  return { assignment, files, pixels };
+  const four = [];
+  if (fourFlyers) {
+    const chosen = fourFlyerPhotos(rungs, TENT_POSITIONS.map((p) => assignment.positions[p]));
+    for (const [i, id] of chosen.ids.entries()) {
+      const number = i + 1;
+      const from = `${chosen.from}, photo ${number}`;
+      const file = `${id}.jpg`;
+      let size;
+      try {
+        size = sizeOfFile(photosDir, file);
+      } catch (err) {
+        throw new Error(`flyer-${number} (${from}): ${err.message}`);
+      }
+      await copyFile(join(photosDir, file), join(stagedPhotos, `flyer-${number}.jpg`));
+      four.push({ number, id, from, file, staged: `flyer-${number}.jpg`, pixels: size });
+    }
+  }
+  return { assignment, files, pixels, four };
+}
+
+/** A page's inputs: the build's, but for flyer-1 to flyer-4, whose hero is their own photo (or the placeholder). */
+function inputsFor(page, inputs, chosen) {
+  if (!page.number) return inputs;
+  const own = chosen?.four[page.number - 1];
+  const flyer = own ? { file: own.staged, present: true } : inputs.photos.flyer;
+  return { ...inputs, photos: { ...inputs.photos, flyer } };
+}
+
+/** The pixels each of a page's photo positions prints from. */
+function pixelsFor(page, chosen) {
+  if (!chosen) return {};
+  return page.number ? { flyer: chosen.four[page.number - 1].pixels } : chosen.pixels;
 }
 
 /** The measuring pass: a copy of the page with measure.js, its DOM dumped by Chrome, the measurement read back. */
@@ -117,64 +153,112 @@ async function printPdf(run, html, pdf) {
   return pdf;
 }
 
-/** The pages, each measured and checked; nothing printed. Throws the refusals, every piece's, when there are any. */
-async function planPieces({ run, stage, inputs, pixels }) {
+/** The pages, each measured and checked; nothing printed. Throws the refusals, every page's, when there are any. */
+async function planPages({ run, stage, inputs, pages, chosen }) {
   const printCss = await readFile(join(PRINT_DIR, "print.css"), "utf8");
   const measureJs = await readFile(join(PRINT_DIR, "measure.js"), "utf8");
   const planned = [];
-  for (const piece of PRINT_PIECES) {
-    const html = join(stage, `${piece.id}.html`);
-    await writeFile(html, printPage(piece, inputs, printCss));
+  for (const page of pages) {
+    const pageInputs = inputsFor(page, inputs, chosen);
+    const html = join(stage, `${page.base}.html`);
+    await writeFile(html, printPage(page.piece, pageInputs, printCss, page.variant));
     const measured = await measure(run, html, measureJs);
-    const photos = resolution(measured.faces.flatMap((f) => f.photos), pixels);
-    const layout = layoutFindings(piece, measured);
+    const photos = resolution(measured.faces.flatMap((f) => f.photos), pixelsFor(page, chosen));
+    const layout = layoutFindings(page.piece, measured);
     const refusals = [...layout.refusals, ...photos.refusals];
-    const placeholders = placeholdersOf(piece, inputs);
-    planned.push({ piece, html, measured, photos: photos.rows, refusals, warnings: layout.warnings, placeholders, stem: stemOf(piece, placeholders) });
+    const placeholders = placeholdersOf(page.piece, pageInputs);
+    planned.push({ page, piece: page.piece, html, measured, photos: photos.rows, refusals, warnings: layout.warnings, placeholders, stem: stemOf(page, placeholders) });
   }
-  const refused = planned.flatMap((p) => p.refusals.map((r) => `${p.piece.id}: ${r}`));
+  const refused = planned.flatMap((p) => p.refusals.map((r) => `${p.page.base}: ${r}`));
   if (refused.length) throw new Error(`refused, nothing printed:\n${refused.join("\n")}`);
   return planned;
 }
 
+/** § 8 item 4: per variant, the four flyers' PNG proofs side by side, as one PNG (a preview; the vendor imposes the PDFs). */
+async function writePreviews({ run, stage, outDir, planned, inputs }) {
+  const written = [];
+  for (const variant of [...new Set(planned.map((p) => p.page.variant))]) {
+    const four = planned.filter((p) => p.page.variant === variant && p.page.number);
+    if (four.length === 0) continue;
+    const one = pageOf(four[0].piece);
+    const [w, h] = [one.w, one.h].map((n) => Math.round(n * CSS_PX_PER_INCH));
+    const imgs = four.map((p) => `<img src="${pathToFileURL(join(outDir, `${p.stem}.png`)).href}" width="${w}" height="${h}" alt="">`);
+    const html = join(stage, `preview-${variant}.html`);
+    await writeFile(
+      html,
+      `<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>flyer-1 to flyer-4</title>\n<style>\n${inputs.site.root}\n` +
+        `html, body { margin: 0; background: var(--ice); }\n.four { display: flex; gap: ${PREVIEW_GUTTER_PX}px; padding: ${PREVIEW_GUTTER_PX}px; }\nimg { display: block; }\n</style>\n</head>\n` +
+        `<body>\n<div class="four">${imgs.join("")}</div>\n</body>\n</html>\n`,
+    );
+    const proof = four.some((p) => p.placeholders.length) ? PROOF_SUFFIX : "";
+    const size = { width: four.length * w + (four.length + 1) * PREVIEW_GUTTER_PX, height: h + 2 * PREVIEW_GUTTER_PX };
+    written.push(await screenshot({ ...run, html, png: join(outDir, `flyer-1-${four.length}-${variant}${proof}.png`), ...size, scale: PROOF_SCALE }));
+  }
+  return written;
+}
+
+/** A photo's row for the record: its pixels, its window in inches and its ppi. */
+const photoRecord = (r) => ({ pixels: [r.width, r.height], window_in: [r.w, r.h].map((n) => Number(n.toFixed(3))), ppi: Math.floor(r.ppi) });
+
 function assignmentRecord(chosen, planned) {
-  const rows = Object.fromEntries(planned.flatMap((p) => p.photos.map((r) => [r.slot, r])));
+  // The windows are the same in every variant (§ 8 moves no photo): the first variant's single pieces and four flyers
+  const first = planned.filter((p) => p.page.variant === planned[0].page.variant);
+  const rows = Object.fromEntries(first.filter((p) => !p.page.number).flatMap((p) => p.photos.map((r) => [r.slot, r])));
   const positions = PRINT_PIECES.flatMap((p) => p.positions).map((position) => {
     if (!chosen) return [position, null];
-    const r = rows[position];
-    const windowIn = [r.w, r.h].map((n) => Number(n.toFixed(3)));
-    const { positions, from } = chosen.assignment;
-    return [position, { id: positions[position], from: from[position], file: chosen.files[position], pixels: [r.width, r.height], window_in: windowIn, ppi: Math.floor(r.ppi) }];
+    const { positions: ids, from } = chosen.assignment;
+    return [position, { id: ids[position], from: from[position], file: chosen.files[position], ...photoRecord(rows[position]) }];
+  });
+  const four = (chosen?.four ?? []).map((f) => {
+    const [row] = first.find((p) => p.page.number === f.number)?.photos ?? [];
+    return { number: f.number, id: f.id, from: f.from, file: f.file, ...(row ? photoRecord(row) : {}) };
   });
   return {
-    about: "SPEC-print-pieces.md § 3: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
+    about: "SPEC-print-pieces.md §§ 3, 7, 8: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
     pool: chosen ? chosen.assignment.pool : null,
+    variants: [...new Set(planned.map((p) => p.page.variant))],
     positions: Object.fromEntries(positions),
     flyer_skipped: chosen ? chosen.assignment.skipped : [],
-    pieces: Object.fromEntries(planned.map((p) => [p.piece.id, { pdf: `${p.stem}.pdf`, png: `${p.stem}.png`, placeholders: p.placeholders }])),
+    four_flyers: four,
+    pages: Object.fromEntries(planned.map((p) => [p.page.base, { pdf: `${p.stem}.pdf`, png: `${p.stem}.png`, placeholders: p.placeholders }])),
   };
 }
 
-/** The report: a line per file, the photos, the offer, the QR code, and LAST what placeholders remain. */
+/** Lines of the same text joined, each naming the pages it is on (the pages in the build's order). */
+function grouped(items) {
+  const groups = new Map();
+  for (const { text, name } of items) groups.set(text, [...(groups.get(text) ?? []), name]);
+  return [...groups].map(([text, names]) => ({ text, names }));
+}
+
+/** The report: a line per file, the photos, the offer, the QR code, the findings, and LAST what placeholders remain. */
 function reportLines({ written, chosen, planned, inputs, eventId, retries }) {
   const { offer } = campaign(inputs);
   const event = inputs.data.events[inputs.eventIndex];
   const lines = written.map((f) => `wrote ${f}`);
   if (!chosen) lines.push("photos: none given (--photos-dir, --rungs and --deliverable): every position shows its placeholder");
-  for (const r of planned.flatMap((p) => p.photos)) {
-    const kind = chosen.files[r.slot].includes("-sq-") ? "its first square" : "as composed";
-    lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${kind}; ${r.width} × ${r.height} px over ${r.w.toFixed(2)} × ${r.h.toFixed(2)} in = ${Math.floor(r.ppi)} ppi`);
+  const first = planned.filter((p) => p.page.variant === planned[0]?.page.variant);
+  const at = (r) => `${r.width} × ${r.height} px over ${r.w.toFixed(2)} × ${r.h.toFixed(2)} in = ${Math.floor(r.ppi)} ppi`;
+  for (const p of first.filter((q) => !q.page.number)) {
+    for (const r of p.photos) {
+      const kind = chosen.files[r.slot].includes("-sq-") ? "its first square" : "as composed";
+      lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${kind}; ${at(r)}`);
+    }
   }
   if (chosen) lines.push(...skippedLines(chosen.assignment));
+  for (const p of first.filter((q) => q.page.number)) {
+    for (const r of p.photos) lines.push(`photo flyer-${p.page.number}: ${chosen.four[p.page.number - 1].from}, as composed; ${at(r)}`);
+  }
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
   const which = eventId === undefined ? "the first in data/events.json" : "--event";
   lines.push(`QR: event "${event.id}" (${which}) carries ${event.url} (qr/${event.id}.svg, written by build.mjs writeQrCodes)`);
-  for (const p of planned) lines.push(...p.warnings.map((w) => `safe margin, ${p.piece.id}: ${w} (the approved layout's; § 7: no part is moved)`));
+  const warnings = grouped(planned.flatMap((p) => p.warnings.map((text) => ({ text, name: p.page.base }))));
+  for (const w of warnings) lines.push(`safe margin, ${w.names.join(", ")}: ${w.text} (the approved layout's; § 7: no part is moved)`);
   lines.push(...retries);
-  const proofs = planned.filter((p) => p.placeholders.length);
+  const proofs = grouped(planned.filter((p) => p.placeholders.length).map((p) => ({ text: p.placeholders.join(", "), name: `${p.stem}.pdf` })));
   lines.push(
     proofs.length
-      ? `placeholders remain: ${proofs.map((p) => `${p.stem}.pdf (${p.placeholders.join(", ")})`).join("; ")}`
+      ? `placeholders remain: ${proofs.map((g) => `${g.names.join(", ")} (${g.text})`).join("; ")}`
       : `placeholders remain: none (${planned.map((p) => `${p.stem}.pdf`).join(", ")})`,
   );
   return lines;
@@ -189,8 +273,11 @@ export async function buildPrint({
   manifestPath = MANIFEST_PATH,
   today,
   eventId,
+  variants = VARIANTS,
+  fourFlyers = true,
   ...paths
 } = {}) {
+  const pages = pagesToPrint({ variants, fourFlyers }); // refuses an unknown variant before anything is emptied
   const given = [photosDir, rungsPath, deliverablePath].filter(Boolean).length;
   if (given !== 0 && given !== 3) throw new Error("--photos-dir, --rungs and --deliverable go together: give all three, or none for placeholders");
   // dist-print/ is wholly this build's output: emptied first, so a refused run leaves nothing to mistake for a piece.
@@ -202,11 +289,11 @@ export async function buildPrint({
   try {
     const stagedPhotos = join(stage, "photos");
     const manifest = await readManifest(manifestPath);
-    const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos }) : null;
+    const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers }) : null;
     const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
-    const planned = await planPieces({ run, stage, inputs, pixels: chosen?.pixels ?? {} });
+    const planned = await planPages({ run, stage, inputs, pages, chosen });
     const written = [];
     for (const p of planned) {
       written.push(await printPdf(run, p.html, join(outDir, `${p.stem}.pdf`)));
@@ -214,6 +301,7 @@ export async function buildPrint({
       const size = { width: Math.round(page.w * CSS_PX_PER_INCH), height: Math.round(page.h * CSS_PX_PER_INCH) };
       written.push(await screenshot({ ...run, html: p.html, png: join(outDir, `${p.stem}.png`), ...size, scale: PROOF_SCALE }));
     }
+    written.push(...(await writePreviews({ run, stage, outDir, planned, inputs })));
     const assignment = join(outDir, "assignment.json");
     await writeFile(assignment, `${JSON.stringify(assignmentRecord(chosen, planned), null, 2)}\n`);
     written.push(assignment);

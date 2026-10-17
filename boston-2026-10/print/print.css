@@ -19,15 +19,40 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 /* A face's .board is its trim: no outline, and what runs into the bleed is not cut off at the trim */
 .print-face > .board { position: absolute; overflow: visible; outline: none; }
 
-/* ---------- The flyer: the bar meets the top, left and right cut edges, the hero the left and right. The bar grows up by
-   a border of its own colour (its padding, and so its words, stay put) and sideways by its margins (its words are
-   centred); the hero grows sideways, and its logo plate is held where it was ---------- */
-.print-flyer .event-bar { margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0; border-top: var(--bleed) solid var(--navy); }
+/* ---------- The flyer: the bar meets the top, left and right cut edges, the hero the left and right. The bar grows by
+   borders of its own colour over margins pulled out as far (its content box, and so its words and logo, stay put); the
+   hero grows sideways, and its logo plate is held where it was ---------- */
+.print-flyer .event-bar {
+  margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0;
+  border: solid var(--navy); border-width: var(--bleed) var(--bleed) 0;
+}
 .print-flyer .flyer-hero { margin: 0 calc(-1 * var(--bleed)); }
 .print-flyer .logo-plate { margin-left: var(--bleed); }
 
-/* ---------- The tent card's face (portrait, 4 × 6 in): its top is the fold, so the bar grows sideways only; of the photos,
-   the large one meets the left cut edge and the tiles the right, and each grows outward from its own cell ---------- */
-.print-tent-card .event-bar { margin: 0 calc(-1 * var(--bleed)); }
+/* ---------- The tent card's face (portrait, 4 × 6 in): its top is the fold, so the bar grows sideways only (by borders,
+   as the flyer's); of the photos, the large one meets the left cut edge and the tiles the right, and each grows outward
+   from its own cell ---------- */
+.print-tent-card .event-bar { margin: 0 calc(-1 * var(--bleed)); border: solid var(--navy); border-width: 0 var(--bleed); }
 .print-tent-card .tent-photos > :first-child { margin-left: calc(-1 * var(--bleed)); width: calc(100% + var(--bleed)); }
-.print-tent-card .tent-photos > :not(:first-child) { margin-right: calc(-1 * var(--bleed)); width: calc(100% + var(--bleed)); }
+.print-tent-card .tent-photos > .photo:not(:first-child) { margin-right: calc(-1 * var(--bleed)); width: calc(100% + var(--bleed)); }
+
+/* ---------- § 8 (the Advisor, 2026-10-17): the words and the logo, for the printed pieces (pieces.mjs's options; the
+   mock-ups never take them). These rules place only what § 8 adds or moves: everything else stays where the mock-up's
+   sheet puts it, and a space § 8 empties stays empty (nothing is stretched to fill it; Q9) ---------- */
+/* The address under the QR code, centred on it: the scan block a column as wide as the code, where the mock-up has it
+   (its own margin-top: auto keeps it at the bottom); the address keeps its own 4px margin */
+.scan-under { flex-direction: column; align-items: center; gap: 0; align-self: flex-start; }
+/* (a) The logo in the navy bar, at its left, on a white plate (the logo's ink is dark and it has no ground of its own), the bar's words
+   beside it; the plate sits inside the bar's 12px padding, so the bar keeps its height. 72px = the bar's 16px padding,
+   the plate (its logo 23px tall is 36px wide, plus 10px of padding) and a 10px gap */
+.event-bar:has(> .bar-plate) { position: relative; text-align: left; padding-left: 72px; }
+.bar-plate { position: absolute; left: 16px; top: 4px; bottom: 4px; display: block; padding: 3px 5px; background: var(--white); border-radius: var(--radius); }
+.bar-plate .logo { width: auto; height: 100%; }
+/* (b) The plate over the main photo's top-left corner: the flyer's hero has it in the mock-up; the tent's large photo,
+   the first of its grid, takes the same plate */
+.print-tent-card .tent-photos { position: relative; }
+/* (c) The logo larger, above the tent's headline and the flyer's offer: on the tent 136px (1.2 × its 112px, the most its
+   body holds with the address under the code: at 168px the body overflowed and the address met the bottom safe margin),
+   on the flyer 168px (2 × its plate's 84px) */
+.tent-logo.logo-large { width: 136px; }
+.flyer-logo.logo-large { width: 168px; align-self: flex-start; }
