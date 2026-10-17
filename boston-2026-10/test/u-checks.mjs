@@ -141,10 +141,11 @@ export async function updatingServedProblems(root = ROOT) {
   }
 }
 
-/** U3's files: [label, file, its name, what the refusal must name]. Each is refused by checkPicks, naming the cause. */
-export async function u3Cases(root = ROOT) {
-  const v2 = JSON.parse(await readFile(join(root, "test", "fixtures", "picks-v2", "2026-10-04.json"), "utf8"));
-  const v1 = JSON.parse(await readFile(join(root, "test", "fixtures", "picks", "2026-10-04.json"), "utf8"));
+/** U3's files: [label, file, its name, what the refusal must name]. Each is refused by checkPicks, naming the cause.
+ *  The fixtures are this package's (test data, not code under test: a mirror carries no test/). */
+export async function u3Cases() {
+  const v2 = JSON.parse(await readFile(join(ROOT, "test", "fixtures", "picks-v2", "2026-10-04.json"), "utf8"));
+  const v1 = JSON.parse(await readFile(join(ROOT, "test", "fixtures", "picks", "2026-10-04.json"), "utf8"));
   const name = `${UPDATING_WEEK}.json`;
   return [
     ["an updating file with a list (the v2 fixture's, valid on its own)", { ...v2, updating: true }, "2026-10-04.json", /chefs-choice/],
@@ -170,7 +171,7 @@ export async function updatingRefusalProblems(root = ROOT) {
   } catch (err) {
     problems.push(`§ 8 item 1's file is refused: ${err.message}`);
   }
-  for (const [label, file, name, cause] of await u3Cases(root)) {
+  for (const [label, file, name, cause] of await u3Cases()) {
     try {
       checkPicks(file, name, plans);
       problems.push(`${label}: accepted`);
