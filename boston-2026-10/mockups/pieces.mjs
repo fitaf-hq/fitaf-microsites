@@ -68,10 +68,11 @@ function scanBlock(parts, c, cls, { under = false } = {}) {
 }
 
 /**
- * The printed pieces' options (SPEC-print-pieces.md § 8, the Advisor, 2026-10-17), which the mock-ups never pass: `short`
- * drops the words § 8 drops and puts the address under the QR code; `logo` places the logo: "bar" (a, in the navy bar at
- * its left), "photo" (b, on a plate over the main photo's corner), "large" (c, larger, above the headline or the offer).
- * Without them a face is exactly the mock-up's. The parts are made in the mock-up's order, so its legend is unchanged.
+ * The printed tent card's options (SPEC-print-pieces.md § 8, the Advisor, 2026-10-17), which the mock-ups never pass:
+ * `short` drops the words § 8 drops and puts the address under the QR code; `logo` places the logo: "bar" (a, in the navy
+ * bar at its left), "photo" (b, on a plate over the large photo's corner), "large" (c, larger, above the headline). The
+ * flyer's are its own (§ 9, below). Without them a face is exactly the mock-up's, its parts made in the mock-up's order,
+ * so its legend is unchanged.
  */
 const barLine = (parts, c, logo) =>
   parts.line("p", "event-bar", c.eventLine, "event line", logo === "bar" ? `<b class="bar-plate">${parts.logo()}</b>` : "");
@@ -110,12 +111,14 @@ export function tentCard(inputs) {
 
 /**
  * The flyer: one hero photo, the offer, a short line on the plans, the QR code. Its markup alone, shared by the mock-up's
- * sheet and the printed flyer (print/). § 8's `short` keeps the bar, the photo, the offer and the QR code with the address.
+ * sheet and the printed flyer (print/). The printed flyer's options (SPEC-print-pieces.md §§ 8–9), which the mock-up never
+ * passes: `short` keeps the photo, the offer and the QR code with the address; `header: false` drops the navy bar and its
+ * words; `logo: "corner"` puts the one logo at the bottom right of the face, after the QR code, instead of on the photo.
  */
-export function flyerFace(c, parts, { short = false, logo } = {}) {
-  const bar = barLine(parts, c, logo);
+export function flyerFace(c, parts, { short = false, header = true, logo } = {}) {
+  const bar = header ? parts.line("p", "event-bar", c.eventLine, "event line") : "";
   const photo = parts.photo("flyer");
-  const plate = logo === undefined || logo === "photo" ? `<div class="logo-plate">${parts.logo()}</div>` : "";
+  const plate = logo === undefined ? `<div class="logo-plate">${parts.logo()}</div>` : "";
   const headlineBlock = short
     ? ""
     : `
@@ -123,16 +126,16 @@ export function flyerFace(c, parts, { short = false, logo } = {}) {
   ${parts.text("h1", "headline", c.headline, "headline")}
   ${parts.text("p", "tagline", c.tagline, "tagline")}
   <div class="plans-line">${parts.planNames(c.plans, "plan names")}${parts.text("p", "from-price", c.fromPrice, "lowest price per meal")}</div>`;
-  const bodyLogo = logo === "large" ? `
-  ${parts.logo("flyer-logo logo-large")}` : "";
   const offer = parts.text("p", "offer", c.offer, "the offer");
   const scan = scanBlock(parts, c, "flyer-scan", { under: short });
+  const corner = logo === "corner" ? `
+  ${parts.logo("flyer-logo logo-corner")}` : "";
   return `
 ${bar}
 <div class="flyer-hero">${photo}${plate}</div>
-<div class="flyer-body">${headlineBlock}${bodyLogo}
+<div class="flyer-body">${headlineBlock}
   ${offer}
-  ${scan}
+  ${scan}${corner}
 </div>`;
 }
 

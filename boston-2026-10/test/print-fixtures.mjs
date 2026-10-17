@@ -115,12 +115,12 @@ export function pdfPages(bytes) {
 /**
  * The words SPEC-print-pieces.md § 8 drops, read from the pieces' own data (never typed here): the tent's subhead and scan
  * prompt (item 1); the flyer's headline block, its headline, tagline, four plan names and lowest price, and its scan prompt
- * (item 2: the flyer is the bar, the photo, the offer and the QR code with the address).
+ * (item 2), and since § 9 its header bar's words ("Fit AF in Boston", "October 2026").
  */
 export function droppedWords(inputs, pieceId) {
   const c = campaign(inputs);
   if (pieceId === "tent-card") return [c.subhead.value, c.scan.value];
-  return [c.headline.value, c.tagline.value, ...c.plans.map((p) => p.name.value), c.fromPrice.value, c.scan.value];
+  return [...c.eventLine.map((v) => v.value), c.headline.value, c.tagline.value, ...c.plans.map((p) => p.name.value), c.fromPrice.value, c.scan.value];
 }
 
 /** A photo ID in Image Gauge's form (p + six hex digits), new each run. */

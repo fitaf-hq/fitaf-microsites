@@ -11,30 +11,35 @@ import { BLEED_IN, CSS_PX_PER_INCH, LAYOUT_PX_PER_INCH, pageOf, PRINT_PIECES, SA
 const FACES = { flyer: flyerFace, "tent-card": tentFace };
 
 /**
- * § 8 item 3: the logo's placements, each a proof named by its letter: (a) in the navy bar at its left, (b) on a plate over
- * the main photo's corner, (c) larger, above the tent's headline and the flyer's offer.
+ * § 8 item 3: the tent card's logo placements, each a proof named by its letter: (a) in the navy bar at its left, (b) on a
+ * plate over the large photo's corner, (c) larger, above the headline. (§ 9 withdrew them for the flyer.)
  */
 export const LOGO_VARIANTS = { a: "bar", b: "photo", c: "large" };
 /**
- * ⭐ THE ONE NAMED VALUE: the variants the build prints. When the Advisor chooses, this becomes that one letter (["b"],
- * say), and that variant alone is the build's output.
+ * ⭐ THE ONE NAMED VALUE: the tent card's variants the build prints. When the Advisor chooses, this becomes that one letter
+ * (["b"], say), and that variant alone is the build's tent card.
  */
 export const VARIANTS = ["a", "b", "c"];
 /** § 8 item 4: the flyer is also made this many times, flyer-1 to flyer-4, each with a photo of a rung-4 array. */
 export const FOUR_FLYERS = 4;
+/** § 9 (the Advisor, 2026-10-17): the flyer's face: § 8's words, no header, one logo at the bottom right. */
+export const FLYER_FACE = { short: true, header: false, logo: "corner" };
 
 /**
- * Every page the build prints, in order: for each variant, the tent card, the flyer, then flyer-1 to flyer-4 (unless
- * `fourFlyers` is false). `base` is the file name before "-PROOF" and the extension (tent-card-a, flyer-3-b).
+ * Every page the build prints, in order: the tent card in each variant, then the flyer, then flyer-1 to flyer-4 (unless
+ * `fourFlyers` is false). `base` is the file name before "-PROOF" and the extension (tent-card-a, flyer, flyer-3); a
+ * flyer's `variant` is null (§ 9: it has no variants).
  */
 export function pagesToPrint({ variants = VARIANTS, fourFlyers = true } = {}) {
   const [tent, flyer] = ["tent-card", "flyer"].map((id) => PRINT_PIECES.find((p) => p.id === id));
-  return variants.flatMap((variant) => {
+  const tents = variants.map((variant) => {
     if (!(variant in LOGO_VARIANTS)) throw new Error(`no logo variant "${variant}" (pages.mjs LOGO_VARIANTS: ${Object.keys(LOGO_VARIANTS).join(", ")})`);
-    const four = fourFlyers ? Array.from({ length: FOUR_FLYERS }, (_, i) => ({ piece: flyer, variant, number: i + 1, base: `flyer-${i + 1}-${variant}` })) : [];
-    return [{ piece: tent, variant, number: null, base: `tent-card-${variant}` }, { piece: flyer, variant, number: null, base: `flyer-${variant}` }, ...four];
+    return { piece: tent, variant, number: null, base: `tent-card-${variant}` };
   });
+  const four = fourFlyers ? Array.from({ length: FOUR_FLYERS }, (_, i) => ({ piece: flyer, variant: null, number: i + 1, base: `flyer-${i + 1}` })) : [];
+  return [...tents, { piece: flyer, variant: null, number: null, base: "flyer" }, ...four];
 }
+
 /** Inches to the mock-ups' layout pixels, which the page is zoomed from (to the CSS inch). */
 const px = (inches) => Number((inches * LAYOUT_PX_PER_INCH).toFixed(3));
 
@@ -57,14 +62,22 @@ export function sizeRules(piece) {
     `.print-face { width: ${px(box.w)}px; height: ${px(box.h)}px; }`,
     `.print-face + .print-face { top: ${px(box.h)}px; }`,
     `.print-face > .board { left: ${px(BLEED_IN)}px; top: ${px(one ? BLEED_IN : 0)}px; width: ${px(piece.face.w)}px; height: ${px(piece.face.h)}px; }`,
+    // § 9: the face's width and its photo window's shape, for print.css (the flyer's photo, 3:2 across the face)
+    `.print-face > .board { --face-w: ${px(piece.face.w)}px;${piece.photoWindow ? ` --photo-ratio: ${piece.photoWindow.w / piece.photoWindow.h};` : ""} }`,
   ].join("\n");
 }
 
-/** A piece's print page in a logo variant: its face with § 8's words (twice for a tent, the upper turned), and nothing else. */
+/**
+ * A piece's print page: the tent card's face in a logo variant with § 8's words (twice, the upper turned), or the flyer's
+ * face as § 9 has it (`variant` is the tent's alone); and nothing else.
+ */
 export function printPage(piece, inputs, printCss, variant = VARIANTS[0]) {
-  const logo = LOGO_VARIANTS[variant];
-  if (!logo) throw new Error(`no logo variant "${variant}"`);
-  const face = FACES[piece.id](campaign(inputs), makeParts(inputs), { short: true, logo }).trim();
+  let options = FLYER_FACE;
+  if (piece.id !== "flyer") {
+    if (!LOGO_VARIANTS[variant]) throw new Error(`no logo variant "${variant}"`);
+    options = { short: true, logo: LOGO_VARIANTS[variant] };
+  }
+  const face = FACES[piece.id](campaign(inputs), makeParts(inputs), options).trim();
   const turns = piece.faces === 1 ? [""] : [" print-face-turned", ""];
   const faces = turns.map((turn) => `<div class="print-face${turn}"><div class="board board-${piece.id}">\n${face}\n</div></div>`);
   return `<!doctype html>

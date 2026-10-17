@@ -2,8 +2,8 @@
 // bleed, in points: the flyer 324 × 414; the tent card, since § 7 two of the mock-up's portrait 4 × 6 in faces on a 4 × 12
 // in sheet, 306 × 882. The build's measuring pass finds each face's trim at its size, and refuses a page or trim of
 // another size, or a photo or colour field that meets a cut edge without running into the bleed. Text or the QR code
-// less than 0.125 in inside a cut edge is REPORTED, not refused: § 7 forbids moving a part, and the approved flyer puts
-// its bar's words 0.10 in from the top trim (the fold is not a cut). Controls over made-up measurements, no Chrome.
+// less than 0.125 in inside a cut edge is REPORTED, not refused (§ 7 forbids moving a part; the fold is not a cut); since
+// § 9 took the flyer's bar away, the build reports none. Controls over made-up measurements, no Chrome.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -41,13 +41,13 @@ test("Q1: each PDF is one page, its media box the sheet plus twice the bleed; ea
     for (const face of p.measured.faces) {
       assert.ok(Math.abs(face.trim.w - p.piece.face.w) < 0.01 && Math.abs(face.trim.h - p.piece.face.h) < 0.01, `${p.piece.id}: a face's trim`);
     }
-    // § 8's flyer carries four runs (the bar's two, the offer, the address); the tent five (and its headline)
-    assert.ok(p.measured.faces.every((f) => f.texts.length >= 4 && f.qrs.length === 1), `${p.piece.id}: the pass measured its text and its QR code (control)`);
+    // § 9's flyer carries two runs (the offer, the address); the tent five (its bar's two, the headline, the offer, the address)
+    const runs = p.piece.id === "flyer" ? 2 : 5;
+    assert.ok(p.measured.faces.every((f) => f.texts.length === runs && f.qrs.length === 1), `${p.piece.id}: the pass measured its text and its QR code (control)`);
     const { refusals, warnings } = layoutFindings(p.piece, p.measured);
     assert.deepEqual(refusals, [], `${p.piece.id}: nothing refused`);
-    // The one known finding: the approved flyer's bar words sit 0.10 in below the top trim (§ 7 forbids moving them)
-    const expected = p.piece.id === "flyer" ? ['the face: the text "Fit AF in Boston"', 'the face: the text "October 2026"'] : [];
-    assert.deepEqual(warnings.map((w) => w.replace(/ is less than.*$/, "")), expected, `${p.piece.id}: the safe-margin findings`);
+    // § 9: the flyer's bar is gone, and with it the one finding there was (its words 0.10 in below the top trim)
+    assert.deepEqual(warnings, [], `${p.piece.id}: no safe-margin finding`);
     assert.deepEqual(p.warnings, warnings, `${p.piece.id}: the build reports them`);
   }
 });

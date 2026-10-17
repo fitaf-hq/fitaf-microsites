@@ -18,7 +18,8 @@ export const LAYOUT_PX_PER_INCH = PX_PER_INCH;
  * file's name before "-PROOF" and the extension, `positions` the photo positions it shows (one face's).
  */
 export const PRINT_PIECES = [
-  { id: "flyer", stem: "flyer", face: { w: 4.25, h: 5.5 }, faces: 1, positions: ["flyer"] },
+  // § 9 (2026-10-17): the flyer's photo window, width to height, across the face at its top (the glam photos' own shape)
+  { id: "flyer", stem: "flyer", face: { w: 4.25, h: 5.5 }, faces: 1, positions: ["flyer"], photoWindow: { w: 3, h: 2 } },
   // § 7 (2026-10-17): the mock-up's own face, portrait 4 × 6 in (§ 2's 6 × 4 landscape was wrong), on a 4 × 12 in sheet
   { id: "tent-card", stem: "tent-card", face: { w: 4, h: 6 }, faces: 2, positions: ["tent-large", "tent-top", "tent-bottom"] },
 ];

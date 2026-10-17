@@ -16,16 +16,25 @@ mock-ups' own (`tentFace`, `flyerFace`), given § 8's options, which **the mock-
 - **The words**: the tent drops its subhead and its scan prompt; the flyer drops its headline block (the rule, the
   headline, the tagline, the four plan names, the lowest price) and its scan prompt, and is the bar, the photo, the offer
   and the QR code. On both, `eatfitaf.com` sits directly under the QR code, centred on it. Emptied space stays empty.
-- **The logo, three variants**, each piece in each, each its own proof named by its letter: **(a)** in the navy bar at its
-  left, on a small white plate (the logo's ink is dark), the bar's words beside it, the bar's height unchanged; **(b)** on
-  a plate over the main photo's top-left corner (the flyer's hero, as in the mock-up; the tent's large photo); **(c)**
-  larger, above the tent's headline (136px, the most its body holds) and the flyer's offer (168px).
+- **The logo, three variants** of the tent card (since § 9; the flyer's were withdrawn), each its own proof named by its
+  letter: **(a)** in the navy bar at its left, on a small white plate (the logo's ink is dark), the bar's words beside
+  it, the bar's height unchanged; **(b)** on a plate over the large photo's top-left corner; **(c)** larger, above the
+  headline (136px, the most its body holds).
   ⭐ **The variant is ONE named value, `VARIANTS` in [`pages.mjs`](pages.mjs)**: set it to the chosen letter and that
   variant is the build's only output.
 - **Four flyers**, `flyer-1` to `flyer-4`, each a full single flyer with its own bleed and its own photo, as composed: the
   first array of rung 4 without the tent's three photos (else the first), in its order. The vendor imposes them; a PNG
   preview shows the four side by side (`flyer-1-4-<letter>.png`).
 - The photos' crops are unchanged by § 8 (the Advisor is choosing how the windows and Image Gauge's crops are reconciled).
+
+⭐ **§ 9 (the Advisor, 2026-10-17 22:37Z): the flyer without its header, the logo at the bottom right, a taller photo.**
+The flyer and its four drop the navy bar and its words, and **§ 8's logo variants are withdrawn for the flyer**: it is one
+flyer, named without a letter (`flyer.pdf`, `flyer-1.pdf` … `flyer-4.pdf`, `flyer-1-4.png`); the variants are the tent's
+alone (`tent-card-a.pdf` …). Its photo window is **3:2** (sizes.mjs `photoWindow`) across the face's width at its top,
+running into the bleed on the top, left and right; below it the offer, then the QR code with the address, the space left
+shared evenly above, between and below them; the one logo (the mock-up's 84px) at the bottom right, at the body's own
+padding, inside the safe margin. The report gives each flyer photo's shape against the window's and how much of its
+width and height show (a 3:2 photo loses only the bleed: 94% of each). The tent card is unchanged by § 9.
 
 ## Build
 
@@ -35,10 +44,10 @@ npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --d
 npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --deliverable FILE --on 2026-10-23 --event demo
 ```
 
-`dist-print/` (**git-ignored, emptied at every run, never hand-edited**), per variant letter: `tent-card-<l>.pdf`,
-`flyer-<l>.pdf` and `flyer-1-<l>.pdf` to `flyer-4-<l>.pdf`, a PNG proof of each at 1× (one pixel per CSS pixel, 96 per
-inch: the PDF's page as Chrome draws it), `flyer-1-4-<l>.png` (the four side by side); and `assignment.json` (which photo
-went where, by ID, with its pixels, its window and its ppi; the four flyers' photos; the rung-1 photos skipped). **A piece carrying any placeholder** (a photo position
+`dist-print/` (**git-ignored, emptied at every run, never hand-edited**): `tent-card-<l>.pdf` per tent variant letter,
+`flyer.pdf` and `flyer-1.pdf` to `flyer-4.pdf`, a PNG proof of each at 1× (one pixel per CSS pixel, 96 per inch: the PDF's
+page as Chrome draws it), `flyer-1-4.png` (the four side by side); and `assignment.json` (which photo went where, by ID,
+with its pixels, its window, its ppi and, for a flyer, how it shows; the four flyers' photos; the rung-1 photos skipped). **A piece carrying any placeholder** (a photo position
 without a photo, or the offer while `data/offers.json` says `"status": "placeholder"` or its label is a bracketed
 stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the report's last line names what remains.
 
@@ -66,7 +75,7 @@ stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the 
    page is **laid out in the mock-ups' own unit (120 px a real inch) and drawn scaled to the CSS inch** (a transform):
    every part is laid out exactly as on the mock-up's sheet, its text at the same size. (A `zoom` laid the text out at
    0.8×, and its widths drifted by up to 1.7 mock-up px.) A part that meets a cut edge only grows outward into the
-   bleed: the flyer's bar (up, by a border of its own colour, and sideways), its hero (sideways), the tent's large photo
+   bleed: the tent's bar (sideways, by borders of its own colour), the flyer's photo (§ 9: up and sideways), the tent's large photo
    (left) and tiles (right), each from its own cell.
 2. **The photos** are copied, under their position's own file name (`mockups/photos.json`), into a temporary folder the
    page is printed from and that is removed after: no photo's ID or file name is in a page.
@@ -76,7 +85,7 @@ stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the 
    inches, bleed included; the smaller of the two ratios, since it fills the window); a field meets a cut edge of the
    trim without running on to the page's edge; or a page or trim is not its size. **It reports, and does not refuse**,
    text or the QR code less than **0.125 in** inside a cut edge (the tent's fold is not one): § 7 forbids moving a part,
-   and **the approved flyer puts its bar's words 0.10 in below the top trim** (two report lines, `safe margin, flyer`).
+   and the approved flyer put its bar's words 0.10 in below the top trim (reported until § 9 took the bar away).
 4. **The PDF** (`--print-to-pdf`, `@page` sized) and **the PNG proof** (`--screenshot`), by `mockups/png.mjs`'s
    `runChrome`: one way to run Chrome in this package.
 5. **A stalled Chrome run is run again.** Each run (measure, PDF, PNG) gets 30 s; one silent that long while Chrome
@@ -89,7 +98,7 @@ stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the 
 
 | piece | trim | PDF page (trim + 0.125 in bleed on every edge) | layout |
 |---|---|---|---|
-| flyer | 4.25 × 5.5 in, portrait | 4.5 × 5.75 in = **324 × 414 pt** | the mock-up's flyer; the navy bar and the hero run into the bleed, the bar's words 0.125 in inside the trim |
+| flyer | 4.25 × 5.5 in, portrait | 4.5 × 5.75 in = **324 × 414 pt** | § 9: no header; the photo 3:2 across the top, into the bleed; the offer, the QR code with the address; the logo bottom right |
 | tent card | two of the mock-up's own faces, each **4 × 6 in, portrait**, on one 4 × 12 in sheet (§ 7) | 4.25 × 12.25 in = **306 × 882 pt** | the mock-up's tent card, exactly; **the upper face is the lower face turned 180°** (one face's markup twice, the first `rotate(180deg)`), the fold on the centre line, so folded into an A-frame both read upright (Q2) |
 
 No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (§ 2 ⚠). The QR code is `build.mjs`
@@ -99,7 +108,7 @@ No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (�
 
 | | case |
 |---|---|
-| Q1 | the sizes in points (§ 7's tent 306 × 882); each PDF one page, its media box the sheet plus twice the bleed; the measured page and trims; the one safe-margin finding (the flyer's bar); the checks' controls (a finding by a cut edge, none by the fold, an unbled field, a wrong size) |
+| Q1 | the sizes in points (§ 7's tent 306 × 882); each PDF one page, its media box the sheet plus twice the bleed; the measured page and trims; no safe-margin finding (§ 9 took the flyer's bar, which had the one); the checks' controls (a finding by a cut edge, none by the fold, an unbled field, a wrong size) |
 | Q2 | the tent: one face's markup twice, the first turned 180° and nothing else turned; the fold on the sheet's centre line; the proof's upper half turned is its lower half (with an unturned control) |
 | Q3 | the assignment over fixture rungs: rung 1's first, rung 3's first array without it, a containing array skipped, every missing part refused by name |
 | Q4 | the JPEG size reader (EXIF quarter turns); the effective resolution; 299 refused and 300 passing; a build with a low-resolution fixture refused, naming the position and the ppi, nothing printed |
@@ -107,16 +116,17 @@ No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (�
 | Q6 | `-PROOF` with no photos, and with photos while the offer is a placeholder; plain names with photos and a named offer; the last line |
 | Q7 | a word changed in a mirror of `data/messages.json` changes the mock-up's flyer and the printed one alike; every printed text run is the mock-up's own; the build's QR; no colour of the print's own |
 | Q8 | no legend, switch, caption or script on a printed piece (the mock-ups' as the control) |
-| Q9 | each printed face's parts sit where the mock-up's sheet puts them, the same boxes scaled, within half a mock-up pixel, but for those § 8 drops, adds and moves (a table per piece and variant: every part it says moves must have moved, every other must not): every cited part, photo and run of text, clipped to the trim, both tent faces (the upper turned back) and the flyer |
+| Q9 | each printed tent face's parts sit where the mock-up's sheet puts them, the same boxes scaled, within half a mock-up pixel, but for those § 8 drops, adds and moves (a table per variant: every part it says moves must have moved, every other must not): every cited part, photo and run of text, clipped to the trim, both faces (the upper turned back). The flyer is § 9's (Q16) |
 | Q10 | the tiles print `<id>-sq-<key>.jpg` for the deliverable's first key, the large photo and the hero `<id>.jpg`; a photo or square missing, or a bad key, refused; built, each tile at its square's own resolution |
 | Q11 | the flyer is rung 1's first landscape photo, a portrait and a square before it skipped and named; none landscape refused; built, the report and `assignment.json` name the skipped |
 | Q12 | § 8's dropped words are in no printed page's markup (every variant, the four flyers too), no printed page carries a word its mock-up lacks, and the mock-ups (and the banner and slideshow) still carry them |
 | Q13 | `eatfitaf.com`'s glyphs centred under the QR code and directly under it (within 0.1 in), on every face of every page, measured in Chrome |
-| Q14 | three variants, one named value; every page named by its letter; (a) the logo in the bar's plate, (b) on a plate over the main photo, (c) larger and first in the body; built, each piece in each variant its own proof |
+| Q14 | three tent variants, one named value, each named by its letter, and one flyer and its four, unlettered; (a) the logo in the bar's plate, (b) on a plate over the large photo, (c) larger and first in the body; built, the files |
+| Q16 | § 9's flyer and its four: no header or its words; one logo, last in the body, in the bottom-right corner inside the safe margin; the window 3:2 within half a mock-up pixel, across the top, into the bleed; the offer then the code; even space; no safe-margin finding; the report's shape and share lines |
 | Q15 | the four flyers' rule (the first rung-4 array without the tent's photos, else the first; refusals); built, four different photos from it, each a one-page flyer at the flyer's size, and the preview of the four |
 | QC | a Chrome run silent 30 s is run again (up to 3), each retry reported; a stall on every attempt still fails (a stand-in Chrome) |
 
-The cases that render (Q1, Q2, Q9, Q13, and parts of Q4–Q6, Q10, Q11, Q14 and Q15) need Chrome (`CHROME=<path>`, else the macOS default) and **skip,
+The cases that render (Q1, Q2, Q9, Q13, and parts of Q4–Q6, Q10, Q11, Q14–Q16) need Chrome (`CHROME=<path>`, else the macOS default) and **skip,
 saying so, when none is found**. Their photos are synthetic JPEGs made at test time (`test/print-fixtures.mjs`) with IDs
 made at random, and they build into a temporary folder, so `npm test` never empties a real `dist-print/`. They build
 one at a time across the suite's parallel processes (a lock directory in the system's temporary folder): several builds

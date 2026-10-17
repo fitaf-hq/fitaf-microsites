@@ -6,7 +6,9 @@
 // board, the trim (a part may run on into the bleed; that moves nothing inside the trim). A part is known by what it
 // cites (else its tag and classes), a run of text by its element, so no word is typed here. For each piece and logo
 // variant the tables below say which parts § 8 drops, adds and moves; every other part must be where it was, and every
-// part said to move must have moved. The tent's upper face is read turned back.
+// part said to move must have moved. The tent's upper face is read turned back. ⭐ Since § 9 the FLYER is not held to it:
+// § 9 lays the flyer out anew (no header, a 3:2 photo, the logo at the bottom right), so no part of it stays where the
+// mock-up has it; Q16 measures the flyer's new layout instead.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -90,26 +92,13 @@ const BAR_WORDS = withText(src("data/messages.json#/event_line/0"), src("data/me
 const HEADLINE = withText(src("data/messages.json#/headline"));
 /** Both pieces: the address under the QR code (§ 8 items 1–2), so the scan block, the code, the address and the offer move. */
 const SCAN = { dropped: [], added: [], moved: [OFFER, textIn(OFFER), URL_, `${URL_} #2`, textIn(URL_)] }; // the code, the address, its words
-function expected(pieceId, variant, mockup) {
-  const flyer = pieceId === "flyer";
-  const scanClass = flyer ? "flyer-scan" : "tent-scan";
-  const dropped = [`div.scan.${scanClass}`, ...withText(src("data/messages.json#/scan_prompt"))];
-  if (flyer) {
-    // The headline block (§ 8 item 2): the rule, the headline, the tagline, the four plan names and the price
-    const plans = mockup.parts.map((p) => p.key).filter((k) => /^src data\/plans\.json#\/(individual\/\d+|family)\/name$/.test(k));
-    const price = mockup.parts.map((p) => p.key).find((k) => k.startsWith(src("data/messages.json#/from_price")));
-    dropped.push("span.rule", ...HEADLINE, ...withText(src("data/messages.json#/tagline")), ...withText(...plans), ...withText(price));
-    if (variant !== "b") dropped.push("div.logo-plate"); // the hero's plate goes where the logo is not on the photo
-  } else {
-    dropped.push(...withText(src("data/messages.json#/subhead")));
-  }
-  const added = [`div.scan.scan-under.${scanClass}`];
+function expected(variant) {
+  const dropped = ["div.scan.tent-scan", ...withText(src("data/messages.json#/scan_prompt")), ...withText(src("data/messages.json#/subhead"))];
+  const added = ["div.scan.scan-under.tent-scan"];
   if (variant === "a") added.push("b.bar-plate");
-  if (variant === "b" && !flyer) added.push("div.logo-plate");
-  const moved = [...SCAN.moved];
-  if (variant === "a") moved.push(LOGO, ...BAR_WORDS); // into the bar; the bar's words beside it
-  if (variant === "c" || (variant === "b" && !flyer)) moved.push(LOGO);
-  if (!flyer) moved.push("span.rule", ...HEADLINE); // the tent's body: its logo gone (a, b) or larger (c)
+  if (variant === "b") added.push("div.logo-plate");
+  const moved = [...SCAN.moved, LOGO, "span.rule", ...HEADLINE]; // the body's logo gone (a, b) or larger (c)
+  if (variant === "a") moved.push(...BAR_WORDS); // the logo into the bar; the bar's words beside it
   return { dropped, added, moved };
 }
 
@@ -127,7 +116,7 @@ function assertSameBoxes(label, printed, mockup, { dropped = [], added = [], mov
   assert.deepEqual(stayed, [], `${label}: parts § 8 moves, found unmoved (or missing)`);
 }
 
-test("Q9: each printed face's parts sit where the mock-up's sheet puts them, but for those § 8 drops, adds and moves", { skip: NO_CHROME }, async () => {
+test("Q9: each printed tent face's parts sit where the mock-up's sheet puts them, but for those § 8 drops, adds and moves", { skip: NO_CHROME }, async () => {
   const inputs = await loadInputs({ photosDir: join(tmp, "no-photos"), today: "2026-10-20" });
   const printCss = await readFile(join(PRINT_DIR, "print.css"), "utf8");
   const stage = join(tmp, "print");
@@ -135,7 +124,7 @@ test("Q9: each printed face's parts sit where the mock-up's sheet puts them, but
   await writeQrCodes(inputs.data.events, stage);
   const mockups = await buildMockups({ outDir: join(tmp, "mockups"), png: false, photosDir: join(tmp, "no-photos"), today: "2026-10-20" });
   await oneAtATime(async () => {
-    for (const piece of PRINT_PIECES) {
+    for (const piece of PRINT_PIECES.filter((p) => p.id === "tent-card")) {
       const [mockup] = await measured(mockups.pages.find((f) => f.endsWith(`/${piece.id}.html`)));
       assert.ok(mockup.parts.length >= 15 && mockup.parts.some((p) => p.key.startsWith("text in ")), `${piece.id}: the parts are measured (control)`);
       for (const variant of VARIANTS) {
@@ -144,7 +133,7 @@ test("Q9: each printed face's parts sit where the mock-up's sheet puts them, but
         const faces = await measured(page);
         assert.equal(faces.length, piece.faces, `${piece.id} ${variant}: ${piece.faces} face(s)`);
         assert.ok(Math.abs(faces.at(-1).height / faces.at(-1).width - mockup.height / mockup.width) < 1e-6, `${piece.id}: the mock-up's proportions`);
-        const rules = expected(piece.id, variant, mockup);
+        const rules = expected(variant);
         assertSameBoxes(`${piece.id} ${variant}, ${piece.faces > 1 ? "the lower face" : "the face"}`, faces.at(-1), mockup, rules);
         if (piece.faces > 1) assertSameBoxes(`${piece.id} ${variant}, the upper face, turned back`, turnedBack(faces[0]), mockup, rules);
       }

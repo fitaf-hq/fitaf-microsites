@@ -1,9 +1,10 @@
 // Q13 and Q14 (SPEC-print-pieces.md § 8 items 1–3), over one build of the three logo variants (the four flyers are Q15's).
 // Q13: eatfitaf.com's box is centred under the QR code's, directly under it, on every face of every page, as Chrome draws
 // them (the build's measuring pass: the address's glyphs' box against the code's).
-// Q14: three variants per piece, named: the variant is one named value (pages.mjs VARIANTS) and every page is a piece in
-// one of them, named by its letter (tent-card-a-PROOF.pdf, …); (a) puts the logo in the navy bar at its left, (b) on a plate
-// over the main photo's corner, (c) larger, above the tent's headline and the flyer's offer; one logo per face.
+// Q14: three variants of the tent card, named: the variant is one named value (pages.mjs VARIANTS) and each tent card page
+// is in one, named by its letter (tent-card-a-PROOF.pdf, …); (a) puts the logo in the navy bar at its left, (b) on a plate
+// over the large photo's corner, (c) larger, above the headline; one logo per face. Since § 9 the flyer has none: one
+// flyer, named flyer, and its four (its one logo is Q16's).
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
@@ -30,7 +31,7 @@ const build = async () => (built ??= await lockedBuild({ outDir: join(tmp, "dist
 test("Q13: on every face of every page, eatfitaf.com is directly under the QR code and centred on it", { skip: NO_CHROME }, async () => {
   const { planned } = await build();
   const address = campaign(inputs).address.value;
-  assert.equal(planned.length, 6, "the tent and the flyer in three variants (control)");
+  assert.equal(planned.length, 4, "the tent in three variants and the flyer (control)");
   for (const p of planned) {
     p.measured.faces.forEach((face, f) => {
       const label = `${p.stem}, face ${f + 1}`;
@@ -46,14 +47,14 @@ test("Q13: on every face of every page, eatfitaf.com is directly under the QR co
   }
 });
 
-test("Q14: three variants, one named value; each page a piece in one variant, named by its letter", () => {
+test("Q14: three tent variants, one named value, each named by its letter; one flyer and its four, unlettered (§ 9)", () => {
   assert.deepEqual(VARIANTS, ["a", "b", "c"]);
   assert.deepEqual(LOGO_VARIANTS, { a: "bar", b: "photo", c: "large" });
-  const bases = pagesToPrint().map((p) => p.base);
-  const expected = VARIANTS.flatMap((v) => [`tent-card-${v}`, `flyer-${v}`, ...[1, 2, 3, 4].map((k) => `flyer-${k}-${v}`)]);
-  assert.deepEqual(bases, expected);
+  const flyers = ["flyer", "flyer-1", "flyer-2", "flyer-3", "flyer-4"];
+  assert.deepEqual(pagesToPrint().map((p) => p.base), [...VARIANTS.map((v) => `tent-card-${v}`), ...flyers]);
+  assert.ok(pagesToPrint().filter((p) => p.piece.id === "flyer").every((p) => p.variant === null), "a flyer has no variant");
   // The one change: the chosen variant alone
-  assert.deepEqual(pagesToPrint({ variants: ["b"] }).map((p) => p.base), ["tent-card-b", "flyer-b", "flyer-1-b", "flyer-2-b", "flyer-3-b", "flyer-4-b"]);
+  assert.deepEqual(pagesToPrint({ variants: ["b"] }).map((p) => p.base), ["tent-card-b", ...flyers]);
   assert.throws(() => pagesToPrint({ variants: ["d"] }), /no logo variant "d"/);
 });
 
@@ -64,10 +65,10 @@ function logosOf(html) {
     .map((e) => ({ within: e.path.map((p) => p.attrs.class ?? "").filter(Boolean), large: hasClass(e, "logo-large"), next: e }));
 }
 
-test("Q14: (a) the logo in the bar, (b) on a plate over the main photo's corner, (c) larger, above the headline or the offer", () => {
-  for (const piece of PRINT_PIECES) {
-    const main = piece.id === "flyer" ? "flyer-hero" : "tent-photos";
-    const body = piece.id === "flyer" ? "flyer-body" : "tent-body";
+test("Q14: on the tent, (a) the logo in the bar, (b) on a plate over the large photo's corner, (c) larger, above the headline", () => {
+  for (const piece of PRINT_PIECES.filter((p) => p.id === "tent-card")) {
+    const main = "tent-photos";
+    const body = "tent-body";
     for (const variant of VARIANTS) {
       const html = printPage(piece, inputs, printCss, variant);
       const logos = logosOf(html);
@@ -83,15 +84,15 @@ test("Q14: (a) the logo in the bar, (b) on a plate over the main photo's corner,
         const els = placedElements(html);
         const [face] = els.filter((e) => hasClass(e, body));
         const kids = els.filter((e) => e.path.at(-1) === face && !hasClass(e, "rule"));
-        assert.ok(hasClass(kids[0], "logo-large") && hasClass(kids[1], piece.id === "flyer" ? "offer" : "headline"), `${piece.id} c: ${kids.map((k) => k.attrs.class).join(", ")}`);
+        assert.ok(hasClass(kids[0], "logo-large") && hasClass(kids[1], "headline"), `${piece.id} c: ${kids.map((k) => k.attrs.class).join(", ")}`);
       }
     }
   }
 });
 
-test("Q14: built, each piece in each variant is its own proof, named by its letter", { skip: NO_CHROME }, async () => {
+test("Q14: built, the tent in each variant is its own proof, named by its letter, and the flyer one, unlettered", { skip: NO_CHROME }, async () => {
   await build();
   const files = (await readdir(join(tmp, "dist-print"))).sort();
-  const expected = ["assignment.json", ...VARIANTS.flatMap((v) => [`flyer-${v}-PROOF.pdf`, `flyer-${v}-PROOF.png`, `tent-card-${v}-PROOF.pdf`, `tent-card-${v}-PROOF.png`])].sort();
+  const expected = ["assignment.json", "flyer-PROOF.pdf", "flyer-PROOF.png", ...VARIANTS.flatMap((v) => [`tent-card-${v}-PROOF.pdf`, `tent-card-${v}-PROOF.png`])].sort();
   assert.deepEqual(files, expected);
 });

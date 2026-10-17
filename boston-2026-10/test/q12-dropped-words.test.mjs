@@ -1,6 +1,6 @@
 // Q12 (SPEC-print-pieces.md § 8 items 1–2): the dropped words are absent from both pieces, and present nowhere else they
 // were not before. The tent drops its subhead and its scan prompt; the flyer its headline block (headline, tagline, the
-// four plan names, the lowest price) and its scan prompt. On every printed page (each logo variant, the four flyers too)
+// four plan names, the lowest price) and its scan prompt, and since § 9 its header's words ("Fit AF in Boston", …). On every printed page (each logo variant, the four flyers too)
 // none of them is in the page's markup at all (text, alt text or any attribute); no printed page carries a word its
 // mock-up lacks; and the mock-ups, which § 8 leaves as they are, still carry them, as do the banner and the slideshow.
 // The words are read from the pieces' own data (print-fixtures.mjs droppedWords), never typed here.
@@ -37,7 +37,7 @@ test("Q12: the dropped words are in the pieces' data, and on their mock-ups (con
 
 test("Q12: no printed page, in any variant, the four flyers too, carries a dropped word anywhere in its markup", () => {
   const pages = pagesToPrint();
-  assert.equal(pages.length, 18, "three variants of the tent, the flyer and the four flyers (control)");
+  assert.equal(pages.length, 8, "three variants of the tent, the flyer and the four flyers (control)");
   for (const page of pages) {
     const says = bodySays(printPage(page.piece, inputs, printCss, page.variant));
     assert.ok(says.includes(inputs.data.events[0].url.replace(/^https?:\/\//, "").replace(/\/$/, "")), `${page.base}: the reader sees the page (control)`);

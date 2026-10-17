@@ -1,10 +1,10 @@
 // `npm run build:print`: the printed tent card and quarter-sheet flyer (SPEC-print-pieces.md), written to dist-print/
-// (git-ignored, emptied at every run). For each logo variant (§ 8: pages.mjs VARIANTS, the one named value): the tent card,
-// the flyer and the four flyers flyer-1 to flyer-4, each a PDF and a PNG proof at 1× (one pixel per CSS pixel, 96 per
-// inch), named by its letter (tent-card-a.pdf, flyer-3-b.pdf), and a PNG preview of the four flyers side by side
-// (flyer-1-4-a.png); and assignment.json (which photo went where). A page still carrying a placeholder (a photo, or the
-// offer) is a proof: its files end "-PROOF", and the report's last line says what remains. The pages are OUTPUTS of the
-// mock-ups' own faces, parts and inputs (mockups/), with § 8's words and logo; the legend is not printed.
+// (git-ignored, emptied at every run): the tent card in each logo variant (§ 8: pages.mjs VARIANTS, the one named value),
+// named by its letter (tent-card-a.pdf), the flyer (§ 9: no variants) and flyer-1 to flyer-4, each a PDF and a PNG proof at
+// 1× (one pixel per CSS pixel, 96 per inch); a PNG preview of the four flyers side by side (flyer-1-4.png); and
+// assignment.json (which photo went where). A page still carrying a placeholder (a photo, or the offer) is a proof: its
+// files end "-PROOF", and the report's last line says what remains. The pages are OUTPUTS of the mock-ups' own faces, parts
+// and inputs (mockups/), with §§ 8–9's words, logo and flyer; the legend is not printed.
 //
 //   node print/build-print.mjs [--photos-dir DIR --rungs FILE --deliverable FILE] [--on YYYY-MM-DD] [--event ID]
 //
@@ -31,7 +31,7 @@ import { loadInputs, MANIFEST_PATH, readManifest } from "../mockups/inputs.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
 import { assignPhotos, fourFlyerPhotos, photoFiles, skippedLines, TENT_POSITIONS } from "./assign.mjs";
-import { layoutFindings, resolution } from "./checks.mjs";
+import { layoutFindings, resolution, showing } from "./checks.mjs";
 import { jpegSize } from "./jpeg.mjs";
 import { pagesToPrint, placeholdersOf, printPage, VARIANTS } from "./pages.mjs";
 import { CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
@@ -167,23 +167,25 @@ async function planPages({ run, stage, inputs, pages, chosen }) {
     const layout = layoutFindings(page.piece, measured);
     const refusals = [...layout.refusals, ...photos.refusals];
     const placeholders = placeholdersOf(page.piece, pageInputs);
-    planned.push({ page, piece: page.piece, html, measured, photos: photos.rows, refusals, warnings: layout.warnings, placeholders, stem: stemOf(page, placeholders) });
+    // § 9 item 2: on a flyer, how its photo shows in the window
+    const [face] = measured.faces;
+    const shows = page.piece.id === "flyer" && chosen ? showing(pixelsFor(page, chosen).flyer, face.photos[0], face.trim) : null;
+    planned.push({ page, piece: page.piece, html, measured, photos: photos.rows, shows, refusals, warnings: layout.warnings, placeholders, stem: stemOf(page, placeholders) });
   }
   const refused = planned.flatMap((p) => p.refusals.map((r) => `${p.page.base}: ${r}`));
   if (refused.length) throw new Error(`refused, nothing printed:\n${refused.join("\n")}`);
   return planned;
 }
 
-/** § 8 item 4: per variant, the four flyers' PNG proofs side by side, as one PNG (a preview; the vendor imposes the PDFs). */
+/** § 8 item 4: the four flyers' PNG proofs side by side, as one PNG (a preview; the vendor imposes the PDFs). */
 async function writePreviews({ run, stage, outDir, planned, inputs }) {
   const written = [];
-  for (const variant of [...new Set(planned.map((p) => p.page.variant))]) {
-    const four = planned.filter((p) => p.page.variant === variant && p.page.number);
-    if (four.length === 0) continue;
+  const four = planned.filter((p) => p.page.number);
+  if (four.length) {
     const one = pageOf(four[0].piece);
     const [w, h] = [one.w, one.h].map((n) => Math.round(n * CSS_PX_PER_INCH));
     const imgs = four.map((p) => `<img src="${pathToFileURL(join(outDir, `${p.stem}.png`)).href}" width="${w}" height="${h}" alt="">`);
-    const html = join(stage, `preview-${variant}.html`);
+    const html = join(stage, "preview.html");
     await writeFile(
       html,
       `<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>flyer-1 to flyer-4</title>\n<style>\n${inputs.site.root}\n` +
@@ -192,31 +194,46 @@ async function writePreviews({ run, stage, outDir, planned, inputs }) {
     );
     const proof = four.some((p) => p.placeholders.length) ? PROOF_SUFFIX : "";
     const size = { width: four.length * w + (four.length + 1) * PREVIEW_GUTTER_PX, height: h + 2 * PREVIEW_GUTTER_PX };
-    written.push(await screenshot({ ...run, html, png: join(outDir, `flyer-1-${four.length}-${variant}${proof}.png`), ...size, scale: PROOF_SCALE }));
+    written.push(await screenshot({ ...run, html, png: join(outDir, `flyer-1-${four.length}${proof}.png`), ...size, scale: PROOF_SCALE }));
   }
   return written;
 }
+
+/**
+ * The pages a photo is reported from: one per piece (the tent card's first variant, its photos the same in every one,
+ * since § 8 moves none; and the flyer), then flyer-1 to flyer-4.
+ */
+function onePerPiece(planned) {
+  const seen = new Set();
+  return planned.filter((p) => p.page.number || (!seen.has(p.piece.id) && seen.add(p.piece.id)));
+}
+
+/** § 9 item 2, said: a photo's shape against its window's, and how much of its width and height show. */
+const percent = (n) => `${Math.round(n * 100)}%`;
+const showsLine = (s) =>
+  `; shape ${s.shape.toFixed(2)} against the window's ${s.window.toFixed(2)}: ${percent(s.width)} of its width and ${percent(s.height)} of its height show`;
 
 /** A photo's row for the record: its pixels, its window in inches and its ppi. */
 const photoRecord = (r) => ({ pixels: [r.width, r.height], window_in: [r.w, r.h].map((n) => Number(n.toFixed(3))), ppi: Math.floor(r.ppi) });
 
 function assignmentRecord(chosen, planned) {
-  // The windows are the same in every variant (§ 8 moves no photo): the first variant's single pieces and four flyers
-  const first = planned.filter((p) => p.page.variant === planned[0].page.variant);
+  const first = onePerPiece(planned);
   const rows = Object.fromEntries(first.filter((p) => !p.page.number).flatMap((p) => p.photos.map((r) => [r.slot, r])));
   const positions = PRINT_PIECES.flatMap((p) => p.positions).map((position) => {
     if (!chosen) return [position, null];
     const { positions: ids, from } = chosen.assignment;
-    return [position, { id: ids[position], from: from[position], file: chosen.files[position], ...photoRecord(rows[position]) }];
+    const shows = position === "flyer" ? { shows: first.find((p) => p.piece.id === "flyer" && !p.page.number)?.shows } : {};
+    return [position, { id: ids[position], from: from[position], file: chosen.files[position], ...photoRecord(rows[position]), ...shows }];
   });
   const four = (chosen?.four ?? []).map((f) => {
-    const [row] = first.find((p) => p.page.number === f.number)?.photos ?? [];
-    return { number: f.number, id: f.id, from: f.from, file: f.file, ...(row ? photoRecord(row) : {}) };
+    const page = first.find((p) => p.page.number === f.number);
+    const [row] = page?.photos ?? [];
+    return { number: f.number, id: f.id, from: f.from, file: f.file, ...(row ? photoRecord(row) : {}), shows: page?.shows };
   });
   return {
-    about: "SPEC-print-pieces.md §§ 3, 7, 8: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
+    about: "SPEC-print-pieces.md §§ 3, 7, 8, 9: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
     pool: chosen ? chosen.assignment.pool : null,
-    variants: [...new Set(planned.map((p) => p.page.variant))],
+    tent_variants: [...new Set(planned.map((p) => p.page.variant).filter(Boolean))],
     positions: Object.fromEntries(positions),
     flyer_skipped: chosen ? chosen.assignment.skipped : [],
     four_flyers: four,
@@ -237,17 +254,17 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries }) {
   const event = inputs.data.events[inputs.eventIndex];
   const lines = written.map((f) => `wrote ${f}`);
   if (!chosen) lines.push("photos: none given (--photos-dir, --rungs and --deliverable): every position shows its placeholder");
-  const first = planned.filter((p) => p.page.variant === planned[0]?.page.variant);
+  const first = onePerPiece(planned);
   const at = (r) => `${r.width} × ${r.height} px over ${r.w.toFixed(2)} × ${r.h.toFixed(2)} in = ${Math.floor(r.ppi)} ppi`;
   for (const p of first.filter((q) => !q.page.number)) {
     for (const r of p.photos) {
       const kind = chosen.files[r.slot].includes("-sq-") ? "its first square" : "as composed";
-      lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${kind}; ${at(r)}`);
+      lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${kind}; ${at(r)}${r.slot === "flyer" && p.shows ? showsLine(p.shows) : ""}`);
     }
   }
   if (chosen) lines.push(...skippedLines(chosen.assignment));
   for (const p of first.filter((q) => q.page.number)) {
-    for (const r of p.photos) lines.push(`photo flyer-${p.page.number}: ${chosen.four[p.page.number - 1].from}, as composed; ${at(r)}`);
+    for (const r of p.photos) lines.push(`photo flyer-${p.page.number}: ${chosen.four[p.page.number - 1].from}, as composed; ${at(r)}${p.shows ? showsLine(p.shows) : ""}`);
   }
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
   const which = eventId === undefined ? "the first in data/events.json" : "--event";

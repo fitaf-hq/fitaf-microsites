@@ -1,6 +1,7 @@
 // Q6 (SPEC-print-pieces.md § 4, § 5): proofs. A piece carrying any placeholder (a photo position without a photo, or the
 // offer while it is a placeholder) is a proof: its files end "-PROOF", and the build's last line says which placeholders
-// remain. Only a piece with none is named flyer-a.pdf / tent-card-a.pdf (§ 8: each page carries its logo variant's letter). The offers are as committed (every one "[The offer]",
+// remain. Only a piece with none is named flyer.pdf / tent-card-a.pdf (§ 8: a tent card carries its logo variant's letter;
+// § 9: the flyers carry none). The offers are as committed (every one "[The offer]",
 // status placeholder) unless a mirror of data/offers.json names a real one.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
@@ -15,7 +16,7 @@ import { lockedBuild, NO_CHROME, photoSet } from "./print-fixtures.mjs";
 const set = await photoSet();
 after(() => rm(set.dir, { recursive: true, force: true }));
 const [flyer, tent] = ["flyer", "tent-card"].map((id) => PRINT_PIECES.find((p) => p.id === id));
-/** § 8: each page is named by its piece and its logo variant's letter (Q14), the -PROOF after it. */
+/** § 8: a tent card is named by its logo variant's letter (Q14); § 9: the flyers have none. -PROOF after it. */
 const page = (base) => pagesToPrint().find((p) => p.base === base);
 const committedOffers = JSON.parse(await readFile(OFFERS_PATH, "utf8"));
 /** A mirror of data/offers.json whose offers are named (no bracketed stand-in) and whose status is not placeholder. */
@@ -46,8 +47,8 @@ test("Q6: no photos: every position and the offer remain, and both pieces are pr
   const inputs = await loadInputs({ photosDir: noPhotos, today: "2026-10-20" });
   assert.deepEqual(placeholdersOf(flyer, inputs), ["photo flyer", 'the offer "[The offer]"']);
   assert.deepEqual(placeholdersOf(tent, inputs), ["photo tent-large", "photo tent-top", "photo tent-bottom", 'the offer "[The offer]"']);
-  assert.equal(stemOf(page("flyer-a"), placeholdersOf(flyer, inputs)), "flyer-a-PROOF");
-  assert.equal(stemOf(page("flyer-3-b"), placeholdersOf(flyer, inputs)), "flyer-3-b-PROOF");
+  assert.equal(stemOf(page("flyer"), placeholdersOf(flyer, inputs)), "flyer-PROOF");
+  assert.equal(stemOf(page("flyer-3"), placeholdersOf(flyer, inputs)), "flyer-3-PROOF");
   assert.equal(stemOf(page("tent-card-c"), placeholdersOf(tent, inputs)), "tent-card-c-PROOF");
 });
 
@@ -61,26 +62,26 @@ test("Q6: photos and a named offer: nothing remains, and the files take the plai
   const inputs = await loadInputs({ photosDir: allPhotos, today: "2026-10-20", offersPath: namedOffersPath });
   assert.deepEqual(placeholdersOf(flyer, inputs), []);
   assert.deepEqual(placeholdersOf(tent, inputs), []);
-  assert.deepEqual([stemOf(page("flyer-a"), []), stemOf(page("tent-card-b"), [])], ["flyer-a", "tent-card-b"]);
+  assert.deepEqual([stemOf(page("flyer"), []), stemOf(page("tent-card-b"), [])], ["flyer", "tent-card-b"]);
 });
 
 test("Q6: built with no photos, the files end -PROOF and the last line lists what remains", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-placeholders");
   const built = await lockedBuild({ outDir: out, today: "2026-10-20", variants: ["a"] });
-  const four = [1, 2, 3, 4].flatMap((k) => [`flyer-${k}-a-PROOF.pdf`, `flyer-${k}-a-PROOF.png`]);
-  const files = ["assignment.json", ...four, "flyer-1-4-a-PROOF.png", "flyer-a-PROOF.pdf", "flyer-a-PROOF.png", "tent-card-a-PROOF.pdf", "tent-card-a-PROOF.png"];
+  const four = [1, 2, 3, 4].flatMap((k) => [`flyer-${k}-PROOF.pdf`, `flyer-${k}-PROOF.png`]);
+  const files = ["assignment.json", ...four, "flyer-1-4-PROOF.png", "flyer-PROOF.pdf", "flyer-PROOF.png", "tent-card-a-PROOF.pdf", "tent-card-a-PROOF.png"];
   assert.deepEqual((await readdir(out)).sort(), files.sort());
   // The pages grouped by what remains on them, in the build's order
   assert.equal(
     built.lines.at(-1),
     'placeholders remain: tent-card-a-PROOF.pdf (photo tent-large, photo tent-top, photo tent-bottom, the offer "[The offer]"); ' +
-      'flyer-a-PROOF.pdf, flyer-1-a-PROOF.pdf, flyer-2-a-PROOF.pdf, flyer-3-a-PROOF.pdf, flyer-4-a-PROOF.pdf (photo flyer, the offer "[The offer]")',
+      'flyer-PROOF.pdf, flyer-1-PROOF.pdf, flyer-2-PROOF.pdf, flyer-3-PROOF.pdf, flyer-4-PROOF.pdf (photo flyer, the offer "[The offer]")',
   );
 });
 
 test("Q6: built with photos and a named offer, the files take the plain names and the last line says none remain", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-final");
   const built = await lockedBuild({ outDir: out, ...set.photos, offersPath: namedOffersPath, today: "2026-10-20", variants: ["b"], fourFlyers: false });
-  assert.deepEqual((await readdir(out)).sort(), ["assignment.json", "flyer-b.pdf", "flyer-b.png", "tent-card-b.pdf", "tent-card-b.png"]);
-  assert.equal(built.lines.at(-1), "placeholders remain: none (tent-card-b.pdf, flyer-b.pdf)");
+  assert.deepEqual((await readdir(out)).sort(), ["assignment.json", "flyer.pdf", "flyer.png", "tent-card-b.pdf", "tent-card-b.png"]);
+  assert.equal(built.lines.at(-1), "placeholders remain: none (tent-card-b.pdf, flyer.pdf)");
 });

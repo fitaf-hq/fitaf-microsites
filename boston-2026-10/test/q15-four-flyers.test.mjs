@@ -50,11 +50,11 @@ test("Q15: built, four flyers of four different photos from the rule, each a one
   );
   const { w, h } = pagePoints(flyer);
   for (const k of [1, 2, 3, 4]) {
-    const { pages, boxes } = pdfPages(await readFile(join(out, `flyer-${k}-a-PROOF.pdf`)));
-    assert.deepEqual([pages, ...boxes], [1, [0, 0, w, h]], `flyer-${k}-a-PROOF.pdf`);
+    const { pages, boxes } = pdfPages(await readFile(join(out, `flyer-${k}-PROOF.pdf`)));
+    assert.deepEqual([pages, ...boxes], [1, [0, 0, w, h]], `flyer-${k}-PROOF.pdf`);
     assert.ok(built.lines.some((l) => l.startsWith(`photo flyer-${k}: rung 4, array 2`)), `the report names flyer-${k}'s photo`);
   }
-  const preview = PNG.sync.read(await readFile(join(out, "flyer-1-4-a-PROOF.png")));
+  const preview = PNG.sync.read(await readFile(join(out, "flyer-1-4-PROOF.png")));
   const one = { w: Math.round(pageOf(flyer).w * CSS_PX_PER_INCH), h: Math.round(pageOf(flyer).h * CSS_PX_PER_INCH) };
   assert.ok(preview.width >= 4 * one.w && preview.width < 4 * one.w + 4 * 40 && preview.height >= one.h, `the four side by side: ${preview.width} × ${preview.height}`);
 });
