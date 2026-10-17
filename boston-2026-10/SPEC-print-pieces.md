@@ -74,3 +74,10 @@ page's own sRGB tokens; there is no CMYK conversion, because the vendor's requir
 The banner and the slideshow in print; CMYK; the vendor's own file specification (checked when known, and § 2's
 values changed to it); the offer's words; which photos the Advisor prefers to the rule's (a later choice replaces § 3's
 rule by a list he approves, kept outside this repository).
+
+## 7. Amendment, 2026-10-17: the approved layouts and the existing crops, nothing new. CONTRACT, before any code
+The Advisor, on the first tent proof: the pieces must be the layouts he approved, through the photo pipeline already built (SPEC-photo-slots.md, Image Gauge's crops), not a new layout. § 2's tent face was wrong: the approved mock-up's face is portrait, 4 × 6 in.
+1. The tent card: two of the mock-up's own faces, each 4 × 6 in portrait, laid out exactly as the mock-up's (tentFace, mockups.css), on one flat 4 × 12 in sheet, the upper face turned 180°, the fold on the centre line; the page is the sheet plus the 0.125 in bleed (4.25 × 12.25 in, 306 × 882 pt). ⛔ The print build re-lays out no face: print-only rules may set the page, the bleed and the safe margin, and nothing that moves a part.
+2. The tent's two tiles (tent-top, tent-bottom) take the photo's first good square from Image Gauge (the square SPEC-photo-slots.md § 2 names for the tent card's tiles), the file <id>-sq-<key>.jpg for the first key the glam deliverable lists for that photo; the large photo and the flyer's hero take the photo as composed (<id>.jpg), covered to the window as in the mock-ups.
+3. The flyer takes the first photo of rung 1 whose pixel width exceeds its height (the flyer's window is landscape), and the report names any skipped. The tent's array rule is unchanged.
+4. Cases: Q1 and Q2 for the new sheet; a case that the printed tent face's parts sit where the mock-up's sheet puts them (the same boxes, scaled); a case for the square file chosen; a case for the landscape rule.
