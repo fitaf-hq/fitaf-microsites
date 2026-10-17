@@ -40,38 +40,41 @@ export function resolution(windows, pixels) {
 }
 
 /**
- * § 2, over one piece's measurement: the page is the sheet plus the bleed, each face is its trim; every text run and QR
- * code sits at least SAFE_IN inside its face's edges (the fold's too); and every painted field (a photo, a colour) that
- * meets a cut edge of the trim runs on to the page's edge. A cut edge is one BLEED_IN inside the page's; the fold is not.
+ * § 2, over one piece's measurement, as § 7 leaves it. REFUSED: a page that is not the sheet plus the bleed, a face that
+ * is not its trim, and a painted field (a photo, a colour) that meets a cut edge of the trim without running on to the
+ * page's edge. REPORTED (warnings): text or the QR code less than SAFE_IN inside a cut edge. § 7 forbids moving a part, so
+ * where the approved layout itself puts text that close the build can only say so (the flyer's bar, 0.10 in below the
+ * top trim). A cut edge is one BLEED_IN inside the page's; the tent's fold is not one. Returns { refusals, warnings }.
  */
-export function layoutRefusals(piece, measure) {
-  const out = [];
+export function layoutFindings(piece, measure) {
+  const refusals = [];
+  const warnings = [];
   const page = pageOf(piece);
   if (!near(measure.page.w, page.w) || !near(measure.page.h, page.h)) {
-    out.push(`the page is ${inches(measure.page.w)} × ${inches(measure.page.h)} in, not ${inches(page.w)} × ${inches(page.h)}`);
+    refusals.push(`the page is ${inches(measure.page.w)} × ${inches(measure.page.h)} in, not ${inches(page.w)} × ${inches(page.h)}`);
   }
-  if (measure.faces.length !== piece.faces) out.push(`${measure.faces.length} face(s) drawn, not ${piece.faces}`);
+  if (measure.faces.length !== piece.faces) refusals.push(`${measure.faces.length} face(s) drawn, not ${piece.faces}`);
   const pageEdges = edgesOf(measure.page);
   measure.faces.forEach((face, f) => {
     const name = piece.faces > 1 ? `face ${f + 1}` : "the face";
     const trim = edgesOf(face.trim);
     if (!near(face.trim.w, piece.face.w) || !near(face.trim.h, piece.face.h)) {
-      out.push(`${name}: its trim is ${inches(face.trim.w)} × ${inches(face.trim.h)} in, not ${piece.face.w} × ${piece.face.h}`);
-    }
-    for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
-      const r = edgesOf(item);
-      const short = SIDES.filter((side) => (r[side] - trim[side]) * INWARD[side] < SAFE_IN - TOLERANCE_IN);
-      if (short.length) out.push(`${name}: ${item.what} is less than ${SAFE_IN} in inside the trim (${short.join(", ")})`);
+      refusals.push(`${name}: its trim is ${inches(face.trim.w)} × ${inches(face.trim.h)} in, not ${piece.face.w} × ${piece.face.h}`);
     }
     const cuts = SIDES.filter((side) => near((trim[side] - pageEdges[side]) * INWARD[side], BLEED_IN));
+    for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
+      const r = edgesOf(item);
+      const short = cuts.filter((side) => (r[side] - trim[side]) * INWARD[side] < SAFE_IN - TOLERANCE_IN);
+      if (short.length) warnings.push(`${name}: ${item.what} is less than ${SAFE_IN} in inside the trim (${short.join(", ")})`);
+    }
     for (const field of face.fields) {
       const r = edgesOf(field);
       for (const side of cuts) {
         const meets = (r[side] - trim[side]) * INWARD[side] <= TOLERANCE_IN;
         const bleeds = (r[side] - pageEdges[side]) * INWARD[side] <= TOLERANCE_IN;
-        if (meets && !bleeds) out.push(`${name}: ${field.what} meets the trim's ${side} edge and does not run into the bleed`);
+        if (meets && !bleeds) refusals.push(`${name}: ${field.what} meets the trim's ${side} edge and does not run into the bleed`);
       }
     }
   });
-  return out;
+  return { refusals, warnings };
 }

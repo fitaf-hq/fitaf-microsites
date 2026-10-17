@@ -12,9 +12,12 @@ const FACES = { flyer: flyerFace, "tent-card": tentFace };
 const px = (inches) => Number((inches * LAYOUT_PX_PER_INCH).toFixed(3));
 
 /**
- * The sizes (sizes.mjs) as CSS: the PDF page, the page box, each face's box and its trim (the .board). One face fills the
- * page, its trim BLEED_IN in from every edge. Two faces are stacked, each the trim plus the bleed on its three outer
- * edges (none at the fold), and the first, the upper, is turned 180° (print.css), so the sheet's centre line is the fold.
+ * The sizes (sizes.mjs) as CSS: the PDF page; the sheet, the page's printed size, which clips; inside it the page box, laid
+ * out in the mock-ups' own pixels (so every part is laid out exactly as on the mock-up's sheet, its text at the same
+ * size) and DRAWN scaled to the CSS inch (a transform, not a zoom: a zoom lays the text out at 0.8× and its widths drift,
+ * test Q9); each face's box and its trim (the .board). One face fills the page, its trim BLEED_IN in from every edge. Two
+ * faces are stacked, each the trim plus the bleed on its three outer edges (none at the fold), and the first, the upper,
+ * is turned 180° (print.css), so the sheet's centre line is the fold.
  */
 export function sizeRules(piece) {
   const page = pageOf(piece);
@@ -22,7 +25,8 @@ export function sizeRules(piece) {
   const box = one ? page : { w: page.w, h: piece.face.h + BLEED_IN };
   return [
     `@page { size: ${page.w}in ${page.h}in; margin: 0; }`,
-    `.print-page { --bleed: ${px(BLEED_IN)}px; --safe: ${px(SAFE_IN)}px; width: ${px(page.w)}px; height: ${px(page.h)}px; zoom: ${CSS_PX_PER_INCH / LAYOUT_PX_PER_INCH}; }`,
+    `.print-sheet { width: ${page.w}in; height: ${page.h}in; }`,
+    `.print-page { --bleed: ${px(BLEED_IN)}px; --safe: ${px(SAFE_IN)}px; width: ${px(page.w)}px; height: ${px(page.h)}px; transform: scale(${CSS_PX_PER_INCH / LAYOUT_PX_PER_INCH}); }`,
     `.print-face { width: ${px(box.w)}px; height: ${px(box.h)}px; }`,
     `.print-face + .print-face { top: ${px(box.h)}px; }`,
     `.print-face > .board { left: ${px(BLEED_IN)}px; top: ${px(one ? BLEED_IN : 0)}px; width: ${px(piece.face.w)}px; height: ${px(piece.face.h)}px; }`,
@@ -48,9 +52,9 @@ ${sizeRules(piece)}
 </style>
 </head>
 <body class="print print-${piece.id}">
-<div class="print-page">
+<div class="print-sheet"><div class="print-page">
 ${faces.join("\n")}
-</div>
+</div></div>
 </body>
 </html>
 `;

@@ -73,7 +73,7 @@ test("Q6: built with no photos, the files end -PROOF and the last line lists wha
 
 test("Q6: built with photos and a named offer, the files take the plain names and the last line says none remain", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-final");
-  const built = await lockedBuild({ outDir: out, photosDir: set.dir, rungsPath: set.rungsPath, offersPath: namedOffersPath, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, ...set.photos, offersPath: namedOffersPath, today: "2026-10-20" });
   assert.deepEqual((await readdir(out)).sort(), ["assignment.json", "flyer.pdf", "flyer.png", "tent-card.pdf", "tent-card.png"]);
   assert.equal(built.lines.at(-1), "placeholders remain: none (flyer.pdf, tent-card.pdf)");
 });

@@ -38,7 +38,7 @@ test("Q5: after a build with fixture photos, git status shows no change, every f
   const before = status();
   const out = join(set.dir, "dist-print"); // the default folder's ignore is shown above; the build writes here so a
   // real build's output in the default folder is not emptied by the suite
-  const built = await lockedBuild({ outDir: out, photosDir: set.dir, rungsPath: set.rungsPath, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20" });
   assert.equal(status(), before, "git status is unchanged by the build");
 
   const names = built.written.map((f) => basename(f)).sort();

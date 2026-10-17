@@ -43,6 +43,9 @@ async function oneAtATime(work) {
   }
 }
 
+/** One Chrome user at a time across the suite: the builds, and any case that runs Chrome itself. */
+export { oneAtATime };
+
 /** buildPrint with the cases' Chrome, one build at a time; any Chrome run it had to retry is printed into the suite's output. */
 export const lockedBuild = (options) =>
   oneAtATime(async () => {
@@ -121,21 +124,42 @@ export function rungsDoc({ strongest = [], alsoGood = [], arrays = {} } = {}, po
   return { what: "a test fixture: rungs of synthetic photo IDs", pools: { [pool]: { what: "fixture", rungs, unvetted: {} } }, photos: {} };
 }
 
+/** The keys each fixture photo's squares are listed under, in the deliverable's order: the first is the one used. */
+export const SQUARE_KEYS = ["tight", "as-composed"];
+
 /**
- * A folder of synthetic photos and the rungs file that names them: rung 1 is `flyer` then others; rung 3's first array
- * holds the flyer's photo (so the rule must skip it), its second does not. `sizes` maps a role to [width, height].
+ * A deliverable in the shape Image Gauge publishes for the glam set (`photos.<id>.squares[].key`, his good squares, best
+ * first), listing `keys` for each ID.
  */
-export async function photoSet({ sizes = {} } = {}) {
+export const deliverableDoc = (ids, keys = SQUARE_KEYS) => ({
+  what: "a test fixture: each synthetic photo's squares",
+  photos: Object.fromEntries(ids.map((id) => [id, { squares: keys.map((key) => ({ key, box: [0, 0, 1, 1] })) }])),
+});
+
+/**
+ * A folder of synthetic photos, the rungs file that names them and the deliverable that lists their squares. Each photo
+ * is there as composed (`<id>.jpg`, 3000 × 2000, landscape, unless `sizes` maps its role to another [width, height]) and
+ * as each square (`<id>-sq-<key>.jpg`, 1200 × 1200, or `squareSizes[role]`). Rung 1 is the flyer's photo then another;
+ * rung 3's first array holds the flyer's photo (so the rule must skip it), its second does not.
+ */
+export async function photoSet({ sizes = {}, squareSizes = {}, rung1 = ["flyer", "other"] } = {}) {
   const dir = await mkdtemp(join(tmpdir(), "boston-print-photos-"));
-  const ids = { flyer: randomId(), other: randomId(), large: randomId(), top: randomId(), bottom: randomId(), spare: randomId() };
-  const size = (role) => sizes[role] ?? [2400, 2400];
-  for (const [role, id] of Object.entries(ids)) await writeFile(join(dir, `${id}.jpg`), fixtureJpeg(...size(role)));
+  const roles = ["flyer", "other", "large", "top", "bottom", "spare", "portrait"];
+  const ids = Object.fromEntries(roles.map((role) => [role, randomId()]));
+  for (const [role, id] of Object.entries(ids)) {
+    await writeFile(join(dir, `${id}.jpg`), fixtureJpeg(...(sizes[role] ?? (role === "portrait" ? [2000, 3000] : [3000, 2000]))));
+    for (const key of SQUARE_KEYS) await writeFile(join(dir, `${id}-sq-${key}.jpg`), fixtureJpeg(...(squareSizes[role] ?? [1200, 1200])));
+  }
   const doc = rungsDoc({
     strongest: [],
-    alsoGood: [ids.flyer, ids.other],
+    alsoGood: rung1.map((role) => ids[role]),
     arrays: { 3: [[ids.spare, ids.flyer, ids.other], [ids.large, ids.top, ids.bottom]] },
   });
   const rungsPath = join(dir, "image-rungs.json");
   await writeFile(rungsPath, JSON.stringify(doc, null, 1));
-  return { dir, ids, rungsPath, doc };
+  const deliverablePath = join(dir, "deliverable.json");
+  await writeFile(deliverablePath, JSON.stringify(deliverableDoc(Object.values(ids)), null, 1));
+  /** The three photo options a build takes. */
+  const photos = { photosDir: dir, rungsPath, deliverablePath };
+  return { dir, ids, rungsPath, deliverablePath, doc, photos };
 }

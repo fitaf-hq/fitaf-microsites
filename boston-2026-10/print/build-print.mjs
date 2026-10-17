@@ -5,15 +5,17 @@
 // mock-ups' own faces, parts and inputs (mockups/), so a change to a shared file changes the mock-up and the printed piece
 // alike; the legend is not printed.
 //
-//   node print/build-print.mjs [--photos-dir DIR --rungs FILE] [--on YYYY-MM-DD] [--event ID]
+//   node print/build-print.mjs [--photos-dir DIR --rungs FILE --deliverable FILE] [--on YYYY-MM-DD] [--event ID]
 //
-// --photos-dir: the glam set's files, `<id>.jpg`; --rungs: Image Gauge's image-rungs.json for it (§ 3's rule picks the
-// photos). Without them every photo position shows the mock-ups' labelled placeholder. --on and --event as the mock-ups'.
+// --photos-dir: the glam set's files, `<id>.jpg` as composed and `<id>-sq-<key>.jpg` each square; --rungs: Image Gauge's
+// image-rungs.json for it (§ 3's rule, as § 7 amends it, picks the photos); --deliverable: Image Gauge's deliverable.json
+// for it, of which only each tile photo's first square key is read (§ 7 item 2). The three go together; without them
+// every photo position shows the mock-ups' labelled placeholder. --on and --event as the mock-ups'.
 //
 // Before printing, a measuring pass (measure.js, in Chrome, over a copy of each page) finds every photo's window, every
 // run of text, the QR code and every painted field; the build refuses, printing nothing, when a photo is below MIN_PPI at
-// its window, when text or the QR code is less than SAFE_IN inside the trim, or when a field meets a cut edge without
-// running into the bleed (checks.mjs).
+// its window, or a field meets a cut edge without running into the bleed, or a page is not its size; it REPORTS text or
+// the QR code less than SAFE_IN inside a cut edge, which § 7 (no part moved) leaves it unable to change (checks.mjs).
 //
 // ⛔ The photographs never enter this repository. They are read from --photos-dir, copied under their position's own file
 // name (mockups/photos.json) into a temporary folder that the pages are printed from and that is removed after; only
@@ -27,8 +29,8 @@ import { copyStatic, loadJson, ROOT, writeQrCodes } from "../build.mjs";
 import { loadInputs, MANIFEST_PATH, readManifest } from "../mockups/inputs.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
-import { assignPhotos } from "./assign.mjs";
-import { layoutRefusals, resolution } from "./checks.mjs";
+import { assignPhotos, photoFiles, skippedLines } from "./assign.mjs";
+import { layoutFindings, resolution } from "./checks.mjs";
 import { jpegSize } from "./jpeg.mjs";
 import { placeholdersOf, printPage } from "./pages.mjs";
 import { CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
@@ -52,24 +54,37 @@ const STALL_ATTEMPTS = 3;
 /** The file name before its extension: a piece with a placeholder left is a proof. */
 export const stemOf = (piece, placeholders) => piece.stem + (placeholders.length ? PROOF_SUFFIX : "");
 
-/** § 3: the rule's photos, each checked to be in --photos-dir and read for its pixel size, copied under its position's name. */
-async function stagePhotos({ photosDir, rungsPath, manifest, stagedPhotos }) {
-  const assignment = assignPhotos(await loadJson(rungsPath));
+/** A photo file's upright pixel size, from its header; a file missing or unreadable is refused, naming it. */
+function sizeOfFile(photosDir, file) {
+  const path = join(photosDir, file);
+  if (!existsSync(path)) throw new Error(`${file} is not in --photos-dir`);
+  try {
+    return jpegSize(readFileSync(path));
+  } catch (err) {
+    throw new Error(`${file}: ${err.message}`);
+  }
+}
+
+/**
+ * §§ 3 and 7: the rule's photos (the flyer's rung-1 photo read for its shape), each position's file (a tile's square, by
+ * the deliverable), each checked to be in --photos-dir and read for its pixel size, copied under its position's name.
+ */
+async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos }) {
+  const assignment = assignPhotos(await loadJson(rungsPath), { sizeOf: (id) => sizeOfFile(photosDir, `${id}.jpg`) });
+  const files = photoFiles(assignment, await loadJson(deliverablePath));
   await mkdir(stagedPhotos, { recursive: true });
   const pixels = {};
-  for (const [position, id] of Object.entries(assignment.positions)) {
-    const from = join(photosDir, `${id}.jpg`);
-    if (!existsSync(from)) throw new Error(`photo position ${position}: ${id}.jpg is not in --photos-dir (${assignment.from[position]})`);
-    const file = manifest.slots[position];
-    if (!file) throw new Error(`photo position ${position} is not in mockups/photos.json`);
+  for (const [position, file] of Object.entries(files)) {
+    const staged = manifest.slots[position];
+    if (!staged) throw new Error(`photo position ${position} is not in mockups/photos.json`);
     try {
-      pixels[position] = jpegSize(await readFile(from));
+      pixels[position] = sizeOfFile(photosDir, file);
     } catch (err) {
-      throw new Error(`photo position ${position}: ${id}.jpg: ${err.message}`);
+      throw new Error(`photo position ${position} (${assignment.from[position]}): ${err.message}`);
     }
-    await copyFile(from, join(stagedPhotos, file));
+    await copyFile(join(photosDir, file), join(stagedPhotos, staged));
   }
-  return { assignment, pixels };
+  return { assignment, files, pixels };
 }
 
 /** The measuring pass: a copy of the page with measure.js, its DOM dumped by Chrome, the measurement read back. */
@@ -112,9 +127,10 @@ async function planPieces({ run, stage, inputs, pixels }) {
     await writeFile(html, printPage(piece, inputs, printCss));
     const measured = await measure(run, html, measureJs);
     const photos = resolution(measured.faces.flatMap((f) => f.photos), pixels);
-    const refusals = [...layoutRefusals(piece, measured), ...photos.refusals];
+    const layout = layoutFindings(piece, measured);
+    const refusals = [...layout.refusals, ...photos.refusals];
     const placeholders = placeholdersOf(piece, inputs);
-    planned.push({ piece, html, measured, photos: photos.rows, refusals, placeholders, stem: stemOf(piece, placeholders) });
+    planned.push({ piece, html, measured, photos: photos.rows, refusals, warnings: layout.warnings, placeholders, stem: stemOf(piece, placeholders) });
   }
   const refused = planned.flatMap((p) => p.refusals.map((r) => `${p.piece.id}: ${r}`));
   if (refused.length) throw new Error(`refused, nothing printed:\n${refused.join("\n")}`);
@@ -127,12 +143,14 @@ function assignmentRecord(chosen, planned) {
     if (!chosen) return [position, null];
     const r = rows[position];
     const windowIn = [r.w, r.h].map((n) => Number(n.toFixed(3)));
-    return [position, { id: chosen.assignment.positions[position], from: chosen.assignment.from[position], pixels: [r.width, r.height], window_in: windowIn, ppi: Math.floor(r.ppi) }];
+    const { positions, from } = chosen.assignment;
+    return [position, { id: positions[position], from: from[position], file: chosen.files[position], pixels: [r.width, r.height], window_in: windowIn, ppi: Math.floor(r.ppi) }];
   });
   return {
     about: "SPEC-print-pieces.md § 3: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
     pool: chosen ? chosen.assignment.pool : null,
     positions: Object.fromEntries(positions),
+    flyer_skipped: chosen ? chosen.assignment.skipped : [],
     pieces: Object.fromEntries(planned.map((p) => [p.piece.id, { pdf: `${p.stem}.pdf`, png: `${p.stem}.png`, placeholders: p.placeholders }])),
   };
 }
@@ -142,13 +160,16 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries }) {
   const { offer } = campaign(inputs);
   const event = inputs.data.events[inputs.eventIndex];
   const lines = written.map((f) => `wrote ${f}`);
-  if (!chosen) lines.push("photos: none given (--photos-dir and --rungs): every position shows its placeholder");
+  if (!chosen) lines.push("photos: none given (--photos-dir, --rungs and --deliverable): every position shows its placeholder");
   for (const r of planned.flatMap((p) => p.photos)) {
-    lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}; ${r.width} × ${r.height} px over ${r.w.toFixed(2)} × ${r.h.toFixed(2)} in = ${Math.floor(r.ppi)} ppi`);
+    const kind = chosen.files[r.slot].includes("-sq-") ? "its first square" : "as composed";
+    lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${kind}; ${r.width} × ${r.height} px over ${r.w.toFixed(2)} × ${r.h.toFixed(2)} in = ${Math.floor(r.ppi)} ppi`);
   }
+  if (chosen) lines.push(...skippedLines(chosen.assignment));
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
   const which = eventId === undefined ? "the first in data/events.json" : "--event";
   lines.push(`QR: event "${event.id}" (${which}) carries ${event.url} (qr/${event.id}.svg, written by build.mjs writeQrCodes)`);
+  for (const p of planned) lines.push(...p.warnings.map((w) => `safe margin, ${p.piece.id}: ${w} (the approved layout's; § 7: no part is moved)`));
   lines.push(...retries);
   const proofs = planned.filter((p) => p.placeholders.length);
   lines.push(
@@ -164,12 +185,14 @@ export async function buildPrint({
   chrome = process.env.CHROME || CHROME_DEFAULT,
   photosDir,
   rungsPath,
+  deliverablePath,
   manifestPath = MANIFEST_PATH,
   today,
   eventId,
   ...paths
 } = {}) {
-  if (Boolean(photosDir) !== Boolean(rungsPath)) throw new Error("--photos-dir and --rungs go together: give both, or neither for placeholders");
+  const given = [photosDir, rungsPath, deliverablePath].filter(Boolean).length;
+  if (given !== 0 && given !== 3) throw new Error("--photos-dir, --rungs and --deliverable go together: give all three, or none for placeholders");
   // dist-print/ is wholly this build's output: emptied first, so a refused run leaves nothing to mistake for a piece.
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
@@ -179,7 +202,7 @@ export async function buildPrint({
   try {
     const stagedPhotos = join(stage, "photos");
     const manifest = await readManifest(manifestPath);
-    const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, manifest, stagedPhotos }) : null;
+    const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos }) : null;
     const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
@@ -212,6 +235,7 @@ function argsOf(argv) {
   for (let i = 0; i < argv.length; i += 2) {
     if (argv[i] === "--photos-dir") out.photosDir = value(i);
     else if (argv[i] === "--rungs") out.rungsPath = value(i);
+    else if (argv[i] === "--deliverable") out.deliverablePath = value(i);
     else if (argv[i] === "--on") out.today = value(i);
     else if (argv[i] === "--event") out.eventId = value(i);
     else throw new Error(`unknown option ${argv[i]}`);
