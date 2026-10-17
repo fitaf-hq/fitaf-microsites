@@ -9,8 +9,12 @@
 // SPEC-snacks-in-the-cart § 4: while snacks are carted (#picks-data's `carted`), *Add snacks* takes the answer set's
 // snack link (its cart's meals, then the week's snack list for its days), and Q4 is shown only where the week has a
 // snack list for the chosen days: never an answer the cart cannot hold. With no week live, Q4 is hidden.
+// SPEC-week-content § 8: a week whose data says `updating` shows the updating card (#cc-updating, its words the build's)
+// in the list's place; an updating week is no week for everything below: no cart, no link, Choose your meals as it is.
 var picks = JSON.parse(document.getElementById("picks-data").textContent);
 var week = picks.weeks.length === 1 ? picks.weeks[0] : null;
+var updatingCard = document.getElementById("cc-updating");
+if (week && week.updating === true) { if (updatingCard) updatingCard.hidden = false; week = null; }
 var snackQuestion = document.getElementById("q-snacks");
 snackQuestion = snackQuestion && snackQuestion.parentNode;
 if (week) start(week);
