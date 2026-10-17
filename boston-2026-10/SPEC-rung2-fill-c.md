@@ -326,3 +326,128 @@ meals"* (§ 7 there).
    pressed on `/checkout`**: does the store take a fifth meal on the 4 plan, and what does `/checkout` show (its lines,
    the per-meal price, the total)? Then the **Advisor pastes** the block in the Footer (his act, on his go), the watch's
    F3 baseline accepted, and the smoke `--live`.
+
+### 8.1 Built — found at the build, not ruled
+
+Red at `943404a`, built at `2c608fe`, the mutants and this section at the commit that adds it. Two cases that failed
+before § 8 (S20, WC-11) are fixed in `b8f041f`, a commit of their own. § 8 is unchanged; this section says what the
+build chose where § 8 left a choice, what § 8 said that turned out wrong, the places item 2 asked for, and the gates.
+
+**The choices**
+
+1. **The table, and its slot.** `countTable` gives mpid → the plan's allowed totals, ascending:
+   `{"20":[4,5],"21":[7],"22":[10],"23":[14,15],"24":[21],…,"33":[14,15],"34":[21],"35":[1]}`, inlined at the block's
+   `var COUNTS` as before, but from a new marker in the source, `/*TOTALS*/ {}`. A source with the old marker,
+   `/*COUNTS*/ {}`, gets the plan's own count (`planCounts`, the old `countTable`), so R2-71, R2-74, R2-77 and SN-5 still
+   rebuild the blocks live before § 8 from their own commits, byte for byte (the build already inlines only the `UI`
+   words a source reads, for the same reason). A source with both markers or neither is refused.
+2. **What `countTable` reads.** Each `selection` row's `plan` and `meals` only, each a whole number or the build
+   refuses; the selection's own rules stay `scripts/selection.mjs`'s (FC-8h's fixture, 9 meals through plan 8, would fail
+   them: 9 is no answer set's count). Every plan, Family included (no row goes through 1).
+3. **The words.** A plan with several totals: *"the plan takes 4 or 5 meals; the link has 6"* (§ 8's), the totals
+   ascending, joined by " or ". A plan with one total keeps *"the plan needs 7 meals; the link has 8"*, so FC-8f's
+   "unchanged" holds for the words too (R2-03, R2-13, R2-14 and CC-5 did not move). One rule in two places: the block's
+   decode and the link tool's `planRefusal`; FC-8g compares their verdicts and words for every plan and every total
+   from 1 to 21. The block's test is written `=== -1` (no `<` in the text).
+4. **§ 1.4 needed no code.** Since fill C's build (§ 2c item 5) it has compared the plan's displayed count with the
+   link's total (`p.total`, or `p.units` where the sidebar counts snacks), never the plan's count. Only its comment
+   changed; FC-8e pins it and its mutant shows the pin bites.
+5. **A Chef's Choice cart is held to its plan's allowed totals, not to its row's `meals`.** So the cart of *or,
+   weekdays* may carry 4 or 5 (the committed weeks delivered 10-18 and 10-25 carry 4 and still build: item 4), and a
+   cart of *and, every day* (14 meals, plan 14) could carry 15. Holding each cart to its row's own count would refuse
+   those two committed weeks. ⬜ Below.
+6. **The synthetic store** (`test/r2-harness.mjs` `orderPage`): its minimum stays the plan's own count (`planCounts`:
+   the store's *"Please add at least N meals"*). `above` lets it take that many more (CHECKOUT enabled from N to
+   N + `above`, "Limit Exceeded" / "REMOVE N MEAL(S)" beyond); `planShowsAtMost` caps its displayed plan count (FC-8e).
+   Their defaults are every other case's store, unchanged. `above: 1` models the answer item 6's smoke is for; it is not
+   a measurement of the store.
+7. **The cases** are `test/fc-08-extra-meal.test.mjs` (21: FC-8a, FC-8d's 15 and FC-8e at both widths; FC-8b on four
+   store shapes; FC-8g in four parts: tool and block together, the program, the Chef's Choice check, the block filling
+   the Chef's Choice link), their checks `test/fc-08-checks.mjs` and the fixture `test/fixtures/fc-08-plans.json`.
+8. **The mutants** (item 5), `test/fc-08-mutants.test.mjs`, each in a mirror of the package (`cc-harness` `mirror()`,
+   MS-10's way: never the tree), the text or the table built by the mirror's own `scripts/build-storefront.mjs`,
+   checked by the case's own function, after an unchanged mirror as the control (it passes all three). Each fails its
+   case, and the run writes what the check found:
+   - the allowed totals from the plan's count alone (`totalsOf = (P) => [P]`): FC-8a, *"not done: … stopped: the
+     plan needs 4 meals; the link has 5"*;
+   - § 1.4 against the plan's count (`p.total` → `COUNTS[p.mpid][0]`): FC-8e at both widths, *"CHECKOUT pressed with
+     the plan showing 4 of a 5-meal link"*, the fill logging `done: /checkout`;
+   - the selection row's `plan` ignored (every row's meals added to every plan): FC-8h, the fixture's table
+     `{"101":[7,9],"102":[7,8,9],"103":[1,7,9]}` where § 8 says `{"101":[7],"102":[8,9],"103":[1]}`.
+9. **FC-8w** (the watch, `tools/storefront-watch/test/fc-08-smoke-need.test.mjs`, no browser): not one of § 8's cases;
+   item 6's smoke needs it (item 2's places, below).
+
+**What § 8 said that turned out wrong**
+
+- **The block's limit.** Item 4 (and item 5's "the built block's size and character checks") say at most 15,360 bytes.
+  The ceiling has been 20,480 since SPEC-rung2-progress-and-checkout § 25.7 (*"Raise the ceiling"*, 2026-10-02), and
+  the block was 18,323 bytes before § 8 (snacks). Built: **18,423 bytes** (100 more), every character ASCII, two `<`
+  (its own), under the build's 20,480 and over 15,360, as it already was. The build's check is unchanged.
+- **"inlined at `COUNTS` as today"**: at the `COUNTS` variable, yes; at the `/*COUNTS*/` marker, no (choice 1).
+- **"Every existing case green"**: five existing cases held a cart one meal above its plan's count to be broken, or
+  named the 14 plan's one total, and § 8 makes that wrong. Amended with the red cases (`943404a`): MS-6 (5 on the cart
+  of *or, weekdays* is now valid; 6 is the cart that does not make its plan), MS-9 (the table's first total is the
+  plan's count), SN-1 and SN-6 (*"the plan takes 14 or 15 meals; the link has 13"*). Found at the build (`2c608fe`):
+  WC-10c's broken week added one meal to the same cart, now valid; it adds two. And the pins moved with the text, as
+  every amendment of the shipped text moves them: R2-32, PR-10 and CC-8's golden to
+  `efcbc570f5f26273bf126438c19e9a8ba258332f5dcd4c5f22a24a1986a9680f`, the golden's `replaces` naming the live
+  `ad25f93d…` (`17c5693`) until the paste; R2-29's small source carries the new marker.
+
+**Item 2: the places that equate a link's units with a plan's count**
+
+Changed:
+
+| place | what it does now |
+|---|---|
+| `scripts/build-storefront.mjs` `countTable` | mpid → allowed totals (choice 1) |
+| `src/storefront/fitaf-handoff.js`, the decode | `need.indexOf(p.total) === -1` refuses, in choice 3's words |
+| `scripts/handoff-link.mjs` `payloadFromArgs` | `planRefusal(totals, total)`, the block's rule in its words |
+| `scripts/chefs-choice.mjs` `cartOf` / `checkPicks` | its table is `countTable`'s (`needs` → `totals`); the rule is the link tool's, as before |
+| `tools/storefront-watch/lib/site-code.mjs` | `counts` is `countTable`'s (the link tool's argument); `planCounts` added |
+| `tools/storefront-watch/lib/smoke.mjs` `smokeRun` | `need` is a given link's own meals (`linkMeals`), else the plan's count. Its pass rule expects *"<need> items"* on /checkout, so held to the plan's count, item 6's smoke of a 5-meal link would FAIL a store that took the fifth meal (*"/checkout does not say "4 items""*). FC-8w |
+| `tools/storefront-watch/bin/probe-counts.mjs`, `probe-snacks.mjs` | read `planCounts` (they press the plan's own count, no link): as before |
+| `test/r2-harness.mjs` | the store's minimum from `planCounts` (choice 6) |
+
+Left:
+
+| place | why |
+|---|---|
+| `scripts/week-content.mjs` (the week content job) | no check of its own: `readPicks` → `checkPicks` → `cartOf`, so it takes the allowed totals with no edit (FC-8g's Chef's Choice part runs the same code) |
+| `scripts/selection.mjs` | it is where the allowed totals come from (each row's `meals` and `plan`, the plan sold at every size and never above its meals); it never compares a link with a plan |
+| § 1.4 in the block | already the link's total (choice 4) |
+| the build's `/*COUNTS*/` path (`planCounts`) | only a source from before § 8 reaches it: the blocks that were live rebuild as they were |
+| `build.mjs` `clientData`, `src/app.js` (the plan page's result card) | a display, not a check: for *or, weekdays* it shows the plan's 4 meals a week, the 4-meal weekly total and *"5 meals go through as our 4-meal plan for now."* What it should say and price when the cart carries 5 is the Advisor's (⬜ below) |
+| `tools/storefront-watch/lib/smoke.mjs` `LARGEST_PLAN` (every budget's size) | the largest plan's count, 21; the largest link is the largest allowed total, 21 too, and cannot exceed it while `selection.mjs` holds (an answer set comes to at most 3 × 7 = 21, through the 21) |
+| `tools/storybook/handoff/store.mjs` | its variable `planCounts` is `countTable`'s (now allowed totals) and goes only to `payloadFromArgs`; its links are 7 and 14 of their plans, so nothing changes. The name now reads wrong. Storybook's suite needs Chrome and was not run |
+| `tools/storefront-watch/test/browser-store.mjs` | a fixture store of a 7-meal plan (a literal 7): it checks no link |
+
+**⬜ Open, for the Advisor (not decided by the build)**
+
+- The plan page for *or, weekdays* (and *and, weekdays, breakfast*): it says 4 meals a week, shows the 4-meal plan's
+  weekly total, and *"5 meals go through as our 4-meal plan for now"*, while its Chef's Choice cart may carry 5. The
+  words and the price shown are his.
+- Whether the Chef's Choice content check should hold each cart to its row's own count (5 for *or, weekdays*); it would
+  refuse the committed weeks delivered 10-18 and 10-25 (4 on that cart). Their picks are Fit AF's emitter's, which § 8
+  says now carries 5 on plan 4.
+- Whether the store takes a fifth meal on the 4 plan, at what price, and what `/checkout` shows: item 6's smoke.
+
+**The gates** (the orchestrator re-runs them)
+
+- `npm test` (the site, `node --test`, no network): on `9f7be94`, 691 cases, 689 passing (S20 and WC-11 failing, both
+  from `62d1751`); at `943404a` (red), 712, 22 failing (16 of FC-8's 21; MS-6, MS-9, SN-1, SN-6 as amended; S20,
+  WC-11); at `2c608fe`, 712, 710 passing (S20, WC-11); at `b8f041f`, S20's and WC-11's files 8 of 8; at this
+  section's commit (and its tree before it), 716 cases with the four mutant cases, 716 passing.
+- `npm run build:storefront`: the Footer block 18,423 bytes, the console file 18,404, `/* fitaf-handoff <commit>
+  sha256:efcbc570f5f26273bf126438c19e9a8ba258332f5dcd4c5f22a24a1986a9680f */`; both warned over the 5,120 target, under
+  the 20,480 ceiling; no `<` but the block's own two.
+- `npm run handoff:link -- --mpid 20` with six meals: `handoff:link: the plan takes 4 or 5 meals; the link has 6`, exit
+  1, nothing printed on stdout; with five (one of them twice): exit 0, the link
+  `https://fitafnutrition.com/order?mpid=20#fitaf=2.<key>*2.<key>.<key>.<key>` and each key beside its name.
+- The mutants: each red on its own case (choice 8).
+- The watch (`tools/storefront-watch`, `npm test`, Chrome against its synthetic store on 127.0.0.1, at `2c608fe`'s
+  code): 213 cases, 212 passing, 1 cancelled: W17b (the smoke with `--link` and a photo part, a 7-meal link on mpid 21,
+  whose `need` is 7 before and after this change) timed out at its 120 s, and its smoke's Chrome then sat idle for 20
+  minutes, past the smoke's own ceiling, until the run's test process was stopped. Run alone, `w17-sheet.test.mjs` is 3
+  of 3, three times (24, 12 and 11 s). ⚠ Whether W17b hangs the same way under the full run's load without this change
+  was not measured. FC-8w 3 of 3 within it.
+- Not run: Storybook's suite; anything on the live store or a live site (item 6 is the orchestrator's).
