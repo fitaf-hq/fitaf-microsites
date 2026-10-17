@@ -2,7 +2,7 @@
    Kill switch: delete this block (never "Inject these scripts": that stops every vendor's). */
 // ── How this file ships ────────────────────────────────────────────────────────────────────────────────
 // `npm run build:storefront` writes it twice: the Footer block (fitaf-handoff.html) and the same text as a console file
-// for the one-browser run (fitaf-handoff.fill-B.console.js). The build inlines the plan counts at the COUNTS slot, the
+// for the one-browser run (fitaf-handoff.fill-B.console.js). The build inlines the plans' allowed totals at the TOTALS slot, the
 // progress screen's words (data/messages.json, `handoff`) at the UI slot and its colours (the page's own tokens,
 // src/template.html) at the TOKENS slot, and the meal-key function at the KEY slot, and drops every FULL-LINE `//`
 // comment, like this one. SPEC-rung2 § 11 item 5: each built file should be at most 5,120 bytes (the build warns above)
@@ -42,10 +42,13 @@ if (loc.hash.slice(0, 7) !== "#fitaf=") return;
 // Once per load: a second copy of this block, or a console paste on a page that has it, must not fill twice.
 if (w.__fitafHandoff) return;
 w.__fitafHandoff = true;
-// mpid: meals a week, from data/plans.json, individual plans and Family. The store's order page will not check out
-// short of the plan's count ("Please add at least 7 meals to continue": the one-browser run, 2026-09-29), so a
-// payload must add exactly that many — never a cart that stops at checkout.
-var COUNTS = /*COUNTS*/ {};
+// mpid: the plan's ALLOWED TOTALS, ascending, from data/plans.json, individual plans and Family (SPEC-rung2-fill-c § 8
+// item 1, the build's countTable): the plan's own count, and the meals of every `selection` row that goes through it
+// (5 on the 4 plan, 15 on the 14: "our 5 meal plan is the 4 meal plan with an extra meal"). The store's order page will
+// not check out short of the plan's count ("Please add at least 7 meals to continue": the one-browser run, 2026-09-29),
+// so a payload must add up to one of these — never a cart that stops at checkout. Before § 8 the slot was COUNTS and
+// held the plan's own count alone; the build still gives an old source that, so the live blocks rebuild (R2-71).
+var COUNTS = /*TOTALS*/ {};
 // SPEC-rung2-progress-and-checkout § 1: the screen's words, data/messages.json's `handoff` ({ title, step, checkout }),
 // inlined by the build. No phrase of the screen is written in this file (R2-50).
 var UI = /*UI*/ {};
@@ -524,8 +527,9 @@ return first(w.document, "button", function (b) {
   return (any || !b.disabled) && re.test(text(b)) && b.getClientRects().length && !b.closest("app-product-card,app-product-card-mobile");
 });
 }
-// SPEC-rung2-fill-c § 1.4: wait for an enabled CHECKOUT AND the plan's own count (plan()) equal to the link's total;
-// short of the plan's count the store shows a disabled "Add N more meals". Then remove the fragment and press it once.
+// SPEC-rung2-fill-c § 1.4: wait for an enabled CHECKOUT AND the plan's own count (plan()) equal to the LINK's total
+// (p.total; § 8 item 3: not the plan's count, so a 5-meal link on the 4 plan waits for 5, not 4); short of the plan's
+// count the store shows a disabled "Add N more meals". Then remove the fragment and press it once.
 // Neither within 50 polls of 200 ms (10 s): stop, naming the store's counts, what the plan shows, and whether CHECKOUT
 // was there at all (§ 1.6). Then wait for /checkout; if the store opens its extras dialog instead, press the dialog's
 // CONTINUE TO CHECKOUT, once, and add nothing from it. Each wait after a press of the store's (CHECKOUT, then CONTINUE)
@@ -555,13 +559,16 @@ guard(function poll() {
 }
 
 // The plan is the page's own ?mpid= (SPEC-rung2 § 11 item 1), read once: a whole number with no leading zero. Then the
-// full-plan rule (§ 7), last, so every other fault above reports itself first.
+// full-plan rule (§ 7, as SPEC-rung2-fill-c § 8 item 2 amends it), last, so every other fault above reports itself
+// first: the meals must add up to one of the plan's allowed totals, and the refusal names them, "the plan takes 4 or 5
+// meals; the link has 6"; a plan with one ("needs 7") is refused in the words it always was. (No `<` in the shipped
+// text: the test is === -1.)
 guard(function () {
 if (loc.pathname !== "/order") fail("not the order page");
 var f = loc.hash.slice(7).split("!"), p = payload(f.shift()), m = /[?&]mpid=([1-9]\d{0,8})(&|$)/.exec(loc.search) || fail("no mpid on this page");
 p.mpid = +m[1];
 var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
-if (p.total !== need) fail("the plan needs " + need + " meals; the link has " + p.total);
+if (need.indexOf(p.total) === -1) fail("the plan " + (need[1] ? "takes " : "needs ") + need.join(" or ") + " meals; the link has " + p.total);
 log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
 // SPEC-rung2-progress-and-checkout § 1, § 2 item 1: the screen, now that the link and the plan's count have passed
 // their checks, and before the fill's first poll. A link refused above shows nothing new.

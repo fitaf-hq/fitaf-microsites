@@ -12,10 +12,15 @@ export async function siteCode() {
     import("../../../build.mjs"),
   ]);
   const plans = await build.loadJson(build.PLANS_PATH);
-  const counts = new Map(Object.entries(storefront.countTable(plans)).map(([mpid, n]) => [Number(mpid), n]));
+  // SPEC-rung2-fill-c § 8: `counts` is the link tool's own argument, mpid -> the plan's ALLOWED TOTALS (countTable: its
+  // count, and the meals of each `selection` row through it, 5 on the 4 plan); `planCounts` is mpid -> the plan's own
+  // count, the store's "at least N meals" (the meals a run without --link chooses, and the probes' plan).
+  const counts = new Map(Object.entries(storefront.countTable(plans)).map(([mpid, totals]) => [Number(mpid), totals]));
+  const planCounts = new Map(Object.entries(storefront.planCounts(plans)).map(([mpid, n]) => [Number(mpid), n]));
   return {
     plans,
     counts,
+    planCounts,
     payloadFromArgs: link.payloadFromArgs,
     handoffLink: link.handoffLink,
     mealKey: link.mealKey,

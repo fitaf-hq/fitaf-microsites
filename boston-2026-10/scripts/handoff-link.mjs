@@ -7,7 +7,9 @@
 // Each meal is its KEY (src/storefront/meal-key.js, the one function the shipped script also carries) and, above 1, its
 // count; the plan's id is the link's own ?mpid=, which the script reads from the page. Version 1 (base64 JSON, with an
 // optional product id per meal for fill A) is retired: § 11, "no link has been published".
-// The tool refuses what the shipped script would refuse, so it never prints a link that silently does nothing.
+// The tool refuses what the shipped script would refuse, so it never prints a link that silently does nothing: among it,
+// meals that do not add up to one of the plan's allowed totals (SPEC-rung2-fill-c § 8: data/plans.json's own count, and
+// the meals of each `selection` row through the plan, so 4 or 5 on the 4 plan and 14 or 15 on the 14).
 // SPEC-rung2-progress-and-checkout § 17.1: with `--photos <delivery Sunday>` (and `--host <code>`, 0 by default), the link
 // also carries what the progress screen needs to show each meal's cell of that week's photo sheet, read here from
 // data/photo-sheets.json (no cell geometry is a literal in this tool or the block). After the meal part, "!"-separated:
@@ -122,10 +124,22 @@ export function itemsFromArgs(itemArgs, flag = "--item") {
 }
 
 /**
+ * SPEC-rung2-fill-c § 8 item 2: a link's meals, `total`, against the plan's allowed `totals` (countTable's), in the
+ * shipped script's own words: null when it is one of them, else the refusal, which names them ("the plan takes 4 or 5
+ * meals; the link has 6"; a plan with one total, in the words it always had: "the plan needs 7 meals; the link has 8").
+ */
+export function planRefusal(totals, total) {
+  if (totals.includes(total)) return null;
+  return `the plan ${totals.length > 1 ? "takes" : "needs"} ${totals.join(" or ")} meals; the link has ${total}`;
+}
+
+/**
  * Command-line arguments -> the payload `{ mpid, items: [{ name, key, qty }], snacks?: [{ name, key, qty }], code? }`.
- * Throws on anything the shipped script would refuse. `counts` maps each mpid in data/plans.json to its meals a week:
- * the MEALS' counts must add up to exactly that (the full-plan rule, § 7); snacks (`--snack`, SPEC-snacks-in-the-cart
- * § 2) are beside the plan, and `snacks` is present only when one is given, so a link without one is as before.
+ * Throws on anything the shipped script would refuse. `counts` maps each mpid in data/plans.json to its ALLOWED TOTALS
+ * (countTable's, SPEC-rung2-fill-c § 8: the plan's own count, and the meals of each `selection` row through it): the
+ * MEALS' counts must add up to one of them (the full-plan rule, § 7, as § 8 amends it); snacks (`--snack`,
+ * SPEC-snacks-in-the-cart § 2) are beside the plan, and `snacks` is present only when one is given, so a link without one
+ * is as before.
  */
 export function payloadFromArgs(argv, counts, photos = null) {
   const flags = { "--mpid": [], "--item": [], "--snack": [], "--code": [], "--photos": [], "--host": [] };
@@ -142,10 +156,11 @@ export function payloadFromArgs(argv, counts, photos = null) {
   const snacks = itemsFromArgs(flags["--snack"], "--snack");
   // § 2: a name or a key given twice is refused across meals and snacks alike, as the block refuses it.
   checkDistinct([...items, ...snacks]);
-  // The same rule and message as the shipped script: the store will not check out short of the plan.
-  const need = counts.get(mpid);
+  // The same rule and message as the shipped script: the store will not check out short of the plan; § 8: one of the
+  // plan's allowed totals.
   const total = items.reduce((sum, it) => sum + it.qty, 0);
-  if (total !== need) throw new Error(`the plan needs ${need} meals; the link has ${total}`);
+  const refusal = planRefusal(counts.get(mpid), total);
+  if (refusal) throw new Error(refusal);
   const payload = { mpid, items, ...(snacks.length ? { snacks } : {}) };
   if (flags["--code"].length) {
     const [code] = flags["--code"];
@@ -178,7 +193,8 @@ export function legend(payload) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
     const plans = await loadJson(PLANS_PATH);
-    const counts = new Map(Object.entries(countTable(plans)).map(([mpid, n]) => [Number(mpid), n]));
+    // SPEC-rung2-fill-c § 8: mpid -> the plan's allowed totals.
+    const counts = new Map(Object.entries(countTable(plans)).map(([mpid, totals]) => [Number(mpid), totals]));
     const photos = existsSync(PHOTOS_PATH) ? await loadJson(PHOTOS_PATH) : null;
     const payload = payloadFromArgs(process.argv.slice(2), counts, photos);
     console.log([handoffLink(plans, payload), ...legend(payload)].join("\n"));

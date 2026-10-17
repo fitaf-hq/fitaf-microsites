@@ -10,7 +10,7 @@ import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 import { parseHTML } from "linkedom";
 import { loadJson, PLANS_PATH } from "../build.mjs";
-import { countTable, storefrontText } from "../scripts/build-storefront.mjs";
+import { planCounts, storefrontText } from "../scripts/build-storefront.mjs";
 
 export const ORIGIN = "https://fitafnutrition.com";
 /** The store's cart key: a visitor's own cart there must be left exactly as it was (R2-14). */
@@ -544,7 +544,9 @@ export async function orderPage({
   const snackOf = (name) => snacks.find((sn) => sn.name === name);
   assert.ok(afterFirstPress === "counter" || afterFirstPress in AFTER_FIRST_PRESS, `afterFirstPress: ${afterFirstPress}`);
   const { document } = parseHTML(await readFile(FIXTURE, "utf8"));
-  const counts = countTable(await loadJson(PLANS_PATH));
+  // The store's own minimum ("Please add at least N meals"): the plan's count, not the link's allowed totals
+  // (SPEC-rung2-fill-c § 8: those are the block's check; this is the store).
+  const counts = planCounts(await loadJson(PLANS_PATH));
   const presses = new Map();
   const log = [];
   const controls = [];

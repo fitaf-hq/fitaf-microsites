@@ -90,7 +90,9 @@ test("WC-10c: a refusal the build would make writes nothing: a broken picks file
   const broken = await mirror(async (dir) => {
     const path = join(dir, "data", "picks", `${WEEK_1018}.json`);
     const week = JSON.parse(await readFile(path, "utf8"));
-    week.lists["chefs-choice"].carts[0].items[0].qty += 1; // the cart no longer makes its plan
+    // The cart no longer makes its plan: two more, since SPEC-rung2-fill-c § 8 a plan takes one more than its count when
+    // a selection row goes through it (this cart is or, weekdays: 4 meals on the 4 plan, which takes 4 or 5).
+    week.lists["chefs-choice"].carts[0].items[0].qty += 2;
     await writeFile(join(dir, "data", "picks", "2026-10-11.json"), JSON.stringify({ ...week, delivery: "2026-10-11" }));
   });
   const noSheet = await mirror((dir) => unlink(join(dir, "src", "assets", "photo-sheets", "chefs-choice-2026-10-18.jpg")));

@@ -7,7 +7,8 @@
 //   and checked (§ 1), and one week made into the data the page's script reads, which is the bucket's object.
 //
 // ⛔ The menus are checked by the LINK TOOL'S OWN RULES, by importing it: each menu, for each size, goes through
-// payloadFromArgs (qty 1..MAX_QTY, names distinct and no two sharing a key, the counts making the plan's count) exactly
+// payloadFromArgs (qty 1..MAX_QTY, names distinct and no two sharing a key, the counts making one of the plan's allowed
+// totals, SPEC-rung2-fill-c § 8: 4 or 5 on the 4 plan, 14 or 15 on the 14) exactly
 // as `npm run handoff:link` takes it, and its link is the tool's handoffLink, whose keys are the one mealKey
 // (src/storefront/meal-key.js). No key function and no encoder live here (CC-2).
 //
@@ -110,12 +111,13 @@ function mealsOf(menu, where) {
 
 /**
  * One list of meals for `count` (a plan's meals a week), checked by the link tool at every size: for each size, the
- * tool's own payloadFromArgs (qty 1..MAX_QTY, names distinct and no two sharing a key, the counts making the plan's
- * count) and its handoffLink. Returns { meals: [{ name, display, qty }], links: { mpid: url } }, `name` as the tool keys it
+ * tool's own payloadFromArgs (qty 1..MAX_QTY, names distinct and no two sharing a key, the counts making one of the
+ * plan's allowed totals: SPEC-rung2-fill-c § 8, its own count or the meals of a `selection` row through it) and its
+ * handoffLink. Returns { meals: [{ name, display, qty }], links: { mpid: url } }, `name` as the tool keys it
  * and `display` as the page shows it (§ 7.1); only `name` reaches the tool. `photo` ({ photos, host }) gives each link
  * the week's cells by the tool's own --photos (SPEC-rung2-progress-and-checkout § 17.1). `where` names it in a refusal.
  */
-function cartOf(meals, count, where, { plans, needs, photo, date }, snacks = null) {
+function cartOf(meals, count, where, { plans, totals, photo, date }, snacks = null) {
   const links = {};
   // SPEC-snacks-in-the-cart § 4.2: while snacks are carted, a second link per size, the cart's meals and then the week's
   // snack list for the cart's days as snack items (the tool's own --snack, so its refusals are the block's).
@@ -127,14 +129,14 @@ function cartOf(meals, count, where, { plans, needs, photo, date }, snacks = nul
     if (photo?.photos?.chefs_choice?.[date]) argv.push("--photos", date, "--host", String(photo.host));
     let payload;
     try {
-      payload = payloadFromArgs(argv, needs, photo?.photos);
+      payload = payloadFromArgs(argv, totals, photo?.photos);
     } catch (err) {
       throw new Error(`${where}: ${err.message}`);
     }
     links[mpid] = handoffLink(plans, payload);
     if (snacks) {
       try {
-        snackLinks[mpid] = handoffLink(plans, payloadFromArgs([...argv, ...snacks.flatMap((m) => ["--snack", `${m.name}:${m.qty}`])], needs, photo?.photos));
+        snackLinks[mpid] = handoffLink(plans, payloadFromArgs([...argv, ...snacks.flatMap((m) => ["--snack", `${m.name}:${m.qty}`])], totals, photo?.photos));
       } catch (err) {
         throw new Error(`${where} with its snacks: ${err.message}`);
       }
@@ -246,8 +248,9 @@ export function checkPicks(json, fileName, plans, photo = null) {
   onlyFields(json, version === 1 ? [...FILE_FIELDS, ...("version" in json ? ["version"] : [])] : V2_FILE_FIELDS, "the file");
   if (json.delivery !== date) throw new Error(`delivery ${JSON.stringify(json.delivery)} is not the file's date (${date})`);
   const { rows } = checkSelection(plans);
-  const needs = new Map(Object.entries(countTable(plans)).map(([mpid, n]) => [Number(mpid), n]));
-  const ctx = { plans, needs, photo, date };
+  // SPEC-rung2-fill-c § 8: mpid -> the plan's allowed totals, the link tool's (and the block's) own table.
+  const totals = new Map(Object.entries(countTable(plans)).map(([mpid, allowed]) => [Number(mpid), allowed]));
+  const ctx = { plans, totals, photo, date };
   return { delivery: date, ...(version === 1 ? v1Carts(json, rows, ctx) : v2Carts(json, rows, ctx)) };
 }
 
