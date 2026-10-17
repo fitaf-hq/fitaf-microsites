@@ -287,3 +287,42 @@ to the store's storage beyond fill B's one key; removing a visitor's meal.
 | c | the served file's cache lifetime | 60 s |
 | d | repeated smoke runs per width | 5 |
 | e | `MIN_GAP_MS` · `ACK_MS` · `RETRIES` · `SETTLE_MS` | 300 · 5000 · 2 · 1000, to be revisited with § 2's measurements |
+
+## 8. Amendment, 2026-10-16: a plan carries the extra meal its `selection` row gives (5 on the 4 plan, 15 on the 14). CONTRACT, before any code
+
+**Why.** Fit AF's decision record `docs/decisions/2026-10-16-the-picks-are-a-model.md` § 2 item 7, the Advisor
+(`ts=2026-10-17T00:51:33.273Z`): *"our 5 meal plan is the 4 meal plan with an extra meal"* (his 2026-10-07 words:
+*"use the "4" plan for 5 meals and the "14" plan for 15 meals"*). `data/plans.json` already says so: its `selection`
+rows map 5 meals to plan 4 and 15 to plan 14. But **every check of a link's count holds it to the plan's own count**
+(`SPEC-rung2-cart-handoff.md` § 7, 2026-09-29: *"the rule is equal, because the microsite only ever offers whole
+plans"*), so a 5-meal cart could never cart 5. Fit AF's own picks cut it to 4 until 2026-10-16 (its misreading, now
+corrected); its corrected picks (`picks-v2`) carry 5 on plan 4. The store's own words are *"Please add at least N
+meals"* (§ 7 there).
+
+1. **The allowed totals of a plan** whose meals a week is `P`: `P`, and the `meals` of every `selection` row whose
+   `plan` is `P`. From today's data: 4 → 4 or 5; 14 → 14 or 15; 7, 10, 21 and Family's unchanged. Data, never a
+   literal: `countTable` (`scripts/build-storefront.mjs`) becomes mpid → its allowed totals, inlined at `COUNTS` as
+   today.
+2. **Every check of a link's count against its plan** takes the allowed totals: fill C's decode (`fitaf-handoff.js`,
+   today `p.total !== need`), the link tool (`scripts/handoff-link.mjs`), and the Chef's Choice cart check
+   (`scripts/chefs-choice.mjs` `cartOf`, *"the counts making the plan's count"*); its refusal names them: *"the plan
+   takes 4 or 5 meals; the link has 6"*. ⚠ Find every other place that equates a link's units with a plan's count
+   (the week content job, `selection.mjs`) and say in § 8.1 which you changed and which you left, with why.
+3. **§ 1.4, before CHECKOUT**: the store's own count must equal **the link's total** (`p.total`), not the plan's count;
+   CHECKOUT enabled, as today. With 5 meals on plan 4 the store shows 5.
+4. **Unchanged**: a link of exactly the plan's count still fills (every link published before this lands); every other
+   rule of fill C, fill B and the two faces; the block's limits (at most 15,360 bytes, ASCII, no `<` but its own two).
+5. **Cases** (written first, run red; the synthetic store, no network): **FC-8a** a 5-meal link on Lean 4's mpid fills
+   and presses CHECKOUT when the store counts 5; **FC-8b** a 4-meal link on it still fills; **FC-8c** 6 refused at
+   decode, nothing pressed, the refusal's words; **FC-8d** 15 on the 14 plan fills, 13 and 16 refused; **FC-8e** § 1.4
+   waits for 5, not 4 (the store showing 4 of a 5-meal link stops, naming the counts); **FC-8f** Family and 7, 10, 21
+   unchanged; **FC-8g** `handoff:link` and the Chef's Choice check take the same totals; **FC-8h** `countTable` from a
+   fixture `plans.json` whose `selection` maps 9 to plan 8: 8 → 8 or 9. Every existing case green; the built block's
+   size and character checks pass. **Mutants** (each in a mirror): allowed totals from the plan's count alone (FC-8a);
+   § 1.4 against the plan's count (FC-8e); the `selection` row's `plan` ignored (FC-8h).
+6. **Then (the orchestrator's, after a re-gate; nothing here is pasted or released by the build)**: `npm run
+   build:storefront`; the watch's smoke with **`--script <the built Footer block> --link <a 5-meal Chef's Choice link on
+   Lean 4>`** (made by `handoff:link` from the week's own file), both widths, on the live store, **nothing typed or
+   pressed on `/checkout`**: does the store take a fifth meal on the 4 plan, and what does `/checkout` show (its lines,
+   the per-meal price, the total)? Then the **Advisor pastes** the block in the Footer (his act, on his go), the watch's
+   F3 baseline accepted, and the smoke `--live`.
