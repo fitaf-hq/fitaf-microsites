@@ -45,6 +45,9 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 | `tools/render-flows/` | the flow-diagram renderer (`npm run render:flows` delegates to it): **its own npm package and lockfile**, so mermaid-cli and puppeteer are never in this package's install, which the deploy runs; see its README | tool, separate package |
 | `mockups/` | ⭐ **four marketing mock-ups for a screen share** (tent card, flyer, banner, slideshow), built from the page's own data, tokens, logo and QR code; photos by manifest, never committed. See [`mockups/README.md`](mockups/README.md) | INPUT + build |
 | `dist-mockups/` | the mock-ups: HTML, PNGs and the photos they show | OUTPUT, git-ignored |
+| `SPEC-print-pieces.md` | the printed pieces' contract (2026-10-17): the tent card and the quarter-sheet flyer, from the glam set; sizes with a 0.125 in bleed, the photos by rule from Image Gauge's rungs at 300 ppi or better, `-PROOF` while a placeholder remains, no legend; cases Q1–Q8; § 7 (the Advisor's correction, 2026-10-17): the approved layouts exactly (the tent two portrait 4 × 6 in faces), the tiles from Image Gauge's squares, the flyer's photo landscape; cases Q9–Q11 | authority |
+| `print/` | the printed pieces' build (`npm run build:print`): the mock-ups' own faces, parts and inputs on a page of the trim plus the bleed, printed by headless Chrome after a measuring pass checks the resolution, the safe margin and the bleed. See [`print/README.md`](print/README.md) | build |
+| `dist-print/` | the printed pieces: `flyer.pdf`, `tent-card.pdf` (`-PROOF` while a placeholder remains), a PNG proof of each, `assignment.json` (the photos' IDs) | OUTPUT, git-ignored |
 | `dist-dev/` | the development pages: `index.html` and `<event-id>/index.html` per event (rung 1's page, Flow 1 on top, Flow 2 as a meal size, the share panel); `email-preview/e1.html` and `ex.html` from `npm run preview:emails` | OUTPUT, git-ignored |
 | `SPEC-rung2-cart-handoff.md` | rung 2's contract: the cart hand-off, § 6 (the store's Custom Scripts Footer) and § 12 (fill B is the mechanism; fill A is retired) govern | authority |
 | `SPEC-storefront-watch.md` | the storefront watch: a GitHub Actions check every 10 minutes of the store's public bundle, the dependencies the hand-off presses, Fit AF's Footer block, and a live smoke test of the hand-off on each flag (never submits); an issue per release; on Fridays, the store's switch to the next week's menu (§ 12, F6), an issue of its own | authority |
@@ -67,7 +70,7 @@ Fit AF store. Rung 1 of [`SPEC.md`](SPEC.md), which is the contract. Everything 
 
 ```sh
 npm --prefix boston-2026-10 install
-npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-71, P1–P6, F1, CC-1–CC-9, PR-1–PR-10, MS-1–MS-16, SN-1–SN-6, WC-1–WC-12, U1–U4
+npm --prefix boston-2026-10 test        # T1–T7, B1–B2, S1–S26, M1–M21, R2-01–R2-71, P1–P6, F1, CC-1–CC-9, PR-1–PR-10, MS-1–MS-16, SN-1–SN-6, WC-1–WC-12, U1–U4, Q1–Q11, QC
 npm --prefix boston-2026-10 run content -- --week YYYY-MM-DD --out DIR  # the week's objects for the Workers' bucket (SPEC-week-content § 3)
 node boston-2026-10/test/suite-in-mirror.mjs --set snacks.shown=false  # the same suite in a mirror, data/plans.json changed there (no --set: the control)
 npm --prefix boston-2026-10 run contrast  # the APCA table; exit 1 if any pair is under its minimum
@@ -75,6 +78,7 @@ npm --prefix boston-2026-10 run build   # writes dist/ (the page carries no week
 npm --prefix boston-2026-10 run email:tokens    # after a :root token change: the emails' copy (M17 fails until then)
 npm --prefix boston-2026-10 run preview:emails  # dist-dev/email-preview/{e1,ex}.html, for a screen share
 npm --prefix boston-2026-10 run build:mockups  # the four mock-ups -> dist-mockups/ (mockups/README.md)
+npm --prefix boston-2026-10 run build:print -- [--photos-dir DIR --rungs FILE --deliverable FILE] [--on YYYY-MM-DD] [--event ID]  # the tent card and the flyer -> dist-print/ (print/README.md)
 npm --prefix boston-2026-10/tools/render-flows ci  # the renderer's own install (not part of the one above)
 npm --prefix boston-2026-10 run render:flows  # flows/rendered/: every flow diagram as SVG + 2x PNG (installed Chrome)
 ```

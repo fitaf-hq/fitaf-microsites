@@ -1,6 +1,8 @@
 # mockups/ — four marketing mock-ups for the Boston trip
 
 **Mock-ups for a SCREEN SHARE at an Owner meeting. Nothing here is printed and nothing is print-ready.**
+The printed tent card and flyer are [`print/`](../print/README.md)'s (`SPEC-print-pieces.md`): it prints these same
+faces (`pieces.mjs` `tentFace` and `flyerFace`, with `parts.mjs` and `inputs.mjs`), so a change here reaches both.
 A tabletop tent card, a quarter-page flyer, a retractable banner and a slideshow, built to carry two
 messages:
 

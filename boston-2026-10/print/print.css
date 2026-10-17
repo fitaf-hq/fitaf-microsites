@@ -1,0 +1,33 @@
+/* The printed pieces (print/, SPEC-print-pieces.md): each mock-up's face on a page of the sheet plus the bleed. This sheet
+   comes after the template's tokens and fonts and mockups.css, and before the sizes (pages.mjs sizeRules, from sizes.mjs,
+   which set the boxes and --bleed and --safe). It draws no colour of its own (the two it names are the template's: the
+   page's white, and the bar's own navy) and nothing translucent. One layout prints and screenshots: no @media print, so
+   the PNG proof is the PDF's page.
+   ⛔ § 7 (the Advisor, 2026-10-17): the faces are the approved mock-ups' layouts, and NO RULE HERE MOVES A PART. A part
+   that meets a cut edge of the trim only grows outward, into the bleed; everything inside the trim stays where the
+   mock-up's sheet puts it (test Q9 measures that, part for part). */
+
+html, body { margin: 0; padding: 0; background: var(--white); }
+* { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* The sheet is the page's printed size and clips; the page inside it is laid out in the mock-ups' pixels and scaled
+   (pages.mjs sizeRules), from its top left corner, out of the flow so that its layout size makes no second page */
+.print-sheet { position: relative; overflow: hidden; background: var(--white); }
+.print-page { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; background: var(--white); }
+.print-face { position: absolute; left: 0; top: 0; overflow: hidden; }
+/* The tent's upper face: the lower face turned, so that folded on the centre line both read upright */
+.print-face-turned { transform: rotate(180deg); }
+/* A face's .board is its trim: no outline, and what runs into the bleed is not cut off at the trim */
+.print-face > .board { position: absolute; overflow: visible; outline: none; }
+
+/* ---------- The flyer: the bar meets the top, left and right cut edges, the hero the left and right. The bar grows up by
+   a border of its own colour (its padding, and so its words, stay put) and sideways by its margins (its words are
+   centred); the hero grows sideways, and its logo plate is held where it was ---------- */
+.print-flyer .event-bar { margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0; border-top: var(--bleed) solid var(--navy); }
+.print-flyer .flyer-hero { margin: 0 calc(-1 * var(--bleed)); }
+.print-flyer .logo-plate { margin-left: var(--bleed); }
+
+/* ---------- The tent card's face (portrait, 4 × 6 in): its top is the fold, so the bar grows sideways only; of the photos,
+   the large one meets the left cut edge and the tiles the right, and each grows outward from its own cell ---------- */
+.print-tent-card .event-bar { margin: 0 calc(-1 * var(--bleed)); }
+.print-tent-card .tent-photos > :first-child { margin-left: calc(-1 * var(--bleed)); width: calc(100% + var(--bleed)); }
+.print-tent-card .tent-photos > :not(:first-child) { margin-right: calc(-1 * var(--bleed)); width: calc(100% + var(--bleed)); }
