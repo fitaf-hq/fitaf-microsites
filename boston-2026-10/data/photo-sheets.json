@@ -374,7 +374,7 @@
     "2026-10-25": {
       "file": "chefs-choice-2026-10-25.jpg",
       "width": 208,
-      "height": 3328,
+      "height": 4992,
       "cells": {
         "Sesame Chicken Teriyaki with Fried Rice": {
           "x": 16,
@@ -394,81 +394,129 @@
           "w": 176,
           "h": 176
         },
-        "Balsamic Grilled Free-Range Chicken": {
+        "Elk Chili": {
           "x": 16,
           "y": 640,
           "w": 176,
           "h": 176
         },
-        "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy": {
+        "Honey-Chipotle Pulled Chicken": {
           "x": 16,
           "y": 848,
           "w": 176,
           "h": 176
         },
-        "Lemon Dill Coho Salmon": {
+        "Balsamic Grilled Free-Range Chicken": {
           "x": 16,
           "y": 1056,
           "w": 176,
           "h": 176
         },
-        "Grass-fed Beef Bourguignon": {
+        "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy": {
           "x": 16,
           "y": 1264,
           "w": 176,
           "h": 176
         },
-        "BBQ Pulled Pork Cauliflower Mac & Cheese": {
+        "Lemon Dill Coho Salmon": {
           "x": 16,
           "y": 1472,
           "w": 176,
           "h": 176
         },
-        "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap": {
+        "Grass-fed Beef Bourguignon": {
           "x": 16,
           "y": 1680,
           "w": 176,
           "h": 176
         },
-        "Vodka Chicken Parm Zucchini Noodle Lasagna": {
+        "BBQ Pulled Pork Cauliflower Mac & Cheese": {
           "x": 16,
           "y": 1888,
           "w": 176,
           "h": 176
         },
-        "Buffalo Chicken Cheesesteak Bowl": {
+        "Maple Bourbon BBQ Chicken Quesadilla on Low Carb Wrap": {
           "x": 16,
           "y": 2096,
           "w": 176,
           "h": 176
         },
-        "Pumpkin Pie Greek Yogurt Parfait": {
+        "Vodka Chicken Parm Zucchini Noodle Lasagna": {
           "x": 16,
           "y": 2304,
           "w": 176,
           "h": 176
         },
-        "🟠NEW: Caramel Apple ProNuts": {
+        "Buffalo Chicken Cheesesteak Bowl": {
           "x": 16,
           "y": 2512,
           "w": 176,
           "h": 176
         },
-        "🟠NEW: Cheesecake Brownie Bites": {
+        "Grass-Fed Beef Taco Bowl with Cauliflower Rice": {
           "x": 16,
           "y": 2720,
           "w": 176,
           "h": 176
         },
-        "Cookies & Cream Protein Dirt": {
+        "Steak & Eggs": {
           "x": 16,
           "y": 2928,
           "w": 176,
           "h": 176
         },
-        "Golden Oreo Protein Sand": {
+        "Pumpkin Pie Greek Yogurt Parfait": {
           "x": 16,
           "y": 3136,
+          "w": 176,
+          "h": 176
+        },
+        "Strawberry Shortcake Protein Waffles": {
+          "x": 16,
+          "y": 3344,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Caramel Apple ProNuts": {
+          "x": 16,
+          "y": 3552,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Cheesecake Brownie Bites": {
+          "x": 16,
+          "y": 3760,
+          "w": 176,
+          "h": 176
+        },
+        "Cognition Superfood Bites: Blueberry Cream & Lion's Mane": {
+          "x": 16,
+          "y": 3968,
+          "w": 176,
+          "h": 176
+        },
+        "Cookies & Cream Protein Dirt": {
+          "x": 16,
+          "y": 4176,
+          "w": 176,
+          "h": 176
+        },
+        "Golden Oreo Protein Sand": {
+          "x": 16,
+          "y": 4384,
+          "w": 176,
+          "h": 176
+        },
+        "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga": {
+          "x": 16,
+          "y": 4592,
+          "w": 176,
+          "h": 176
+        },
+        "Relaxation Superfood Bites: Apple Crisp & Reishi": {
+          "x": 16,
+          "y": 4800,
           "w": 176,
           "h": 176
         }
