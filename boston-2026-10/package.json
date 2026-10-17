@@ -14,6 +14,7 @@
     "handoff:link": "node scripts/handoff-link.mjs",
     "content": "node scripts/week-content.mjs",
     "build:mockups": "node mockups/build-mockups.mjs",
+    "build:print": "node print/build-print.mjs",
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",
     "email:tokens": "node scripts/email-tokens.mjs",

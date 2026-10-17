@@ -8,6 +8,10 @@ dist-storefront/
 # The mock-ups' output: its PNGs and its copies of the photos carry photographs.
 dist-mockups/
 
+# The printed pieces' output (npm run build:print, SPEC-print-pieces.md): its PDFs and PNGs carry photographs, and its
+# assignment.json names their IDs. Never committed.
+boston-2026-10/dist-print/
+
 # Storybook (boston-2026-10/tools/storybook, SPEC-storybook-microsite.md): its static build, and the log it writes on a
 # failure. The pages it shows are the site's build, written under its node_modules/.cache/ (ignored above)
 storybook-static/

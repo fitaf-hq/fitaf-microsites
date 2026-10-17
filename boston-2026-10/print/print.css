@@ -1,0 +1,39 @@
+/* The printed pieces (print/, SPEC-print-pieces.md): each mock-up's face on a page of the trim plus the bleed. This sheet
+   comes after the template's tokens and fonts and mockups.css, and before the sizes (pages.mjs sizeRules, from sizes.mjs,
+   which set the boxes and --bleed and --safe). It arranges and extends the mock-ups' parts; it draws no colour of its own
+   (the one it names is the template's white, the page's) and nothing translucent. One layout prints and screenshots: no
+   @media print, so the PNG proof is the PDF's page. */
+
+html, body { margin: 0; padding: 0; background: var(--white); }
+* { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.print-page { position: relative; overflow: hidden; background: var(--white); }
+.print-face { position: absolute; left: 0; top: 0; overflow: hidden; }
+/* The tent's upper face: the lower face turned, so that folded on the centre line both read upright */
+.print-face-turned { transform: rotate(180deg); }
+/* A face's .board is its trim: no outline, and what runs into the bleed is not cut off at the trim */
+.print-face > .board { position: absolute; overflow: visible; outline: none; }
+/* The navy bar's words: at the mock-up's line height of 1 their glyphs' box overflows the line, past the safe margin;
+   at the font's own line height it is the line, so the bar's padding is the words' distance from its edges */
+.print-face .event-bar { line-height: normal; }
+
+/* ---------- The flyer: the mock-up's layout. The navy bar and the hero meet the trim, so they run into the bleed, and
+   the bar's words sit --safe inside the trim ---------- */
+.print-flyer .event-bar {
+  margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0;
+  padding-top: calc(var(--bleed) + var(--safe)); padding-bottom: var(--safe);
+}
+.print-flyer .flyer-hero { margin: 0 calc(-1 * var(--bleed)); }
+.print-flyer .logo-plate { margin-left: var(--bleed); }
+
+/* ---------- The tent card's face, LANDSCAPE (the mock-up's is portrait): the bar across the top, at the fold; the
+   mock-up's three photos (the large one two rows tall, the two tiles beside it) in the left half, running into the bleed
+   at the left and the bottom; the rest of the mock-up's face, as it is, in the right half ---------- */
+.print-tent-card .board {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+}
+.print-tent-card .event-bar {
+  grid-column: 1 / -1; margin: 0 calc(-1 * var(--bleed));
+  padding-top: var(--safe); padding-bottom: var(--safe);
+}
+.print-tent-card .tent-photos { height: auto; margin: 0 0 calc(-1 * var(--bleed)) calc(-1 * var(--bleed)); }
+.print-tent-card .tent-body { min-height: 0; }
