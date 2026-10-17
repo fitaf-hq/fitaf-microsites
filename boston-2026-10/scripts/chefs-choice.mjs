@@ -48,7 +48,10 @@ const CART_FIELDS = ["lunch_dinner", "weekends", "breakfast", "plan", "items"];
 /** § 3's phrases in data/messages.json's `chefs_choice` the card shows, and the placeholders each must carry. Since
  *  SPEC-plan-page-refinement § 1–2 the list is always open: `open` (its button) and `note` are kept there, not read.
  *  SPEC-meal-selection § 9 item 3: the snack block's heading and its not-carted line. */
-const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [] };
+const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [], updating: [] };
+/** SPEC-week-content § 8 item 1: an UPDATING week's file is exactly { delivery, version: 2, updating: true, lists: {} }
+ *  (Fit AF's emitter, `--updating`: the store has switched and this week's carts are not made yet). */
+const UPDATING_FILE_FIELDS = [...V2_FILE_FIELDS, "updating"];
 
 /** A path as a person finds it: from the package when it is inside it. */
 const shown = (path) => (path.startsWith(ROOT + sep) ? relative(ROOT, path) : path);
@@ -232,10 +235,22 @@ function v2Carts(json, rows, ctx) {
   return { carts, snacks };
 }
 
+/** SPEC-week-content § 8 item 1: an updating file's `updating` is exactly true and its `lists` empty (any list, the shown
+ *  one included, is refused, naming it). The week has no carts and no snacks: the page shows the updating card. */
+function updatingWeek(json) {
+  if (json.updating !== true) throw new Error(`updating must be true, got ${JSON.stringify(json.updating)}`);
+  if (!isObject(json.lists)) throw new Error("lists must be an object, empty in an updating week");
+  const names = Object.keys(json.lists);
+  if (names.length) throw new Error(`an updating week carries no list; lists has ${names.map((n) => JSON.stringify(n)).join(", ")}`);
+  return { updating: true, carts: {}, snacks: {} };
+}
+
 /**
  * One picks file (already parsed), checked against § 1 and SPEC-meal-selection § 5: the file's name is its delivery
  * Sunday; a version-1 file's fields are exactly `delivery` and `menus`, a version-2 file's `delivery`, `version` and
- * `lists`. Returns { delivery, carts: { answerKey: { meals, links } }, snacks: { "7d"|"5d": meals } }. `photo`
+ * `lists`, and an updating week's (SPEC-week-content § 8) those and `updating`, true, its `lists` empty. Returns
+ * { delivery, carts: { answerKey: { meals, links } }, snacks: { "7d"|"5d": meals } }, an updating week's with
+ * `updating: true` and no cart and no snack. `photo`
  * ({ photos, host }: the photo sheets' manifest and the code of the host the page is served from) gives each link the
  * week's cells, by the tool's own --photos; without it, or with no sheet for the week, the links are today's.
  */
@@ -245,9 +260,11 @@ export function checkPicks(json, fileName, plans, photo = null) {
   if (!isObject(json)) throw new Error("the file must be an object");
   const version = json.version ?? 1;
   if (!VERSIONS.includes(version)) throw new Error(`version ${JSON.stringify(json.version)} is not one the page reads (${VERSIONS.join(", ")})`);
-  onlyFields(json, version === 1 ? [...FILE_FIELDS, ...("version" in json ? ["version"] : [])] : V2_FILE_FIELDS, "the file");
+  const updating = version === 2 && "updating" in json;
+  onlyFields(json, version === 1 ? [...FILE_FIELDS, ...("version" in json ? ["version"] : [])] : updating ? UPDATING_FILE_FIELDS : V2_FILE_FIELDS, "the file");
   if (json.delivery !== date) throw new Error(`delivery ${JSON.stringify(json.delivery)} is not the file's date (${date})`);
   const { rows } = checkSelection(plans);
+  if (updating) return { delivery: date, ...updatingWeek(json) };
   // SPEC-rung2-fill-c § 8: mpid -> the plan's allowed totals, the link tool's (and the block's) own table.
   const totals = new Map(Object.entries(countTable(plans)).map(([mpid, allowed]) => [Number(mpid), allowed]));
   const ctx = { plans, totals, photo, date };
@@ -319,6 +336,9 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", 
       return {
         delivery: w.delivery,
         ...windowOf(w.delivery),
+        // SPEC-week-content § 8 item 2: an updating week says so, its carts an empty object (the shape the Workers' check
+        // reads, so they serve it); a week without `updating` is byte for byte what it was.
+        ...(w.updating ? { updating: true } : {}),
         carts: Object.fromEntries(
           Object.entries(w.carts).map(([key, cart]) => [
             key,
@@ -339,7 +359,13 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", 
 
 /** A piece of the card's markup (src/chefs-choice/<file>) with its words; a `{{…}}` left over refuses the build. */
 function cardHtml(template, words, file = "card.html") {
-  const values = { CHECKOUT: words.checkout, OWN: words.own, SNACKS_HEADING: words.snacks_heading, SNACKS_NOT_CARTED: words.snacks_not_carted };
+  const values = {
+    CHECKOUT: words.checkout,
+    OWN: words.own,
+    SNACKS_HEADING: words.snacks_heading,
+    SNACKS_NOT_CARTED: words.snacks_not_carted,
+    UPDATING: words.updating, // SPEC-week-content § 8 item 3: the updating card, hidden until a week says `updating`
+  };
   const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
     if (!(key in values)) throw new Error(`src/chefs-choice/${file}: ${whole} has no value`);
     return esc(values[key]);

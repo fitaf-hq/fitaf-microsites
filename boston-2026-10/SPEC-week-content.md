@@ -281,3 +281,101 @@ holding no week; Q4's markup; `plan-data`'s `snacks` true); CC-8's Worker map (`
 **Counts after the rulings**: the site 690 → 691 (WC-12's two cases and WC-11's new mutant added; WC-9b removed; CC-5's
 three window and program cases became two, "a bad --on" going with `--on`). Contrast 70/70, Storybook 41/41 and the
 watch 192/192, their counts unchanged. S20's golden did not move.
+
+## 8. Amendment, 2026-10-16: an *updating* week, the fallback at a stop after the store's switch. CONTRACT, before any code
+
+**Why.** Fit AF's `scripts/switch/menu-mismatch.spec.md` § 5, ruled by the Advisor (`ts=2026-10-16T23:44:50.877Z`):
+*"Any stop after the switch"*: once the store has turned over, last week's carts no longer work, so the page must not
+keep offering them. Built by Fit AF's `scripts/switch/menu-bands.spec.md` § 5, whose file shape is the interface here.
+
+1. **A week's picks file may be exactly** `{"delivery": "<Sunday>", "version": 2, "updating": true, "lists": {}}`
+   (`data/picks/<delivery>.json`, written by Fit AF's emitter, `--updating`). The Chef's Choice check (`checkPicks`)
+   accepts it; it refuses `updating` with any value but `true`, and an `updating` file with any list.
+2. **The content command** (§ 3) over it writes `week/picks-data.json`: that one week, `"updating": true`, **no carts
+   and no links**, no photo sheet; deterministic, as § 3.
+3. **The page**: a week whose data says `updating` shows, in the Chef's Choice card's place, a card reading *"We're
+   updating this week's menu."* (its words in the build's words file, `data/messages.json`, never a literal in the
+   script), and the page's existing fallback stays as it is (*Choose your meals*, the store's own order page). **No
+   form**: the menu-open alert's consent wording is not ruled (Fit AF `menu-mismatch.spec.md` § 5 item 5), so its form
+   is a later amendment. A week without `updating` is unchanged (CC-1 to CC-9 and WC-1 to WC-12 green as they are).
+4. **The Worker is unchanged**: it serves `week/picks-data.json` whatever it holds.
+5. **Cases** (written first, run red; `node --test`, no network): **U1** the page over an updating week: the card shown
+   with its words, no Chef's Choice cart, no checkout link anywhere in the card · **U2** the content command over an
+   updating file: exit 0, `"updating": true`, no carts, no photo sheet, byte-identical on a second run · **U3** an
+   updating file with a list, and `updating: "yes"`, refused by `checkPicks` · **U4** a normal week byte-identical to
+   before (the page and the content). **Mutants** (each in a copy of the package): `updating` ignored by the page (U1);
+   lists allowed beside `updating` (U3).
+
+### 8.1 Built — found at the build, not ruled
+
+Red at `552e634` (10 of U1–U4's 11 cases failing on the missing feature; U4 passing, as it must: it pins what does not
+change), green at `425feee` (11 of 11; the site 716 → 727), the mutants and these notes at the commit that carries this
+section (the site 730). § 8 is unchanged.
+
+**What was built**
+
+- `data/messages.json`: `chefs_choice.updating`, *"We're updating this week's menu."*; the build requires it, as every
+  `chefs_choice` phrase (`chefsChoiceWords`).
+- `src/chefs-choice/card.html`: `<p class="cc-updating" id="cc-updating" hidden>{{UPDATING}}</p>`, the card's first
+  line; `style.css`: one rule, the list's box and the heading's type (tokens only, navy on white, a pair already
+  measured). `src/chefs-choice/chefs-choice.js`: a week whose data says `updating: true` un-hides the card and is then
+  **no week** for everything after it.
+- `scripts/chefs-choice.mjs`: `checkPicks` takes the updating file (`updatingWeek`); `pageData` writes
+  `"updating": true` for it. `scripts/week-content.mjs`, the build and the Worker are unchanged (CC-8 green).
+- The content for an updating week, as built (production; the snacks shown and carted as committed), 166 bytes for
+  2026-11-01: `{"zone":"America/New_York","carted":true,"weeks":[{"delivery":"2026-11-01","valid_from":"2026-10-23",`
+  `"valid_to":"2026-10-29","updating":true,"carts":{},"snacks":{}}]}`; `--env dev` byte-identical (no link to carry a
+  host code).
+
+**The choices, where § 8 left one open**
+
+1. **"No carts" (item 2) is `"carts": {}`, not the key left out.** Production's Worker puts the bucket's object in the
+   page only if its shape check passes (`isWeek`, § 7 choice 5), and that check requires `carts` to be an object of
+   carts; a week without the key would be dropped, silently, and the visitor would get the no-week page, no card. With
+   `{}` the unchanged Worker serves it (U1c, through `site.js` in Miniflare). `snacks` is `{}` too while snacks are
+   shown, and `valid_from`/`valid_to` are kept (unread), so the week has pageData's one shape. The page's script decides
+   on `updating` before it reads `carts`, so it shows the card with the key absent as well (U1e).
+2. **The page over an updating week is the page with no week, plus the card.** The script sets the week aside, so Q4,
+   the snack box and *Choose your meals* (the plan's order page, the rung 1 link) behave as with no week. U1 checks it at
+   all 48 individual fragments (three goals, eight answer sets, with and without snacks), both builds: the card shown
+   with the phrase, no list, no *Choose my own meals*, *Continue to checkout* without a link, no control in the card, no
+   `#fitaf=` anywhere in the page, and the visible page without the card equal to the no-week page's; the card hidden
+   before a plan is chosen and on Family.
+3. **The card's place**: inside the result card after *Choose your meals* (the `PICKS_CARD` slot follows `#result-cta`
+   in the template), where the list would be. ⚠ A visitor reads *Choose your meals* and then, beneath it, *"We're
+   updating this week's menu."*; whether the notice should come first is a copy and layout question, not changed here.
+4. **The words are the build's, in the markup** (`{{UPDATING}}`), not in the content: a change of words is a release,
+   and the content carries only `"updating": true`.
+5. **The refusals' words**: `updating must be true, got "yes"` (or `false`, `null`); `an updating week carries no
+   list; lists has "chefs-choice"` (any list, the shown one or another, empty or not); `lists must be an object, empty in
+   an updating week`; a version-1 file with `updating` is `unknown field "updating"`; a missing `lists` is the existing
+   `missing field`. The selection is still checked. Through `readPicks` (the content command) each names the file.
+6. **U4's "byte-identical to before (the page and the content)"**: the content is compared whole. The page cannot be
+   byte-identical, since its script must read `updating` and the build carries the card's markup and style on every page
+   (§ 2.1); so § 8 adds **whole lines only, each naming `updating`** (seven in the production page) and changes none
+   that was there, and U4 compares the page with those lines removed to `d1dac5b`'s byte for byte, with the visible page
+   at seven fragments compared whole. "Before" is `d1dac5b`'s own tree (git archive), recorded by
+   `node test/u-04-record.mjs` into `test/u-04-golden.json`, for the two fixtures and the committed 2026-10-18, both
+   targets. ⚠ Like WC-9 it pins `d1dac5b`'s inputs: an intended change to them turns it red and it is re-recorded.
+7. **U2 asks "no photo sheet" of a week whose manifest names one**: a mirror's `data/picks/2026-10-25.json` made
+   updating (the committed weeks beside it, all checked), `npm run content` as the program: `week/picks-data.json`
+   alone, though `data/photo-sheets.json` names `chefs-choice-2026-10-25.jpg`.
+
+**Found**
+
+- ⚠ **Item 4's "it serves `week/picks-data.json` whatever it holds" is not so of the Worker as it stands**: it serves
+  what passes its shape check and drops anything else (§ 4.2). It holds for the updating week only because the content
+  is made to pass the check (choice 1).
+- ⚠ **Item 5's "the page … byte-identical to before" cannot hold literally** (choice 6), and S20's golden moved for it:
+  `index.html` `84e54136…` → `51203bcc…`, for § 8 alone (S20 and CC-4 were green on `d1dac5b`; every asset and QR code
+  unchanged). CC-1–CC-9 and WC-1–WC-12 are green as they were; CC-4 reads S20's golden, so it is green with it.
+
+**Mutants (item 5, each in a mirror, `test/u-mutants.test.mjs`)**: the control (the unchanged mirror) passes U1 and
+U3. `updating` ignored by the page (the script's branch never taken): U1 red at all 48 fragments, *the updating card is
+not shown* (and nothing else: the rest of the page is still the no-week page). Lists allowed beside `updating` (the
+list refusal removed): U3 red, the three updating files with a list accepted.
+
+**Gates**: the site 716 of 716 on `d1dac5b`, 727 of 727 at `425feee`, 730 of 730 at this section's commit; `npm run
+content -- --week 2026-11-01` in a copy of the package over § 8 item 1's file: exit 0 twice, one file, 166 bytes,
+`398b26fd…`, byte-identical. **Not run**: Storybook and the watch (their own packages; Storybook's SM-4 reads
+`chefs_choice`); the page in a browser (linkedom only); nothing deployed, no bucket written.

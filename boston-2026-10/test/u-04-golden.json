@@ -1,0 +1,98 @@
+{
+  "about": "U4's before (SPEC-week-content § 8 item 5): test/u-checks.mjs normalWeekRecord() over recorded_at's own tree (test/u-04-record.mjs, which wrote this file): per normal week and target, the content command's files, the page as served with that week once its lines naming `updating` are removed (recorded_at's page has none), and the visible page per fragment. Re-record only by running the recorder; never by hand.",
+  "recorded_at": "d1dac5b",
+  "record": {
+    "the v1 fixture, 2026-10-04 · prod": {
+      "content": {
+        "week/picks-data.json": "1408 bytes sha256:9e9ab0acf69249befa905f27a93c0e1602d2beefc017d1131bbc37f356799634"
+      },
+      "page": "38198 bytes sha256:b0669ca3b5d2a8a77c8eea88cb3a3764d37cc05f08e5d888a3a2b535ecd99af5",
+      "visible": {
+        "(no fragment)": "217305befa46a962302e66528594982b38a97d09123e9b5adcf9646075980e31",
+        "#lean-7": "ec39d660ccdd862fe0181b12a464eacbda011f5296000d50d1382c3ff1c0f4b4",
+        "#lean-or-7d": "ec39d660ccdd862fe0181b12a464eacbda011f5296000d50d1382c3ff1c0f4b4",
+        "#lean-or-5d-s": "683adf265e8af1046e8ce31d995d066fb1134d72224dfccc3bb46552755fe1d8",
+        "#signature-and-5d-b-s": "e51909f94e0436a8454c5cf20cad75392fdf0125fd66df9e0348a51de2b0f2b7",
+        "#performance-and-7d-b": "bcb9aeaf8daa60674f17068eb295f0e843bb2d373fe3f95f21cf880e09b91310",
+        "#family": "a81c84d29ae383c383db565ae8f3735973cafa12a79da3bd434e3f48571cb592"
+      }
+    },
+    "the v1 fixture, 2026-10-04 · dev": {
+      "content": {
+        "week/picks-data.json": "1408 bytes sha256:9e9ab0acf69249befa905f27a93c0e1602d2beefc017d1131bbc37f356799634"
+      },
+      "page": "60221 bytes sha256:c0644a6d4d9689ab47c5763ac39f4d9cfcb65a09fdc57d0773d2b12cd5713a47",
+      "visible": {
+        "(no fragment)": "9667482765fd9ea0f6b40747a1568e5f3f80b00be7aa43a800a85b1042274c00",
+        "#lean-7": "05e63775d026b21fdcbc6a650912942b0545b79e3d904d3116f641bae3624d22",
+        "#lean-or-7d": "05e63775d026b21fdcbc6a650912942b0545b79e3d904d3116f641bae3624d22",
+        "#lean-or-5d-s": "dc825a680a9246922b4ff3dfd2fa89fbbec96fba24f3367635d881e3aaa527e9",
+        "#signature-and-5d-b-s": "ae9e596f7be6d8ce7ba61c5f39fcb5f28b0b01d19485f3552ce1ea9d92c0daf7",
+        "#performance-and-7d-b": "2057f6fb4f20b82675647ee82e9b9872dd6873f2a3b226b2f1e9ac2fe7ae22ab",
+        "#family": "2fd7af97905618e82c08f3d019ab5b442d6acca6ed1e2f668af8efc7323ee968"
+      }
+    },
+    "the v2 fixture, 2026-10-04 · prod": {
+      "content": {
+        "week/picks-data.json": "7382 bytes sha256:ae6010f6a9b13b3d60c39fb75e9810e285728fcbe88a50389f2dcbcba6633ddb"
+      },
+      "page": "44172 bytes sha256:fe8e5aed6c7931c1102c247ae82cb13f30fae414cc363a7f82b382a421f2cc97",
+      "visible": {
+        "(no fragment)": "217305befa46a962302e66528594982b38a97d09123e9b5adcf9646075980e31",
+        "#lean-7": "12ad4399695c7a9993343a81e7d8aa4f0ce729199761daf4b0a4d8d39ae8d45c",
+        "#lean-or-7d": "12ad4399695c7a9993343a81e7d8aa4f0ce729199761daf4b0a4d8d39ae8d45c",
+        "#lean-or-5d-s": "fdacd8b8abe1f8764a87192aa069a375cd4959ba26e056f986cb208bb002b3e1",
+        "#signature-and-5d-b-s": "619ab37cd97d519b9b245c383cc205f888c1b29ca7a52ada82e51483219c5796",
+        "#performance-and-7d-b": "6d93e20051f21620f38960a054ed40290c05d50e183458c1d67a0f3848912250",
+        "#family": "a81c84d29ae383c383db565ae8f3735973cafa12a79da3bd434e3f48571cb592"
+      }
+    },
+    "the v2 fixture, 2026-10-04 · dev": {
+      "content": {
+        "week/picks-data.json": "7382 bytes sha256:ae6010f6a9b13b3d60c39fb75e9810e285728fcbe88a50389f2dcbcba6633ddb"
+      },
+      "page": "66195 bytes sha256:20c6dfe4acb7bfe8b8f136ee6bb188d9cb8840efe3c68aef19bafaf2512ede8e",
+      "visible": {
+        "(no fragment)": "9667482765fd9ea0f6b40747a1568e5f3f80b00be7aa43a800a85b1042274c00",
+        "#lean-7": "fd15cef294b99d5f505e1d6b0e0178672474d5bffc5121fa39f2023932f3d722",
+        "#lean-or-7d": "fd15cef294b99d5f505e1d6b0e0178672474d5bffc5121fa39f2023932f3d722",
+        "#lean-or-5d-s": "16df0282fc04829d06912ce277fa142259287339bf311dc9061f517d0dde8fc1",
+        "#signature-and-5d-b-s": "879c21c27b916160ad3cd0f1d96fbc6c9e57fc381481bb4d96d280722da2a34b",
+        "#performance-and-7d-b": "3489a10b930457ef521760429019adbc8e4397ee70722b4d6cf4faee17cc9417",
+        "#family": "2fd7af97905618e82c08f3d019ab5b442d6acca6ed1e2f668af8efc7323ee968"
+      }
+    },
+    "the committed week, 2026-10-18 · prod": {
+      "content": {
+        "week/picks-data.json": "31134 bytes sha256:3a7b7b5d01acf787f6ca96f06921280a8a023eafb58be39dc271be3b642f1a64",
+        "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
+      },
+      "page": "67924 bytes sha256:f3da8f9d22800daeea52fbb8b4326a42aefb24ef35338a2ec4eb05b86586d91b",
+      "visible": {
+        "(no fragment)": "217305befa46a962302e66528594982b38a97d09123e9b5adcf9646075980e31",
+        "#lean-7": "e6ef02eb1d7a62e346a0539102fbad234d5b814686705ae14cd18092999fe1fd",
+        "#lean-or-7d": "e6ef02eb1d7a62e346a0539102fbad234d5b814686705ae14cd18092999fe1fd",
+        "#lean-or-5d-s": "080c8eecc75bec22cca0ca3162b8240347556b8cd14932133ae7b8743e45a4fd",
+        "#signature-and-5d-b-s": "84684a8c0d19f5b02c86192c6b5d0f8923da5584c799d8eb3ef625c9c035cca1",
+        "#performance-and-7d-b": "43e9c558ac23cb7178c01d70bd2fd1c0d2c74093dac02cfdfabef9be09b3f6e6",
+        "#family": "a81c84d29ae383c383db565ae8f3735973cafa12a79da3bd434e3f48571cb592"
+      }
+    },
+    "the committed week, 2026-10-18 · dev": {
+      "content": {
+        "week/picks-data.json": "31134 bytes sha256:931a963b2b55b6f881304712a06fb5c28fa3da03bf8b851a26035b5a216d92a7",
+        "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
+      },
+      "page": "89947 bytes sha256:c58fac9d9a0c823cee01c92fa5f501753eb89f32da7d6057f87524883d89e171",
+      "visible": {
+        "(no fragment)": "9667482765fd9ea0f6b40747a1568e5f3f80b00be7aa43a800a85b1042274c00",
+        "#lean-7": "c7f767945f05c2a64650400366709f07f3bf879e2dc49b191e7ba3ec4ccf1962",
+        "#lean-or-7d": "c7f767945f05c2a64650400366709f07f3bf879e2dc49b191e7ba3ec4ccf1962",
+        "#lean-or-5d-s": "96d1887198f7e69b771c3cfbc84432b5507fa7018d71ed7b9c527da2a39a7878",
+        "#signature-and-5d-b-s": "1259e5414a61427674e788a8c8e5df11c680d0483536b623123d6d437a7e65aa",
+        "#performance-and-7d-b": "d65bbeed6d414e1c52dca147f6b50edeed2bad1d1f02cb37f6f58571bb817897",
+        "#family": "2fd7af97905618e82c08f3d019ab5b442d6acca6ed1e2f668af8efc7323ee968"
+      }
+    }
+  }
+}
