@@ -3,7 +3,8 @@
 // that keeps the real piece's proportions; the sheet scales it to the window.
 import { campaign, esc, makeParts } from "./parts.mjs";
 
-const PX_PER_INCH = 120;
+/** The mock-ups' layout unit: CSS pixels per inch of the real piece (the print build zooms it to the CSS inch). */
+export const PX_PER_INCH = 120;
 /** The banner is scaled down to fit a screen: 33 × 80 in at this many pixels per inch. */
 const BANNER_PX_PER_INCH = 12.125;
 const px = (inches, per = PX_PER_INCH) => Math.round(inches * per);
@@ -64,11 +65,12 @@ function scanBlock(parts, c, cls) {
   return `<div class="scan ${cls}">${parts.qr(c)}<div class="scan-text">${parts.text("p", "scan-prompt", c.scan, "scan prompt")}${parts.text("p", "address", c.address, "web address")}</div></div>`;
 }
 
-/** The tent card's face: three photos, the logo, the headline, the offer and the QR code. */
-export function tentCard(inputs) {
-  const c = campaign(inputs);
-  const parts = makeParts(inputs);
-  return sheet(piece("tent-card"), inputs, parts, `
+/**
+ * The tent card's face: three photos, the logo, the headline, the offer and the QR code. The face's markup alone, shared by
+ * the mock-up's sheet and the printed tent card (print/, SPEC-print-pieces.md), so one change reaches both.
+ */
+export function tentFace(c, parts) {
+  return `
 ${parts.line("p", "event-bar", c.eventLine, "event line")}
 <div class="tent-photos">${parts.photo("tent-large")}${parts.photo("tent-top")}${parts.photo("tent-bottom")}</div>
 <div class="tent-body">
@@ -78,14 +80,21 @@ ${parts.line("p", "event-bar", c.eventLine, "event line")}
   ${parts.text("p", "subhead", c.subhead, "subhead")}
   ${parts.text("p", "offer", c.offer, "the offer")}
   ${scanBlock(parts, c, "tent-scan")}
-</div>`);
+</div>`;
 }
 
-/** The flyer: one hero photo, the offer, a short line on the plans, the QR code. */
-export function flyer(inputs) {
+export function tentCard(inputs) {
   const c = campaign(inputs);
   const parts = makeParts(inputs);
-  return sheet(piece("flyer"), inputs, parts, `
+  return sheet(piece("tent-card"), inputs, parts, tentFace(c, parts));
+}
+
+/**
+ * The flyer: one hero photo, the offer, a short line on the plans, the QR code. Its markup alone, shared by the mock-up's
+ * sheet and the printed flyer (print/).
+ */
+export function flyerFace(c, parts) {
+  return `
 ${parts.line("p", "event-bar", c.eventLine, "event line")}
 <div class="flyer-hero">${parts.photo("flyer")}<div class="logo-plate">${parts.logo()}</div></div>
 <div class="flyer-body">
@@ -95,7 +104,13 @@ ${parts.line("p", "event-bar", c.eventLine, "event line")}
   <div class="plans-line">${parts.planNames(c.plans, "plan names")}${parts.text("p", "from-price", c.fromPrice, "lowest price per meal")}</div>
   ${parts.text("p", "offer", c.offer, "the offer")}
   ${scanBlock(parts, c, "flyer-scan")}
-</div>`);
+</div>`;
+}
+
+export function flyer(inputs) {
+  const c = campaign(inputs);
+  const parts = makeParts(inputs);
+  return sheet(piece("flyer"), inputs, parts, flyerFace(c, parts));
 }
 
 /** The banner, top to bottom: the brand, the offer at eye level, a large QR code within reach, the photo. */
