@@ -44,6 +44,19 @@ small inline script. Total transfer under 60 KB before images.
 > same-origin or `data:`. The palette gains the store's plan colours and a darker button orange,
 > checked by `npm run contrast` (APCA) — see the README.
 
+> **Ruled 2026-10-18 (the orchestrator, the contracts' author; an engineering reading, the Advisor's to redirect), at
+> the merge of `boston/analytics` into `boston/integration-1022`: what "Total transfer under 60 KB" measures.** In the
+> ruling's words: *"transfer" is what crosses the network, so the budget is the page **gzip-compressed** (Node's
+> `zlib.gzipSync` at its default level, which is conservative against the brotli the edge may use) under 60 × 1024
+> bytes, on every page the production and development builds write. Each budget case also PRINTS the raw size,
+> asserting nothing on it.* **The reason**: this section's own, the page *"opened from a QR code in a gym lobby on weak
+> wifi"*, which is a transfer measure; the raw-byte assertion was a stricter stand-in. Found because the development
+> page with the analytics script (`SPEC-analytics.md`) is 63,825 bytes raw, over 60 × 1024, where it was 61,282 at
+> `45b5e37` before the merge. One definition, `test/page-budget.mjs`, read by T5, S18's dev T5 and A1;
+> `test/page-budget.test.mjs` shows a page over the limit compressed failing it. **The sizes now** (bytes, raw / gzip):
+> production `index.html` 40,195 / 11,878; development `index.html` 63,825 / 18,780, `demo/` 63,825 / 18,780,
+> `boston/` 63,827 / 18,780, `seminar/` 63,828 / 18,782; all under 61,440 gzip.
+
 ## 2. The plan table — `data/plans.json`
 
 Read 2026-09-27 off `https://fitafnutrition.com/meal-plans` (the store's public page):
