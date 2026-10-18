@@ -12,6 +12,12 @@
 // was § 2b's lines alone. What U4 showed against d1dac5b (a normal week unchanged by § 8 but for its `updating` lines) held
 // on every commit up to 8bf4dc0's parent (c415795); from here the reference is 8bf4dc0's tree, which carries § 8, and the
 // lines naming `updating` are still removed before comparing.
+// ⚠ RE-RECORDED at ac52905 (`node test/u-04-record.mjs --commit ac52905`), the merge of boston/analytics into
+// boston/integration-1022: SPEC-analytics.md § 4 puts the analytics script (build.mjs analyticsSlot) one line before
+// #plan-data on every page by design. Against 8bf4dc0's record, all six contents and every visible fragment were
+// byte-identical and only the six served pages moved, each by 2,543 bytes; each served page of ac52905 with that slot and
+// its newline removed is 45b5e37's byte for byte (45b5e37's own record was 8bf4dc0's). From here the reference is
+// ac52905's tree, which carries the analytics.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -20,7 +26,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 8bf4dc0's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "8bf4dc0");
+test("U4: a normal week, the content and the page as served, byte-identical to ac52905's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "ac52905");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });
