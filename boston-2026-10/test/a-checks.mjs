@@ -1,9 +1,12 @@
-// The checks of A2, A3, A4 and A6 (SPEC-analytics.md § 7) as functions over a PACKAGE (`root`: this one, or a mirror of
+// The checks of A2, A3, A4 and A6 (SPEC-analytics.md § 7), and since the merge into boston/integration-1022 the QR event's
+// (§ 9 item 2, a-qr-event.test.mjs), as functions over a PACKAGE (`root`: this one, or a mirror of
 // it), each returning one line per thing the package gets wrong ([] when it is right). The cases run them on this
 // package; the mutants (a-mutants.test.mjs) run THE SAME checks on a mirror carrying one mutation each. Not a test file
 // itself. Every expectation is the contract's, written here, never read back from the code under test.
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ROOT } from "../build.mjs";
-import { BEACON, builtPage, S1, startBeacon, TEST_IP, TEST_UA, TEST_UA_TOKEN, VALID, wholeVisit } from "./a-harness.mjs";
+import { BEACON, builtPage, devPages, openVisit, S1, startBeacon, TEST_IP, TEST_UA, TEST_UA_TOKEN, VALID, wholeVisit } from "./a-harness.mjs";
 
 /** § 4: "at most 2 KB". */
 export const MAX_BODY_BYTES = 2048;
@@ -153,6 +156,54 @@ export async function saltExpiryProblems(root = ROOT) {
     } finally {
       await site.dispose();
     }
+  }
+  return problems;
+}
+
+/** § 10's data point: blob1–blob11 are event, s, country, device, viewport, qr, …; so the QR id is the sixth blob. */
+export const QR_BLOB_INDEX = 5;
+
+/** § 3's `open` ("the QR event id if the URL names one") and § 9 item 2 ("The page reads the id against data/events.json;
+ *  anything else is recorded as no event"), checked at the merge of boston/analytics into boston/integration-1022
+ *  (2026-10-18), which met SPEC-print-pieces § 11's two codes. On the production page and every page the development build
+ *  writes, an `open` from `?e=<id>` carries that id, for every event the package's data/events.json names (control:
+ *  demo, boston and seminar among them), and after another parameter too; an id it does not name, an empty one, an `e=`
+ *  ending another parameter's name, and no query carry ""; and the production Worker writes each such `open`, as the
+ *  page sent it, with that id in the qr blob. */
+export async function qrEventProblems(root = ROOT) {
+  const problems = [];
+  const ids = JSON.parse(await readFile(join(root, "data", "events.json"), "utf8")).map((e) => e.id);
+  for (const id of ["demo", "boston", "seminar"]) if (!ids.includes(id)) problems.push(`control: data/events.json names no ${id}`);
+  const searches = [
+    ...ids.map((id) => [`?e=${id}`, id]),
+    ["?from=flyer&e=seminar", "seminar"],
+    ["?e=somewhere-else", ""],
+    ["?e=", ""],
+    ["?code=boston", ""],
+    ["", ""],
+  ];
+  const pages = [["production", await builtPage({ root })], ...(await devPages({ root })).map((p) => [`development ${p.path}`, p.html])];
+  const named = [];
+  for (const [where, html] of pages) {
+    for (const [search, want] of searches) {
+      const at = `${where}, ${search || "no query"}`;
+      const open = openVisit(html, { search }).beacons.find((b) => b.body.event === "open")?.body;
+      if (!open) problems.push(`${at}: no open sent (control)`);
+      else if (open.qr !== want) problems.push(`${at}: the open carries qr ${JSON.stringify(open.qr)}, not ${JSON.stringify(want)}`);
+      else if (where === "production" && want) named.push([at, open]);
+    }
+  }
+  const site = await startBeacon({ root });
+  try {
+    await site.log();
+    for (const [at, open] of named) {
+      const res = await site.post(open);
+      const { points } = await site.log();
+      if (res.status !== 204 || points.length !== 1) problems.push(`${at}: the Worker answered ${res.status} and wrote ${points.length} data point(s), not 204 and 1`);
+      else if (points[0].blobs?.[QR_BLOB_INDEX] !== open.qr) problems.push(`${at}: written with qr ${JSON.stringify(points[0].blobs?.[QR_BLOB_INDEX])}, not ${JSON.stringify(open.qr)}`);
+    }
+  } finally {
+    await site.dispose();
   }
   return problems;
 }
