@@ -38,13 +38,13 @@ test("Q5: after a build with fixture photos, git status shows no change, every f
   const before = status();
   const out = join(set.dir, "dist-print"); // the default folder's ignore is shown above; the build writes here so a
   // real build's output in the default folder is not emptied by the suite
-  // One variant, with the four flyers (their rung-4 photos are IDs too)
-  const built = await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20", variants: ["a"] });
+  // The tent card and the flyer, with the four flyers (their rung-4 photos are IDs too)
+  const built = await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20" });
   assert.equal(status(), before, "git status is unchanged by the build");
 
   const names = built.written.map((f) => basename(f)).sort();
   const four = [1, 2, 3, 4].flatMap((k) => [`flyer-${k}-PROOF.pdf`, `flyer-${k}-PROOF.png`]);
-  assert.deepEqual(names, ["assignment.json", ...four, "flyer-1-4-PROOF.png", "flyer-PROOF.pdf", "flyer-PROOF.png", "tent-card-a-PROOF.pdf", "tent-card-a-PROOF.png"].sort());
+  assert.deepEqual(names, ["assignment.json", ...four, "flyer-1-4-PROOF.png", "flyer-PROOF.pdf", "flyer-PROOF.png", "tent-card-PROOF.pdf", "tent-card-PROOF.png"].sort());
   for (const name of names) assert.equal(git("check-ignore", "-q", "--no-index", inDistPrint(name)).status, 0, `${name}, in dist-print/, is ignored`);
 
   const ids = ["flyer", "large", "top", "bottom", "one", "two", "three", "four"].map((role) => set.ids[role]);

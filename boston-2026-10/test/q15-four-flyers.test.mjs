@@ -41,7 +41,7 @@ test("Q15: a missing rung 4, an empty one, or an array not of four photo IDs is 
 
 test("Q15: built, four flyers of four different photos from the rule, each a one-page flyer with its bleed, and a preview of the four", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-print");
-  const built = await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20", variants: ["a"] });
+  const built = await lockedBuild({ outDir: out, ...set.photos, today: "2026-10-20" });
   const record = JSON.parse(await readFile(join(out, "assignment.json"), "utf8"));
   const { ids } = set;
   assert.deepEqual(

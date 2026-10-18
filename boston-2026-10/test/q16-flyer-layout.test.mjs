@@ -36,7 +36,7 @@ test("Q16: the flyer and its four: no header bar, none of its words, one logo af
   const words = campaign(inputs).eventLine.map((v) => v.value);
   assert.ok(words.includes("Fit AF in Boston"), "the header's words, from the data (control)");
   for (const page of flyerPages) {
-    const html = printPage(page.piece, inputs, printCss, page.variant);
+    const html = printPage(page.piece, inputs, printCss);
     const els = placedElements(html);
     assert.deepEqual(els.filter((e) => hasClass(e, "event-bar")), [], `${page.base}: no header bar`);
     const body = /<body\b[^>]*>([\s\S]*)<\/body>/.exec(html)[1].replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, "");
@@ -64,7 +64,7 @@ test("Q16 control: how a photo shows in its window (its shape against the window
 });
 
 test("Q16: built, every flyer page: a 3:2 window at the top, into the bleed; the offer, then the code; even space; the logo in the corner", { skip: NO_CHROME }, async () => {
-  const built = await lockedBuild({ outDir: join(set.dir, "dist-print"), ...set.photos, today: "2026-10-20", variants: ["a"] });
+  const built = await lockedBuild({ outDir: join(set.dir, "dist-print"), ...set.photos, today: "2026-10-20" });
   const pages = built.planned.filter((p) => p.piece.id === "flyer");
   assert.equal(pages.length, 5, "the flyer and its four (control)");
   for (const p of pages) {

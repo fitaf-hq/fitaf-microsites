@@ -1,5 +1,5 @@
-// SPEC-print-pieces.md § 2 and § 7: the printed pieces' sizes, as named values in one place, to redirect when the vendor's
-// specification is known. Inches throughout. A piece is one or two FACES of `face` (width × height); two faces are stacked
+// SPEC-print-pieces.md §§ 2, 7, 9 and 10: the printed pieces' sizes, as named values in one place, to redirect when the
+// vendor's specification is known. Inches throughout. A piece is one or two FACES of `face` (width × height); two faces are stacked
 // on one flat sheet, the upper turned 180° so that, folded on the centre line into an A-frame, both read upright. Every
 // PDF page is the sheet plus BLEED_IN on every edge; text and the QR code sit at least SAFE_IN inside a face's edges.
 import { PX_PER_INCH } from "../mockups/pieces.mjs";
@@ -20,8 +20,9 @@ export const LAYOUT_PX_PER_INCH = PX_PER_INCH;
 export const PRINT_PIECES = [
   // § 9 (2026-10-17): the flyer's photo window, width to height, across the face at its top (the glam photos' own shape)
   { id: "flyer", stem: "flyer", face: { w: 4.25, h: 5.5 }, faces: 1, positions: ["flyer"], photoWindow: { w: 3, h: 2 } },
-  // § 7 (2026-10-17): the mock-up's own face, portrait 4 × 6 in (§ 2's 6 × 4 landscape was wrong), on a 4 × 12 in sheet
-  { id: "tent-card", stem: "tent-card", face: { w: 4, h: 6 }, faces: 2, positions: ["tent-large", "tent-top", "tent-bottom"] },
+  // § 7 (2026-10-17): the mock-up's own face, portrait 4 × 6 in (§ 2's 6 × 4 landscape was wrong), on a 4 × 12 in sheet;
+  // § 10 (2026-10-18): its three photo windows, each this shape (square), the large one's side two tiles and their gap
+  { id: "tent-card", stem: "tent-card", face: { w: 4, h: 6 }, faces: 2, positions: ["tent-large", "tent-top", "tent-bottom"], photoWindow: { w: 1, h: 1 } },
 ];
 
 /** The flat sheet (the faces stacked) and the PDF page (the sheet plus the bleed), in inches. */

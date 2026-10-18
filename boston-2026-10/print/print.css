@@ -1,11 +1,11 @@
 /* The printed pieces (print/, SPEC-print-pieces.md): each mock-up's face on a page of the sheet plus the bleed. This sheet
    comes after the template's tokens and fonts and mockups.css, and before the sizes (pages.mjs sizeRules, from sizes.mjs,
-   which set the boxes and --bleed and --safe). It draws no colour of its own (the two it names are the template's: the
-   page's white, and the bar's own navy) and nothing translucent. One layout prints and screenshots: no @media print, so
+   which set the boxes and --bleed, --safe, --face-w and --photo-ratio). It draws no colour of its own (the one it names
+   is the template's: the page's white) and nothing translucent. One layout prints and screenshots: no @media print, so
    the PNG proof is the PDF's page.
-   ⛔ § 7 (the Advisor, 2026-10-17): the faces are the approved mock-ups' layouts, and NO RULE HERE MOVES A PART. A part
-   that meets a cut edge of the trim only grows outward, into the bleed; everything inside the trim stays where the
-   mock-up's sheet puts it (test Q9 measures that, part for part). */
+   § 7 (the Advisor, 2026-10-17): the faces were the approved mock-ups' layouts, and no rule here moved a part; a part
+   that meets a cut edge of the trim only grows outward, into the bleed. The Advisor has since laid each face out anew,
+   the flyer by § 9 and the tent card by § 10: the rules below are theirs (tests Q16 and Q17). */
 
 html, body { margin: 0; padding: 0; background: var(--white); }
 * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -32,28 +32,36 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-flyer .flyer-scan { margin-top: 0; }
 .print-flyer .logo-corner { position: absolute; right: 24px; bottom: 20px; width: 84px; }
 
-/* ---------- The tent card's face (portrait, 4 × 6 in): its top is the fold, so the bar grows sideways only, by borders
-   of its own colour over margins pulled out as far (its content box, and so its words and logo, stay put); of the
-   photos, the large one meets the left cut edge and the tiles the right, and each grows outward from its own cell ---- */
-.print-tent-card .event-bar { margin: 0 calc(-1 * var(--bleed)); border: solid var(--navy); border-width: 0 var(--bleed); }
+/* ---------- The tent card's face, as § 10 has it (the Advisor, 2026-10-18; portrait, 4 × 6 in): no bar; its top is the
+   fold. Its photos are three SQUARE windows across the face's width, at its top (--photo-ratio, sizes.mjs, the shape of
+   each window, width to height: 1): mockups.css's 2fr 1fr becomes the arithmetic of squares, a tile's side the face's
+   width less the two gaps (the mock-up's own 4px), over three, and the large window's side two tiles and the gap between
+   them. With a ratio r for every window: a tile t wide is t / r tall, the large window 2t / r + gap tall and r times
+   that wide, and the three widths and two gaps make the face's: t = (face - gap (1 + r)) / 3. Of the photos, the large
+   one meets the left cut edge and the tiles the right, and each grows outward into the bleed from its own cell ---------- */
+.print-tent-card .tent-photos {
+  --gap: 4px; /* mockups.css .tent-photos' own */
+  --tile-w: calc((var(--face-w) - var(--gap) * (1 + var(--photo-ratio))) / 3);
+  --tile-h: calc(var(--tile-w) / var(--photo-ratio));
+  gap: var(--gap);
+  grid-template-columns: calc(2 * var(--tile-w) + var(--photo-ratio) * var(--gap)) var(--tile-w);
+  grid-template-rows: var(--tile-h) var(--tile-h);
+  height: calc(2 * var(--tile-h) + var(--gap));
+}
 .print-tent-card .tent-photos > :first-child { margin-left: calc(-1 * var(--bleed)); width: calc(100% + var(--bleed)); }
 .print-tent-card .tent-photos > .photo:not(:first-child) { margin-right: calc(-1 * var(--bleed)); width: calc(100% + var(--bleed)); }
+/* Below the photos, in order: the rule and the headline, the offer, then the QR code with the address under it, the space
+   left shared evenly above, between and below them (four equal auto margins; nothing stretched; the body's 11px gap set
+   to 0 so the shares are equal, and kept between the rule and its headline); the one logo, the mock-up's 112px
+   (mockups.css .tent-logo), at the bottom right, at the body's own padding (24px right, 22px bottom), inside the safe
+   margin */
+.print-tent-card .tent-body { position: relative; gap: 0; }
+.print-tent-card .tent-body .rule { margin: auto 0 11px; }
+.print-tent-card .tent-body .offer, .print-tent-card .tent-scan { margin-top: auto; }
+.print-tent-card .tent-scan { margin-bottom: auto; }
+.print-tent-card .logo-corner { position: absolute; right: 24px; bottom: 22px; }
 
-/* ---------- § 8 (the Advisor, 2026-10-17): the words and the logo, for the printed pieces (pieces.mjs's options; the
-   mock-ups never take them; § 9 has the flyer's logo, above). These rules place only what § 8 adds or moves: everything else stays where the mock-up's
-   sheet puts it, and a space § 8 empties stays empty (nothing is stretched to fill it; Q9) ---------- */
-/* The address under the QR code, centred on it: the scan block a column as wide as the code, where the mock-up has it
-   (its own margin-top: auto keeps it at the bottom); the address keeps its own 4px margin */
+/* ---------- § 8 (the Advisor, 2026-10-17): the words, for the printed pieces (pieces.mjs's options; the mock-ups never
+   take them). The address under the QR code, centred on it: the scan block a column as wide as the code (its place is
+   §§ 9–10's, above); the address keeps its own 4px margin ---------- */
 .scan-under { flex-direction: column; align-items: center; gap: 0; align-self: flex-start; }
-/* (a) The logo in the navy bar, at its left, on a white plate (the logo's ink is dark and it has no ground of its own), the bar's words
-   beside it; the plate sits inside the bar's 12px padding, so the bar keeps its height. 72px = the bar's 16px padding,
-   the plate (its logo 23px tall is 36px wide, plus 10px of padding) and a 10px gap */
-.event-bar:has(> .bar-plate) { position: relative; text-align: left; padding-left: 72px; }
-.bar-plate { position: absolute; left: 16px; top: 4px; bottom: 4px; display: block; padding: 3px 5px; background: var(--white); border-radius: var(--radius); }
-.bar-plate .logo { width: auto; height: 100%; }
-/* (b) The plate over the large photo's top-left corner: the mock-up's flyer has it on its hero; the tent's large photo,
-   the first of its grid, takes the same plate */
-.print-tent-card .tent-photos { position: relative; }
-/* (c) The logo larger, above the tent's headline: 136px (1.2 × its 112px, the most its body holds with the address under
-   the code: at 168px the body overflowed and the address met the bottom safe margin) */
-.tent-logo.logo-large { width: 136px; }
