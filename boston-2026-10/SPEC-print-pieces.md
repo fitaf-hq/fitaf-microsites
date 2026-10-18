@@ -130,7 +130,10 @@ will count them (`?e=<id>` read against `data/events.json`). Measured 2026-10-18
    slide; nothing here sends it.
 4. **Unchanged**: the production page and the development page byte for byte (S20; `events.json`'s other ids are not
    read by today's page), the mock-ups (their default is the first event), the save step (an id outside `events.json`
-   is still refused; these two are now inside it), every word and size of the pieces.
+   is still refused; these two are now inside it), every word and size of the pieces. The address printed under the
+   QR code is the event URL's host alone, so every piece for every event reads `eatfitaf.com` (§ 8 item 1), while the
+   code itself carries the full URL (`https://eatfitaf.com/?e=boston`; the orchestrator's ruling, 2026-10-18, after the
+   build found the address had followed the URL to `eatfitaf.com/?e=boston`).
 5. **Cases** (written first, run red): **Q12** the three events load, `demo` first; **Q13** `build:print` with no
    `--event` reports `boston` and `https://eatfitaf.com/?e=boston`, and its QR SVG is `writeQrCodes`' for that URL;
    **Q14** `npm run build` writes the `boston` and `seminar` codes, each decoding to its URL (decoded by the test, not

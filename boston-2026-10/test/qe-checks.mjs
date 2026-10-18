@@ -20,6 +20,8 @@ export const EXPECTED_EVENTS = [
   { id: "boston", name: "Fit AF in Boston, 26–29 October 2026", url: BOSTON_URL },
   { id: "seminar", name: "the seminar of 23 October 2026", url: SEMINAR_URL },
 ];
+/** § 11 item 4 (the orchestrator's ruling, 2026-10-18): the address printed under every event's code, its URL's host. */
+export const ADDRESS = "eatfitaf.com";
 /** The date the print builds pick the offer on: fixed, so a run does not depend on today. */
 export const ON = "2026-10-20";
 
@@ -72,6 +74,8 @@ export function decodeSvg(svg) {
  * so every piece a -PROOF), into a temporary folder, one print build at a time across the suite. The problems, [] when
  * the pieces carry `boston`:
  *   - the report's QR line names the event `boston`, its URL and its file qr/boston.svg;
+ *   - every printed face, as the build's measuring pass found its text, carries the address `eatfitaf.com` once and no
+ *     text holding `?e=` (§ 11 item 4: the address is the URL's host; the code carries the full URL);
  *   - every printed page's PNG proof decodes to the boston URL, each face on its own (the tent's two, turned or not);
  *   - writeQrCodes' qr/boston.svg for data/events.json is byte for byte the one it writes for that URL alone, and the
  *     SVG decodes to it.
@@ -88,6 +92,12 @@ export async function printDefaultProblems(root, { fourFlyers = true } = {}) {
     const line = /^QR: event "boston" \([^()]+\) carries https:\/\/eatfitaf\.com\/\?e=boston \(qr\/boston\.svg, written by build\.mjs writeQrCodes\)$/;
     if (qr.length !== 1 || !line.test(qr[0])) problems.push(`the report's QR line: ${JSON.stringify(qr)}`);
     for (const p of built.planned) {
+      // § 11 item 4 (the orchestrator's ruling): the address printed under the code is the URL's host, on every face
+      p.measured.faces.forEach((face, f) => {
+        const texts = face.texts.map((t) => t.text);
+        const n = texts.filter((t) => t === ADDRESS).length;
+        if (n !== 1 || texts.some((t) => t.includes("?e="))) problems.push(`${p.stem}, face ${f + 1}: the address ${JSON.stringify(ADDRESS)} ${n} times; texts with ?e=: ${JSON.stringify(texts.filter((t) => t.includes("?e=")))}`);
+      });
       const png = await readFile(join(out, "dist-print", `${p.stem}.png`));
       const height = PNG.sync.read(png).height;
       const band = Math.floor(height / p.piece.faces);
