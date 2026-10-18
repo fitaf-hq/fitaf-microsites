@@ -1,17 +1,16 @@
 // `npm run build:print`: the printed tent card and quarter-sheet flyer (SPEC-print-pieces.md), written to dist-print/
-// (git-ignored, emptied at every run): the tent card in each logo variant (§ 8: pages.mjs VARIANTS, the one named value),
-// named by its letter (tent-card-a.pdf), the flyer (§ 9: no variants) and flyer-1 to flyer-4, each a PDF and a PNG proof at
-// 1× (one pixel per CSS pixel, 96 per inch); a PNG preview of the four flyers side by side (flyer-1-4.png); and
-// assignment.json (which photo went where). A page still carrying a placeholder (a photo, or the offer) is a proof: its
-// files end "-PROOF", and the report's last line says what remains. The pages are OUTPUTS of the mock-ups' own faces, parts
-// and inputs (mockups/), with §§ 8–9's words, logo and flyer; the legend is not printed.
+// (git-ignored, emptied at every run): the tent card (§ 10: no variants), the flyer (§ 9: no variants) and flyer-1 to
+// flyer-4, each a PDF and a PNG proof at 1× (one pixel per CSS pixel, 96 per inch); a PNG preview of the four flyers side
+// by side (flyer-1-4.png); and assignment.json (which photo went where). A page still carrying a placeholder (a photo, or
+// the offer) is a proof: its files end "-PROOF", and the report's last line says what remains. The pages are OUTPUTS of
+// the mock-ups' own faces, parts and inputs (mockups/), with § 8's words and §§ 9–10's layouts; the legend is not printed.
 //
 //   node print/build-print.mjs [--photos-dir DIR --rungs FILE --deliverable FILE] [--on YYYY-MM-DD] [--event ID]
 //
 // --photos-dir: the glam set's files, `<id>.jpg` as composed and `<id>-sq-<key>.jpg` each square; --rungs: Image Gauge's
 // image-rungs.json for it (§ 3's rule, as § 7 amends it, picks the photos); --deliverable: Image Gauge's deliverable.json
-// for it, of which only each tile photo's first square key is read (§ 7 item 2). The three go together; without them
-// every photo position shows the mock-ups' labelled placeholder. --on and --event as the mock-ups'.
+// for it, of which only each tent photo's first square key is read (§ 7 item 2, § 10 item 3). The three go together;
+// without them every photo position shows the mock-ups' labelled placeholder. --on and --event as the mock-ups'.
 //
 // Before printing, a measuring pass (measure.js, in Chrome, over a copy of each page) finds every photo's window, every
 // run of text, the QR code and every painted field; the build refuses, printing nothing, when a photo is below MIN_PPI at
@@ -30,10 +29,10 @@ import { copyStatic, loadJson, ROOT, writeQrCodes } from "../build.mjs";
 import { loadInputs, MANIFEST_PATH, readManifest } from "../mockups/inputs.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
-import { assignPhotos, fourFlyerPhotos, photoFiles, skippedLines, TENT_POSITIONS } from "./assign.mjs";
+import { assignPhotos, fourFlyerPhotos, photoFiles, skippedLines, SQUARE_POSITIONS, TENT_POSITIONS } from "./assign.mjs";
 import { layoutFindings, resolution, showing } from "./checks.mjs";
 import { jpegSize } from "./jpeg.mjs";
-import { pagesToPrint, placeholdersOf, printPage, VARIANTS } from "./pages.mjs";
+import { pagesToPrint, placeholdersOf, printPage } from "./pages.mjs";
 import { CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
 
 export const PRINT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -69,9 +68,9 @@ function sizeOfFile(photosDir, file) {
 }
 
 /**
- * §§ 3, 7 and 8: the rule's photos (the flyer's rung-1 photo read for its shape), each position's file (a tile's square, by
- * the deliverable), each checked to be in --photos-dir and read for its pixel size, copied under its position's name; and,
- * with the four flyers, rung 4's four (as composed), copied as flyer-1.jpg to flyer-4.jpg.
+ * §§ 3, 7, 8 and 10: the rule's photos (the flyer's rung-1 photo read for its shape), each position's file (a tent window's
+ * square, by the deliverable), each checked to be in --photos-dir and read for its pixel size, copied under its position's
+ * name; and, with the four flyers, rung 4's four (as composed), copied as flyer-1.jpg to flyer-4.jpg.
  */
 async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers }) {
   const rungs = await loadJson(rungsPath);
@@ -161,15 +160,17 @@ async function planPages({ run, stage, inputs, pages, chosen }) {
   for (const page of pages) {
     const pageInputs = inputsFor(page, inputs, chosen);
     const html = join(stage, `${page.base}.html`);
-    await writeFile(html, printPage(page.piece, pageInputs, printCss, page.variant));
+    await writeFile(html, printPage(page.piece, pageInputs, printCss));
     const measured = await measure(run, html, measureJs);
-    const photos = resolution(measured.faces.flatMap((f) => f.photos), pixelsFor(page, chosen));
+    const pixels = pixelsFor(page, chosen);
+    const photos = resolution(measured.faces.flatMap((f) => f.photos), pixels);
     const layout = layoutFindings(page.piece, measured);
     const refusals = [...layout.refusals, ...photos.refusals];
     const placeholders = placeholdersOf(page.piece, pageInputs);
-    // § 9 item 2: on a flyer, how its photo shows in the window
-    const [face] = measured.faces;
-    const shows = page.piece.id === "flyer" && chosen ? showing(pixelsFor(page, chosen).flyer, face.photos[0], face.trim) : null;
+    // §§ 9–10: how each photo shows in its window, by position, on the last face (the tent's lower, upright; its upper is
+    // the same turned)
+    const face = measured.faces.at(-1);
+    const shows = Object.fromEntries(face.photos.filter((ph) => pixels[ph.slot]).map((ph) => [ph.slot, showing(pixels[ph.slot], ph, face.trim)]));
     planned.push({ page, piece: page.piece, html, measured, photos: photos.rows, shows, refusals, warnings: layout.warnings, placeholders, stem: stemOf(page, placeholders) });
   }
   const refused = planned.flatMap((p) => p.refusals.map((r) => `${p.page.base}: ${r}`));
@@ -199,41 +200,40 @@ async function writePreviews({ run, stage, outDir, planned, inputs }) {
   return written;
 }
 
-/**
- * The pages a photo is reported from: one per piece (the tent card's first variant, its photos the same in every one,
- * since § 8 moves none; and the flyer), then flyer-1 to flyer-4.
- */
-function onePerPiece(planned) {
-  const seen = new Set();
-  return planned.filter((p) => p.page.number || (!seen.has(p.piece.id) && seen.add(p.piece.id)));
-}
-
-/** § 9 item 2, said: a photo's shape against its window's, and how much of its width and height show. */
+/** §§ 9–10, said: a photo's shape against its window's, and how much of its width and height show. */
 const percent = (n) => `${Math.round(n * 100)}%`;
 const showsLine = (s) =>
   `; shape ${s.shape.toFixed(2)} against the window's ${s.window.toFixed(2)}: ${percent(s.width)} of its width and ${percent(s.height)} of its height show`;
+
+/**
+ * Which file a position prints (§§ 7 and 10): its first square, or the photo as composed, and for a tent window, which
+ * is square, why (§ 10 item 3: the deliverable has none for it).
+ */
+function fileKind(chosen, slot) {
+  if (chosen.files[slot] !== `${chosen.assignment.positions[slot]}.jpg`) return "its first square";
+  return SQUARE_POSITIONS.includes(slot) ? "as composed: the deliverable lists no square for it" : "as composed";
+}
 
 /** A photo's row for the record: its pixels, its window in inches and its ppi. */
 const photoRecord = (r) => ({ pixels: [r.width, r.height], window_in: [r.w, r.h].map((n) => Number(n.toFixed(3))), ppi: Math.floor(r.ppi) });
 
 function assignmentRecord(chosen, planned) {
-  const first = onePerPiece(planned);
-  const rows = Object.fromEntries(first.filter((p) => !p.page.number).flatMap((p) => p.photos.map((r) => [r.slot, r])));
+  const pieces = planned.filter((p) => !p.page.number); // the tent card and the flyer
+  const rows = Object.fromEntries(pieces.flatMap((p) => p.photos.map((r) => [r.slot, { row: r, shows: p.shows[r.slot] }])));
   const positions = PRINT_PIECES.flatMap((p) => p.positions).map((position) => {
     if (!chosen) return [position, null];
     const { positions: ids, from } = chosen.assignment;
-    const shows = position === "flyer" ? { shows: first.find((p) => p.piece.id === "flyer" && !p.page.number)?.shows } : {};
-    return [position, { id: ids[position], from: from[position], file: chosen.files[position], ...photoRecord(rows[position]), ...shows }];
+    const { row, shows } = rows[position];
+    return [position, { id: ids[position], from: from[position], file: chosen.files[position], ...photoRecord(row), shows }];
   });
   const four = (chosen?.four ?? []).map((f) => {
-    const page = first.find((p) => p.page.number === f.number);
+    const page = planned.find((p) => p.page.number === f.number);
     const [row] = page?.photos ?? [];
-    return { number: f.number, id: f.id, from: f.from, file: f.file, ...(row ? photoRecord(row) : {}), shows: page?.shows };
+    return { number: f.number, id: f.id, from: f.from, file: f.file, ...(row ? photoRecord(row) : {}), shows: page?.shows.flyer };
   });
   return {
-    about: "SPEC-print-pieces.md §§ 3, 7, 8, 9: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
+    about: "SPEC-print-pieces.md §§ 3, 7, 8, 9, 10: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
     pool: chosen ? chosen.assignment.pool : null,
-    tent_variants: [...new Set(planned.map((p) => p.page.variant).filter(Boolean))],
     positions: Object.fromEntries(positions),
     flyer_skipped: chosen ? chosen.assignment.skipped : [],
     four_flyers: four,
@@ -254,17 +254,14 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries }) {
   const event = inputs.data.events[inputs.eventIndex];
   const lines = written.map((f) => `wrote ${f}`);
   if (!chosen) lines.push("photos: none given (--photos-dir, --rungs and --deliverable): every position shows its placeholder");
-  const first = onePerPiece(planned);
   const at = (r) => `${r.width} × ${r.height} px over ${r.w.toFixed(2)} × ${r.h.toFixed(2)} in = ${Math.floor(r.ppi)} ppi`;
-  for (const p of first.filter((q) => !q.page.number)) {
-    for (const r of p.photos) {
-      const kind = chosen.files[r.slot].includes("-sq-") ? "its first square" : "as composed";
-      lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${kind}; ${at(r)}${r.slot === "flyer" && p.shows ? showsLine(p.shows) : ""}`);
-    }
+  const shown = (p, slot) => (p.shows[slot] ? showsLine(p.shows[slot]) : "");
+  for (const p of planned.filter((q) => !q.page.number)) {
+    for (const r of p.photos) lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${fileKind(chosen, r.slot)}; ${at(r)}${shown(p, r.slot)}`);
   }
   if (chosen) lines.push(...skippedLines(chosen.assignment));
-  for (const p of first.filter((q) => q.page.number)) {
-    for (const r of p.photos) lines.push(`photo flyer-${p.page.number}: ${chosen.four[p.page.number - 1].from}, as composed; ${at(r)}${p.shows ? showsLine(p.shows) : ""}`);
+  for (const p of planned.filter((q) => q.page.number)) {
+    for (const r of p.photos) lines.push(`photo flyer-${p.page.number}: ${chosen.four[p.page.number - 1].from}, as composed; ${at(r)}${shown(p, "flyer")}`);
   }
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
   const which = eventId === undefined ? "the first in data/events.json" : "--event";
@@ -290,11 +287,10 @@ export async function buildPrint({
   manifestPath = MANIFEST_PATH,
   today,
   eventId,
-  variants = VARIANTS,
   fourFlyers = true,
   ...paths
 } = {}) {
-  const pages = pagesToPrint({ variants, fourFlyers }); // refuses an unknown variant before anything is emptied
+  const pages = pagesToPrint({ fourFlyers });
   const given = [photosDir, rungsPath, deliverablePath].filter(Boolean).length;
   if (given !== 0 && given !== 3) throw new Error("--photos-dir, --rungs and --deliverable go together: give all three, or none for placeholders");
   // dist-print/ is wholly this build's output: emptied first, so a refused run leaves nothing to mistake for a piece.

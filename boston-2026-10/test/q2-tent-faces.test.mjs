@@ -54,7 +54,7 @@ test("Q2: the turned face is turned 180°, and nothing else is", () => {
 
 test("Q2: rendered, the upper face is the lower face turned 180°; the fold is the sheet's centre line", { skip: NO_CHROME }, async () => {
   const out = join(tmp, "dist-print");
-  const built = await lockedBuild({ outDir: out, today: "2026-10-20", variants: ["b"], fourFlyers: false });
+  const built = await lockedBuild({ outDir: out, today: "2026-10-20", fourFlyers: false });
   const planned = built.planned.find((p) => p.piece.id === "tent-card");
   const [upper, lower] = planned.measured.faces.map((f) => f.trim);
   const fold = planned.measured.page.h / 2;

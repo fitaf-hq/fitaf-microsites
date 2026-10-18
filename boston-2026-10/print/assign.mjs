@@ -4,13 +4,17 @@
 // flyer's window is landscape), the photos before it skipped and named; the tent card's three positions take, in its
 // order, the first array of rung 3 that does not contain the flyer's photo, so no photo is on both pieces. A pool, rung or
 // array missing is refused, naming it. IDs only: no path, and an ID that is not a plain name (it becomes a file name) is
-// refused. Which FILE each position prints (§ 7 item 2): the tiles, Image Gauge's first good square for the photo
-// (`<id>-sq-<key>.jpg`, the first key the glam deliverable lists); the large photo and the flyer, the photo as composed.
+// refused. Which FILE each position prints (§ 7 item 2, § 10 item 3): each of the tent's windows, square since § 10,
+// Image Gauge's first good square for the photo (`<id>-sq-<key>.jpg`, the first key the glam deliverable lists), or the
+// photo as composed when the deliverable has no square for it; the flyer, the photo as composed.
 export const POOL = "glam";
 export const FLYER_POSITION = "flyer";
 export const TENT_POSITIONS = ["tent-large", "tent-top", "tent-bottom"];
-/** The positions printed from a square (§ 7 item 2; SPEC-photo-slots.md § 2's `square`, the tent card's small tiles). */
-export const SQUARE_POSITIONS = ["tent-top", "tent-bottom"];
+/**
+ * The positions printed from a square (§ 7 item 2 the two tiles, SPEC-photo-slots.md § 2's `square`; § 10 item 3 the
+ * large photo too, its window square since § 10).
+ */
+export const SQUARE_POSITIONS = [...TENT_POSITIONS];
 const PHOTO_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const PLAIN_KEY = PHOTO_ID;
 
@@ -98,19 +102,21 @@ export const skippedLines = (assignment) =>
   assignment.skipped.map((s) => `flyer: skipped ${s.from} (${s.width} × ${s.height} px, not landscape)`);
 
 /**
- * § 7 item 2: the file each position prints, by name in --photos-dir. A tile is the photo's first good square, by the
- * first key the glam deliverable lists for it (`photos.<id>.squares[].key`); any other position, the photo as composed.
- * Only the tiles' photos are looked up in the deliverable.
+ * §§ 7 and 10: the file each position prints, by name in --photos-dir. A tent window is the photo's first good square, by
+ * the first key the glam deliverable lists for it (`photos.<id>.squares[].key`); § 10 item 3: a photo with no square in
+ * the deliverable (not listed, or listed with none) prints as composed, `<id>.jpg`, covered to its square window, and the
+ * build's report names it. The flyer, the photo as composed. Only the tent's photos are looked up in the deliverable.
  */
 export function photoFiles(assignment, deliverable) {
   if (!deliverable?.photos || typeof deliverable.photos !== "object") throw new Error('the deliverable has no "photos"');
   return Object.fromEntries(
     Object.entries(assignment.positions).map(([position, id]) => {
-      if (!SQUARE_POSITIONS.includes(position)) return [position, `${id}.jpg`];
-      const entry = deliverable.photos[id];
-      if (!entry) throw new Error(`photo position ${position}: the deliverable has no photo ${id}`);
-      if (!Array.isArray(entry.squares) || entry.squares.length === 0) throw new Error(`photo position ${position}: the deliverable lists no square for ${id}`);
-      const key = entry.squares[0]?.key;
+      const composed = `${id}.jpg`;
+      if (!SQUARE_POSITIONS.includes(position)) return [position, composed];
+      const squares = deliverable.photos[id]?.squares;
+      if (squares === undefined || (Array.isArray(squares) && squares.length === 0)) return [position, composed];
+      if (!Array.isArray(squares)) throw new Error(`photo position ${position}: the deliverable's squares for ${id} are not a list`);
+      const key = squares[0]?.key;
       if (typeof key !== "string" || !PLAIN_KEY.test(key)) throw new Error(`photo position ${position}: ${id}'s first square key ${JSON.stringify(key)} is not a plain name`);
       return [position, `${id}-sq-${key}.jpg`];
     }),

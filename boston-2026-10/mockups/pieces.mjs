@@ -68,38 +68,34 @@ function scanBlock(parts, c, cls, { under = false } = {}) {
 }
 
 /**
- * The printed tent card's options (SPEC-print-pieces.md § 8, the Advisor, 2026-10-17), which the mock-ups never pass:
- * `short` drops the words § 8 drops and puts the address under the QR code; `logo` places the logo: "bar" (a, in the navy
- * bar at its left), "photo" (b, on a plate over the large photo's corner), "large" (c, larger, above the headline). The
- * flyer's are its own (§ 9, below). Without them a face is exactly the mock-up's, its parts made in the mock-up's order,
- * so its legend is unchanged.
- */
-const barLine = (parts, c, logo) =>
-  parts.line("p", "event-bar", c.eventLine, "event line", logo === "bar" ? `<b class="bar-plate">${parts.logo()}</b>` : "");
-
-/**
  * The tent card's face: three photos, the logo, the headline, the offer and the QR code. The face's markup alone, shared by
- * the mock-up's sheet and the printed tent card (print/, SPEC-print-pieces.md), so one change reaches both.
+ * the mock-up's sheet and the printed tent card (print/, SPEC-print-pieces.md), so one change reaches both. The printed
+ * tent card's options (SPEC-print-pieces.md §§ 8 and 10), which the mock-up never passes: `short` drops the words § 8
+ * drops and puts the address under the QR code; `header: false` drops the navy bar and its words; `logo: "corner"` puts
+ * the one logo at the bottom right of the face, after the QR code, instead of above the headline (§ 10 withdrew § 8's
+ * three logo variants, as § 9 had the flyer's). Without them a face is exactly the mock-up's, its parts made in the
+ * mock-up's order, so its legend is unchanged.
  */
-export function tentFace(c, parts, { short = false, logo } = {}) {
-  const bar = barLine(parts, c, logo);
+export function tentFace(c, parts, { short = false, header = true, logo } = {}) {
+  const bar = header ? parts.line("p", "event-bar", c.eventLine, "event line") : "";
   const photos = `${parts.photo("tent-large")}${parts.photo("tent-top")}${parts.photo("tent-bottom")}`;
-  const plate = logo === "photo" ? `<div class="logo-plate">${parts.logo()}</div>` : "";
-  const bodyLogo = logo === undefined ? parts.logo("tent-logo") : logo === "large" ? parts.logo("tent-logo logo-large") : "";
+  const bodyLogo = logo === undefined ? parts.logo("tent-logo") : "";
   const headline = parts.text("h1", "headline", c.headline, "headline");
   const subhead = short ? "" : `
   ${parts.text("p", "subhead", c.subhead, "subhead")}`;
   const offer = parts.text("p", "offer", c.offer, "the offer");
   const scan = scanBlock(parts, c, "tent-scan", { under: short });
+  const corner = logo === "corner" ? `
+  ${parts.logo("tent-logo logo-corner")}` : "";
   return `
 ${bar}
-<div class="tent-photos">${photos}${plate}</div>
+<div class="tent-photos">${photos}</div>
 <div class="tent-body">
   ${bodyLogo}
   <span class="rule"></span>
   ${headline}${subhead}
   ${offer}
-  ${scan}
+  ${scan}${corner}
 </div>`;
 }
 

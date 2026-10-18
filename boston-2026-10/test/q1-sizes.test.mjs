@@ -3,7 +3,7 @@
 // in sheet, 306 × 882. The build's measuring pass finds each face's trim at its size, and refuses a page or trim of
 // another size, or a photo or colour field that meets a cut edge without running into the bleed. Text or the QR code
 // less than 0.125 in inside a cut edge is REPORTED, not refused (§ 7 forbids moving a part; the fold is not a cut); since
-// § 9 took the flyer's bar away, the build reports none. Controls over made-up measurements, no Chrome.
+// § 9 took the flyer's bar away, and § 10 the tent's, the build reports none. Controls over made-up measurements, no Chrome.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -27,8 +27,8 @@ test("Q1: the sizes, in points: the flyer 324 × 414, the tent card 306 × 882 (
 
 test("Q1: each PDF is one page, its media box the sheet plus twice the bleed; each face's trim measured at its size", { skip: NO_CHROME }, async () => {
   const out = join(tmp, "dist-print");
-  // One variant, the flyer and the tent (variant c keeps the bar as the mock-up has it); Q15 holds the four flyers' sizes
-  const built = await lockedBuild({ outDir: out, today: "2026-10-20", variants: ["c"], fourFlyers: false });
+  // The tent and the flyer; Q15 holds the four flyers' sizes
+  const built = await lockedBuild({ outDir: out, today: "2026-10-20", fourFlyers: false });
   for (const p of built.planned) {
     const { pages, boxes } = pdfPages(await readFile(join(out, `${p.stem}.pdf`)));
     const { w, h } = pagePoints(p.piece);
@@ -41,8 +41,8 @@ test("Q1: each PDF is one page, its media box the sheet plus twice the bleed; ea
     for (const face of p.measured.faces) {
       assert.ok(Math.abs(face.trim.w - p.piece.face.w) < 0.01 && Math.abs(face.trim.h - p.piece.face.h) < 0.01, `${p.piece.id}: a face's trim`);
     }
-    // § 9's flyer carries two runs (the offer, the address); the tent five (its bar's two, the headline, the offer, the address)
-    const runs = p.piece.id === "flyer" ? 2 : 5;
+    // § 9's flyer carries two runs (the offer, the address); § 10's tent three a face (the headline, the offer, the address)
+    const runs = p.piece.id === "flyer" ? 2 : 3;
     assert.ok(p.measured.faces.every((f) => f.texts.length === runs && f.qrs.length === 1), `${p.piece.id}: the pass measured its text and its QR code (control)`);
     const { refusals, warnings } = layoutFindings(p.piece, p.measured);
     assert.deepEqual(refusals, [], `${p.piece.id}: nothing refused`);

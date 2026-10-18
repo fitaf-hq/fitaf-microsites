@@ -2,8 +2,9 @@
 // the page printed. Once the fonts are in, it records, in inches from the page's top-left corner: the page, and for each
 // face (a .print-face's .board, its trim) every photo window ([data-slot]), every run of text outside an annotation (its
 // glyphs' box, from a Range), every QR code, every logo, every painted field (a photo, or an element whose background is
-// not the page's own), and the blocks a layout is judged by (the offer, the scan block, and the body with its content box,
-// SPEC-print-pieces.md § 9). It writes them as JSON into a script element, which `--dump-dom` returns. It writes no text.
+// not the page's own), and the blocks a layout is judged by (the rule, the headline, the offer, the scan block, and the
+// body with its content box, SPEC-print-pieces.md §§ 9–10). It writes them as JSON into a script element, which
+// `--dump-dom` returns. It writes no text.
 (() => {
   const CSS_PX_PER_INCH = 96;
   const page = document.querySelector(".print-page");
@@ -31,17 +32,19 @@
       })
       .map((el) => ({ what: nameOf(el), ...inches(el.getBoundingClientRect()) }));
     // The content box, as drawn: the computed padding and borders are in layout pixels and the page is drawn scaled
-    // (pages.mjs sizeRules), so they are scaled by the element's drawn width over its layout width
+    // (pages.mjs sizeRules), so they are scaled by the element's drawn width over its layout width. On a face turned
+    // 180° (the tent's upper) each side is drawn opposite its own: its top padding at the bottom, its left at the right
     const contentOf = (el) => {
       const r = el.getBoundingClientRect();
       const st = getComputedStyle(el);
       const drawn = r.width / el.offsetWidth;
       const side = (k) => (parseFloat(st[`padding${k}`]) + parseFloat(st[`border${k}Width`])) * drawn;
-      const left = r.left + side("Left");
-      const top = r.top + side("Top");
-      return inches({ left, top, width: r.right - side("Right") - left, height: r.bottom - side("Bottom") - top });
+      const [l, t, rt, b] = el.closest(".print-face-turned") ? ["Right", "Bottom", "Left", "Top"] : ["Left", "Top", "Right", "Bottom"];
+      const left = r.left + side(l);
+      const top = r.top + side(t);
+      return inches({ left, top, width: r.right - side(rt) - left, height: r.bottom - side(b) - top });
     };
-    const blocks = [...board.querySelectorAll(".offer, .scan, .flyer-body, .tent-body")]
+    const blocks = [...board.querySelectorAll(".rule, .headline, .offer, .scan, .flyer-body, .tent-body")]
       .filter((el) => !annotation(el))
       .map((el) => ({ what: [...el.classList].join("."), ...inches(el.getBoundingClientRect()), content: contentOf(el) }));
     return {
