@@ -3,8 +3,8 @@ type: storefront-footer-block
 title: "Fit AF cart hand-off: the Footer block built from 8b11e54"
 as_of: 2026-10-16
 target: "the store's admin, Custom Scripts, Footer (pasted by the Advisor; never by an agent)"
-status: built, not pasted
-pasted: null
+status: pasted
+pasted: "2026-10-18, by the Advisor (his answer 'Pasted', AskUserQuestion ts=2026-10-18T20:43:36.318Z); the watch's F3 found it live, present once, text intact, at 2026-10-18T20:47:54.554Z (the watch's report, run --daily) on release main-7ENR4BDO.js; the smoke --live PASS at 1280 and 390 on a 4-meal and a 5-meal Chef's Choice link on Lean 4 (2026-10-18T20:46Z), nothing submitted"
 clearance: public
 built_from:
   repository: fitaf-microsites
