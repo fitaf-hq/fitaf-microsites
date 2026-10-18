@@ -101,7 +101,10 @@ test("S18 (dev T5): the only external script is Turnstile; the only fetch is the
   const fetches = [...devHtml.matchAll(/\bfetch\s*\(([^,]+),/g)].map((m) => m[1]);
   assert.deepEqual(fetches, ["cfg.api"]);
   assert.match(devHtml, /"api":"\/api\/save"/);
-  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|sendBeacon|@import|<iframe\b|localStorage|sessionStorage|document\.cookie/i);
+  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|@import|<iframe\b|localStorage|sessionStorage|document\.cookie/i);
+  // T5 amended by SPEC-analytics.md § 4, here as on the production page: exactly one sendBeacon, to /a.
+  assert.equal([...devHtml.matchAll(/sendBeacon/g)].length, 1, "exactly one sendBeacon");
+  assert.match(devHtml, /\bnavigator\.sendBeacon\(\s*(["'])\/a\1\s*,/, "its URL is /a");
   for (const url of loadedUrls(devHtml)) assert.ok(isSameOrigin(url), `same-origin only, got ${url}`);
   assert.ok(Buffer.byteLength(devHtml) < 60 * 1024, "under the 60 KB budget");
 });

@@ -84,7 +84,8 @@ export async function startWorker({ bindings = {}, resend } = {}) {
     },
   };
   // Miniflare 5 takes a new options shape; wrangler itself converts from the V4 shape this way.
-  const mf = new Miniflare(convertV4MiniflareOptions({ workers: [worker] }));
+  // cf: false: Miniflare's own placeholder request.cf, never https://workers.cloudflare.com/cf.json (SPEC-analytics § 10.1).
+  const mf = new Miniflare(convertV4MiniflareOptions({ cf: false, workers: [worker] }));
   const db = await mf.getD1Database(d1.binding, cfg.name);
   await applyMigrations(db, resolve(ROOT, d1.migrations_dir));
   return { mf, db, outbound, vars: cfg.vars };

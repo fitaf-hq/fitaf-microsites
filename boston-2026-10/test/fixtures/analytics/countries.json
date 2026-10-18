@@ -1,0 +1,40 @@
+{
+  "meta": [
+    {
+      "name": "day",
+      "type": "String"
+    },
+    {
+      "name": "value",
+      "type": "String"
+    },
+    {
+      "name": "visits",
+      "type": "UInt64"
+    }
+  ],
+  "data": [
+    {
+      "day": "2026-10-23",
+      "value": "CA",
+      "visits": "1"
+    },
+    {
+      "day": "2026-10-23",
+      "value": "US",
+      "visits": "14"
+    },
+    {
+      "day": "2026-10-24",
+      "value": "US",
+      "visits": "3"
+    },
+    {
+      "day": "2026-10-24",
+      "value": "",
+      "visits": "1"
+    }
+  ],
+  "rows": 4,
+  "rows_before_limit_at_least": 4
+}

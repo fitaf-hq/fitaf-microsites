@@ -1,0 +1,30 @@
+{
+  "meta": [
+    {
+      "name": "day",
+      "type": "String"
+    },
+    {
+      "name": "visitors",
+      "type": "UInt64"
+    },
+    {
+      "name": "visits",
+      "type": "UInt64"
+    }
+  ],
+  "data": [
+    {
+      "day": "2026-10-23",
+      "visitors": "12",
+      "visits": "15"
+    },
+    {
+      "day": "2026-10-24",
+      "visitors": "3",
+      "visits": "4"
+    }
+  ],
+  "rows": 2,
+  "rows_before_limit_at_least": 2
+}

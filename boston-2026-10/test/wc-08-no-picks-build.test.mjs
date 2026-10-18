@@ -10,7 +10,8 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build, NO_PICKS, PROD_SLOTS, renderPage } from "../build.mjs";
+import { analyticsSlot, build, NO_PICKS, PROD_SLOTS, renderPage } from "../build.mjs";
+import events from "../data/events.json" with { type: "json" };
 import { card, hiddenInTree, MESSAGES, openPlanPage, PLANS } from "./cc-harness.mjs";
 import { devPage } from "./dev-page.mjs";
 import { TABLE } from "./ms-harness.mjs";
@@ -36,9 +37,13 @@ async function built(target) {
   }
 }
 
-test("WC-8 (control): the reference is today's no-picks page, byte for byte", async () => {
+// Since SPEC-analytics.md § 4 every page carries the analytics script (the ANALYTICS slot, one line before #plan-data),
+// so the reference is today's no-picks page plus exactly that slot: without it, byte for byte the page pinned above.
+test("WC-8 (control): the reference is today's no-picks page, byte for byte (but for the analytics slot)", async () => {
   const reference = await renderPage(PLANS, PROD_SLOTS, MESSAGES, NO_PICKS);
-  assert.equal(sha256(reference), TODAY_NO_PICKS_SHA256);
+  const slot = `${await analyticsSlot(events)}\n`;
+  assert.equal(reference.split(slot).length - 1, 1, "the analytics slot is on the page once");
+  assert.equal(sha256(reference.replace(slot, "")), TODAY_NO_PICKS_SHA256);
 });
 
 for (const target of ["prod", "dev"]) {
