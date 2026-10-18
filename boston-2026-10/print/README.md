@@ -81,8 +81,12 @@ stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the 
   photo the deliverable lists no square for (not listed, or listed with none) prints **as composed**, covered to the
   square, and the report says so. The flyer's hero prints the photo as composed, `<id>.jpg`, covered to the window as in
   the mock-ups.
-- **`--on`** picks the offer by `offerForSave`, and **`--event`** the event whose QR code the pieces carry (default: the
-  first in `data/events.json`), as for the mock-ups. The report names the offer, the event and the URL the code carries.
+- **`--on`** picks the offer by `offerForSave`, and **`--event`** the event whose QR code the pieces carry, as for the
+  mock-ups. ⭐ **With no `--event` the pieces carry `boston`** (§ 11, 2026-10-18: `build-print.mjs` `PRINT_EVENT`, one
+  named value), where the mock-ups carry the first event, `demo`. The report names the offer, the event and the URL the
+  code carries. The address under the code is the event URL's **host** alone (`mockups/parts.mjs`; § 11 item 4, the
+  orchestrator's ruling 2026-10-18), so every piece for every event reads `eatfitaf.com`, as § 8 item 1 has it, while
+  the code carries the full URL (`?e=boston`).
 
 ## How a page is made, and checked before it is printed
 
@@ -142,6 +146,10 @@ No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (�
 | Q16 | § 9's flyer and its four: no header or its words; one logo, last in the body, in the bottom-right corner inside the safe margin; the window 3:2 within half a mock-up pixel, across the top, into the bleed; the offer then the code; even space; no safe-margin finding; the report's shape and share lines |
 | Q15 | the four flyers' rule (the first rung-4 array without the tent's photos, else the first; refusals); built, four different photos from it, each a one-page flyer at the flyer's size, and the preview of the four |
 | Q17 | § 10's tent card, both faces (the upper turned back): no bar or its words; one logo, last in the body, at the mock-up's size, in the bottom-right corner inside the safe margin; three windows each 1:1 within half a mock-up pixel, at the fold, across the face, the large one's side two tiles and the gap, into the bleed at the sides; the rule and headline, the offer, the code, in order, the space even; no safe-margin finding; the report's square and share lines |
+| QE12 | § 11's Q12 (renamed: § 8 holds Q12–Q15; `test/qe-checks.mjs`): `data/events.json` is `demo`, `boston`, `seminar`, word for word, `demo` first; the mock-ups' and the Worker harness's first event still `demo`; the Worker's id check accepts the three and refuses another |
+| QE13 | § 11's Q13: `build:print` with no `--event` reports `boston` and `https://eatfitaf.com/?e=boston`, every printed face's code decodes to it (the proof PNGs, jsQR, a face at a time) while its address reads `eatfitaf.com` (every event's: the URL's host), and `qr/boston.svg` is `writeQrCodes`' for that URL; the default one named value; `--event demo` still names demo. Its mutant (`qe13-default-mutant.test.mjs`): the default back to the first event, in a mirror, fails it |
+| QE14 | § 11's Q14: `npm run build` writes `qr/boston` and `qr/seminar`, PNG and SVG, beside `demo`'s, each decoded (the SVG drawn from its path, then jsQR) to its URL |
+| QE15 | § 11's Q15: production, development and the mock-ups each built from `data/events.json` and from its first event alone: every file byte-identical; added exactly the four codes (production, mock-ups) and `/boston/` and `/seminar/` (development, each `demo`'s page but for its own event id) |
 | QC | a Chrome run silent 30 s is run again (up to 3), each retry reported; a stall on every attempt still fails (a stand-in Chrome) |
 
 The cases that render (Q1, Q2, Q13, and parts of Q4–Q6, Q10, Q11, Q14–Q17) need Chrome (`CHROME=<path>`, else the macOS default) and **skip,
