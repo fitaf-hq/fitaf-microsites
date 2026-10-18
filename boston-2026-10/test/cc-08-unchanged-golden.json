@@ -6,7 +6,7 @@
   "watch_expected_footer": "fitaf-handoff 17c5693 sha256:ad25f93d3dcd616c20c53046df0441ad7f2f63ad72337ca069db48658a70b457",
   "worker": {
     "data/delivery-zips.json": "2b1cef0f8aa0909021e6efa98038b75ee2251bb4cec9b55640d719673af6e3bd",
-    "data/events.json": "42b72b04ea1836245b704c58b6028a7007666033ec2a0364a08b000f038f2f39",
+    "data/events.json": "c06fb47b30012ce7a991fcd1c64570d4576f0318294810f81d57737c9d57e989",
     "data/offers.json": "b1fc0171e9b04d3b6457e4b6698c2a29d580a512b5ae9c9c0c8f1c917c2903eb",
     "data/save.json": "d3a69064ba93523669e6d44a07b95176796fe1b0a54ad79639f0dba1814986b8",
     "src/worker/allowlist.js": "75728f64b8765cfc251ec1ad446069bd0f452823f697e8e64ffaefa9e0868cc9",
