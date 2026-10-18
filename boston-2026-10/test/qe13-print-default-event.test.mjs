@@ -26,6 +26,7 @@ test("QE13: every event's address is its URL's host, eatfitaf.com, and its code 
   for (const e of events) {
     const c = campaign(await loadInputs({ photosDir: join(MOCKUPS_DIR, "no-such-folder"), today: ON, eventId: e.id }));
     assert.equal(c.address.value, ADDRESS, `${e.id}: the address`);
+    assert.equal(c.address.value, new URL(e.url).host, `${e.id}: the address is the URL's host`);
     assert.equal(c.qr.url, e.url, `${e.id}: the code's URL`);
   }
 });

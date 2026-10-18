@@ -50,8 +50,10 @@ export function campaign(inputs) {
       value: data.messages.from_price.replaceAll("{price}", money(low.cents)),
       src: [at(SOURCES.messages, "/from_price"), at(SOURCES.plans, low.pointer)],
     },
-    // The address as people type it: the event URL without its scheme or trailing slash.
-    address: { value: event.url.replace(/^https?:\/\//, "").replace(/\/$/, ""), src: eventUrl },
+    // The address as people type it: the event URL's host alone (SPEC-print-pieces.md § 11 item 4), so every event's
+    // piece reads eatfitaf.com; the QR code carries the full URL (?e=boston). By string, not new URL(): its scheme off, and
+    // everything from its path on, so a value that is not a URL (P2's letterless markers) passes through whole.
+    address: { value: event.url.replace(/^https?:\/\//, "").replace(/[/?#][\s\S]*$/, ""), src: eventUrl },
     qr: { path: `qr/${event.id}.svg`, url: event.url, src: eventUrl },
     plans: [...data.plans.individual.map((p, i) => plan(p, `/individual/${i}`)), plan(data.plans.family, "/family")],
   };
