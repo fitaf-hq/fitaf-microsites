@@ -41,6 +41,10 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   event as E1 names it. ⚠ An event id and name are public; neither may name a person.
   The `demo` URL is `https://eatfitaf.com/` (the vanity domain, attached 2026-09-27). QR codes printed before
   that point at the old `workers.dev` address, which still serves the same page.
+  ⭐ Since `SPEC-print-pieces.md` § 11 (2026-10-18): **`boston`** (`https://eatfitaf.com/?e=boston`, the trip's days)
+  and **`seminar`** (`?e=seminar`, for the organizers' slide) after `demo`, which **stays first**: the mock-ups'
+  default, the development page at `/` and the save step's built-in id read the first event. The printed pieces carry
+  `boston` by default (`print/build-print.mjs` `PRINT_EVENT`). Both URLs serve the production page as `/` does.
 - **`delivery-zips.json`**: ⛔ **a MOCK** (`"status": "mock"`) of greater Boston by three-digit ZIP prefix,
   so the ZIP check of `flows/01-save-offer.md` § 5 can be built. It is **not** the store's delivery area.
   Replace it with the official list (five-digit ZIPs, `"match": "exact"`, `"status": "official"`); a
