@@ -34,7 +34,7 @@
     { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "Choose your meals / Save my offer / Tell me when you deliver here, 19px/700 uppercase" },
     { "fg": "--on-cta", "bg": "--cta-hover", "role": "large-text", "where": "the same buttons on hover" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the button's own shape against the card" },
-    { "fg": "--orange", "bg": "--white", "role": "non-text", "where": "save-the-offer section top bar (dev)", "build": "dev" },
+    { "fg": "--orange", "bg": "--white", "role": "non-text", "where": "the offer box's and the save-the-offer section's top bar (dev; SPEC-rung4 § 2b: the box at the top, the section at the end)", "build": "dev" },
     { "fg": "--white", "bg": "--draft", "role": "body", "where": "DRAFT banner, 14px (dev)", "build": "dev" },
     { "fg": "--draft", "bg": "--white", "role": "body", "where": "DRAFT tag 12px/600, save error 16px/600 (dev)", "build": "dev" },
     { "fg": "--navy", "bg": "--ice", "role": "body", "where": "share panel title 18px/600 (dev)", "build": "dev" },

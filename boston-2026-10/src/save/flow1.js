@@ -28,11 +28,26 @@
   }
   var offer = offerLabel();
 
+  // Where this flow sits (SPEC-rung4 § 2b, save the offer at the END): directly after the button that leaves for the
+  // store — the result card's once a plan is chosen, the Family card's on Family — and nowhere before a plan is chosen.
+  // Read off Flow 2's own panels, which app.js renders (as the share panel reads its card); never written here.
+  // There is one Flow 1, moved between the two places: what was typed goes with it.
+  var ANCHORS = { individual: "save-end", family: "save-end-family" };
+  function placeOf() {
+    if (!el("panel-family").hidden) return "family";
+    if (!el("result").hidden) return "individual";
+    return null;
+  }
+
   // name: OFFER · EDITING · CHECKING · OUT_OF_AREA · EXPANSION_SAVED · VERIFYING · SENDING · ERROR · SAVED
   //       · PLAN · MENU.  kind: what is being saved ("offer" | "expansion"); error: ERROR's kind.
-  var state = { name: "OFFER", kind: "offer", error: null, zip: "", email: "" };
+  //       place: Flow 2's, where this flow is shown ("individual" | "family" | null: not shown).
+  var state = { name: "OFFER", kind: "offer", error: null, zip: "", email: "", place: null };
 
   function render(s) {
+    var section = el("save");
+    section.hidden = !s.place;
+    if (s.place && section.parentNode !== el(ANCHORS[s.place])) el(ANCHORS[s.place]).appendChild(section);
     var collapsed = s.name === "PLAN" || s.name === "MENU";
     var busy = s.name === "CHECKING" || s.name === "VERIFYING" || s.name === "SENDING";
     var outOfArea = s.name === "OUT_OF_AREA" || s.name === "EXPANSION_SAVED" ||
@@ -50,15 +65,13 @@
     el("save-done").hidden = s.name !== "SAVED";
     el("save-done-email").textContent = s.name === "SAVED" ? s.email : "";
     el("save-expansion-done").hidden = s.name !== "EXPANSION_SAVED";
-    // Out of area, the flow has no PLAN edge (the offer cannot be used there): only the menu link remains.
-    el("save-skip-plan").hidden = outOfArea;
   }
   function go(next) {
     state = next;
     render(state);
   }
   function withName(name, extra) {
-    var next = { name: name, kind: state.kind, error: null, zip: state.zip, email: state.email };
+    var next = { name: name, kind: state.kind, error: null, zip: state.zip, email: state.email, place: state.place };
     for (var k in extra || {}) next[k] = extra[k];
     return next;
   }
@@ -68,13 +81,17 @@
   function editOrRetry() {
     if (state.name === "ERROR" || state.name === "OUT_OF_AREA") go(withName("EDITING", { kind: "offer" }));
   }
-  function buildMyPlan() {
-    go(withName("PLAN"));
-    var target = document.getElementById("panel-individual");
-    if (target && target.scrollIntoView) target.scrollIntoView();
-  }
+  // § 2b item 3: no "Build my plan" skip at the end, where the visitor has built the plan; PLAN is reached from the
+  // email's link (#from-email) alone.
   function seeMenu() { go(withName("MENU")); } // no menu input exists yet, so no link calls this
   function reopen() { go(withName("EDITING", { kind: "offer" })); }
+  // Flow 2 moved on (a plan chosen or changed, Family, back): this flow follows it, its own state unchanged.
+  function choiceChanged() {
+    var next = {};
+    for (var k in state) next[k] = state[k];
+    next.place = placeOf();
+    go(next);
+  }
 
   function saveMyOffer() {
     var email = el("save-email").value.trim();
@@ -138,12 +155,11 @@
   el("save-email").addEventListener("input", editOrRetry);
   el("save-zip").addEventListener("input", editOrRetry);
   el("save-expansion").addEventListener("click", tellMeWhenYouDeliver);
-  el("save-skip-plan").addEventListener("click", buildMyPlan);
   el("save-reopen").addEventListener("click", reopen);
   var menu = el("save-skip-menu");
   if (menu) menu.addEventListener("click", seeMenu);
+  window.addEventListener("hashchange", choiceChanged);
 
-  // A visit from the email's link opens at Flow 2, with this flow collapsed to one line.
-  if (location.hash === "#from-email") state = withName("PLAN");
-  render(state);
+  // Every visit opens at Flow 2 (§ 2b item 1); a visit from the email's link has this flow collapsed to one line.
+  go(withName(location.hash === "#from-email" ? "PLAN" : "OFFER", { place: placeOf() }));
 })();

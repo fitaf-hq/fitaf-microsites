@@ -21,14 +21,16 @@ test("S5: `offer` with a near (or far) ZIP -> zip_out_of_area; `expansion` with 
 });
 
 test("S5 (page): the page checks the ZIP before any request, and offers the expansion list instead", async () => {
-  const page = simulatePage(await devPage());
+  const html = await devPage();
+  const page = simulatePage(html);
   page.type("save-email", "dummy-s5@example.com");
   page.type("save-zip", NEAR_ZIP);
   page.el("save-form").dispatch("submit");
   assert.equal(page.record.fetches.length, 0, "OUT_OF_AREA is decided in the page: nothing sent");
   assert.equal(page.el("save-out-of-area").hidden, false);
   assert.equal(page.el("save-ooa-zip").textContent, NEAR_ZIP);
-  assert.equal(page.el("save-skip-plan").hidden, true, "no PLAN edge out of area");
+  // No PLAN edge out of area; since SPEC-rung4 § 2b item 3 there is no Build my plan link on the page at all.
+  assert.doesNotMatch(html, /id="save-skip-plan"/, "no PLAN edge out of area");
 
   page.el("save-marketing").checked = true; // the marketing box is offer-only: never sent with an expansion
   page.el("save-expansion").dispatch("click");

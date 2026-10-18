@@ -323,7 +323,9 @@ export const PROD_SLOTS = {
   QUESTION_ONE: "What's your goal?",
   DEV_STYLE: "",
   DRAFT_BANNER: "",
+  OFFER_BOX: "",
   SAVE_SECTION: "",
+  SAVE_FAMILY: "",
   SHARE_PANEL: "",
   DEV_SCRIPT: "",
 };
@@ -348,7 +350,10 @@ export const DEV_ASSET_PREFIX = "/";
 export const PROD_PHOTO_HOST = 0;
 export const DEV_PHOTO_HOST = 1;
 
-const MENU_LINK = '<button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button>';
+/** Flow 1's one link left once a menu input exists (Flow 8): since SPEC-rung4 § 2b item 3 there is no Build my plan link
+ *  beside it, so the paragraph exists only with the link. */
+const MENU_LINK =
+  '\n            <p class="skips"><button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button></p>';
 
 /** What the development page's scripts read: the save endpoint, the ZIP list (mock), the sizes, and (§ 2a)
  *  what the offer box needs to choose as the Worker does. ⛔ Never a code: no shared_code, no code_mode. */
@@ -381,9 +386,13 @@ export const declaration = (f) => (/^function\b/.test(f.toString()) ? f.toString
 export const ZONED_DATE_HELPERS = [formatter, zonedParts, pad, zonedDate];
 
 /**
- * The development build's slots (SPEC-rung4 § 2): Flow 1 at the top, Flow 2 reframed as a meal size, the
- * share panel, the DRAFT marking. `siteKey` is the dev environment's TURNSTILE_SITE_KEY (Cloudflare's
- * published test key). Assets are addressed from the root, so /<event-id>/ pages find them.
+ * The development build's slots (SPEC-rung4 § 2): Flow 2 reframed as a meal size, the share panel, the DRAFT
+ * marking, and since § 2b (save the offer at the END) the offer box at the top (§ 2a's heading and label) and Flow 1
+ * after the button that leaves for the store: in the result card's place (SAVE_SECTION, directly after the result card)
+ * and, on Family, the place src/save/flow1.js moves it to (SAVE_FAMILY, directly after the Family panel, whose last
+ * thing is the Family card's button: outside it, so the panel's bytes are unchanged, MS-13). `siteKey` is
+ * the dev environment's TURNSTILE_SITE_KEY (Cloudflare's published test key). Assets are addressed from the root, so
+ * /<event-id>/ pages find them.
  */
 export async function devSlots(plans, { save, zips, siteKey, eventId, offers, menu = existsSync(MENU_PATH) }) {
   const read = (name) => readFile(join(ROOT, "src", "save", name), "utf8");
@@ -403,7 +412,9 @@ export async function devSlots(plans, { save, zips, siteKey, eventId, offers, me
     GOALS: plans.individual.map(sizeButton).join("\n"),
     DEV_STYLE: (await read("style.css")).trimEnd(),
     DRAFT_BANNER: "\n" + fill(await read("banner.html")).trimEnd(),
+    OFFER_BOX: "\n" + (await read("offer-box.html")).trimEnd(),
     SAVE_SECTION: "\n" + fill(await read("section.html")).trimEnd(),
+    SAVE_FAMILY: '\n  <div id="save-end-family"></div>',
     SHARE_PANEL: "\n" + (await read("share-panel.html")).trimEnd(),
     DEV_SCRIPT:
       `\n<script type="application/json" id="save-data">${scriptJson(client)}</script>` +

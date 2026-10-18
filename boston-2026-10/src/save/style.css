@@ -1,16 +1,19 @@
 
-/* Rung 4 (development build only): Flow 1 (save the offer) and Flow 2's share panel. Colours are tokens;
-   every pair they draw is in src/contrast-pairs.json. */
+/* Rung 4 (development build only): the offer box, Flow 1 (save the offer) and Flow 2's share panel. Colours are
+   tokens; every pair they draw is in src/contrast-pairs.json. Since SPEC-rung4 § 2b the offer box (heading and label) is
+   at the top and Flow 1 directly after the button that leaves for the store, in the page's flow: no overlay. */
 :root { --draft: #8a1c1c; }
 .draft-banner { background: var(--draft); color: var(--white); padding: 10px 16px; font-size: 14px; text-align: center; }
 .draft-tag { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--draft); }
 .save-wrap { padding-top: 20px; }
-.save {
+.offer-box, .save {
   border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 18px 20px;
   background: linear-gradient(var(--orange), var(--orange)) top / 100% 6px no-repeat, var(--white);
 }
-.save h2 { margin: 0; font: 700 24px/1.2 var(--head); color: var(--navy); }
-.save-offer { margin: 6px 0 10px; color: var(--navy); }
+.offer-box h2 { margin: 0; font: 700 24px/1.2 var(--head); color: var(--navy); }
+.save-offer { margin: 6px 0 0; color: var(--navy); }
+.save { margin: 20px 0 24px; }
+.save-lead { margin: 0 0 14px; color: var(--ink); }
 .field { display: block; margin: 0 0 14px; }
 .field-name { display: block; font-weight: 600; color: var(--navy); }
 .field-help { display: block; font-size: 14px; font-style: italic; color: var(--muted); }

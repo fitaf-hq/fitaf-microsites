@@ -32,6 +32,8 @@ on the development page.
 Below the form, without saving anything: **Build my plan →** (and **See this week's menu →** once a menu is
 published). The box starts **unticked** and is not required.
 
+⚠ **Layout note, not wording** (`SPEC-rung4-save-offer.md` § 2b, 2026-10-18): on the page, the heading and the offer line are the offer box at the top; the lines from *"Not ready today?"* to the privacy line, the form and § 2 sit at the end, directly after *Choose your meals*, once a plan is chosen; **Build my plan →** is not shown there.
+
 ## 2. Out of area
 
 > We don't deliver to **[ZIP]** yet.
