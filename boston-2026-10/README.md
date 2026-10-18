@@ -309,7 +309,7 @@ Each Worker serves the week from its R2 bucket, so a week is two objects written
 |---|---|---|
 | bucket (binding `WEEK`) | `fitaf-microsite-content-dev` | `fitaf-microsite-content-prod` |
 | objects | `week/picks-data.json`, `week/<file>.jpg` | the same |
-| Worker entry | `src/worker/index.js` (imports `site.js`'s handlers) | `src/worker/site.js` (those two behaviours only) |
+| Worker entry | `src/worker/index.js` (imports `site.js`'s handlers) | `src/worker/site.js` (those two behaviours, and since SPEC-analytics § 4 `POST /a`, nothing else) |
 | `assets.run_worker_first` | `["/", "/index.html", "/*/", "/*/index.html"]` | `["/", "/index.html"]` |
 
 - **The page**: on the page's routes the Worker runs first, fetches the asset and, if the bucket holds a valid one-week
@@ -351,7 +351,7 @@ live until a pin moves to it, and **a release is a pin change**, reviewed where 
 ## Rungs 3–4 — development only
 
 ⛔ **Nothing below touches production.** The top level of `wrangler.jsonc` is the production Worker: no D1, no rate
-limiter, no cron; since SPEC-week-content § 4 its one script, `src/worker/site.js`, serves the week and nothing else. Rung 4 ([`SPEC-rung4-save-offer.md`](SPEC-rung4-save-offer.md))
+limiter, no cron; since SPEC-week-content § 4 its one script, `src/worker/site.js`, serves the week and, since SPEC-analytics § 4, also takes `POST /a` (the page's analytics, with the `ANALYTICS` and `SALTS` bindings), and nothing else. Rung 4 ([`SPEC-rung4-save-offer.md`](SPEC-rung4-save-offer.md))
 lives in its `dev` environment — Worker `fitaf-microsites-dev`, D1 `fitaf-leads-dev` (dummy data only),
 Cloudflare's published Turnstile **test** keys. The production build (`npm run build`) leaves every
 development slot empty and every reworded slot at its old text, so `dist/` is byte-identical to the build

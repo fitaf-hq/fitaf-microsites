@@ -353,3 +353,21 @@ mirror: the control 0 problems on A2, A3, A4 and A6; the IP into a blob, A4 red 
 `2026-10-24T03:59:00.000Z: SALTS holds salt:2026-10-23 with no expiration`: the New York day's last minute keys the
 New York date); the vocabulary check removed, A3 red (54, `an event outside § 3: written (1 data point(s))`). CC-8's
 Worker map moved again (`beacon.js` only). Contrast 70/70.
+
+### 10.2 Corrections at the merge into `boston/integration-1022` (2026-10-18; the text above is left as it was)
+
+Merged at `ac52905` (`boston/rung-4-save-offer` `cd99011` with `boston/event-codes` `0d1fac2`, then this branch). Two of
+§ 10's statements are no longer true of the merged tree:
+
+1. **`qr`'s vocabulary** (§ 10's table, *"`""` or an id of `data/events.json`: `demo` today"*; and § 9 item 2's *"one
+   event today"*): since `SPEC-print-pieces.md` § 11 (2026-10-18) `data/events.json` holds `demo`, `boston` and
+   `seminar`, so an `open`'s `qr` is `""`, `demo`, `boston` or `seminar`. The build writes the three into the page's
+   `QR_IDS` and `beacon.js` reads the same file. The page's reading of them is `test/a-qr-event.test.mjs` (`a123be9`),
+   which no case of § 7 covered: an `open` from `?e=boston` or `?e=seminar` carries that id, any other query none.
+2. **The sizes** (§ 10's Found, *"The development build, with the card, is 61,389 bytes, 51 under 60 KB"*, production's
+   39,366, the slot 2,524): the slot is now 2,542 bytes (the two ids). The development page was 61,282 bytes at
+   `45b5e37`, before the merge, and is 63,825 after it (`demo/` 63,825, `boston/` 63,827, `seminar/` 63,828), over 60 ×
+   1024 raw: the next addition met the budget, as § 10 said it would. **Ruled 2026-10-18** (the orchestrator; `SPEC.md`
+   § 1's note of that day): the budget is the page gzip-compressed under 60 × 1024 bytes on every page the builds
+   write, the raw size printed and not asserted. A1, S18 and T5 read it through `test/page-budget.mjs`. Now, raw / gzip:
+   production 40,195 / 11,878; development 63,825–63,828 / 18,780–18,782.
