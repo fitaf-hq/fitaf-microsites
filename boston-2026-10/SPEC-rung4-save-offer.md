@@ -88,6 +88,37 @@ file, and the two could disagree. **One place changes the offer, and the page, `
 `data/events.json`, with that event id built in; `/` is the first event. A save sends its `event_id`, and the
 Worker accepts only ids in `events.json`.
 
+### 2b. Amendment, 2026-10-18: save the offer at the END. CONTRACT, before any code
+
+**Why**: the Advisor, after the Owner meeting (2026-10-17): *"the "save your offer" call to action now should appear at
+the **end** of the process. We do not need to enable to initial modal/overlay we were planning"*; and on the consent
+wording (2026-10-18): *"The language is tentatively approved but needs to be seen in context on the microsite (which is
+currently receiving no traffic). Please deploy it so we can do that final approval pass"*. **This amendment moves Flow
+1; it changes no word of `consent/DRAFT.md`, no state, no request and no table.** It is for the dev build, where the
+final pass is made: dummy data, Turnstile's test keys.
+
+1. **The top of the page**: the offer box keeps the heading and the offer's label (§ 2a: *"Your Boston offer"* and
+   `offerForSave`'s label, the primary offer), and the page then opens on **Flow 2**, question 1 (meal size). Flow 1's
+   form is no longer at the top, and there is no modal, overlay or dialog for it anywhere.
+2. **The end of the process**: Flow 1 (`consent/DRAFT.md` § 1's lines from *"Not ready today? Save it"* to the privacy
+   line, the form, and § 2 out of area) is placed **directly after the button that leaves for the store** (*"Choose your
+   meals"*, `flows/02-choose.md` § 7), in a plan's chosen state and the Family state alike. Before a plan is chosen it is
+   not shown. Its states and transitions are `flows/01-save-offer.md`'s, unchanged.
+3. **`DRAFT.md` § 1's last line** (*"Below the form, without saving anything: **Build my plan →**"*) no longer applies at
+   the end: the visitor has built the plan. The skip link is not shown there. ⚠ A layout note in DRAFT.md, not its words:
+   this amendment adds a one-line note to DRAFT.md saying where § 1's parts now sit, and changes nothing else in it.
+4. **`#from-email`** still opens at Flow 2, and Flow 1 collapses to the one-line **Save my offer** link, now at the end.
+5. **Carried, unchanged**: S18 (every paragraph of §§ 1–2 as written, the offer line as its slot), S20 (the production
+   build byte-identical; this amendment touches only the dev build), S21–S26, the event pages.
+
+| | case | expect |
+|---|---|---|
+| S27 | the dev page, in document order | the offer box (heading and label) first; Flow 2's question 1 next; no Flow 1 form above the store button |
+| S28 | a plan chosen (and Family) | Flow 1's form directly after **Choose your meals**; absent before a plan is chosen |
+| S29 | the page's markup | no `dialog`, `[aria-modal]`, or overlay element for Flow 1 |
+| S30 | `#from-email` | Flow 2 first; Flow 1 as the one-line link at the end |
+| S31 | ⭐ mutant: Flow 1 rendered at the top again | S27 fails |
+
 ## 3. `POST /api/save`
 
 Body: `{ kind: "offer" | "expansion", email, zip, consent_marketing, event_id, wording_version, turnstile_token }`.
