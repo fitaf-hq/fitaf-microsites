@@ -108,3 +108,32 @@ The Advisor (2026-10-18), on the tent card: drop its bar *"like the flyer"*; the
 4. Below the photos, in order: the headline, the offer, then the QR code with eatfitaf.com under it; the logo at the bottom right. Parts keep the mock-up's sizes; the space left is distributed evenly between them (nothing is stretched), as § 9 item 3.
 5. The flyers are unchanged by this amendment.
 6. Cases: the tent has no bar and no "Fit AF in Boston"; each of its three windows measures 1:1 within half a mock-up pixel, and the large window's side equals two tiles plus the gap; each window's file is a square (`-sq-`) where the deliverable has one; the logo's box sits in each face's bottom-right corner inside the safe margin; the order of the parts; the upper face is still the lower turned 180° (Q2); one variant file, `tent-card-PROOF.pdf`, not three. The report gives each window's shape and the visible fraction of its photo.
+
+## 11. Amendment, 2026-10-18: the two event codes, `boston` and `seminar`. CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-17 (Fit AF's decision record `2026-10-17-the-picks-from-our-plans-and-the-breakfast-slate.md`
+§ 7a): *"I like the idea of two QR codes … It is possible that the seminar organizers will flash up a slide thanking
+Fit AF for the catering – if so, we can ask them to include this QR code"*, and *"Boston should have a unique QR code"*;
+ordered first among Boston's work on 2026-10-18 (§ 7g item 7 there). `SPEC-analytics.md` § 9 item 2 is the reader that
+will count them (`?e=<id>` read against `data/events.json`). Measured 2026-10-18: `https://eatfitaf.com/?e=boston` and
+`?e=seminar` serve the production page byte for byte as `/` does, so a code works before the analytics land.
+
+1. **`data/events.json` gains two events, after `demo`**, which stays first so that nothing reading *the first event*
+   changes (the mock-ups' default, the save step's built-in id, `SPEC-rung4-save-offer.md` § 3):
+   `{ "id": "boston", "name": "Fit AF in Boston, 26–29 October 2026", "url": "https://eatfitaf.com/?e=boston" }` and
+   `{ "id": "seminar", "name": "the seminar of 23 October 2026", "url": "https://eatfitaf.com/?e=seminar" }`.
+2. **The printed pieces carry `boston` by default**: `build:print`'s default event becomes the event whose id is
+   `boston` (one named value), which is what § 4 already says (*"the Boston event"*); `--event` still names any other.
+   The build's report line names the event and its URL, as today.
+3. **`npm run build`** (production) writes one code per event, as `writeQrCodes` already does: `dist/qr/boston.svg` and
+   `.png`, `dist/qr/seminar.svg` and `.png`, beside `demo`'s. The seminar's is handed to the Advisor for the organizers'
+   slide; nothing here sends it.
+4. **Unchanged**: the production page and the development page byte for byte (S20; `events.json`'s other ids are not
+   read by today's page), the mock-ups (their default is the first event), the save step (an id outside `events.json`
+   is still refused; these two are now inside it), every word and size of the pieces.
+5. **Cases** (written first, run red): **Q12** the three events load, `demo` first; **Q13** `build:print` with no
+   `--event` reports `boston` and `https://eatfitaf.com/?e=boston`, and its QR SVG is `writeQrCodes`' for that URL;
+   **Q14** `npm run build` writes the `boston` and `seminar` codes, each decoding to its URL (decoded by the test, not
+   assumed: if no decoder is installed, the matrix is compared with one `writeQrCodes` makes for the URL); **Q15** S20
+   and the mock-ups' outputs byte-identical. **Mutant**: the default back to the first event (Q13).
+6. ⛔ **Not here**: the analytics' reading of `?e=` (`SPEC-analytics.md`), the offer's words (the Owner's), any print order.
