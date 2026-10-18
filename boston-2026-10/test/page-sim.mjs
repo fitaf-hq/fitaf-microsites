@@ -52,6 +52,10 @@ export function simulatePage(html, { hash = "", turnstile = "pass", fetchReply =
       },
       setAttribute(k, v) { el.attributes[k] = String(v); },
       getAttribute(k) { return el.attributes[k] ?? null; },
+      // SPEC-rung4 § 2b: Flow 1 is moved after the store button. This stand-in records the parent only; document order
+      // is not modelled here (S27-S31 run the page over linkedom's DOM for that).
+      parentNode: null,
+      appendChild(child) { child.parentNode = el; return child; },
       focus() {},
       scrollIntoView() {},
     };

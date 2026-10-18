@@ -6,6 +6,12 @@
 // and changes no line that was there (§ 8.1). The content and the visible page are compared whole.
 // ⚠ Like WC-9, this pins d1dac5b's inputs: an intended change to them (the words, data/plans.json, the fixtures, the
 // committed 2026-10-18 week or its sheet) turns it red, and it is then re-recorded (`node test/u-04-record.mjs`).
+// ⚠ RE-RECORDED at 8bf4dc0 (`node test/u-04-record.mjs --commit 8bf4dc0`): SPEC-rung4-save-offer.md § 2b moves the
+// development page's Flow 1 to the end by design. Against d1dac5b's record, the three production entries and all six
+// contents were byte-identical and only the three development pages (bytes and visible) moved; the served page's diff
+// was § 2b's lines alone. What U4 showed against d1dac5b (a normal week unchanged by § 8 but for its `updating` lines) held
+// on every commit up to 8bf4dc0's parent (c415795); from here the reference is 8bf4dc0's tree, which carries § 8, and the
+// lines naming `updating` are still removed before comparing.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -14,7 +20,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to d1dac5b's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "d1dac5b");
+test("U4: a normal week, the content and the page as served, byte-identical to 8bf4dc0's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "8bf4dc0");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

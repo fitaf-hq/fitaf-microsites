@@ -59,7 +59,9 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   assert.equal(all.length, 13, "9 paragraphs -> 2 + 1 + 4 + 1 + 1 + 1 + 3 = 13 pieces");
   assert.deepEqual(all.map(isOfferLine), [false, true, ...Array(11).fill(false)], "one piece is the offer line: the second, under the heading");
   for (const piece of all.filter((p) => !isOfferLine(p))) assert.ok(text.includes(piece), `missing from the page: ${piece}`);
-  assert.ok(text.includes("Build my plan →"), "the skip link below the form (DRAFT § 1)");
+  // SPEC-rung4 § 2b item 3: DRAFT § 1's last line (below the form, "Build my plan →") no longer applies at the end, where
+  // the visitor has built the plan; the skip link is not on the page. (Its paragraphs above are checked as before.)
+  assert.ok(!text.includes("Build my plan →"), "no skip link (§ 2b item 3)");
 
   // The offer line (§ 2a): a slot under the heading, filled in the browser with offers.json's own label.
   assert.ok(!text.includes(all[1]), "the draft's literal offer line is not on the page");
@@ -126,23 +128,19 @@ test("S18: Flow 1's states in the page — OFFER, ERROR keeps what was typed, SA
   assert.equal(page.record.fetches[0].url, "/api/save");
   assert.equal(page.el("save-done").hidden, false, "SAVED");
   assert.equal(visibleText(`<p>Saved — look for it tomorrow at <strong>${page.el("save-done-email").textContent}</strong></p>`), "Saved — look for it tomorrow at dummy-s18@example.com");
-  assert.equal(page.el("save-skip-plan").hidden, false, "SAVED keeps the links");
+  assert.doesNotMatch(devHtml, /id="save-skip-plan"/, "SAVED: no Build my plan link (§ 2b item 3), and no menu link (no menu input)");
   const body = JSON.parse(page.record.fetches[0].init.body);
   assert.deepEqual(body, {
     kind: "offer", email: "dummy-s18@example.com", zip: "02118", consent_marketing: false,
     event_id: events[0].id, wording_version: "v0.3-draft", turnstile_token: "XXXX.DUMMY.TOKEN.XXXX",
   });
 
-  const skip = simulatePage(devHtml);
-  skip.el("save-skip-plan").dispatch("click");
-  assert.equal(skip.el("save-open").hidden, true, "PLAN: Flow 1 collapses");
-  assert.equal(skip.el("save-collapsed").hidden, false, "to one line: Save my offer");
-  skip.el("save-reopen").dispatch("click");
-  assert.equal(skip.el("save-open").hidden, false, "and reopens");
-
+  // Since § 2b item 3 there is no skip link: PLAN (Flow 1 collapsed to one line) is reached from the email's link.
   const fromEmail = simulatePage(devHtml, { hash: "#from-email" });
-  assert.equal(fromEmail.el("save-open").hidden, true, "#from-email opens at Flow 2");
-  assert.equal(fromEmail.el("save-collapsed").hidden, false);
+  assert.equal(fromEmail.el("save-open").hidden, true, "#from-email opens at Flow 2: PLAN, Flow 1 collapses");
+  assert.equal(fromEmail.el("save-collapsed").hidden, false, "to one line: Save my offer");
+  fromEmail.el("save-reopen").dispatch("click");
+  assert.equal(fromEmail.el("save-open").hidden, false, "and reopens");
   assert.match(devHtml, /id="save-reopen">Save my offer</);
 });
 
