@@ -54,6 +54,7 @@ two objects written to a bucket.
 
 1. **Production gains a script** (`main`). ⛔ It does **only** what this section says: no D1, no rate limiters, no
    cron, no other route. The development Worker keeps everything it has and gains the same two behaviours.
+   *(2026-10-13: the two are three since [`SPEC-analytics.md`](SPEC-analytics.md) § 4, by the Advisor's word: `POST /a`, the page's analytics, with the `ANALYTICS` and `SALTS` bindings of its § 6.)*
 2. **The page**: for a request that would be served the page carrying `#picks-data` (find every such route: `/`,
    `/index.html`, and any other the assets serve it under), the Worker reads `week/picks-data.json` from `WEEK`. If it
    exists, parses as a JSON object, and carries a `weeks` array of exactly one week with the shape `pageData()` makes

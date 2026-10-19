@@ -130,10 +130,23 @@ will count them (`?e=<id>` read against `data/events.json`). Measured 2026-10-18
    slide; nothing here sends it.
 4. **Unchanged**: the production page and the development page byte for byte (S20; `events.json`'s other ids are not
    read by today's page), the mock-ups (their default is the first event), the save step (an id outside `events.json`
-   is still refused; these two are now inside it), every word and size of the pieces.
+   is still refused; these two are now inside it), every word and size of the pieces. The address printed under the
+   QR code is the event URL's host alone, so every piece for every event reads `eatfitaf.com` (§ 8 item 1), while the
+   code itself carries the full URL (`https://eatfitaf.com/?e=boston`; the orchestrator's ruling, 2026-10-18, after the
+   build found the address had followed the URL to `eatfitaf.com/?e=boston`).
 5. **Cases** (written first, run red): **Q12** the three events load, `demo` first; **Q13** `build:print` with no
    `--event` reports `boston` and `https://eatfitaf.com/?e=boston`, and its QR SVG is `writeQrCodes`' for that URL;
    **Q14** `npm run build` writes the `boston` and `seminar` codes, each decoding to its URL (decoded by the test, not
    assumed: if no decoder is installed, the matrix is compared with one `writeQrCodes` makes for the URL); **Q15** S20
    and the mock-ups' outputs byte-identical. **Mutant**: the default back to the first event (Q13).
 6. ⛔ **Not here**: the analytics' reading of `?e=` (`SPEC-analytics.md`), the offer's words (the Owner's), any print order.
+
+> **Ruled 2026-10-18 (the orchestrator, the contracts' author), at the merge of `boston/analytics` into
+> `boston/integration-1022`: item 4's "byte for byte" held for the event codes alone.** Once the analytics reads `?e=`
+> (`SPEC-analytics.md` § 9 item 2), every page carries `data/events.json`'s ids in its analytics script, so the page
+> carrying the event ids is the analytics' change, not this section's. QE15 is narrowed to exactly that (`9fab243`): each
+> production and development page of the committed build and of the one-event build differs by that id list alone
+> (`["demo","boston","seminar"]` against `["demo"]`), and is byte for byte the one-event page once the list is put back;
+> every other file, the two added pages and codes, and the mock-ups are as item 4 says. The analytics' reading of the
+> two ids is its own case, `test/a-qr-event.test.mjs` (`a123be9`): an `open` from `?e=boston` or `?e=seminar` carries
+> that id, any other query none.

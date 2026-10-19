@@ -173,8 +173,10 @@ export async function startSite({ root = ROOT, entry = "site", assets = {}, obje
     if (!hit) return new Response(null, { status: 404 });
     return new Response(request.method === "HEAD" ? null : hit.body, { status: hit.status ?? 200, headers: hit.headers ?? {} });
   };
+  // cf: false: Miniflare's own placeholder request.cf, never https://workers.cloudflare.com/cf.json (SPEC-analytics § 10.1).
   const mf = new Miniflare(
     convertV4MiniflareOptions({
+      cf: false,
       workers: [
         {
           name: `wc-${entry}`,
@@ -225,7 +227,8 @@ export async function configured({ env, distDir, objects = {}, root = ROOT }) {
   const options = { ...workerOptions, name: `wc-${env ?? "prod"}`, modules: true, script: await bundle(main) };
   delete options.modulesRules;
   delete options.scriptPath;
-  const mf = new Miniflare(convertV4MiniflareOptions({ workers: [options] }));
+  // cf: false: Miniflare's own placeholder request.cf, never https://workers.cloudflare.com/cf.json (SPEC-analytics § 10.1).
+  const mf = new Miniflare(convertV4MiniflareOptions({ cf: false, workers: [options] }));
   try {
     await fill(await mf.getR2Bucket("WEEK"), objects);
   } catch (err) {

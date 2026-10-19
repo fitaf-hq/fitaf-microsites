@@ -53,7 +53,8 @@ const script = (
     logLevel: "silent",
   })
 ).outputFiles[0].text;
-const mf = new Miniflare(convertV4MiniflareOptions({ workers: [{ name: "s07", modules: true, script, compatibilityDate: "2026-09-26" }] }));
+// cf: false: Miniflare's own placeholder request.cf, never https://workers.cloudflare.com/cf.json (SPEC-analytics § 10.1).
+const mf = new Miniflare(convertV4MiniflareOptions({ cf: false, workers: [{ name: "s07", modules: true, script, compatibilityDate: "2026-09-26" }] }));
 after(() => mf.dispose());
 
 test("S7 (workerd): the Workers runtime computes the same instants", async () => {

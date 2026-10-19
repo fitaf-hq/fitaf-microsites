@@ -12,6 +12,7 @@ import { offerForSave } from "../src/worker/offers.js";
 import { zonedDate } from "../src/worker/zoned-time.js";
 import { isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
 import { devPage } from "./dev-page.mjs";
+import { assertPageBudget } from "./page-budget.mjs";
 import { simulatePage } from "./page-sim.mjs";
 
 const devHtml = await devPage();
@@ -95,15 +96,19 @@ test("S18: the marketing box is not pre-ticked and not required; no input can be
   for (const i of inputs) assert.doesNotMatch(i, /\bname=/, `no name attribute, so a native submit carries nothing: ${i}`);
 });
 
-test("S18 (dev T5): the only external script is Turnstile; the only fetch is the save endpoint; same origin", () => {
+test("S18 (dev T5): the only external script is Turnstile; the only fetch is the save endpoint; same origin", (t) => {
   const srcs = [...devHtml.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(srcs, [TURNSTILE_SCRIPT_URL]);
   const fetches = [...devHtml.matchAll(/\bfetch\s*\(([^,]+),/g)].map((m) => m[1]);
   assert.deepEqual(fetches, ["cfg.api"]);
   assert.match(devHtml, /"api":"\/api\/save"/);
-  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|sendBeacon|@import|<iframe\b|localStorage|sessionStorage|document\.cookie/i);
+  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|@import|<iframe\b|localStorage|sessionStorage|document\.cookie/i);
+  // T5 amended by SPEC-analytics.md § 4, here as on the production page: exactly one sendBeacon, to /a.
+  assert.equal([...devHtml.matchAll(/sendBeacon/g)].length, 1, "exactly one sendBeacon");
+  assert.match(devHtml, /\bnavigator\.sendBeacon\(\s*(["'])\/a\1\s*,/, "its URL is /a");
   for (const url of loadedUrls(devHtml)) assert.ok(isSameOrigin(url), `same-origin only, got ${url}`);
-  assert.ok(Buffer.byteLength(devHtml) < 60 * 1024, "under the 60 KB budget");
+  // The 60 KB budget, gzip-compressed (SPEC.md § 1's note of 2026-10-18; test/page-budget.mjs), the raw size printed.
+  assertPageBudget(devHtml, "S18, the development page", t);
 });
 
 test("S18: Flow 1's states in the page — OFFER, ERROR keeps what was typed, SAVED; #from-email opens at Flow 2", async () => {

@@ -13,6 +13,7 @@
     "build:storefront": "node scripts/build-storefront.mjs",
     "handoff:link": "node scripts/handoff-link.mjs",
     "content": "node scripts/week-content.mjs",
+    "analytics": "node scripts/analytics.mjs",
     "build:mockups": "node mockups/build-mockups.mjs",
     "build:print": "node print/build-print.mjs",
     "test": "node --test \"test/*.test.mjs\"",

@@ -1,0 +1,42 @@
+{
+  "meta": [
+    {
+      "name": "day",
+      "type": "String"
+    },
+    {
+      "name": "q1",
+      "type": "Float64"
+    },
+    {
+      "name": "median",
+      "type": "Float64"
+    },
+    {
+      "name": "q3",
+      "type": "Float64"
+    },
+    {
+      "name": "n",
+      "type": "UInt64"
+    }
+  ],
+  "data": [
+    {
+      "day": "2026-10-23",
+      "q1": 400,
+      "median": 820,
+      "q3": 1200,
+      "n": "15"
+    },
+    {
+      "day": "2026-10-24",
+      "q1": 510,
+      "median": 640,
+      "q3": 900,
+      "n": "4"
+    }
+  ],
+  "rows": 2,
+  "rows_before_limit_at_least": 2
+}

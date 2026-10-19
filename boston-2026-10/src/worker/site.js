@@ -1,6 +1,7 @@
 // The week as content (SPEC-week-content.md § 4): PRODUCTION's Worker entry (wrangler.jsonc's top-level `main`), and the
-// two behaviours the development Worker (index.js) imports, never copies. ⛔ Nothing else is here: no D1, no rate
-// limiter, no cron, no other route. Every other request is the assets' (§ 4.1).
+// behaviours the development Worker (index.js) imports, never copies. ⛔ Nothing else is here: no D1, no rate limiter, no
+// cron, no other route. Every other request is the assets' (§ 4.1). Since SPEC-analytics.md § 4 (the Advisor's word,
+// 2026-10-13) the "ONLY two things" are three: 3., below.
 //
 // 1. The page (§ 4.2): for a request that would be served the page carrying `#picks-data` (wrangler.jsonc's
 //    `assets.run_worker_first` sends those routes here first; every other route stays assets-first, § 4.5), the asset is
@@ -11,6 +12,8 @@
 //    are: no week, no card. Nothing is thrown at the visitor.
 // 2. The photo sheets (§ 4.3): GET /week/<file>.jpg, a plain file name, is the bucket's object week/<file>.jpg,
 //    image/jpeg; any other /week/ request, or an absent object, is a 404, the bucket not read for a refused name.
+// 3. The page's analytics (SPEC-analytics.md § 4): POST /a, one event of a closed list, one Analytics Engine data
+//    point; a 204 in every case (beacon.js). No asset matches /a, so it reaches the script assets-first.
 //
 // Freshness (§ 4.4): a write to the bucket is what the next request gets. The page is asked of the assets WITHOUT the
 // visitor's conditional headers (so the assets never answer 304 for a page whose week may have changed under the same
@@ -18,6 +21,7 @@
 // this page): a browser keeps it but asks again every time, and gets the page whole. A sheet goes out with
 // `Cache-Control: no-cache` and the object's own ETag, so a browser revalidates every time and gets a 304 while the
 // object is unchanged; a sheet re-written under the same name is seen at the next request.
+import { BEACON_PATH, serveBeacon } from "./beacon.js";
 import { scriptJson } from "./script-json.js";
 
 /** SPEC-week-content § 1, the interface with fitaf-infra: the binding is WEEK, and these are its objects. */
@@ -129,10 +133,12 @@ export async function serveSheet(request, env) {
   return object.body ? new Response(object.body, { headers }) : new Response(null, { status: 304, headers });
 }
 
-/** Both behaviours, and the assets for everything else: production's whole script, and the development Worker's last
- *  step once its own routes have not matched. */
+/** The three behaviours, and the assets for everything else: production's whole script, and the development Worker's
+ *  last step once its own routes have not matched. */
 export async function serveSite(request, env) {
-  if (new URL(request.url).pathname.startsWith(SHEETS_PATH)) return serveSheet(request, env);
+  const { pathname } = new URL(request.url);
+  if (pathname === BEACON_PATH && request.method === "POST") return serveBeacon(request, env);
+  if (pathname.startsWith(SHEETS_PATH)) return serveSheet(request, env);
   if (request.method === "GET") return servePage(request, env);
   return env.ASSETS.fetch(request);
 }

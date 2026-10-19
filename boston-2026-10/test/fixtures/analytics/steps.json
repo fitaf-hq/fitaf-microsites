@@ -1,0 +1,120 @@
+{
+  "meta": [
+    {
+      "name": "day",
+      "type": "String"
+    },
+    {
+      "name": "event",
+      "type": "String"
+    },
+    {
+      "name": "question",
+      "type": "String"
+    },
+    {
+      "name": "visits",
+      "type": "UInt64"
+    }
+  ],
+  "data": [
+    {
+      "day": "2026-10-23",
+      "event": "open",
+      "question": "",
+      "visits": "15"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "answer",
+      "question": "goal",
+      "visits": "11"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "answer",
+      "question": "lunch_dinner",
+      "visits": "9"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "answer",
+      "question": "weekends",
+      "visits": "6"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "answer",
+      "question": "breakfast",
+      "visits": "5"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "answer",
+      "question": "snacks",
+      "visits": "2"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "result",
+      "question": "",
+      "visits": "8"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "click",
+      "question": "",
+      "visits": "4"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "leave",
+      "question": "",
+      "visits": "13"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "error",
+      "question": "",
+      "visits": "1"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "open",
+      "question": "",
+      "visits": "4"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "answer",
+      "question": "goal",
+      "visits": "2"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "answer",
+      "question": "lunch_dinner",
+      "visits": "2"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "result",
+      "question": "",
+      "visits": "2"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "click",
+      "question": "",
+      "visits": "1"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "leave",
+      "question": "",
+      "visits": "4"
+    }
+  ],
+  "rows": 16,
+  "rows_before_limit_at_least": 16
+}

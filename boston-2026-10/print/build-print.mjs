@@ -10,7 +10,8 @@
 // --photos-dir: the glam set's files, `<id>.jpg` as composed and `<id>-sq-<key>.jpg` each square; --rungs: Image Gauge's
 // image-rungs.json for it (§ 3's rule, as § 7 amends it, picks the photos); --deliverable: Image Gauge's deliverable.json
 // for it, of which only each tent photo's first square key is read (§ 7 item 2, § 10 item 3). The three go together;
-// without them every photo position shows the mock-ups' labelled placeholder. --on and --event as the mock-ups'.
+// without them every photo position shows the mock-ups' labelled placeholder. --on and --event as the mock-ups', but with
+// no --event the pieces carry PRINT_EVENT (`boston`, § 11 item 2), where the mock-ups carry the first event.
 //
 // Before printing, a measuring pass (measure.js, in Chrome, over a copy of each page) finds every photo's window, every
 // run of text, the QR code and every painted field; the build refuses, printing nothing, when a photo is below MIN_PPI at
@@ -38,6 +39,9 @@ import { CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
 export const PRINT_DIR = dirname(fileURLToPath(import.meta.url));
 export const DIST_PRINT = join(ROOT, "dist-print");
 export const PROOF_SUFFIX = "-PROOF";
+/** SPEC-print-pieces.md § 11 item 2 (§ 4's "the Boston event"): the event whose QR code the pieces carry when no --event
+ *  names one, by its id in data/events.json. The mock-ups' default stays the first event (`demo`). */
+export const PRINT_EVENT = "boston";
 const PROOF_SCALE = 1;
 const MEASURED = /<script\b[^>]*\bid="print-measure"[^>]*>([\s\S]*?)<\/script>/;
 const DUMPED_UNMEASURED = Symbol("the page was dumped without its measurement");
@@ -264,7 +268,7 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries }) {
     for (const r of p.photos) lines.push(`photo flyer-${p.page.number}: ${chosen.four[p.page.number - 1].from}, as composed; ${at(r)}${shown(p, "flyer")}`);
   }
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
-  const which = eventId === undefined ? "the first in data/events.json" : "--event";
+  const which = eventId === undefined ? "the default, PRINT_EVENT" : "--event";
   lines.push(`QR: event "${event.id}" (${which}) carries ${event.url} (qr/${event.id}.svg, written by build.mjs writeQrCodes)`);
   const warnings = grouped(planned.flatMap((p) => p.warnings.map((text) => ({ text, name: p.page.base }))));
   for (const w of warnings) lines.push(`safe margin, ${w.names.join(", ")}: ${w.text} (the approved layout's; § 7: no part is moved)`);
@@ -303,7 +307,7 @@ export async function buildPrint({
     const stagedPhotos = join(stage, "photos");
     const manifest = await readManifest(manifestPath);
     const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers }) : null;
-    const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId });
+    const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId: eventId ?? PRINT_EVENT });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
     const planned = await planPages({ run, stage, inputs, pages, chosen });
