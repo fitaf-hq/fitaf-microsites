@@ -34,8 +34,14 @@ subdomains only). This contract is the umbrella; its three parts are each built 
 - `checkPicks` accepts a preview file only where a preview is read (the preview build and the preview content command),
   and refuses `preview: true` everywhere else, so a preview can never reach the live site.
 - **The content command** gains `--preview`: `npm run content -- --preview --week <delivery> --from <dir> --out <dir>`
-  reads `<from>/<delivery>.json` and the photo sheets it names from `<from>/photo-sheets/`, and writes
-  `<out>/previews/<delivery>/picks-data.json` and those sheets, deterministic, as § 3 there. Refused without `--from`,
+  reads `<from>/<delivery>.json` and, when present, **the week's sheet entry
+  `<from>/photo-sheets/chefs-choice-<delivery>.json`** (`{ file, width, height, cells }`, the shape of one
+  `data/photo-sheets.json` `chefs_choice[<delivery>]` entry, its cells keyed by Fit AF's names) with the sheet it names
+  in `<from>/photo-sheets/`, and writes `<out>/previews/<delivery>/picks-data.json` and that sheet, deterministic, as
+  § 3 there. No entry: plain tiles, nothing copied. ⚠ **Ruled 2026-10-20 by the orchestrator** (the two builds read it
+  two ways: one shared `<from>/photo-sheets.json`, against Fit AF's photos emitter writing one entry per week): **one
+  file per week**, so a preview's pull request into `fitaf-infra` adds only its own files and never edits a manifest
+  every other preview shares. Refused without `--from`,
   and refused when `--from` resolves inside this repository's tree.
 
 ⚠ **Amended 2026-10-20** (Fit AF's decision record `2026-10-17-the-picks-from-our-plans-and-the-breakfast-slate.md`
