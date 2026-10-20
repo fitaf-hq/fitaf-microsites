@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 import jsQR from "jsqr";
 import { PNG } from "pngjs";
 import { ROOT } from "../build.mjs";
-import { CHROME, oneAtATime } from "./print-fixtures.mjs";
+import { CHROME, FITTING_BACK_PATH, oneAtATime } from "./print-fixtures.mjs";
 
 export const BOSTON_URL = "https://eatfitaf.com/?e=boston";
 export const SEMINAR_URL = "https://eatfitaf.com/?e=seminar";
@@ -71,7 +71,8 @@ export function decodeSvg(svg) {
 
 /**
  * QE13's check over a package tree `root` (this package, or a mirror of it): `build:print` with no --event (no photos,
- * so every piece a -PROOF), into a temporary folder, one print build at a time across the suite. The problems, [] when
+ * so every piece a -PROOF), into a temporary folder, one print build at a time across the suite; since § 12 with the
+ * flyer's back's words that fit (print-fixtures.mjs FITTING_BACK_PATH: the back is not this check's). The problems, [] when
  * the pieces carry `boston`:
  *   - the report's QR line names the event `boston`, its URL and its file qr/boston.svg;
  *   - every printed face, as the build's measuring pass found its text, carries the address `eatfitaf.com` once and no
@@ -87,7 +88,7 @@ export async function printDefaultProblems(root, { fourFlyers = true } = {}) {
   const out = await mkdtemp(join(tmpdir(), "boston-qe13-"));
   const problems = [];
   try {
-    const built = await oneAtATime(() => buildPrint({ chrome: CHROME, outDir: join(out, "dist-print"), today: ON, fourFlyers }));
+    const built = await oneAtATime(() => buildPrint({ chrome: CHROME, outDir: join(out, "dist-print"), today: ON, fourFlyers, backPath: FITTING_BACK_PATH }));
     const qr = built.lines.filter((l) => l.startsWith("QR: "));
     const line = /^QR: event "boston" \([^()]+\) carries https:\/\/eatfitaf\.com\/\?e=boston \(qr\/boston\.svg, written by build\.mjs writeQrCodes\)$/;
     if (qr.length !== 1 || !line.test(qr[0])) problems.push(`the report's QR line: ${JSON.stringify(qr)}`);

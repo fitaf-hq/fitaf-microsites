@@ -99,12 +99,16 @@ export function makeParts(inputs) {
       note(c.qr.src, "QR code (written by build.mjs)");
       return `<img class="qr ${cls}" src="${esc(c.qr.path)}" alt="QR code: ${esc(c.qr.url)}" ${cite(c.qr.src)}>`;
     },
-    /** A photo slot: the manifest's file when it is in the photos folder, else a labelled placeholder. */
+    /**
+     * A photo slot: the manifest's file when it is in the photos folder, else a labelled placeholder. A print-only
+     * position (SPEC-print-pieces.md § 12: the flyer's back, on no mock-up and so in no legend) is not the manifest's: it
+     * names its own `source`, which is cited and not noted for the legend.
+     */
     photo(slot, cls = "") {
       const photo = inputs.photos[slot];
       if (!photo) throw new Error(`photo slot "${slot}" is not in ${MANIFEST_SOURCE}`);
-      const sources = [at(MANIFEST_SOURCE, `/slots/${slot}`)];
-      note(sources, `photo: ${slot}`);
+      const sources = [photo.source ?? at(MANIFEST_SOURCE, `/slots/${slot}`)];
+      if (!photo.source) note(sources, `photo: ${slot}`);
       const attrs = `data-slot="${esc(slot)}" ${cite(sources)}`;
       if (photo.present) return `<img class="photo ${cls}" src="photos/${esc(encodeURIComponent(photo.file))}" alt="" ${attrs}>`;
       return (

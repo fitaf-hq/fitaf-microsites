@@ -57,5 +57,6 @@ test("Q14: no variants (§§ 9–10): one tent card and one flyer and its four, 
 test("Q14: built, one tent card proof, tent-card-PROOF, not three, and the flyer one, unlettered", { skip: NO_CHROME }, async () => {
   await build();
   const files = (await readdir(join(tmp, "dist-print"))).sort();
-  assert.deepEqual(files, ["assignment.json", "flyer-PROOF.pdf", "flyer-PROOF.png", "tent-card-PROOF.pdf", "tent-card-PROOF.png"]);
+  // § 12 item 1: and the one back proof, unlettered too
+  assert.deepEqual(files, ["assignment.json", "flyer-PROOF.pdf", "flyer-PROOF.png", "flyer-back-PROOF.png", "tent-card-PROOF.pdf", "tent-card-PROOF.png"]);
 });

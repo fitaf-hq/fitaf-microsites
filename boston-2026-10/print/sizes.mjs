@@ -1,8 +1,9 @@
-// SPEC-print-pieces.md §§ 2, 7, 9 and 10: the printed pieces' sizes, as named values in one place, to redirect when the
+// SPEC-print-pieces.md §§ 2, 7, 9, 10 and 12: the printed pieces' sizes, as named values in one place, to redirect when the
 // vendor's specification is known. Inches throughout. A piece is one or two FACES of `face` (width × height); two faces are stacked
 // on one flat sheet, the upper turned 180° so that, folded on the centre line into an A-frame, both read upright. Every
 // PDF page is the sheet plus BLEED_IN on every edge; text and the QR code sit at least SAFE_IN inside a face's edges.
 import { PX_PER_INCH } from "../mockups/pieces.mjs";
+import { BACK_POSITIONS } from "./assign.mjs";
 
 export const BLEED_IN = 0.125;
 export const SAFE_IN = 0.125;
@@ -14,12 +15,42 @@ export const CSS_PX_PER_INCH = 96;
 export const LAYOUT_PX_PER_INCH = PX_PER_INCH;
 
 /**
+ * § 12 item 2 (the Advisor, 2026-10-20): the flyer's front, the call to action larger. The offer is set at the headline's
+ * size (mockups.css .headline, 34px, from the offer's own 24px), on at most this many lines; the QR code is this many
+ * inches square (168 layout px, from the mock-up's 112). Layout px are the mock-ups' (LAYOUT_PX_PER_INCH a real inch).
+ */
+export const FRONT_OFFER_PX = 34;
+export const FRONT_OFFER_MAX_LINES = 2;
+export const FRONT_QR_IN = 1.4;
+/**
+ * § 12 items 3 and 5: the flyer's back. No type on it smaller than BACK_MIN_TEXT_PX (8.4 pt). Its paragraphs are set at
+ * BACK_TEXT_PX, their lines BACK_LINE_HEIGHT apart (the heading and the lede take the mock-ups' headline and tagline);
+ * the words' blocks are BACK_GAP_PX apart, the mock-up flyer body's own gap (mockups.css .flyer-body), and the words must
+ * end at least that far above the bottom row (eatfitaf.com and the logo), or the build refuses: nothing is shrunk.
+ */
+export const BACK_MIN_TEXT_PX = 14;
+export const BACK_TEXT_PX = 14;
+export const BACK_LINE_HEIGHT = 1.4;
+export const BACK_GAP_PX = 10;
+
+/**
  * The two printed pieces (§ 2): `id` is the mock-up whose face is printed (mockups/pieces.mjs PIECES), `stem` the output
  * file's name before "-PROOF" and the extension, `positions` the photo positions it shows (one face's).
  */
 export const PRINT_PIECES = [
   // § 9 (2026-10-17): the flyer's photo window, width to height, across the face at its top (the glam photos' own shape)
-  { id: "flyer", stem: "flyer", face: { w: 4.25, h: 5.5 }, faces: 1, positions: ["flyer"], photoWindow: { w: 3, h: 2 } },
+  // § 12 (2026-10-20): two sides, the front then the back, each a page of its own (the back upright, for a flip on the
+  // long edge); the back's three photo positions, each window square
+  {
+    id: "flyer",
+    stem: "flyer",
+    face: { w: 4.25, h: 5.5 },
+    faces: 1,
+    sides: 2,
+    positions: ["flyer"],
+    photoWindow: { w: 3, h: 2 },
+    back: { positions: BACK_POSITIONS, photoWindow: { w: 1, h: 1 } },
+  },
   // § 7 (2026-10-17): the mock-up's own face, portrait 4 × 6 in (§ 2's 6 × 4 landscape was wrong), on a 4 × 12 in sheet;
   // § 10 (2026-10-18): its three photo windows, each this shape (square), the large one's side two tiles and their gap
   { id: "tent-card", stem: "tent-card", face: { w: 4, h: 6 }, faces: 2, positions: ["tent-large", "tent-top", "tent-bottom"], photoWindow: { w: 1, h: 1 } },

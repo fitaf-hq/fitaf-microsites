@@ -4,6 +4,9 @@
 // by side (flyer-1-4.png); and assignment.json (which photo went where). A page still carrying a placeholder (a photo, or
 // the offer) is a proof: its files end "-PROOF", and the report's last line says what remains. The pages are OUTPUTS of
 // the mock-ups' own faces, parts and inputs (mockups/), with § 8's words and §§ 9–10's layouts; the legend is not printed.
+// § 12 (2026-10-20): every flyer PDF has two pages, the front and the back; the back is the same for every flyer, its
+// words data/flyer-back.md's (print/back.mjs), and it has one PNG proof, flyer-back(-PROOF).png. A back whose words do not
+// fit is refused, never shrunk; until the words are marked approved the back, and so every flyer, is a proof.
 //
 //   node print/build-print.mjs [--photos-dir DIR --rungs FILE --deliverable FILE] [--on YYYY-MM-DD] [--event ID]
 //
@@ -21,20 +24,23 @@
 // ⛔ The photographs never enter this repository. They are read from --photos-dir, copied under their position's own file
 // name (mockups/photos.json) into a temporary folder that the pages are printed from and that is removed after; only
 // dist-print/ (ignored) holds what carries them, and only dist-print/assignment.json names their IDs.
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { PNG } from "pngjs";
 import { copyStatic, loadJson, ROOT, writeQrCodes } from "../build.mjs";
 import { loadInputs, MANIFEST_PATH, readManifest } from "../mockups/inputs.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
-import { assignPhotos, fourFlyerPhotos, photoFiles, skippedLines, SQUARE_POSITIONS, TENT_POSITIONS } from "./assign.mjs";
-import { layoutFindings, resolution, showing } from "./checks.mjs";
+import { assignPhotos, BACK_POSITIONS, backPhotoIds, fourFlyerPhotos, photoFiles, skippedLines, SQUARE_POSITIONS, TENT_POSITIONS } from "./assign.mjs";
+import { BACK_PATH, readBack } from "./back.mjs";
+import { backFindings, frontFindings, layoutFindings, resolution, showing } from "./checks.mjs";
 import { jpegSize } from "./jpeg.mjs";
-import { pagesToPrint, placeholdersOf, printPage } from "./pages.mjs";
-import { CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
+import { backPlaceholders, pagesToPrint, placeholdersOf, printDocument } from "./pages.mjs";
+import { BACK_MIN_TEXT_PX, CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
 
 export const PRINT_DIR = dirname(fileURLToPath(import.meta.url));
 export const DIST_PRINT = join(ROOT, "dist-print");
@@ -57,6 +63,10 @@ const STALL_ATTEMPTS = 3;
 
 /** The file name before its extension: a page with a placeholder left is a proof. */
 export const stemOf = (page, placeholders) => page.base + (placeholders.length ? PROOF_SUFFIX : "");
+/** § 12 item 1: the flyer's one back proof, named as a page is (flyer-back, or flyer-back-PROOF). */
+export const BACK_BASE = "flyer-back";
+/** A piece's sides: the flyer's two since § 12, each a PDF page; every other piece one. */
+const sidesOf = (piece) => piece.sides ?? 1;
 /** § 8 item 4's preview of the four flyers: their PNG proofs side by side, this far apart and from the edge (CSS px). */
 const PREVIEW_GUTTER_PX = 24;
 
@@ -72,18 +82,21 @@ function sizeOfFile(photosDir, file) {
 }
 
 /**
- * §§ 3, 7, 8 and 10: the rule's photos (the flyer's rung-1 photo read for its shape), each position's file (a tent window's
- * square, by the deliverable), each checked to be in --photos-dir and read for its pixel size, copied under its position's
- * name; and, with the four flyers, rung 4's four (as composed), copied as flyer-1.jpg to flyer-4.jpg.
+ * §§ 3, 7, 8, 10 and 12: the rule's photos (the flyer's rung-1 photo read for its shape), each position's file (a tent
+ * window's square, by the deliverable), each checked to be in --photos-dir and read for its pixel size, copied under its
+ * position's name; with the four flyers, rung 4's four (as composed), copied as flyer-1.jpg to flyer-4.jpg; and with the
+ * flyer's back (`withBack`), its three, rung 3's first array holding none of those (§ 12 item 6), each its square.
  */
-async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers }) {
+async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers, withBack }) {
   const rungs = await loadJson(rungsPath);
-  const assignment = assignPhotos(rungs, { sizeOf: (id) => sizeOfFile(photosDir, `${id}.jpg`) });
+  const front = assignPhotos(rungs, { sizeOf: (id) => sizeOfFile(photosDir, `${id}.jpg`) });
+  const chosenFour = fourFlyers ? fourFlyerPhotos(rungs, TENT_POSITIONS.map((p) => front.positions[p])) : null;
+  const assignment = withBack ? withBackAssignment(front, backPhotoIds(rungs, [...Object.values(front.positions), ...(chosenFour?.ids ?? [])])) : front;
   const files = photoFiles(assignment, await loadJson(deliverablePath));
   await mkdir(stagedPhotos, { recursive: true });
   const pixels = {};
   for (const [position, file] of Object.entries(files)) {
-    const staged = manifest.slots[position];
+    const staged = BACK_POSITIONS.includes(position) ? `${position}.jpg` : manifest.slots[position];
     if (!staged) throw new Error(`photo position ${position} is not in mockups/photos.json`);
     try {
       pixels[position] = sizeOfFile(photosDir, file);
@@ -93,11 +106,10 @@ async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, st
     await copyFile(join(photosDir, file), join(stagedPhotos, staged));
   }
   const four = [];
-  if (fourFlyers) {
-    const chosen = fourFlyerPhotos(rungs, TENT_POSITIONS.map((p) => assignment.positions[p]));
-    for (const [i, id] of chosen.ids.entries()) {
+  if (chosenFour) {
+    for (const [i, id] of chosenFour.ids.entries()) {
       const number = i + 1;
-      const from = `${chosen.from}, photo ${number}`;
+      const from = `${chosenFour.from}, photo ${number}`;
       const file = `${id}.jpg`;
       let size;
       try {
@@ -112,6 +124,16 @@ async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, st
   return { assignment, files, pixels, four };
 }
 
+/** § 12 item 6: the assignment with the back's three positions, left to right, from the back's rung-3 array. */
+function withBackAssignment(front, back) {
+  const at = (j) => `${back.from}, photo ${j + 1}`;
+  return {
+    ...front,
+    positions: { ...front.positions, ...Object.fromEntries(BACK_POSITIONS.map((p, j) => [p, back.ids[j]])) },
+    from: { ...front.from, ...Object.fromEntries(BACK_POSITIONS.map((p, j) => [p, at(j)])) },
+  };
+}
+
 /** A page's inputs: the build's, but for flyer-1 to flyer-4, whose hero is their own photo (or the placeholder). */
 function inputsFor(page, inputs, chosen) {
   if (!page.number) return inputs;
@@ -120,10 +142,32 @@ function inputsFor(page, inputs, chosen) {
   return { ...inputs, photos: { ...inputs.photos, flyer } };
 }
 
-/** The pixels each of a page's photo positions prints from. */
+/** The pixels each of a page's photo positions prints from (its front's; the back's are backPixels'). */
 function pixelsFor(page, chosen) {
   if (!chosen) return {};
-  return page.number ? { flyer: chosen.four[page.number - 1].pixels } : chosen.pixels;
+  if (page.number) return { flyer: chosen.four[page.number - 1].pixels };
+  return Object.fromEntries(Object.entries(chosen.pixels).filter(([position]) => !BACK_POSITIONS.includes(position)));
+}
+
+/** § 12: the pixels each of the back's photo positions prints from, the same for every flyer. */
+const backPixels = (chosen) => (chosen ? Object.fromEntries(BACK_POSITIONS.filter((p) => chosen.pixels[p]).map((p) => [p, chosen.pixels[p]])) : {});
+
+/** How each photo shows in its window, by position, on a face (§§ 9–10, and § 12's back). */
+const showsOf = (face, pixels) => Object.fromEntries(face.photos.filter((ph) => pixels[ph.slot]).map((ph) => [ph.slot, showing(pixels[ph.slot], ph, face.trim)]));
+
+/**
+ * § 12 items 3–6: a flyer's back as measured (the second sheet of its document), checked: its page and trim, its fields'
+ * bleed, its photos' resolution, and whether its words fit (checks.mjs backFindings). What stands in on it, too.
+ */
+function planBack(page, measured, pageInputs, words, chosen) {
+  const sheet = measured.sheets[1];
+  if (!sheet) return { refusals: ["the back was not drawn: the page has one sheet"], placeholders: [] };
+  const pixels = backPixels(chosen);
+  const photos = resolution(sheet.faces.flatMap((f) => f.photos), pixels);
+  const fit = backFindings(page.piece, sheet);
+  const refusals = [...layoutFindings(page.piece, sheet).refusals, ...photos.refusals, ...fit.refusals];
+  const shows = showsOf(sheet.faces[0], pixels);
+  return { measured: sheet, photos: photos.rows, shows, refusals, spacePx: fit.spacePx, smallestPx: fit.smallestPx, placeholders: backPlaceholders(pageInputs, words) };
 }
 
 /** The measuring pass: a copy of the page with measure.js, its DOM dumped by Chrome, the measurement read back. */
@@ -157,30 +201,80 @@ async function printPdf(run, html, pdf) {
 }
 
 /** The pages, each measured and checked; nothing printed. Throws the refusals, every page's, when there are any. */
-async function planPages({ run, stage, inputs, pages, chosen }) {
+async function planPages({ run, stage, inputs, pages, chosen, words }) {
   const printCss = await readFile(join(PRINT_DIR, "print.css"), "utf8");
   const measureJs = await readFile(join(PRINT_DIR, "measure.js"), "utf8");
   const planned = [];
   for (const page of pages) {
     const pageInputs = inputsFor(page, inputs, chosen);
     const html = join(stage, `${page.base}.html`);
-    await writeFile(html, printPage(page.piece, pageInputs, printCss));
+    await writeFile(html, printDocument(page.piece, pageInputs, printCss, words));
     const measured = await measure(run, html, measureJs);
     const pixels = pixelsFor(page, chosen);
     const photos = resolution(measured.faces.flatMap((f) => f.photos), pixels);
     const layout = layoutFindings(page.piece, measured);
-    const refusals = [...layout.refusals, ...photos.refusals];
-    const placeholders = placeholdersOf(page.piece, pageInputs);
+    // § 12 item 2: the flyer's offer on at most two lines
+    const front = page.piece.id === "flyer" ? frontFindings(measured).refusals : [];
+    const back = sidesOf(page.piece) === 2 ? planBack(page, measured, pageInputs, words, chosen) : null;
+    const refusals = [...layout.refusals, ...photos.refusals, ...front, ...(back?.refusals ?? [])];
+    const placeholders = [...placeholdersOf(page.piece, pageInputs), ...(back?.placeholders ?? [])];
     // §§ 9–10: how each photo shows in its window, by position, on the last face (the tent's lower, upright; its upper is
     // the same turned)
-    const face = measured.faces.at(-1);
-    const shows = Object.fromEntries(face.photos.filter((ph) => pixels[ph.slot]).map((ph) => [ph.slot, showing(pixels[ph.slot], ph, face.trim)]));
-    planned.push({ page, piece: page.piece, html, measured, photos: photos.rows, shows, refusals, warnings: layout.warnings, placeholders, stem: stemOf(page, placeholders) });
+    const shows = showsOf(measured.faces.at(-1), pixels);
+    planned.push({ page, piece: page.piece, html, measured, photos: photos.rows, shows, refusals, warnings: layout.warnings, placeholders, stem: stemOf(page, placeholders), back });
   }
   const refused = planned.flatMap((p) => p.refusals.map((r) => `${p.page.base}: ${r}`));
   if (refused.length) throw new Error(`refused, nothing printed:\n${refused.join("\n")}`);
   return planned;
 }
+
+/**
+ * § 12: a page's PNG proof, one PNG per side. A one-sided page is screenshot as it is. A two-sided one (the flyer) is
+ * screenshot whole, its sides stacked as its document lays them out, and cut into its sides: the front is the page's
+ * proof (`<stem>.png`); the back is returned, its PNG and its pixels' hash, for the one back proof and for the check that
+ * every flyer's back is the same page (Q19).
+ */
+async function writeProof({ run, stage, outDir, p }) {
+  const page = pageOf(p.piece);
+  const [w, h] = [page.w, page.h].map((n) => Math.round(n * CSS_PX_PER_INCH));
+  const sides = sidesOf(p.piece);
+  const png = join(outDir, `${p.stem}.png`);
+  if (sides === 1) return { png: await screenshot({ ...run, html: p.html, png, width: w, height: h, scale: PROOF_SCALE }) };
+  const whole = await screenshot({ ...run, html: p.html, png: join(stage, `${p.page.base}.sides.png`), width: w, height: h * sides, scale: PROOF_SCALE });
+  const [front, back] = splitSides(readFileSync(whole), sides);
+  await writeFile(png, front.png);
+  return { png, back };
+}
+
+/** A PNG of `sides` equal bands stacked, cut into one PNG per band: each its bytes and its pixels' SHA-256 (RGBA). */
+function splitSides(bytes, sides) {
+  const whole = PNG.sync.read(bytes);
+  const height = whole.height / sides;
+  if (!Number.isInteger(height)) throw new Error(`a proof of ${whole.height} px does not cut into ${sides} sides`);
+  const row = whole.width * 4;
+  return Array.from({ length: sides }, (_, i) => {
+    const side = new PNG({ width: whole.width, height });
+    whole.data.copy(side.data, 0, i * height * row, (i + 1) * height * row);
+    return { png: PNG.sync.write(side), pixels: createHash("sha256").update(side.data).digest("hex") };
+  });
+}
+
+/**
+ * § 12 item 1: the one back proof, flyer-back(-PROOF).png, from the flyers' backs as each flyer's document draws them,
+ * which must be the same page, pixel for pixel (the vendor imposes four fronts on one side and four backs on the other).
+ */
+async function writeBackProof({ outDir, planned }) {
+  const backs = planned.filter((p) => p.back);
+  if (backs.length === 0) return [];
+  const differ = backs.filter((p) => p.back.pixels !== backs[0].back.pixels).map((p) => p.page.base);
+  if (differ.length) throw new Error(`the flyers' backs are not the same page: ${differ.join(", ")} differ from ${backs[0].page.base}'s`);
+  const png = join(outDir, `${backStem(backs[0])}.png`);
+  await writeFile(png, backs[0].back.png);
+  return [png];
+}
+
+/** The back proof's name: a proof while anything on the back stands in (its photos, its words until approved). */
+const backStem = (p) => BACK_BASE + (p.back.placeholders.length ? PROOF_SUFFIX : "");
 
 /** § 8 item 4: the four flyers' PNG proofs side by side, as one PNG (a preview; the vendor imposes the PDFs). */
 async function writePreviews({ run, stage, outDir, planned, inputs }) {
@@ -223,8 +317,10 @@ const photoRecord = (r) => ({ pixels: [r.width, r.height], window_in: [r.w, r.h]
 
 function assignmentRecord(chosen, planned) {
   const pieces = planned.filter((p) => !p.page.number); // the tent card and the flyer
-  const rows = Object.fromEntries(pieces.flatMap((p) => p.photos.map((r) => [r.slot, { row: r, shows: p.shows[r.slot] }])));
-  const positions = PRINT_PIECES.flatMap((p) => p.positions).map((position) => {
+  const sides = pieces.flatMap((p) => [p, ...(p.back ? [p.back] : [])]); // and the flyer's back (§ 12)
+  const rows = Object.fromEntries(sides.flatMap((p) => p.photos.map((r) => [r.slot, { row: r, shows: p.shows[r.slot] }])));
+  const back = pieces.find((p) => p.back);
+  const positions = [...PRINT_PIECES.flatMap((p) => p.positions), ...(back ? BACK_POSITIONS : [])].map((position) => {
     if (!chosen) return [position, null];
     const { positions: ids, from } = chosen.assignment;
     const { row, shows } = rows[position];
@@ -236,12 +332,13 @@ function assignmentRecord(chosen, planned) {
     return { number: f.number, id: f.id, from: f.from, file: f.file, ...(row ? photoRecord(row) : {}), shows: page?.shows.flyer };
   });
   return {
-    about: "SPEC-print-pieces.md §§ 3, 7, 8, 9, 10: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
+    about: "SPEC-print-pieces.md §§ 3, 7, 8, 9, 10, 12: which photo went where, by rule. Written by npm run build:print into dist-print/, which git ignores: never committed.",
     pool: chosen ? chosen.assignment.pool : null,
     positions: Object.fromEntries(positions),
     flyer_skipped: chosen ? chosen.assignment.skipped : [],
     four_flyers: four,
     pages: Object.fromEntries(planned.map((p) => [p.page.base, { pdf: `${p.stem}.pdf`, png: `${p.stem}.png`, placeholders: p.placeholders }])),
+    back: back ? { png: `${backStem(back)}.png`, placeholders: back.back.placeholders, space_px: Number(back.back.spacePx.toFixed(1)), smallest_px: back.back.smallestPx } : null,
   };
 }
 
@@ -267,6 +364,15 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries }) {
   for (const p of planned.filter((q) => q.page.number)) {
     for (const r of p.photos) lines.push(`photo flyer-${p.page.number}: ${chosen.four[p.page.number - 1].from}, as composed; ${at(r)}${shown(p, "flyer")}`);
   }
+  // § 12: the flyer's back, once (it is the same page on every flyer): its photos, and how its words fit
+  const back = planned.find((q) => q.back)?.back;
+  if (back) {
+    for (const r of back.photos) lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${fileKind(chosen, r.slot)}; ${at(r)}${shown(back, r.slot)}`);
+    const flyers = planned.filter((q) => q.back).length;
+    lines.push(
+      `back: data/flyer-back.md's words fit, ${back.spacePx.toFixed(1)} layout px to spare above the bottom row; the smallest type ${back.smallestPx} layout px (the floor ${BACK_MIN_TEXT_PX}); the same page 2 on ${flyers === 1 ? "the flyer" : `all ${flyers} flyers`}`,
+    );
+  }
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
   const which = eventId === undefined ? "the default, PRINT_EVENT" : "--event";
   lines.push(`QR: event "${event.id}" (${which}) carries ${event.url} (qr/${event.id}.svg, written by build.mjs writeQrCodes)`);
@@ -289,12 +395,14 @@ export async function buildPrint({
   rungsPath,
   deliverablePath,
   manifestPath = MANIFEST_PATH,
+  backPath = BACK_PATH,
   today,
   eventId,
   fourFlyers = true,
   ...paths
 } = {}) {
   const pages = pagesToPrint({ fourFlyers });
+  const withBack = pages.some((p) => sidesOf(p.piece) === 2);
   const given = [photosDir, rungsPath, deliverablePath].filter(Boolean).length;
   if (given !== 0 && given !== 3) throw new Error("--photos-dir, --rungs and --deliverable go together: give all three, or none for placeholders");
   // dist-print/ is wholly this build's output: emptied first, so a refused run leaves nothing to mistake for a piece.
@@ -306,23 +414,28 @@ export async function buildPrint({
   try {
     const stagedPhotos = join(stage, "photos");
     const manifest = await readManifest(manifestPath);
-    const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers }) : null;
+    // § 12 item 4: the back's words, read and checked first (a file outside the subset is refused, naming its line)
+    const words = withBack ? await readBack(backPath) : null;
+    const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers, withBack }) : null;
     const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId: eventId ?? PRINT_EVENT });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
-    const planned = await planPages({ run, stage, inputs, pages, chosen });
+    const planned = await planPages({ run, stage, inputs, pages, chosen, words });
     const written = [];
     for (const p of planned) {
       written.push(await printPdf(run, p.html, join(outDir, `${p.stem}.pdf`)));
-      const page = pageOf(p.piece);
-      const size = { width: Math.round(page.w * CSS_PX_PER_INCH), height: Math.round(page.h * CSS_PX_PER_INCH) };
-      written.push(await screenshot({ ...run, html: p.html, png: join(outDir, `${p.stem}.png`), ...size, scale: PROOF_SCALE }));
+      const proof = await writeProof({ run, stage, outDir, p });
+      written.push(proof.png);
+      if (p.back) Object.assign(p.back, proof.back);
     }
+    written.push(...(await writeBackProof({ outDir, planned })));
     written.push(...(await writePreviews({ run, stage, outDir, planned, inputs })));
     const assignment = join(outDir, "assignment.json");
     await writeFile(assignment, `${JSON.stringify(assignmentRecord(chosen, planned), null, 2)}\n`);
     written.push(assignment);
-    return { written, planned, inputs, chosen, retries, lines: reportLines({ written, chosen, planned, inputs, eventId, retries }) };
+    const first = planned.find((p) => p.back);
+    const back = first ? { stem: backStem(first), placeholders: first.back.placeholders, spacePx: first.back.spacePx, smallestPx: first.back.smallestPx, words } : null;
+    return { written, planned, inputs, chosen, back, retries, lines: reportLines({ written, chosen, planned, inputs, eventId, retries }) };
   } catch (err) {
     if (retries.length) err.message += `\n(and Chrome runs retried before it: ${retries.join("; ")})`;
     throw err;

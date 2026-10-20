@@ -1,7 +1,8 @@
 /* The printed pieces (print/, SPEC-print-pieces.md): each mock-up's face on a page of the sheet plus the bleed. This sheet
    comes after the template's tokens and fonts and mockups.css, and before the sizes (pages.mjs sizeRules, from sizes.mjs,
-   which set the boxes and --bleed, --safe, --face-w and --photo-ratio). It draws no colour of its own (the one it names
-   is the template's: the page's white) and nothing translucent. One layout prints and screenshots: no @media print, so
+   which set the boxes and --bleed, --safe, --face-w and --photo-ratio). It draws no colour of its own (the ones it names
+   are the template's: the page's white, and since § 12 the navy of a lead-in on the flyer's back, as the mock-ups' own
+   headings) and nothing translucent. One layout prints and screenshots: no @media print, so
    the PNG proof is the PDF's page.
    § 7 (the Advisor, 2026-10-17): the faces were the approved mock-ups' layouts, and no rule here moved a part; a part
    that meets a cut edge of the trim only grows outward, into the bleed. The Advisor has since laid each face out anew,
@@ -31,6 +32,42 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-flyer .flyer-body { position: relative; gap: 0; justify-content: space-evenly; } /* its 10px gap would unequal them */
 .print-flyer .flyer-scan { margin-top: 0; }
 .print-flyer .logo-corner { position: absolute; right: 24px; bottom: 20px; width: 84px; }
+/* § 12 (the Advisor, 2026-10-20): the front a strong call to action, by scale, nothing added: the offer at the headline's
+   size, in its own field across the body's width (the body's column stretches it), and the QR code 1.4 in square; both
+   sizes.mjs's (--offer-size, --qr-side). The space left is still shared evenly, as § 9 has it */
+.print-flyer .flyer-body > .offer { font-size: var(--offer-size); }
+.print-flyer .flyer-scan .qr { width: var(--qr-side); height: var(--qr-side); }
+
+/* ---------- § 12: a flyer's two sides, each a sheet and a page of its PDF: the front, then the back, upright (a flip on
+   the long edge) ---------- */
+.print-sheet + .print-sheet { break-before: page; }
+/* The back: three square photos across the face's width at its top (the tent's tile arithmetic, § 10: three equal squares
+   and two 4px gaps, a tile the face's width less the gaps, over three), the row running into the bleed on the top and the
+   outer two on the left and right, each from its own cell; then the words from data/flyer-back.md, their blocks the
+   mock-up flyer body's gap apart (--back-gap), the heading the mock-ups' .headline, the lede their .tagline, each
+   paragraph at --back-text with its lead-in in the heading font; and the bottom row at the body's own padding (24px at the
+   sides, 20px below), eatfitaf.com at the left and the logo at the right, the front's 84px in the front's corner. The
+   words run from the top of the body down; what they must not reach is the bottom row (checks.mjs backFindings) */
+.print-flyer .flyer-back-photos {
+  --gap: 4px; /* mockups.css .tent-photos' own */
+  --tile: calc((var(--face-w) - 2 * var(--gap)) / 3);
+  flex: none;
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: calc(var(--tile) + var(--bleed)) var(--tile) calc(var(--tile) + var(--bleed));
+  grid-template-rows: calc(var(--tile) + var(--bleed));
+  margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0;
+}
+.print-flyer .flyer-back-body { position: relative; flex: 1; min-height: 0; padding: 16px 24px 20px; }
+.print-flyer .flyer-back-words { display: flex; flex-direction: column; align-items: flex-start; gap: var(--back-gap); }
+.print-flyer .flyer-back-para { margin: 0; font-size: var(--back-text); line-height: var(--back-line); }
+.print-flyer .flyer-back-lead { font-family: var(--head); font-weight: 700; color: var(--navy); }
+.print-flyer .flyer-back-foot {
+  position: absolute; left: 24px; right: 24px; bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.print-flyer .flyer-back-foot .address { margin: 0; }
+.print-flyer .flyer-back-logo { width: 84px; }
 
 /* ---------- The tent card's face, as § 10 has it (the Advisor, 2026-10-18; portrait, 4 × 6 in): no bar; its top is the
    fold. Its photos are three SQUARE windows across the face's width, at its top (--photo-ratio, sizes.mjs, the shape of

@@ -110,8 +110,12 @@ export function tentCard(inputs) {
  * sheet and the printed flyer (print/). The printed flyer's options (SPEC-print-pieces.md §§ 8–9), which the mock-up never
  * passes: `short` keeps the photo, the offer and the QR code with the address; `header: false` drops the navy bar and its
  * words; `logo: "corner"` puts the one logo at the bottom right of the face, after the QR code, instead of on the photo.
+ * `side: "back"` (SPEC-print-pieces.md § 12) makes the printed flyer's BACK instead, which the mock-up does not have:
+ * `back.positions`' photos across its top, then `back.words` (print/back.mjs, data/flyer-back.md read), and at the bottom
+ * the address and the logo; no QR code and no offer.
  */
-export function flyerFace(c, parts, { short = false, header = true, logo } = {}) {
+export function flyerFace(c, parts, { short = false, header = true, logo, side = "front", back } = {}) {
+  if (side === "back") return flyerBack(c, parts, back);
   const bar = header ? parts.line("p", "event-bar", c.eventLine, "event line") : "";
   const photo = parts.photo("flyer");
   const plate = logo === undefined ? `<div class="logo-plate">${parts.logo()}</div>` : "";
@@ -132,6 +136,27 @@ ${bar}
 <div class="flyer-body">${headlineBlock}
   ${offer}
   ${scan}${corner}
+</div>`;
+}
+
+/**
+ * The printed flyer's back (SPEC-print-pieces.md § 12 item 3), print-only: three square photos across the top; the
+ * words, the heading at the headline's size, the first paragraph (the lede) at the tagline's, then each paragraph, its
+ * lead-in apart; and the bottom row, the address at the left and the logo at the right. Each word is cited by its line in
+ * the words file (`words.source`), which no legend lists: the back is on no mock-up's sheet.
+ */
+function flyerBack(c, parts, { positions, words }) {
+  const cite = (line) => `data-src="${esc(`${words.source}#L${line}`)}"`;
+  const paragraph = (p, cls) => `<p class="${cls}" ${cite(p.line)}>${p.lead === null ? "" : `<b class="flyer-back-lead">${esc(p.lead)}</b> `}${esc(p.text)}</p>`;
+  const [lede, ...rest] = words.paragraphs;
+  return `
+<div class="flyer-back-photos">${positions.map((position) => parts.photo(position)).join("")}</div>
+<div class="flyer-back-body">
+  <div class="flyer-back-words">
+  <h1 class="headline" ${cite(words.heading.line)}>${esc(words.heading.text)}</h1>
+  ${[paragraph(lede, "tagline flyer-back-lede"), ...rest.map((p) => paragraph(p, "flyer-back-para"))].join("\n  ")}
+  </div>
+  <div class="flyer-back-foot">${parts.text("p", "address", c.address, "web address")}${parts.logo("flyer-back-logo")}</div>
 </div>`;
 }
 
