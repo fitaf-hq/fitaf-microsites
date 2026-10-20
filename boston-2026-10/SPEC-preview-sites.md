@@ -117,7 +117,12 @@ section, each case file alone. §§ 1–6 are unchanged.
 
 **The choices, where §§ 1–4 left one open**
 
-1. **How a preview file names its sheet.** § 2 says the command reads "the photo sheets it names", and the preview
+1. ⛔ **Superseded 2026-10-20 by § 2's ruling (the orchestrator's, `48731b4`): one file per week.** The command reads
+   the week's sheet entry `<from>/photo-sheets/chefs-choice-<delivery>.json`, exactly `{ file, width, height, cells }`,
+   and the sheet it names beside it, and no longer reads `<from>/photo-sheets.json`; no entry, plain tiles. Built at the
+   commit after `3c7a0ed` (the cases: PV6b, red on the reading below); a field the ruled shape lacks is refused, the
+   build's reading. The reading as it stood:
+   **How a preview file names its sheet.** § 2 says the command reads "the photo sheets it names", and the preview
    file is the version-2 shape plus two keys, none naming a sheet. Read as: `<from>/photo-sheets.json`, in
    `data/photo-sheets.json`'s shape (the photos emitter's own), its `chefs_choice[<delivery>]` `{ file, width, height,
    cells }` with the cells keyed by the week's names (Fit AF's), the file in `<from>/photo-sheets/`. No manifest, or no

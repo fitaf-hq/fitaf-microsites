@@ -26,8 +26,9 @@
 //   npm run content -- --preview --week YYYY-MM-DD --from DIR --out DIR
 //
 // reads DIR/<week>.json, a preview file (Fit AF's emitter's `--preview`: the version-2 picks shape, "preview": true,
-// "approved"), checked by checkPicks in a preview read, and the week's photo sheet that DIR/photo-sheets.json names
-// (data/photo-sheets.json's shape; the sheet in DIR/photo-sheets/), and writes OUT/previews/<week>/picks-data.json (the
+// "approved"), checked by checkPicks in a preview read, and, when present, the week's sheet entry
+// DIR/photo-sheets/chefs-choice-<week>.json (one file per week, § 2 ruled 2026-10-20: { file, width, height, cells }, one
+// data/photo-sheets.json chefs_choice entry) with the sheet it names beside it, and writes OUT/previews/<week>/picks-data.json (the
 // page's #picks-data for that week: no link at all, marked `preview` and `approved`, its sheet at the preview Worker's
 // /<week>/week/<file>.jpg) and OUT/previews/<week>/week/<file>.jpg, deterministic, reported as above. ⛔ A preview's
 // data never enters this repository: --from is required, and refused when it resolves inside this repository's tree;
@@ -151,9 +152,12 @@ export function pageWithWeek(html, data) {
  *  and its sheets under week/, which the Worker serves at /<delivery>/week/<file>.jpg. */
 export const PREVIEWS_DIR = "previews";
 export const previewDataKey = (delivery) => `${PREVIEWS_DIR}/${delivery}/picks-data.json`;
-/** What --from holds beside <delivery>.json: the sheets' manifest (data/photo-sheets.json's shape) and their directory. */
-const PREVIEW_MANIFEST = "photo-sheets.json";
+/** What --from holds beside <delivery>.json (§ 2, ruled 2026-10-20: ONE FILE PER WEEK): photo-sheets/, holding the week's
+ *  sheet entry chefs-choice-<delivery>.json, exactly { file, width, height, cells } (one data/photo-sheets.json
+ *  chefs_choice entry, cells keyed by the week's names), and the sheet it names beside it. */
 const PREVIEW_SHEETS = "photo-sheets";
+const sheetEntryName = (delivery) => `chefs-choice-${delivery}.json`;
+const ENTRY_FIELDS = ["file", "width", "height", "cells"];
 /** A sheet's file name, as the Workers match one: letters, digits, ".", "_" and "-", ending ".jpg", no "..". */
 const SHEET_FILE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.jpg$/;
 /** This repository's top level: the package is one directory below it (its ../README.md is the repository's). */
@@ -182,26 +186,26 @@ export function previewSource(from, repoRoot = REPO_ROOT) {
   return real;
 }
 
-/** The week's sheet as --from names it: photo-sheets.json's `chefs_choice[<week>]` ({ file, width, height, cells }, cells
- *  keyed by the week's names), its file in photo-sheets/; refused when named and absent. No manifest, or no entry for
- *  the week: null (plain tiles, nothing copied). */
+/** The week's sheet as --from holds it (§ 2, ruled 2026-10-20): its entry photo-sheets/chefs-choice-<week>.json, exactly
+ *  { file, width, height, cells } (a field the shape lacks is refused: the build's reading), and the sheet it names beside
+ *  it; refused, naming the entry, when the sheet is absent. No entry: null (plain tiles, nothing copied). No other file
+ *  is read: a shared photo-sheets.json, or another week's entry, is not this week's. */
 async function previewSheet(dir, week) {
-  const manifestPath = join(dir, PREVIEW_MANIFEST);
-  if (!existsSync(manifestPath)) return null;
-  let manifest;
+  const entryPath = join(dir, PREVIEW_SHEETS, sheetEntryName(week));
+  if (!existsSync(entryPath)) return null;
+  let entry;
   try {
-    manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    entry = JSON.parse(await readFile(entryPath, "utf8"));
   } catch (err) {
-    throw new Error(`${manifestPath}: not JSON: ${err.message}`);
+    throw new Error(`${entryPath}: not JSON: ${err.message}`);
   }
-  const entry = isObject(manifest) && isObject(manifest.chefs_choice) ? manifest.chefs_choice[week] : undefined;
-  if (entry === undefined) return null;
   const valid =
-    isObject(entry) && typeof entry.file === "string" && SHEET_FILE.test(entry.file) && !entry.file.includes("..") &&
+    isObject(entry) && Object.keys(entry).every((key) => ENTRY_FIELDS.includes(key)) &&
+    typeof entry.file === "string" && SHEET_FILE.test(entry.file) && !entry.file.includes("..") &&
     Number.isInteger(entry.width) && Number.isInteger(entry.height) && isObject(entry.cells) && Object.values(entry.cells).every(isCell);
-  if (!valid) throw new Error(`${manifestPath}: chefs_choice.${week} must be { file (a plain .jpg name), width, height, cells of { x, y, w, h } }`);
+  if (!valid) throw new Error(`${entryPath} must be exactly { file (a plain .jpg name), width, height, cells of { x, y, w, h } }`);
   const path = join(dir, PREVIEW_SHEETS, entry.file);
-  if (!existsSync(path)) throw new Error(`${manifestPath} names ${entry.file}, which is not in ${join(dir, PREVIEW_SHEETS)}/`);
+  if (!existsSync(path)) throw new Error(`${entryPath} names ${entry.file}, which is not beside it in ${join(dir, PREVIEW_SHEETS)}/`);
   return { entry, path };
 }
 
