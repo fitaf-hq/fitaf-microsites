@@ -181,3 +181,10 @@ committed): a list oldest first, a `..` let through, and the preview marks unche
 
 **Not run here**: the full suite, Storybook, the watch, `npm run contrast`, any build of every target; nothing
 deployed, no `wrangler`, no bucket written; the page not looked at in a browser (linkedom and Miniflare only).
+
+**Re-gated by the orchestrator** (Fit AF, 2026-10-20 03:02–03:10 PDT, at `f2c7fca`, announced, one run at a time; the
+worktree's `git status` unchanged): `npm test` **873 of 873** (`# fail 0`); `npm run contrast` **70 pairs, 70 pass**; the
+week content of 2026-10-18 and 2026-10-25, production and `--env dev`, **byte-identical** to `cff49c0`'s (four of four,
+`diff -r`); `test/pv-05-record.mjs --commit f2c7fca`'s `files` **equal** to `test/pv-05-golden.json`'s (recorded from
+`8081b46`); Storybook (`tools/storybook`, after `npm ci --offline`) **41 of 41**. ⛔ Merged after Friday 2026-10-23's
+switch, which builds from `boston/rung-4-save-offer`.
