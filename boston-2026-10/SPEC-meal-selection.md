@@ -368,3 +368,47 @@ it moves with the flag too. `carted: true` is still refused by the build (§ 10 
 link's snack items, the block's press and CHECKOUT by width, the page's links, the live proof, and the release order (no
 link carrying a snack before the Advisor's paste). Two choices open with defaults: the snack price (none on the page) and
 who chooses the week's snacks.
+
+## 12. Amendment, 2026-10-20: every default on the left, *Weekdays only* the default, and the snacks in the card's list. CONTRACT, before any code
+
+**The Advisor's words** (2026-10-20, Fit AF's session 250): *"Please flip the semantics of these questions: "Weekdays
+only" and "Every day"; "No breakfast" and "Add breakfast". That will mean that all of the defaults ("OR", "Weekdays", "No
+breakfast") line up along the left side"*; asked whether *Weekdays only* also becomes the default and whether snacks flip
+the same way: *"Yes – please also do snacks as well so the default of "no snacks" (or however we wrote it) is on the
+left. Please unify snacks into the bottom of the meal list. That will clean up the bottom of the page ("Continue to
+checkout", "Choose my own meals", "See all plans")."* Amends § 1's table and § 2's defaults; nothing else of §§ 1–11.
+
+1. **The answers, each pair's default first (on the left)**:
+
+   | | question | answers, left · right | default |
+   |---|---|---|---|
+   | Q1 | lunch or dinner, or both | *Lunch **or** dinner* · *Lunch **and** dinner* | none (unchanged: the card waits for Q1) |
+   | Q2 | weekends | ***Weekdays only*** · *Every day* | ⚠ **weekdays** (was *every day*) |
+   | Q3 | breakfast | *No breakfast* · *Add breakfast* | no breakfast |
+   | Q4 | snacks | *No snacks* · *Add snacks* | no snacks |
+
+   The words stay phrases in `data/messages.json` (Q2's *no* answer reads *"Weekdays only"*); the default is data
+   (`data/plans.json` `selection_defaults.weekends: false`), and the order is the build's (each pair's default first,
+   so a future default change keeps the default on the left: the order follows the default, it is not a second list).
+2. ⚠ **What the default now means**: answering Q1 alone gives *or, weekdays* (5 a week, which the store fills as its
+   4-meal plan, § 2's table) and *and, weekdays* (10), not 7 and 14. **§ 6's MS-3 inverts**: the default links are
+   `or-5d` and `and-5d`. **Today's fragments keep their meaning** (§ 3): `#<size>-7` still opens *or, every day* and
+   `#<size>-14` *and, every day*, and a fragment naming its days (`-7d`, `-5d`) is read as written.
+3. **The snacks join the card's list**: with *Add snacks*, the one list holds the week's meals, then the snacks under a
+   small *"Snacks"* heading inside the same list (the phrase `snacks_heading`, or a shorter one the build names), then
+   *Continue to checkout* and *Choose my own meals*; no second box below the buttons. *"Snacks aren't added to your
+   cart yet."* stays with the snacks, where § 11 shows it. With *No snacks* the card is as today.
+4. **What changes, and what must not**: the development and production pages change, by design (the questions' order
+   and the default, the card's layout): S20's production golden and the development goldens are re-recorded **once**,
+   with every changed line listed in the build's notes. ⛔ **The week's content is byte-identical** (`npm run content`
+   for 2026-10-18 and 2026-10-25, production and `--env dev`, against `cff49c0`), and the cart links and the store's
+   Footer hand-off for every answer set are unchanged: the same answer set gives the same link. Storybook's stories that
+   show the questions or the card are re-recorded.
+5. **Cases, written first and run red**: each pair's default on the left; the default state (*weekdays*, no breakfast,
+   no snacks) after Q1 alone, with its links `or-5d` / `and-5d`; the legacy fragments' meaning unchanged; with snacks, one
+   list whose last lines are the snacks and the two buttons after it, no separate snacks box; without snacks the list as
+   today; and **the switch's smokes** (`unattended-switch.spec.md` S7/S9, Fit AF): whether any of them selects an answer
+   by position or by the old default. The build says which, and changes none of Fit AF's programs.
+6. **Release**: the dev line, then a dev pin (`fitaf-infra`) and the Advisor's look on dev; ⛔ **production only on his
+   word**, and not between Fit AF's rehearsal and Friday 2026-10-23's switch unless he says so (the switch's live smokes
+   run against eatfitaf.com's page).
