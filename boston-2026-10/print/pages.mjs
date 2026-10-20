@@ -160,11 +160,15 @@ ${sheets.join("\n")}
 
 /**
  * § 4: the offer is a placeholder while data/offers.json says its offers are (`status`), or while the chosen offer's
- * label is a bracketed stand-in ("[The offer]"). Either keeps a piece a proof.
+ * label is a bracketed stand-in ("[The offer]"). Either keeps a piece a proof. § 12.2 (2026-10-20): an offer whose
+ * words the Owner approved carries `label_approved` (the date) and is final for print, although the file's codes and
+ * terms, and its other offers, are still placeholders; a bracketed label is a placeholder whatever it carries.
  */
 export function offerIsPlaceholder(inputs) {
   const { offer } = campaign(inputs);
-  return inputs.data.offers.status === "placeholder" || /^\[.*\]$/.test(offer.value.trim());
+  if (/^\[.*\]$/.test(offer.value.trim())) return true;
+  if (inputs.data.offers.offers.find((o) => o.id === offer.id)?.label_approved) return false;
+  return inputs.data.offers.status === "placeholder";
 }
 
 /** What still stands in on a piece: each photo position without a photo, and the offer while it is a placeholder. */

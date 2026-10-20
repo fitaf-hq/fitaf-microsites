@@ -1,8 +1,9 @@
 // Q6 (SPEC-print-pieces.md § 4, § 5): proofs. A piece carrying any placeholder (a photo position without a photo, or the
 // offer while it is a placeholder) is a proof: its files end "-PROOF", and the build's last line says which placeholders
 // remain. Only a piece with none is named flyer.pdf / tent-card.pdf (§ 8 named a tent card by its logo variant's letter;
-// §§ 9–10 withdrew the variants). The offers are as committed (every one "[The offer]",
-// status placeholder) unless a mirror of data/offers.json names a real one. Since § 12 (2026-10-20) each flyer carries
+// §§ 9–10 withdrew the variants). The offers here are a PLACEHOLDER copy of data/offers.json (every label "[The offer]",
+// none approved, status placeholder) unless a mirror names a real one: since § 12.2 (2026-10-20) the committed Boston
+// offer's words are approved (`label_approved`), which the last case checks. Since § 12 (2026-10-20) each flyer carries
 // the back too: its three photo positions and its words, a placeholder until data/flyer-back.md is marked approved (Q26);
 // the words that fit (print-fixtures.mjs), with the mark, stand for the approved words here.
 import test, { after } from "node:test";
@@ -22,6 +23,12 @@ const [flyer, tent] = ["flyer", "tent-card"].map((id) => PRINT_PIECES.find((p) =
 /** Since §§ 9–10 no page carries a variant's letter (Q14). -PROOF after its name. */
 const page = (base) => pagesToPrint().find((p) => p.base === base);
 const committedOffers = JSON.parse(await readFile(OFFERS_PATH, "utf8"));
+/** The committed offers as placeholders: every label bracketed, none approved (what data/offers.json held before § 12.2). */
+const placeholderOffersPath = join(set.dir, "offers-placeholder.json");
+await writeFile(
+  placeholderOffersPath,
+  JSON.stringify({ ...committedOffers, offers: committedOffers.offers.map(({ label_approved: _approved, ...o }) => ({ ...o, label: "[The offer]" })) }),
+);
 /** A mirror of data/offers.json whose offers are named (no bracketed stand-in) and whose status is not placeholder. */
 const namedOffersPath = join(set.dir, "offers-named.json");
 await writeFile(
@@ -37,20 +44,20 @@ const allPhotos = join(set.dir, "positions");
 await mkdir(allPhotos);
 for (const position of PRINT_PIECES.flatMap((p) => p.positions)) await writeFile(join(allPhotos, `${position}.jpg`), "");
 
-test("Q6: the committed offer is a placeholder; a named one is not", async () => {
-  assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20" })), true);
+test("Q6: the placeholder offer is a placeholder; a named one is not", async () => {
+  assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: placeholderOffersPath })), true);
   assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: namedOffersPath })), false);
   // Either sign keeps it a placeholder: the file's status, or a bracketed label
   const statusOnly = join(set.dir, "offers-status.json");
-  await writeFile(statusOnly, JSON.stringify({ ...committedOffers, offers: committedOffers.offers.map((o) => ({ ...o, label: "Named" })) }));
+  await writeFile(statusOnly, JSON.stringify({ ...committedOffers, offers: committedOffers.offers.map(({ label_approved: _approved, ...o }) => ({ ...o, label: "Named" })) }));
   assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: statusOnly })), true, "status placeholder");
   const labelOnly = join(set.dir, "offers-label.json");
-  await writeFile(labelOnly, JSON.stringify({ ...committedOffers, status: "approved" }));
+  await writeFile(labelOnly, JSON.stringify({ ...JSON.parse(await readFile(placeholderOffersPath, "utf8")), status: "approved" }));
   assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: labelOnly })), true, "label [The offer]");
 });
 
 test("Q6: no photos: every position and the offer remain, and both pieces are proofs", async () => {
-  const inputs = await loadInputs({ photosDir: noPhotos, today: "2026-10-20" });
+  const inputs = await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: placeholderOffersPath });
   assert.deepEqual(placeholdersOf(flyer, inputs), ["photo flyer", 'the offer "[The offer]"']);
   assert.deepEqual(placeholdersOf(tent, inputs), ["photo tent-large", "photo tent-top", "photo tent-bottom", 'the offer "[The offer]"']);
   assert.equal(stemOf(page("flyer"), placeholdersOf(flyer, inputs)), "flyer-PROOF");
@@ -59,7 +66,7 @@ test("Q6: no photos: every position and the offer remain, and both pieces are pr
 });
 
 test("Q6: photos but the offer a placeholder: still proofs, the offer alone remaining", async () => {
-  const inputs = await loadInputs({ photosDir: allPhotos, today: "2026-10-20" });
+  const inputs = await loadInputs({ photosDir: allPhotos, today: "2026-10-20", offersPath: placeholderOffersPath });
   assert.deepEqual(placeholdersOf(flyer, inputs), ['the offer "[The offer]"']);
   assert.equal(stemOf(page("tent-card"), placeholdersOf(tent, inputs)), "tent-card-PROOF");
 });
@@ -73,7 +80,7 @@ test("Q6: photos and a named offer: nothing remains, and the files take the plai
 
 test("Q6: built with no photos, the files end -PROOF and the last line lists what remains", { skip: NO_CHROME }, async () => {
   const out = join(set.dir, "dist-placeholders");
-  const built = await lockedBuild({ outDir: out, today: "2026-10-20" });
+  const built = await lockedBuild({ outDir: out, today: "2026-10-20", offersPath: placeholderOffersPath });
   const four = [1, 2, 3, 4].flatMap((k) => [`flyer-${k}-PROOF.pdf`, `flyer-${k}-PROOF.png`]);
   const files = ["assignment.json", ...four, "flyer-1-4-PROOF.png", "flyer-PROOF.pdf", "flyer-PROOF.png", "flyer-back-PROOF.png", "tent-card-PROOF.pdf", "tent-card-PROOF.png"];
   assert.deepEqual((await readdir(out)).sort(), files.sort());
@@ -91,4 +98,17 @@ test("Q6: built with photos, a named offer and approved back words, the files ta
   const built = await lockedBuild({ outDir: out, ...set.photos, offersPath: namedOffersPath, backPath: approvedBackPath, today: "2026-10-20", fourFlyers: false });
   assert.deepEqual((await readdir(out)).sort(), ["assignment.json", "flyer-back.png", "flyer.pdf", "flyer.png", "tent-card.pdf", "tent-card.png"]);
   assert.equal(built.lines.at(-1), "placeholders remain: none (tent-card.pdf, flyer.pdf)");
+});
+
+test("Q6 (§ 12.2): an offer whose words are approved is final for print; a bracketed one never is", async () => {
+  // The committed file: the Boston offer's words approved on 2026-10-20, the file's status still placeholder
+  assert.equal(committedOffers.status, "placeholder", "the file's codes and terms are still placeholders (control)");
+  const boston = committedOffers.offers.find((o) => o.applies_to === "event" && o.label_approved);
+  assert.ok(boston && !/^\[.*\]$/.test(boston.label.trim()), "one event offer carries label_approved and its words");
+  assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20" })), false, "the committed offer on 2026-10-20");
+  assert.deepEqual(placeholdersOf(flyer, await loadInputs({ photosDir: allPhotos, today: "2026-10-20" })), [], "photos and the approved offer: nothing remains");
+  // A bracketed label stays a placeholder whatever it carries
+  const bracketedApproved = join(set.dir, "offers-bracketed-approved.json");
+  await writeFile(bracketedApproved, JSON.stringify({ ...committedOffers, offers: committedOffers.offers.map((o) => ({ ...o, label: "[The offer]", label_approved: "2026-10-20" })) }));
+  assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: bracketedApproved })), true, "bracketed, approved");
 });

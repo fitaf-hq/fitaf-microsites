@@ -1,6 +1,6 @@
 {
   "status": "placeholder",
-  "status_note": "PLACEHOLDERS until the Owner approves the offers: no terms, no codes. Dates are calendar dates in America/New_York, inclusive at both ends. Exactly one `general` offer is current on any date (test S11b checks the file). The past offer exists so the expired paths (WELCOME_BACK, an expired /confirm token, the lapse) are reachable in development.",
+  "status_note": "PLACEHOLDERS until the Owner approves the offers: no terms, no codes. Since 2026-10-20 one offer's WORDS are approved (its label_approved, SPEC-print-pieces.md section 12.2): the Boston event offer's label, for print; its codes and terms, and every other offer, are still placeholders. Dates are calendar dates in America/New_York, inclusive at both ends. Exactly one `general` offer is current on any date (test S11b checks the file). The past offer exists so the expired paths (WELCOME_BACK, an expired /confirm token, the lapse) are reachable in development.",
   "offers": [
     {
       "id": "event-past-placeholder",
@@ -13,7 +13,8 @@
     },
     {
       "id": "event-boston-2026-10-placeholder",
-      "label": "[The offer]",
+      "label": "Sign up today, save up to 28%",
+      "label_approved": "2026-10-20",
       "applies_to": "event",
       "valid_from": "2026-10-01",
       "valid_to": "2026-11-30",

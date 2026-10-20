@@ -243,3 +243,14 @@ liked the glam set.
    the build measured on its sheet (`pdftotext`) and every QR code's box is drawn (`pdftoppm`, at least a quarter of it
    dark); skipped, said, without poppler. Its mutant, the containment removed, fails it with page 1's address and QR
    code missing. ⚠ **The PNG proof is still a screenshot, not the PDF**; Q27 is what ties the two.
+
+### 12.2 The Boston offer's words, approved (2026-10-20)
+
+The Advisor (`ts=2026-10-20T23:42:09.441Z`): *"The offer was approved by the Owner in our last meeting."* The offer is the
+recommended pricing scheme of Fit AF's decision record 2026-10-17 § 7j item 1, its line on the pieces *"Sign up today,
+save up to 28%"*. ⇒ `data/offers.json`'s Boston event offer carries its words and **`label_approved: "2026-10-20"`**, and
+the print build reads an offer carrying `label_approved` as final (`pages.mjs` `offerIsPlaceholder`), though the file's
+`status` stays `placeholder`: its codes and terms, and its other three offers, are not approved (test S11 holds that), and
+a bracketed label is a placeholder whatever it carries. Q6 builds its placeholder cases from a placeholder copy of the
+file and checks the committed one. ⚠ The flyers stay proofs until `data/flyer-back.md` is marked approved (§ 12 item 4);
+the tent card is final.
