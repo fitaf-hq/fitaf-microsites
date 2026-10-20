@@ -150,3 +150,71 @@ will count them (`?e=<id>` read against `data/events.json`). Measured 2026-10-18
 > every other file, the two added pages and codes, and the mock-ups are as item 4 says. The analytics' reading of the
 > two ids is its own case, `test/a-qr-event.test.mjs` (`a123be9`): an `open` from `?e=boston` or `?e=seminar` carries
 > that id, any other query none.
+
+## 12. Amendment, 2026-10-20: a two-sided flyer, the front a strong call to action, the back "Why Fit AF?". CONTRACT, before any code
+
+**Why.** The Advisor, mid-meeting with the Owner (Fit AF's decision record
+`2026-10-17-the-picks-from-our-plans-and-the-breakfast-slate.md` § 7k item 4, `ts=2026-10-20T17:50:25.052Z`): *"lean into
+the Owner's self-described tendency to "list features over benefits" and put a version of "Why Fit AF?" on the back. I
+don't want to do a wall of text – but we could let the back be mostly wordy prose and make the front a strong call to
+action with a more impactful (simplified?) design. I also think we can possibly add more photos (to the front and/or
+back) now that we've effectively doubled the display surface of the piece."* And, the same meeting: the Owner *"really"*
+liked the glam set.
+
+1. **Two sides.** Every flyer PDF (`flyer.pdf`, `flyer-1.pdf` to `flyer-4.pdf`) has **two pages**: page 1 the front, page
+   2 the back, each the trim plus the bleed (324 × 414 pt, Q1's), the back upright for a flip on the long edge (no
+   rotation). The **back is the same for every flyer**, so the vendor can impose four fronts on one side and four backs
+   on the other. PNG proofs: each front as today (`flyer-1-PROOF.png` …), and **one** `flyer-back(-PROOF).png`;
+   `flyer-1-4.png` stays the four fronts. The tent card is unchanged by this amendment.
+2. **The front: the call to action, larger.** Today's parts in today's order (§ 9 item 3: the 3:2 photo, the offer, the
+   QR code with `eatfitaf.com` under it, the logo at the bottom right), and nothing added: the strength is in scale.
+   **The offer** is set at the headline's size (the mock-ups' `.headline`, 34px, from the offer's 24px), in its own
+   field (`var(--cta)`), across the body's width, wrapping to at most two lines; **the QR code** is **1.4 in** square
+   (168 layout px, from 112), the address under it as § 8 item 1. Both are named values (`print/sizes.mjs`), so a
+   redirect is one change. The space left is shared evenly (§ 9 item 3); nothing stretched. ⛔ No scan prompt (§ 8
+   dropped it) and no new words on the front.
+3. **The back: "Why Fit AF?" in a few short paragraphs, and three photos.** Top to bottom: **three square photos** across
+   the face's width at its top, running into the bleed on the top edge and on the outer edge of the outer two (the
+   tent's tile arithmetic, § 10: three equal squares and two 4px gaps); **the words** of `data/flyer-back.md` (item 4):
+   its heading at the headline's size, its first paragraph (the lede) at the tagline's, then each paragraph, its bold
+   lead-in in the heading font; and at the bottom **`eatfitaf.com`** at the left and the **logo** at the right, as the
+   front's. ⛔ **No QR code and no offer on the back** (the front carries both; the offer's words are not approved, and
+   one place for them is enough). Type no smaller than **14 layout px** (8.4 pt) anywhere on the back (a named value).
+4. **The words: `data/flyer-back.md`, the only source.** A small Markdown file a person can edit, read by the build, and
+   **only this subset**: line 1 `# <heading>`; then paragraphs separated by one blank line; a paragraph may open with
+   `**<lead-in>**` followed by a space; `’` and the other characters of the page's own copy are allowed, and nothing
+   else Markdown means (a list, a link, a second heading, emphasis elsewhere, HTML) is: the build **refuses** naming the
+   line. Its words are the orchestrator's draft from "Why Fit AF?" draft 2 (Fit AF `docs/explainers/why-fit-af/`), every
+   claim one that draft already makes, **for the Advisor to edit**; until he marks it approved (`<!-- approved -->` as
+   its last line, the only HTML comment allowed), **the back is a proof** (§ 4's rule: `-PROOF`, and the last line names
+   it). It is committed: its words are a version of a page this repository already serves on the dev site (`/why/`), and
+   it names no person and no photo.
+5. **It must fit, not shrink.** The back's words and photos are laid out at the sizes above; if the words do not fit
+   between the photos and the bottom row (the face's content would overflow, or any line would fall inside the bottom
+   row or outside the safe margin), **the build refuses**, naming how many layout px over it is. Nothing scales the type
+   down to make it fit: the remedy is fewer words, which is the point (*"I don't want to do a wall of text"*).
+6. **The back's photos, by rule** (pool `glam`): the **first array of rung 3 that contains none of the photos the build
+   places elsewhere** (the flyer's, the four flyers', the tent's three), its three in order, left to right; none such →
+   refused, naming the rung. Each prints Image Gauge's first good square for its photo (§ 10 item 3's rule, and its
+   fallback: a photo with no square prints as composed, covered, and the report names it), at least 300 ppi (§ 3).
+   `assignment.json` gains `flyer-back-1` to `flyer-back-3`, as the other positions. Without `--photos-dir`, the
+   mock-ups' labelled placeholder, as § 3.
+7. **Unchanged**: the tent card, every mock-up and its screen build (the back is print-only; `flyerFace` gains options
+   the mock-ups never pass, as § 8's did), the page, the Worker, the storefront block, `data/offers.json` and every
+   other data file but the new one; ⛔ the header's rule on photographs (no photo, photo ID, file name or photos' location
+   committed).
+8. **Cases** (written first, run red): **Q18** each flyer PDF has two pages, each 324 × 414 pt; **Q19** the five flyers'
+   backs are the same page (their page 2 renders to identical pixels); **Q20** the back's text is exactly
+   `data/flyer-back.md`'s words in its order (the DOM's text against the file's, whitespace normalised), and a word
+   changed in the file changes the back (in a mirror, Q7's way); **Q21** the subset: a list, a link, a second heading
+   and stray HTML each refused, naming the line; **Q22** the back's three windows are 1:1 within half a layout px, each a
+   `-sq-` file where the deliverable has one, from item 6's rule (fixture rungs: an array holding any other position's
+   photo is skipped; none left refused); **Q23** too many words refused, naming the overflow (a fixture file), and no
+   font size on the back below the minimum; **Q24** the back carries no QR code and no offer; **Q25** the front's offer
+   at 34px and its QR code 168 layout px, the parts in § 9's order, the logo's box at the bottom right inside the safe
+   margin; **Q26** without `<!-- approved -->` the back is `-PROOF` and named on the last line, with it not. **Q5**'s
+   *nothing committed* extends to the back's photos. **Mutants**: item 6's rule allowing a photo used elsewhere (Q22);
+   the overflow check off (Q23); the back's page dropped (Q18); the approval marker ignored (Q26).
+9. ⛔ **Not here**: the offer's words (the Owner's and the Advisor's); the back's final words (the Advisor's edit); more
+   photos on the front (offered: the front could take two squares beside the QR code; not built until he asks); the
+   vendor's file specification; any print order.
