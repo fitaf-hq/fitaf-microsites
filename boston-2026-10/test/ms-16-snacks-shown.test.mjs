@@ -14,9 +14,9 @@ import assert from "node:assert/strict";
 import { mealLine, MESSAGES } from "./cc-harness.mjs";
 import { cardOf, fragmentOf, GOALS, open, pageOf, questionsOf, resultOf, SNACKS_CARTED, SNACKS_SHOWN, TABLE, V2_DIR, V2_SNACKS, V2_SNACKS_FIVE, v2WithFiveDays } from "./ms-harness.mjs";
 
-test("MS-16: with snacks shown and not carted (its own data), Q4 is on the page", async () => {
+test("MS-16: with snacks shown and not carted (its own data), Q4 is on the page, its default (No snacks) on the left (§ 12)", async () => {
   const q = questionsOf(open(await pageOf({ picks: V2_DIR, snacks: SNACKS_SHOWN }), "#lean-or-7d"));
-  assert.deepEqual([q.snacks?.shown, q.snacks?.answers], [true, ["yes", "no"]]);
+  assert.deepEqual([q.snacks?.shown, q.snacks?.answers], [true, ["no", "yes"]]);
 });
 
 test("MS-16: Add snacks shows the week's list and the not-carted line; every link is the one with No snacks", async () => {
