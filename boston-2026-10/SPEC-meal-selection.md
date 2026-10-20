@@ -368,3 +368,31 @@ it moves with the flag too. `carted: true` is still refused by the build (§ 10 
 link's snack items, the block's press and CHECKOUT by width, the page's links, the live proof, and the release order (no
 link carrying a snack before the Advisor's paste). Two choices open with defaults: the snack price (none on the page) and
 who chooses the week's snacks.
+
+## 13. Amendment, 2026-10-20: a week's snack list holds at most one a day, not exactly one. CONTRACT, before any code
+
+(§ 12 is `boston/defaults-left`'s, the questions' defaults on the left; this section does not depend on it.)
+
+**Why.** The Owner's rule to try, from the Advisor's live notes of the 2026-10-20 meeting (Fit AF's decision record
+`2026-10-17-the-picks-from-our-plans-and-the-breakfast-slate.md` § 7k item 1): *"Snacks are big, multi-portion items
+… Weekdays get 3 snacks: dirt, pronut, superfood. Plus weekends get 2 snacks: brownie + sand or superfood"*. The picks
+are Fit AF's (`scripts/menus/propose_picks.spec.md` § 14), and a week's file then carries **5** snacks for every day
+and **3** for weekdays, still keyed by the days. This page decides nothing about which snacks or how many: it shows the
+week's lists.
+
+1. **The check** (`scripts/chefs-choice.mjs` `snackLists`): a list's total `qty` must be **at least 1 and at most its
+   days** (7 or 5), in place of exactly its days; the message names both bounds. The keys (`"7"`, `"5"`) and the page's
+   data (`7d`, `5d`) are unchanged, and so is every other check of a snack item.
+2. **The words**: § 2's *"Snacks: 7 with every day, 5 with weekdays"* now reads *the week's snack list for the chosen
+   days, as Fit AF's picks hold it*; any comment or phrase that counts snacks by the days (`selection.mjs`'s *"Snacks are
+   one a day"*, `messages.json`'s `recap_snacks` `{s}`) takes the list's own total. Grep for every reader of the snack
+   lists; each is in scope.
+3. **Cases** (written first, run red): **MS-17** a fixture week with snack lists of 5 (every day) and 3 (weekdays)
+   builds, and the card and its recap show 5 and 3; a list of 8 for 7 days and an empty list are refused, each named;
+   **MS-18** the committed weeks in `data/picks/` build byte for byte as before (their lists are one a day).
+   **Mutant**: the old exact check, which turns MS-17 red.
+4. ⛔ **Order of release**: in production **before** Fit AF commits its first file made by the new rule (the switch of
+   Friday 2026-10-30 for the week delivered 8 November, at the earliest), and **not before** Friday 2026-10-23's switch
+   has released (Fit AF's `scripts/switch/unattended-switch.spec.md` § 12: nothing merges into
+   `boston/rung-4-save-offer` until then). A dev pin first, as every release.
+5. ⛔ **Not here**: carting snacks (`SPEC-snacks-in-the-cart.md`), a snack price, which snacks.
