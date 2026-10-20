@@ -67,7 +67,10 @@ test("§ 12 mutant: the overflow check off fails Q23", { skip: NO_CHROME }, asyn
   await withMirror((dir) => edit(dir, ...MUTANTS.overflow), async (dir) => {
     const problems = await fitProblems(dir);
     t.diagnostic(`Q23 on the mutant: ${problems.length} problems: ${JSON.stringify(problems)}`);
-    assert.ok(problems.some((p) => p.startsWith("too many words were not refused")), problems.join("\n"));
+    // Q23 is red either way: the words are not refused at all, or (as the safe-margin check on the back still catches
+    // words that run past the bottom edge) they are refused without the overflow being named. The second is what the
+    // build does with the check off (2026-10-20): the safe margin is a second guard, not the one item 5 names.
+    assert.ok(problems.some((p) => p.startsWith("too many words were not refused") || p.startsWith("too many words, refused as:")), problems.join("\n"));
   });
 });
 
