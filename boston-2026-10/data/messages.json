@@ -26,7 +26,7 @@
     "note": "These meals go into your cart. You can change them before you pay.",
     "checkout": "Continue to checkout",
     "own": "Choose my own meals",
-    "snacks_heading": "Snacks this week",
+    "snacks_heading": "Snacks",
     "snacks_not_carted": "Snacks aren't added to your cart yet.",
     "updating": "We're updating this week's menu."
   },
@@ -34,7 +34,7 @@
     "status": "placeholder",
     "questions": {
       "lunch_dinner": { "heading": "Which meals should we cover?", "or": "Lunch *or* dinner", "and": "Lunch *and* dinner" },
-      "weekends": { "heading": "Which days?", "yes": "Every day", "no": "Weekdays" },
+      "weekends": { "heading": "Which days?", "yes": "Every day", "no": "Weekdays only" },
       "breakfast": { "heading": "Breakfast too?", "yes": "Add breakfast", "no": "No breakfast" },
       "snacks": { "heading": "Snacks too?", "yes": "Add snacks", "no": "No snacks" }
     },

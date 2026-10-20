@@ -134,14 +134,24 @@ export const fillPhrase = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (w
 /** A phrase as markup: escaped, then each `*word*` emphasised (data/messages.json's own mark for emphasis). */
 export const emphasised = (phrase) => esc(phrase).replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
-/** The meal selection's four questions (SPEC-meal-selection § 1) and each one's two answers, in the page's order; the
- *  answer is the button's `data-a`, and its phrase is `plan_page.questions.<question>.<answer>`. */
+/** The meal selection's four questions (SPEC-meal-selection § 1) and each one's two answers; the answer is the button's
+ *  `data-a`, and its phrase is `plan_page.questions.<question>.<answer>`. The page's order is answerOrder's. */
 export const QUESTIONS = {
   lunch_dinner: ["or", "and"],
   weekends: ["yes", "no"],
   breakfast: ["yes", "no"],
   snacks: ["yes", "no"],
 };
+
+/** A question's two answers in the page's order (SPEC-meal-selection § 12 item 1): each pair's DEFAULT FIRST, on the
+ *  left, read from data/plans.json's `selection_defaults` (Q2–Q4: its answer "yes" when the default is true), so a
+ *  changed default keeps the default on the left: the order follows the default, it is not a second list. Q1 has no
+ *  default (the card waits for it) and keeps QUESTIONS' order, *or* then *and*. */
+export function answerOrder(q, defaults) {
+  if (!(q in defaults)) return QUESTIONS[q];
+  const first = defaults[q] ? "yes" : "no";
+  return [first, ...QUESTIONS[q].filter((a) => a !== first)];
+}
 
 /** The plan page's own phrases (data/messages.json's `plan_page`), checked: a missing one refuses the build. */
 export function planPageWords(messages) {
@@ -161,10 +171,10 @@ export function planPageWords(messages) {
 }
 
 /** One question (SPEC-meal-selection § 1): its heading and its two answers, in the count buttons' style (centred, the
- *  check above: SPEC-plan-page-refinement § 8 item 4), words only (§ 7, ruled: no numeral). */
-function question(q, words) {
+ *  check above: SPEC-plan-page-refinement § 8 item 4), words only (§ 7, ruled: no numeral), its default first (§ 12). */
+function question(q, words, defaults) {
   const w = words.questions[q];
-  const buttons = QUESTIONS[q].map(
+  const buttons = answerOrder(q, defaults).map(
     (a) =>
       `          <button type="button" class="choice" data-q="${q}" data-a="${a}" aria-pressed="false">` +
       `<span class="choice-name">${emphasised(w[a])}</span></button>`,
@@ -181,10 +191,11 @@ ${buttons.join("\n")}
  *  offered (`offer`: § 9 item 3's `snacks.shown`, and SPEC-snacks-in-the-cart § 4.5: not while carted with no week). */
 function mealQuestions(plans, words, offer = plans.snacks.shown) {
   const more = ["weekends", "breakfast", ...(offer ? ["snacks"] : [])];
-  return `${question("lunch_dinner", words)}
+  const defaults = plans.selection_defaults;
+  return `${question("lunch_dinner", words, defaults)}
 
       <div class="more" id="more" hidden>
-${more.map((q) => question(q, words)).join("\n")}
+${more.map((q) => question(q, words, defaults)).join("\n")}
       </div>`;
 }
 

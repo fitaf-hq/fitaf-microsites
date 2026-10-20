@@ -357,8 +357,9 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", 
   };
 }
 
-/** A piece of the card's markup (src/chefs-choice/<file>) with its words; a `{{…}}` left over refuses the build. */
-function cardHtml(template, words, file = "card.html") {
+/** A piece of the card's markup (src/chefs-choice/<file>) with its words; a `{{…}}` left over refuses the build. `markup`
+ *  fills slots with markup already made (SPEC-meal-selection § 12 item 3: the snack block, inside the list), unescaped. */
+function cardHtml(template, words, file = "card.html", markup = {}) {
   const values = {
     CHECKOUT: words.checkout,
     OWN: words.own,
@@ -367,6 +368,7 @@ function cardHtml(template, words, file = "card.html") {
     UPDATING: words.updating, // SPEC-week-content § 8 item 3: the updating card, hidden until a week says `updating`
   };
   const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
+    if (key in markup) return markup[key];
     if (!(key in values)) throw new Error(`src/chefs-choice/${file}: ${whole} has no value`);
     return esc(values[key]);
   });
@@ -383,14 +385,15 @@ export async function chefsChoice({ plans, messages, zone }) {
   const words = chefsChoiceWords(messages);
   const read = (name) => readFile(join(CHEFS_CHOICE_SRC, name), "utf8");
   // SPEC-meal-selection § 9 item 3: the snack block only while Q4 is on the page. SPEC-snacks-in-the-cart § 4.3: while
-  // snacks are carted, without the not-carted line (the list keeps its heading).
+  // snacks are carted, without the not-carted line (the list keeps its heading). § 12 item 3: the block is INSIDE the
+  // card's one list, after the meals and before the list's checkout link (card.html's {{SNACKS}}), not a box of its own.
   const { shown: snacks, carted } = checkSelection(plans).snacks;
   const snackHtml = (await read("snacks.html")).replace(carted ? /\n[^\n]*id="cc-snacks-note"[^\n]*/ : /(?!)/, "");
   const snackBlock = snacks ? "\n" + cardHtml(snackHtml, words, "snacks.html").trimEnd() : "";
   return {
     slots: {
       PICKS_STYLE: "\n" + (await read("style.css")).trim(),
-      PICKS_CARD: "\n" + cardHtml(await read("card.html"), words).trimEnd() + snackBlock,
+      PICKS_CARD: "\n" + cardHtml(await read("card.html"), words, "card.html", { SNACKS: snackBlock }).trimEnd(),
       PICKS_SCRIPT:
         `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, snacks, carted }))}</script>` +
         `\n<script>\n(function () {\n"use strict";\n${(await read("chefs-choice.js")).trim()}\n})();\n</script>`,
