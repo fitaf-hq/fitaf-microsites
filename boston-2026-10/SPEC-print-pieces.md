@@ -233,3 +233,13 @@ liked the glam set.
 3. **The draft words did not fit** (item 5 refused them: 66.1 layout px over); cut by the orchestrator to the five
    paragraphs now in `data/flyer-back.md` (12.3 layout px to spare), every claim still one of draft 2's.
 4. **Q21's refusal cases edit a fixed fixture**, not the committed words, so the Advisor's edits cannot break them.
+5. ⛔ **The two-sided PDF printed its front without its QR code, address and logo** (found 2026-10-20, after every case
+   was green). Each sheet's page is laid out at the mock-ups' size and drawn scaled, so its unscaled layout is taller
+   than the sheet; with a second sheet after it, Chrome's print layout carried every part that crossed the page's
+   height into the next fragment, and lost it. The PNG proofs (screenshots) and every measured case read the screen, so
+   all of them showed the parts; poppler's `pdftotext` and `pdftoppm` and macOS's own renderer showed the PDF without
+   them, and the one-page PDFs of the morning had them. **Fixed by containing each sheet** (`print.css`:
+   `.print-sheet { contain: strict; }`). ⭐ **Q27 reads the PDF itself**: every page of every PDF carries every text run
+   the build measured on its sheet (`pdftotext`) and every QR code's box is drawn (`pdftoppm`, at least a quarter of it
+   dark); skipped, said, without poppler. Its mutant, the containment removed, fails it with page 1's address and QR
+   code missing. ⚠ **The PNG proof is still a screenshot, not the PDF**; Q27 is what ties the two.

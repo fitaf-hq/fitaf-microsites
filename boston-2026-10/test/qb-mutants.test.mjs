@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { NO_CHROME } from "./print-fixtures.mjs";
-import { approvalProblems, backRuleProblems, fitProblems, twoSidesProblems } from "./qb-checks.mjs";
+import { approvalProblems, backRuleProblems, fitProblems, NO_POPPLER, pdfCarriesProblems, twoSidesProblems } from "./qb-checks.mjs";
 import { printMirror } from "./qe-checks.mjs";
 
 /** Replace `from` (present exactly once) with `to` in the mirror's file `rel`. */
@@ -39,6 +39,8 @@ const MUTANTS = {
   back: [join("print", "sizes.mjs"), "sides: 2", "sides: 1"],
   /** Q26: the approval mark read and dropped, but the words never approved. */
   approval: [join("print", "back.mjs"), "approved: marked,", "approved: false,"],
+  /** Q27 (§ 12.1 item 5): the sheet no longer contained, so printing fragments the front and its lower parts are lost. */
+  contained: [join("print", "print.css"), ".print-sheet { contain: strict; }", ".print-sheet { }"],
 };
 
 test("§ 12 mutants (control): the unchanged mirror passes Q22's rule and Q26's", async () => {
@@ -88,5 +90,20 @@ test("§ 12 mutant: the approval mark ignored fails Q26", async (t) => {
     t.diagnostic(`Q26 on the mutant: ${problems.length} problems: ${JSON.stringify(problems)}`);
     assert.ok(problems.includes("the words with the approval mark read as unapproved"), problems.join("\n"));
     assert.ok(problems.includes("the approved back still made the flyer a proof"), problems.join("\n"));
+  });
+});
+
+test("§ 12.1 mutant (control): the unchanged mirror passes Q27", { skip: NO_CHROME || NO_POPPLER }, async () => {
+  await withMirror(async () => {}, async (dir) => {
+    assert.deepEqual(await pdfCarriesProblems(dir), []);
+  });
+});
+
+test("§ 12.1 mutant: the sheet not contained fails Q27", { skip: NO_CHROME || NO_POPPLER }, async (t) => {
+  await withMirror((dir) => edit(dir, ...MUTANTS.contained), async (dir) => {
+    const problems = await pdfCarriesProblems(dir);
+    t.diagnostic(`Q27 on the mutant: ${problems.length} problems: ${JSON.stringify(problems)}`);
+    assert.ok(problems.some((p) => /^flyer-PROOF\.pdf page 1 lacks the text "eatfitaf\.com"$/.test(p)), problems.join("\n"));
+    assert.ok(problems.some((p) => /^flyer-PROOF\.pdf page 1: the QR code's box is \d+% dark/.test(p)), problems.join("\n"));
   });
 });

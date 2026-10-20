@@ -4,6 +4,7 @@
 // Each check runs over a package tree `root` (this package, or a mirror of it: qe-checks.mjs printMirror) and returns its
 // problems, [] when the tree holds § 12; the case runs it on this package and the mutant on a mirror, so the red is the
 // case's own. ⛔ No photograph: the photos are print-fixtures.mjs's synthetic JPEGs, their IDs made at random.
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -262,3 +263,72 @@ export async function committedFitProblems(root) {
 
 /** The words that fit, as the cases build with them (print-fixtures.mjs), from `root`'s committed file. */
 export const fittingBack = async (root = ROOT) => fittingBackText(await committedBack(root));
+
+/**
+ * Q27's tools: poppler's pdftotext and pdftoppm, which read the PDF as a printer's software would. The case is skipped,
+ * said, when they are absent (as the Chrome cases are without Chrome).
+ */
+const PDFTOTEXT = process.env.PDFTOTEXT || "pdftotext";
+const PDFTOPPM = process.env.PDFTOPPM || "pdftoppm";
+export const NO_POPPLER = [PDFTOTEXT, PDFTOPPM].every((tool) => spawnSync(tool, ["-v"]).error === undefined)
+  ? false
+  : "poppler's pdftotext and pdftoppm not found (brew install poppler, or set PDFTOTEXT and PDFTOPPM)";
+/** The resolution the QR check draws a page at, and how dark a QR code's box must be to count as drawn. */
+const RASTER_DPI = 72;
+const QR_DARK_MIN = 0.25;
+const DARK_LEVEL = 128;
+const norm = (s) => s.split(/\s+/).filter(Boolean).join(" ");
+
+/** A page of a PDF drawn by pdftoppm in gray: { width, height, data } (one byte a pixel), from its PGM. */
+function grayPage(pdf, n) {
+  const bytes = execFileSync(PDFTOPPM, ["-gray", "-r", String(RASTER_DPI), "-f", String(n), "-l", String(n), pdf]);
+  const header = /^P5\s+(\d+)\s+(\d+)\s+255\s/.exec(bytes.subarray(0, 64).toString("latin1"));
+  if (!header) throw new Error(`pdftoppm did not write a PGM for ${pdf} page ${n}`);
+  const [, width, height] = header.map(Number);
+  return { width, height, data: bytes.subarray(header[0].length) };
+}
+
+/** The share of a box's pixels (inches, from the sheet's page's corner) that are dark in a drawn page. */
+function darkShare(raster, box, origin) {
+  const at = (inches) => Math.round(inches * RASTER_DPI);
+  const [x0, y0] = [at(box.x - origin.x), at(box.y - origin.y)];
+  const [x1, y1] = [Math.min(raster.width, at(box.x - origin.x + box.w)), Math.min(raster.height, at(box.y - origin.y + box.h))];
+  let dark = 0;
+  let all = 0;
+  for (let y = Math.max(0, y0); y < y1; y += 1) {
+    for (let x = Math.max(0, x0); x < x1; x += 1) {
+      all += 1;
+      if (raster.data[y * raster.width + x] < DARK_LEVEL) dark += 1;
+    }
+  }
+  return all ? dark / all : 0;
+}
+
+/**
+ * Q27 (§ 12.1 item 5): the PDF is what is printed, and the PNG proofs and every other case read the page as Chrome lays
+ * it out on a screen. Each page of each PDF must carry its sheet as the build measured it: every text run on the sheet is
+ * in the page's text (pdftotext), and every QR code's box is drawn, at least QR_DARK_MIN of it dark (pdftoppm). The
+ * problems.
+ */
+export async function pdfCarriesProblems(root, { fourFlyers = false } = {}) {
+  return withTmp(async (dir) => {
+    const out = join(dir, "dist-print");
+    const built = await build(root, { outDir: out, fourFlyers });
+    const problems = [];
+    for (const p of built.planned) {
+      const pdf = join(out, `${p.stem}.pdf`);
+      for (const [i, sheet] of (p.measured.sheets ?? [p.measured]).entries()) {
+        const n = i + 1;
+        const text = norm(execFileSync(PDFTOTEXT, ["-f", String(n), "-l", String(n), pdf, "-"]).toString("utf8"));
+        for (const t of sheet.faces.flatMap((f) => f.texts)) if (!text.includes(norm(t.text))) problems.push(`${p.stem}.pdf page ${n} lacks the text "${t.text}"`);
+        const qrs = sheet.faces.flatMap((f) => f.qrs);
+        const raster = qrs.length ? grayPage(pdf, n) : null;
+        for (const qr of qrs) {
+          const share = darkShare(raster, qr, sheet.page);
+          if (share < QR_DARK_MIN) problems.push(`${p.stem}.pdf page ${n}: the QR code's box is ${Math.round(share * 100)}% dark, under ${QR_DARK_MIN * 100}%: not drawn`);
+        }
+      }
+    }
+    return problems;
+  });
+}

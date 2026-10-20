@@ -13,6 +13,12 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 /* The sheet is the page's printed size and clips; the page inside it is laid out in the mock-ups' pixels and scaled
    (pages.mjs sizeRules), from its top left corner, out of the flow so that its layout size makes no second page */
 .print-sheet { position: relative; overflow: hidden; background: var(--white); }
+/* § 12.1 item 5 (2026-10-20): each sheet is contained, so that printing (paged media) never fragments it. Its page is laid
+   out at the mock-ups' size and drawn scaled, so its unscaled layout is taller than the sheet; with a second sheet after
+   it, Chrome's print layout carried every part that crossed the page's height into the next fragment, and the flyer's
+   PDF front printed without its QR code, address and logo while the screen (the PNG proof, every measured case) showed
+   them. Q27 reads the PDF itself */
+.print-sheet { contain: strict; }
 .print-page { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; background: var(--white); }
 .print-face { position: absolute; left: 0; top: 0; overflow: hidden; }
 /* The tent's upper face: the lower face turned, so that folded on the centre line both read upright */
