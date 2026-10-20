@@ -5,7 +5,7 @@
 // expectation is the contract's, written here, never read back from the code under test.
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, readdir, readFile, symlink, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { parseHTML } from "linkedom";
 import { ROOT } from "../build.mjs";
@@ -26,6 +26,7 @@ import {
   readFixture,
   runContent,
   SHEET,
+  sheetEntryOf,
   sheetKey,
   sheetPath,
   startPreview,
@@ -469,6 +470,80 @@ export async function determinismProblems(root = ROOT) {
   } finally {
     for (const out of runs) await out.done();
     await from.done();
+  }
+  return problems;
+}
+
+/** The fixture's sheet entry for WEEK, as committed. */
+const fixtureEntry = async () => JSON.parse(await readFile(join(FIXTURE_DIR, sheetEntryOf(WEEK)), "utf8"));
+
+/**
+ * PV6b (§ 2, the sheet interface ruled 2026-10-20: ONE FILE PER WEEK): the preview content command reads the week's sheet
+ * entry from <from>/photo-sheets/chefs-choice-<delivery>.json ({ file, width, height, cells }, cells keyed by the week's
+ * names) and the sheet it names beside it, and no longer reads a shared <from>/photo-sheets.json. With the entry: the
+ * sheet at § 2's key, byte for byte, a tile showing it at the Worker's path. Without one (a shared photo-sheets.json
+ * naming the sheet beside it notwithstanding): plain tiles, nothing copied. An entry naming a sheet that is not beside
+ * it, or not of the ruled shape (no cells; and, the build's reading, a field the shape lacks), refused, naming the entry.
+ */
+export async function sheetEntryProblems(root = ROOT) {
+  const problems = [];
+  const url = `url("${sheetPath(WEEK, SHEET)}")`;
+  const thumbsOf = (data) => Object.values(data?.weeks?.[0]?.carts ?? {}).flatMap((c) => c.thumbs ?? []);
+  const entryName = `chefs-choice-${WEEK}.json`;
+  const variants = [
+    ["the week's entry", async () => {}, "sheet"],
+    [
+      "no entry, a shared photo-sheets.json naming the sheet",
+      async (dir) => {
+        await rm(join(dir, sheetEntryOf(WEEK)));
+        await writeFile(join(dir, "photo-sheets.json"), JSON.stringify({ chefs_choice: { [WEEK]: await fixtureEntry() } }, null, 2));
+      },
+      "plain",
+    ],
+    ["an entry naming a sheet not beside it", (dir) => rm(join(dir, "photo-sheets", SHEET)), "refused"],
+    [
+      "an entry without cells",
+      async (dir) => {
+        const { cells, ...rest } = await fixtureEntry();
+        await writeFile(join(dir, sheetEntryOf(WEEK)), JSON.stringify(rest));
+      },
+      "refused",
+    ],
+    [
+      "an entry with a field the ruled shape lacks (the build's reading)",
+      async (dir) => writeFile(join(dir, sheetEntryOf(WEEK)), JSON.stringify({ ...(await fixtureEntry()), base: "photo-sheets/" })),
+      "refused",
+    ],
+  ];
+  for (const [label, change, expect] of variants) {
+    const from = await previewFrom();
+    try {
+      await change(from.dir);
+      let out;
+      try {
+        out = await previewContentOf({ root, week: WEEK, from: from.dir });
+      } catch (err) {
+        if (expect !== "refused") problems.push(`${label}: refused: ${message(err)}`);
+        else if (!message(err).includes(entryName)) problems.push(`${label}: refused, but not naming ${entryName}: ${message(err)}`);
+        continue;
+      }
+      if (expect === "refused") {
+        problems.push(`${label}: accepted`);
+        continue;
+      }
+      const keys = Object.keys(out.files).sort();
+      const shows = thumbsOf(out.data).some((t) => t && t.includes(url));
+      if (expect === "sheet") {
+        if (JSON.stringify(keys) !== JSON.stringify([dataKey(WEEK), sheetKey(WEEK, SHEET)].sort())) problems.push(`${label}: the files are ${JSON.stringify(keys)}, not the data and ${sheetKey(WEEK, SHEET)}`);
+        else if (!out.files[sheetKey(WEEK, SHEET)].equals(await readFile(FLAT_SHEET))) problems.push(`${label}: the sheet is not the one beside the entry, byte for byte`);
+        if (!shows) problems.push(`${label}: no tile shows the sheet at ${url}`);
+      } else {
+        if (JSON.stringify(keys) !== JSON.stringify([dataKey(WEEK)])) problems.push(`${label}: the files are ${JSON.stringify(keys)}, not the data alone`);
+        if (thumbsOf(out.data).some((t) => t !== null)) problems.push(`${label}: a tile has a photo (not plain tiles)`);
+      }
+    } finally {
+      await from.done();
+    }
   }
   return problems;
 }

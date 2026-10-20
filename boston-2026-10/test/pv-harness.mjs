@@ -3,7 +3,8 @@
 //
 // - A preview's data is read from a TEMPORARY copy of test/fixtures/previews/ (invented weeks; the directory itself is
 //   inside this repository's tree, which the content command refuses as --from: PV7), with the one photo sheet its
-//   manifest names written there, a byte copy of the flat-colour fixture sheet (no image is committed for it: P1).
+//   week's sheet entry names written beside the entry, a byte copy of the flat-colour fixture sheet (no image is
+//   committed for it: P1).
 // - The preview Worker runs in Miniflare (local workerd: HTMLRewriter is the platform's own), bundled from a package's
 //   src/worker/preview.js by esbuild, under a thin wrapper that only RECORDS each read of the bucket (PREVIEW's get, head
 //   and list, passed through unchanged); it answers one path of its own, /__pv/log, which no case of the contract names.
@@ -20,16 +21,18 @@ import { build as esbuild } from "esbuild";
 import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { ROOT } from "../build.mjs";
 
-/** The fixture: two invented preview files and one sheet's manifest (test/fixtures/previews/README.md). */
+/** The fixture: two invented preview files and one week's sheet entry (test/fixtures/previews/README.md). */
 export const FIXTURE_DIR = join(ROOT, "test", "fixtures", "previews");
 /** § 4's deliveries: 2026-11-01 (not approved) and 2026-10-25 (approved, its names suffixed " (week two)"); 2026-11-08
  *  has no preview. */
 export const WEEK = "2026-11-01";
 export const OTHER_WEEK = "2026-10-25";
 export const ABSENT_WEEK = "2026-11-08";
-/** The sheet the fixture's manifest names for WEEK, and the committed flat-colour bytes it is a copy of. */
+/** The sheet WEEK's entry names, and the committed flat-colour bytes it is a copy of. § 2 (ruled 2026-10-20): the week's
+ *  sheet entry is <from>/photo-sheets/chefs-choice-<delivery>.json, one file per week, the sheet beside it. */
 export const SHEET = "chefs-choice-2026-11-01.jpg";
 export const FLAT_SHEET = join(ROOT, "test", "fixtures", "photo-sheets", "chefs-choice-2026-10-04.jpg");
+export const sheetEntryOf = (delivery) => join("photo-sheets", `chefs-choice-${delivery}.json`);
 
 /** § 2's object keys under the content's --out (and the preview bucket), written here from the contract. */
 export const dataKey = (delivery) => `previews/${delivery}/picks-data.json`;
