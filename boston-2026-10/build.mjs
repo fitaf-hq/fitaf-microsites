@@ -51,6 +51,7 @@ export const ANALYTICS_PATH = join(ROOT, "src", "analytics.js");
 export const STATIC_DIRS = [
   { dir: "fonts", match: /\.woff2$/ },
   { dir: "assets", match: /\.png$/ },
+  { dir: "why", match: /\.html$/ }, // "Why Fit AF?" draft 2, for review (2026-10-20)
 ];
 export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
