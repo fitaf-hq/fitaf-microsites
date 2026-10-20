@@ -549,3 +549,18 @@ SPEC.md § 1's 61,440 gzip. (`diff`'s own output; the `#plan-data` line is one l
 ---
 > <script type="application/json" id="plan-data">… "defaults":{"weekends":false,"breakfast":false,"snacks":false} …
 ```
+
+### 12.2 Gated, 2026-10-20 (the orchestrator, on `235ae87`, each set announced, nice 15)
+
+- `npm test` **872 of 872**; `npm run contrast` **70 pairs, 70 pass**; `tools/storybook` **41 of 41**;
+  `tools/storefront-watch` **213 of 213**.
+- ⚠ **The owed mirror gate, `suite-in-mirror.mjs --set snacks.shown=false`, is stale**: since `SPEC-snacks-in-the-cart.md`
+  § 4.1 made `snacks.carted` `true`, the build refuses snacks carted while not shown (`selection.mjs`: *"snacks.carted is
+  true while snacks are not shown"*), so that set alone fails every case that builds a page (228 of 842). The reachable
+  state is **`--set snacks.shown=false --set snacks.carted=false`**: **854 of 872**, and **the same 18 cases fail on the
+  dev line `cff49c0` under the same two sets** (842 of 860; the two that read differently are U4 and WC-9c, the same
+  cases naming a golden this branch re-recorded). **None of the 18 is this branch's.**
+- ⚠ **Found, not this branch's**: on the dev line, hiding snacks breaks 18 cases. Most pin goldens recorded with snacks
+  shown (S20, CC-4, CC-8b/c, MS-9 ×2, PR-10, U1b–e, U4, WC-9a/c, § 8's control), but **A3 fails with a `TypeError`**
+  (*"list is not iterable"*): a path that assumes the snack list exists. A flip of `snacks.shown` to `false` would need
+  them re-recorded and A3's path fixed in its own commit, as § 11 says of S20.
