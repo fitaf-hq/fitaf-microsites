@@ -56,7 +56,7 @@ back "Why Fit AF?".** Every flyer PDF, `flyer.pdf` and `flyer-1.pdf` to `flyer-4
 flyer's document draws it, and the build checks the five are the same pixels before it writes the one back proof,
 `flyer-back(-PROOF).png` (each flyer's own PNG proof is its front). **The front** keeps § 9's parts in § 9's order and
 adds nothing: the strength is in scale, the offer at the headline's size (34px, from 24px) in its own field across the
-body, and the QR code **1.4 in** square (168 layout px, from 112), both named values in sizes.mjs, the space left still
+body (its two lines balanced), and the QR code **1.25 in** square (150 layout px, from 112; § 12.1: 1.4 in put eatfitaf.com inside the safe margin under a two-line offer), both named values in sizes.mjs, the space left still
 shared evenly; an offer on more than two lines is refused. **The back** (`mockups/pieces.mjs` `flyerFace`'s `side:
 "back"`, which the mock-ups never pass) is three square photos across the top, into the bleed on the top and the outer
 edges (the tent's tile arithmetic: a tile the face's width less two 4px gaps, over three, 1.39 in), then the words of
@@ -147,7 +147,7 @@ back's three is read. The
 
 | piece | trim | PDF page (trim + 0.125 in bleed on every edge) | layout |
 |---|---|---|---|
-| flyer | 4.25 × 5.5 in, portrait, **two sides** (§ 12) | 4.5 × 5.75 in = **324 × 414 pt**, a page per side | the front, § 9 and § 12: no header; the photo 3:2 across the top, into the bleed; the offer at 34px, the QR code 1.4 in with the address; the logo bottom right. The back, § 12: three 1.39 in squares across the top, into the bleed; the words of `data/flyer-back.md`, 14 layout px and up; `eatfitaf.com` and the logo at the bottom; the same back on every flyer |
+| flyer | 4.25 × 5.5 in, portrait, **two sides** (§ 12) | 4.5 × 5.75 in = **324 × 414 pt**, a page per side | the front, § 9 and § 12: no header; the photo 3:2 across the top, into the bleed; the offer at 34px on at most two balanced lines, the QR code 1.25 in with the address; the logo bottom right. The back, § 12: three 1.39 in squares across the top, into the bleed; the words of `data/flyer-back.md`, 14 layout px and up; `eatfitaf.com` and the logo at the bottom; the same back on every flyer |
 | tent card | two of the mock-up's own faces, each **4 × 6 in, portrait**, on one 4 × 12 in sheet (§ 7) | 4.25 × 12.25 in = **306 × 882 pt** | § 10: no bar; three square photo windows across the top, at the fold, into the bleed at the sides; the rule and the headline, the offer, the QR code with the address; the logo bottom right; **the upper face is the lower face turned 180°** (one face's markup twice, the first `rotate(180deg)`), the fold on the centre line, so folded into an A-frame both read upright (Q2) |
 
 No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (§ 2 ⚠). The QR code is `build.mjs`
@@ -186,7 +186,7 @@ No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (�
 | Q22 | the back's photos: the first rung-3 array holding no photo placed elsewhere, in order, none left refused (`backRuleProblems`); built, three windows 1:1 within half a layout px, two 4px gaps, across the top, into the bleed; each its `-sq-` file, one without a square as composed and named |
 | Q23 | too many words refused, naming the layout px over, nothing printed (`fitProblems`); the check over made-up measurements; no type on the back below 14 layout px; and **`data/flyer-back.md` as committed fits** (`committedFitProblems`) |
 | Q24 | no QR code and no offer on the back, in its markup and as Chrome lays it out; the front has both (the control) |
-| Q25 | the front: the offer at 34 layout px (the mock-ups' headline) across the body, on at most two lines, the QR code 168 layout px, § 9's order, the logo in the corner inside the safe margin |
+| Q25 | the front: the offer at 34 layout px (the mock-ups' headline) across the body, on two lines (a neutral two-line offer, § 12.1), the QR code 150 layout px, § 9's order, the logo in the corner and no text inside the safe margin |
 | Q26 | without `<!-- approved -->` the flyer and its back are `-PROOF` and the last line names the words; with it, plain names and none (`approvalProblems`) |
 | QB mutants | `test/qb-mutants.test.mjs`, each in a mirror after the unchanged mirror's control: the back's rule allowing a photo used elsewhere fails Q22; the overflow check off, Q23; the flyer one-sided (the back's page dropped), Q18; the approval mark ignored, Q26 |
 

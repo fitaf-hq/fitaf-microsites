@@ -218,3 +218,18 @@ liked the glam set.
 9. ⛔ **Not here**: the offer's words (the Owner's and the Advisor's); the back's final words (the Advisor's edit); more
    photos on the front (offered: the front could take two squares beside the QR code; not built until he asks); the
    vendor's file specification; any print order.
+
+### 12.1 Built, 2026-10-20 — found at the build, not ruled
+
+1. ⚠ **The 1.4 in QR code did not fit under a two-line offer.** The first build with the offer's proposed label (not
+   committed here: the offer is not approved; two lines at 34px) warned on all five fronts that `eatfitaf.com` was less
+   than § 2's 0.125 in inside the bottom cut edge; under Q25's two-line fixture the logo measured 0.058 in from it. Q25
+   had passed because the committed offer is the one-line placeholder. **The code is 1.25 in** (150 layout px, still
+   34% larger than the mock-up's 0.93 in), the one other value tried, which keeps every part inside the safe margin
+   under two lines (sizes between the two were not tried). Q25 now builds with a neutral bracketed two-line offer, and
+   fails at 1.4 in (run red, then green).
+2. **The offer's two lines are balanced** (`text-wrap: balance`): without it the first line ran nearly the body's width
+   and the second held the last two words.
+3. **The draft words did not fit** (item 5 refused them: 66.1 layout px over); cut by the orchestrator to the five
+   paragraphs now in `data/flyer-back.md` (12.3 layout px to spare), every claim still one of draft 2's.
+4. **Q21's refusal cases edit a fixed fixture**, not the committed words, so the Advisor's edits cannot break them.

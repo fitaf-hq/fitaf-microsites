@@ -17,11 +17,11 @@ export const LAYOUT_PX_PER_INCH = PX_PER_INCH;
 /**
  * § 12 item 2 (the Advisor, 2026-10-20): the flyer's front, the call to action larger. The offer is set at the headline's
  * size (mockups.css .headline, 34px, from the offer's own 24px), on at most this many lines; the QR code is this many
- * inches square (168 layout px, from the mock-up's 112). Layout px are the mock-ups' (LAYOUT_PX_PER_INCH a real inch).
+ * inches square (150 layout px, from the mock-up's 112; 1.4 in, § 12 item 2, put eatfitaf.com inside the safe margin under a two-line offer: § 12.1). Layout px are the mock-ups' (LAYOUT_PX_PER_INCH a real inch).
  */
 export const FRONT_OFFER_PX = 34;
 export const FRONT_OFFER_MAX_LINES = 2;
-export const FRONT_QR_IN = 1.4;
+export const FRONT_QR_IN = 1.25;
 /**
  * § 12 items 3 and 5: the flyer's back. No type on it smaller than BACK_MIN_TEXT_PX (8.4 pt). Its paragraphs are set at
  * BACK_TEXT_PX, their lines BACK_LINE_HEIGHT apart (the heading and the lede take the mock-ups' headline and tagline);

@@ -20,9 +20,9 @@ export const FLYER_PAGES = 2;
 export const FLYER_BOX = [0, 0, 324, 414];
 /** § 12 item 3: no type on the back smaller than this, in layout px (8.4 pt). */
 export const MIN_TEXT_PX = 14;
-/** § 12 item 2: the front's offer at the headline's size, and its QR code 1.4 in, in layout px (120 a real inch). */
+/** § 12 item 2: the front's offer at the headline's size, and its QR code 1.25 in (§ 12.1), in layout px (120 a real inch). */
 export const FRONT_OFFER_PX = 34;
-export const FRONT_QR_PX = 168;
+export const FRONT_QR_PX = 150;
 
 const load = (root, rel) => import(pathToFileURL(join(root, rel)).href);
 

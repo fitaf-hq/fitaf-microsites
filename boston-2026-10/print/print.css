@@ -33,9 +33,9 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-flyer .flyer-scan { margin-top: 0; }
 .print-flyer .logo-corner { position: absolute; right: 24px; bottom: 20px; width: 84px; }
 /* § 12 (the Advisor, 2026-10-20): the front a strong call to action, by scale, nothing added: the offer at the headline's
-   size, in its own field across the body's width (the body's column stretches it), and the QR code 1.4 in square; both
+   size, in its own field across the body's width (the body's column stretches it), and the QR code 1.25 in square (§ 12.1); both
    sizes.mjs's (--offer-size, --qr-side). The space left is still shared evenly, as § 9 has it */
-.print-flyer .flyer-body > .offer { font-size: var(--offer-size); }
+.print-flyer .flyer-body > .offer { font-size: var(--offer-size); text-wrap: balance; } /* two lines of even length, not one long and one short */
 .print-flyer .flyer-scan .qr { width: var(--qr-side); height: var(--qr-side); }
 
 /* ---------- § 12: a flyer's two sides, each a sheet and a page of its PDF: the front, then the back, upright (a flip on

@@ -76,7 +76,7 @@ export function sizeRules(piece) {
     // §§ 9–10: the face's width and its photo windows' shape, for print.css (the flyer's photo, 3:2 across the face; the
     // tent's three, square)
     `.print-face > .board { --face-w: ${px(piece.face.w)}px;${piece.photoWindow ? ` --photo-ratio: ${piece.photoWindow.w / piece.photoWindow.h};` : ""} }`,
-    // § 12: the flyer's front, its offer at the headline's size and its QR code 1.4 in (print.css reads them for the flyer
+    // § 12: the flyer's front, its offer at the headline's size and its QR code 1.25 in, § 12.1 (print.css reads them for the flyer
     // alone); and, for a piece with a back, the back's paragraphs' type, their lines and the gap between the words' blocks
     `.print-face > .board { --offer-size: ${FRONT_OFFER_PX}px; --qr-side: ${px(FRONT_QR_IN)}px; }`,
     ...(piece.back ? [`.print-face > .board { --back-text: ${BACK_TEXT_PX}px; --back-line: ${BACK_LINE_HEIGHT}; --back-gap: ${BACK_GAP_PX}px; }`] : []),
