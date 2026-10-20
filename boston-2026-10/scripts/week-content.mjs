@@ -20,10 +20,23 @@
 //   selection, the card's words, and every sheet the manifest names must be present. A refusal, a week with no picks
 //   file, an unknown argument or a DIR that already holds week/ exits 1 and WRITES NOTHING: everything is made in
 //   memory first.
-import { existsSync } from "node:fs";
+//
+// A PREVIEW (SPEC-preview-sites.md § 2, amended 2026-10-20):
+//
+//   npm run content -- --preview --week YYYY-MM-DD --from DIR --out DIR
+//
+// reads DIR/<week>.json, a preview file (Fit AF's emitter's `--preview`: the version-2 picks shape, "preview": true,
+// "approved"), checked by checkPicks in a preview read, and the week's photo sheet that DIR/photo-sheets.json names
+// (data/photo-sheets.json's shape; the sheet in DIR/photo-sheets/), and writes OUT/previews/<week>/picks-data.json (the
+// page's #picks-data for that week: no link at all, marked `preview` and `approved`, its sheet at the preview Worker's
+// /<week>/week/<file>.jpg) and OUT/previews/<week>/week/<file>.jpg, deterministic, reported as above. ⛔ A preview's
+// data never enters this repository: --from is required, and refused when it resolves inside this repository's tree;
+// it is fitaf-infra's previews/ directory (its content job passes its own checkout's). No --env and no --picks: a
+// preview has no link to carry a host, and reads nothing of data/picks/.
+import { existsSync, realpathSync, statSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   DEV_PHOTO_HOST,
@@ -35,11 +48,12 @@ import {
   PICKS_DIR,
   PLANS_PATH,
   PROD_PHOTO_HOST,
+  ROOT,
   SAVE_PATH,
   scriptJson,
   sheetsToCopy,
 } from "../build.mjs";
-import { chefsChoiceWords, isSunday, pageData, readPicks } from "./chefs-choice.mjs";
+import { checkPicks, chefsChoiceWords, isSunday, pageData, readPicks } from "./chefs-choice.mjs";
 import { checkSelection } from "./selection.mjs";
 
 /** § 1: the objects' keys (the interface with fitaf-infra). */
@@ -133,10 +147,106 @@ export function pageWithWeek(html, data) {
   return parts[0] + PICKS_ELEMENT_OPEN + scriptJson(data) + parts[1].slice(end);
 }
 
-/** Write `files` under `outDir` (refusing a directory that already holds week/, before writing anything): each file's
- *  path, size and SHA-256. */
-export async function writeContent(files, outDir) {
-  if (existsSync(join(outDir, WEEK_DIR))) throw new Error(`${join(outDir, WEEK_DIR)}/ already exists: give an empty --out, so two weeks' objects never meet`);
+/** SPEC-preview-sites §§ 2–3: a preview's objects, under previews/<delivery>/ (the preview Worker's bucket keys): its data,
+ *  and its sheets under week/, which the Worker serves at /<delivery>/week/<file>.jpg. */
+export const PREVIEWS_DIR = "previews";
+export const previewDataKey = (delivery) => `${PREVIEWS_DIR}/${delivery}/picks-data.json`;
+/** What --from holds beside <delivery>.json: the sheets' manifest (data/photo-sheets.json's shape) and their directory. */
+const PREVIEW_MANIFEST = "photo-sheets.json";
+const PREVIEW_SHEETS = "photo-sheets";
+/** A sheet's file name, as the Workers match one: letters, digits, ".", "_" and "-", ending ".jpg", no "..". */
+const SHEET_FILE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.jpg$/;
+/** This repository's top level: the package is one directory below it (its ../README.md is the repository's). */
+export const REPO_ROOT = dirname(ROOT);
+
+const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const isCell = (c) => isObject(c) && ["x", "y", "w", "h"].every((k) => Number.isFinite(c[k])) && c.w > 0 && c.h > 0;
+
+/**
+ * --from as a preview reads it (SPEC-preview-sites § 2, amended 2026-10-20): its real path. Refused when it is not given,
+ * does not exist or is not a directory, and when it resolves (links followed) inside this repository's tree: a preview's
+ * data never enters this repository, which is public.
+ */
+export function previewSource(from, repoRoot = REPO_ROOT) {
+  if (!from) throw new Error("--from DIR is required with --preview: the directory holding <delivery>.json and photo-sheets/ (fitaf-infra's previews/), never this repository");
+  let real;
+  try {
+    real = realpathSync(from);
+  } catch {
+    throw new Error(`--from ${from} does not exist`);
+  }
+  if (!statSync(real).isDirectory()) throw new Error(`--from ${from} is not a directory`);
+  const rel = relative(realpathSync(repoRoot), real);
+  const outside = rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel);
+  if (!outside) throw new Error(`--from ${from} is inside this repository's tree: a preview's data never enters this repository (SPEC-preview-sites § 2); give fitaf-infra's previews/ directory`);
+  return real;
+}
+
+/** The week's sheet as --from names it: photo-sheets.json's `chefs_choice[<week>]` ({ file, width, height, cells }, cells
+ *  keyed by the week's names), its file in photo-sheets/; refused when named and absent. No manifest, or no entry for
+ *  the week: null (plain tiles, nothing copied). */
+async function previewSheet(dir, week) {
+  const manifestPath = join(dir, PREVIEW_MANIFEST);
+  if (!existsSync(manifestPath)) return null;
+  let manifest;
+  try {
+    manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  } catch (err) {
+    throw new Error(`${manifestPath}: not JSON: ${err.message}`);
+  }
+  const entry = isObject(manifest) && isObject(manifest.chefs_choice) ? manifest.chefs_choice[week] : undefined;
+  if (entry === undefined) return null;
+  const valid =
+    isObject(entry) && typeof entry.file === "string" && SHEET_FILE.test(entry.file) && !entry.file.includes("..") &&
+    Number.isInteger(entry.width) && Number.isInteger(entry.height) && isObject(entry.cells) && Object.values(entry.cells).every(isCell);
+  if (!valid) throw new Error(`${manifestPath}: chefs_choice.${week} must be { file (a plain .jpg name), width, height, cells of { x, y, w, h } }`);
+  const path = join(dir, PREVIEW_SHEETS, entry.file);
+  if (!existsSync(path)) throw new Error(`${manifestPath} names ${entry.file}, which is not in ${join(dir, PREVIEW_SHEETS)}/`);
+  return { entry, path };
+}
+
+/**
+ * A preview's content for delivery Sunday `week` (SPEC-preview-sites § 2): { week, files: [{ key, bytes }] }, the data
+ * first, then its sheet. The preview file is checked by checkPicks in a preview read (refusing a file that is not a
+ * preview's), with the selection and the card's words as the live content's; its data is pageData() over that one week,
+ * every sheet URL at /<week>/week/<file>. Throws on any refusal; reads only, writes nothing. `repoRoot` for a case.
+ */
+export async function previewContent({ week, from, plansPath = PLANS_PATH, messagesPath = MESSAGES_PATH, savePath = SAVE_PATH, repoRoot = REPO_ROOT } = {}) {
+  if (typeof week !== "string" || !isSunday(week)) throw new Error(`--week must be a delivery Sunday, YYYY-MM-DD; got ${week}`);
+  const dir = previewSource(from, repoRoot);
+  const plans = await loadJson(plansPath);
+  const { snacks: flags } = checkSelection(plans);
+  const words = chefsChoiceWords(await loadJson(messagesPath));
+  const zone = (await loadJson(savePath)).send_time_zone;
+  const path = join(dir, `${week}.json`);
+  if (!existsSync(path)) throw new Error(`no preview file for ${week}: ${path}`);
+  let checked;
+  try {
+    let json;
+    try {
+      json = JSON.parse(await readFile(path, "utf8"));
+    } catch (err) {
+      throw new Error(`not JSON: ${err.message}`);
+    }
+    checked = checkPicks(json, `${week}.json`, plans, null, { preview: true });
+  } catch (err) {
+    throw new Error(`${path}: ${err.message}`);
+  }
+  const sheet = await previewSheet(dir, week);
+  const photos = sheet ? { base: CONTENT_BASE, chefs_choice: { [week]: sheet.entry } } : { base: null };
+  const prefix = `/${week}/`;
+  const text = scriptJson(pageData([checked], { words, zone, photos, assetPrefix: prefix, snacks: flags.shown, carted: flags.carted }));
+  const files = [{ key: previewDataKey(week), bytes: Buffer.from(text, "utf8") }];
+  if (sheet && text.includes(`${prefix}${CONTENT_BASE}${sheet.entry.file}`)) {
+    files.push({ key: `${PREVIEWS_DIR}/${week}/${WEEK_DIR}/${sheet.entry.file}`, bytes: await readFile(sheet.path) });
+  }
+  return { week, files };
+}
+
+/** Write `files` under `outDir` (refusing a directory that already holds `top`, week/ or a preview's previews/, before
+ *  writing anything): each file's path, size and SHA-256. */
+export async function writeContent(files, outDir, top = WEEK_DIR) {
+  if (existsSync(join(outDir, top))) throw new Error(`${join(outDir, top)}/ already exists: give an empty --out, so two weeks' objects never meet`);
   const written = [];
   for (const { key, bytes } of files) {
     const path = join(outDir, key);
@@ -147,19 +257,35 @@ export async function writeContent(files, outDir) {
   return written;
 }
 
-/** The command line: exactly --week and --out, and --env dev and --picks DIR. Anything else is refused. */
+const USAGE = "npm run content -- --week YYYY-MM-DD --out DIR [--env dev] [--picks DIR], or -- --preview --week YYYY-MM-DD --from DIR --out DIR";
+
+/** The command line: exactly --week and --out, and --env dev and --picks DIR; or a preview's (SPEC-preview-sites § 2):
+ *  --preview, --week, --from and --out, and nothing else. Anything else is refused. */
 export function parseArgs(argv) {
-  const known = { "--week": "week", "--out": "out", "--env": "env", "--picks": "picks" };
+  const known = { "--week": "week", "--out": "out", "--env": "env", "--picks": "picks", "--from": "from" };
   const args = {};
+  let preview = false;
   for (let i = 0; argv.length > i; i += 2) {
+    if (argv[i] === "--preview") {
+      if (preview) throw new Error("--preview given twice");
+      preview = true;
+      i -= 1; // a flag: no value follows it
+      continue;
+    }
     const name = known[argv[i]];
-    if (!name) throw new Error(`unknown argument ${JSON.stringify(argv[i])} (npm run content -- --week YYYY-MM-DD --out DIR [--env dev] [--picks DIR])`);
+    if (!name) throw new Error(`unknown argument ${JSON.stringify(argv[i])} (${USAGE})`);
     if (name in args) throw new Error(`${argv[i]} given twice`);
     if (argv[i + 1] === undefined || argv[i + 1].startsWith("--")) throw new Error(`${argv[i]} needs a value`);
     args[name] = argv[i + 1];
   }
   if (!args.week) throw new Error("--week YYYY-MM-DD is required: the delivery Sunday (never inferred)");
   if (!args.out) throw new Error("--out DIR is required");
+  if (preview) {
+    if (args.env !== undefined || args.picks !== undefined) throw new Error("--preview takes no --env and no --picks: a preview has no link to carry a host, and reads only --from");
+    if (!args.from) throw new Error("--from DIR is required with --preview: the directory holding <delivery>.json and photo-sheets/ (fitaf-infra's previews/), never this repository");
+    return { preview: true, week: args.week, out: args.out, from: resolve(args.from) };
+  }
+  if (args.from !== undefined) throw new Error("--from is a preview's (--preview); the live content reads data/picks/");
   if (args.env !== undefined && args.env !== "dev") throw new Error(`--env must be dev; got ${args.env}`);
   return { week: args.week, out: args.out, target: args.env ?? "prod", ...(args.picks ? { picksDir: resolve(args.picks) } : {}) };
 }
@@ -167,9 +293,10 @@ export function parseArgs(argv) {
 // Run as a program (not a top-level await: chefs-choice.mjs imports build.mjs, which must finish evaluating first).
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   (async () => {
-    const { week, out, target, picksDir } = parseArgs(process.argv.slice(2));
-    const { files } = await weekContent({ week, target, ...(picksDir ? { picksDir } : {}) });
-    for (const f of await writeContent(files, out)) console.log(`wrote ${f.path} (${f.bytes} bytes) sha256:${f.sha256}`);
+    const args = parseArgs(process.argv.slice(2));
+    const { week, out, target, picksDir } = args;
+    const { files } = args.preview ? await previewContent({ week, from: args.from }) : await weekContent({ week, target, ...(picksDir ? { picksDir } : {}) });
+    for (const f of await writeContent(files, out, args.preview ? PREVIEWS_DIR : WEEK_DIR)) console.log(`wrote ${f.path} (${f.bytes} bytes) sha256:${f.sha256}`);
   })().catch((err) => {
     console.error(`week-content: ${err.message}`);
     process.exitCode = 1;

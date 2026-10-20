@@ -90,3 +90,83 @@ later, perhaps every planned week at the plan's own approval); the live site.
 
 Then the first preview, **2026-11-01** (the Boston menu): Fit AF's file, this repository's commit, the pin, the content
 run; the Advisor opens `https://preview.eatfitaf.com/2026-11-01/`, signs in, and the Fit AF team tests it.
+
+## 7. Built (part 2, this repository) — found at the build, not ruled
+
+Red at `c6ece96` (each case file alone: PV1, PV2, PV3a, PV4, PV6, PV7 and the three mutant cases failing on the missing
+feature; PV3b and PV5 passing, as they must: they pin what does not change), green at the commit that carries this
+section, each case file alone. §§ 1–6 are unchanged.
+
+**What was built**
+
+- `build.mjs`: the target `preview` (`npm run build -- --env preview` → `dist-preview/`): `renderPage` with
+  `previewSlots()` (the production slots, the page's files addressed from the root as the development pages' are,
+  `ANALYTICS` empty) and `{ orderLinks: false }` (the grid's six cells and Family's button written with no `href`,
+  `role="link" aria-disabled="true"`; plan-data's `base` empty). The template gains three slots, `PREVIEW_STYLE`,
+  `PREVIEW_BANNER` (first in `<body>`) and `PREVIEW_SCRIPT` (last), empty on every other page (PV5).
+- `src/preview/`: `banner.html`, `style.css`, `preview.js`; the words in `data/messages.json`'s `preview`.
+- `scripts/chefs-choice.mjs`: `checkPicks(json, name, plans, photo, { preview })`; `pageData` writes the week's
+  `preview: true` and `approved`. `scripts/week-content.mjs`: `previewContent()`, `previewSource()`, `--preview`.
+- `src/worker/preview.js`: `route`, `isDate`, `isPreviewWeek`, `servePreview`; it imports `script-json.js` only.
+
+**The choices, where §§ 1–4 left one open**
+
+1. **How a preview file names its sheet.** § 2 says the command reads "the photo sheets it names", and the preview
+   file is the version-2 shape plus two keys, none naming a sheet. Read as: `<from>/photo-sheets.json`, in
+   `data/photo-sheets.json`'s shape (the photos emitter's own), its `chefs_choice[<delivery>]` `{ file, width, height,
+   cells }` with the cells keyed by the week's names (Fit AF's), the file in `<from>/photo-sheets/`. No manifest, or no
+   entry for the week: plain tiles, nothing copied. ⚠ **This is the interface with Fit AF's `emit_microsite_photos.py`
+   preview mode, which is not yet contracted there** (`emit_microsite_picks.spec.md` § 8 item 4 names the sheet only).
+2. **The banner's date** is the delivery as the address names it (`2026-11-01`), written by the page's script from
+   `#picks-data`'s one week; *Not yet approved.* is in the markup and hidden only when the week says `approved: true`
+   (a week whose approval is unknown is not called approved). The words are the build's (a change is a release), as §
+   8.1 item 4 of SPEC-week-content chose for `updating`. Without JavaScript the date is blank (the card needs it too).
+3. **Ordering off, at run time.** A preview's carts keep one entry per size, its value `""` (no link), so the card's
+   script shows the size's list; plan-data's `base` is `""`, so app.js writes `?mpid=N` on *Choose your meals*, which
+   the card's script reads to choose the size. `preview.js` runs last and takes every `<a>`'s `href` away, marking it
+   `role="link" aria-disabled="true"`, at load, after each `hashchange` (its listener follows app.js's and the card's)
+   and after each click (app.js re-renders without a `hashchange` when a choice leaves the fragment as it was). No link
+   holds an address at any moment a visitor can act; the served page holds no store URL in its bytes.
+4. **`preview` and `approved` are the week's keys** in the content (as `updating` is), not the top level's.
+5. **`checkPicks`** refuses `"preview": true` unless the caller passes `{ preview: true }` (the preview content command
+   alone), and in a preview read refuses a file that is not a preview's; a preview file is version 2, never `updating`,
+   its `approved` true or false. Its carts pass the link tool's checks (`payloadFromArgs`) and make no link. ⚠ A preview
+   file put in `data/picks/` refuses the live content of EVERY week (the live command reads every file, SPEC-week-content
+   § 7 item 10): loud, by design.
+6. **"This repository's tree"** is the package's parent directory (the repository's top level: `../README.md`), both
+   sides compared by real path, so a link elsewhere that resolves into the repository is refused (PV7). Not `git
+   rev-parse`: a checkout without `.git`, or one nested in another repository, would answer differently.
+7. **The command line**: `--preview` takes `--week`, `--from` and `--out` only (`--env` and `--picks` refused: a
+   preview has no link to carry a host and reads nothing of `data/picks/`); `--from` without `--preview` is refused; an
+   `--out` already holding `previews/` is refused, as one holding `week/` is.
+8. **The Worker.** It expects `run_worker_first: true` (the list is at `/`, where the assets hold the bare preview
+   page). Static files are `/fonts/…` and `/assets/…` only; `/<delivery>` without its slash, `/index.html` and any
+   method but GET on the Worker's own routes are 404s. An object that is not a preview of its date (not one week, a
+   different `delivery`, no `preview: true` or `approved`, or not the shape the page reads) is the 404 naming the date:
+   **a live week's content, which carries the store's links, is never served here** (PV4 checks it). The list is by key
+   (`previews/<date>/picks-data.json` present), not by reading each object.
+9. **Nothing shared with the live Workers**: the shape check is written again in `preview.js` (`isPreviewWeek`, the
+   keys the page's scripts read plus the two marks) rather than imported from `site.js`, which imports the beacon.
+
+**Mutation results (§ 4, `test/pv-mutants.test.mjs`, each in a nested mirror)**: the control passes PV1 and PV3. A
+store link left in the preview page (the preview build with `orderLinks: true`): PV1 red, 16 problems, the first *"the
+built page holds 8 URL(s) of fitafnutrition.com"*. The refusal of `preview: true` removed from the live content
+command (`checkPicks`' refusal outside a preview read): PV3 red, `checkPicks`, the live content (prod and dev, alone
+and beside a live week) and the program (exit 0, `week/` written) all accept it. PV4, probed by hand the same way (not
+committed): a list oldest first, a `..` let through, and the preview marks unchecked are each red.
+
+**Found**
+
+- ⚠ **`--out` inside this repository is not refused** (§ 2 is silent): the objects would sit, untracked, in the public
+  repository's working tree. Not built, since `fitaf-infra`'s job may place `--out` anywhere; the orchestrator's to rule.
+- `wrangler.jsonc` is not touched: the preview Worker's bucket name, settings and domain are `fitaf-infra`'s, and its
+  mirror of this file is unchanged.
+- ⚠ `npm run contrast` does not read `src/preview/style.css` (its inputs are a fixed list); the file draws only the
+  measured white-on-navy pair and dims a disabled link (inactive controls). Storybook's SM-4 reads every `src/**/*.css`
+  rule and every phrase of `data/messages.json`, so the two new rules and the banner's words are now page text it must
+  not copy.
+- PV5's golden is every file of both builds as `8081b46` wrote them (git archive of that commit, `pv-05-record.mjs`);
+  the production `index.html` there is S20's `ac981505…`.
+
+**Not run here**: the full suite, Storybook, the watch, `npm run contrast`, any build of every target; nothing
+deployed, no `wrangler`, no bucket written; the page not looked at in a browser (linkedom and Miniflare only).

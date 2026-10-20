@@ -1,7 +1,11 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
 //
-//   node build.mjs [--env dev] [--out DIR]
+//   node build.mjs [--env dev|preview] [--out DIR]
+//
+// `--env preview` (SPEC-preview-sites.md § 3) writes dist-preview/: the production page with a preview site's changes
+// built in (the banner's slot, every order link without an address and shown disabled, no analytics beacon, no rung 4),
+// holding no week either: the preview Worker (src/worker/preview.js) puts a planned week in its #picks-data.
 //
 // ⛔ THE BUILD EMBEDS NO WEEK (SPEC-week-content § 7, the orchestrator's ruling of 2026-10-11 on § 7's first open
 // question): the page always carries the Chef's Choice card with a #picks-data holding `weeks: []`, hidden, and reads
@@ -29,6 +33,9 @@ export const PLANS_PATH = join(ROOT, "data", "plans.json");
 export const EVENTS_PATH = join(ROOT, "data", "events.json");
 export const DIST = join(ROOT, "dist");
 export const DIST_DEV = join(ROOT, "dist-dev");
+/** SPEC-preview-sites § 3: the preview build's directory, and its page's own sources (the banner, its style, its script). */
+export const DIST_PREVIEW = join(ROOT, "dist-preview");
+export const PREVIEW_SRC = join(ROOT, "src", "preview");
 export const SAVE_PATH = join(ROOT, "data", "save.json");
 /** The campaign's phrases, shared by the page and the mock-ups (mockups/): one place to change a phrase. */
 export const MESSAGES_PATH = join(ROOT, "data", "messages.json");
@@ -81,6 +88,14 @@ export function weeklyTotalCents(cell) {
 export function orderUrl(plans, mpid) {
   return `${plans.order_base_url}?mpid=${mpid}`;
 }
+
+/** SPEC-preview-sites § 1 item 2: on a preview, a plan's link has no address and is shown disabled. */
+const NO_ORDER_LINK = 'role="link" aria-disabled="true"';
+/** A plan's link's attribute: its order page (`href`), or with `orderLinks` false (a preview) none, disabled. */
+const orderLink = (plans, mpid, orderLinks) => (orderLinks ? `href="${esc(orderUrl(plans, mpid))}"` : NO_ORDER_LINK);
+/** SPEC-preview-sites § 1 item 2: a preview's plan-data has no store address. app.js still writes `?mpid=N` on Choose your
+ *  meals (the card's script reads the size from it), and the preview's script then takes every link's href away. */
+const PREVIEW_ORDER_BASE = "";
 
 export function shownCounts(plans) {
   return plans.shown_counts.map((c) => c.meals_per_week);
@@ -233,7 +248,7 @@ ${slides.join("\n")}
   </div>`;
 }
 
-function gridRows(plans) {
+function gridRows(plans, orderLinks = true) {
   const cells = gridCells(plans);
   return plans.individual
     .map((plan) => {
@@ -241,7 +256,7 @@ function gridRows(plans) {
         .filter((c) => c.plan === plan.id)
         .map(
           (c) =>
-            `<td><a class="cell" href="${esc(orderUrl(plans, c.mpid))}" data-cell="${c.plan}-${c.count}" ` +
+            `<td><a class="cell" ${orderLink(plans, c.mpid, orderLinks)} data-cell="${c.plan}-${c.count}" ` +
             `aria-label="${esc(plan.name)}, ${c.count} meals a week: ${money(c.price_per_meal_cents)} per meal, ${money(c.total_cents)} a week">` +
             `<b>${money(c.price_per_meal_cents)}<span class="visually-hidden"> per meal</span></b>` +
             `<small>${money(c.total_cents)}/wk</small></a></td>`,
@@ -258,7 +273,7 @@ function gridHead(plans) {
     .join("");
 }
 
-function familySection(plans) {
+function familySection(plans, orderLinks = true) {
   const f = plans.family;
   const cell = f.counts[0];
   const n = cell.meals_per_week;
@@ -269,7 +284,7 @@ function familySection(plans) {
         <div><dt>Per family meal</dt><dd>${money(cell.price_per_meal_cents)}</dd></div>
         <div><dt>Weekly total (${n} meal${n === 1 ? "" : "s"})</dt><dd>${money(weeklyTotalCents(cell))}</dd></div>
       </dl>
-      <a class="cta" href="${esc(orderUrl(plans, cell.mpid))}" data-plan="${esc(f.id)}">Choose your meals</a>
+      <a class="cta" ${orderLink(plans, cell.mpid, orderLinks)} data-plan="${esc(f.id)}">Choose your meals</a>
     </div>`;
 }
 
@@ -277,14 +292,14 @@ function familySection(plans) {
  * What the inline script needs: display strings computed here from cents, so money math lives once. Since
  * SPEC-meal-selection: per answer set (`or-5d`, § 8 item 2) the plan it goes through and the rounded line, or "" (§ 2);
  * each size's cells for every plan an answer set goes through; the defaults; today's two counts as answer sets (§ 3:
- * `#lean-7`, `#meals-14`); and whether Q4 is on the page.
+ * `#lean-7`, `#meals-14`); and whether Q4 is on the page. With `orderLinks` false (a preview) the order page's base is empty.
  */
-function clientData(plans, words, offer = plans.snacks.shown) {
+function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true) {
   const { rows, defaults } = checkSelection(plans);
   const counts = [...new Set([...rows.values()].map((r) => r.plan))].sort((a, b) => a - b);
   const legacy = shownCounts(plans).map((n) => [n, legacyKey(rows, n)]).filter(([, key]) => key);
   return {
-    base: plans.order_base_url,
+    base: orderLinks ? plans.order_base_url : PREVIEW_ORDER_BASE,
     answers: Object.fromEntries(
       [...rows].map(([key, r]) => [key, { plan: r.plan, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
     ),
@@ -464,8 +479,10 @@ export async function analyticsSlot(events) {
 }
 
 /** `picks`: this week's Chef's Choice slots (scripts/chefs-choice.mjs), or none. `photos`: the photo sheets' manifest
- *  (data/photo-sheets.json when not given). `events`: data/events.json when not given (the analytics' QR ids). */
-export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS, photos = undefined, events = undefined) {
+ *  (data/photo-sheets.json when not given). `events`: data/events.json when not given (the analytics' QR ids).
+ *  `orderLinks` false (a preview, SPEC-preview-sites § 1 item 2): the grid's and Family's links, and plan-data's base,
+ *  carry no store address. */
+export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS, photos = undefined, events = undefined, { orderLinks = true } = {}) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
   messages ??= await loadJson(MESSAGES_PATH);
@@ -486,13 +503,17 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
     GOALS: plans.individual.map(goalButton).join("\n"),
     MEAL_QUESTIONS: mealQuestions(plans, words, offer),
     GRID_HEAD: gridHead(plans),
-    GRID_ROWS: gridRows(plans),
-    FAMILY: familySection(plans),
+    GRID_ROWS: gridRows(plans, orderLinks),
+    FAMILY: familySection(plans, orderLinks),
     READ_FROM_TEXT: esc(plans.read_from.replace(/^https?:\/\//, "")),
     READ_ON: esc(plans.read_on),
-    DATA: scriptJson(clientData(plans, words, offer)),
+    DATA: scriptJson(clientData(plans, words, offer, orderLinks)),
     ANALYTICS: await analyticsSlot(events),
     SCRIPT: script.trim(),
+    // SPEC-preview-sites § 3: a preview's banner, its style and its script, empty on every other page (PV5).
+    PREVIEW_STYLE: "",
+    PREVIEW_BANNER: "",
+    PREVIEW_SCRIPT: "",
     ...dev,
     ...picks,
   };
@@ -573,6 +594,48 @@ async function writeDevPages(plans, events, outDir, offersPath, messages, picks,
   return written;
 }
 
+/** SPEC-preview-sites § 1 item 2: the banner's words (data/messages.json's `preview`) and the placeholders each must
+ *  carry once. A missing phrase or placeholder refuses the preview build. */
+const PREVIEW_PHRASES = { banner: ["{date}"], not_approved: [] };
+export function previewWords(messages) {
+  const words = messages.preview ?? {};
+  for (const [key, placeholders] of Object.entries(PREVIEW_PHRASES)) {
+    if (typeof words[key] !== "string" || !words[key].trim()) throw new Error(`data/messages.json: preview.${key} is missing`);
+    for (const p of placeholders) {
+      if (words[key].split(p).length !== 2) throw new Error(`data/messages.json: preview.${key} must hold ${p} once`);
+    }
+  }
+  return words;
+}
+
+/** The banner's date: the preview's script writes the week's delivery into it. */
+const PREVIEW_DATE = '<span id="preview-date"></span>';
+
+/**
+ * The preview build's slots (SPEC-preview-sites § 3): the production page's (PROD_SLOTS), served one directory down
+ * (/<delivery>/), so its own files are addressed from the root as the development pages' are; no analytics beacon; and
+ * the banner (src/preview/banner.html, its words data/messages.json's), its style and the script that keeps ordering off
+ * (src/preview/preview.js, run last, in one function scope). Its links are written without an address by renderPage's
+ * `orderLinks` false. No rung 4: the production page has none.
+ */
+export async function previewSlots(messages) {
+  const words = previewWords(messages);
+  const read = (name) => readFile(join(PREVIEW_SRC, name), "utf8");
+  const values = { BANNER: esc(words.banner).replace("{date}", PREVIEW_DATE), NOT_APPROVED: esc(words.not_approved) };
+  const banner = (await read("banner.html")).trimEnd().replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
+    if (!(key in values)) throw new Error(`src/preview/banner.html: ${whole} has no value`);
+    return values[key];
+  });
+  return {
+    ...PROD_SLOTS,
+    ASSET_PREFIX: DEV_ASSET_PREFIX,
+    ANALYTICS: "",
+    PREVIEW_STYLE: "\n" + (await read("style.css")).trim(),
+    PREVIEW_BANNER: "\n" + banner,
+    PREVIEW_SCRIPT: `\n<script>\n(function () {\n"use strict";\n${(await read("preview.js")).trim()}\n})();\n</script>`,
+  };
+}
+
 /** The Chef's Choice card for the page (SPEC-chefs-choice; SPEC-week-content § 2.1): always carried, holding NO week
  *  (§ 7's ruling: the bucket is the only source of a served week). Its words are checked here, so a missing phrase
  *  refuses the build. */
@@ -592,8 +655,9 @@ export async function build({
   target = "prod",
   outDir,
 } = {}) {
-  if (target !== "prod" && target !== "dev") throw new Error(`unknown build target: ${target}`);
-  outDir ??= target === "dev" ? DIST_DEV : DIST;
+  const dirs = { prod: DIST, dev: DIST_DEV, preview: DIST_PREVIEW };
+  if (!Object.hasOwn(dirs, target)) throw new Error(`unknown build target: ${target}`);
+  outDir ??= dirs[target];
   const plans = await loadJson(plansPath);
   // SPEC-meal-selection § 2: a broken meal selection stops the build here, before anything is written.
   checkSelection(plans);
@@ -602,14 +666,17 @@ export async function build({
   const photos = await loadPhotos(photosPath);
   // Before anything is written: the card's words checked (a missing phrase stops the build here).
   const card = await cardSlots({ plans, messages });
-  // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
-  if (target === "dev") await rm(outDir, { recursive: true, force: true });
+  const preview = target === "preview" ? await previewSlots(messages) : null; // the banner's words checked, too
+  // The dev and preview directories are wholly this build's output, so each starts empty (nothing stale gets deployed).
+  if (target !== "prod") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
   let pages;
   if (target === "dev") {
     pages = await writeDevPages(plans, events, outDir, offersPath, messages, card, photos);
   } else {
-    const html = await renderPage(plans, PROD_SLOTS, messages, card, photos, events);
+    const html = preview
+      ? await renderPage(plans, preview, messages, card, photos, events, { orderLinks: false })
+      : await renderPage(plans, PROD_SLOTS, messages, card, photos, events);
     const path = join(outDir, "index.html");
     await writeFile(path, html);
     pages = [{ path, bytes: Buffer.byteLength(html) }];

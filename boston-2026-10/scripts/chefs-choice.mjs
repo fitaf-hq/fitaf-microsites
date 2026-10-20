@@ -52,6 +52,13 @@ const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: []
 /** SPEC-week-content § 8 item 1: an UPDATING week's file is exactly { delivery, version: 2, updating: true, lists: {} }
  *  (Fit AF's emitter, `--updating`: the store has switched and this week's carts are not made yet). */
 const UPDATING_FILE_FIELDS = [...V2_FILE_FIELDS, "updating"];
+/** SPEC-preview-sites § 2: a PREVIEW file is exactly version 2's fields and two more, `preview` (true) and `approved` (true
+ *  or false: whether an approval binds to the week's picks), written by Fit AF's emitter, `--preview`: a planned week, its
+ *  names Fit AF's (no store name exists yet). */
+const PREVIEW_FILE_FIELDS = [...V2_FILE_FIELDS, "preview", "approved"];
+/** A preview's checkout links: none (SPEC-preview-sites § 1 item 2: the page has no link to the store at all). Each size
+ *  keeps its entry, so the card's script shows the size's list; the preview's own script keeps it leading nowhere. */
+const NO_LINK = "";
 
 /** A path as a person finds it: from the package when it is inside it. */
 const shown = (path) => (path.startsWith(ROOT + sep) ? relative(ROOT, path) : path);
@@ -120,7 +127,7 @@ function mealsOf(menu, where) {
  * and `display` as the page shows it (§ 7.1); only `name` reaches the tool. `photo` ({ photos, host }) gives each link
  * the week's cells by the tool's own --photos (SPEC-rung2-progress-and-checkout § 17.1). `where` names it in a refusal.
  */
-function cartOf(meals, count, where, { plans, totals, photo, date }, snacks = null) {
+function cartOf(meals, count, where, { plans, totals, photo, date, preview = false }, snacks = null) {
   const links = {};
   // SPEC-snacks-in-the-cart § 4.2: while snacks are carted, a second link per size, the cart's meals and then the week's
   // snack list for the cart's days as snack items (the tool's own --snack, so its refusals are the block's).
@@ -136,10 +143,12 @@ function cartOf(meals, count, where, { plans, totals, photo, date }, snacks = nu
     } catch (err) {
       throw new Error(`${where}: ${err.message}`);
     }
-    links[mpid] = handoffLink(plans, payload);
+    // SPEC-preview-sites § 2: a preview's carts are checked as every cart is, and make no link.
+    links[mpid] = preview ? NO_LINK : handoffLink(plans, payload);
     if (snacks) {
       try {
-        snackLinks[mpid] = handoffLink(plans, payloadFromArgs([...argv, ...snacks.flatMap((m) => ["--snack", `${m.name}:${m.qty}`])], totals, photo?.photos));
+        const withSnacks = payloadFromArgs([...argv, ...snacks.flatMap((m) => ["--snack", `${m.name}:${m.qty}`])], totals, photo?.photos);
+        snackLinks[mpid] = preview ? NO_LINK : handoffLink(plans, withSnacks);
       } catch (err) {
         throw new Error(`${where} with its snacks: ${err.message}`);
       }
@@ -253,22 +262,36 @@ function updatingWeek(json) {
  * `updating: true` and no cart and no snack. `photo`
  * ({ photos, host }: the photo sheets' manifest and the code of the host the page is served from) gives each link the
  * week's cells, by the tool's own --photos; without it, or with no sheet for the week, the links are today's.
+ *
+ * SPEC-preview-sites § 2: a PREVIEW file (`"preview": true`) is accepted only where a preview is read, the preview content
+ * command, which passes `{ preview: true }`, and refused everywhere else, so a preview can never reach the live site; in
+ * a preview read only a preview file is accepted. Its fields are PREVIEW_FILE_FIELDS, `approved` true or false; its
+ * carts are checked as every version-2 file's are, and make no link (NO_LINK). The week is returned with
+ * `preview: true` and its `approved`.
  */
-export function checkPicks(json, fileName, plans, photo = null) {
+export function checkPicks(json, fileName, plans, photo = null, { preview = false } = {}) {
   const date = PICKS_FILE.exec(fileName)?.[1];
   if (!date || !isSunday(date)) throw new Error(`the file name is not a Sunday's date (YYYY-MM-DD.json)`);
   if (!isObject(json)) throw new Error("the file must be an object");
+  const isPreview = json.preview === true;
+  if (isPreview && !preview) throw new Error('a preview file ("preview": true) is read only by the preview content command (npm run content -- --preview), never for the live site');
+  if (preview && !isPreview) throw new Error(`not a preview file: "preview" must be true, got ${JSON.stringify(json.preview)}`);
   const version = json.version ?? 1;
   if (!VERSIONS.includes(version)) throw new Error(`version ${JSON.stringify(json.version)} is not one the page reads (${VERSIONS.join(", ")})`);
+  if (isPreview && version !== 2) throw new Error(`a preview file is version 2, got version ${JSON.stringify(json.version)}`);
   const updating = version === 2 && "updating" in json;
-  onlyFields(json, version === 1 ? [...FILE_FIELDS, ...("version" in json ? ["version"] : [])] : updating ? UPDATING_FILE_FIELDS : V2_FILE_FIELDS, "the file");
+  if (isPreview && updating) throw new Error("a preview file is never an updating week");
+  const fields = updating ? UPDATING_FILE_FIELDS : isPreview ? PREVIEW_FILE_FIELDS : V2_FILE_FIELDS;
+  onlyFields(json, version === 1 ? [...FILE_FIELDS, ...("version" in json ? ["version"] : [])] : fields, "the file");
   if (json.delivery !== date) throw new Error(`delivery ${JSON.stringify(json.delivery)} is not the file's date (${date})`);
+  if (isPreview && typeof json.approved !== "boolean") throw new Error(`approved must be true or false, got ${JSON.stringify(json.approved)}`);
   const { rows } = checkSelection(plans);
   if (updating) return { delivery: date, ...updatingWeek(json) };
   // SPEC-rung2-fill-c § 8: mpid -> the plan's allowed totals, the link tool's (and the block's) own table.
   const totals = new Map(Object.entries(countTable(plans)).map(([mpid, allowed]) => [Number(mpid), allowed]));
-  const ctx = { plans, totals, photo, date };
-  return { delivery: date, ...(version === 1 ? v1Carts(json, rows, ctx) : v2Carts(json, rows, ctx)) };
+  const ctx = { plans, totals, photo, date, preview: isPreview };
+  const week = { delivery: date, ...(version === 1 ? v1Carts(json, rows, ctx) : v2Carts(json, rows, ctx)) };
+  return isPreview ? { ...week, preview: true, approved: json.approved } : week;
 }
 
 /** Every picks file in `dir`, each checked; a file breaking a rule throws, naming it. Sorted by delivery. */
@@ -339,6 +362,8 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", 
         // SPEC-week-content § 8 item 2: an updating week says so, its carts an empty object (the shape the Workers' check
         // reads, so they serve it); a week without `updating` is byte for byte what it was.
         ...(w.updating ? { updating: true } : {}),
+        // SPEC-preview-sites § 2: a preview's week says so, and whether an approval binds to it (the banner reads it).
+        ...(w.preview ? { preview: true, approved: w.approved } : {}),
         carts: Object.fromEntries(
           Object.entries(w.carts).map(([key, cart]) => [
             key,

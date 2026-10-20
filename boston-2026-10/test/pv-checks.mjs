@@ -303,6 +303,10 @@ async function previewAssets(html) {
   };
 }
 
+/** PV4's guard: a live week (the v2 fixture's delivery) and a date a preview is mis-filed under. */
+const LIVE_WEEK = "2026-10-04";
+const MISFILED_WEEK = "2026-11-29";
+
 /** Paths a preview Worker must answer with a 404 without reading its bucket: a "..", raw (route) or encoded (served), and
  *  a segment that is not a date (or not a real one), and the shapes § 3 does not name. */
 export const REFUSED_RAW = [`/${WEEK}/week/../x.jpg`, `/../${WEEK}/`, `/${WEEK}/../`, `/${WEEK}/week/x..jpg`];
@@ -330,7 +334,9 @@ export const REFUSED_SERVED = [
  * `/` lists the two, newest first, each a link; `/2026-11-01/` is dist-preview's page with that week's object as its
  * `#picks-data` (escaped as at build), every other byte the asset's, `Cache-Control` the live page's; `/2026-11-08/` (no
  * object) a 404 naming the date; `/2026-11-01/week/<sheet>` the sheet, image/jpeg; the page's static files from the
- * assets; a path with ".." or a non-date a 404, the bucket never read for it.
+ * assets; a path with ".." or a non-date a 404, the bucket never read for it. And (the build's reading of § 1 item 2: the
+ * page has no link to the store at all) an object that is not a preview of its date, a live week's content or a preview
+ * filed under another date, is a 404 naming the date.
  */
 export async function workerProblems(root = ROOT) {
   const problems = [];
@@ -397,6 +403,22 @@ export async function workerProblems(root = ROOT) {
     for (const method of ["POST", "PUT", "DELETE"]) {
       const res = await worker.get(pagePath(WEEK), { method });
       if (res.status !== 404) problems.push(`${method} ${pagePath(WEEK)}: status ${res.status}, not 404`);
+    }
+    await worker.dispose();
+    worker = undefined;
+
+    // Not a preview of that date (§ 1 item 2: the page has no link to the store at all): a LIVE week's content (the
+    // live content command's, carrying the store's links) at a delivery's key, and a preview filed under another date,
+    // are each a 404 naming the date. A second Worker, so the list above is the contract's two.
+    const { weekContent } = await moduleOf(root, "scripts", "week-content.mjs");
+    const live = await weekContent({ week: LIVE_WEEK, picksDir: join(ROOT, "test", "fixtures", "picks-v2") });
+    const liveText = Buffer.from(live.files[0].bytes).toString("utf8");
+    if (!liveText.includes(STORE_HOST)) problems.push(`fixture control: the live content of ${LIVE_WEEK} carries the store's links`);
+    worker = await startPreview({ root, assets: assets.table, objects: { [dataKey(LIVE_WEEK)]: liveText, [dataKey(MISFILED_WEEK)]: one.text } });
+    for (const date of [LIVE_WEEK, MISFILED_WEEK]) {
+      const res = await worker.get(pagePath(date));
+      if (res.status !== 404 || !res.text.includes(date)) problems.push(`${pagePath(date)} (${date === LIVE_WEEK ? "a live week's content" : `${WEEK}'s preview filed there`}): ${res.status}, not a 404 naming the date`);
+      if (res.text.includes(STORE_HOST)) problems.push(`${pagePath(date)}: the response carries ${STORE_HOST}`);
     }
   } catch (err) {
     problems.push(`no Worker to check: ${message(err)}`);
