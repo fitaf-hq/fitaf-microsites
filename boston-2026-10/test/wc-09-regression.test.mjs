@@ -5,6 +5,11 @@
 // own tree by test/wc-09-record.mjs (re-run it and diff to check the golden). Also the PAGE a visitor
 // gets from production's Worker (the no-week build, the content in the bucket) is, visibly, the page of 409b805 at noon
 // on 2026-10-11 in New York, at every fragment of REGRESSION_HASHES (§ 2.3: everything else on the page is unchanged).
+// ⚠ RE-RECORDED for SPEC-meal-selection.md § 12 (2026-10-20: each pair's default on the left, *Weekdays only* the
+// default, the snacks in the card's list; the page MEANT to change visibly, the content not): `visible` only, by
+// `node test/wc-09-record.mjs --visible-at 5f55cbc`, is now the page production's Worker serves from 5f55cbc's own tree
+// with the same content (`visible_at`); picks_data, page_sha256 and the sheet are still 409b805's, so WC-9a is unchanged.
+// Against 409b805's, "" and #family were byte-identical and the 18 answered fragments moved (§ 12.1).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -24,6 +29,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
+  assert.equal(golden.visible_at, "5f55cbc", "the visible pages: 5f55cbc's served page (SPEC-meal-selection § 12)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {
@@ -49,7 +55,7 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
   }
 });
 
-test("WC-9c: the page production's Worker serves with that content is, visibly, 409b805's page at every fragment", async () => {
+test("WC-9c: the page production's Worker serves with that content is, visibly, visible_at's page at every fragment", async () => {
   const asset = await noWeekPage();
   const { text, files } = await contentOf({ week: WEEK_1018 });
   const site = await startSite({ assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheetKeyOf(SHEET_1018)]: files[sheetKeyOf(SHEET_1018)] } });

@@ -18,6 +18,11 @@
 // byte-identical and only the six served pages moved, each by 2,543 bytes; each served page of ac52905 with that slot and
 // its newline removed is 45b5e37's byte for byte (45b5e37's own record was 8bf4dc0's). From here the reference is
 // ac52905's tree, which carries the analytics.
+// ⚠ RE-RECORDED at 5f55cbc (`node test/u-04-record.mjs --commit 5f55cbc`): SPEC-meal-selection.md § 12 (2026-10-20) puts
+// each answer pair's default on the left, makes *Weekdays only* the default and moves the snack block inside the card's
+// list, by design. Against ac52905's record, all six contents and the visible page at "(no fragment)" and #family were
+// byte-identical; the six served pages and their visible page at the five answered fragments moved (§ 12.1 lists the
+// lines). From here the reference is 5f55cbc's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -26,7 +31,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to ac52905's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "ac52905");
+test("U4: a normal week, the content and the page as served, byte-identical to 5f55cbc's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "5f55cbc");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

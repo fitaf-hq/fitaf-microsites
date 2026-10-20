@@ -412,3 +412,140 @@ checkout", "Choose my own meals", "See all plans")."* Amends § 1's table and §
 6. **Release**: the dev line, then a dev pin (`fitaf-infra`) and the Advisor's look on dev; ⛔ **production only on his
    word**, and not between Fit AF's rehearsal and Friday 2026-10-23's switch unless he says so (the switch's live smokes
    run against eatfitaf.com's page).
+
+### 12.1 Built — found at the build, not ruled
+
+Built on `boston/defaults-left` from `d15b48c` (this contract, on the dev line `cff49c0`), in three commits: `68ec5f9`
+(the cases, red), `5f55cbc` (items 1–4), and this note's (the goldens, re-recorded once, and § 12.1). **To be re-gated by
+the orchestrator**: the cases below were run one file at a time, never the whole suite, Storybook or `npm run contrast`.
+§§ 0–12 are unchanged.
+
+**The cases (item 5), and what they did before the code** (`node --test <file>`, alone, on `68ec5f9`):
+
+| case | file | before | after (`5f55cbc` and this commit) |
+|---|---|---|---|
+| MS-17 (new): each pair's default on the left in this table's words, prod and dev; `selection_defaults` weekdays, no breakfast, no snacks; the left answers pressed after Q1; the order follows other defaults in a copy of the data | `ms-17-defaults-left.test.mjs` | 1 of 7 (the all-true defaults happen to be today's order) | 7 of 7 |
+| MS-3, inverted (item 2): Q1 alone gives `or-5d` (the 4-meal plan, the rounded line) and `and-5d`, their fragments and figures, and with a week those carts' own links; `#<size>-7` / `#<size>-14` keep their meaning, byte-identical to `ms-golden.json`; `-7d` / `-5d` read as written | `ms-03-defaults.test.mjs` | 1 of 3 (the legacy fragments, a control) | 3 of 3 |
+| MS-18 (new, item 3): with *Add snacks* the snacks inside `#cc-list` after the meals, under an `h4` reading *Snacks*, before *Continue to checkout*, *Choose my own meals* the card's last thing (not carted: the line after the snacks; carted: no line); *No snacks* reads as today; `.cc-snacks` draws no box, its heading smaller than the list's | `ms-18-snacks-in-the-list.test.mjs` | 1 of 4 (*No snacks*, a control) | 4 of 4 |
+| MS-16: Q4's answers `no`, `yes` | `ms-16-snacks-shown.test.mjs` | 2 of 3 | 3 of 3 |
+| A3's control: the page's answers compared as a set (their order is MS-17's subject) | `a03-refusals.test.mjs` | 4 of 4 | 4 of 4 |
+
+**Where § 12 was silent, and what was done**
+
+1. **Q1's order.** Q1 has no default (the card waits for it), so it keeps `QUESTIONS`' order, *or* then *and*: the
+   Advisor's *"OR"* is on the left as he listed it.
+2. **Where the order lives**: `build.mjs`'s `answerOrder(q, defaults)`, Q2–Q4's default answer first, read from
+   `selection_defaults` (`true` → `yes`). Not `scripts/selection.mjs`, which the Worker reaches, so the Worker's files move
+   by `data/plans.json` alone. `QUESTIONS` stays the vocabulary (A3's, and `src/worker/beacon.js` keeps its own copy
+   unchanged); only the markup's order follows the default. `src/app.js` is unchanged: the new default reaches it as
+   `#plan-data`'s `defaults`, and every answer is read by its `data-a`, never by position.
+3. **The heading**: `chefs_choice.snacks_heading` itself shortened to *"Snacks"* (one phrase, not a second); an `h4`
+   (`.cc-snacks-heading`, 600 15px, navy) under the list's `h3` (17px). Navy on white is a pair `npm run contrast`
+   already measures, so `src/contrast-pairs.json` is unchanged (not run here).
+4. **"Inside the same list"** is read as inside the list's box, `#cc-list`: the snack block keeps its own `ul`
+   (`#cc-snack-list`, the meals' style) under its heading, between `#cc-meals` and `#cc-checkout` (`card.html`'s new
+   `{{SNACKS}}` slot), rather than `li`s appended to `#cc-meals`, so the heading is not a list item and the card's script
+   (`chefs-choice.js`) is unchanged, its ids all kept.
+5. **The not-carted line** (*"stays with the snacks"*): committed, `snacks.carted` is true, so the line is not on the
+   page (SPEC-snacks-in-the-cart § 4.3) and nothing shows it; with a copy's flags not carted, it sits inside the list
+   after the snacks and before *Continue to checkout* (MS-18).
+6. ⬜ **A fallback card shows no snacks now.** § 10 item 12 put the snack box on the card whether or not the answers had a
+   cart; inside the list, it is hidden with the list. While carted no link could carry them anyway, and both committed
+   weeks (10-18, 10-25) have a cart for all eight answer sets, so nothing a visitor sees today changes. For the Advisor,
+   if a fallback card should show them.
+7. **CC-7b** reads the card's words from `#cc-list`'s text, which now holds the snack block: it marks `snacks_heading`
+   and `snacks_not_carted` too and builds from its own snack flags (shown, not carted: § 11's rule). CC-7a's source check
+   keeps its four phrases (*"Snacks"* is also inside the script's own name `renderSnacks`); two comments were reworded so
+   no card phrase is written in a source.
+8. **WC-9's visible pages cannot be re-recorded by its recorder as it was** (it builds a commit `--on` a date, and no
+   build embeds a week since SPEC-week-content § 7). `test/wc-09-record.mjs` gains `--visible-at <commit>`: `visible` is
+   the page production's Worker serves from that commit's own tree with the week's content in its bucket, as WC-9c makes
+   it; `picks_data`, `page_sha256` and the sheet stay 409b805's, so WC-9a's content comparison is unchanged.
+9. **The build commit, `5f55cbc`, is red by design** on exactly the cases that pin the pages' bytes (S20, CC-4 prod,
+   WC-8's control, WC-9c, U4) and the Worker's files (CC-8b, CC-8c, MS-9 ×2, PR-10: `data/plans.json`), because U4's and
+   WC-9's recorders record from a commit's own tree: this commit records them from `5f55cbc`.
+10. **Storybook** keeps no recorded image or golden: its stories build from the tree, so the stories that show the
+    questions or the card show the new order and layout with no change to them; its walk reads answers by `data-a` and
+    the snack block by its ids. Not run here.
+11. **Not changed, stale**: `data/messages.json`'s `about` still says snacks are not carted.
+
+**The switch's smokes (item 5)**: none selects an answer by position or relies on the old default. Fit AF's
+`scripts/switch/unattended-switch.spec.md` S7 and S9 take each smoke's link from a page's own `#picks-data` (the page
+fetched, never pressed) by the answer set's KEY, the cart's `links` or `snack_links` (its `smoke-link.ts`, with the job
+config naming `or-5d`, `and-7d-b`, `and-7d` and `or-5d` for S7 and `and-7d` for S9); its one positional choice is the
+size, the first of the cart's mpids sorted, over the content, which § 12 does not move. The watch's smoke opens the link
+it is given on the store (`tools/storefront-watch/lib/smoke.mjs`), and nothing in the watch's `bin/` or `lib/` reads a
+`data-q` or `data-a`. None of Fit AF's programs was changed.
+
+**What did not change, shown** (the dev line's worktree at `cff49c0`, read only, against this branch):
+
+- `npm run content -- --week 2026-10-18` and `2026-10-25`, each also `--env dev`, compared with `diff -r`: byte-identical
+  (`week/picks-data.json` 3a7b7b5d… and 931a963b… for 10-18 prod and dev, 31,134 bytes; b0787e5b… and fe445c38… for
+  10-25, 31,411 bytes; the sheets byte for byte).
+- Every answer set's links: both committed weeks, prod and dev, three sizes, `#<size>-7`, `#<size>-14` and the eight
+  answer sets with and without `-s` (216 states), each page made by its own tree's build and content and opened by the
+  same reader: *Continue to checkout*, *Choose my own meals*, *Choose your meals*, the meals and the figures
+  byte-identical (96 of the 216 links carry snacks). The same answer set gives the same link; only Q1 alone now lands on
+  `or-5d` / `and-5d`.
+- The visible page (wc-harness `visible()`) at 60 fragments per week and target: 6 byte-identical (no answer chosen,
+  `#family`, `#individual`, each size alone), 54 byte-identical once § 12's three changes are undone (each pair's buttons
+  swapped back, *Weekdays only* read as *Weekdays*, the snack block moved back after *Choose my own meals* with its old
+  heading), 0 different otherwise.
+- Every built file but the pages byte-identical (fonts, logo, photo sheets, QR codes).
+
+**The goldens, re-recorded once (this commit)**
+
+| golden | moved |
+|---|---|
+| S20 `test/s20-production-golden.json` | `index.html` alone, `ac981505…` → `03e39dbc…` |
+| WC-8's `TODAY_NO_PICKS_SHA256` | `03fcc0c1…` → `bb17e256…` |
+| U4 `test/u-04-golden.json` (`node test/u-04-record.mjs --commit 5f55cbc`) | the six served pages, and their visible page at the five answered fragments; all six contents and `(no fragment)` and `#family` byte-identical |
+| WC-9 `test/wc-09-golden.json` (`node test/wc-09-record.mjs --visible-at 5f55cbc`) | `visible` at the 18 answered fragments; `""`, `#family`, `picks_data`, `page_sha256` and the sheet as before |
+| CC-8 `test/cc-08-unchanged-golden.json` (CC-8b, CC-8c, MS-9, PR-10) | `worker["data/plans.json"]`, `4213f7b5…` → `46542b6f…`; the Footer block's text (`efcbc570…`) and the watch's expected Footer unchanged |
+
+**Every changed line.** Production's `index.html` (no week, as every build writes it), 25 lines; each development page
+(`/`, `demo/`, `boston/`, `seminar/`) changes by the same 25 lines at other line numbers (compared line for line), and
+each served page (U4, WC-9) by the same lines, its `#picks-data` the unchanged content. Sizes, raw / gzip: production
+40,195 / 11,878 → 40,324 / 11,947; development `/` 63,825 / 18,780 → 63,954 / 18,840 (`seminar/` 63,957 / 18,842), under
+SPEC.md § 1's 61,440 gzip. (`diff`'s own output; the `#plan-data` line is one line of JSON, shown here by its
+`defaults` alone, the only part that moved.)
+
+```text
+198,200c198,203
+< /* The week's snacks (SPEC-meal-selection § 9 item 3): shown with Add snacks, below the card's links; never in a link */
+< .cc-snacks { margin: 16px 0 0; padding: 16px 16px 4px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+< .cc-note { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+---
+> /* The week's snacks (SPEC-meal-selection § 9 item 3; § 12 item 3): with Add snacks, inside the card's one list, after the
+>    meals and before the list's checkout link, under a small heading; no box of their own */
+> .cc-snacks { margin: 0 0 16px; }
+> .cc-snacks .cc-meals { margin-bottom: 0; }
+> .cc-snacks-heading { margin: 0 0 4px; font: 600 15px/1.3 var(--head); color: var(--navy); }
+> .cc-note { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+257a261
+>           <button type="button" class="choice" data-q="weekends" data-a="no" aria-pressed="false"><span class="choice-name">Weekdays only</span></button>
+259d262
+<           <button type="button" class="choice" data-q="weekends" data-a="no" aria-pressed="false"><span class="choice-name">Weekdays</span></button>
+265d267
+<           <button type="button" class="choice" data-q="breakfast" data-a="yes" aria-pressed="false"><span class="choice-name">Add breakfast</span></button>
+266a269
+>           <button type="button" class="choice" data-q="breakfast" data-a="yes" aria-pressed="false"><span class="choice-name">Add breakfast</span></button>
+272d274
+<           <button type="button" class="choice" data-q="snacks" data-a="yes" aria-pressed="false"><span class="choice-name">Add snacks</span></button>
+273a276
+>           <button type="button" class="choice" data-q="snacks" data-a="yes" aria-pressed="false"><span class="choice-name">Add snacks</span></button>
+290a294,297
+>             <div class="cc-snacks" id="cc-snacks" hidden>
+>               <h4 class="cc-snacks-heading" id="cc-snacks-heading" hidden>Snacks</h4>
+>               <ul class="cc-meals" id="cc-snack-list" hidden></ul>
+>             </div>
+294,297d300
+<           <div class="cc-snacks" id="cc-snacks" hidden>
+<             <h3 class="cc-heading" id="cc-snacks-heading" hidden>Snacks this week</h3>
+<             <ul class="cc-meals" id="cc-snack-list" hidden></ul>
+<           </div>
+400c403
+< <script type="application/json" id="plan-data">… "defaults":{"weekends":true,"breakfast":false,"snacks":false} …
+---
+> <script type="application/json" id="plan-data">… "defaults":{"weekends":false,"breakfast":false,"snacks":false} …
+```
