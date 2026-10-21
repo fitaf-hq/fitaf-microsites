@@ -18,7 +18,9 @@ test("S11: /o/<code> ORIGINAL — a known code whose offer is live shows that co
     assert.equal(res.status, 200);
     assert.match(res.text, /<h1>Your offer<\/h1>/);
     assert.equal(codeOnPage(res.text), code);
-    assert.match(res.text, new RegExp(`href="/${event_id}/#from-email">Build my plan →`));
+    // SPEC-save-offer-production § 9.2 (ruled 2026-10-21): the page at /, the save's event in ?e=, #from-email (production
+    // serves the page at / alone; /<event-id>/ is the development build's).
+    assert.match(res.text, new RegExp(`href="/\\?e=${event_id}#from-email">Build my plan →`));
     assert.equal(res.headers["cache-control"], "no-store");
   }
 });

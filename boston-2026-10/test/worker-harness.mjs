@@ -85,7 +85,12 @@ export async function applyMigrations(db, dir) {
  * Rung 5: `bindings` adds to (or overrides) the dev vars — e.g. a DUMMY RESEND_API_KEY, SEND_ALLOWLIST —
  * and `resend(request)` answers requests to Resend's API in place of the network (else they get the 599).
  */
-export async function startWorker({ bindings = {}, resend, worker: which = process.env.BOSTON_SAVE_WORKER ?? "development", production = true } = {}) {
+/**
+ * `assets` (SPEC-save-offer-production § 9.2, SP11): the Worker's ASSETS, as a path -> HTML table answered as the assets
+ * would answer it ("/x/" serves the table's "/x/"; anything else 404), for either Worker; without it, production's
+ * ASSETS answers 404 to everything and development's has none (its assets come first in wrangler's router).
+ */
+export async function startWorker({ bindings = {}, resend, worker: which = process.env.BOSTON_SAVE_WORKER ?? "development", production = true, assets } = {}) {
   const isProduction = which === "production";
   const cfg = isProduction ? await productionWranglerConfig() : await devConfig();
   const [d1] = cfg.d1_databases;
@@ -102,8 +107,19 @@ export async function startWorker({ bindings = {}, resend, worker: which = proce
       cfg.ratelimits.map((r) => [r.name, { namespace_id: r.namespace_id, simple: r.simple }]),
     ),
     bindings: { ...cfg.vars, ...(isProduction ? { TURNSTILE_SECRET_KEY: TEST_TURNSTILE_SECRET } : {}), ...bindings },
-    ...(isProduction
-      ? { serviceBindings: { ASSETS: async (request) => (assetRequests.push(`${request.method} ${new URL(request.url).pathname}`), new Response(null, { status: 404 })) } }
+    ...(isProduction || assets
+      ? {
+          serviceBindings: {
+            ASSETS: async (request) => {
+              const { pathname } = new URL(request.url);
+              assetRequests.push(`${request.method} ${pathname}`);
+              const html = assets?.[pathname];
+              return html === undefined
+                ? new Response(null, { status: 404 })
+                : new Response(request.method === "HEAD" ? null : html, { headers: { "content-type": "text/html; charset=utf-8" } });
+            },
+          },
+        }
       : {}),
     outboundService: async (request) => {
       const body = await request.clone().text();

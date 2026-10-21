@@ -351,3 +351,22 @@ None of these shows `events.json`'s `name`:
 - **`default`:** an object. At `63275a8` it is `{ fetch: serveSite }`. At HEAD it is the same while `production` is false, and `{ fetch, scheduled }` (index.js's handler) while it is true.
 
 workerd's local runtime (Miniflare 5.20260926.1-alpha) refused a bundle that kept these exports: *"Incorrect type for map entry 'PAGE_CACHE_CONTROL': the provided value is not of type 'function or ExportedHandler'"*. That is the string exports. The functions were not reported, since workerd stopped at the first string. `src/worker/index.js` (development's entry) exports `default` alone.
+
+### 9.2 Ruling, 2026-10-21 (the orchestrator; engineering, within the Advisor's § 9 ruling on `?e=`): every link back to the page
+
+**Found at the build (§ 9.1, finding 7).** `/o/<code>`'s *Build my plan →* linked to `/<event_id>/#from-email`. Production
+serves the page at `/` alone, so on eatfitaf.com that link was a 404 for every save.
+
+**Ruled.** `/o/<code>`'s *Build my plan →*, and any other Worker-rendered link back to the page that points at
+`/<event_id>/`, becomes **`/?e=<event_id>#from-email`**. That one form works:
+- on production, which serves only `/`;
+- on development, where `/` with `?e=` takes the event through `qrEvent`.
+
+The case comes first:
+- **SP11:** on a production-Worker `/o` page the link resolves to a page that same Worker serves with 200, carrying `?e=<id>` and `#from-email`; the same on development.
+- The same case confirms that E1's *See my offer* and the confirm page's links resolve with 200 on the production Worker.
+
+The audit found one such link, in `src/worker/redeem.js`:
+- `/confirm`'s only link is `/o/<code>`, and its form posts to its own address;
+- E1's and E-X's links are `/o/<code>` and `/confirm/<token>`;
+- `/o`'s current-offer page links `/`.
