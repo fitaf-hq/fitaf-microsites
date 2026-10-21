@@ -44,8 +44,10 @@ test("Q5: after a build with fixture photos, git status shows no change, every f
   assert.equal(status(), before, "git status is unchanged by the build");
 
   const names = built.written.map((f) => basename(f)).sort();
+  // The tent card is final or a proof as the committed offer stands (SPEC-print-pieces.md § 12.2: approved since 2026-10-20)
+  const tentStem = built.planned.find((p) => p.piece.id === "tent-card").stem;
   const four = [1, 2, 3, 4].flatMap((k) => [`flyer-${k}-PROOF.pdf`, `flyer-${k}-PROOF.png`]);
-  assert.deepEqual(names, ["assignment.json", ...four, "flyer-1-4-PROOF.png", "flyer-PROOF.pdf", "flyer-PROOF.png", "flyer-back-PROOF.png", "tent-card-PROOF.pdf", "tent-card-PROOF.png"].sort());
+  assert.deepEqual(names, ["assignment.json", ...four, "flyer-1-4-PROOF.png", "flyer-PROOF.pdf", "flyer-PROOF.png", "flyer-back-PROOF.png", `${tentStem}.pdf`, `${tentStem}.png`].sort());
   for (const name of names) assert.equal(git("check-ignore", "-q", "--no-index", inDistPrint(name)).status, 0, `${name}, in dist-print/, is ignored`);
 
   const ids = ["flyer", "large", "top", "bottom", "one", "two", "three", "four", "back1", "back2", "back3"].map((role) => set.ids[role]);
