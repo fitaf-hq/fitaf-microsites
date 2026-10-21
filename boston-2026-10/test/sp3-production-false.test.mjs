@@ -33,7 +33,8 @@ const base = await basePackage();
 test.after(() => base.dispose());
 
 /** The files this contract changes in the development Worker's reach (SPEC § 8 lists why each moves). */
-const MOVED_WORKER_FILES = ["data/events.json", "data/save.json", "src/worker/choose-sender.js", "src/worker/pages.js", "src/worker/site.js"];
+// src/worker/redeem.js since § 9.2: /o's Build my plan is /?e=<event_id>#from-email.
+const MOVED_WORKER_FILES = ["data/events.json", "data/save.json", "src/worker/choose-sender.js", "src/worker/pages.js", "src/worker/redeem.js", "src/worker/site.js"];
 
 /** § 9 item 2's change to a page's analytics script, applied to the base's page: qrEvent's declaration and QR_IDS at the
  *  script's head, the open reading qrEvent. The only difference SP3 allows the production page with production false. */

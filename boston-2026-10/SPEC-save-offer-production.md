@@ -370,3 +370,27 @@ The audit found one such link, in `src/worker/redeem.js`:
 - `/confirm`'s only link is `/o/<code>`, and its form posts to its own address;
 - E1's and E-X's links are `/o/<code>` and `/confirm/<token>`;
 - `/o`'s current-offer page links `/`.
+
+**Built (2026-10-21).**
+
+| commit | what |
+|---|---|
+| `578ead1` | the ruling above; SP11 written first, red (0/2, on both Workers at "/o's Build my plan", `/boston/#from-email`); S11 amended by it, red (3/4) |
+| the next commit | the fix: `src/worker/redeem.js` gives `/?e=${row.event_id}#from-email` |
+| the commit after it | CC-8b re-recorded; SP3's list of moved Worker files; this note |
+
+**SP11, after the fix: 2/2.** For each Worker, run with its own build's pages as its assets (production: the approved fixtures' `/` and `/privacy/` only; development: `/`, each `/<event-id>/` and `/privacy/`), each link below answered **200**:
+
+| link | resolves to | status |
+|---|---|---|
+| E1's *See my offer* | `/o/<code>` | 200 |
+| `/o`'s *Build my plan →* | `/?e=boston#from-email`: the plan page with the save step. Opened there, Flow 1 is collapsed to its one line, and a save from it names `boston` | 200 |
+| `/o`'s current-offer page's link | `/` | 200 |
+| E1's *Yes, keep me posted* | `/confirm/<token>`, whose form posts to its own address | 200 |
+| that form's *Yes* | the confirmed page | 200 |
+| the confirmed page's *See my offer* | `/o/<code>` | 200 |
+| E-X's *Yes, tell me* | `/confirm/<token>` | 200 |
+
+S11 4/4. 44 files (S1–S17, SP1–SP11 with SP6's S1–S17 against production, the mutants, CC-8 and M1–M13): 112 of 112.
+
+**Goldens.** Only CC-8b moved: `src/worker/redeem.js`, `d2689a2b…` → `d1c45d59…`; none added or removed. The pages, S20, U4, M14 and WC-9 did not move, because the link is the Worker's, not the build's.
