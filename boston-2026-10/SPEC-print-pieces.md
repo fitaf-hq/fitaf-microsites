@@ -483,4 +483,26 @@ record § 7o item 2); this is his list.
    2026-10-21 (§ 15's release), for the next run on the in-house printer or the shop. Not before the Advisor has seen a
    render of the new back.
 
-### 16.1 Built (to be filled by the build)
+### 16.1 Built, 2026-10-21 (evening) — found at the build, not ruled
+
+1. **The cases first, Q31** (`test/q31-owners-five.test.mjs`): the committed file's bar, read the plain way (Q21's
+   reading, not `back.mjs`'s), is the five in his order, each with item 2's icon, and the file keeps its mark; built
+   with the committed back, the PDF's page 2 carries the bar's lead-in and the five labels in that order (Q29's reader,
+   `backGraphicsProblems`); and a case per new icon: one of `ICON_NAMES`, an SVG on the 24-unit square, a drawn shape,
+   no colour of its own, and its one-line comment in `print/icons.mjs`. Run red on the base: **0 of 5**, each for its
+   reason (the bar's Diabetic, Vegetarian and Vegan; page 2 lacking *High protein* in order; no such icon).
+2. **The words and the icons** as items 1 and 2 say. **The back still fits: 3.2 layout px to spare**, the same as § 15's
+   release (the five labels each on one line, as the old five were, so the bar's height did not change); the smallest
+   type 14 layout px. The dumbbell was first drawn with plates 12 units tall; in the render it read lighter than the
+   bread and the avocado beside it, and was **redrawn with plates 16 units tall**, the handle kept at 6.
+3. ⚠ **Q30 amended on purpose**: its unknown-plan case named `{keto}`. Item 2 made `keto` an icon, so that line read as
+   a bar's item and the refusal moved to the next line (*"a block mixes a bar's items and plans"*): red, 4 of 5. The
+   unknown plan is now `{unknown}`, neither a plan nor an icon. No other case changed.
+4. **The print set and P1: 138 of 138** (§ 15's 133 and Q31's 5), each file run alone at `nice -n 15`; after the
+   dumbbell's redraw, Q31, Q29, Q19, Q23, Q7 and Q27 again, 23 of 23. The mutants red on their cases, their controls
+   green (QB 11 of 11).
+5. **A render for the Advisor**, built as § 15's release was (the glam set, front B's approved words, the KMS's names;
+   no placeholder left), into the ignored `dist-print/`: the back of `flyer-1.pdf` at 150 dpi and its bar at 300 dpi
+   (`pdftocairo`), the five icons and labels legible and none clipped. Not committed: the back carries the photos.
+   Item 5 (the print-ready pages and the 4-up) waits for his look.
+6. ⚠ `print/README.md`'s table of cases stops at Q26 (and the QB mutants): Q27–Q31 have no row. Not changed here.
