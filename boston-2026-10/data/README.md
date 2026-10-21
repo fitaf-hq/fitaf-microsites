@@ -17,7 +17,8 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   its date, no Owner placeholder left), `offers.json` is `approved`, `delivery-zips.json` is `official`, and production's
   `MAIL_FROM` and `TURNSTILE_SITE_KEY` (wrangler.jsonc's top level) are real. **`privacy_notice_url`**: where the step's
   last line links the privacy notice (DRAFT § 6); `null` shows DRAFT § 1's `[Privacy notice]` placeholder, which a
-  production build refuses.
+  production build refuses. Since § 9 (2026-10-21) **`"/privacy/"`**: the page the build makes from DRAFT § 6 (the
+  development build always, marked DRAFT; the production build only with `production` true).
 - **`offers.json`** (rung 4): ⛔ **placeholders** (`"status": "placeholder"`; every `label` is `[The offer]`,
   every `shared_code` `PLACEHOLDER`) until the Owner's offers are approved. Dates are calendar dates in New
   York, inclusive. A save gets the live `event` offer, else the current `general` one; **exactly one
@@ -44,7 +45,10 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   ⚠ Until its window ends, a committed file changes the production page (`SPEC-chefs-choice.md` § 6).
 - **`events.json`**: one entry per QR code, `{ "id", "name", "url" }`; `id` names `dist/qr/<id>.png` and
   `.svg`, and (rung 4, dev) `dist-dev/<id>/index.html`, whose saves carry that `event_id`; `name` is the
-  event as E1 names it. ⚠ An event id and name are public; neither may name a person.
+  event as E1 names it, after *"You saved this offer at"* (since `SPEC-save-offer-production.md` § 9: `demo`
+  *"eatfitaf.com"*, `boston` *"Fit AF's Boston event"*; E1 is the only place it is shown). A save names the `?e=` code its
+  page was opened with when it is one of these ids (read once, by `src/qr-event.js`, for the analytics and the save
+  alike), else the page's own event. ⚠ An event id and name are public; neither may name a person.
   The `demo` URL is `https://eatfitaf.com/` (the vanity domain, attached 2026-09-27). QR codes printed before
   that point at the old `workers.dev` address, which still serves the same page.
   ⭐ Since `SPEC-print-pieces.md` § 11 (2026-10-18): **`boston`** (`https://eatfitaf.com/?e=boston`, the trip's days)

@@ -10,6 +10,10 @@
 // in data/save.json) and § 4 item 2 (site.js serving rung 4's routes when true) change files in it by construction, so its
 // bytes cannot stay the base's; § 4 item 1's "byte-identical in behaviour" is what is checked here, and CC-8b's map is
 // compared with the base's file by file: only the files this contract names move (SPEC § 8).
+// ⚠ Amended by § 9 item 2 (2026-10-21): the page's one reading of ?e= (src/qr-event.js) is at the head of the analytics
+// script of EVERY page, the production page's with `production` false too, so that page is the base's with exactly that
+// change (withSection9Reading below: its lines are S20's note's) and every other file the base's, byte for byte; S20's
+// golden is re-recorded once for it. The Worker's behaviour is still the base's, byte for byte.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -29,7 +33,27 @@ const base = await basePackage();
 test.after(() => base.dispose());
 
 /** The files this contract changes in the development Worker's reach (SPEC § 8 lists why each moves). */
-const MOVED_WORKER_FILES = ["data/save.json", "src/worker/choose-sender.js", "src/worker/pages.js", "src/worker/site.js"];
+const MOVED_WORKER_FILES = ["data/events.json", "data/save.json", "src/worker/choose-sender.js", "src/worker/pages.js", "src/worker/site.js"];
+
+/** § 9 item 2's change to a page's analytics script, applied to the base's page: qrEvent's declaration and QR_IDS at the
+ *  script's head, the open reading qrEvent. The only difference SP3 allows the production page with production false. */
+function withSection9Reading(html) {
+  const ids = /\nvar QR_IDS = (\[[^\]\n]*\]);\n/.exec(html);
+  assert.ok(ids, "control: the base page's analytics list");
+  const head = '<script>\n(function () {\n"use strict";\nvar w = window, d = document, perf = w.performance, rnd = w.crypto;';
+  assert.equal(html.split(head).length - 1, 1, "control: the analytics script's head, once");
+  const fn = 'function qrEvent(search, ids) {\nvar m = /(?:^|[?&])e=([^&#]*)/.exec(search || "");\nreturn m && ids.indexOf(m[1]) >= 0 ? m[1] : "";\n}';
+  const lines = [
+    ['var x = w.innerWidth || 0, qr = /(?:^|[?&])e=([^&#]*)/.exec(w.location.search || "");', "var x = w.innerWidth || 0;"],
+    ['qr: qr && QR_IDS.indexOf(qr[1]) >= 0 ? qr[1] : ""', "qr: qrEvent(w.location.search, QR_IDS)"],
+  ];
+  let out = html.replace(ids[0], "\n").replace(head, `<script>\n${fn}\nvar QR_IDS = ${ids[1]};\n${head.slice("<script>\n".length)}`);
+  for (const [from, to] of lines) {
+    assert.equal(out.split(from).length - 1, 1, `control: the base's line, once: ${from}`);
+    out = out.replace(from, to);
+  }
+  return out;
+}
 
 async function hashesOf(dir, top = dir) {
   const out = {};
@@ -45,7 +69,7 @@ test("SP3: data/save.json's production is false (control)", () => {
   assert.equal(saveConfig.production, false);
 });
 
-test("SP3 (S20): npm run build with production false is S20's golden, and the base tree's build, byte for byte", async () => {
+test("SP3 (S20): npm run build with production false is S20's golden, and the base tree's build (§ 9 item 2's reading apart), byte for byte", async () => {
   const dir = await mkdtemp(join(tmpdir(), "boston-sp3-"));
   try {
     const { build: baseBuild } = await import(pathToFileURL(join(base.pkg, "build.mjs")).href);
@@ -53,7 +77,11 @@ test("SP3 (S20): npm run build with production false is S20's golden, and the ba
     await baseBuild({ target: "prod", outDir: join(dir, "base") });
     const [now, before] = [await hashesOf(join(dir, "now")), await hashesOf(join(dir, "base"))];
     assert.deepEqual(now, s20.files, "S20's golden");
-    assert.deepEqual(now, before, `${BASE}'s build`);
+    assert.deepEqual(Object.keys(now), Object.keys(before), `${BASE}'s files`);
+    for (const f of Object.keys(now).filter((f) => f !== "index.html")) assert.equal(now[f], before[f], `${f}: ${BASE}'s, byte for byte`);
+    const [page, basePage] = [await readFile(join(dir, "now", "index.html"), "utf8"), await readFile(join(dir, "base", "index.html"), "utf8")];
+    assert.notEqual(page, basePage, "control: the page moved");
+    assert.equal(page, withSection9Reading(basePage), `index.html: ${BASE}'s with § 9 item 2's reading, and nothing else`);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -63,7 +91,8 @@ test("SP3 (T5): the production page with production false has no script src and 
   const html = await renderPage(await loadPlans());
   assertProductionT5(html, { production: false });
   const { renderPage: baseRender } = await import(pathToFileURL(join(base.pkg, "build.mjs")).href);
-  assert.equal(html, await baseRender(JSON.parse(await readFile(join(base.pkg, "data", "plans.json"), "utf8"))), `${BASE}'s page`);
+  const basePage = await baseRender(JSON.parse(await readFile(join(base.pkg, "data", "plans.json"), "utf8")));
+  assert.equal(html, withSection9Reading(basePage), `${BASE}'s page, § 9 item 2's reading apart`);
 });
 
 const REQUESTS = [

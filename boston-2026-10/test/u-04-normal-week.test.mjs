@@ -34,6 +34,13 @@
 // byte-identical; the three development pages moved (+635 bytes each: the line, its style and comment, the buttons'
 // class, the render line) and their visible page at the six answered fragments (the step is shown there; "(no fragment)"
 // unchanged, the step hidden before a plan is chosen). From here the reference is 1305f62's tree.
+// ⚠ RE-RECORDED at e11f775 (`node test/u-04-record.mjs --commit e11f775`): SPEC-save-offer-production.md § 9 (2026-10-21)
+// puts the page's one reading of ?e= (src/qr-event.js) at the head of the analytics script on EVERY page, and on the
+// development page links the form's Privacy notice to /privacy/ and sends the ?e= event. Against 1305f62's record, all six
+// contents and the three production entries' visible pages were byte-identical; the three production pages moved by +63
+// bytes each (the analytics script alone: S20's note lists the lines); the three development pages by +370 each (the same
+// lines, the link in place of "[Privacy notice]", flow1.js's event lines) and their visible
+// page at the six answered fragments (the link's words). From here the reference is e11f775's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -42,7 +49,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 1305f62's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "1305f62");
+test("U4: a normal week, the content and the page as served, byte-identical to e11f775's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "e11f775");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

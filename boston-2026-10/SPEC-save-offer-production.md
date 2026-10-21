@@ -245,3 +245,109 @@ Builds compared:
    `?e=` naming no event, the first event's; E1 for each (a recording sender) reads *"at Fit AF's Boston event"* and
    *"at eatfitaf.com"*. **Mutant**: the page sends the first event whatever the code (SP10 red). Every golden that moves
    is re-recorded once with its changed lines listed (E1's text golden M14 will, for the names).
+
+### 9.1 Built (2026-10-21)
+
+Built on `boston/save-offer-production` from `2c726d1`. Every case was run as single files at `nice -n 15`; the whole
+suites were not run here.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `9a3f310` | SP9, SP10 and mutant 4, run red; S18 and QE12 amended by § 9, run red with them |
+| `e11f775` | the code |
+| the next commit | S20, U4 and CC-8b re-recorded; SP3 and U4 amended; these notes; README and `data/README.md` |
+
+**Cases** (red at `9a3f310`, green at `e11f775` with the goldens of the next commit)
+
+| case | red | green |
+|---|---|---|
+| SP9 | 1/5. The production build with `production` false already had no `/privacy/`, a guard | 5/5 |
+| SP10 | 0/6 | 6/6 |
+| mutant 4 | red (its site not in the page) | rejects on "`?e=boston` sends boston"; mutants 1–3 still 3/3 |
+| S18 | 7/8 | 8/8 |
+| QE12 | 2/3 | 3/3 |
+
+After the goldens, 101 files touching the page, the Worker, the emails and the goldens (M1–M21, S1–S31, SP1–SP10 and the mutants, WC-1–WC-12, A1–A11 with A-QR and A's mutants, CC-8, U4, T5, QE12–QE15, W1, W4, MS-14 and B2) gave **269 of 270**. The one failure is **S22**, the base's own (§ 8.2). SP6's S1–S17 still pass 38 of 38 against the production Worker. `npm run contrast`: 76 of 76.
+
+**What § 9 built**
+
+1. **`/privacy/`**: `build.mjs` `privacyPage()` makes it from DRAFT § 6.
+   - **Content:** § 6's six paragraphs, each starting at a bold heading, escaped, with the draft's `**…**` as `<strong>`; then the logo and a heading, *Privacy notice*. No script.
+   - **Look:** the template's `:root` and `@font-face` rules (the fonts from `/fonts/`, as `/why/`), then `src/privacy/style.css`. That file is tokens only, `npm run contrast` reads it, and its four pairs are tagged `"build": "privacy"`.
+   - **Where it is written:** `privacy/index.html`, beside the plan pages and listed with the copied files, not the pages, so the analytics' page checks (A1, A-QR) do not read it.
+   - **Development build:** always carries it, with the step's line *"DRAFT — not for use · wording v0.3-draft"*. It shows the draft's own `[email]`, `[30]` and `[Mailchimp]`.
+   - **Production build:** carries it only with `production` true, unmarked. Its printed words join the refusals (*"the privacy page prints a placeholder: [email]"*).
+   - **Link:** `data/save.json` `privacy_notice_url` is `"/privacy/"`, so the form's *Privacy notice* is `<a class="save-privacy" href="/privacy/">` in both builds. It resolves from `/` and from each `/<event-id>/` page (SP9).
+2. **The event a save names.** `src/qr-event.js` `qrEvent(search, ids)` is the page's one reading of `?e=`, and `analyticsSlot` inlines it at the head of the analytics script. `src/analytics.js`'s `QR_IDS` moves out of its IIFE, as one list global to the page, and its `open` reads `qrEvent(w.location.search, QR_IDS)`. `flow1.js` sends `qrEvent(location.search, QR_IDS) || cfg.event_id`. In the page, the `?e=` pattern appears once, `function qrEvent(` once, and `qrEvent(` three times (SP10).
+3. **`data/events.json`**: `demo` → *"eatfitaf.com"*, `boston` → *"Fit AF's Boston event"*. `seminar`, the ids, the URLs and the QR codes are unchanged.
+
+**Every other place the build shows an event's name.** There is none besides E1 (`src/worker/messages.js`: *"You saved this offer at **<name>** yesterday — here it is."*), which now reads *"at eatfitaf.com"* and *"at Fit AF's Boston event"* (SP10, through the Worker and a recording sender). `npm run preview:emails` renders E1 for the first event, so its preview now says *"at eatfitaf.com"*; its report's `event` says the same.
+
+None of these shows `events.json`'s `name`:
+- the plan pages and `/privacy/`;
+- the `/confirm` and `/o` pages;
+- E-X;
+- the QR codes;
+- the mock-ups and the printed pieces. Their header bar is `data/messages.json`'s `event_line`, *"Fit AF in Boston · October 2026"*, unchanged, and they print each event's URL host.
+
+**Chosen where § 9 is silent, or read**
+
+1. ⚠ **"One reading" moves production with `production` false.** The beacon's reading is in the analytics script that every page carries, so making it the save step's too changes the production page. S20 is re-recorded once. SP3 now holds the production build to the base's with exactly these lines changed (`withSection9Reading`), and every other file byte for byte. The Worker's behaviour is still the base's, byte for byte. The lines changed in `index.html` (42,074 → 42,137 bytes):
+   - 4 lines added: `qrEvent`'s declaration;
+   - `var QR_IDS = ["demo","boston","seminar"];` moved from inside the IIFE to before it;
+   - `var x = w.innerWidth || 0, qr = /(?:^|[?&])e=([^&#]*)/.exec(w.location.search || "");` → `var x = w.innerWidth || 0;`
+   - `qr: qr && QR_IDS.indexOf(qr[1]) >= 0 ? qr[1] : ""` → `qr: qrEvent(w.location.search, QR_IDS)`.
+
+   One list, not two: a second copy of the ids in `save-data` would also break QE15's "the ids exactly once".
+2. **"The first event otherwise" is read as the page's own event.** On `/` and on production's one page that is the first event, `demo`. A development `/<event-id>/` page keeps its own id when no code names one (SP10's third case), as rung 4 built those pages.
+3. **On the development build, `/privacy/` is marked as the step is**: always, with the wording version.
+4. **The case mirrors copy `consent/`** (`cc-harness` `mirror()`, `qe-checks` `printMirror()`), since every build now reads DRAFT.md.
+5. **M14 did not move.** Its E1 is rendered from its own sample event (*"the sample event"*, `test/email-fixture.mjs`), not from `data/events.json`. SP10 checks the new names in E1.
+6. **A finding for the wording pass:** § 6's *"How long we keep it. As in § 5."* now prints on a public page whose § 5 is not on it.
+7. ⚠ **A finding before the pin, not in § 9:** the `/o/<code>` page's *Build my plan →* links to `/<event_id>/#from-email` (`src/worker/redeem.js`). Production serves only `/`, so on eatfitaf.com that link is a 404 for every save, `demo` and `boston` alike. This was already true before § 9, since every production save would have been `demo`. A one-line fix (`/?e=<event_id>#from-email`, or `/#from-email`) needs a ruling and a case.
+
+**Goldens, every changed line**
+
+- **S20** (`index.html` only): `f1f0e04f…` → `6093af72…`. The lines are those in item 1 above.
+- **U4** (`recorded_at` `1305f62` → `e11f775`):
+  - The three production pages moved: v1 42620 `d13822b4…` → 42683 `3f69f52c…`; v2 48594 `c56b6803…` → 48657 `7358dacd…`; the committed week 72346 `f5a898cf…` → 72409 `512964b4…`.
+  - The three development pages moved: v1 66887 `7195fee4…` → 67257 `fe7c748a…`; v2 72861 `4f35fcdd…` → 73231 `f0749e99…`; the committed week 96613 `4a4ae97c…` → 96983 `a5f3e67d…`.
+  - The development pages' visible page moved at the six answered fragments. On the v1 fixture:
+    - `#lean-7` and `#lean-or-7d`: `ceb931b6…` → `b909ef73…`
+    - `#lean-or-5d-s`: `5158b804…` → `2ba782bc…`
+    - `#signature-and-5d-b-s`: `9bd27c83…` → `41d8273b…`
+    - `#performance-and-7d-b`: `26d2f35c…` → `b89f79e4…`
+    - `#family`: `3c9a1c26…` → `efd029e9…`
+  - On the v2 fixture:
+    - `#lean-7` and `#lean-or-7d`: `f955bdf9…` → `ef53db26…`
+    - `#lean-or-5d-s`: `f05c2b4e…` → `562c7007…`
+    - `#signature-and-5d-b-s`: `6ad22886…` → `2b9401c6…`
+    - `#performance-and-7d-b`: `54da486e…` → `4691c9ff…`
+    - `#family`: `3c9a1c26…` → `efd029e9…`
+  - On the committed week:
+    - `#lean-7` and `#lean-or-7d`: `d8a0f3ee…` → `1b6544cb…`
+    - `#lean-or-5d-s`: `8209d8a1…` → `e7db8526…`
+    - `#signature-and-5d-b-s`: `cbdb0276…` → `31d82cb5…`
+    - `#performance-and-7d-b`: `f8bc202b…` → `e8bdb23f…`
+    - `#family`: `3c9a1c26…` → `efd029e9…`
+  - Unchanged: all six contents, the production pages' visible pages, and `(no fragment)`.
+
+  The development page's whole diff against `18ac41f`'s (the same on `demo/`, `boston/` and `seminar/`):
+  - the analytics lines of item 1;
+  - `<span class="placeholder">[Privacy notice]</span>` → `<a class="save-privacy" href="/privacy/">Privacy notice</a>`;
+  - `flow1.js`'s `var eventId = …` with its two-line comment, and `event_id: cfg.event_id` → `event_id: eventId`.
+
+  `privacy/index.html` is added.
+- **CC-8b** (two entries; none added or removed):
+  - `data/events.json`: `c06fb47b…` → `99676fc9…`
+  - `data/save.json`: `d048bcfe…` → `490a65db…`
+- **Not moved:** M14, WC-9 and MS.
+
+**`site.js`'s named exports** (production's entry), the same at `63275a8` and at this HEAD:
+- **Strings, 4:** `WEEK_OBJECT` (`"week/picks-data.json"`), `SHEETS_PATH` (`"/week/"`), `PAGE_CACHE_CONTROL` (`"no-cache"`), `SHEET_CACHE_CONTROL` (`"no-cache"`).
+- **Functions, 5:** `sheetKey`, `isWeek`, `servePage`, `serveSheet`, `serveSite`.
+- **`default`:** an object. At `63275a8` it is `{ fetch: serveSite }`. At HEAD it is the same while `production` is false, and `{ fetch, scheduled }` (index.js's handler) while it is true.
+
+workerd's local runtime (Miniflare 5.20260926.1-alpha) refused a bundle that kept these exports: *"Incorrect type for map entry 'PAGE_CACHE_CONTROL': the provided value is not of type 'function or ExportedHandler'"*. That is the string exports. The functions were not reported, since workerd stopped at the first string. `src/worker/index.js` (development's entry) exports `default` alone.
