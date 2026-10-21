@@ -4,7 +4,7 @@
 // else is refused, naming the key:
 //   headline  one to three lines, each set on its own line (the build never rewraps a line it was given)
 //   accent    the index of the headline's line set in the brand's green (optional); and within any line, words
-//             between asterisks (*PEOPLE WHO*) are set in it too
+//             between asterisks (*LIKE THIS*) are set in it too
 //   size      the headline's size in layout px for this take (optional; FRONT_B_HEAD_PX otherwise)
 //   lede      one line of text, the line that says what the headline leaves out
 //   callout   one to three short lines for the one callout over the photo's corner (optional)
