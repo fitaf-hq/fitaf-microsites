@@ -30,6 +30,12 @@ Fit AF puts into the store; Fit AF's emitter writes it (its `scripts/menus/emit_
      **all five** numbers, each a non-negative integer (grams, and calories). Family has none (`SPEC-chefs-choice` § 3:
      the card is the individual plans').
    - `ingredients`: text, not blank. `contains`: text, not blank, optional. No other field anywhere in `meals`.
+   - ⚠ **Amended 2026-10-21, after both builds** (the orchestrator; the line above read as making `ingredients` required,
+     which § 3 item 3 contradicts and Fit AF's emitter does not give): **each of `nutrition` and `ingredients` is
+     optional, an entry carries at least one of them, and `contains` appears only beside `ingredients`.** `"meals": {}`
+     is accepted. The emitter writes only what a meal's label row gives (Fit AF `emit_microsite_picks.spec.md` § 9.0
+     item 5 and § 9.1): numbers with no declaration, or a declaration with no numbers that parse. A file this check
+     refused would stop the switch's content step.
    - ⛔ Public fields only, as today: no KMS slug, no product id, no price, no person.
 3. **A file without these additions reads exactly as today**: every committed week, and every week emitted before Fit
    AF's § 9 lands.
