@@ -11,7 +11,7 @@
 import assert from "node:assert/strict";
 import { appendFile, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { build as esbuild } from "esbuild";
 import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import events from "../data/events.json" with { type: "json" };
@@ -42,7 +42,16 @@ async function bundleWorker(main, { save } = {}) {
   const plugins = save
     ? [{ name: "save-json", setup: (b) => b.onLoad({ filter: /[\\/]data[\\/]save\.json$/ }, () => ({ contents: JSON.stringify(save), loader: "json" })) }]
     : [];
-  const out = await esbuild({ entryPoints: [main], bundle: true, format: "esm", write: false, logLevel: "silent", plugins });
+  // Production's entry also exports its helpers by name (site.js: WEEK_OBJECT, PAGE_CACHE_CONTROL, …), which workerd
+  // would read as entrypoints; the bundle exports its default alone, as wc-harness's wrapper does.
+  const out = await esbuild({
+    stdin: { contents: `export { default } from ${JSON.stringify(main)};`, resolveDir: ROOT, loader: "js" },
+    bundle: true,
+    format: "esm",
+    write: false,
+    logLevel: "silent",
+    plugins,
+  });
   return out.outputFiles[0].text;
 }
 
@@ -110,12 +119,18 @@ export async function startWorker({ bindings = {}, resend, worker: which = proce
   // Miniflare 5 takes a new options shape; wrangler itself converts from the V4 shape this way.
   // cf: false: Miniflare's own placeholder request.cf, never https://workers.cloudflare.com/cf.json (SPEC-analytics § 10.1).
   const mf = new Miniflare(convertV4MiniflareOptions({ cf: false, workers: [worker] }));
-  const db = await mf.getD1Database(d1.binding, cfg.name);
-  await applyMigrations(db, resolve(ROOT, d1.migrations_dir));
-  if (isProduction && process.env.BOSTON_SAVE_WORKER_LOG) {
-    await appendFile(process.env.BOSTON_SAVE_WORKER_LOG, `${JSON.stringify({ main: cfg.main, database: d1.database_name, production })}\n`);
+  let db;
+  try {
+    db = await mf.getD1Database(d1.binding, cfg.name);
+    await applyMigrations(db, resolve(ROOT, d1.migrations_dir));
+  } catch (err) {
+    await mf.dispose(); // a workerd left running keeps the test file's process from ever exiting
+    throw err;
   }
-  return { mf, db, outbound, vars: cfg.vars, main: cfg.main, assetRequests };
+  if (isProduction && process.env.BOSTON_SAVE_WORKER_LOG) {
+    await appendFile(process.env.BOSTON_SAVE_WORKER_LOG, `${JSON.stringify({ main: relative(ROOT, resolve(ROOT, cfg.main)), database: d1.database_name, production })}\n`);
+  }
+  return { mf, db, outbound, vars: cfg.vars, main: relative(ROOT, resolve(ROOT, cfg.main)), assetRequests };
 }
 
 let ipCounter = 0;
@@ -201,9 +216,10 @@ export class FixedRedemptions {
   }
 }
 
-/** Run send-due against the Miniflare database as the cron would, at `nowMs`. */
+/** Run send-due against the Miniflare database as the cron would, at `nowMs`, with the vars of the Worker the cases run
+ *  against (production's under BOSTON_SAVE_WORKER=production, so its links name production's SITE_URL). */
 export async function runSendDue(db, { nowMs, sender, redemptions }) {
-  const { vars } = await devConfig();
+  const { vars } = process.env.BOSTON_SAVE_WORKER === "production" ? await productionWranglerConfig() : await devConfig();
   return sendDue(db, {
     now: new Date(nowMs).toISOString(),
     sender,

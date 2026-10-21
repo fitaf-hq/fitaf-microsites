@@ -1,5 +1,7 @@
 // The Worker-rendered pages (/confirm, /o): minimal HTML in the browser's own colours — no colour is
-// drawn here, so there is no pair for `npm run contrast` to measure. Marked DRAFT like the dev page.
+// drawn here, so there is no pair for `npm run contrast` to measure. Marked DRAFT like the dev page while the wording is
+// a draft (SPEC-save-offer-production.md § 3 item 2: the draft tag never in production, whose build refuses a draft
+// wording; one rule for both Workers, which share this module and data/save.json).
 import saveConfig from "../../data/save.json" with { type: "json" };
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -10,6 +12,11 @@ const STYLE =
   "h1{font-size:1.5rem;line-height:1.25}button{font:inherit;min-height:48px;padding:10px 18px;margin:0 8px 8px 0}" +
   ".draft{font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}";
 
+/** The DRAFT line, while `wording_version` names a draft. */
+const DRAFT_MARK = /draft/i.test(saveConfig.wording_version)
+  ? `<p class="draft">DRAFT — not for use · wording ${esc(saveConfig.wording_version)}</p>\n`
+  : "";
+
 /** `bodyHtml` is trusted markup built by the callers from escaped values. */
 export function page(title, bodyHtml) {
   return (
@@ -17,7 +24,7 @@ export function page(title, bodyHtml) {
     '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
     '<meta name="robots" content="noindex">\n' +
     `<title>Fit AF — ${esc(title)}</title>\n<style>${STYLE}</style>\n</head>\n<body>\n` +
-    `<p class="draft">DRAFT — not for use · wording ${esc(saveConfig.wording_version)}</p>\n` +
+    DRAFT_MARK +
     `${bodyHtml}\n</body>\n</html>\n`
   );
 }

@@ -23,6 +23,8 @@ import { classifyZip } from "./src/worker/zip-class.js";
 import { scriptJson } from "./src/worker/script-json.js";
 import { checkSelection, legacyKey } from "./scripts/selection.mjs";
 import { formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
+import { e1, ex } from "./src/worker/messages.js";
+import { productionRefusals } from "./scripts/production-inputs.mjs";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
 export const PLANS_PATH = join(ROOT, "data", "plans.json");
@@ -34,6 +36,8 @@ export const SAVE_PATH = join(ROOT, "data", "save.json");
 export const MESSAGES_PATH = join(ROOT, "data", "messages.json");
 export const ZIPS_PATH = join(ROOT, "data", "delivery-zips.json");
 export const OFFERS_PATH = join(ROOT, "data", "offers.json");
+/** The consent wording (SPEC-save-offer-production § 3 item 2: its status line and its placeholders gate production). */
+export const DRAFT_PATH = join(ROOT, "consent", "DRAFT.md");
 /** The weekly menu input of Flow 8. It does not exist yet, so the "See this week's menu" link is absent. */
 export const MENU_PATH = join(ROOT, "data", "menu.json");
 /** The week's Chef's Choice, one file per delivery Sunday (SPEC-chefs-choice § 1): read by the content command alone
@@ -399,50 +403,93 @@ export const declaration = (f) => (/^function\b/.test(f.toString()) ? f.toString
  *  "const FORMATTERS = new Map();". The Chef's Choice script inlines the same ones, the same way. */
 export const ZONED_DATE_HELPERS = [formatter, zonedParts, pad, zonedDate];
 
+/** The privacy notice in the step's last line (DRAFT § 1's "[Privacy notice]"): a link once data/save.json names the
+ *  notice's address (`privacy_notice_url`), else the placeholder, as the development page has always shown it. */
+export const privacyNotice = (url) =>
+  url ? `<a class="save-privacy" href="${esc(url)}">Privacy notice</a>` : '<span class="placeholder">[Privacy notice]</span>';
+
+/** The step's DRAFT tag (development only: SPEC-save-offer-production § 3 item 2, never in a production build). */
+const DRAFT_TAG = '\n            <p class="draft-tag">DRAFT — not for use · wording {{WORDING_VERSION}}</p>';
+
 /**
- * The development build's slots (SPEC-rung4 § 2): Flow 2 reframed as a meal size, the share panel, the DRAFT
- * marking, and since § 2b (save the offer at the END) the offer box at the top (§ 2a's heading and label) and Flow 1
- * after the button that leaves for the store: in the result card's place (SAVE_SECTION, directly after the result card)
- * and, on Family, the place src/save/flow1.js moves it to (SAVE_FAMILY, directly after the Family panel, whose last
- * thing is the Family card's button: outside it, so the panel's bytes are unchanged, MS-13). `siteKey` is
- * the dev environment's TURNSTILE_SITE_KEY (Cloudflare's published test key). Assets are addressed from the root, so
- * /<event-id>/ pages find them.
+ * Flow 1's slots, the save step, as both builds carry it (SPEC-rung4 § 2b; SPEC-save-offer-production §§ 1, 3): the
+ * offer box at the top (§ 2a's heading and label) and Flow 1 after the button that leaves for the store: in the result
+ * card's place (SAVE_SECTION, directly after the result card) and, on Family, the place src/save/flow1.js moves it to
+ * (SAVE_FAMILY, directly after the Family panel, whose last thing is the Family card's button: outside it, so the panel's
+ * bytes are unchanged, MS-13); its style and its scripts, Turnstile's last. `draft`: the step's DRAFT tag (the
+ * development build's alone). `share`: the share panel's arithmetic and script (the development build's Flow 2).
+ * `siteKey` is the environment's TURNSTILE_SITE_KEY. Also returns `read` and `fill` for the development build's extras.
  */
-export async function devSlots(plans, { save, zips, siteKey, eventId, offers, menu = existsSync(MENU_PATH) }) {
+export async function saveSlots(plans, { save, zips, siteKey, eventId, offers, menu = existsSync(MENU_PATH) }, { draft, share = false }) {
   const read = (name) => readFile(join(ROOT, "src", "save", name), "utf8");
   const fill = (text) =>
-    text.replaceAll("{{WORDING_VERSION}}", esc(save.wording_version)).replaceAll("{{MENU_LINK}}", menu ? MENU_LINK : "");
+    text
+      .replaceAll("{{DRAFT_TAG}}", draft ? DRAFT_TAG : "")
+      .replaceAll("{{WORDING_VERSION}}", esc(save.wording_version))
+      .replaceAll("{{MENU_LINK}}", menu ? MENU_LINK : "")
+      .replaceAll("{{PRIVACY_NOTICE}}", privacyNotice(save.privacy_notice_url));
   const client = saveClientData(plans, { save, zips, siteKey, eventId, offers });
-  // One source each, inlined as written: the Worker's ZIP check, the calculator's arithmetic, and (§ 2a) the
-  // Worker's choice of offer with the zoned date it chooses on. FORMATTERS is zoned-time.js's cache, empty.
+  // One source each, inlined as written: the Worker's ZIP check, the calculator's arithmetic (with the share panel), and
+  // (§ 2a) the Worker's choice of offer with the zoned date it chooses on. FORMATTERS is zoned-time.js's cache, empty.
   const shared = [
-    ...[classifyZip, shareLines, parseTarget, mealsADayOf].map(declaration),
+    ...[classifyZip, ...(share ? [shareLines, parseTarget, mealsADayOf] : [])].map(declaration),
     "const FORMATTERS = new Map();",
     ...[isLive, currentGeneral, offerForSave, ...ZONED_DATE_HELPERS].map(declaration),
   ].join("\n");
   return {
-    ASSET_PREFIX: DEV_ASSET_PREFIX,
-    QUESTION_ONE: "Meal size",
-    GOALS: plans.individual.map(sizeButton).join("\n"),
+    read,
+    fill,
     DEV_STYLE: (await read("style.css")).trimEnd(),
-    DRAFT_BANNER: "\n" + fill(await read("banner.html")).trimEnd(),
     OFFER_BOX: "\n" + (await read("offer-box.html")).trimEnd(),
     SAVE_SECTION: "\n" + fill(await read("section.html")).trimEnd(),
     SAVE_FAMILY: '\n  <div id="save-end-family"></div>',
-    SHARE_PANEL: "\n" + (await read("share-panel.html")).trimEnd(),
     DEV_SCRIPT:
       `\n<script type="application/json" id="save-data">${scriptJson(client)}</script>` +
       `\n<script>\n${shared}\n</script>` +
       `\n<script>\n${(await read("flow1.js")).trim()}\n</script>` +
-      `\n<script>\n${(await read("share.js")).trim()}\n</script>` +
+      (share ? `\n<script>\n${(await read("share.js")).trim()}\n</script>` : "") +
       `\n<script src="${TURNSTILE_SCRIPT_URL}" async defer></script>`,
   };
+}
+
+/**
+ * The development build's slots (SPEC-rung4 § 2): Flow 1 (saveSlots, with its DRAFT tag), Flow 2 reframed as a meal size,
+ * the share panel, and the page's DRAFT banner. `siteKey` is the dev environment's TURNSTILE_SITE_KEY (Cloudflare's
+ * published test key). Assets are addressed from the root, so /<event-id>/ pages find them.
+ */
+export async function devSlots(plans, inputs) {
+  const { read, fill, ...flowOne } = await saveSlots(plans, inputs, { draft: true, share: true });
+  return {
+    ...flowOne,
+    ASSET_PREFIX: DEV_ASSET_PREFIX,
+    QUESTION_ONE: "Meal size",
+    GOALS: plans.individual.map(sizeButton).join("\n"),
+    DRAFT_BANNER: "\n" + fill(await read("banner.html")).trimEnd(),
+    SHARE_PANEL: "\n" + (await read("share-panel.html")).trimEnd(),
+  };
+}
+
+/**
+ * The production page with data/save.json's `production` true (SPEC-save-offer-production § 3 item 2): production's
+ * page (its Flow 2, its assets at its own root) and Flow 1 at the end exactly as the development build has it, with no
+ * DRAFT tag, no banner and no share panel; the production site key; the one page saving as the first event.
+ */
+export async function productionSlots(plans, inputs) {
+  const { read, fill, ...flowOne } = await saveSlots(plans, inputs, { draft: false });
+  return { ...PROD_SLOTS, ...flowOne };
 }
 
 /** The dev environment's resolved config, read by wrangler itself (one source for bindings and keys). */
 export async function devConfig() {
   const { unstable_readConfig } = await import("wrangler");
   return unstable_readConfig({ config: WRANGLER_CONFIG, env: "dev" }, { hideWarnings: true });
+}
+
+/** Production's resolved config (wrangler.jsonc's top level, which fitaf-infra mirrors): its vars name the sender, the
+ *  site key and the site's address (SPEC-save-offer-production § 4 item 3). */
+export async function productionConfig() {
+  const { unstable_readConfig } = await import("wrangler");
+  return unstable_readConfig({ config: WRANGLER_CONFIG }, { hideWarnings: true });
 }
 
 /** The page's phrases from data/messages.json. The event line's parts are joined as the page always wrote them. */
@@ -585,6 +632,47 @@ async function writeDevPages(plans, events, outDir, offersPath, messages, picks,
   return written;
 }
 
+/** What a production page prints, as words: the markup's text without its scripts and styles, the ZIP slot's default
+ *  (filled with the visitor's ZIP before it is shown) apart. */
+export function printedText(html) {
+  return html
+    .replace(/<(script|style|noscript)\b[\s\S]*?<\/\1>/g, " ")
+    .replace(/<strong id="save-ooa-zip">\[ZIP\]<\/strong>/, "<strong></strong>")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ");
+}
+
+/** The emails as the Worker would render them from these inputs (every offer, every event; E1 ticked, as its every line
+ *  shows): their text parts, the words the HTML shows too (SPEC-rung5 § 9, M18). */
+function printedEmails({ offers, events, vars, save }) {
+  const sample = { to: "nobody@example.com", code: "SAMPLE23", token: "SAMPLE-TOKEN", siteUrl: vars.SITE_URL ?? "" };
+  const parts = offers.offers.flatMap((offer) => events.map((event) => ({ where: `E1 (${offer.id}, ${event.id})`, text: e1({ ...sample, offer, event }).text })));
+  parts.push({ where: "E-X", text: ex({ ...sample, zip: "01602", unconfirmedDays: save.unconfirmed_expansion_days }).text });
+  return parts;
+}
+
+/**
+ * SPEC-save-offer-production § 3 item 2: the production page with `production` true, rendered in memory, and the refusal
+ * of every input not yet approved (scripts/production-inputs.mjs), each named, before anything is written.
+ */
+async function productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftPath, productionVars }) {
+  const offers = await loadJson(offersPath);
+  const zips = await loadJson(zipsPath);
+  const draftText = await readFile(draftPath, "utf8");
+  const vars = productionVars ?? (await productionConfig()).vars ?? {};
+  const inputs = { save, zips, siteKey: vars.TURNSTILE_SITE_KEY ?? "", eventId: checkEventId(events[0].id), offers };
+  const html = await renderPage(plans, await productionSlots(plans, inputs), messages, card, photos, events);
+  const printed = [{ where: "the page", text: printedText(html) }, ...printedEmails({ offers, events, vars, save })];
+  const refusals = productionRefusals({ save, offers, zips, draftText, vars, printed });
+  if (refusals.length) throw new Error(`production build refused (data/save.json production is true):\n${refusals.map((r) => `- ${r}`).join("\n")}`);
+  return html;
+}
+
 /** The Chef's Choice card for the page (SPEC-chefs-choice; SPEC-week-content § 2.1): always carried, holding NO week
  *  (§ 7's ruling: the bucket is the only source of a served week). Its words are checked here, so a missing phrase
  *  refuses the build. */
@@ -598,6 +686,10 @@ export async function build({
   plansPath = PLANS_PATH,
   eventsPath = EVENTS_PATH,
   offersPath = OFFERS_PATH,
+  savePath = SAVE_PATH,
+  zipsPath = ZIPS_PATH,
+  draftPath = DRAFT_PATH,
+  productionVars,
   messagesPath = MESSAGES_PATH,
   photosPath = PHOTOS_PATH,
   sheetsDir = PHOTO_SHEETS_DIR,
@@ -614,6 +706,15 @@ export async function build({
   const photos = await loadPhotos(photosPath);
   // Before anything is written: the card's words checked (a missing phrase stops the build here).
   const card = await cardSlots({ plans, messages });
+  // SPEC-save-offer-production § 3: with `production` false the production page is the one before it, byte for byte (S20);
+  // true, it carries Flow 1, and the build refuses here, writing nothing, until every input is approved.
+  const save = await loadJson(savePath);
+  const prodHtml =
+    target !== "prod"
+      ? null
+      : save.production === true
+        ? await productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftPath, productionVars })
+        : await renderPage(plans, PROD_SLOTS, messages, card, photos, events);
   // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
   if (target === "dev") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
@@ -621,10 +722,9 @@ export async function build({
   if (target === "dev") {
     pages = await writeDevPages(plans, events, outDir, offersPath, messages, card, photos);
   } else {
-    const html = await renderPage(plans, PROD_SLOTS, messages, card, photos, events);
     const path = join(outDir, "index.html");
-    await writeFile(path, html);
-    pages = [{ path, bytes: Buffer.byteLength(html) }];
+    await writeFile(path, prodHtml);
+    pages = [{ path, bytes: Buffer.byteLength(prodHtml) }];
   }
   const files = await copyStatic(outDir, photos, sheetsDir);
   // QR codes point at the production URL, so only the production build writes them.

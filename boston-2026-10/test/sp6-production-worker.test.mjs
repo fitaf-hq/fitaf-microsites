@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { devConfig, ROOT } from "../build.mjs";
 import { count, postSave, startWorker, validSave } from "./worker-harness.mjs";
 
@@ -22,7 +22,7 @@ async function productionConfig() {
 test("SP6 (§ 4.3): wrangler.jsonc's production mirror — the interface names with fitaf-infra", async () => {
   const prod = await productionConfig();
   const dev = await devConfig();
-  assert.equal(prod.main, "src/worker/site.js", "production's entry is unchanged");
+  assert.equal(relative(ROOT, prod.main), "src/worker/site.js", "production's entry is unchanged");
   assert.deepEqual(prod.d1_databases.map((d) => [d.binding, d.database_name, d.migrations_dir]), [["DB", "fitaf-leads-prod", "migrations"]]);
   const limits = (cfg) => cfg.ratelimits.map((r) => [r.name, r.simple]);
   assert.deepEqual(limits(prod), limits(dev), "the rate-limit bindings as development's");
@@ -73,15 +73,19 @@ test("SP6: S1-S17's cases, run against the production Worker with production tru
   const dir = await mkdtemp(join(tmpdir(), "boston-sp6-"));
   const log = join(dir, "workers.jsonl");
   try {
-    const r = spawnSync(process.execPath, ["--test", "--test-concurrency=1", ...files.map((f) => join(ROOT, "test", f))], {
-      env: { ...process.env, BOSTON_SAVE_WORKER: "production", BOSTON_SAVE_WORKER_LOG: log },
+    // A child `node --test` of its own: without this runner's NODE_TEST_CONTEXT, reporting TAP.
+    const { NODE_TEST_CONTEXT, ...env } = process.env;
+    const r = spawnSync(process.execPath, ["--test", "--test-reporter=tap", "--test-concurrency=1", ...files.map((f) => join(ROOT, "test", f))], {
+      env: { ...env, BOSTON_SAVE_WORKER: "production", BOSTON_SAVE_WORKER_LOG: log },
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
     });
     const tally = (name) => Number(new RegExp(`^# ${name} (\\d+)$`, "m").exec(r.stdout)?.[1]);
     assert.equal(r.status, 0, `the S cases against production: ${r.stdout.split("\n").filter((l) => /^not ok|# fail/.test(l)).join("; ")}`);
     assert.equal(tally("fail"), 0);
-    assert.ok(tally("pass") >= 40, `the cases ran (${tally("pass")} passed)`);
+    // 38: S1-S17's cases as the development Worker runs them (all 18 files, measured 2026-10-21); none skipped here.
+    assert.equal(tally("tests"), 38, "every case ran");
+    assert.equal(tally("pass"), 38, "every case passed");
     const started = (await readFile(log, "utf8")).trim().split("\n").map((l) => JSON.parse(l));
     assert.ok(started.length >= 17, `a production Worker started for each file that starts one (${started.length})`);
     for (const w of started) assert.deepEqual(w, { main: "src/worker/site.js", database: "fitaf-leads-prod", production: true });

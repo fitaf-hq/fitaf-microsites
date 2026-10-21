@@ -1,7 +1,6 @@
       <div id="save-end">
         <section class="save js-only" id="save" aria-labelledby="save-title" hidden>
-          <div id="save-open">
-            <p class="draft-tag">DRAFT — not for use · wording {{WORDING_VERSION}}</p>
+          <div id="save-open">{{DRAFT_TAG}}
             <p class="save-step-offer" id="save-step-offer"><strong id="save-step-offer-label"></strong></p>
             <p class="save-lead">Not ready today? Save it — we'll email your code tomorrow morning, with a link back here. We'll send it once.</p>
             <form id="save-form" novalidate>
@@ -17,7 +16,7 @@
               <button class="skip save-submit" type="submit" id="save-submit">Save my offer</button>
               <p class="save-notice">We'll use your email to send this code once, tomorrow. Only if you tick the box and then confirm it will we
                 send you anything else. We delete your details 30 days after the offer ends unless you've confirmed. We
-                don't sell your information. <span class="placeholder">[Privacy notice]</span></p>
+                don't sell your information. {{PRIVACY_NOTICE}}</p>
             </form>
             <div class="save-out" id="save-out-of-area" hidden>
               <p class="save-out-line">We don't deliver to <strong id="save-ooa-zip">[ZIP]</strong> yet.</p>

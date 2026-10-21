@@ -44,7 +44,7 @@ test("WC-6a: production's Worker hands every other route to the assets and retur
   }
 });
 
-test("WC-6b: wrangler.jsonc, production: main is site.js; its bindings ASSETS and WEEK (the prod bucket), and ANALYTICS and SALTS (SPEC-analytics § 6), alone; the page's routes run first", async () => {
+test("WC-6b: wrangler.jsonc, production: main is site.js; its bindings ASSETS and WEEK (the prod bucket), ANALYTICS and SALTS (SPEC-analytics § 6), and the save step's DB, rate limiters and cron (SPEC-save-offer-production § 4), alone; the page's routes run first", async () => {
   const prod = await wranglerConfig(undefined);
   assert.equal(relative(ROOT, prod.main), join("src", "worker", "site.js"));
   assert.equal(prod.assets.binding, "ASSETS");
@@ -53,12 +53,16 @@ test("WC-6b: wrangler.jsonc, production: main is site.js; its bindings ASSETS an
   // SPEC-analytics.md § 6 (the Advisor's word, 2026-10-13): the analytics dataset and the salts' KV namespace, and no other.
   assert.deepEqual(prod.analytics_engine_datasets, [{ binding: "ANALYTICS", dataset: "fitaf_microsite_analytics_prod" }]);
   assert.deepEqual(prod.kv_namespaces.map((k) => k.binding), ["SALTS"]);
-  for (const none of ["d1_databases", "ratelimits", "durable_objects", "services", "queues"]) {
+  for (const none of ["durable_objects", "services", "queues"]) {
     const value = prod[none];
     const empty = value === undefined || (Array.isArray(value) && !value.length) || (value?.bindings && !value.bindings.length) || (value?.producers && !value.producers.length && !value.consumers?.length);
     assert.ok(empty, `production has no ${none}: ${JSON.stringify(value)}`);
   }
-  assert.deepEqual(prod.triggers?.crons ?? [], [], "production has no cron");
+  // Amended by SPEC-save-offer-production.md § 4 item 2 ("§ 4 item 1's 'no D1, no rate limiters, no cron' for production is
+  // amended by this item"): the save step's, by name, and no other — used only while data/save.json's production is true.
+  assert.deepEqual(prod.d1_databases.map((d) => [d.binding, d.database_name]), [["DB", "fitaf-leads-prod"]], "the save step's database");
+  assert.deepEqual(prod.ratelimits.map((r) => r.name), ["SAVE_RATE_LIMITER", "LOOKUP_RATE_LIMITER"], "the save step's rate limiters");
+  assert.deepEqual(prod.triggers?.crons ?? [], ["*/5 * * * *"], "the save step's cron");
   const dev = await wranglerConfig("dev");
   assert.equal(relative(ROOT, dev.main), join("src", "worker", "index.js"));
   assert.equal(dev.assets.binding, "ASSETS");
