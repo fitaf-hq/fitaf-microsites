@@ -114,3 +114,36 @@ export function submitSave(page, { email = "dummy-sp@example.com", zip }) {
   event.initEvent("submit", true, true);
   page.el("save-form").dispatchEvent(event);
 }
+
+// ---- SP10 (§ 9 item 2): the event a save names ----
+
+/** The `?e=` pattern, written as the page carries it: SP10 finds it once in a page (one reading). */
+export const ONE_READING = "/(?:^|[?&])e=([^&#]*)/";
+
+/** The `event_id` the page at `html` sends when opened with `search`, a valid in-area save made through its own form. */
+async function eventSent(html, search) {
+  const { simulatePage } = await import("./page-sim.mjs");
+  const page = simulatePage(html, { search });
+  page.type("save-email", "dummy-sp10@example.com");
+  page.type("save-zip", "02118");
+  page.el("save-form").dispatch("submit");
+  await page.settle();
+  assert.equal(page.record.fetches.length, 1, `${search || "(no code)"}: one save sent`);
+  return JSON.parse(page.record.fetches[0].init.body).event_id;
+}
+
+/** SP10: `?e=boston` sends boston (and `?e=seminar` seminar, among other parameters too); no code, an empty one, a code
+ *  naming no event, or one only resembling an id, sends `fallback`. */
+export async function assertEventFromCode(html, { fallback }) {
+  for (const [search, expected] of [
+    ["?e=boston", "boston"],
+    ["?x=1&e=seminar", "seminar"],
+    ["", fallback],
+    ["?e=", fallback],
+    ["?e=nowhere", fallback],
+    ["?e=BOSTON", fallback],
+    ["?ee=boston", fallback],
+  ]) {
+    assert.equal(await eventSent(html, search), expected, `${search || "(no code)"} sends ${expected}`);
+  }
+}

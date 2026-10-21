@@ -3,6 +3,7 @@
 //   1. the build's input check always passes            -> SP4 (each refusal) fails
 //   2. production sending through the allowlist           -> SP7 (production sends) fails
 //   3. the draft tag kept in production                   -> SP4 (the approved page has no draft tag) fails
+//   4. (§ 9 item 3) the page sends the first event whatever the code -> SP10 fails
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -13,6 +14,8 @@ import { ROOT } from "../build.mjs";
 import { mirror } from "./cc-harness.mjs";
 import { approvedPage, assertEachRefusal, assertNoDraftMarking } from "./sp-production.mjs";
 import { assertProductionSends } from "./sp-sending.mjs";
+import { assertEventFromCode } from "./sp-fixture.mjs";
+import { devPage } from "./dev-page.mjs";
 
 /** `file` (relative to `dir`) with `from` replaced by `to`, exactly once. */
 async function mutate(dir, file, from, to) {
@@ -54,4 +57,11 @@ test("mutant 3: the draft tag kept in production -> SP4 fails", async () => {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("mutant 4: the page sends the first event whatever the code -> SP10 fails", async () => {
+  const html = await devPage();
+  const site = "qrEvent(location.search, QR_IDS) || cfg.event_id";
+  assert.equal(html.split(site).length - 1, 1, "the mutation site occurs exactly once in the page");
+  await assert.rejects(assertEventFromCode(html.replace(site, "cfg.event_id"), { fallback: "demo" }), /\?e=boston sends boston/);
 });

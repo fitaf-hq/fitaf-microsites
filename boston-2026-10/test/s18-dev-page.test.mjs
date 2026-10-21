@@ -59,7 +59,11 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   const all = [...one, ...two].flatMap(pieces);
   assert.equal(all.length, 13, "9 paragraphs -> 2 + 1 + 4 + 1 + 1 + 1 + 3 = 13 pieces");
   assert.deepEqual(all.map(isOfferLine), [false, true, ...Array(11).fill(false)], "one piece is the offer line: the second, under the heading");
-  for (const piece of all.filter((p) => !isOfferLine(p))) assert.ok(text.includes(piece), `missing from the page: ${piece}`);
+  // SPEC-save-offer-production § 9 item 1: DRAFT § 1's "[Privacy notice]" is the form's link to /privacy/ (data/save.json
+  // privacy_notice_url), so the page shows its words without the brackets, as a link.
+  const linked = (piece) => piece.replace("[Privacy notice]", "Privacy notice");
+  for (const piece of all.filter((p) => !isOfferLine(p))) assert.ok(text.includes(linked(piece)), `missing from the page: ${piece}`);
+  assert.match(devHtml, /<a class="save-privacy" href="\/privacy\/">Privacy notice<\/a>/, "the notice linked (§ 9 item 1)");
   // SPEC-rung4 § 2b item 3: DRAFT § 1's last line (below the form, "Build my plan →") no longer applies at the end, where
   // the visitor has built the plan; the skip link is not on the page. (Its paragraphs above are checked as before.)
   assert.ok(!text.includes("Build my plan →"), "no skip link (§ 2b item 3)");

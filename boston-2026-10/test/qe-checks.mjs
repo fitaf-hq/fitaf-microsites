@@ -14,10 +14,12 @@ import { CHROME, oneAtATime } from "./print-fixtures.mjs";
 
 export const BOSTON_URL = "https://eatfitaf.com/?e=boston";
 export const SEMINAR_URL = "https://eatfitaf.com/?e=seminar";
-/** § 11 item 1, word for word, after `demo` as it was committed before it (and stays first). */
+/** § 11 item 1, word for word, after `demo` as it was committed before it (and stays first). The names of demo and
+ *  boston since SPEC-save-offer-production.md § 9 item 2 (the Advisor, 2026-10-21: what E1 says after "You saved this
+ *  offer at"); the ids, the URLs and the order as § 11 has them. */
 export const EXPECTED_EVENTS = [
-  { id: "demo", name: "the Fit AF demo event", url: "https://eatfitaf.com/" },
-  { id: "boston", name: "Fit AF in Boston, 26–29 October 2026", url: BOSTON_URL },
+  { id: "demo", name: "eatfitaf.com", url: "https://eatfitaf.com/" },
+  { id: "boston", name: "Fit AF's Boston event", url: BOSTON_URL },
   { id: "seminar", name: "the seminar of 23 October 2026", url: SEMINAR_URL },
 ];
 /** § 11 item 4 (the orchestrator's ruling, 2026-10-18): the address printed under every event's code, its URL's host. */

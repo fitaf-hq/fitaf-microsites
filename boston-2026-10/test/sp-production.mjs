@@ -136,7 +136,9 @@ export async function productionBuild({ root = ROOT, unfixed = null, production 
     }
     const files = await filesUnder(outDir);
     const html = error ? null : await readFile(join(outDir, "index.html"), "utf8");
-    return { html, error, files, inputs };
+    const privacy = files.includes(join("privacy", "index.html")) ? await readFile(join(outDir, "privacy", "index.html"), "utf8") : null;
+    const draftText = await readFile(inputs.options.draftPath, "utf8");
+    return { html, privacy, error, files, inputs, draftText };
   } finally {
     await rm(inputs.dir, { recursive: true, force: true });
   }
@@ -210,3 +212,33 @@ export async function basePackage() {
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
   return { pkg, dispose: () => rm(scratch, { recursive: true, force: true }) };
 }
+
+// ---- § 9 item 1: the privacy notice's page ----
+
+/** DRAFT.md § 6's paragraphs as a reader reads them, written here from the draft's own layout (independent of the
+ *  build): its blockquote, each paragraph starting at a line that opens with a bold heading ("> **Who we are.** …"),
+ *  continuation lines joined by a space, the bold marks removed. */
+export function section6Paragraphs(draftText) {
+  const section = draftText.split(/^## 6\. .*$/m)[1].split(/^## /m)[0];
+  const lines = section.split("\n").filter((l) => l.startsWith(">")).map((l) => l.replace(/^>\s?/, ""));
+  const paragraphs = [];
+  for (const line of lines) {
+    if (line.startsWith("**") || !paragraphs.length) paragraphs.push(line);
+    else paragraphs[paragraphs.length - 1] += ` ${line}`;
+  }
+  return paragraphs.map((p) => p.replace(/\*\*/g, "").replace(/\s+/g, " ").trim()).filter(Boolean);
+}
+
+/** A page's words: the markup without its scripts and styles, its tags, entities decoded, whitespace squashed. */
+export const pageText = (html) =>
+  html
+    .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, " ")
+    .replace(/<\/?(strong|em|b|a|span)\b[^>]*>/g, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
