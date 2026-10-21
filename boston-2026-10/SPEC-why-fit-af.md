@@ -220,3 +220,80 @@ prompt 255 objective 6): **the dialog closes on that link**, as it closes on Esc
 5. **Unchanged**: everything § 2 item 5 lists; `/why/`'s file; the plans dialog.
 
 ### 6.1 Built (to be filled by the build)
+
+Built on `boston/why-button` from `84807ce` (this contract), in three commits: `9fae450` (the cases, red), `e2284f1`
+(§ 6 items 1 and 3) and this section's (the goldens, re-recorded once, and § 6.1). **To be re-gated by the
+orchestrator** (the site suite, contrast and the storefront watch were not run by the build). §§ 1–5 and § 6 items 1–5
+are unchanged.
+
+**The cases, and what they did before the code** (each file alone, `nice -n 15 node --test <file>`; before on `9fae450`,
+after on `e2284f1` and this commit)
+
+| case | file | before | after |
+|---|---|---|---|
+| W2, § 6 item 4: with the dialog open, a press on the frame's link whose URL, resolved against the frame's document, is this origin's `/` (found by where it goes, never by its words: *Find your plan.* is a phrase of `data/messages.json`, which SM-4 keeps out of every file under `tools/storybook/`) closes the dialog, focus on `#why-link`, the top page's URL unchanged, no `framenavigated` in the network's quiet after the press (750 ms), the frame's document still `/why/`; production at 390 (`#lean-7`) and development `/demo/` at 390 | `tools/storybook/test/w-why-chrome.test.mjs` | 0 of 2 (the dialog stayed open, the frame navigated to `/`, its document the plan page) | 2 of 2 |
+| W2's § 6 mutant: a copy of the production build without the one line of its script that listens for a click on the frame's document (`doc.addEventListener("click"`, read from the page) fails it (*did not close the dialog*, *a frame to /*); the copy as built passes (its control) | the same | 0 of 1 (fixture control: no such line) | 1 of 1 |
+| The file's other seven (W2's three, W3's three, W2's first mutant) | the same | 7 of 7 | 7 of 7 |
+| SM-3, § 6 item 3: each story's page's frame (its one `<iframe src>`, resolved against the page's URL in the static build) answers 200 with the site's own build of `/why/` (`npm run build` / `npm run build:dev`, its `why/index.html`), byte for byte; every date, both builds | `tools/storybook/test/sm-3-one-source.test.mjs` | 0 of 1 (the four development pages' `/why/` answered 404; the four production pages' `why/` 200 and the built page, the control) | 1 of 1 |
+| SM-3 and its mutant | the same | 2 of 2 | 2 of 2 |
+
+`w-why-chrome.test.mjs`: 7 of 10 before, 10 of 10 after; `sm-3-one-source.test.mjs`: 2 of 3 before, 3 of 3 after.
+`nice -n 15 npm --prefix boston-2026-10/tools/storybook test` on `e2284f1`'s code with these goldens: 52 of 52 (§ 4.1's
+48, and W2's two, its § 6 mutant and SM-3's § 6 case).
+
+**The goldens, re-recorded once (this commit)** — each case run alone on `e2284f1` before (red where its golden moved)
+and after
+
+| golden | before → after | moved |
+|---|---|---|
+| S20 `test/s20-production-golden.json` (every file of `e2284f1`'s production build, hashed) | 0 of 1 → 1 of 1 | `index.html`, `f1f0e04f…` → `c5a35d44…`; every other file (`why/index.html` among them, `43afc5ed…`) byte-identical |
+| WC-8's `TODAY_NO_PICKS_SHA256` (its control's own computation, at each tree) | 2 of 3 → 3 of 3 | `1c68a68b…` → `21abbe56…` (`84807ce`'s tree reproduces `1c68a68b…`); its two visible-page cases did not fail |
+| U4 `test/u-04-golden.json` (`node test/u-04-record.mjs --commit e2284f1`) | 0 of 1 → 1 of 1 | the six served pages, each +516 bytes (v1 fixture prod `d13822b4…` → `6725cbd4…`, dev `1b411c4b…` → `b5056032…`; v2 fixture prod `c56b6803…` → `e3e40f6f…`, dev `1d1b91a9…` → `ac582b7b…`; the committed week prod `f5a898cf…` → `263482a1…`, dev `bb3c301f…` → `286f1e51…`); all six contents and the visible page at all seven fragments byte-identical |
+| WC-9 `test/wc-09-golden.json` (`node test/wc-09-record.mjs --visible-at e2284f1`) | 3 of 3 → 3 of 3 | `visible_at` alone (`f02807e` → `e2284f1`); all 20 visible pages byte-identical (see below) |
+| CC-8 and every other golden | not moved | `cc-04`, `cc-08`, `m14-text-golden`, `ms-03`, `ms-04`, `ms-09`, `ms-13`, `ms-14`, `pr-10`, `qe15`, `r2-32`: each alone, green, on this tree |
+
+**Every changed line.** Built from each commit's own tree (`git archive`, this package's `node_modules` linked), both
+builds: every file but the pages byte-identical (`diff -rq`), `why/index.html` among them. Production's `index.html`
+(no week, as every build writes it): 7 lines added, none removed, in three places; each development page (`/`,
+`demo/`, `boston/`, `seminar/`) by the same 7 lines at `677a678,679`, `678a681,684`, `681a688` (compared line for line);
+each served page (U4) by the same lines. Sizes, raw / gzip (`test/page-budget.mjs` `pageSizes`): production 42,074 /
+12,424 → 42,590 / 12,594; development `/` and `demo/` 65,706 / 19,319 → 66,222 / 19,472, `boston/` 65,708 / 19,319 →
+66,224 / 19,472, `seminar/` 65,709 / 19,321 → 66,225 / 19,474; under SPEC.md § 1's 61,440 gzip. (`diff`'s own output,
+production.)
+
+```text
+571a572,573
+>   // So does its link back to this site's plan page (SPEC-why-fit-af § 6), which would open the plan page inside its own
+>   // dialog: pressed, the dialog closes and the frame stays. Any other link in the frame is a link.
+572a575,578
+>   function toPlanPage(el) {
+>     var a = el && el.closest ? el.closest("a[href]") : null;
+>     return !!a && a.origin === location.origin && a.pathname === "/";
+>   }
+575a582
+>     if (doc) doc.addEventListener("click", function (e) { if (toPlanPage(e.target)) { e.preventDefault(); $("#why").close(); } });
+```
+
+`tools/storybook/microsite/layout.js`: `ROOT_STATIC` `["fonts", "assets"]` → `["fonts", "assets", "why"]`, its one line.
+
+**Where § 6 was silent, and what was done** (found at the build, not ruled)
+
+1. **WC-9 did not move.** § 6 item 4 says S20, U4 and WC-9 move. WC-9's golden holds only visible pages beyond
+   `409b805`'s content, and `visible()` reads the page without its scripts; the change is script alone, so WC-9 passed
+   on `e2284f1` before any re-record. Its recorder, run as item 4 asks, changed `visible_at` alone; that is committed
+   (the test's pin `f02807e` → `e2284f1`). U4's visible pages and WC-8's two visible-page cases likewise did not move.
+2. **"This site's plan page"** is read as the top page's origin and the path `/`, by the anchor's own `origin` and
+   `pathname` (resolved against the frame's document). On a development event page (`/demo/`) the link's `/` is the
+   development root, not the page the visitor is on; the dialog closes on it all the same, as § 6 item 1's "path `/`"
+   says.
+3. **A press with a modifier** (Ctrl or Cmd, which would open a new tab) is a `click` too, so it closes the dialog and
+   opens nothing; a middle press is an `auxclick`, not handled, and opens the link as before. By the DOM's event model,
+   not measured here.
+4. **The new Storybook case is in `sm-3-one-source.test.mjs`**: it is SM-3's rule (what a story's frame loads is the
+   site's own build) and reuses that file's static build; it has no case id of its own.
+5. **Left as they are** (§ 6 item 3, "no other Storybook change"): `.storybook/main.js`'s header comment and the
+   Storybook README's `.storybook/main.js` row still say the development build's `fonts/` and `assets/` are served at
+   the root, as does SPEC-storybook-microsite.md § 7 (its build's notes); the root now also serves `why/`.
+6. **"Not navigated" is read in a window**: W2's § 6 case waits for 750 ms of network quiet after the press and then
+   finds no `framenavigated` and the frame's document still `/why/`. Its mutant shows the window catches the
+   navigation the listener prevents.

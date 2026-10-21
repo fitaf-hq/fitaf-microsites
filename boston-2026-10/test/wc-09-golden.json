@@ -1,7 +1,7 @@
 {
   "about": "WC-9's before (SPEC-week-content § 5): the production build of recorded_at, built --on `on` from that commit's own tree (test/wc-09-record.mjs, which wrote this file). picks_data is its #picks-data; visible is, per fragment, the SHA-256 of the visible page opened at opened_at, with the week's sheet URL rewritten to /week/<file>. Re-record only by running the recorder; never by hand. Since SPEC-meal-selection § 12 (--visible-at): visible is instead the page production's Worker serves from visible_at's own tree with that week's content in its bucket, opened at opened_at; everything else is recorded_at's.",
   "recorded_at": "409b805",
-  "visible_at": "f02807e",
+  "visible_at": "e2284f1",
   "on": "2026-10-11",
   "week": "2026-10-18",
   "opened_at": "2026-10-11T16:00:00.000Z",

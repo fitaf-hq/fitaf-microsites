@@ -28,6 +28,11 @@
 // 5f55cbc's record, all six contents were byte-identical; the six served pages and their visible page at all seven
 // fragments moved (the footer is on every one; SPEC-why-fit-af § 4 lists the lines). From here the reference is
 // f02807e's tree.
+// ⚠ RE-RECORDED at e2284f1 (`node test/u-04-record.mjs --commit e2284f1`): SPEC-why-fit-af.md § 6 (2026-10-21) makes the
+// /why/ page's link back to the plan page close the dialog, from app.js, which is inlined in the page. Against
+// f02807e's record, all six contents and the visible page at all seven fragments were byte-identical; the six served
+// pages moved (each +516 bytes: app.js's seven added lines, SPEC-why-fit-af § 6.1 lists them). From here the reference
+// is e2284f1's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -36,7 +41,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to f02807e's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "f02807e");
+test("U4: a normal week, the content and the page as served, byte-identical to e2284f1's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "e2284f1");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

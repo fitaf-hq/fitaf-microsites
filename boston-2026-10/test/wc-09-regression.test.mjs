@@ -15,6 +15,10 @@
 // f02807e`. Against 5f55cbc's, all 20 fragments moved ("" and #family too: the footer is on every one), each 6e0f6bd's
 // byte for byte once those three additions are removed (SPEC-why-fit-af § 4); picks_data, page_sha256 and the sheet
 // still 409b805's.
+// ⚠ RE-RECORDED for SPEC-why-fit-af.md § 6 (2026-10-21: the /why/ page's link back to the plan page closes the dialog, in
+// app.js, inlined in the page) by `node test/wc-09-record.mjs --visible-at e2284f1`, as § 6 item 4 asks: only
+// `visible_at` moved. All 20 visible pages are f02807e's byte for byte (visible() reads the page without its scripts,
+// and the change is script alone); picks_data, page_sha256 and the sheet still 409b805's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -34,7 +38,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
-  assert.equal(golden.visible_at, "f02807e", "the visible pages: f02807e's served page (SPEC-why-fit-af § 2)");
+  assert.equal(golden.visible_at, "e2284f1", "the visible pages: e2284f1's served page (SPEC-why-fit-af §§ 2 and 6)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {
