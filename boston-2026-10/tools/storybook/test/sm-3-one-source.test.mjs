@@ -7,6 +7,12 @@
 //
 // ⭐ Mutant (in the suite, in a mirror): a copy of the served pages with one CSS rule changed fails the check.
 // STORYBOOK_STATIC=<dir> runs the case against another static build (a copy), to watch it fail there.
+//
+// The site's SPEC-why-fit-af § 6 item 3 (2026-10-21), by the same rule: the frame a story's page carries (the /why/
+// page, read from the page's own <iframe src> and resolved against the page's URL) answers 200 with the site's own
+// build of /why/ (`npm run build` / `npm run build:dev`, its why/index.html), byte for byte. The development page
+// addresses it from the root (/why/), so it is served there with fonts/ and assets/ (microsite/layout.js ROOT_STATIC);
+// the production page's is beside it, under /microsite/.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
@@ -83,6 +89,44 @@ async function oneSource(staticDir) {
 test("SM-3: each page a story loads is the site's own build for its build and date, but the one clock script", { timeout: BUILD_TIMEOUT_MS }, async () => {
   const { dir } = await storybookStatic();
   assert.deepEqual(await oneSource(dir), []);
+});
+
+/** The page's one frame's src (T5: the page carries exactly one <iframe>, the /why/ frame); null when it has none. */
+function frameSrc(html) {
+  const frames = [...html.matchAll(/<iframe\b[^>]*>/g)];
+  return frames.length === 1 ? (/\bsrc="([^"]+)"/.exec(frames[0][0])?.[1] ?? null) : null;
+}
+
+test("SM-3 (SPEC-why-fit-af § 6 item 3): each story's page's /why/ frame answers 200 with the site's own build of /why/, the development page's (at the root) and the production page's (beside it)", { timeout: BUILD_TIMEOUT_MS }, async () => {
+  const { dir } = await storybookStatic();
+  const manifest = await readManifest(dir);
+  const server = await serveStatic(dir);
+  const work = await mkdtemp(join(tmpdir(), "fitaf-storybook-sm-3-why-"));
+  const answers = [];
+  try {
+    for (const build of BUILDS.map((b) => b.id)) {
+      const out = join(work, build);
+      await run("npm", ["--prefix", SITE, "run", SITE_SCRIPT[build], "--", "--out", out], { maxBuffer: 16 * 1024 * 1024 });
+      const why = await readFile(join(out, "why", "index.html"), "utf8");
+      for (const date of manifest.dates.filter((d) => d.on)) {
+        const at = new URL(`${server.base}/${pageUrl(build, date.id)}`);
+        const src = frameSrc(await (await fetch(at)).text());
+        const frame = src && new URL(src, at);
+        const res = frame ? await fetch(frame) : null;
+        const body = res ? await res.text() : null;
+        answers.push({ page: `${build}/${date.id}`, src, status: res?.status ?? null, built: body === why });
+      }
+    }
+  } finally {
+    await server.close();
+    await rm(work, { recursive: true, force: true });
+  }
+  assert.ok(answers.filter((a) => a.page.startsWith("development/")).length >= 1, `fixture control: a development page was read (${answers.length})`);
+  assert.deepEqual(
+    answers.filter((a) => a.status !== 200 || !a.built),
+    [],
+    "every story's frame answers 200 with the site's built /why/ page",
+  );
 });
 
 test("SM-3 (mutant): a page served from a copy with one CSS rule changed fails", { timeout: BUILD_TIMEOUT_MS }, async (t) => {

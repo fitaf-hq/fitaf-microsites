@@ -10,8 +10,14 @@
 //   W3: the same pages with JavaScript off: neither the button nor the dialog shown; the footer's one link shown, reading
 //   the button's label and going to /why/; the plans dialog still shown, as the page's no-script rule always showed it
 //   (a control).
+//   W2, since SPEC-why-fit-af § 6 (2026-10-21): with the dialog open, a press on the /why/ page's link to this site's
+//   plan page (found in the frame by where it goes, its URL resolved against the frame's document: this origin, path
+//   "/"; never by its words, SM-4) closes the dialog, focus back on the button, the top page's URL unchanged, nothing
+//   navigated (the frame's document still /why/). On the production page at 390 and the development page /demo/ at 390.
 // ⭐ Mutant: a copy of the production build without the one line of its script that wires the button (the button wired
-// to nothing) fails W2; the copy left as built (its control) passes.
+// to nothing) fails W2; the copy left as built (its control) passes. ⭐ And § 6's: a copy without the one line that
+// listens for a click on the frame's document (the link's listener removed: the frame navigates to the plan page, the
+// dialog stays open) fails § 6's case; the copy as built (its control) passes.
 // The pages are the site's own builds (`node build.mjs [--env dev] --out`, as the stories' pages are built), served on
 // 127.0.0.1; nothing else is requested. The page's words and its script's line are read from the site or the page,
 // never written here (SM-4).
@@ -34,6 +40,11 @@ const WHY_PATH = "/why/";
 const BACKDROP = { x: 4, y: 4 };
 /** The frame's least height, as a share of the viewport's: "a height that fits the viewport" (§ 2 item 2). */
 const FRAME_MIN_SHARE = 0.75;
+/** § 6: this site's plan page, the path a link in the frame must resolve to (on the frame's own origin). */
+const PLAN_PATH = "/";
+/** § 6: how long the network must be quiet after the press before the case reads what happened (a navigation the
+ *  press started would be under way by then). */
+const SETTLE_MS = 750;
 
 /** The /why/ page's title, read from the site's source (the frame's document is that page). */
 const WHY_TITLE = /<title>([^<]+)<\/title>/.exec(await readFile(siteFile("src", "why", "index.html"), "utf8"))[1];
@@ -52,6 +63,8 @@ const PAGES = [
   { name: "production, 1280, #family", dir: prodOut, path: "/index.html", hash: "#family", width: VIEWPORTS.w1280.width },
   { name: `development /${EVENT}/, 390, #lean-7`, dir: devOut, path: `/${EVENT}/index.html`, hash: "#lean-7", width: VIEWPORTS.w390.width },
 ];
+/** § 6's pages: production at 390 and the development page /demo/ at 390 (the contract names /demo/). */
+const PLAN_LINK_PAGES = [PAGES[0], { name: "development /demo/, 390, #lean-7", dir: devOut, path: "/demo/", hash: "#lean-7", width: VIEWPORTS.w390.width }];
 
 /** `fn(page, base, requested)` on the page served from `dir` at `path` + `hash`, `width` wide, in a fresh Chrome
  *  (JavaScript off with `script: false`); `requested` the paths asked of 127.0.0.1 so far. Refuses any other request. */
@@ -96,6 +109,58 @@ function readWhy() {
   };
 }
 
+/** True once the dialog's frame holds the /why/ page, loaded (its path and its title the source's); false on timeout. */
+function frameLoaded(page) {
+  return page
+    .waitForFunction(
+      (path, title) => {
+        const doc = document.querySelector("#why iframe")?.contentDocument;
+        return doc?.readyState === "complete" && doc.location.pathname === path && doc.title === title;
+      },
+      { timeout: FRAME_LOAD_MS },
+      WHY_PATH,
+      WHY_TITLE,
+    )
+    .then(
+      () => true,
+      () => false,
+    );
+}
+
+/** Runs in the frame: its links whose URL, resolved against its document, is this origin's `planPath`. */
+function linksToPlan(planPath) {
+  return [...document.querySelectorAll("a[href]")].filter((a) => {
+    const url = new URL(a.href, document.baseURI);
+    return url.origin === location.origin && url.pathname === planPath;
+  });
+}
+
+/** § 6: one line per thing the press on the frame's link to the plan page does not hold; [] when all do. */
+async function planLinkProblems(page) {
+  const problems = [];
+  await page.click("#why-link");
+  if (!(await frameLoaded(page))) return [`the frame did not load ${WHY_PATH}: ${JSON.stringify((await page.evaluate(readWhy)).doc)}`];
+  const frame = await (await page.$("#why iframe")).contentFrame();
+  const links = await frame.evaluateHandle(linksToPlan, PLAN_PATH);
+  const count = await links.evaluate((all) => all.length);
+  if (count !== 1) return [`fixture control: the /why/ page has ${count} links to the plan page, not 1`];
+  const link = (await links.evaluateHandle((all) => all[0])).asElement();
+  const top = page.url();
+  const navigated = [];
+  const onNavigated = (f) => navigated.push(`${f === page.mainFrame() ? "the top page" : "a frame"} to ${new URL(f.url()).pathname}`);
+  page.on("framenavigated", onNavigated);
+  await link.click();
+  await page.waitForNetworkIdle({ idleTime: SETTLE_MS, timeout: FRAME_LOAD_MS }).catch(() => {});
+  page.off("framenavigated", onNavigated);
+  const s = await page.evaluate(readWhy);
+  if (s.open) problems.push("a press on the frame's link to the plan page did not close the dialog");
+  else if (!s.focusOnButton) problems.push("a press on the frame's link to the plan page: focus did not return to the button");
+  if (page.url() !== top) problems.push(`the top page's URL moved: ${top} -> ${page.url()}`);
+  if (navigated.length) problems.push(`navigated after the press: ${navigated.join("; ")}`);
+  if (s.doc?.path !== WHY_PATH) problems.push(`the frame's document is not ${WHY_PATH} after the press: ${JSON.stringify(s.doc)}`);
+  return problems;
+}
+
 /** One line per thing W2 does not hold on `page`; [] when all do. Stops at the first close that does not happen. */
 async function behaviourProblems(page, requested) {
   const problems = [];
@@ -122,20 +187,7 @@ async function behaviourProblems(page, requested) {
   if (!(await open("first press"))) return problems;
   const opened = await state();
   if (!opened.focusInside) problems.push("focus did not move into the dialog");
-  const loaded = await page
-    .waitForFunction(
-      (path, title) => {
-        const doc = document.querySelector("#why iframe")?.contentDocument;
-        return doc?.readyState === "complete" && doc.location.pathname === path && doc.title === title;
-      },
-      { timeout: FRAME_LOAD_MS },
-      WHY_PATH,
-      WHY_TITLE,
-    )
-    .then(
-      () => true,
-      () => false,
-    );
+  const loaded = await frameLoaded(page);
   const s = await state();
   if (!loaded) problems.push(`the frame did not load ${WHY_PATH}: ${JSON.stringify(s.doc)}`);
   const { box, frameBox, viewport } = s;
@@ -161,6 +213,12 @@ for (const where of PAGES) {
   test(`W2 (${where.name}): the button opens the dialog with /why/ in its frame; Escape, the close button and the backdrop close it, focus back on the button (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
     const problems = await withPage(where, (page, base, requested) => behaviourProblems(page, requested));
     assert.deepEqual(problems, []);
+  });
+}
+
+for (const where of PLAN_LINK_PAGES) {
+  test(`W2 (${where.name}, SPEC-why-fit-af § 6): a press on the frame's link to the plan page closes the dialog, focus back on the button, the top page's URL unchanged, nothing navigated (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
+    assert.deepEqual(await withPage(where, (page) => planLinkProblems(page)), []);
   });
 }
 
@@ -205,4 +263,22 @@ test("W2 (mutant): the button wired to nothing (its line of the script removed) 
   await writeFile(index, html.replace(WIRING, ""));
   const problems = await withPage(where, (page, base, requested) => behaviourProblems(page, requested));
   assert.ok(problems.some((p) => /the button did not open the dialog/.test(p)), problems.join("\n"));
+});
+
+/** § 6: the one line of the page's script that listens for a click on the frame's document (the link's listener). */
+const PLAN_LINK_WIRING = /^[^\n]*\bdoc\.addEventListener\(["']click["'][^\n]*\n/gm;
+
+test("W2 (mutant, SPEC-why-fit-af § 6): the link's listener removed (its line of the script) fails § 6's case; the copy as built passes (Chrome, 390)", { timeout: TIMEOUT_MS }, async (t) => {
+  const copy = await mkdtemp(join(tmpdir(), "fitaf-storybook-why-plan-mutant-"));
+  t.after(() => rm(copy, { recursive: true, force: true }));
+  await siteBuild({ build: "production", out: copy });
+  const index = join(copy, "index.html");
+  const html = await readFile(index, "utf8");
+  const where = { dir: copy, path: "/index.html", hash: "#lean-7", width: VIEWPORTS.w390.width };
+  assert.equal(html.match(PLAN_LINK_WIRING)?.length, 1, "fixture control: one line of the script listens for a click on the frame's document");
+  assert.deepEqual(await withPage(where, (page) => planLinkProblems(page)), [], "control: the copy as built passes § 6's case");
+  await writeFile(index, html.replace(PLAN_LINK_WIRING, ""));
+  const problems = await withPage(where, (page) => planLinkProblems(page));
+  assert.ok(problems.some((p) => /did not close the dialog/.test(p)), problems.join("\n"));
+  assert.ok(problems.some((p) => /navigated after the press: a frame to \/(;|$)/.test(p)), problems.join("\n"));
 });
