@@ -2,7 +2,9 @@
 // and the site never installs a driver (the plans dialog's own case, PR-8 in pr-chrome.test.mjs, is the model):
 //   W2: the footer's button opens its dialog modally, focus moving in, with the frame loaded at /why/ (its document the
 //   site's src/why/index.html, known by its title) and as tall as the viewport allows, the /why/ page scrolling inside
-//   it; Escape, the close button and a press on the backdrop each close it, and focus returns to the button. On the
+//   it, and not requested before the button is pressed (`loading="lazy"`); Escape (with focus on the dialog's own
+//   controls, and again with focus inside the frame, after a press in it), the close button and a press on the backdrop
+//   each close it, and focus returns to the button. On the
 //   production page at 390 (#lean-7) and at 1280 (#family, the other tab), and on a development page one directory down
 //   (/<event-id>/, whose assets are addressed from the root) at 390.
 //   W3: the same pages with JavaScript off: neither the button nor the dialog shown; the footer's one link shown, reading
@@ -51,8 +53,8 @@ const PAGES = [
   { name: `development /${EVENT}/, 390, #lean-7`, dir: devOut, path: `/${EVENT}/index.html`, hash: "#lean-7", width: VIEWPORTS.w390.width },
 ];
 
-/** `fn(page, base)` on the page served from `dir` at `path` + `hash`, `width` wide, in a fresh Chrome (JavaScript off
- *  with `script: false`). Refuses any request off 127.0.0.1. */
+/** `fn(page, base, requested)` on the page served from `dir` at `path` + `hash`, `width` wide, in a fresh Chrome
+ *  (JavaScript off with `script: false`); `requested` the paths asked of 127.0.0.1 so far. Refuses any other request. */
 async function withPage({ dir, path, hash, width, script = true }, fn) {
   const server = await serveStatic(dir);
   const chrome = await freshChrome();
@@ -61,9 +63,14 @@ async function withPage({ dir, path, hash, width, script = true }, fn) {
     await page.setViewport({ width, height: VIEWPORTS[width === VIEWPORTS.w390.width ? "w390" : "w1280"].height });
     await page.setJavaScriptEnabled(script);
     await page.setRequestInterception(true);
-    page.on("request", (r) => (isLocal(r.url()) ? r.continue() : r.abort()));
+    const requested = [];
+    page.on("request", (r) => {
+      if (!isLocal(r.url())) return r.abort();
+      requested.push(new URL(r.url()).pathname);
+      return r.continue();
+    });
     await page.goto(`${server.base}${path}${hash}`, { waitUntil: "load" });
-    return await fn(page, server.base);
+    return await fn(page, server.base, requested);
   } finally {
     await chrome.close();
     await server.close();
@@ -84,13 +91,15 @@ function readWhy() {
     viewport: { width: innerWidth, height: innerHeight },
     box: box(dialog),
     frameBox: box(frame),
-    doc: doc && { path: doc.location.pathname, title: doc.title, scrolls: doc.documentElement.scrollHeight > doc.documentElement.clientHeight },
+    // While the frame navigates, its document may be the initial one, with no element yet.
+    doc: doc?.documentElement ? { path: doc.location.pathname, title: doc.title, scrolls: doc.documentElement.scrollHeight > doc.documentElement.clientHeight } : null,
   };
 }
 
 /** One line per thing W2 does not hold on `page`; [] when all do. Stops at the first close that does not happen. */
-async function behaviourProblems(page) {
+async function behaviourProblems(page, requested) {
   const problems = [];
+  if (requested.includes(WHY_PATH)) problems.push(`${WHY_PATH} was requested before the button was pressed (the frame is not lazy)`);
   const state = () => page.evaluate(readWhy);
   const open = async (how) => {
     const pressed = await page.click("#why-link").then(
@@ -140,13 +149,17 @@ async function behaviourProblems(page) {
   if (!(await open("second press"))) return problems;
   if (!(await closes("the close button", () => page.click("#why-close")))) return problems;
   if (!(await open("third press"))) return problems;
-  await closes("a press on the backdrop", () => page.mouse.click(BACKDROP.x, BACKDROP.y));
+  if (!(await closes("a press on the backdrop", () => page.mouse.click(BACKDROP.x, BACKDROP.y)))) return problems;
+  if (!(await open("fourth press"))) return problems;
+  await page.mouse.click(frameBox.left + frameBox.width / 2, frameBox.top + frameBox.height / 2);
+  if ((await page.evaluate(() => document.activeElement?.tagName)) !== "IFRAME") problems.push("control: a press in the frame did not move focus into it");
+  await closes("Escape with focus inside the frame", () => page.keyboard.press("Escape"));
   return problems;
 }
 
 for (const where of PAGES) {
   test(`W2 (${where.name}): the button opens the dialog with /why/ in its frame; Escape, the close button and the backdrop close it, focus back on the button (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
-    const problems = await withPage(where, (page) => behaviourProblems(page));
+    const problems = await withPage(where, (page, base, requested) => behaviourProblems(page, requested));
     assert.deepEqual(problems, []);
   });
 }
@@ -164,7 +177,7 @@ for (const where of PAGES) {
       }));
       let landed = null;
       if (seen.links.length === 1) {
-        await Promise.all([page.waitForNavigation({ waitUntil: "load" }), page.click("footer a")]);
+        await page.goto(seen.links[0].href, { waitUntil: "load" });
         landed = await page.evaluate(() => ({ path: location.pathname, title: document.title }));
       }
       return { ...seen, base, landed };
@@ -188,8 +201,8 @@ test("W2 (mutant): the button wired to nothing (its line of the script removed) 
   const html = await readFile(index, "utf8");
   const where = { dir: copy, path: "/index.html", hash: "#lean-7", width: VIEWPORTS.w390.width };
   assert.equal(html.match(WIRING)?.length, 1, "fixture control: one line of the script wires the button");
-  assert.deepEqual(await withPage(where, (page) => behaviourProblems(page)), [], "control: the copy as built passes W2");
+  assert.deepEqual(await withPage(where, (page, base, requested) => behaviourProblems(page, requested)), [], "control: the copy as built passes W2");
   await writeFile(index, html.replace(WIRING, ""));
-  const problems = await withPage(where, (page) => behaviourProblems(page));
+  const problems = await withPage(where, (page, base, requested) => behaviourProblems(page, requested));
   assert.ok(problems.some((p) => /the button did not open the dialog/.test(p)), problems.join("\n"));
 });

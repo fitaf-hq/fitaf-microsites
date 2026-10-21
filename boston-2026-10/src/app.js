@@ -138,13 +138,24 @@
       n.click();
     });
   });
-  // See all plans: the grid in a modal dialog. Esc closes it (the browser's own); so do its close button and a press on
-  // the backdrop (the dialog itself, outside its box); focus goes back to the link.
-  var all = $("#all"), allLink = $("#all-link");
-  allLink.addEventListener("click", function () { all.showModal(); });
-  $("#all-close").addEventListener("click", function () { all.close(); });
-  all.addEventListener("click", function (e) { if (e.target === all) all.close(); });
-  all.addEventListener("close", function () { allLink.focus(); });
+  // See all plans (the grid) and Why Fit AF? (the /why/ page in a frame, SPEC-why-fit-af § 2 item 3): each a modal dialog
+  // its button opens. Esc closes it (the browser's own); so do its close button and a press on the backdrop (the dialog
+  // itself, outside its box); focus goes back to the button.
+  function modal(dialog, button, close) {
+    button.addEventListener("click", function () { dialog.showModal(); });
+    close.addEventListener("click", function () { dialog.close(); });
+    dialog.addEventListener("click", function (e) { if (e.target === dialog) dialog.close(); });
+    dialog.addEventListener("close", function () { button.focus(); });
+  }
+  modal($("#all"), $("#all-link"), $("#all-close"));
+  modal($("#why"), $("#why-link"), $("#why-close"));
+  // A key pressed with focus inside the frame (after a click or a scroll in it) goes to the frame's document, not the
+  // dialog's, so Esc there would not close it: the /why/ page is this site's own, and its Esc closes the dialog too.
+  var whyFrame = $("#why-frame");
+  whyFrame.addEventListener("load", function () {
+    var doc = whyFrame.contentDocument;
+    if (doc) doc.addEventListener("keydown", function (e) { if (e.key === "Escape") $("#why").close(); });
+  });
 
   // The carousel: one photo shown, the next every CAROUSEL_MS, never under reduced motion (no dots: § 8 item 1).
   var slides = $$("#carousel .slide"), shown = 0;

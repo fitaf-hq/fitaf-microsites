@@ -7,10 +7,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import events from "../data/events.json" with { type: "json" };
 import saveConfig from "../data/save.json" with { type: "json" };
-import { build, renderPage, ROOT, TURNSTILE_SCRIPT_URL } from "../build.mjs";
+import { build, DEV_ASSET_PREFIX, renderPage, ROOT, TURNSTILE_SCRIPT_URL } from "../build.mjs";
 import { offerForSave } from "../src/worker/offers.js";
 import { zonedDate } from "../src/worker/zoned-time.js";
-import { isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
+import { assertOneWhyFrame, isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
 import { devPage } from "./dev-page.mjs";
 import { assertPageBudget } from "./page-budget.mjs";
 import { simulatePage } from "./page-sim.mjs";
@@ -102,7 +102,9 @@ test("S18 (dev T5): the only external script is Turnstile; the only fetch is the
   const fetches = [...devHtml.matchAll(/\bfetch\s*\(([^,]+),/g)].map((m) => m[1]);
   assert.deepEqual(fetches, ["cfg.api"]);
   assert.match(devHtml, /"api":"\/api\/save"/);
-  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|@import|<iframe\b|localStorage|sessionStorage|document\.cookie/i);
+  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|@import|localStorage|sessionStorage|document\.cookie/i);
+  // T5 amended by SPEC-why-fit-af.md § 2 item 2: one <iframe>, the /why/ page's frame, same-origin (loadedUrls reads it).
+  assertOneWhyFrame(devHtml, "S18", DEV_ASSET_PREFIX);
   // T5 amended by SPEC-analytics.md § 4, here as on the production page: exactly one sendBeacon, to /a.
   assert.equal([...devHtml.matchAll(/sendBeacon/g)].length, 1, "exactly one sendBeacon");
   assert.match(devHtml, /\bnavigator\.sendBeacon\(\s*(["'])\/a\1\s*,/, "its URL is /a");
