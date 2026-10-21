@@ -136,12 +136,33 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 }
 .print-flyer .fb-callout span { display: block; }
 .print-flyer .fb-callout span:first-child { font-size: 30px; line-height: 1; }
-.print-flyer .fb-foot { flex: none; display: flex; align-items: stretch; gap: 18px; padding: 14px 24px 20px; }
-.print-flyer .fb-cta { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
-.print-flyer .fb-cta > .offer { font-size: var(--fb-offer); text-wrap: balance; }
-.print-flyer .fb-logo { width: 84px; }
-.print-flyer .fb-scan { flex: none; display: flex; flex-direction: column; align-items: center; }
-.print-flyer .fb-scan .qr { width: var(--fb-qr); height: var(--fb-qr); }
+/* Pass 2 (the Advisor, 2026-10-20): the logo at the top right, on a white plate, the headline kept clear of it; the foot one
+   orange section (the offer's own --cta) into the bleed under a torn edge, the offer large in white with no box of its
+   own; the QR code at error correction H on a white tile with a green rule, the logo at its centre */
+.print-flyer .fb-band { position: relative; }
+.print-flyer .fb-logo-top {
+  position: absolute; top: calc(var(--bleed) + 18px); right: calc(var(--bleed) + 20px); width: 92px;
+  padding: 6px 8px; border-radius: 6px; background: var(--white);
+}
+.print-flyer .fb-head { padding-right: 120px; }
+.print-flyer .fb-foot {
+  position: relative; flex: none; display: flex; align-items: center; gap: 18px;
+  margin: 0 calc(-1 * var(--bleed)) calc(-1 * var(--bleed));
+  padding: 16px calc(var(--bleed) + 24px) calc(var(--bleed) + 16px); background: var(--cta);
+}
+.print-flyer .fb-foot-edge { position: absolute; left: 0; top: -12px; width: 100%; height: 13px; fill: var(--cta); }
+.print-flyer .fb-cta { flex: 1; min-width: 0; }
+.print-flyer .fb-cta > .offer { margin: 0; padding: 0; background: none; color: var(--white); font-size: var(--fb-offer); line-height: 1.12; text-wrap: balance; }
+.print-flyer .fb-scan { flex: none; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.print-flyer .fb-qr { position: relative; padding: 6px; border: 3px solid var(--signature); border-radius: 10px; background: var(--white); line-height: 0; }
+.print-flyer .fb-qr .qr { width: var(--fb-qr); height: var(--fb-qr); }
+/* the logo at the code's centre (about a quarter of its width, under the 30% error correction H recovers); centred by
+   its own size, not a transform (Q2) */
+.print-flyer .fb-qr-logo {
+  position: absolute; left: calc(50% - 22px); top: calc(50% - 16px); width: 32px;
+  padding: 3px 4px; border-radius: 4px; background: var(--white);
+}
+.print-flyer .fb-scan .address { margin: 0; color: var(--white); }
 /* § 13 item 8 (2026-10-20): the meal's name on its photo, a solid chip of the band's ink with white type (nothing
    translucent): on front B at the photo's lower left, inside the safe margin; on the back, in each square's own grid
    cell at its foot, the outer two kept the safe margin inside the trim */

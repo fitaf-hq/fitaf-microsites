@@ -36,7 +36,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { PNG } from "pngjs";
-import { copyStatic, loadJson, ROOT, writeQrCodes } from "../build.mjs";
+import { copyStatic, loadJson, QR_OPTIONS, ROOT, writeQrCodes } from "../build.mjs";
+import QRCode from "qrcode";
 import { loadInputs, MANIFEST_PATH, readManifest } from "../mockups/inputs.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
@@ -454,6 +455,8 @@ export async function buildPrint({
     const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId: eventId ?? PRINT_EVENT });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
+    // § 13 item 11: front B's code, the same URL by the same library and options at error correction H, for its logo
+    for (const event of inputs.data.events) await writeFile(join(stage, "qr", `${event.id}-h.svg`), await QRCode.toString(event.url, { ...QR_OPTIONS, errorCorrectionLevel: "H", type: "svg" }));
     const planned = await planPages({ run, stage, inputs, pages, chosen, words, front, photoNames });
     const written = [];
     for (const p of planned) {

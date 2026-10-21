@@ -39,7 +39,7 @@ export const BACK_GAP_PX = 10;
  */
 export const FRONT_B_HEAD_PX = 40;
 export const FRONT_B_LEDE_PX = 17;
-export const FRONT_B_OFFER_PX = 26;
+export const FRONT_B_OFFER_PX = 32;
 export const FRONT_B_CALLOUT_PX = 92;
 export const FRONT_B_QR_IN = 1;
 

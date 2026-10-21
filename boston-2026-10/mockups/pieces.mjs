@@ -148,17 +148,23 @@ ${bar}
  */
 function flyerFrontB(c, parts, words) {
   const cite = (key) => `data-src="${esc(`${words.source}#${key}`)}"`;
-  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}">${esc(t)}</span>`).join("");
+  // a line in the accent colour (`accent`), and within any line the words between asterisks
+  const spans = (t) => t.split("*").map((part, j) => (j % 2 ? `<span class="fb-accent">${esc(part)}</span>` : esc(part))).join("");
+  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}">${spans(t)}</span>`).join("");
+  const size = words.size ? ` style="font-size: ${words.size}px"` : "";
+  // the QR code at error correction H (print/build-print.mjs writes it), so the logo can sit in its centre
+  const qrH = { ...c, qr: { ...c.qr, path: c.qr.path.replace(/\.svg$/, "-h.svg") } };
   const callout = words.callout ? `<p class="fb-callout" ${cite("callout")}>${words.callout.map((t) => `<span>${esc(t)}</span>`).join("")}</p>` : "";
   return `
 <div class="fb-band">
-  <h1 class="fb-head" ${cite("headline")}>${lines}</h1>
+  ${parts.logo("fb-logo-top")}
+  <h1 class="fb-head" ${cite("headline")}${size}>${lines}</h1>
   <p class="fb-lede" ${cite("lede")}>${esc(words.lede)}</p>
 </div>
 <div class="fb-hero">${parts.photo("flyer")}${parts.caption("flyer", "fb-name")}<svg class="fb-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE}"/></svg>${callout}</div>
-<div class="fb-foot">
-  <div class="fb-cta">${parts.text("p", "offer", c.offer, "the offer")}${parts.logo("fb-logo")}</div>
-  ${scanBlock(parts, c, "fb-scan", { under: true })}
+<div class="fb-foot"><svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>
+  <div class="fb-cta">${parts.text("p", "offer", c.offer, "the offer")}</div>
+  <div class="scan scan-under fb-scan"><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
 </div>`;
 }
 
@@ -166,6 +172,8 @@ function flyerFrontB(c, parts, words) {
 const TORN_EDGE =
   "M0 0H510V7L497 11L486 6L471 12L458 8L441 13L430 7L414 12L399 9L386 14L370 8L357 12L341 7L327 13L311 9L296 14L283 8" +
   "L268 12L252 6L238 13L223 9L207 14L194 8L179 12L163 7L150 13L134 9L119 14L106 8L91 12L75 7L62 13L46 9L31 14L18 8L0 12Z";
+/** The same edge mirrored top to bottom (the foot's upper edge), by its numbers: print.css may turn nothing (Q2). */
+const TORN_EDGE_UP = TORN_EDGE.replace("M0 0H510V7", "M0 18H510V11").replace(/L(\d+) (\d+)/g, (_, x, y) => `L${x} ${18 - Number(y)}`);
 
 /**
  * The printed flyer's back (SPEC-print-pieces.md § 12 item 3), print-only: three square photos across the top; the

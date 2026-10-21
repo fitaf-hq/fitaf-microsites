@@ -55,7 +55,7 @@ export const STATIC_DIRS = [
 export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 const CENTS_PER_DOLLAR = 100;
-const QR_OPTIONS = {
+export const QR_OPTIONS = {
   errorCorrectionLevel: "M",
   margin: 2,
   color: { dark: "#1b2360", light: "#ffffff" },

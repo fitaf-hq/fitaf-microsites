@@ -3,7 +3,9 @@
 // approved it is data/flyer-front.json, committed, carrying `"approved": true`. Only these keys, each checked; anything
 // else is refused, naming the key:
 //   headline  one to three lines, each set on its own line (the build never rewraps a line it was given)
-//   accent    the index of the headline's line set in the brand's green (optional)
+//   accent    the index of the headline's line set in the brand's green (optional); and within any line, words
+//             between asterisks (*PEOPLE WHO*) are set in it too
+//   size      the headline's size in layout px for this take (optional; FRONT_B_HEAD_PX otherwise)
 //   lede      one line of text, the line that says what the headline leaves out
 //   callout   one to three short lines for the one callout over the photo's corner (optional)
 //   approved  true once the Advisor approves the words (optional; anything but true is a proof)
@@ -12,7 +14,9 @@ import { basename } from "node:path";
 
 /** § 13: the committed home of front B's words, once they are approved. */
 export const FRONT_PATH = new URL("../data/flyer-front.json", import.meta.url).pathname;
-const KEYS = ["headline", "accent", "lede", "callout", "approved"];
+const KEYS = ["headline", "accent", "lede", "callout", "approved", "size"];
+const SIZE_MIN_PX = 24;
+const SIZE_MAX_PX = 56;
 const MAX_LINES = 3;
 
 const lineList = (v) => Array.isArray(v) && v.length >= 1 && v.length <= MAX_LINES && v.every((s) => typeof s === "string" && s.trim() !== "");
@@ -31,6 +35,10 @@ export async function readFront(path) {
   if (typeof raw.lede !== "string" || raw.lede.trim() === "") refuse(`"lede" must be a line of text`);
   if (raw.callout !== undefined && !lineList(raw.callout)) refuse(`"callout" must be one to ${MAX_LINES} lines of text`);
   if (raw.approved !== undefined && typeof raw.approved !== "boolean") refuse(`"approved" must be true or false`);
+  if (raw.headline.some((line) => (line.match(/\*/g) ?? []).length % 2)) refuse(`"headline": an accent's asterisks come in pairs`);
+  if (raw.size !== undefined && !(Number.isInteger(raw.size) && raw.size >= SIZE_MIN_PX && raw.size <= SIZE_MAX_PX)) {
+    refuse(`"size" must be a whole number of layout px from ${SIZE_MIN_PX} to ${SIZE_MAX_PX}`);
+  }
   return {
     source: basename(path),
     headline: raw.headline.map((s) => s.trim()),
@@ -38,5 +46,6 @@ export async function readFront(path) {
     lede: raw.lede.trim(),
     callout: raw.callout ? raw.callout.map((s) => s.trim()) : null,
     approved: raw.approved === true,
+    size: raw.size ?? null,
   };
 }

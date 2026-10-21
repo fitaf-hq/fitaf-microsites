@@ -302,7 +302,18 @@ before anything of it is committed, the mechanism's mutant red first.
 9. **The callout is optional and, by the Advisor's word, unused**: the claim it carried was *"a "our water is wet"
    style claim – true but fairly meaningless."* The lede's two
    lines are balanced (`text-wrap: balance`), as the offer's are.
-10. **Cases**: **Q28** `readFront` refuses each malformed key, naming it; with a fixture's neutral bracketed words, every
+11. **Pass 2** (the Advisor on pass 1, 2026-10-20: a headline that read *"like a wall of text"*; the foot *"needs to be
+   unified into one section (rather than an orange box on a white backround)"*; *"move the logo from the footer to the
+   top right of the page"*; *"make the QR code stylized and stick the Fit AF logo in it"*; *"this needs \*more\* to meet
+   the Owner's design tastes"*): **the logo at the band's top right** on a white plate, the headline kept clear of it;
+   **words between asterisks** in a headline line set in the accent colour, and **`size`**, a take's own headline size
+   (24–56 layout px); **the foot one orange section** (`--cta`) running into the bleed under the band's torn edge
+   mirrored (by its numbers: Q2 lets nothing turn), the offer at `FRONT_B_OFFER_PX` (32) in white with no box of its
+   own; **the QR code at error correction H** (`qr/<event>-h.svg`, the same URL by the same library and `QR_OPTIONS` but
+   the level, written by the print build; the page's and the tent's codes unchanged, P4) on a white tile with a green
+   rule, **the logo at its centre** (about a quarter of its width, within what level H recovers). Read from pass 2's PDFs:
+   every code decodes to the event's URL at 300 dpi, and the front's at 150 and 100 dpi, by two decoders.
+12. **Cases**: **Q28** `readFront` refuses each malformed key, naming it; with a fixture's neutral bracketed words, every
    flyer's page 1 carries the headline's lines, the lede, the callout, the offer and the address as text in the PDF and
    its QR code drawn (Q27's reader, `pdfCarriesProblems`), page 2 is the same page as front A's back, no part is less
    than the safe margin inside the trim, and the flyers are proofs; with `"approved": true` (and the back approved) they
