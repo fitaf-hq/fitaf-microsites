@@ -137,7 +137,7 @@ const PICKS_CASES = [
   ["an unknown field on a cart (a price)", (w) => (carts(w)[2].price_cents = 1250), /carts\[2\]: unknown field "price_cents"/],
   ["an unknown field on a meal (an internal id)", (w) => (carts(w)[2].items[0].slug = "x"), /carts\[2\] \(and, every day, no breakfast\)\.items\[0\] "Smoked Paprika Chicken Bowl": unknown field "slug"/],
   ["an unknown field on the file", (w) => (w.menus = {}), /the file: unknown field "menus"/],
-  ["a list the page does not show", (w) => (w.lists["family-favourites"] = w.lists["chefs-choice"]), /lists: "family-favourites" is not a list the page shows \(chefs-choice\)/],
+  ["a list the page does not show", (w) => (w.lists["family-favourites"] = w.lists["chefs-choice"]), /lists: "family-favourites" is not a list the page shows \(chefs-choice[^)]*\)/], // since SPEC-every-menu-and-nutrition, every list the words name
   ["no list", (w) => (w.lists = {}), /lists: no "chefs-choice"/],
   ["a version the page does not read", (w) => (w.version = 3), /version 3 is not one the page reads \(1, 2\)/],
   ["a cart with no meals", (w) => (carts(w)[0].items = []), /carts\[0\] \(or, every day, no breakfast\)\.items must be a list of meals/],

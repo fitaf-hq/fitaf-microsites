@@ -34,7 +34,7 @@ const entry = (w, name = SHOWN) => w.meals[name];
 export const REFUSALS = [
   // Without `meals` (whose entries name the second list's meals), so the list alone decides: a check that let it through
   // would make the week (EM1's mutant).
-  ["a list the words do not name (data/messages.json as committed)", changed((w) => delete w.meals), /lists: "fixture-two" is not a list the page shows \(chefs-choice\)/, "committed"],
+  ["a list the words do not name (data/messages.json as committed)", changed((w) => delete w.meals), /lists: "fixture-two" is not a list the page shows \(chefs-choice[^)]*\)/, "committed"],
   ["a meals key no cart's meal is named", changed((w) => (w.meals["Not On Any Cart"] = structuredClone(entry(w)))), /meals "Not On Any Cart": no meal of the file's carts has this name/],
   ["a meals key naming a snack (snacks are not carts)", changed((w) => (w.meals["Dark Chocolate Protein Bites"] = structuredClone(entry(w)))), /meals "Dark Chocolate Protein Bites": no meal of the file's carts has this name/],
   ["a number negative", changed((w) => (entry(w).nutrition.lean.cal = -1)), /meals "Smoked Paprika Chicken Bowl"\.nutrition\.lean\.cal must be a whole number, 0 or more; got -1/],

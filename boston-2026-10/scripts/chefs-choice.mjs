@@ -66,8 +66,9 @@ const LIST_FIELDS = ["carts", "snacks"];
 const CART_FIELDS = ["lunch_dinner", "weekends", "breakfast", "plan", "items"];
 /** § 3's phrases in data/messages.json's `chefs_choice` the card shows, and the placeholders each must carry. Since
  *  SPEC-plan-page-refinement § 1–2 the list is always open: `open` (its button) and `note` are kept there, not read.
- *  SPEC-meal-selection § 9 item 3: the snack block's heading and its not-carted line. */
-const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [], updating: [] };
+ *  SPEC-meal-selection § 9 item 3: the snack block's heading and its not-carted line. SPEC-every-menu-and-nutrition § 2 (the
+ *  Advisor's ruling of 2026-10-21): `menus_label`, the chooser's own name (its aria-label). */
+const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [], updating: [], menus_label: [] };
 /** SPEC-week-content § 8 item 1: an UPDATING week's file is exactly { delivery, version: 2, updating: true, lists: {} }
  *  (Fit AF's emitter, `--updating`: the store has switched and this week's carts are not made yet). */
 const UPDATING_FILE_FIELDS = [...V2_FILE_FIELDS, "updating"];
@@ -519,6 +520,7 @@ function cardHtml(template, words, file = "card.html", markup = {}) {
     SNACKS_HEADING: words.snacks_heading,
     SNACKS_NOT_CARTED: words.snacks_not_carted,
     UPDATING: words.updating, // SPEC-week-content § 8 item 3: the updating card, hidden until a week says `updating`
+    MENUS_LABEL: words.menus_label, // SPEC-every-menu-and-nutrition § 2: the chooser's own name
   };
   const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
     if (key in markup) return markup[key];
