@@ -28,6 +28,12 @@
 // 5f55cbc's record, all six contents were byte-identical; the six served pages and their visible page at all seven
 // fragments moved (the footer is on every one; SPEC-why-fit-af § 4 lists the lines). From here the reference is
 // f02807e's tree.
+// ⚠ RE-RECORDED at 1305f62 (`node test/u-04-record.mjs --commit 1305f62`): SPEC-save-offer-production.md § 1 (2026-10-21)
+// puts the offer's line in the save step and makes its two buttons the page's quieter button, on the development page by
+// design. Against f02807e's record, the three production entries (page and visible) and all six contents were
+// byte-identical; the three development pages moved (+635 bytes each: the line, its style and comment, the buttons'
+// class, the render line) and their visible page at the six answered fragments (the step is shown there; "(no fragment)"
+// unchanged, the step hidden before a plan is chosen). From here the reference is 1305f62's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -36,7 +42,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to f02807e's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "f02807e");
+test("U4: a normal week, the content and the page as served, byte-identical to 1305f62's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "1305f62");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });
