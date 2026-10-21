@@ -46,7 +46,9 @@ export async function handleOffer(env, rawCode, { now, today }) {
   const row = code && (await env.DB.prepare(FIND_SQL).bind(code).first());
   if (!row) return htmlResponse(200, currentPage(today));
 
-  const back = planLink(`/${row.event_id}/#from-email`);
+  // SPEC-save-offer-production § 9.2: the page at / (production serves no other), the save's event in ?e= (read by the page's
+  // qrEvent), Flow 1 collapsed (#from-email). The event id is one of data/events.json's (validate-save.js), [a-z0-9-].
+  const back = planLink(`/?e=${row.event_id}#from-email`);
   const offer = offerById(row.offer_id);
   if (offer && isLive(offer, today)) {
     return htmlResponse(
