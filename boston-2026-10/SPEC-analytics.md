@@ -403,4 +403,73 @@ reading, not for drawing.
    range with a day of no data; AJ4 no field but the shape's (a check that walks the document); **mutant**: the JSON
    computed by a second path that drops the funnel's last step (AJ1 red), its control green.
 
-### 11.1 Built (to be filled by the build)
+### 11.1 Built (2026-10-21, the agent)
+
+§ 11 is unchanged. On `boston/analytics-json`: the cases at `8bf6ee8` (on `2ceb05a`'s code, red), the code at `116393b`,
+this section after it.
+
+**What was built**: `scripts/analytics.mjs` `reportData(scope, rows)` computes the report's figures once, as § 11 item
+1's document; `reportText(doc)` is a formatting of that document (it took `(scope, rows)` before; nothing else in the
+package calls it); `--json` prints the document in place of the text. The SQL, the refusals and the exit codes are as
+they were.
+
+**Cases, before and after** (each command's result line; `nice -n 15 node --test` over the files named, in the package,
+no other file run; the whole suite was not run, as the brief asked):
+
+| | before (`8bf6ee8`, `2ceb05a`'s code) | after (`116393b`) |
+|---|---|---|
+| `test/aj1-json-figures.test.mjs test/aj2-text-unchanged.test.mjs test/aj3-day-without-data.test.mjs test/aj4-shape-only.test.mjs test/aj-refusals.test.mjs test/aj-mutants.test.mjs` | `# tests 9` `# pass 1` `# fail 8` | `# tests 9` `# pass 9` `# fail 0` |
+| `test/a11-report.test.mjs` | `# tests 4` `# pass 4` `# fail 0` | `# tests 4` `# pass 4` `# fail 0` |
+
+The one that passed red is AJ4's control (the walk over the document written by hand and 13 broken ones), which runs no
+report. The eight failed on the missing feature: `--json` was an unknown argument (exit 2, `analytics: unknown argument:
+--json`), and the mutant's anchor was not in `scripts/analytics.mjs`. AJ2's first half (this tree's text equal to
+`2ceb05a`'s) passes on the base by construction, its control; its second half (this tree's `reportText` over the
+document `--json` printed, equal to that text) is the one that was red.
+
+**The mutant** (`test/aj-mutants.test.mjs`, in a mirror, through THE SAME check AJ1 runs, `test/aj-checks.mjs`
+`figureProblems`): the control (the unchanged mirror) has 0 problems. The JSON computed by a second path that drops the
+funnel's last step (`--json` prints a copy of the document whose every funnel lacks its last entry; the text still from
+the document): AJ1 red, 9 problems, eight of them one per day with data in each run, as `the fixture, 2026-10-23..25
+2026-10-23: the funnel's step 8: the text's click 4, the document's none`, and the ninth the fixture's document unequal to
+the one written by hand.
+
+**The answers the cases run** (`aj-checks.mjs` `runs()`, a stand-in for `fetch`, nothing requested): A11's fixture over
+2026-10-23..25, over 2026-10-22..25 and with `--env dev`; the fixture with 2026-10-24 thinned (no `leave` row, a load
+over `n` `"0"`, no clicks or countries, a device row of 0 visits), so a day with data has both quartile sets `null` and
+two empty splits; and no rows at all over 2026-10-30..11-02 (across a month's end). Derived in the module, not added as
+fixture files.
+
+**What § 11 was silent on, and what was built**
+
+1. **The change between funnel steps** (the text's `-4 (27%)`, `+6`) is not in the document: it is the formatting's
+   arithmetic over two adjacent `visits`, and AJ4 refuses a field outside the shape. Likewise the durations: the
+   document carries the engine's quartiles in milliseconds as answered, and the text rounds them (`820 ms`, `15.5 s`,
+   `1 min 12 s`). So AJ1 compares a duration within the text's rounding (±0.5 ms, ±50.5 ms, ±500.5 ms), and pins the
+   exact values by the fixture's document written by hand.
+2. **The splits' keys** are the values the text prints (`order`, `phone`, `<400`, `US`), the empty country `""` where
+   the text writes `(none)`. Only values with visits appear, as in the text; a split with none is `{}` (the text's `none`, or no
+   `click by link` line). Keys are inserted in the text's order (§ 10's link and viewport lists, else most visits
+   first), but JSON's key order carries no meaning and the text sorts again, so it never depends on it.
+3. **A row without its value column counts as `""`** (it was `r.value ?? r.link`, so a missing device printed
+   `undefined`). The SQL API writes every column, so the text is unchanged for any answer it gives (AJ2).
+4. **`null`** for `visit_length_ms` or `load_ms` exactly when the text says `no leave recorded` / `no open recorded`: no
+   row for the day, or its `n` 0.
+5. **The output**: `JSON.stringify(doc, null, 2)` and a closing newline; keys in the shape's order.
+6. **`--json` takes no value**, anywhere on the command line; given twice it is the same; `--json yes` is refused as
+   `unknown argument: yes` (exit 2). The usage line (stderr) names `[--json]`; the report's text is unchanged.
+7. **§ 11 item 3 had no case in item 4**: `test/aj-refusals.test.mjs` is it. With `--json`, A11's seven refusals and
+   `--json yes` each exit 2 with the reason and nothing on stdout, run as a program; the SQL API's three (a 403, an answer
+   not JSON, an answer with no `data` list) each exit 1 after the first request, nothing on stdout.
+8. **AJ2 reads `2ceb05a` from the repository's objects** (`git archive` of its `scripts/`, `src/worker/`, `data/` and
+   `package.json`, as W4 does for its base), so a clone without that commit fails it.
+
+**Found, not ruled**
+
+- The worktree had no `node_modules`; they were installed with `npm ci --offline --ignore-scripts` from the local npm
+  cache (no network, no install script run; `package-lock.json` unchanged; nothing committed). The suite therefore has
+  not run on this install.
+- The suite gains 9 tests (`test/*.test.mjs` takes the six new test files: AJ1, AJ2, AJ3 one each, AJ4 two, item 3 two,
+  the mutant and its control two; `aj-checks.mjs` is not a test file).
+- **Not done here**: the real report (no token here; the SQL API never reached), the whole suite, Storybook and the
+  watch; nothing deployed, no merge.
