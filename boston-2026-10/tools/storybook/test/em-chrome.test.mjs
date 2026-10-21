@@ -441,10 +441,13 @@ async function targetProblems(dir = menusOut) {
         }
         await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
         await settle(page);
+        // The mark's turn may be animated: its end state is read once every running animation has finished.
+        await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
         const open = await page.evaluate(readFirstControl);
         if (open.expanded !== "true") fail(`a press on its ${part} did not open the meal`);
         else if (open.turn === closed.turn) fail(`the mark did not turn (${open.turn})`);
         if (open.expanded === "true") await press(page, "#cc-meals button");
+        await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
       }
     });
   }
@@ -466,6 +469,7 @@ test("EM6 (mutant): the row's control shrunk to the name alone fails EM6; the co
   );
   const problems = await targetProblems(mutant);
   t.diagnostic(problems.join("\n"));
-  assert.ok(problems.some((p) => /is [\d.]+ × [\d.]+$/.test(p)), `EM6 fails it on a control's size:\n${problems.join("\n")}`);
-  assert.ok(problems.some((p) => /a press on its \.cc-(thumb|line) did not open the meal/.test(p)), `and on a press beside the name:\n${problems.join("\n")}`);
+  // The shrunk button keeps its style's 64 px (min-height, the row's width), so EM6 fails it where the row is no longer
+  // the control: a press on the tile or the line opens nothing.
+  assert.ok(problems.some((p) => /a press on its \.cc-(thumb|line) did not open the meal/.test(p)), `EM6 fails it on a press beside the name:\n${problems.join("\n")}`);
 });

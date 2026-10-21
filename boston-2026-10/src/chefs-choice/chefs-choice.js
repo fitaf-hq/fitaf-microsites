@@ -14,7 +14,8 @@
 // SPEC-every-menu-and-nutrition § 2: a week of more than one list (`menus`) offers, above the list, a radio group of the
 // menus with a cart for the answers (#cc-menus), Chef's Choice first; the chosen menu's cart, snacks and links are the
 // card's, by the same reading as Chef's Choice's. § 3: a meal with nutrition (`facts`) shows its line for the chosen size
-// (#result's data-accent, the plan app.js rendered) and, with ingredients, is a button opening them beneath it. What the
+// (#result's data-accent, the plan app.js rendered) and, with ingredients, its whole row is a button opening them beneath
+// it, its mark a chevron (§ 10). What the
 // Worker's shape check does not read (`menus`, `facts`) is read here only in the shape the content writes.
 var picks = JSON.parse(document.getElementById("picks-data").textContent);
 var week = picks.weeks.length === 1 ? picks.weeks[0] : null;
@@ -81,27 +82,39 @@ function start(week) {
     return lines && has(lines, size) && typeof lines[size] === "string" ? lines[size] : null;
   }
 
-  // A meal with its entry: the name and the size's line, as a button opening the panel beneath it (aria-expanded,
-  // aria-controls) when the entry has ingredients; a second press closes it, each meal on its own (§ 3 item 2).
-  function detail(li, name, entry, place) {
+  // A meal with its entry (§ 3): its name and the size's line in one column beside its tile; with ingredients, § 10 item 1:
+  // the WHOLE ROW (tile, name, line) is the button opening the panel beneath it (aria-expanded, aria-controls), a second
+  // press closing it, each meal on its own; its mark (§ 10 item 2) a chevron the style draws, hidden from assistive
+  // technology, turning when the meal is open.
+  function appendAll(parent, children) {
+    children.forEach(function (child) { parent.appendChild(child); });
+  }
+  function detail(li, tile, name, entry, place) {
     var line = lineFor(isMap(entry.lines) ? entry.lines : null, result.getAttribute("data-accent"));
     var more = isText(entry.ingredients) ? entry.ingredients : null;
-    if (!line && !more) return li.appendChild(name);
-    li.className = "cc-detail";
-    var text = document.createElement("div");
+    if (!line && !more) return appendAll(li, [tile, name]);
+    var text = document.createElement("span");
     text.className = "cc-text";
-    var meal = document.createElement(more ? "button" : "span");
-    meal.className = "cc-meal";
-    meal.appendChild(name);
+    text.appendChild(name);
     if (line) {
       var numbers = document.createElement("span");
       numbers.className = "cc-line";
       numbers.textContent = line;
-      meal.appendChild(numbers);
+      text.appendChild(numbers);
     }
-    text.appendChild(meal);
-    li.appendChild(text);
-    if (!more) return;
+    if (!more) {
+      li.className = "cc-detail";
+      return appendAll(li, [tile, text]);
+    }
+    li.className = "cc-control";
+    var meal = document.createElement("button");
+    meal.type = "button";
+    meal.className = "cc-meal";
+    var mark = document.createElement("span");
+    mark.className = "cc-mark";
+    mark.setAttribute("aria-hidden", "true");
+    appendAll(meal, [tile, text, mark]);
+    li.appendChild(meal);
     var panel = document.createElement("div");
     panel.className = "cc-more";
     panel.id = "cc-more-" + place.split("|").pop();
@@ -113,8 +126,7 @@ function start(week) {
       contains.textContent = entry.contains;
       panel.appendChild(contains);
     }
-    text.appendChild(panel);
-    meal.type = "button";
+    li.appendChild(panel);
     meal.setAttribute("aria-controls", panel.id);
     var show = function (open) {
       meal.setAttribute("aria-expanded", String(open));
@@ -140,10 +152,9 @@ function start(week) {
       var name = document.createElement("span");
       name.className = "cc-name";
       name.textContent = lines[j];
-      li.appendChild(tile);
       var at = isList(facts) && typeof facts[j] === "number" ? entries[facts[j]] : null;
-      if (isMap(at)) detail(li, name, at, id + "|" + j);
-      else li.appendChild(name);
+      if (isMap(at)) detail(li, tile, name, at, id + "|" + j);
+      else appendAll(li, [tile, name]);
       ul.appendChild(li);
     }
   }
