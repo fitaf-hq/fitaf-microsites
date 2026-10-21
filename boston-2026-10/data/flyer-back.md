@@ -1,13 +1,24 @@
 # Why Fit AF?
 
-Fresh, chef-prepared meals, made for your goals, delivered every week.
+**Built around your goals**
+- {lean} Lean: Fat loss and body composition
+- {signature} Signature: Balanced nutrition for everyday life
+- {performance} Performance: Fuel for muscle, strength and performance
+- {family} Family: Healthy meals the whole family will actually eat
 
-**Fresh, never frozen.** Cooked in our own kitchen in Scranton, Pennsylvania, for the week you eat it. Since 2017.
+**Allergen and diet sensitive**
+- {gluten-free} Gluten-free
+- {diabetic} Diabetic
+- {low-carb} Low carb
+- {vegetarian} Vegetarian
+- {vegan} Vegan
 
-**Built around your goals.** Lean, Signature, Performance or Family: choose the plan that fits.
+**How it works**
+1. {order} Order online: by Thursday midnight
+2. {cook} We cook: fresh, in our own kitchen
+3. {deliver} We deliver: Sunday or Monday
+4. {eat} Heat & eat: ready when you are
 
-**A new menu every week.** The favourites stay, the seasons come through, and there is always something new. Start from our Chef's Choice, or choose every meal yourself.
+**A new menu every week**
 
-**Allergen sensitive.** Celiac, diabetic and other diets are fully accommodated.
-
-**Delivered where you are.** Order by midnight Thursday; your meals arrive on Sunday, at your home or your gym, across Greater Boston and Eastern Pennsylvania. You don't need to be in.
+<!-- approved -->

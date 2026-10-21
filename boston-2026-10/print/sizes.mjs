@@ -59,7 +59,8 @@ export const PRINT_PIECES = [
     sides: 2,
     positions: ["flyer"],
     photoWindow: { w: 3, h: 2 },
-    back: { positions: BACK_POSITIONS, photoWindow: { w: 1, h: 1 } },
+    // § 15 item 8 (2026-10-21): the back's three windows the glam photos' own 3:2, the names in one band under them
+    back: { positions: BACK_POSITIONS, photoWindow: { w: 3, h: 2 } },
   },
   // § 7 (2026-10-17): the mock-up's own face, portrait 4 × 6 in (§ 2's 6 × 4 landscape was wrong), on a 4 × 12 in sheet;
   // § 10 (2026-10-18): its three photo windows, each this shape (square), the large one's side two tiles and their gap

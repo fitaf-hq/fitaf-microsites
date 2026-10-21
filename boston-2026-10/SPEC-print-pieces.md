@@ -425,3 +425,17 @@ were checked against Fit AF's record of the offer's numbers before this amendmen
    without its `:`, plans and a bar's items mixed). **Mutant**: the plans' items dropped (Q30 red), its control green.
 7. ⛔ **Not here**: the words (the Advisor's, then the Owner's); which banner prints; the Owner's notes on the review
    (to come).
+8. **The back, the Advisor's notes on pass 5 (2026-10-21, with crops of it)**, before it fits: *"unify the meal names
+   underneath the photos (which will push the rest of the content down)"*; of the body, *"This has a lot of margin"*;
+   *"… can get the banner treatment and be put last in the order (above the logo and domain name)"*; *"drop the blue
+   background for"* the bar; and the lede line dropped. So: **the back's meal names leave the photos** for one band
+   under them, the band's ink running into the bleed at both sides and across the gaps, each name under its own photo
+   in white (§ 13 item 8's chips stay on front B); **the body's padding** 8 px at the top and 18 px at the sides (the names' own 4/5 px) (the
+   safe margin is 15), the bottom row 14 px up; the plan cards' padding and gaps 4 px, the steps' discs 30 px; **a
+   statement is set as the front's banner** (item 2's level ink ribbon, centred), wherever the words file puts it;
+   **the bar has no ground** (its icons and labels on the page's white); and **the lede is optional**: § 12 item 4's
+   *"the first paragraph is the lede"* now reads *a first paragraph of words is the lede*; a back whose first block is a
+   graphic has none. **And the back's three photos 3:2** (the glam photos' own shape, printed as composed, no longer
+   from a square; § 12 item 6 made them square), which, with the band, the margins and the ribbon, is what lets the back
+   fit: measured in a scratch copy, the back was 58.6 layout px over with square photos and 2.8 over at 3:2, closed by
+   the tightening above. Q10's list of square positions amended on purpose. Q30 holds each.

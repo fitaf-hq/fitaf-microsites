@@ -98,7 +98,8 @@ function blockItem(source, n, line, open) {
 /**
  * The words file read: { heading: { text, line }, paragraphs: [{ kind: "text", lead, text, line }, { kind: "bar",
  * "steps" or "plans", lead, items, line } or { kind: "statement", lead, line }], approved, source }, each with the
- * file's line it starts on (1-based); paragraphs[0] is the lede. Refuses anything outside the subset, naming the line.
+ * file's line it starts on (1-based); paragraphs[0], when it is words, is the lede (§ 15 item 8: it may be a block
+ * instead). Refuses anything outside the subset, naming the line.
  */
 export function parseBack(text, source = BACK_SOURCE) {
   const lines = text.split("\n").map((l) => l.replace(/\r$/, ""));
@@ -152,7 +153,7 @@ export function parseBack(text, source = BACK_SOURCE) {
   }
   closeBlock(lines.length + 1);
   if (paragraphs.length === 0) refuse(source, lines.length + 1, "no paragraph: the lede, at least, is needed");
-  if (paragraphs[0].kind !== "text") refuse(source, paragraphs[0].line, "the first paragraph is the lede, and must be words");
+  // § 15 item 8: a first paragraph of words is the lede; a back whose first block is a graphic has none
   return { heading: { text: heading[1], line: 1 }, paragraphs, approved: marked, source };
 }
 

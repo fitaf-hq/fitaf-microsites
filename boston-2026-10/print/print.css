@@ -227,8 +227,8 @@ html, body { margin: 0; padding: 0; background: var(--white); }
   font: 700 15px/1 var(--head); letter-spacing: .06em; text-transform: uppercase;
   clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
 }
-.print-flyer .fbk-plans, .print-flyer .fbk-statement { width: 100%; }
-.print-flyer .fbk-plans > .flyer-back-lead, .print-flyer .fbk-statement > .flyer-back-lead { display: block; text-align: center; }
+.print-flyer .fbk-plans { width: 100%; }
+.print-flyer .fbk-plans > .flyer-back-lead { display: block; text-align: center; }
 .print-flyer .fbk-plans ul {
   display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none;
 }
@@ -241,8 +241,33 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-flyer .fbk-plans li[data-accent="family"] { border-top-color: var(--family); }
 .print-flyer .fbk-plan-name { font: 700 var(--back-text)/1.15 var(--head); text-transform: uppercase; }
 .print-flyer .fbk-plan-line { font-size: var(--back-text); line-height: 1.2; }
-.print-flyer .fbk-statement { margin: 0; }
 /* § 15 item 2b: the foot's texture, the template's lighter orange in opaque dots on its flat areas only, behind every
    word and the code's tile (pieces.mjs FOOT_DOTS), anchored at the foot's lower left */
 .print-flyer .fb-foot-dots { position: absolute; left: 0; bottom: 0; width: 540px; height: 213px; color: var(--orange); }
 .print-flyer .fb-cta, .print-flyer .fb-scan { position: relative; z-index: 1; }
+/* § 15 item 8 (the Advisor's notes on pass 5): the back's photos 3:2 and their meal names in one band of ink under them
+   (the grid's second row, running into the bleed at both sides and across the gaps; the photos keep their cells); the body's
+   margins smaller (8 px top, 18 px sides, the safe margin 15); the plan cards and the steps' discs tighter; the bar on
+   the page's white; a statement set as the front's banner, centred */
+.print-flyer .flyer-back-photos { grid-template-rows: calc(var(--tile) * 2 / 3 + var(--bleed)) auto; row-gap: 0; }
+.print-flyer .flyer-back-photos .flyer-back-name {
+  position: static; grid-row: 2; align-self: stretch; max-width: none; margin: 0; border-radius: 0;
+  padding: 4px 8px 5px; background: var(--ink);
+}
+.print-flyer .flyer-back-photos .flyer-back-name-1 { padding-left: calc(var(--bleed) + var(--safe)); }
+/* the middle name covers both gaps, a pixel over each neighbour (ink on ink), so no seam shows */
+.print-flyer .flyer-back-photos .flyer-back-name-2 { margin: 0 calc(-1 * var(--gap) - 1px); padding-left: calc(9px + var(--gap)); padding-right: calc(9px + var(--gap)); }
+.print-flyer .flyer-back-photos .flyer-back-name-3 { padding-right: calc(var(--bleed) + var(--safe)); }
+.print-flyer .flyer-back-body { padding: 8px 18px 14px; }
+.print-flyer .flyer-back-foot { left: 18px; right: 18px; bottom: 14px; }
+.print-flyer .fbk-plans ul { gap: 4px; }
+.print-flyer .fbk-plans li { padding: 4px 4px 5px; }
+.print-flyer .fbk-mark { width: 30px; height: 30px; }
+.print-flyer .fbk-mark .fbk-icon { width: 18px; height: 18px; }
+.print-flyer .fbk-bar ul { padding: 2px 0 0; background: none; }
+.print-flyer .fbk-statement { align-self: center; margin: 0; line-height: 0; }
+.print-flyer .fbk-statement span {
+  display: inline-block; padding: 6px 18px 5px; background: var(--ink); color: var(--white);
+  font: 700 15px/1 var(--head); letter-spacing: .06em; text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
+}

@@ -126,6 +126,8 @@ test("Q30: the back's plans refused outside § 15 item 3, naming the line; a lea
     ["family", "Plan four", "line four"],
   ]);
   assert.equal(read.paragraphs[2].lead, "Statement words");
+  // § 15 item 8: the lede is optional; a bold line alone in the lede's place is a statement
+  assert.deepEqual(parseBack("# Heading words\n\n**Statement words**\n", "fixture.md").paragraphs.map((p) => p.kind), ["statement"]);
 });
 
 test("Q30: built, the back's plans and statement are in the PDF in the file's order", { skip: NO_CHROME || NO_POPPLER }, async () => {

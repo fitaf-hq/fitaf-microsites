@@ -256,16 +256,20 @@ function flyerBack(c, parts, { positions, words }) {
   // lead-in standing alone, centred as a block's)
   const plans = (p) =>
     `<div class="fbk-plans" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ul>${p.items.map((it) => `<li data-accent="${esc(it.plan)}" ${cite(it.line)}><b class="fbk-plan-name">${esc(it.name)}</b><span class="fbk-plan-line">${esc(it.text)}</span></li>`).join("")}</ul></div>`;
-  const statement = (p) => `<p class="fbk-statement" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b></p>`;
+  // § 15 item 8: a statement set as the front's banner, a level ink ribbon
+  const statement = (p) => `<p class="fbk-statement" ${cite(p.line)}><span>${esc(p.lead)}</span></p>`;
   const BLOCKS = { bar, steps, plans, statement };
   const block = (p) => (BLOCKS[p.kind] ?? ((q) => paragraph(q, "flyer-back-para")))(p);
-  const [lede, ...rest] = words.paragraphs;
+  // § 15 item 8: the lede only when the first paragraph is words
+  const [first, ...others] = words.paragraphs;
+  const lede = first.kind === "text" ? paragraph(first, "tagline flyer-back-lede") : null;
+  const rest = lede === null ? words.paragraphs : others;
   return `
 <div class="flyer-back-photos">${positions.map((position) => parts.photo(position)).join("")}${positions.map((position, i) => parts.caption(position, `flyer-back-name flyer-back-name-${i + 1}`)).join("")}</div>
 <div class="flyer-back-body">
   <div class="flyer-back-words">
   <h1 class="headline" ${cite(words.heading.line)}>${esc(words.heading.text)}</h1>
-  ${[paragraph(lede, "tagline flyer-back-lede"), ...rest.map(block)].join("\n  ")}
+  ${[...(lede === null ? [] : [lede]), ...rest.map(block)].join("\n  ")}
   </div>
   <div class="flyer-back-foot">${parts.text("p", "address", c.address, "web address")}${parts.logo("flyer-back-logo")}</div>
 </div>`;

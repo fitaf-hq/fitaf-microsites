@@ -106,7 +106,8 @@ test("Q29: the back's bar and steps refused outside § 14 item 3, naming the lin
     ["**Bar lead**\n- {vegan} One\n", /a bar must have 2 to 6 items, not 1/],
   ];
   for (const [rest, why] of cases) assert.throws(() => parseBack(head + rest, "fixture.md"), why);
-  assert.throws(() => parseBack("# Heading words\n\n**Bar lead**\n- {vegan} One\n- {diabetic} Two\n", "fixture.md"), /the first paragraph is the lede/);
+  // § 15 item 8 (2026-10-21) amends this on purpose: the lede is optional, so a back that opens with a block parses
+  assert.deepEqual(parseBack("# Heading words\n\n**Bar lead**\n- {vegan} One\n- {diabetic} Two\n", "fixture.md").paragraphs.map((p) => p.kind), ["bar"]);
   const read = parseBack(BACK_GRAPHICS_FIXTURE, "fixture.md");
   assert.deepEqual(read.paragraphs.map((p) => p.kind), ["text", "bar", "steps"]);
   assert.deepEqual(read.paragraphs[2].items.map((it) => [it.icon, it.title, it.detail]), [["order", "Title one", "detail one"], ["cook", "Title two", "detail two"], ["eat", "Title three", "detail three"]]);

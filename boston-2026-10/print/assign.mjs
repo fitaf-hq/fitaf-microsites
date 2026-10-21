@@ -18,9 +18,10 @@ export const TENT_POSITIONS = ["tent-large", "tent-top", "tent-bottom"];
 export const BACK_POSITIONS = ["flyer-back-1", "flyer-back-2", "flyer-back-3"];
 /**
  * The positions printed from a square (§ 7 item 2 the two tiles, SPEC-photo-slots.md § 2's `square`; § 10 item 3 the
- * large photo too, its window square since § 10; § 12 item 6 the back's three, each window square).
+ * large photo too, its window square since § 10). § 12 item 6 put the back's three here too; § 15 item 8 (2026-10-21)
+ * makes their windows the glam photos' own 3:2 under the names band, so they print as composed, as the flyer's does.
  */
-export const SQUARE_POSITIONS = [...TENT_POSITIONS, ...BACK_POSITIONS];
+export const SQUARE_POSITIONS = [...TENT_POSITIONS];
 const PHOTO_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const PLAIN_KEY = PHOTO_ID;
 

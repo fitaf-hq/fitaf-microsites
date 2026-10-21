@@ -20,7 +20,8 @@ const set = await photoSet({ squareSizes: { large: [1300, 1300], top: [1000, 100
 after(() => rm(set.dir, { recursive: true, force: true }));
 
 test("Q10: every tent window is a square file, the large photo's too (§ 10); the hero the photo as composed", () => {
-  assert.deepEqual(SQUARE_POSITIONS, ["tent-large", "tent-top", "tent-bottom", "flyer-back-1", "flyer-back-2", "flyer-back-3"]);
+  // § 15 item 8 (2026-10-21) amends this on purpose: the back's three windows are 3:2 and print the photo as composed
+  assert.deepEqual(SQUARE_POSITIONS, ["tent-large", "tent-top", "tent-bottom"]);
   assert.deepEqual(photoFiles(assignment, deliverableDoc([f, l, t, b])), {
     flyer: `${f}.jpg`,
     "tent-large": `${l}-sq-${SQUARE_KEYS[0]}.jpg`,
