@@ -10,15 +10,22 @@ export const BUILDS = [
 
 /** The Date control (§ 2 item 4). `today` is the real clock and adds no script; the others fix the frame's clock.
  *  SPEC-meal-selection § 9: `fixture` is the site's fixture week of invented names in the picks file's version 2 (a cart
- *  per answer set, and snacks), built from test/fixtures/picks-v2/ (the build's --picks) and seen inside its window. */
+ *  per answer set, and snacks), built from test/fixtures/picks-v2/ (the build's --picks) and seen inside its window.
+ *  SPEC-every-menu-and-nutrition: `menus` is the site's fixture week of two menus (Chef's Choice and an invented list)
+ *  with each meal's nutrition, test/fixtures/picks-menus/, made with the fixture's own words. */
 export const DATES = [
   { id: "today", label: "today (the real clock)" },
   { id: "week", label: "a week with picks" },
   { id: "none", label: "no picks" },
   { id: "fixture", label: "the fixture week (invented names, version 2)" },
+  { id: "menus", label: "the fixture week of two menus, with nutrition (invented names)" },
 ];
 /** Where the fixture week's picks directory is, from the site (the content command's --picks, resolved in the site). */
 export const FIXTURE_PICKS = "test/fixtures/picks-v2";
+/** SPEC-every-menu-and-nutrition: the two-menu fixture week's picks directory, and the site's module of its own words
+ *  (an invented list's name, the heading with {menu}), laid over data/messages.json for the content's --messages. */
+export const FIXTURE_MENUS = "test/fixtures/picks-menus";
+export const FIXTURE_MENUS_WORDS = "test/fixtures/menus-words.mjs";
 
 /** The two widths (§ 3), the storefront smoke's: 390 the default. */
 export const VIEWPORTS = {

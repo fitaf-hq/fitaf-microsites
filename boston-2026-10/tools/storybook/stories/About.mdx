@@ -4,6 +4,7 @@ import * as Family from "./family.stories.js";
 import * as WholePage from "./whole-page.stories.js";
 import * as HandOff from "./handoff.stories.js";
 import * as MealSelection from "./meal-selection.stories.js";
+import * as EveryMenu from "./every-menu.stories.js";
 import { storyList } from "./story-list.js";
 
 <Meta title="Microsite/About these stories" />
@@ -34,6 +35,16 @@ Each opens scrolled to its subject (the questions, or the snacks). **While snack
 answer set shows no Q4, and *or · weekdays · snacks, no list* shows that: Q4 hidden, at the questions; with snacks not
 carted, it shows the not-carted line alone. Name a state as *Meal selection · and · weekdays · breakfast · 390: …*.
 
+## Every menu, and each meal's nutrition
+
+The **Every menu** stories show the card of a week with two menus (the site's SPEC-every-menu-and-nutrition): the row of
+the menus' names above the meal list, Chef's Choice selected; the other menu chosen, its meals, snacks and checkout link
+in Chef's Choice's place; and a meal's nutrition, one line for the chosen size under its name, opened to its ingredients.
+They open on the Date control's **two-menu fixture week**: invented meal names, Chef's Choice's carts as the fixture
+week's and a second, invented list, written with the fixture's own words (an invented menu's name is never in the site's
+words until the Advisor approves one), put into the page as the Workers put any week. Name a state as *Every menu · Two
+menus · 390: …*.
+
 ## The hand-off
 
 The **Hand-off** stories show the hand-off's two faces, the progress screen and the three-step checkout, as the Footer
@@ -51,7 +62,7 @@ policy, so nothing leaves this machine.
 
 ## Every story, by group
 
-{storyList([Individual, Family, WholePage, MealSelection, HandOff]).map(({ group, stories }) => (
+{storyList([Individual, Family, WholePage, MealSelection, EveryMenu, HandOff]).map(({ group, stories }) => (
   <div key={group}>
     <h3>{group}</h3>
     <ul>{stories.map((name) => <li key={name}>{name}</li>)}</ul>
