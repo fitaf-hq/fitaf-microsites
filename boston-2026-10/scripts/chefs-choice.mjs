@@ -48,11 +48,12 @@ const MEAL_FIELDS = ["name", "display", "qty"];
 const VERSIONS = [1, 2];
 const V2_FILE_FIELDS = ["delivery", "version", "lists"];
 const SHOWN_LIST = "chefs-choice";
-/** SPEC-every-menu-and-nutrition § 1 item 2: a version-2 file's optional field, an entry's fields (`contains` alone
- *  optional), and a size's five numbers (grams, and calories). § 4: the nutrition phrases, and `menus`' own note. */
+/** SPEC-every-menu-and-nutrition § 1 item 2: a version-2 file's optional field, an entry's fields (as amended at 1fb2b19,
+ *  each optional: at least one of `nutrition` and `ingredients`, `contains` only beside `ingredients`), and a size's five
+ *  numbers (grams, and calories). § 4: the nutrition phrases, and `menus`' own note. */
 const V2_OPTIONAL_FIELDS = ["meals"];
-const ENTRY_FIELDS = ["nutrition", "ingredients"];
-const ENTRY_OPTIONAL_FIELDS = ["contains"];
+const ENTRY_FIELDS = [];
+const ENTRY_OPTIONAL_FIELDS = ["nutrition", "ingredients", "contains"];
 const ENTRY_TEXTS = ["ingredients", "contains"];
 const FACTS = ["cal", "protein", "carbs", "fat", "fiber"];
 const NUTRITION_PHRASES = { line: ["{cal}", "{protein}", "{carbs}", "{fat}"], ingredients: ["{text}"], contains: ["{text}"] };
@@ -258,7 +259,9 @@ function v2Carts(json, rows, ctx) {
   }
   const meals = json.meals === undefined ? null : mealEntries(json.meals, checked, ctx.plans);
   const [shown] = checked; // chefs-choice: the words name it first
-  return { carts: shown.carts, snacks: shown.snacks, ...(checked.length > 1 ? { lists: checked } : {}), ...(meals ? { meals } : {}) };
+  // § 1 item 2, amended: `"meals": {}` is accepted, and with no entry the week is what it is without `meals` (§ 1 item 3).
+  const entries = meals && Object.keys(meals).length ? { meals } : {};
+  return { carts: shown.carts, snacks: shown.snacks, ...(checked.length > 1 ? { lists: checked } : {}), ...entries };
 }
 
 /** One version-2 list (SPEC-meal-selection § 5): its carts, each a row of the selection through that row's plan, at most
@@ -294,10 +297,11 @@ function listCarts(list, at, rows, ctx) {
 
 /**
  * SPEC-every-menu-and-nutrition § 1 item 2: the `meals` map, checked. Each key is a meal's `name` in a cart of the file
- * (as the link tool reads a name: whitespace collapsed and trimmed; a snack is not a cart's meal); each entry carries
- * `nutrition` (any of data/plans.json's individual sizes, each with all five numbers, whole and 0 or more), `ingredients`
- * (text, not blank) and, optionally, `contains` (text, not blank), and nothing else. Returns the entries by the name as
- * the tool reads it, their texts as the page shows them.
+ * (as the link tool reads a name: whitespace collapsed and trimmed; a snack is not a cart's meal); each entry carries, as
+ * amended at 1fb2b19, at least one of `nutrition` (any of data/plans.json's individual sizes, each with all five numbers,
+ * whole and 0 or more; one holding no size gives no numbers) and `ingredients` (text, not blank), and `contains` (text,
+ * not blank) only beside `ingredients`; nothing else. Returns the entries by the name as the tool reads it, their texts as
+ * the page shows them, each field only when the file gives it. `{}` is accepted and is no entry at all.
  */
 function mealEntries(meals, lists, plans) {
   if (!isObject(meals)) throw new Error("meals must be an object, an entry per meal by its name");
@@ -310,8 +314,11 @@ function mealEntries(meals, lists, plans) {
     if (!named.has(key)) throw new Error(`${at}: no meal of the file's carts has this name`);
     if (key in out) throw new Error(`${at}: named twice (as the store's names are read, whitespace collapsed)`);
     onlyFields(entry, ENTRY_FIELDS, at, ENTRY_OPTIONAL_FIELDS);
-    if (!isObject(entry.nutrition)) throw new Error(`${at}.nutrition must be an object, the numbers per size`);
-    for (const [size, facts] of Object.entries(entry.nutrition)) {
+    if ("nutrition" in entry && !isObject(entry.nutrition)) throw new Error(`${at}.nutrition must be an object, the numbers per size`);
+    const numbers = "nutrition" in entry && Object.keys(entry.nutrition).length > 0;
+    if (!numbers && !("ingredients" in entry)) throw new Error(`${at}: carries neither nutrition nor ingredients`);
+    if ("contains" in entry && !("ingredients" in entry)) throw new Error(`${at}: contains without ingredients`);
+    for (const [size, facts] of Object.entries(entry.nutrition ?? {})) {
       if (!sizes.includes(size)) throw new Error(`${at}.nutrition: unknown field ${JSON.stringify(size)} (the sizes are ${sizes.join(", ")})`);
       onlyFields(facts, FACTS, `${at}.nutrition.${size}`);
       for (const fact of FACTS) {
@@ -324,8 +331,8 @@ function mealEntries(meals, lists, plans) {
       if (!asShown(entry[field])) throw new Error(`${at}: ${field} is blank`);
     }
     out[key] = {
-      nutrition: entry.nutrition,
-      ingredients: asShown(entry.ingredients),
+      ...(numbers ? { nutrition: entry.nutrition } : {}),
+      ...(entry.ingredients !== undefined ? { ingredients: asShown(entry.ingredients) } : {}),
       ...(entry.contains !== undefined ? { contains: asShown(entry.contains) } : {}),
     };
   }
@@ -424,14 +431,14 @@ function thumbStyle(url, sheet, name) {
 
 /**
  * SPEC-every-menu-and-nutrition § 3: a week's `meals` as the page shows them, or null without: `list`, one entry per meal
- * ({ lines: { size: the line }, ingredients, contains? }, each a phrase of `nutrition` filled here), and `at`, a meal's
- * place in it by its name as the link tool reads it.
+ * ({ lines?: { size: the line }, ingredients?, contains? }, each a phrase of `nutrition` filled here, and each only when
+ * the meal has it: § 3 item 3, no data, no claim), and `at`, a meal's place in it by its name as the link tool reads it.
  */
 function factsOf(meals, phrases) {
   if (!meals) return null;
   const list = Object.values(meals).map((entry) => ({
-    lines: Object.fromEntries(Object.entries(entry.nutrition).map(([size, facts]) => [size, fill(phrases.line, facts)])),
-    ingredients: fill(phrases.ingredients, { text: entry.ingredients }),
+    ...(entry.nutrition ? { lines: Object.fromEntries(Object.entries(entry.nutrition).map(([size, facts]) => [size, fill(phrases.line, facts)])) } : {}),
+    ...(entry.ingredients !== undefined ? { ingredients: fill(phrases.ingredients, { text: entry.ingredients }) } : {}),
     ...(entry.contains !== undefined ? { contains: fill(phrases.contains, { text: entry.contains }) } : {}),
   }));
   return { list, at: new Map(Object.keys(meals).map((name, i) => [name, i])) };

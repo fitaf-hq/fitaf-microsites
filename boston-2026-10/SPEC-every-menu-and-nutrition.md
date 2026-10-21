@@ -177,6 +177,7 @@ whole suite or the storefront watch. §§ 1–8 are unchanged.
    list's carts; a snack's name is refused (§ 1 item 2: *"no item's name in the file's carts"*), and two keys that read
    alike are *"named twice"*. **An entry's fields**: § 1 item 2 marks `contains` alone optional, so `nutrition` (any of the
    three sizes, possibly none) and `ingredients` are required; ingredients and Contains are shown whitespace-collapsed.
+   ⚠ **Wrong, and amended** (`1fb2b19`; the build of it is below, after the changed lines).
 6. **The size** the line reads is `#result`'s `data-accent`, the plan's id `app.js` writes with the result (the size of
    *Choose your meals*' mpid); `app.js` is unchanged.
 7. **The control** (§ 3 item 2's *"its line is a disclosure control"* and the ruling's *"Tapping the meal"*): the meal's
@@ -457,3 +458,18 @@ line for line); each served page (U4) by the same lines. Sizes, raw / gzip (`tes
 ---
 >     fill($("cc-meals"), c.menu.meals, c.menu.thumbs, c.menu.facts, picked + "|" + key);
 ```
+
+**§ 1 item 2, amended (`1fb2b19`, the orchestrator, 2026-10-21), built.** Item 5 above read `ingredients` (and `nutrition`)
+as required; Fit AF's emitter writes only what a meal's label row gives, so that check would have refused its files and
+stopped the switch's content step. Now `mealEntries` takes each of `nutrition` and `ingredients` as optional and refuses
+an entry that carries neither (*"carries neither nutrition nor ingredients"*, a `nutrition` holding no size counting as
+none) and `contains` without `ingredients` (*"contains without ingredients"*); `"meals": {}` is accepted and makes the
+content of the same week without `meals` (no `facts`); `facts`' entries carry `lines`, `ingredients` and `contains`
+only when the meal has them. The fixture week gains a meal of ingredients alone (*Turkey Chili Verde*, Chef's Choice) and
+one of numbers alone (*Cumin Lamb Rice Bowl*, `fixture-two`). Cases first (`780447c`), red on `1fb2b19`'s code: EM1 10 of
+23 failing (four acceptances; three new refusals refused for another reason, *"missing field …"*; the fixture's own content
+and the two key cases behind it; `"meals": {}` accepted but carrying `"facts": []`), EM4, EM5 and the mutants' file 6 of 12,
+the Chrome file 4 of 5 (the fixture refused). After the fix: EM1 23 of 23, EM4 + EM5 + the mutants 12 of 12, the Chrome
+file 5 of 5. **EM3 needed no change to the card**: its script already shows a line only for the chosen size's numbers and
+makes a meal a control only with ingredients; EM3 now reads both shapes (a control with no line, a line with no control).
+The page's bytes do not move (S20's golden stands); a week without `meals` is as before (EM5c).
