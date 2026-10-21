@@ -1,12 +1,12 @@
 {
   "about": "U4's before (SPEC-week-content § 8 item 5): test/u-checks.mjs normalWeekRecord() over recorded_at's own tree (test/u-04-record.mjs, which wrote this file): per normal week and target, the content command's files, the page as served with that week once its lines naming `updating` are removed (recorded_at's page has none), and the visible page per fragment. Re-record only by running the recorder; never by hand.",
-  "recorded_at": "f2d1748",
+  "recorded_at": "f72040a",
   "record": {
     "the v1 fixture, 2026-10-04 · prod": {
       "content": {
         "week/picks-data.json": "1408 bytes sha256:9e9ab0acf69249befa905f27a93c0e1602d2beefc017d1131bbc37f356799634"
       },
-      "page": "51406 bytes sha256:3bc052797ab3f16e95172324a06f9009cc5ad67315b0f8d1a14267a0cc6ff11f",
+      "page": "52813 bytes sha256:a92fc93ed11e96172e998c039965e9f8885e4fddca0830311c0b0040ae797b73",
       "visible": {
         "(no fragment)": "74d41eeab530d2befa7503cfd0a587633286c43d7c876d57585bb198fa782c4e",
         "#lean-7": "660eecf0f5201c0b691a843818fa25fbce5736ad3888a365fcc2b1fe9effbb19",
@@ -21,7 +21,7 @@
       "content": {
         "week/picks-data.json": "1408 bytes sha256:9e9ab0acf69249befa905f27a93c0e1602d2beefc017d1131bbc37f356799634"
       },
-      "page": "75038 bytes sha256:f3c41e2267f3200f208f6edb6c515ba9e62db8a4c1ae7e158143b3bff62430c4",
+      "page": "76445 bytes sha256:fd561b5e238d47e737b0085fc6eb3a849e2713481b865e7ff49cd651da164a8b",
       "visible": {
         "(no fragment)": "02701998977a19a6ff067140d6b4176a3efa601c0f0c367e3a2c993c017dd3c4",
         "#lean-7": "b47d9c384aec2aab413bcdd07babc7fa6cf0d14e76d28faf3ae3accf00625414",
@@ -36,7 +36,7 @@
       "content": {
         "week/picks-data.json": "7382 bytes sha256:ae6010f6a9b13b3d60c39fb75e9810e285728fcbe88a50389f2dcbcba6633ddb"
       },
-      "page": "57380 bytes sha256:3218b7fbfa2772889d4f088d4f5dfd727b71f457039b6dae4bc9c0817adfb36b",
+      "page": "58787 bytes sha256:1e15ca514d1a10d94ab21561d91039d29ce60dbcde875bb48f1932912e3d3147",
       "visible": {
         "(no fragment)": "74d41eeab530d2befa7503cfd0a587633286c43d7c876d57585bb198fa782c4e",
         "#lean-7": "c3bd9fb190cfde42f018c7cf7f65a943cd86d5747ad23504aae228bc6787a9bd",
@@ -51,7 +51,7 @@
       "content": {
         "week/picks-data.json": "7382 bytes sha256:ae6010f6a9b13b3d60c39fb75e9810e285728fcbe88a50389f2dcbcba6633ddb"
       },
-      "page": "81012 bytes sha256:c6e73fc1ef117880cea7efa3dc4b7384b6710dc36da7b0f83aaf167bf3464f14",
+      "page": "82419 bytes sha256:263577477dad61a71b828c06e78a2a6462f780605d3e153b897f4552a1538e86",
       "visible": {
         "(no fragment)": "02701998977a19a6ff067140d6b4176a3efa601c0f0c367e3a2c993c017dd3c4",
         "#lean-7": "0beb65fe074d737b2cd68cff152ec9299980198256be22006f1dcec26dacf08c",
@@ -67,7 +67,7 @@
         "week/picks-data.json": "31134 bytes sha256:3a7b7b5d01acf787f6ca96f06921280a8a023eafb58be39dc271be3b642f1a64",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "81132 bytes sha256:68508fd8a0fb6cd9615f34d1e094a7d824f14c8ff70f5dfd4fc781bb8f70b97d",
+      "page": "82539 bytes sha256:d1569ce863fdaff439a756bab36ac2c5aed627e316e0d85f40cecb89463b9279",
       "visible": {
         "(no fragment)": "74d41eeab530d2befa7503cfd0a587633286c43d7c876d57585bb198fa782c4e",
         "#lean-7": "aeed752db8b77d9d1b72d5f6f224f3748f6371453d9b7f579489827c584a8198",
@@ -83,7 +83,7 @@
         "week/picks-data.json": "31134 bytes sha256:931a963b2b55b6f881304712a06fb5c28fa3da03bf8b851a26035b5a216d92a7",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "104764 bytes sha256:31500952cd04fb6e80834f8089b7461f6db9f0cb02b96a03b3b6688df1b4ecc6",
+      "page": "106171 bytes sha256:463430c077d7d687eca3dcc630bf6a08d3d706f27e4c58077bf6b8d1c293fc90",
       "visible": {
         "(no fragment)": "02701998977a19a6ff067140d6b4176a3efa601c0f0c367e3a2c993c017dd3c4",
         "#lean-7": "cf159851e2a2322e98624380356586088854a2bf9b7d826542926013d06acb20",

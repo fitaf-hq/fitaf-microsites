@@ -525,3 +525,168 @@ carry `{menu}`). Cases first (`68d4ca1`), then the code (`f2d1748`), then the go
 2. **The mark says "more", not "add"**: the + and − become a chevron that turns when the meal is open (drawn here, `currentColor`, `aria-hidden`), because + will mean *add a meal* in the picker to come. `aria-expanded` and `aria-controls` stay as built.
 3. **Not here**: the page's other controls (the answers, *Continue to checkout*, *Choose my own meals*, *See all plans*): a site-wide rule is its own contract.
 4. **Cases**: EM6 (Chrome, at 390 and 1280): every chip's and every meal control's bounding box at least 64 CSS px in its smaller dimension; a press anywhere on a meal's row (the tile, the name, the line) opens it; the mark is not the text "+". Mutant: the row's control shrunk to the name alone (EM6 red). The renders (`dist-dev/renders/`) re-made at 390 and 1280, opened and described.
+
+### 10.1 Built (found at the build, not ruled)
+
+Built in three commits after § 10's (`31783b9`): `93a2a71` (EM6, red), `f72040a` (items 1–2), and this section's (the
+goldens, re-recorded once, the renders and § 10.1). **To be re-gated by the orchestrator** (single files only, as § 9).
+§ 10 is unchanged.
+
+| case | file | before (`93a2a71`) | after (`f72040a` and this commit) |
+|---|---|---|---|
+| EM6 (Chrome, 390 and 1280, each menu in turn): every chip and meal control at least 64 CSS px in its smaller dimension; a press on the first meal control's tile, name and line each opens it and its mark turns; no "+" or "−" as text or CSS content, a mark hidden from assistive technology; its mutant and control | `tools/storybook/test/em-chrome.test.mjs` | 0 of 2 (the chips 134 × 40 and 115.7 × 40 at 390; *Turkey Chili Verde*'s and *Basil Tofu Noodles*' controls 218 × 24.8, the name alone; every mark the CSS content "+", none hidden) | 2 of 2; the file 7 of 7 with EM2, EM3 and their mutants |
+
+**The mutant**: the row's control shrunk to the name alone (a copy of the built page, the script's one line
+`appendAll(meal, [tile, text, mark]);` putting the tile and the name's column back in the row and only the name and the
+mark in the button): EM6 red, *"a press on its .cc-thumb did not open the meal"* and *".cc-line"*, at 390 and 1280; the
+copy as built passes EM6 whole.
+
+**Where § 10 was silent, and what was done**
+
+1. **The constant** is a CSS custom property, `--touch-target: 64px`, declared once on `.cc-list` (the card's box, which
+   holds every target § 10 names), its source in the comment above it: OurFans' *"Real-world device ergonomics"*, 10 mm
+   at 163 CSS px per inch, 64.2. EM6 holds the contract's number on its own (`TARGET_PX`).
+2. **The chips**: 64 px tall and at least as wide, their text centred, pill-shaped (`border-radius: 32px`); colours as
+   built; EM6 measures each at both widths.
+3. **The row**: a meal with ingredients is one `button` (`.cc-meal`, `display: flex`, the row's full width,
+   `min-height: var(--touch-target)`) holding its tile, its name and line (one column, `.cc-text`) and its mark; the
+   panel follows the button inside the `li`, indented to the name's column (68 px). A meal with numbers alone keeps a
+   row beside its tile (no control, no mark: § 3 item 3); a meal without an entry, the row it always had.
+4. **The mark** is a `span` (`.cc-mark`, `aria-hidden="true"`) the style draws as a chevron, two borders in
+   `currentColor` (navy) turned 45°, pointing down; open, it turns to point up (`rotate(-135deg)`), in 0.15 s, which the
+   page's reduced-motion rule already stops. No SVG and no glyph: nothing for a screen reader or a copy to read.
+5. **EM6's mutant fails on the press, not the size**: the shrunk button keeps its style's 64 px (its `min-height` and the
+   row's width), so it is the tile and the line, no longer inside the control, that open nothing. EM6 reads the mark's
+   turn once its animation has finished (it first read the transition's first frame, equal to the closed state).
+6. **§ 10 item 3 kept**: the answers, *Continue to checkout*, *Choose my own meals* and *See all plans* are unchanged.
+
+**What did not change, shown**: every built file but the pages byte-identical (`diff -rq`, `f2d1748`'s and `f72040a`'s
+builds, each from its own tree); U4's six contents and every visible fragment; WC-9's 20 visible pages (its recorder,
+`--visible-at f72040a`, changed only `visible_at`: not re-recorded); WC-8 and CC-8; EM5c (2026-10-25's content);
+`npm run contrast` 70 of 70 (navy on white and white on navy only, pairs already measured).
+
+**The goldens, re-recorded once (this commit)**: S20's `index.html` `5bd5d4e1…` → `c0fde5fc…`, every other file
+byte-identical; U4 by its recorder (`--commit f72040a`): the six served pages, each +1,407 bytes, all six contents and
+every visible fragment byte-identical; WC-9, WC-8 and CC-8 not moved. Green after: S20, CC-4, U4, WC-8, WC-9, CC-8, EM5,
+W4 23 of 23; the site's EM, CC, MS, U, WC, W1, W4, S18, T2, T5, PR, A1 and the budget 294 of 297 before the re-record (the
+three golden cases).
+
+**The renders** (`dist-dev/renders/`, never committed; the production build with the two-menu fixture week, every image
+request refused, each cropped to the result card), re-made at `f72040a` at 390 and 1280: (1) Chef's Choice selected, the
+chips 64 px tall, three meals with a chevron (two with their lines, *Turkey Chili Verde* with ingredients alone, no
+line), two plain rows; (2) Fixture Two selected, three chevron rows and *Cumin Lamb with Rice × 2*'s line with no chevron
+(numbers alone); (3) *Smoked Paprika Chicken Bowl × 2* opened, its chevron pointing up, *"Ingredients: Chicken breast,
+brown rice, black beans, smoked paprika, lime, cilantro"* and *"Contains: Milk"* beneath it in the name's column.
+
+**Every changed line.** Production's `index.html`: 31 lines removed and 48 added in 13 places; each development page
+(`/`, `demo/`, `boston/`, `seminar/`) by the same lines (compared line for line); each served page (U4) by the same
+lines. Sizes, raw / gzip (`test/page-budget.mjs`): production 50,860 / 14,858 → 52,267 / 15,368; development `/` 74,492 /
+21,769 → 75,899 / 22,312 (`seminar/` 75,902 / 22,313), under SPEC.md § 1's 61,440 gzip. (`diff`'s own output, `f2d1748`'s
+page against `f72040a`'s.)
+
+```text
+214,215c214,219
+< /* Every picked menu (SPEC-every-menu-and-nutrition § 2): above the list, a native radio group, each radio a chip; the
+<    chosen one navy, as the selected tab; the radio itself kept for the keyboard and assistive technology, not drawn */
+---
+> /* SPEC-every-menu-and-nutrition § 10 (the Advisor, 2026-10-21): every target this card adds is at least the standard
+>    target of OurFans' design philosophy (docs/arch/design-philosophy.md, "Real-world device ergonomics": 10 mm), at the
+>    densest logical density it uses (163 CSS px per inch: 10 mm is 64.2 CSS px), in its smaller dimension */
+> .cc-list { --touch-target: 64px; }
+> /* Every picked menu (§ 2): above the list, a native radio group, each radio a chip; the chosen one navy, as the selected
+>    tab; the radio itself kept for the keyboard and assistive technology, not drawn */
+220c224
+< .cc-menu span { display: block; min-height: 40px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 20px; background: var(--white); color: var(--navy); font: 600 15px/1.3 var(--head); cursor: pointer; }
+---
+> .cc-menu span { display: flex; align-items: center; justify-content: center; min-width: var(--touch-target); min-height: var(--touch-target); padding: 0 20px; border: 1px solid var(--line); border-radius: 32px; background: var(--white); color: var(--navy); font: 600 15px/1.3 var(--head); cursor: pointer; }
+224,231c228,237
+< /* Each meal's nutrition (§ 3): its line for the chosen size under its name; with ingredients the meal is a button, + when
+<    closed and − when open, opening them beneath it. A meal with neither keeps the row it always had */
+< .cc-meals li.cc-detail { align-items: flex-start; }
+< .cc-text { flex: 1; min-width: 0; }
+< .cc-meal { display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+< button.cc-meal { cursor: pointer; }
+< button.cc-meal .cc-name::after { content: "+"; margin-left: 8px; color: var(--navy); font-weight: 700; }
+< button.cc-meal[aria-expanded="true"] .cc-name::after { content: "\2212"; }
+---
+> /* Each meal's nutrition (§ 3): its line for the chosen size under its name. With ingredients the meal's whole row (its
+>    tile, its name and its line) is the button (§ 10 item 1), at least the touch target tall, its mark a chevron that
+>    turns when the meal is open (§ 10 item 2: "more", never the + of adding a meal), the ingredients beneath it. A meal
+>    with neither keeps the row it always had */
+> .cc-text { display: block; flex: 1; min-width: 0; }
+> .cc-text .cc-name { display: block; }
+> .cc-meals li.cc-control { display: block; }
+> .cc-meal { display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--touch-target); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+> .cc-mark { flex: none; width: 10px; height: 10px; margin: 0 8px 4px 4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; color: var(--navy); transform: rotate(45deg); transition: transform .15s ease-out; }
+> button.cc-meal[aria-expanded="true"] .cc-mark { transform: translateY(4px) rotate(-135deg); }
+233c239
+< .cc-more { margin: 6px 0 2px; color: var(--ink); font-size: 14px; }
+---
+> .cc-more { margin: 4px 0 2px 68px; color: var(--ink); font-size: 14px; }
+633c639,640
+< // (#result's data-accent, the plan app.js rendered) and, with ingredients, is a button opening them beneath it. What the
+---
+> // (#result's data-accent, the plan app.js rendered) and, with ingredients, its whole row is a button opening them beneath
+> // it, its mark a chevron (§ 10). What the
+700,702c707,714
+<   // A meal with its entry: the name and the size's line, as a button opening the panel beneath it (aria-expanded,
+<   // aria-controls) when the entry has ingredients; a second press closes it, each meal on its own (§ 3 item 2).
+<   function detail(li, name, entry, place) {
+---
+>   // A meal with its entry (§ 3): its name and the size's line in one column beside its tile; with ingredients, § 10 item 1:
+>   // the WHOLE ROW (tile, name, line) is the button opening the panel beneath it (aria-expanded, aria-controls), a second
+>   // press closing it, each meal on its own; its mark (§ 10 item 2) a chevron the style draws, hidden from assistive
+>   // technology, turning when the meal is open.
+>   function appendAll(parent, children) {
+>     children.forEach(function (child) { parent.appendChild(child); });
+>   }
+>   function detail(li, tile, name, entry, place) {
+705,707c717,718
+<     if (!line && !more) return li.appendChild(name);
+<     li.className = "cc-detail";
+<     var text = document.createElement("div");
+---
+>     if (!line && !more) return appendAll(li, [tile, name]);
+>     var text = document.createElement("span");
+709,711c720
+<     var meal = document.createElement(more ? "button" : "span");
+<     meal.className = "cc-meal";
+<     meal.appendChild(name);
+---
+>     text.appendChild(name);
+716c725
+<       meal.appendChild(numbers);
+---
+>       text.appendChild(numbers);
+718,720c727,739
+<     text.appendChild(meal);
+<     li.appendChild(text);
+<     if (!more) return;
+---
+>     if (!more) {
+>       li.className = "cc-detail";
+>       return appendAll(li, [tile, text]);
+>     }
+>     li.className = "cc-control";
+>     var meal = document.createElement("button");
+>     meal.type = "button";
+>     meal.className = "cc-meal";
+>     var mark = document.createElement("span");
+>     mark.className = "cc-mark";
+>     mark.setAttribute("aria-hidden", "true");
+>     appendAll(meal, [tile, text, mark]);
+>     li.appendChild(meal);
+732,733c751
+<     text.appendChild(panel);
+<     meal.type = "button";
+---
+>     li.appendChild(panel);
+759d776
+<       li.appendChild(tile);
+761,762c778,779
+<       if (isMap(at)) detail(li, name, at, id + "|" + j);
+<       else li.appendChild(name);
+---
+>       if (isMap(at)) detail(li, tile, name, at, id + "|" + j);
+>       else appendAll(li, [tile, name]);
+```

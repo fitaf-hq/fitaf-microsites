@@ -37,6 +37,10 @@
 // of 2026-10-21) give the chooser's fieldset its aria-label, the page's one changed line. Against 9a19f48's record, all six
 // contents (the heading now "{menu} ({week})", filled as before) and every visible fragment were byte-identical; only the
 // six served pages moved, each by 18 bytes. From here the reference is f2d1748's tree.
+// ⚠ RE-RECORDED at f72040a (`node test/u-04-record.mjs --commit f72040a`): SPEC-every-menu-and-nutrition § 10 (the
+// Advisor, 2026-10-21) puts the 64 px touch target, the meal row as a button and its chevron in the card's style and
+// script. Against f2d1748's record, all six contents and every visible fragment were byte-identical; only the six served
+// pages moved, each by 1,407 bytes (§ 10.1 lists the lines). From here the reference is f72040a's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -45,7 +49,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to f2d1748's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "f2d1748");
+test("U4: a normal week, the content and the page as served, byte-identical to f72040a's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "f72040a");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });
