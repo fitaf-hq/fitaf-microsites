@@ -194,3 +194,29 @@ Each with `nice -n 15`, the tree clean before and after (`git status` empty).
 
 B1 and S20, failing on `6e0f6bd`, pass here (§ 4 items 4–5). QC (Chrome stalls timed by the clock) failed one case on
 each of two runs of the contract's tree under the machine's load (a different case each time) and passed here.
+
+## 6. Amendment, 2026-10-21: "Find your plan" inside the dialog, and Storybook's frame. CONTRACT, before any code
+
+**Why.** § 4 items 14 and 15, put to the orchestrator: the /why/ page's one link (*Find your plan*, `href="/"`), pressed
+inside the dialog, loads the plan page inside the frame (the page nested in its own dialog); and Storybook's
+development stories serve no `why/`, so their frame is a 404. The orchestrator's ruling (Fit AF session 255, after
+prompt 255 objective 6): **the dialog closes on that link**, as it closes on Esc; `/why/` itself is unchanged (§ 2 item 5).
+
+1. **In `src/app.js`, from the frame's `load` listener** (the one that already makes Esc close the dialog, § 4 item 6):
+   a click in the frame's document on a link whose URL, resolved against that document, is **this site's plan page**
+   (same origin, path `/`) is prevented and **closes the dialog** (focus back on the button, as every close). The frame
+   does not navigate. Any other link in the frame (none today) behaves as a link. Same origin only: nothing if the
+   frame's document cannot be read (as Esc).
+2. **Without script** nothing changes: the footer's link opens `/why/` as a page, whose *Find your plan* goes to `/`.
+3. **Storybook**: `tools/storybook/microsite/layout.js` `ROOT_STATIC` gains `"why"`, so a development story's frame
+   (`/why/`) loads the built page as the production story's (`why/`) does. No other Storybook change.
+4. **Cases.** W2 gains: in Chrome, with the dialog open, a press on the frame's *Find your plan* closes the dialog,
+   focus on the button, the top page's URL unchanged and no plan page loaded inside the frame (the frame's document
+   still `/why/`, or the frame not navigated); production at 390 and development `/demo/` at 390. **Mutant**: the
+   link's listener removed (the frame navigates and the dialog stays open): W2 red; its control green. Storybook's suite
+   gains: a development story's frame `/why/` answers 200 with the built page (red before item 3). **The goldens**:
+   `app.js` is inlined in the built page, so S20, U4 and WC-9 move once more, each re-recorded by its own recorder,
+   every changed line listed in § 6.1 (as § 4 did); no other golden moves.
+5. **Unchanged**: everything § 2 item 5 lists; `/why/`'s file; the plans dialog.
+
+### 6.1 Built (to be filled by the build)
