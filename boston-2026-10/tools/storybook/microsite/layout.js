@@ -29,7 +29,7 @@ export const DEFAULT_VIEWPORT = "w390";
 
 /** Where Storybook serves the built pages, and the root-relative directories the development page asks for. */
 export const PAGES_ROUTE = "microsite";
-export const ROOT_STATIC = ["fonts", "assets"];
+export const ROOT_STATIC = ["fonts", "assets", "why"];
 
 /** Where one build's page for one date is written, under the pages' directory; and the URL a story's frame loads it at,
  *  relative to Storybook's own iframe. */

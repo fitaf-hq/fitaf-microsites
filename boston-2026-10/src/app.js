@@ -151,10 +151,17 @@
   modal($("#why"), $("#why-link"), $("#why-close"));
   // A key pressed with focus inside the frame (after a click or a scroll in it) goes to the frame's document, not the
   // dialog's, so Esc there would not close it: the /why/ page is this site's own, and its Esc closes the dialog too.
+  // So does its link back to this site's plan page (SPEC-why-fit-af § 6), which would open the plan page inside its own
+  // dialog: pressed, the dialog closes and the frame stays. Any other link in the frame is a link.
   var whyFrame = $("#why-frame");
+  function toPlanPage(el) {
+    var a = el && el.closest ? el.closest("a[href]") : null;
+    return !!a && a.origin === location.origin && a.pathname === "/";
+  }
   whyFrame.addEventListener("load", function () {
     var doc = whyFrame.contentDocument;
     if (doc) doc.addEventListener("keydown", function (e) { if (e.key === "Escape") $("#why").close(); });
+    if (doc) doc.addEventListener("click", function (e) { if (toPlanPage(e.target)) { e.preventDefault(); $("#why").close(); } });
   });
 
   // The carousel: one photo shown, the next every CAROUSEL_MS, never under reduced motion (no dots: § 8 item 1).
