@@ -183,6 +183,7 @@ html, body { margin: 0; padding: 0; background: var(--white); }
    the back's bar (each icon over its label, on the template's ice) and steps (columns in order: the icon on a blue
    disc, the title in the heading font, the detail under it), each block's lead-in centred over it, at the back's own
    type size or more */
+.print-flyer .fb-lede-line { display: block; }
 .print-flyer .fb-lede[data-lede-accent="orange"] .fb-lede-accent { color: var(--orange); }
 .print-flyer .fb-lede[data-lede-accent="blue"] .fb-lede-accent { color: var(--lean); }
 .print-flyer .fb-lede[data-lede-accent="green"] .fb-lede-accent { color: var(--signature); }

@@ -335,6 +335,8 @@ stay outside this repository until approved (§ 13 item 3).
    colour the words file's new key **`ledeAccent`** names: `orange` (`--orange`), `blue` (`--lean`) or `green`
    (`--signature`); without the key, `orange`. Anything else is refused, naming the key. The lede stays one paragraph,
    balanced (§ 13 item 9).
+   1a. **The lede in two lines** (the Advisor on pass 3, 2026-10-21, for the H1 take): `lede` may instead be one to two
+   lines (an array), each set on its own line as given, as the headline's are; three or more are refused.
 2. **Volume, by the brief's feeling** (Fit AF `docs/design-analysis/2026-10-20-boston-flyer-fronts.md` § 1 item 5: scale,
    contrast, saturation, motion): a **halftone** of white dots over the band's lower right, fading toward the headline
    (a CSS gradient, nothing turned, behind every word), the Owner's own texture; and a take's headline `size` as its

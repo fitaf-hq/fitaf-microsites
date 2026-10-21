@@ -368,7 +368,7 @@ export async function frontWordsProblems(root, frontPath, words) {
     const out = join(dir, "dist-print");
     const built = await build(root, { outDir: out, fourFlyers: false, frontPath });
     // a headline's accent asterisks are markup, not words
-    const runs = [...words.headline.map((line) => line.replaceAll("*", "")), words.lede.replaceAll("*", ""), ...(words.callout ?? [])];
+    const runs = [...words.headline.map((line) => line.replaceAll("*", "")), ...[words.lede].flat().map((line) => line.replaceAll("*", "")), ...(words.callout ?? [])];
     const problems = [];
     for (const p of built.planned.filter((q) => q.piece.id === "flyer")) {
       const pdf = join(out, `${p.stem}.pdf`);

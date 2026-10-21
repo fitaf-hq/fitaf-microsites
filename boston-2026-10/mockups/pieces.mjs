@@ -160,7 +160,7 @@ function flyerFrontB(c, parts, words) {
 <div class="fb-band">${HALFTONE}
   ${parts.logo("fb-logo-top")}
   <h1 class="fb-head" ${cite("headline")}${size}>${lines}</h1>
-  <p class="fb-lede" data-lede-accent="${esc(words.ledeAccent ?? "orange")}" ${cite("lede")}>${words.lede.split("*").map((part, j) => (j % 2 ? `<span class="fb-lede-accent">${esc(part)}</span>` : esc(part))).join("")}</p>
+  <p class="fb-lede" data-lede-accent="${esc(words.ledeAccent ?? "orange")}" ${cite("lede")}>${words.lede.map((line) => `<span class="fb-lede-line">${line.split("*").map((part, j) => (j % 2 ? `<span class="fb-lede-accent">${esc(part)}</span>` : esc(part))).join("")}</span>`).join("")}</p>
 </div>
 <div class="fb-hero">${parts.photo("flyer")}${parts.caption("flyer", "fb-name")}<svg class="fb-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE}"/></svg>${callout}</div>
 <div class="fb-foot"><svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>

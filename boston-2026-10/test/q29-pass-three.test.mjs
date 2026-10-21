@@ -30,6 +30,8 @@ test("Q29: the lede's accent key, and its asterisks, are checked", async () => {
   for (const [words, why] of [
     [{ ...FRONT_FIXTURE, lede: "One *two* three", ledeAccent: "purple" }, /"ledeAccent" must be one of orange, blue, green/],
     [{ ...FRONT_FIXTURE, lede: "One *two three" }, /"lede": an accent's asterisks come in pairs/],
+    [{ ...FRONT_FIXTURE, lede: ["One", "two", "three"] }, /"lede" must be a line of text, or one to 2 lines/],
+    [{ ...FRONT_FIXTURE, lede: ["One", ""] }, /"lede" must be a line of text, or one to 2 lines/],
   ]) {
     const { dir, path } = await frontFile(words);
     try {
@@ -40,7 +42,9 @@ test("Q29: the lede's accent key, and its asterisks, are checked", async () => {
   }
   const { dir, path } = await frontFile({ ...FRONT_FIXTURE, lede: "One *two* three" });
   try {
-    assert.equal((await readFront(path)).ledeAccent, "orange", "orange when the key is absent");
+    const read = await readFront(path);
+    assert.equal(read.ledeAccent, "orange", "orange when the key is absent");
+    assert.deepEqual(read.lede, ["One *two* three"], "a lede given as one line is one line");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -70,7 +74,9 @@ test("Q29: built, the lede's accented word is drawn in each ledeAccent's colour,
   const dir = await mkdtemp(join(tmpdir(), "boston-q29-accent-"));
   try {
     for (const accent of Object.keys(ACCENT_RGB)) {
-      const { dir: wordsDir, path } = await frontFile({ ...FRONT_FIXTURE, lede: `Plain words, *${ACCENT_WORD}* words.`, ledeAccent: accent });
+      // § 14 item 1a: the blue case gives its lede as two lines
+      const lede = accent === "blue" ? ["Plain words,", `*${ACCENT_WORD}* words.`] : `Plain words, *${ACCENT_WORD}* words.`;
+      const { dir: wordsDir, path } = await frontFile({ ...FRONT_FIXTURE, lede, ledeAccent: accent });
       try {
         const out = join(dir, accent);
         const built = await lockedBuild({ outDir: out, fourFlyers: false, frontPath: path });
