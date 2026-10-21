@@ -371,3 +371,36 @@ Merged at `ac52905` (`boston/rung-4-save-offer` `cd99011` with `boston/event-cod
    § 1's note of that day): the budget is the page gzip-compressed under 60 × 1024 bytes on every page the builds
    write, the raw size printed and not asserted. A1, S18 and T5 read it through `test/page-budget.mjs`. Now, raw / gzip:
    production 40,195 / 11,878; development 63,825–63,828 / 18,780–18,782.
+
+## 11. Amendment, 2026-10-21: `--json`, the same report as data, for the Owner's graphs. CONTRACT, before any code
+
+**Why.** The Advisor (Fit AF's decision record `2026-10-17-…` § 7o item 13): *"a lightweight visualization of the
+microsite's analytics … "eCommerce analytics dashboard" is totally a fine inspiration. The one ask is that we incorporate
+our palettes"*. The graphs are drawn outside this repository from a file the operator writes; § 5's text report is for
+reading, not for drawing.
+
+1. **`npm run analytics -- --from … --to … [--env dev] --json`** prints, instead of § 5's text, one JSON document with
+   **exactly the text report's figures**, from one function both outputs read (the text becomes a formatting of it, so
+   the two cannot disagree; the text output byte-identical to today's for the same answers):
+   ```json
+   { "dataset": "…", "from": "YYYY-MM-DD", "to": "YYYY-MM-DD", "zone": "America/New_York",
+     "days": [ { "day": "YYYY-MM-DD", "data": true,
+                 "visitors": 0, "visits": 0,
+                 "funnel": [ { "step": "open", "visits": 0 }, { "step": "answer: <q>", "visits": 0 }, …,
+                             { "step": "result", "visits": 0 }, { "step": "click", "visits": 0 } ],
+                 "clicks": { "<link>": 0 },
+                 "visit_length_ms": { "q1": 0, "median": 0, "q3": 0, "n": 0 },
+                 "load_ms": { "q1": 0, "median": 0, "q3": 0, "n": 0 },
+                 "device": { "<value>": 0 }, "viewport": { "<band>": 0 }, "country": { "<code>": 0 },
+                 "errors": 0 } ] }
+   ```
+   Every day from `from` to `to` appears, in order; a day with no data is `{ "day", "data": false }`. A length or load
+   with no visits is `null`. Counts are numbers; the splits' keys are the text's labels (an empty country is `""`).
+2. ⛔ **Aggregates only**, as § 5: the document holds nothing per visit, and no visit id, salt, address or user agent.
+3. The token and account as § 5; `--json` with any refusal of § 5 exits as § 5 does, writing nothing to stdout.
+4. **Cases**: AJ1 a fixture of the SQL API's answers (the cases' existing stub) → the document, each figure equal to the
+   text report's for the same answers; AJ2 the text output byte-identical to the base's for the same fixture; AJ3 a
+   range with a day of no data; AJ4 no field but the shape's (a check that walks the document); **mutant**: the JSON
+   computed by a second path that drops the funnel's last step (AJ1 red), its control green.
+
+### 11.1 Built (to be filled by the build)
