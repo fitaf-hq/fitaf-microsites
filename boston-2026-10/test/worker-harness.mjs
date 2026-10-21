@@ -2,8 +2,14 @@
 // Runs the Worker in Miniflare (local workerd) with an in-memory D1, the dev config's rate-limit bindings
 // and vars, and a stubbed Turnstile. ⛔ No request leaves the machine: any outbound fetch other than
 // Turnstile's siteverify gets a 599, and siteverify is answered here.
+// SPEC-save-offer-production.md SP6: with `worker: "production"` (or BOSTON_SAVE_WORKER=production in the environment,
+// which SP6 sets to run S1-S17 against it) the Worker is PRODUCTION's: wrangler.jsonc's top level (its `main`,
+// src/worker/site.js; its D1, rate limits and vars), bundled with data/save.json's `production` set to `production`
+// (true unless given), the Turnstile secret the test key (production's is a secret, never in the config), and an ASSETS
+// binding that answers 404 and records each request. Each production Worker started is appended to the file
+// BOSTON_SAVE_WORKER_LOG names, if set, so SP6 can see the cases ran against it.
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { build as esbuild } from "esbuild";
@@ -31,10 +37,22 @@ export const PAST_OFFER_ID = "event-past-placeholder";
 /** Rung 5 § 8: a CONFIRM_TOKEN_KEY for tests only — public, and nothing real is keyed with it. */
 export const TEST_CONFIRM_TOKEN_KEY = "test-only-confirm-token-key-0000000000000";
 
-async function bundleWorker(main) {
-  const out = await esbuild({ entryPoints: [main], bundle: true, format: "esm", write: false, logLevel: "silent" });
+async function bundleWorker(main, { save } = {}) {
+  // `save`: data/save.json's contents as the bundle sees them (the production flag), the file itself never written.
+  const plugins = save
+    ? [{ name: "save-json", setup: (b) => b.onLoad({ filter: /[\\/]data[\\/]save\.json$/ }, () => ({ contents: JSON.stringify(save), loader: "json" })) }]
+    : [];
+  const out = await esbuild({ entryPoints: [main], bundle: true, format: "esm", write: false, logLevel: "silent", plugins });
   return out.outputFiles[0].text;
 }
+
+/** wrangler.jsonc's top level (production), as wrangler reads it. */
+async function productionWranglerConfig() {
+  const { unstable_readConfig } = await import("wrangler");
+  return unstable_readConfig({ config: join(ROOT, "wrangler.jsonc") }, { hideWarnings: true });
+}
+/** The Turnstile secret the stub accepts: Cloudflare's published test secret, as the dev vars carry it. */
+const TEST_TURNSTILE_SECRET = "1x0000000000000000000000000000000AA";
 
 /** SQL files -> statements. The migrations carry `--` comments and no string literal containing `--`. */
 export function statements(sql) {
@@ -58,20 +76,26 @@ export async function applyMigrations(db, dir) {
  * Rung 5: `bindings` adds to (or overrides) the dev vars — e.g. a DUMMY RESEND_API_KEY, SEND_ALLOWLIST —
  * and `resend(request)` answers requests to Resend's API in place of the network (else they get the 599).
  */
-export async function startWorker({ bindings = {}, resend } = {}) {
-  const cfg = await devConfig();
+export async function startWorker({ bindings = {}, resend, worker: which = process.env.BOSTON_SAVE_WORKER ?? "development", production = true } = {}) {
+  const isProduction = which === "production";
+  const cfg = isProduction ? await productionWranglerConfig() : await devConfig();
   const [d1] = cfg.d1_databases;
+  assert.ok(d1, `wrangler.jsonc gives the ${which} Worker a D1 binding`);
   const outbound = [];
+  const assetRequests = [];
   const worker = {
     name: cfg.name,
     modules: true,
-    script: await bundleWorker(resolve(ROOT, cfg.main)),
+    script: await bundleWorker(resolve(ROOT, cfg.main), isProduction ? { save: { ...saveConfig, production } } : {}),
     compatibilityDate: cfg.compatibility_date,
     d1Databases: { [d1.binding]: "test-d1" },
     ratelimits: Object.fromEntries(
       cfg.ratelimits.map((r) => [r.name, { namespace_id: r.namespace_id, simple: r.simple }]),
     ),
-    bindings: { ...cfg.vars, ...bindings },
+    bindings: { ...cfg.vars, ...(isProduction ? { TURNSTILE_SECRET_KEY: TEST_TURNSTILE_SECRET } : {}), ...bindings },
+    ...(isProduction
+      ? { serviceBindings: { ASSETS: async (request) => (assetRequests.push(`${request.method} ${new URL(request.url).pathname}`), new Response(null, { status: 404 })) } }
+      : {}),
     outboundService: async (request) => {
       const body = await request.clone().text();
       outbound.push({ url: request.url, body, headers: Object.fromEntries(request.headers) });
@@ -88,7 +112,10 @@ export async function startWorker({ bindings = {}, resend } = {}) {
   const mf = new Miniflare(convertV4MiniflareOptions({ cf: false, workers: [worker] }));
   const db = await mf.getD1Database(d1.binding, cfg.name);
   await applyMigrations(db, resolve(ROOT, d1.migrations_dir));
-  return { mf, db, outbound, vars: cfg.vars };
+  if (isProduction && process.env.BOSTON_SAVE_WORKER_LOG) {
+    await appendFile(process.env.BOSTON_SAVE_WORKER_LOG, `${JSON.stringify({ main: cfg.main, database: d1.database_name, production })}\n`);
+  }
+  return { mf, db, outbound, vars: cfg.vars, main: cfg.main, assetRequests };
 }
 
 let ipCounter = 0;

@@ -12,6 +12,7 @@ import { DAYS, FIXTURE_DIR, midday as ccMidday, openPlanPage, pageWithPicks } fr
 import { FIXTURE_OFFERS, midday, S21_DATES } from "./offer-box-fixture.mjs";
 import { assertFlowOneDirectlyAfterStoreButton } from "./save-end-fixture.mjs";
 import { assertOfferLineAsRun, assertOfferLineInMarkup, STEP_OFFER_LABEL } from "./sp-fixture.mjs";
+import { approvedPage } from "./sp-production.mjs";
 
 const html = await devPage({ card: true });
 const fixture = await devPage({ offers: FIXTURE_OFFERS, card: true });
@@ -56,4 +57,15 @@ test("SP1: a label is written as text, never as markup; no offer to choose leave
   assert.equal(run.el(STEP_OFFER_LABEL).textContent, "", "the step's line shows nothing in place of a label");
   assert.equal(run.el("save-offer-label").textContent, "", "as the box at the top does");
   assert.equal(run.el("save-form").hasAttribute("hidden"), false, "the form is still there");
+});
+
+// The production half (§ 3 item 2: the production page with `production` true carries Flow 1 with § 1's tweaks), on the
+// page sp-production.mjs builds from the approved fixtures.
+test("SP1 (production true): the step's offer line directly above the save lead, the box at the top as it was", async () => {
+  const { html, inputs } = await approvedPage();
+  assertOfferLineInMarkup(html);
+  for (const hash of ["#lean-or-7d", "#family"]) {
+    const shown = Object.values(S21_DATES).map((ymd) => assertOfferLineAsRun(html, inputs.offers.offers, { hash, now: midday(ymd) }));
+    assert.equal(new Set(shown).size, 2, `${hash}: control: two labels across the event offer`);
+  }
 });

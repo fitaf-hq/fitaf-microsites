@@ -12,6 +12,7 @@ import { devPage } from "./dev-page.mjs";
 import { DAYS, FIXTURE_DIR, midday, openPlanPage, pageWithPicks } from "./cc-harness.mjs";
 import { NOW } from "./save-end-fixture.mjs";
 import { assertQuietButtons, shownCtas, submitSave } from "./sp-fixture.mjs";
+import { approvedPage } from "./sp-production.mjs";
 
 const html = await devPage({ card: true });
 const FAR_ZIP = "90210";
@@ -57,4 +58,17 @@ test("SP2: the new pairs are declared and pass; no pair still draws a save butto
   const { rows, problems } = await measure();
   assert.deepEqual(problems, []);
   assert.deepEqual(rows.filter((r) => !r.pass).map((r) => r.where), [], "every pair passes");
+});
+
+// The production half (§ 3 item 2), on the page sp-production.mjs builds from the approved fixtures.
+test("SP2 (production true): the quieter buttons in See all plans' style; the store's button the one --cta shown", async () => {
+  const { html: prod } = await approvedPage();
+  assertQuietButtons(prod);
+  for (const [hash, expected] of [["#lean-or-7d", ["result-cta"]], ["#family", ["family"]]]) {
+    assert.deepEqual(shownCtas(openPlanPage(prod, { hash, now: NOW })), expected, hash);
+  }
+  const out = openPlanPage(prod, { hash: "#lean-or-7d", now: NOW });
+  submitSave(out, { zip: FAR_ZIP });
+  assert.equal(out.el("save-out-of-area").hasAttribute("hidden"), false, "control: out of area");
+  assert.deepEqual(shownCtas(out), ["result-cta"]);
 });
