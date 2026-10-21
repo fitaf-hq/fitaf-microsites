@@ -297,3 +297,15 @@ production.)
 6. **"Not navigated" is read in a window**: W2's § 6 case waits for 750 ms of network quiet after the press and then
    finds no `framenavigated` and the frame's document still `/why/`. Its mutant shows the window catches the
    navigation the listener prevents.
+
+### 6.2 Gated by the orchestrator on `0b6ab73` (2026-10-21, announced to the peers, each set at `nice -n 15`)
+
+| gate | result | a failure's control |
+|---|---|---|
+| `npm --prefix boston-2026-10 test` | 878 of 879 | S22 alone (*the page has no element #save-offer-label*), and S22 fails identically on `6e0f6bd`'s own tree (`git archive` into a scratch folder, the same `node_modules`): the base's, not this branch's |
+| `npm --prefix boston-2026-10 run contrast` | 70 of 70 pairs | none |
+| `npm --prefix boston-2026-10/tools/storybook test` | **52 of 52**, run alone 16:29–16:31 PDT | ⚠ the first run (16:05, beside other builds, the 15-minute load average near 150) timed out PR-14 at 120 s and then hung idle in `pr-chrome` and `w-why-chrome` with no browser left; the orchestrator stopped those two files at 16:25 and re-ran the suite alone: every case green |
+| `npm --prefix boston-2026-10/tools/storefront-watch test` | 213 of 213 | none |
+| `tools/storybook/test/w-why-chrome.test.mjs` (W2, W3, § 6's case and the mutants), three runs | 10 of 10, three times | none |
+
+Released by a dev pin, then the production pin (§ 5), the Advisor's go given 2026-10-21 (Fit AF's decision record § 7o item 6).
