@@ -180,3 +180,17 @@ gzip (`test/page-budget.mjs`): production 40,324 / 11,947 → 42,074 / 12,424; d
 
 A dev pin, then the production pin (`fitaf-infra` `microsites.lock`), each by pull request through develop to main, on
 the Advisor's go (given 2026-10-21 for both pushes).
+
+### 4.1 Gated on `e3c59e4` (the build's own run; to be re-run by the orchestrator)
+
+Each with `nice -n 15`, the tree clean before and after (`git status` empty).
+
+| gate | result | a failure's control on `6e0f6bd` (a temporary worktree, the same installs) |
+|---|---|---|
+| `npm --prefix boston-2026-10 test` | 878 of 879 | S22 alone (*the page has no element #save-offer-label*): fails there identically (868 of 872 there: S22, B1, S20 and one QC case) |
+| `npm --prefix boston-2026-10 run contrast` | 70 of 70 pairs | none |
+| `npm --prefix boston-2026-10/tools/storybook test` | 48 of 48 (41 before, and W2, W3 and the mutant's 7) | none |
+| `npm --prefix boston-2026-10/tools/storefront-watch test` | 213 of 213 | none |
+
+B1 and S20, failing on `6e0f6bd`, pass here (§ 4 items 4–5). QC (Chrome stalls timed by the clock) failed one case on
+each of two runs of the contract's tree under the machine's load (a different case each time) and passed here.
