@@ -11,7 +11,13 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   versions the Worker accepts, the send zone and hour (09:00 America/New_York), and the lapse periods
   (30 days after an offer ends; 7 days for an unconfirmed expansion request; `expansion_retention_days`, 365,
   ⬜ proposed). When the wording is approved, add `v1` to `known_wording_versions` and point
-  `wording_version` at it.
+  `wording_version` at it. ⭐ **`production`** (`SPEC-save-offer-production.md` § 3): `false`, the production page and
+  Worker are as they were (S20, SP3); `true`, the production page carries the save step and the production Worker its
+  routes and cron, and `npm run build` **refuses, naming each**, until the wording is `v1` (DRAFT.md's status line with
+  its date, no Owner placeholder left), `offers.json` is `approved`, `delivery-zips.json` is `official`, and production's
+  `MAIL_FROM` and `TURNSTILE_SITE_KEY` (wrangler.jsonc's top level) are real. **`privacy_notice_url`**: where the step's
+  last line links the privacy notice (DRAFT § 6); `null` shows DRAFT § 1's `[Privacy notice]` placeholder, which a
+  production build refuses.
 - **`offers.json`** (rung 4): ⛔ **placeholders** (`"status": "placeholder"`; every `label` is `[The offer]`,
   every `shared_code` `PLACEHOLDER`) until the Owner's offers are approved. Dates are calendar dates in New
   York, inclusive. A save gets the live `event` offer, else the current `general` one; **exactly one
