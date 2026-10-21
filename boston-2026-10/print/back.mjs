@@ -6,8 +6,9 @@
 // one HTML comment allowed is the approval mark, `<!-- approved -->`, as the file's last line: until it is there the
 // back is a proof (§ 4's rule; print/pages.mjs backPlaceholders). Blank lines at the very end are an editor's, and ignored.
 // § 14 item 3: two graphic blocks, each a line holding only a lead-in followed, with no blank line, by its items: a bar
-// (`- {<icon>} <label>`, two to six) or steps (`1. {<icon>} <title>: <detail>`, numbered from 1, two to four). A list
-// anywhere else is still refused.
+// (`- {<icon>} <label>`, two to six) or steps (`1. {<icon>} <title>: <detail>`, numbered from 1, two to four). § 15
+// adds plans (`- {<plan>} <name>: <line>`, two to four, a plan's own colour), and a statement: a lead-in on a line of
+// its own with no items after it. A list anywhere else is still refused.
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
@@ -22,7 +23,11 @@ const LEAD_IN = /^\*\*([^*\s][^*]*?)\*\* (\S.*)$/;
 const LEAD_ALONE = /^\*\*([^*\s][^*]*?)\*\*$/;
 const BAR_ITEM = /^- \{([^}]*)\} (\S.*)$/;
 const STEP_ITEM = /^(\d+)\. \{([^}]*)\} ([^:]+): (\S.*)$/;
-const ITEMS = { bar: [2, 6], steps: [2, 4] };
+const PLAN_ITEM = /^- \{(lean|signature|performance|family)\} ([^:]+): (\S.*)$/;
+const ITEMS = { bar: [2, 6], steps: [2, 4], plans: [2, 4] };
+/** What each block is called: in a count's refusal, and (the bar's by its items, as § 14 worded it) in a mix's. */
+const KIND_NAMES = { bar: "a bar", steps: "steps", plans: "plans" };
+const MIX_NAMES = { ...KIND_NAMES, bar: "a bar's items" };
 /** The page's own copy's characters: letters and their marks, digits, the space, and its punctuation. */
 const COPY_CHAR = /[\p{L}\p{M}\p{N} .,:;!?'’‘“”"()&$%/+·×…–—-]/u;
 /** What each refused construct is called, by the first sign of it in a line, in this order. */
@@ -58,17 +63,24 @@ function openingOf(source, n, line) {
   return { lead: m[1], rest: m[2] };
 }
 
-/** § 14 item 3: `line` as an item of the block `open` (a bar or steps; its first item decides which), or false. */
+/** §§ 14–15: `line` as an item of the block `open` (a bar, steps or plans; its first item decides which), or false. */
 function blockItem(source, n, line, open) {
-  const bar = BAR_ITEM.exec(line);
+  const plan = PLAN_ITEM.exec(line);
+  const bar = plan ? null : BAR_ITEM.exec(line);
   const step = STEP_ITEM.exec(line);
-  if (!bar && !step) {
-    if (/^(-|\d+\.)\s/.test(line)) refuse(source, n, "an item must be `- {<icon>} <label>` or `<n>. {<icon>} <title>: <detail>` (§ 14 item 3)");
+  if (!plan && !bar && !step) {
+    if (/^(-|\d+\.)\s/.test(line)) refuse(source, n, "an item must be `- {<icon>} <label>`, `<n>. {<icon>} <title>: <detail>` or `- {<plan>} <name>: <line>` (§§ 14–15)");
     return false;
   }
-  const kind = bar ? "bar" : "steps";
+  const kind = plan ? "plans" : bar ? "bar" : "steps";
   if (open.kind === "lead") open.kind = kind;
-  if (open.kind !== kind) refuse(source, n, "a block mixes a bar's items and steps (§ 14 item 3)");
+  if (open.kind !== kind) refuse(source, n, `a block mixes ${MIX_NAMES[open.kind]} and ${MIX_NAMES[kind]} (§§ 14–15)`);
+  if (plan) {
+    checkWords(source, n, plan[2]);
+    checkWords(source, n, plan[3]);
+    open.items.push({ plan: plan[1], name: plan[2].trim(), text: plan[3], line: n });
+    return true;
+  }
   const name = bar ? bar[1] : step[2];
   if (!ICON_NAMES.includes(name)) refuse(source, n, `an icon must be one of ${ICON_NAMES.join(", ")}, not {${name}}`);
   if (bar) {
@@ -84,8 +96,8 @@ function blockItem(source, n, line, open) {
 }
 
 /**
- * The words file read: { heading: { text, line }, paragraphs: [{ kind: "text", lead, text, line } or { kind: "bar" or
- * "steps", lead, items, line }], approved, source }, each with the
+ * The words file read: { heading: { text, line }, paragraphs: [{ kind: "text", lead, text, line }, { kind: "bar",
+ * "steps" or "plans", lead, items, line } or { kind: "statement", lead, line }], approved, source }, each with the
  * file's line it starts on (1-based); paragraphs[0] is the lede. Refuses anything outside the subset, naming the line.
  */
 export function parseBack(text, source = BACK_SOURCE) {
@@ -103,10 +115,11 @@ export function parseBack(text, source = BACK_SOURCE) {
   const paragraphs = [];
   let open = null;
   const closeBlock = (n) => {
-    if (open?.kind === "lead") refuse(source, open.line, "a lead-in on a line of its own must be followed by a bar's or steps' items (§ 14 item 3)");
-    if (open && open.kind !== "text") {
+    // § 15 item 4: a lead-in on a line of its own with no items after it is a statement
+    if (open?.kind === "lead") open.kind = "statement";
+    if (open && open.kind !== "text" && open.kind !== "statement") {
       const [min, max] = ITEMS[open.kind];
-      if (open.items.length < min || open.items.length > max) refuse(source, n, `${open.kind === "bar" ? "a bar" : "steps"} must have ${min} to ${max} items, not ${open.items.length}`);
+      if (open.items.length < min || open.items.length > max) refuse(source, n, `${KIND_NAMES[open.kind]} must have ${min} to ${max} items, not ${open.items.length}`);
     }
   };
   for (let i = 2; i < lines.length; i += 1) {

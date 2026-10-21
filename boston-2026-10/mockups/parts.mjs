@@ -103,6 +103,14 @@ export function makeParts(inputs) {
       note([LOGO_SOURCE], "logo");
       return `<img class="logo ${cls}" src="${LOGO_PATH}" alt="Fit AF" width="330" height="210" data-src="${LOGO_SOURCE}">`;
     },
+    /**
+     * SPEC-print-pieces.md § 15 item 1: the logo drawn for a dark ground (print-only: print/assets/, copied by the print
+     * build). Front B is on no mock-up's sheet, so, as its words, this source is cited and in no legend.
+     */
+    logoReversed(file, cls = "") {
+      const source = `print/assets/${file}`;
+      return `<img class="logo ${cls}" src="assets/${esc(file)}" alt="Fit AF" width="1600" height="690" data-src="${esc(source)}">`;
+    },
     /** The event's QR code: the file build.mjs writeQrCodes writes, never a second generator (test P4). */
     qr(c, cls = "") {
       note(c.qr.src, "QR code (written by build.mjs)");

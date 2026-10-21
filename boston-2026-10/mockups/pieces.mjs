@@ -155,18 +155,28 @@ function flyerFrontB(c, parts, words) {
   const size = words.size ? ` style="font-size: ${words.size}px"` : "";
   // the QR code at error correction H (print/build-print.mjs writes it), so the logo can sit in its centre
   const qrH = { ...c, qr: { ...c.qr, path: c.qr.path.replace(/\.svg$/, "-h.svg") } };
+  // § 15 item 2: the offer's banner, a level ribbon of the band's ink above the offer
+  const banner = words.banner ? `<p class="fb-banner" ${cite("banner")}><span>${esc(words.banner)}</span></p>` : "";
+  const offer = parts.text("p", "offer", c.offer, "the offer");
   const callout = words.callout ? `<p class="fb-callout" ${cite("callout")}>${words.callout.map((t) => `<span>${esc(t)}</span>`).join("")}</p>` : "";
   return `
 <div class="fb-band">${HALFTONE}
-  ${parts.logo("fb-logo-top")}
+  ${bandLogo(parts, words.logo)}
   <h1 class="fb-head" ${cite("headline")}${size}>${lines}</h1>
   <p class="fb-lede" data-lede-accent="${esc(words.ledeAccent ?? "orange")}" ${cite("lede")}>${words.lede.map((line) => `<span class="fb-lede-line">${line.split("*").map((part, j) => (j % 2 ? `<span class="fb-lede-accent">${esc(part)}</span>` : esc(part))).join("")}</span>`).join("")}</p>
 </div>
 <div class="fb-hero">${parts.photo("flyer")}${parts.caption("flyer", "fb-name")}<svg class="fb-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE}"/></svg>${callout}</div>
-<div class="fb-foot"><svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>
-  <div class="fb-cta">${parts.text("p", "offer", c.offer, "the offer")}</div>
+<div class="fb-foot">${FOOT_DOTS}<svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>
+  <div class="fb-cta">${banner}${offer}</div>
   <div class="scan scan-under fb-scan"><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
 </div>`;
+}
+
+/** § 15 item 1: the band's logo by the words file's `logo`: drawn for the dark ground (its own white field gone, the
+ * tagline white; or, `reversed-white`, the second word's letters white too), or pass 2's on its white plate. */
+const REVERSED_LOGO_FILES = { reversed: "fitaf-logo-reversed.png", "reversed-white": "fitaf-logo-reversed-white.png" };
+function bandLogo(parts, treatment) {
+  return treatment === "plate" ? parts.logo("fb-logo-top") : parts.logoReversed(REVERSED_LOGO_FILES[treatment], "fb-logo-top fb-logo-rev");
 }
 
 /** § 14 item 2: the band's halftone (the grid's size, its pitch, the largest dot's radius and how far the dots reach). */
@@ -192,6 +202,35 @@ const HALFTONE = (() => {
   return `<svg class="fb-dots" viewBox="0 0 ${HALFTONE_W} ${HALFTONE_H}" fill="currentColor" aria-hidden="true">${dots.join("")}</svg>`;
 })();
 
+/**
+ * § 15 item 2b: the foot's texture, the same kind of halftone on the orange, in patches over its flat areas only: each
+ * patch's dots largest at its origin and gone before they reach a word (the offer at the left, the code's white tile,
+ * which covers any dot behind it, and the address under it). The grid is the foot's own (layout px, its width the face
+ * and both bleeds; anchored at its lower left), a fixed drawing so every build is the same.
+ */
+const FOOT_DOTS_W = 540;
+const FOOT_DOTS_H = 213;
+const FOOT_DOTS_PITCH = 10;
+const FOOT_DOTS_R_MAX = 3.4;
+const FOOT_DOTS_R_MIN = 0.45;
+/** Each patch: its origin (x, y from the grid's top left) and how far its dots reach. */
+const FOOT_PATCHES = [
+  { x: FOOT_DOTS_W, y: 0, reach: 185 }, // the top right, around the code's tile
+  { x: 0, y: 0, reach: 56 }, // the top left, under the torn edge and above the banner
+  { x: 0, y: FOOT_DOTS_H, reach: 90 }, // the lower left corner, under the offer
+  { x: 322, y: FOOT_DOTS_H, reach: 86 }, // the foot of the gap between the offer and the code
+];
+const FOOT_DOTS = (() => {
+  const dots = [];
+  for (let y = FOOT_DOTS_PITCH / 2; y < FOOT_DOTS_H; y += FOOT_DOTS_PITCH) {
+    for (let x = FOOT_DOTS_PITCH / 2; x < FOOT_DOTS_W; x += FOOT_DOTS_PITCH) {
+      const r = Math.max(...FOOT_PATCHES.map((p) => FOOT_DOTS_R_MAX * Math.max(0, 1 - Math.hypot(p.x - x, p.y - y) / p.reach) ** 1.3));
+      if (r >= FOOT_DOTS_R_MIN) dots.push(`<circle cx="${x}" cy="${y}" r="${r.toFixed(2)}"/>`);
+    }
+  }
+  return `<svg class="fb-foot-dots" viewBox="0 0 ${FOOT_DOTS_W} ${FOOT_DOTS_H}" fill="currentColor" aria-hidden="true">${dots.join("")}</svg>`;
+})();
+
 /** Front B's torn edge (§ 13): the band's lower edge, drawn over the photo's top, a fixed path so every build is the same. */
 const TORN_EDGE =
   "M0 0H510V7L497 11L486 6L471 12L458 8L441 13L430 7L414 12L399 9L386 14L370 8L357 12L341 7L327 13L311 9L296 14L283 8" +
@@ -213,7 +252,13 @@ function flyerBack(c, parts, { positions, words }) {
     `<div class="fbk-bar" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ul>${p.items.map((it) => `<li ${cite(it.line)}>${icon(it.icon, "fbk-icon")}<span>${esc(it.label)}</span></li>`).join("")}</ul></div>`;
   const steps = (p) =>
     `<div class="fbk-steps" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ol>${p.items.map((it) => `<li ${cite(it.line)}><span class="fbk-mark">${icon(it.icon, "fbk-icon")}</span><b class="fbk-title">${esc(it.title)}</b><span class="fbk-detail">${esc(it.detail)}</span></li>`).join("")}</ol></div>`;
-  const block = (p) => (p.kind === "bar" ? bar(p) : p.kind === "steps" ? steps(p) : paragraph(p, "flyer-back-para"));
+  // § 15 items 3–4: plans (cards in a row, each its plan's colour as a top bar, its name, its line), and a statement (a
+  // lead-in standing alone, centred as a block's)
+  const plans = (p) =>
+    `<div class="fbk-plans" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ul>${p.items.map((it) => `<li data-accent="${esc(it.plan)}" ${cite(it.line)}><b class="fbk-plan-name">${esc(it.name)}</b><span class="fbk-plan-line">${esc(it.text)}</span></li>`).join("")}</ul></div>`;
+  const statement = (p) => `<p class="fbk-statement" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b></p>`;
+  const BLOCKS = { bar, steps, plans, statement };
+  const block = (p) => (BLOCKS[p.kind] ?? ((q) => paragraph(q, "flyer-back-para")))(p);
   const [lede, ...rest] = words.paragraphs;
   return `
 <div class="flyer-back-photos">${positions.map((position) => parts.photo(position)).join("")}${positions.map((position, i) => parts.caption(position, `flyer-back-name flyer-back-name-${i + 1}`)).join("")}</div>

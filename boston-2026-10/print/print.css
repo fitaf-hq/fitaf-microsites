@@ -214,3 +214,35 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-flyer .fbk-mark .fbk-icon { width: 21px; height: 21px; }
 .print-flyer .fbk-title { font: 700 var(--back-text)/1.15 var(--head); color: var(--navy); }
 .print-flyer .fbk-detail { font-size: var(--back-text); line-height: 1.2; }
+/* § 15 (2026-10-21): pass 5. The band's logo drawn for the dark ground, on no plate (its own white field gone); the offer's
+   banner, a level ribbon of the band's ink with notched ends above the offer (nothing turned); the back's plans, cards
+   in a row, each its plan's colour as a top bar and never behind text, its name and its line in ink; and a statement, a
+   lead-in standing alone, centred as a block's */
+/* the logo on the band's own ink, so the halftone does not show through its field */
+.print-flyer .fb-logo-rev { width: 112px; padding: 0; border-radius: 0; background: var(--ink); }
+.print-flyer .fb-band:has(.fb-logo-rev) .fb-head { padding-right: 132px; }
+.print-flyer .fb-banner { margin: 0 0 7px; line-height: 0; }
+.print-flyer .fb-banner span {
+  display: inline-block; padding: 6px 18px 5px; background: var(--ink); color: var(--white);
+  font: 700 15px/1 var(--head); letter-spacing: .06em; text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
+}
+.print-flyer .fbk-plans, .print-flyer .fbk-statement { width: 100%; }
+.print-flyer .fbk-plans > .flyer-back-lead, .print-flyer .fbk-statement > .flyer-back-lead { display: block; text-align: center; }
+.print-flyer .fbk-plans ul {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none;
+}
+.print-flyer .fbk-plans li {
+  display: flex; flex-direction: column; gap: 2px; padding: 5px 6px 6px; border-top: 5px solid var(--lean);
+  border-radius: 0 0 6px 6px; background: var(--ice); color: var(--ink);
+}
+.print-flyer .fbk-plans li[data-accent="signature"] { border-top-color: var(--signature); }
+.print-flyer .fbk-plans li[data-accent="performance"] { border-top-color: var(--performance); }
+.print-flyer .fbk-plans li[data-accent="family"] { border-top-color: var(--family); }
+.print-flyer .fbk-plan-name { font: 700 var(--back-text)/1.15 var(--head); text-transform: uppercase; }
+.print-flyer .fbk-plan-line { font-size: var(--back-text); line-height: 1.2; }
+.print-flyer .fbk-statement { margin: 0; }
+/* § 15 item 2b: the foot's texture, the template's lighter orange in opaque dots on its flat areas only, behind every
+   word and the code's tile (pieces.mjs FOOT_DOTS), anchored at the foot's lower left */
+.print-flyer .fb-foot-dots { position: absolute; left: 0; bottom: 0; width: 540px; height: 213px; color: var(--orange); }
+.print-flyer .fb-cta, .print-flyer .fb-scan { position: relative; z-index: 1; }

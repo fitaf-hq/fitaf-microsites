@@ -100,7 +100,9 @@ test("Q29: the back's bar and steps refused outside § 14 item 3, naming the lin
     ["**Bar lead**\n- {vegan} One\n1. {order} Title: detail\n", /line 7: a block mixes a bar's items and steps/],
     ["**Steps lead**\n2. {order} Title: detail\n", /line 6: steps are numbered from 1 in order/],
     ["**Steps lead**\n1. {order} Title without its detail\n", /line 6: an item must be/],
-    ["**Bar lead**\n\nWords.\n", /line 5: a lead-in on a line of its own must be followed/],
+    // § 15 item 4 (2026-10-21) amends this case on purpose: a lead-in on a line of its own with no items is now a
+    // statement, so the case that refused it is Q30's to hold; a lead-in followed by a non-item line still refuses
+    ["**Bar lead**\nWords.\n", /line 6: a list|line 6: a block's lines must all be its items/],
     ["**Bar lead**\n- {vegan} One\n", /a bar must have 2 to 6 items, not 1/],
   ];
   for (const [rest, why] of cases) assert.throws(() => parseBack(head + rest, "fixture.md"), why);

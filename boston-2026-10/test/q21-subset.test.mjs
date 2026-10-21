@@ -67,7 +67,9 @@ test("Q21: emphasis elsewhere, another comment, a first line not the heading, a 
   const cases = [
     [withLine(5, lines[4].replace("Every meal", "Every *single* meal")), 5, "emphasis"],
     [withLine(5, lines[4].replace("Every meal", "Every __single__ meal")), 5, "emphasis"],
-    [withLine(3, `**${lines[2]}**`), 3, "a lead-in"],
+    // § 15 item 4 (2026-10-21) amends this case on purpose: a bold line alone is now a statement, so a bolded lede is
+    // refused as the lede that is not words, still at its line
+    [withLine(3, `**${lines[2]}**`), 3, "the first paragraph is the lede"],
     [withLine(13, "<!-- a note -->"), 13, "an HTML comment"],
     [withLine(1, "Why Fit AF?"), 1, "the first line"],
     [withLine(2, "", { insert: true }), 3, "a second blank line"],

@@ -10,15 +10,21 @@
 //             (§ 14 item 1a); words between asterisks are set in the colour `ledeAccent` names (§ 14 item 1)
 //   ledeAccent orange, blue or green: the lede's accent colour (optional; orange otherwise)
 //   callout   one to three short lines for the one callout over the photo's corner (optional)
+//   logo      reversed, reversed-white or plate: the band's logo (§ 15 item 1; optional, reversed otherwise)
+//   banner    one short line on a level ribbon above the offer (§ 15 item 2; optional, at most BANNER_MAX_CHARS)
 //   approved  true once the Advisor approves the words (optional; anything but true is a proof)
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
 
 /** § 13: the committed home of front B's words, once they are approved. */
 export const FRONT_PATH = new URL("../data/flyer-front.json", import.meta.url).pathname;
-const KEYS = ["headline", "accent", "lede", "ledeAccent", "callout", "approved", "size"];
+const KEYS = ["headline", "accent", "lede", "ledeAccent", "callout", "approved", "size", "logo", "banner"];
 /** § 14 item 1: the lede's accent colours, by the template's own tokens. */
 export const LEDE_ACCENTS = ["orange", "blue", "green"];
+/** § 15 item 1: the band's logo treatments, the first the default. */
+export const LOGO_TREATMENTS = ["reversed", "reversed-white", "plate"];
+/** § 15 item 2: the banner's longest line. */
+export const BANNER_MAX_CHARS = 32;
 const SIZE_MIN_PX = 24;
 const SIZE_MAX_PX = 56;
 const MAX_LINES = 3;
@@ -48,6 +54,9 @@ export async function readFront(path) {
   if (raw.size !== undefined && !(Number.isInteger(raw.size) && raw.size >= SIZE_MIN_PX && raw.size <= SIZE_MAX_PX)) {
     refuse(`"size" must be a whole number of layout px from ${SIZE_MIN_PX} to ${SIZE_MAX_PX}`);
   }
+  if (raw.logo !== undefined && !LOGO_TREATMENTS.includes(raw.logo)) refuse(`"logo" must be one of ${LOGO_TREATMENTS.join(", ")}`);
+  const bannerOk = typeof raw.banner === "string" && raw.banner.trim() !== "" && raw.banner.trim().length <= BANNER_MAX_CHARS;
+  if (raw.banner !== undefined && !bannerOk) refuse(`"banner" must be one line of at most ${BANNER_MAX_CHARS} characters`);
   return {
     source: basename(path),
     headline: raw.headline.map((s) => s.trim()),
@@ -57,5 +66,7 @@ export async function readFront(path) {
     callout: raw.callout ? raw.callout.map((s) => s.trim()) : null,
     approved: raw.approved === true,
     size: raw.size ?? null,
+    logo: raw.logo ?? LOGO_TREATMENTS[0],
+    banner: raw.banner === undefined ? null : raw.banner.trim(),
   };
 }

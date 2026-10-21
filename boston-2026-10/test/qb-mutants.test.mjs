@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { NO_CHROME } from "./print-fixtures.mjs";
-import { approvalProblems, BACK_GRAPHICS_FIXTURE, backFile, backGraphicsProblems, backRuleProblems, fitProblems, FRONT_FIXTURE, frontFile, frontWordsProblems, NO_POPPLER, pdfCarriesProblems, twoSidesProblems } from "./qb-checks.mjs";
+import { approvalProblems, BACK_GRAPHICS_FIXTURE, backFile, backGraphicsProblems, backRuleProblems, fitProblems, FRONT_FIXTURE, frontFile, frontWordsProblems, NO_POPPLER, pdfCarriesProblems, PLANS_FIXTURE, PLANS_RUNS, twoSidesProblems } from "./qb-checks.mjs";
 import { printMirror } from "./qe-checks.mjs";
 
 /** Replace `from` (present exactly once) with `to` in the mirror's file `rel`. */
@@ -45,6 +45,8 @@ const MUTANTS = {
   frontB: [join("print", "pages.mjs"), 'const b = !words && front && piece.id === "flyer" ? { front } : {};', "const b = {};"],
   // § 14 item 3: the bar drawn with none of its items
   barItems: [join("mockups", "pieces.mjs"), '<ul>${p.items.map((it) => `<li ${cite(it.line)}>${icon(it.icon, "fbk-icon")}<span>${esc(it.label)}</span></li>`).join("")}</ul>', "<ul></ul>"],
+  // § 15 item 3: the plans drawn with none of their cards
+  plansItems: [join("mockups", "pieces.mjs"), '<ul>${p.items.map((it) => `<li data-accent="${esc(it.plan)}" ${cite(it.line)}><b class="fbk-plan-name">${esc(it.name)}</b><span class="fbk-plan-line">${esc(it.text)}</span></li>`).join("")}</ul>', "<ul></ul>"],
 };
 
 test("§ 12 mutants (control): the unchanged mirror passes Q22's rule and Q26's", async () => {
@@ -123,6 +125,20 @@ test("§ 13 mutant: front B's words ignored fails Q28 (the unchanged mirror, its
     });
   } finally {
     await rm(wordsDir, { recursive: true, force: true });
+  }
+});
+
+test("§ 15 mutant: the plans' items dropped fails Q30 (the unchanged mirror, its control, passes)", { skip: NO_CHROME || NO_POPPLER }, async (t) => {
+  const { dir: backDir, path } = await backFile(PLANS_FIXTURE);
+  try {
+    await withMirror(async () => {}, async (dir) => assert.deepEqual(await backGraphicsProblems(dir, path, PLANS_RUNS), [], "control"));
+    await withMirror((dir) => edit(dir, ...MUTANTS.plansItems), async (dir) => {
+      const problems = await backGraphicsProblems(dir, path, PLANS_RUNS);
+      t.diagnostic(`Q30 on the mutant: ${problems.length} problems: ${JSON.stringify(problems)}`);
+      assert.ok(problems.some((p) => p === 'flyer-PROOF.pdf page 2 lacks the back\'s "Plan one" in order'), problems.join("\n"));
+    });
+  } finally {
+    await rm(backDir, { recursive: true, force: true });
   }
 });
 

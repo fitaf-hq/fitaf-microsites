@@ -376,3 +376,52 @@ stay outside this repository until approved (§ 13 item 3).
    it. The same run refused pass 3's first halftone (a translucent gradient: Q7 allows nothing translucent and no raw
    colour); it is drawn instead as opaque dots of the template's `--muted` that shrink away from the corner
    (`pieces.mjs` `HALFTONE`). After both: the print set 111 of 111, the § 14 mutant red on its case and its control green.
+
+## 15. Amendment, 2026-10-21: pass 5, the goals as plans, the menu as badges, the offer's banner, and the logo reversed. CONTRACT, before any code
+
+**Why.** The Advisor on pass 4 (Fit AF's decision record `2026-10-17-…` § 7o items 8 and 10): *"Goals as an
+infographic"*, *"Menu line as a graphic"*, *"I'm interested in the offer as a banner … that it is a limited time offer
+and/or its total potential savings"*, and of the band's logo on its white plate, *"The white field on black background
+feels like a cutout"*; then (§ 7p item 5), after the Owner's review, *"the Owner wants to use it (with some continued
+refinements!)"*. The words stay outside this repository until approved (§ 13 item 3); the two claims a banner may carry
+were checked against Fit AF's record of the offer's numbers before this amendment, and which one prints is his.
+
+1. **The logo reversed, no plate.** Front B's band carries the logo **drawn for a dark ground**:
+   `print/assets/fitaf-logo-reversed.png` (the green box and its white letters as they are; the logo's own white field
+   transparent; the tagline white; the frame's blue and the greens as the logo's own inks), on no plate, at the band's
+   top right where § 13 item 11 put it, the headline kept clear of it. It is derived in Fit AF from the vector logo the
+   Owner's label files carry, never from a flyer's raster, and is print-only (the page keeps `src/assets/fitaf-logo.png`,
+   B1; `copyStatic` copies only `src/assets`, so the page's built files do not change). The words file's new key
+   **`logo`** chooses it: `reversed` (the default from this amendment), `reversed-white` (the same, the second word's
+   letters white instead of green) or `plate` (§ 13 item 11's, for comparison). Anything else is refused, naming the key.
+   The QR code's centre keeps the page's logo on its white tile (a white ground).
+2. **The offer's banner.** The words file's new key **`banner`**: one short line (at most 32 characters), set in the
+   foot above the offer, on a level ribbon (a flat band with notched ends, `clip-path`, nothing turned: Q2) of the
+   template's `--ink` with white type in the heading font, uppercase. No new colour (Q7). Absent, no banner.
+   2a. **The offer's words** stay `data/offers.json`'s approved label (§ 12.2), which the Owner's review changed the same
+   day (relayed by the Advisor, 2026-10-21; the record is Fit AF's): *"Sign up today to save 25%"*, `label_approved`
+   2026-10-21. Its terms and codes are still placeholders (the file's `status`): the terms the Owner sets must give 25%.
+   2b. **The foot's texture** (the Advisor, the same day: *"add a little something (more dots or some other texture) to the
+   orange … I do not want to impact legibility, so maybe this is just on some of the flat orange areas"*): opaque dots of
+   the template's `--orange` on the foot's `--cta`, in patches whose dots are largest at the foot's corners and at the foot
+   of the gap between the offer and the code, and gone before they reach a word (`pieces.mjs` `FOOT_DOTS`); the code's
+   white tile covers any dot behind it. Nothing translucent (Q7).
+3. **The back's plans.** § 14 item 3's subset gains a third block, **plans**: items `- {<plan>} <name>: <line>`, two to
+   four, `<plan>` one of `lean`, `signature`, `performance`, `family`; set as cards in a row in the file's order, each
+   with its plan's colour as a top bar (an accent, never behind text, as the page's plan cards), its name in the
+   heading font and its line under it, in ink.
+4. **A statement.** A lead-in on a line of its own with no items after it (§ 14 item 3 refused it) is a statement, set
+   centred as a block's lead-in. The Advisor (2026-10-21), of the menu line: *"that's a claim that is strong enough to
+   stand on its own"*. (A badges block was built first and dropped the same day on his word, *"Get rid of these
+   badges"*: not here.)
+5. **Unchanged**: every block's other rules (§ 14 item 3: a lead-in on a line of its own, no blank line before the
+   items, a mixed block refused, an unknown name refused naming the line); the type floor; **the words and the graphics
+   must still fit** (§ 12 item 5): the build refuses an overflow, naming it in layout px, and never shrinks to fit.
+   Which words go when they do not fit is the Advisor's.
+6. **Cases. Q30**: the words file's `logo` key: each treatment builds, the reversed logo is the band's image and no
+   plate is drawn behind it, an unknown one is refused; `banner`: its text is read from the PDF in the foot above the
+   offer, and a 33-character one is refused; a back fixture with plans and a statement builds, its lead-ins, names and
+   lines read from the PDF in the file's order; each malformed item is refused naming its line (an unknown plan, a plan
+   without its `:`, plans and a bar's items mixed). **Mutant**: the plans' items dropped (Q30 red), its control green.
+7. ⛔ **Not here**: the words (the Advisor's, then the Owner's); which banner prints; the Owner's notes on the review
+   (to come).

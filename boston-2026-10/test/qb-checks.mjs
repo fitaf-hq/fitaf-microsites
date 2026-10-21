@@ -396,6 +396,23 @@ The lede words.
 3. {eat} Title three: detail three
 `;
 
+/** Q30 (§ 15 items 3–4): a back with plans and a statement, a fixture's neutral words. */
+export const PLANS_FIXTURE = `# Heading words
+
+The lede words.
+
+**Plans lead**
+- {lean} Plan one: line one
+- {signature} Plan two: line two
+- {performance} Plan three: line three
+- {family} Plan four: line four
+
+**Statement words**
+`;
+
+/** Q30: the runs the plans fixture prints, in the file's order. */
+export const PLANS_RUNS = ["Plans lead", "Plan one", "line one", "Plan two", "line two", "Plan three", "line three", "Plan four", "line four", "Statement words"];
+
 /** Q29: the runs the fixture's graphics print, in the file's order. */
 export const BACK_GRAPHICS_RUNS = ["Bar lead", "Label one", "Label two", "Label three", "Steps lead", "Title one", "detail one", "Title two", "detail two", "Title three", "detail three"];
 

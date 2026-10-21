@@ -31,7 +31,7 @@
 // dist-print/ (ignored) holds what carries them, and only dist-print/assignment.json names their IDs.
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -49,6 +49,16 @@ import { backPlaceholders, pagesToPrint, placeholdersOf, printDocument } from ".
 import { BACK_MIN_TEXT_PX, CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
 
 export const PRINT_DIR = dirname(fileURLToPath(import.meta.url));
+/** § 15 item 1: the print-only images (the logo drawn for a dark ground), never the page's (copyStatic copies src/assets). */
+export const PRINT_ASSETS_DIR = join(PRINT_DIR, "assets");
+
+/** Copies print/assets/*.png into the stage's assets/, beside the page's logo. */
+async function copyPrintAssets(stage) {
+  await mkdir(join(stage, "assets"), { recursive: true });
+  for (const name of (await readdir(PRINT_ASSETS_DIR)).filter((n) => n.endsWith(".png")).sort()) {
+    await copyFile(join(PRINT_ASSETS_DIR, name), join(stage, "assets", name));
+  }
+}
 export const DIST_PRINT = join(ROOT, "dist-print");
 export const PROOF_SUFFIX = "-PROOF";
 /** SPEC-print-pieces.md § 11 item 2 (§ 4's "the Boston event"): the event whose QR code the pieces carry when no --event
@@ -453,6 +463,7 @@ export async function buildPrint({
     const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers, withBack }) : null;
     const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId: eventId ?? PRINT_EVENT });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
+    await copyPrintAssets(stage); // § 15 item 1: the print-only logo drawn for a dark ground
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
     // § 13 item 11: front B's code, the same URL by the same library and options at error correction H, for its logo
     await writeQrCodesH(inputs.data.events, stage);
