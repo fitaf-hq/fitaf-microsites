@@ -33,6 +33,10 @@
 // f02807e's record, all six contents and the visible page at all seven fragments were byte-identical (none of these
 // weeks has a second list or meals, § 2 item 4); only the six served pages moved, each by 8,768 bytes (its § 9 lists the
 // lines). From here the reference is 9a19f48's tree.
+// ⚠ RE-RECORDED at f2d1748 (`node test/u-04-record.mjs --commit f2d1748`): the approved menu names (the Advisor's ruling
+// of 2026-10-21) give the chooser's fieldset its aria-label, the page's one changed line. Against 9a19f48's record, all six
+// contents (the heading now "{menu} ({week})", filled as before) and every visible fragment were byte-identical; only the
+// six served pages moved, each by 18 bytes. From here the reference is f2d1748's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -41,7 +45,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 9a19f48's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "9a19f48");
+test("U4: a normal week, the content and the page as served, byte-identical to f2d1748's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "f2d1748");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

@@ -170,7 +170,7 @@ whole suite or the storefront watch. §§ 1–8 are unchanged.
    carry"*), so a one-list week's heading is today's; a week of two or more lists whose heading has no `{menu}` is refused
    by the content (*"2 lists, and data/messages.json's chefs_choice.heading has no {menu} to name the menu shown"*), since
    § 2 item 2's heading must name the menu. The fixture's words carry `"{menu} ({week})"`; the change that names a second
-   list (§ 4) adds `{menu}` to the committed heading in the same commit.
+   list (§ 4) adds `{menu}` to the committed heading in the same commit. ⚠ Done at `f2d1748` (below).
 4. **`menus`' note.** `status` sits inside `menus` as in every words key; it is not a list. `chefs-choice` must be the
    first list named (*"menus must name chefs-choice first"*), § 4's *"chefs-choice first"*; a blank name is refused.
 5. **The `meals` keys** are matched as the link tool reads a name (whitespace collapsed and trimmed) against every
@@ -189,6 +189,7 @@ whole suite or the storefront watch. §§ 1–8 are unchanged.
    menu a `label` holding a radio (`name="cc-menu"`, its `value` the list) drawn as a chip in the selected tab's colours
    (navy, white), the radio itself 1 px and transparent. ⬜ **For the Advisor: the group has no name of its own** (no
    `legend`): each radio is named by its menu; naming the group would be one more phrase in `data/messages.json`.
+   ✅ Ruled 2026-10-21: *"Menu"* (below).
 9. **Chef's Choice with no cart where another list has one**: the card falls back (*Choose your meals*), with no
    chooser (one list offered), unless that other list was the one chosen, which § 2 item 3 then keeps. No committed week
    has such an answer set.
@@ -473,3 +474,45 @@ the Chrome file 4 of 5 (the fixture refused). After the fix: EM1 23 of 23, EM4 +
 file 5 of 5. **EM3 needed no change to the card**: its script already shows a line only for the chosen size's numbers and
 makes a meal a control only with ingredients; EM3 now reads both shapes (a control with no line, a line with no control).
 The page's bytes do not move (S20's golden stands); a week without `meals` is as before (EM5c).
+
+**The approved menu names, built** (the Advisor's ruling of 2026-10-21, Fit AF decision 2026-10-17 § 7q item 6, through
+the orchestrator: the four names approved for this public repository; the chooser's own name *"Menu"*; the heading to
+carry `{menu}`). Cases first (`68d4ca1`), then the code (`f2d1748`), then the goldens with this note.
+
+- **The words**: `menus` gains, after `chefs-choice` and in this order, `poultry-and-fish` *"Poultry & Fish"*,
+  `gluten-free` *"Gluten Free"*, `comfort-classics` *"Comfort Classics"*, `global-explorers` *"Global Explorers"*;
+  `chefs_choice.heading` is `"{menu} ({week})"`; `chefs_choice.menus_label` is *"Menu"*, required by the build and written
+  as the chooser fieldset's `aria-label` (`card.html`'s `{{MENUS_LABEL}}`). Every group's `status` stays `"placeholder"`.
+  The fixture's words no longer override the heading; they add only the invented list's name.
+- **A one-list week's heading reads exactly as before**: Chef's Choice's name fills `{menu}`, so 2026-10-25's reads
+  *"Chef's Choice (October 26 – November 1)"* and the fixture week's *"Chef's Choice (October 5–11)"* (PR-17). The content
+  of every committed week and fixture is byte for byte what it was (EM5c, W4, U4's six contents).
+- **The cases**: EM4a holds the five names in order, *"Menu"* and a heading carrying `{menu}` and `{week}`; EM4c finds the
+  marked group name as the chooser's `aria-label` (names of lists the week does not carry need not be shown); EM1 makes a
+  week naming `gluten-free` with `data/messages.json` as committed, its menus `[["chefs-choice", "Chef's Choice"],
+  ["gluten-free", "Gluten Free"]]`; EM2 (Chrome) reads the group's role and name in the accessibility tree (`group`,
+  *"Menu"*). Cases that read the phrase follow it: PR-17's phrase, cc-harness's `headingFor` (fills `{menu}`), EM1's
+  no-`{menu}` words, Storybook's SM-4 control (the footnote's piece, as the heading now begins with a placeholder).
+- **Red on `7c08183`'s code**: the site's EM files with PR-17, CC-1, CC-3 and SM-4, 28 of 50 failing (every two-list
+  content refused for the heading's missing `{menu}`; `gluten-free` *"is not a list the page shows"*; no approved names,
+  no `menus_label`; PR-17's phrase); the Chrome file 4 of 5. **Green on `f2d1748`**: 96 of 99 with CC-1 to CC-9, then 63 of
+  63 for EM1, the mutants and MS-6 once two pinned refusals were loosened (EM1's list case and MS-6's read *"(chefs-choice)"*;
+  the refusal now names every list the words name); MS, U, WC, W1, W4, S18, T2, T5, P2, PR, A1 and the budget 211 of 213
+  (S20 and U4, re-recorded here); Chrome 5 of 5, SM-6 6 of 6; after the goldens, S20, CC-4, U4, WC-8, WC-9, CC-8, EM5 and W4
+  23 of 23.
+- **The page's one changed line** (`diff`, `9a19f48`'s production page against `f2d1748`'s, each from its own tree; each
+  development page by the same line):
+
+  ```text
+  321c321
+  <             <fieldset class="cc-menus" id="cc-menus" hidden></fieldset>
+  ---
+  >             <fieldset class="cc-menus" id="cc-menus" aria-label="Menu" hidden></fieldset>
+  ```
+
+- **Goldens**: S20's `index.html` `031e8401…` → `5bd5d4e1…`, every other file byte-identical; U4 by its recorder
+  (`--commit f2d1748`): the six served pages, each +18 bytes, all six contents and every visible fragment byte-identical;
+  WC-9's recorder (`--visible-at f2d1748`) wrote every key as committed but `visible_at`, so not re-recorded; WC-8 and
+  CC-8 not moved. Sizes, raw / gzip: production 50,842 / 14,852 → 50,860 / 14,858; development `/` 74,474 / 21,762 →
+  74,492 / 21,769 (`seminar/` 74,495 / 21,770).
+

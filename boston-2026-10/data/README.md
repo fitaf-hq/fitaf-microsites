@@ -30,8 +30,9 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   `{n}`), `note`, `checkout`, `own`; ⚠ placeholders (`status`) for the copy review. `npm run build` reads it only
   when a week in `picks/` is open, and refuses a missing phrase or placeholder. **`menus`** (since
   `SPEC-every-menu-and-nutrition.md` § 4) names each list a week may carry, in the chooser's order, `chefs-choice` first
-  (`status` is its note); a list without a name here is refused, and ⛔ none but `chefs-choice` is named until the
-  Advisor approves one. **`nutrition`**: `line` (`{cal}`, `{protein}`, `{carbs}`, `{fat}`), `ingredients` and
+  (`status` is its note), then the four the Advisor approved on 2026-10-21 (Poultry & Fish, Gluten Free, Comfort
+  Classics, Global Explorers); a list without a name here is refused, and ⛔ a name joins only on his approval.
+  `chefs_choice.heading` carries `{menu}`, and `chefs_choice.menus_label` is the chooser's own name. **`nutrition`**: `line` (`{cal}`, `{protein}`, `{carbs}`, `{fat}`), `ingredients` and
   `contains` (`{text}`); placeholders, refused missing.
 - **`picks/<sunday>.json`**: this week's Chef's Choice, one file per delivery Sunday, written by Fit AF's emitter
   from the week's picks (never by hand): `{ "delivery", "menus": { "<count>": [{ "name", "display", "qty" }] } }`;
