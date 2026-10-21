@@ -221,3 +221,27 @@ Builds compared:
 - Redemptions stay the null implementation: no suppression by an order yet.
 - The export to an email provider is not built.
 - Nothing logs an address, a token, a code or a key (M7 unchanged; the cron reports counts only).
+
+## 9. Amendment, 2026-10-21: the privacy notice's page, and the event a save names. CONTRACT, before any code
+
+**Why.** § 8.4's two forks, put to the Advisor (Fit AF's decision record § 7q item 6, `AskUserQuestion`
+2026-10-21): ***"A /privacy/ page on eatfitaf.com"*** and ***"From ?e=, else "eatfitaf.com""***.
+
+1. **`/privacy/`**: one static page built from `consent/DRAFT.md` § 6 (the privacy notice), in the template's fonts and
+   colours, no script, served as `/why/` is (`build.mjs`'s static pages). ⛔ **Its words are the draft's and it is
+   public only when they are approved**: the development build always carries it, marked as the step is (*"DRAFT — not
+   for use"* while the wording is a draft); the production build carries it **only with `production: true`**, under the
+   § 3 item 2 refusals (a bracket left in § 6 refuses). `save.json`'s `privacy_notice_url` (§ 8.4) is `"/privacy/"`, so
+   the form's *Privacy notice* is a link to it in both builds.
+2. **The event a save names**: the page sends as `event_id` the `?e=` code it was opened with when that code names an
+   entry of `data/events.json` (read by the same function the analytics beacon reads it with: one reading, never two),
+   and the first event otherwise, in both builds. `data/events.json`'s names become what an email says after *"You
+   saved this offer at"*: **`demo` → *"eatfitaf.com"***, **`boston` → *"Fit AF's Boston event"*** (the Advisor's
+   option's words); `seminar` unchanged (it is not used: the Owner does not do the seminar). The ids, the URLs and the
+   QR codes do not change. Say every other place the build shows an event's name, and what it shows there now.
+3. **Cases**: **SP9** `/privacy/` in the development build with the draft marking; absent from the production build
+   with `production: false`; present with `production: true` and approved fixtures, its every paragraph § 6's; the form's
+   link resolves to it in both. **SP10** a save from `?e=boston` sends `event_id: "boston"`; from no code, and from
+   `?e=` naming no event, the first event's; E1 for each (a recording sender) reads *"at Fit AF's Boston event"* and
+   *"at eatfitaf.com"*. **Mutant**: the page sends the first event whatever the code (SP10 red). Every golden that moves
+   is re-recorded once with its changed lines listed (E1's text golden M14 will, for the names).
