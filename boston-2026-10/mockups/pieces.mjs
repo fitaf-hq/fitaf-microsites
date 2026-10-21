@@ -1,6 +1,7 @@
 // The four mock-ups: a tabletop tent card, a quarter-page flyer, a retractable banner and a slideshow.
 // Mock-ups for a screen share: nothing here is print-ready. Each is laid out at a fixed size in CSS pixels
 // that keeps the real piece's proportions; the sheet scales it to the window.
+import { icon } from "../print/icons.mjs";
 import { campaign, esc, makeParts } from "./parts.mjs";
 
 /** The mock-ups' layout unit: CSS pixels per inch of the real piece (the print build zooms it to the CSS inch). */
@@ -156,10 +157,10 @@ function flyerFrontB(c, parts, words) {
   const qrH = { ...c, qr: { ...c.qr, path: c.qr.path.replace(/\.svg$/, "-h.svg") } };
   const callout = words.callout ? `<p class="fb-callout" ${cite("callout")}>${words.callout.map((t) => `<span>${esc(t)}</span>`).join("")}</p>` : "";
   return `
-<div class="fb-band">
+<div class="fb-band">${HALFTONE}
   ${parts.logo("fb-logo-top")}
   <h1 class="fb-head" ${cite("headline")}${size}>${lines}</h1>
-  <p class="fb-lede" ${cite("lede")}>${esc(words.lede)}</p>
+  <p class="fb-lede" data-lede-accent="${esc(words.ledeAccent ?? "orange")}" ${cite("lede")}>${words.lede.split("*").map((part, j) => (j % 2 ? `<span class="fb-lede-accent">${esc(part)}</span>` : esc(part))).join("")}</p>
 </div>
 <div class="fb-hero">${parts.photo("flyer")}${parts.caption("flyer", "fb-name")}<svg class="fb-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE}"/></svg>${callout}</div>
 <div class="fb-foot"><svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>
@@ -167,6 +168,29 @@ function flyerFrontB(c, parts, words) {
   <div class="scan scan-under fb-scan"><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
 </div>`;
 }
+
+/** § 14 item 2: the band's halftone (the grid's size, its pitch, the largest dot's radius and how far the dots reach). */
+const HALFTONE_W = 300;
+const HALFTONE_H = 200;
+const HALFTONE_PITCH = 9;
+const HALFTONE_R_MAX = 2.4;
+const HALFTONE_REACH = 320;
+const HALFTONE_R_MIN = 0.4;
+/**
+ * The Owner's own texture: opaque dots on a fixed grid, largest at the band's lower right corner and smaller with the
+ * distance from it, so the tone fades by the dots' size and nothing is translucent (Q7); drawn in the colour around them
+ * (print.css: the template's muted grey), a fixed drawing so every build is the same.
+ */
+const HALFTONE = (() => {
+  const dots = [];
+  for (let y = HALFTONE_H - HALFTONE_PITCH / 2; y > 0; y -= HALFTONE_PITCH) {
+    for (let x = HALFTONE_W - HALFTONE_PITCH / 2; x > 0; x -= HALFTONE_PITCH) {
+      const r = HALFTONE_R_MAX * Math.max(0, 1 - Math.hypot(HALFTONE_W - x, HALFTONE_H - y) / HALFTONE_REACH) ** 1.3;
+      if (r >= HALFTONE_R_MIN) dots.push(`<circle cx="${x}" cy="${y}" r="${r.toFixed(2)}"/>`);
+    }
+  }
+  return `<svg class="fb-dots" viewBox="0 0 ${HALFTONE_W} ${HALFTONE_H}" fill="currentColor" aria-hidden="true">${dots.join("")}</svg>`;
+})();
 
 /** Front B's torn edge (§ 13): the band's lower edge, drawn over the photo's top, a fixed path so every build is the same. */
 const TORN_EDGE =
@@ -184,13 +208,19 @@ const TORN_EDGE_UP = TORN_EDGE.replace("M0 0H510V7", "M0 18H510V11").replace(/L(
 function flyerBack(c, parts, { positions, words }) {
   const cite = (line) => `data-src="${esc(`${words.source}#L${line}`)}"`;
   const paragraph = (p, cls) => `<p class="${cls}" ${cite(p.line)}>${p.lead === null ? "" : `<b class="flyer-back-lead">${esc(p.lead)}</b> `}${esc(p.text)}</p>`;
+  // § 14 item 3: a bar (each icon over its label) and steps (columns in order: the icon, the title, the detail)
+  const bar = (p) =>
+    `<div class="fbk-bar" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ul>${p.items.map((it) => `<li ${cite(it.line)}>${icon(it.icon, "fbk-icon")}<span>${esc(it.label)}</span></li>`).join("")}</ul></div>`;
+  const steps = (p) =>
+    `<div class="fbk-steps" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ol>${p.items.map((it) => `<li ${cite(it.line)}><span class="fbk-mark">${icon(it.icon, "fbk-icon")}</span><b class="fbk-title">${esc(it.title)}</b><span class="fbk-detail">${esc(it.detail)}</span></li>`).join("")}</ol></div>`;
+  const block = (p) => (p.kind === "bar" ? bar(p) : p.kind === "steps" ? steps(p) : paragraph(p, "flyer-back-para"));
   const [lede, ...rest] = words.paragraphs;
   return `
 <div class="flyer-back-photos">${positions.map((position) => parts.photo(position)).join("")}${positions.map((position, i) => parts.caption(position, `flyer-back-name flyer-back-name-${i + 1}`)).join("")}</div>
 <div class="flyer-back-body">
   <div class="flyer-back-words">
   <h1 class="headline" ${cite(words.heading.line)}>${esc(words.heading.text)}</h1>
-  ${[paragraph(lede, "tagline flyer-back-lede"), ...rest.map((p) => paragraph(p, "flyer-back-para"))].join("\n  ")}
+  ${[paragraph(lede, "tagline flyer-back-lede"), ...rest.map(block)].join("\n  ")}
   </div>
   <div class="flyer-back-foot">${parts.text("p", "address", c.address, "web address")}${parts.logo("flyer-back-logo")}</div>
 </div>`;

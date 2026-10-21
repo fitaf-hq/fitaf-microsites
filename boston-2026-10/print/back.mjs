@@ -5,9 +5,13 @@
 // heading, emphasis elsewhere, code, a quote, HTML): it is refused, naming the line. The first paragraph is the lede. The
 // one HTML comment allowed is the approval mark, `<!-- approved -->`, as the file's last line: until it is there the
 // back is a proof (§ 4's rule; print/pages.mjs backPlaceholders). Blank lines at the very end are an editor's, and ignored.
+// § 14 item 3: two graphic blocks, each a line holding only a lead-in followed, with no blank line, by its items: a bar
+// (`- {<icon>} <label>`, two to six) or steps (`1. {<icon>} <title>: <detail>`, numbered from 1, two to four). A list
+// anywhere else is still refused.
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
+import { ICON_NAMES } from "./icons.mjs";
 
 export const BACK_SOURCE = "data/flyer-back.md";
 export const BACK_PATH = join(ROOT, BACK_SOURCE);
@@ -15,6 +19,10 @@ export const APPROVED_MARK = "<!-- approved -->";
 
 const HEADING = /^# (\S.*)$/;
 const LEAD_IN = /^\*\*([^*\s][^*]*?)\*\* (\S.*)$/;
+const LEAD_ALONE = /^\*\*([^*\s][^*]*?)\*\*$/;
+const BAR_ITEM = /^- \{([^}]*)\} (\S.*)$/;
+const STEP_ITEM = /^(\d+)\. \{([^}]*)\} ([^:]+): (\S.*)$/;
+const ITEMS = { bar: [2, 6], steps: [2, 4] };
 /** The page's own copy's characters: letters and their marks, digits, the space, and its punctuation. */
 const COPY_CHAR = /[\p{L}\p{M}\p{N} .,:;!?'’‘“”"()&$%/+·×…–—-]/u;
 /** What each refused construct is called, by the first sign of it in a line, in this order. */
@@ -50,8 +58,34 @@ function openingOf(source, n, line) {
   return { lead: m[1], rest: m[2] };
 }
 
+/** § 14 item 3: `line` as an item of the block `open` (a bar or steps; its first item decides which), or false. */
+function blockItem(source, n, line, open) {
+  const bar = BAR_ITEM.exec(line);
+  const step = STEP_ITEM.exec(line);
+  if (!bar && !step) {
+    if (/^(-|\d+\.)\s/.test(line)) refuse(source, n, "an item must be `- {<icon>} <label>` or `<n>. {<icon>} <title>: <detail>` (§ 14 item 3)");
+    return false;
+  }
+  const kind = bar ? "bar" : "steps";
+  if (open.kind === "lead") open.kind = kind;
+  if (open.kind !== kind) refuse(source, n, "a block mixes a bar's items and steps (§ 14 item 3)");
+  const name = bar ? bar[1] : step[2];
+  if (!ICON_NAMES.includes(name)) refuse(source, n, `an icon must be one of ${ICON_NAMES.join(", ")}, not {${name}}`);
+  if (bar) {
+    checkWords(source, n, bar[2]);
+    open.items.push({ icon: name, label: bar[2], line: n });
+  } else {
+    if (Number(step[1]) !== open.items.length + 1) refuse(source, n, `steps are numbered from 1 in order: this one should be ${open.items.length + 1}`);
+    checkWords(source, n, step[3]);
+    checkWords(source, n, step[4]);
+    open.items.push({ icon: name, title: step[3].trim(), detail: step[4], line: n });
+  }
+  return true;
+}
+
 /**
- * The words file read: { heading: { text, line }, paragraphs: [{ lead, text, line }], approved, source }, each with the
+ * The words file read: { heading: { text, line }, paragraphs: [{ kind: "text", lead, text, line } or { kind: "bar" or
+ * "steps", lead, items, line }], approved, source }, each with the
  * file's line it starts on (1-based); paragraphs[0] is the lede. Refuses anything outside the subset, naming the line.
  */
 export function parseBack(text, source = BACK_SOURCE) {
@@ -68,26 +102,44 @@ export function parseBack(text, source = BACK_SOURCE) {
   if (lines.length > 1 && lines[1] !== "") refuse(source, 2, "a blank line must follow the heading");
   const paragraphs = [];
   let open = null;
+  const closeBlock = (n) => {
+    if (open?.kind === "lead") refuse(source, open.line, "a lead-in on a line of its own must be followed by a bar's or steps' items (§ 14 item 3)");
+    if (open && open.kind !== "text") {
+      const [min, max] = ITEMS[open.kind];
+      if (open.items.length < min || open.items.length > max) refuse(source, n, `${open.kind === "bar" ? "a bar" : "steps"} must have ${min} to ${max} items, not ${open.items.length}`);
+    }
+  };
   for (let i = 2; i < lines.length; i += 1) {
     const n = i + 1;
     const line = lines[i];
     if (line.trim() === "") {
       if (open === null) refuse(source, n, "a second blank line (paragraphs are separated by one)");
+      closeBlock(n);
       open = null;
       continue;
     }
+    if (open !== null && open.kind !== "text" && blockItem(source, n, line, open)) continue;
     for (const [sign, what] of REFUSED.slice(0, 5)) if (sign.test(line)) refuse(source, n, what);
-    if (open === null) {
+    if (open === null && LEAD_ALONE.test(line)) {
+      const lead = LEAD_ALONE.exec(line)[1];
+      checkWords(source, n, lead);
+      open = { kind: "lead", lead, items: [], line: n };
+      paragraphs.push(open);
+    } else if (open === null) {
       const { lead, rest } = openingOf(source, n, line);
       checkWords(source, n, rest);
-      open = { lead, text: rest, line: n };
+      open = { kind: "text", lead, text: rest, line: n };
       paragraphs.push(open);
+    } else if (open.kind !== "text") {
+      refuse(source, n, "a block's lines must all be its items (§ 14 item 3)");
     } else {
       checkWords(source, n, line);
       open.text = `${open.text} ${line}`;
     }
   }
+  closeBlock(lines.length + 1);
   if (paragraphs.length === 0) refuse(source, lines.length + 1, "no paragraph: the lede, at least, is needed");
+  if (paragraphs[0].kind !== "text") refuse(source, paragraphs[0].line, "the first paragraph is the lede, and must be words");
   return { heading: { text: heading[1], line: 1 }, paragraphs, approved: marked, source };
 }
 

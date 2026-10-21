@@ -88,6 +88,12 @@ meal's name on its photo (`{ "<photo id>": "<name>" }`, always outside this repo
 `--back-words FILE` builds with a back other than `data/flyer-back.md`; `--out-dir DIR` writes there instead of
 `dist-print/` (emptied first; keep it under `dist-print/`, which git ignores, e.g. `dist-print/take-h4/`).
 
+**Pass 3** (`SPEC-print-pieces.md` § 14): front B's `lede` may set words between asterisks in the colour its words
+file's `ledeAccent` names (`orange`, the default; `blue`; `green`), and the band carries a halftone. The back's words
+file may hold **a bar** (a lead-in on a line of its own, then `- {<icon>} <label>` items) and **steps** (the same, with
+`1. {<icon>} <title>: <detail>` items), the icons `print/icons.mjs`'s (drawn here; an unknown one refused). A meal's
+name may run to 60 characters and wraps in its chip; the names file comes from Fit AF's KMS, never typed.
+
 ```sh
 npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --deliverable FILE \
   --front-words data/flyer-front-h4.json --photo-names NAMES.json --out-dir dist-print/take-h4   # paths from the package

@@ -177,3 +177,39 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-flyer .flyer-back-name-1 { grid-column: 1; left: calc(var(--bleed) + var(--safe)); max-width: calc(var(--tile) - var(--safe) - 8px); }
 .print-flyer .flyer-back-name-2 { grid-column: 2; left: 8px; }
 .print-flyer .flyer-back-name-3 { grid-column: 3; left: 8px; max-width: calc(var(--tile) - var(--safe) - 8px); }
+/* § 14 (2026-10-20, late): the lede's accent colour, by the words file's ledeAccent; the band's halftone, the template's
+   muted grey in opaque dots that shrink away from its lower right corner, behind every word (nothing turned, nothing
+   translucent: pieces.mjs HALFTONE); the meal's name wraps in its chip;
+   the back's bar (each icon over its label, on the template's ice) and steps (columns in order: the icon on a blue
+   disc, the title in the heading font, the detail under it), each block's lead-in centred over it, at the back's own
+   type size or more */
+.print-flyer .fb-lede[data-lede-accent="orange"] .fb-lede-accent { color: var(--orange); }
+.print-flyer .fb-lede[data-lede-accent="blue"] .fb-lede-accent { color: var(--lean); }
+.print-flyer .fb-lede[data-lede-accent="green"] .fb-lede-accent { color: var(--signature); }
+.print-flyer .fb-band { overflow: hidden; }
+.print-flyer .fb-dots { position: absolute; right: 0; bottom: 0; width: 300px; height: 200px; color: var(--muted); }
+.print-flyer .fb-head, .print-flyer .fb-lede { position: relative; z-index: 1; }
+.print-flyer .fb-logo-top { z-index: 1; }
+.print-flyer .photo-name { text-wrap: balance; }
+.print-flyer .fbk-bar, .print-flyer .fbk-steps { width: 100%; }
+.print-flyer .fbk-bar > .flyer-back-lead, .print-flyer .fbk-steps > .flyer-back-lead { display: block; text-align: center; }
+.print-flyer .fbk-bar ul {
+  display: flex; justify-content: space-around; gap: 6px; margin: 4px 0 0; padding: 6px 6px 5px; list-style: none;
+  border-radius: 8px; background: var(--ice);
+}
+.print-flyer .fbk-bar li {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center;
+  font: 600 var(--back-text)/1.15 var(--head); color: var(--ink);
+}
+.print-flyer .fbk-bar .fbk-icon { width: 24px; height: 24px; color: var(--cta); }
+.print-flyer .fbk-steps ol {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; margin: 3px 0 0; padding: 0; list-style: none;
+}
+.print-flyer .fbk-steps li { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.print-flyer .fbk-mark {
+  display: grid; place-items: center; width: 36px; height: 36px; margin: 0 0 2px;
+  border-radius: 50%; background: var(--lean); color: var(--white);
+}
+.print-flyer .fbk-mark .fbk-icon { width: 21px; height: 21px; }
+.print-flyer .fbk-title { font: 700 var(--back-text)/1.15 var(--head); color: var(--navy); }
+.print-flyer .fbk-detail { font-size: var(--back-text); line-height: 1.2; }

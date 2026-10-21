@@ -318,3 +318,59 @@ before anything of it is committed, the mechanism's mutant red first.
    its QR code drawn (Q27's reader, `pdfCarriesProblems`), page 2 is the same page as front A's back, no part is less
    than the safe margin inside the trim, and the flyers are proofs; with `"approved": true` (and the back approved) they
    are final. **Mutant**: the front words ignored (front A printed): Q28 red.
+
+## 14. Amendment, 2026-10-20 (late evening): pass 3, the lede's accent, the back's two graphics, and longer meal names. CONTRACT, before any code
+
+**Why.** The Advisor on pass 2 (Fit AF's decision record `2026-10-17-…` § 7n): the front is *"like a 6 or maybe 7"* against
+the Owner's *"Volume 10"*, with *"more headroom to get to the Owner's aesthetic volume"*; a phrase of the lede in an
+accent colour, *"Maybe blue or orange from the palette? I think the green might be repetitive"*; a new lede of three short
+sentences in place of a string of three qualifiers (its words are Fit AF's, not this repository's), with a test of
+whether it makes any measurable difference. On the back: *"turn the prose into something more graphical"*: the allergen line *"a horizontal
+bar/grouping with each supported diet listed (possibly with some sort of standard graphic symbol?)"*, and the delivery
+paragraph replaced by *"the Owner's multi-step graphic (at least as a placeholder)"*. The meal names now come from the
+KMS (Fit AF `scripts/photographs/glam_photo_names.py`), and some are longer than § 13 item 8's 40 characters. The words
+stay outside this repository until approved (§ 13 item 3).
+
+1. **The lede's accent.** Front B's `lede` may carry words between asterisks (pairs, as the headline's), set in the
+   colour the words file's new key **`ledeAccent`** names: `orange` (`--orange`), `blue` (`--lean`) or `green`
+   (`--signature`); without the key, `orange`. Anything else is refused, naming the key. The lede stays one paragraph,
+   balanced (§ 13 item 9).
+2. **Volume, by the brief's feeling** (Fit AF `docs/design-analysis/2026-10-20-boston-flyer-fronts.md` § 1 item 5: scale,
+   contrast, saturation, motion): a **halftone** of white dots over the band's lower right, fading toward the headline
+   (a CSS gradient, nothing turned, behind every word), the Owner's own texture; and a take's headline `size` as its
+   words file gives it. Every part stays inside the safe margin.
+3. **The back's two graphics, in the words file.** § 12 item 4's subset gains two blocks, each a line holding only a
+   lead-in (`**<lead-in>**`) followed, with no blank line, by its items:
+   - **a bar**: items `- {<icon>} <label>`, two to six, set in one row, each its icon over its label;
+   - **steps**: items `1. {<icon>} <title>: <detail>`, numbered from 1 in order in the file, two to four, set as columns
+     in that order, each its icon, its title in the heading font, its detail under it; no number is printed (the
+     Advisor on pass 3: *"Drop the red 1-4 on the steps"*).
+   Each block's lead-in is centred over it (the same note: *"Center … and …"*).
+   `<icon>` is one of `print/icons.mjs`'s names (drawn here as plain line drawings, no outside set); an unknown icon, a
+   list item outside such a block, a block mixing the two kinds, a misnumbered step or a step without its `:` is refused,
+   naming the line. Everything else of § 12 item 4 stands (a list anywhere else is still refused). Type on the back stays
+   at least the floor (14 layout px), and the words and the graphics must still fit (§ 12 item 5).
+4. **Longer meal names.** A name may run to **60** characters (`PHOTO_NAME_MAX_CHARS`) and wraps inside its chip, which
+   keeps § 13 item 8's place and its width limit; nothing shrinks it.
+5. **Cases.** **Q29**: the lede's words between asterisks carry the colour of each `ledeAccent`, an unknown one refused;
+   a back fixture with a bar and steps builds, its lead-ins, labels, titles and details read from the PDF (Q27's
+   reader) in the file's order (an icon is not text, so the PDF cannot say it was drawn: every icon name resolves, and an
+   unknown one is refused); each refusal of item 3 names its line; a 60-character name prints and a 61-character one is
+   refused. **Q21**'s list case still refuses (a list with no lead-in line). **Mutant**: the bar's items dropped (Q29
+   red).
+6. ⛔ **Not here**: the words (the Advisor's, then the Owner's); which diets Fit AF supports (the bar prints what the words
+   file lists; the Owner confirms the list); the *"Built around your goals"* infographic (the Advisor's next revision);
+   the offer as a starburst or banner (offered on pass 1, not yet asked for again).
+7. **Built, 2026-10-20 (late), found at the build, not ruled.** The pass 3 back (its words outside this repository) did
+   not fit with the bar and the steps added: § 12 item 5 refused it at 99.9, then 30.2, then 17.2 layout px over. It
+   fits with **1.6 layout px** to spare after one paragraph and two clauses were cut from the words (the words file's
+   business, listed in Fit AF's record) and the graphics tightened (the bar's icons 24px, the steps' discs 36px); the
+   type stays at the floor or above. A diagnostic build without one paragraph was drawn to see where the lines fell.
+   The Advisor's notes on it (decision § 7o item 4): no numbers on the steps; the two lead-ins centred.
+8. ⛔ **Q7 had been red since `e51a7f9` (§ 13 item 11) and no run said so.** Pass 2 wrote the level-H QR code with
+   `qrcode` imported into `print/build-print.mjs`; Q7 holds that no print file makes a QR code (one source, `build.mjs`),
+   and pass 2's runs were Q2, Q27, Q28, the mutants and P4, not Q7. Found by this pass's whole print set (111 cases).
+   **Fixed**: `build.mjs` `writeQrCodesH` writes `qr/<event>-h.svg` (the site's outputs unchanged), the print build calls
+   it. The same run refused pass 3's first halftone (a translucent gradient: Q7 allows nothing translucent and no raw
+   colour); it is drawn instead as opaque dots of the template's `--muted` that shrink away from the corner
+   (`pieces.mjs` `HALFTONE`). After both: the print set 111 of 111, the § 14 mutant red on its case and its control green.

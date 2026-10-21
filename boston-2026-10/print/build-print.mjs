@@ -36,8 +36,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { PNG } from "pngjs";
-import { copyStatic, loadJson, QR_OPTIONS, ROOT, writeQrCodes } from "../build.mjs";
-import QRCode from "qrcode";
+import { copyStatic, loadJson, ROOT, writeQrCodes, writeQrCodesH } from "../build.mjs";
 import { loadInputs, MANIFEST_PATH, readManifest } from "../mockups/inputs.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
@@ -67,8 +66,8 @@ const PDF_TAIL_BYTES = 64;
  */
 const STALL_MS = 30_000;
 const STALL_ATTEMPTS = 3;
-/** § 13 item 8: a meal's name on its photo is one short line, or two at most on the back's squares. */
-const PHOTO_NAME_MAX_CHARS = 40;
+/** § 14 item 4: a meal's name on its photo, as the KMS names it; it wraps inside its chip, and nothing shrinks it. */
+const PHOTO_NAME_MAX_CHARS = 60;
 
 /** The file name before its extension: a page with a placeholder left is a proof. */
 export const stemOf = (page, placeholders) => page.base + (placeholders.length ? PROOF_SUFFIX : "");
@@ -456,7 +455,7 @@ export async function buildPrint({
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
     // § 13 item 11: front B's code, the same URL by the same library and options at error correction H, for its logo
-    for (const event of inputs.data.events) await writeFile(join(stage, "qr", `${event.id}-h.svg`), await QRCode.toString(event.url, { ...QR_OPTIONS, errorCorrectionLevel: "H", type: "svg" }));
+    await writeQrCodesH(inputs.data.events, stage);
     const planned = await planPages({ run, stage, inputs, pages, chosen, words, front, photoNames });
     const written = [];
     for (const p of planned) {

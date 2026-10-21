@@ -368,13 +368,60 @@ export async function frontWordsProblems(root, frontPath, words) {
     const out = join(dir, "dist-print");
     const built = await build(root, { outDir: out, fourFlyers: false, frontPath });
     // a headline's accent asterisks are markup, not words
-    const runs = [...words.headline.map((line) => line.replaceAll("*", "")), words.lede, ...(words.callout ?? [])];
+    const runs = [...words.headline.map((line) => line.replaceAll("*", "")), words.lede.replaceAll("*", ""), ...(words.callout ?? [])];
     const problems = [];
     for (const p of built.planned.filter((q) => q.piece.id === "flyer")) {
       const pdf = join(out, `${p.stem}.pdf`);
       const read = (args) => flat(execFileSync(PDFTOTEXT, [...args, "-f", "1", "-l", "1", pdf, "-"]).toString("utf8"));
       const [text, raw] = [read([]), read(["-raw"])];
       for (const run of runs) if (!text.includes(flat(run)) && !raw.includes(flat(run))) problems.push(`${p.stem}.pdf page 1 lacks front B's "${run}"`);
+    }
+    return problems;
+  });
+}
+
+/** Q29 (§ 14 item 3): a back with a bar and steps, in neutral words (never a candidate's: this repository is public). */
+export const BACK_GRAPHICS_FIXTURE = `# Heading words
+
+The lede words.
+
+**Bar lead**
+- {gluten-free} Label one
+- {diabetic} Label two
+- {vegan} Label three
+
+**Steps lead**
+1. {order} Title one: detail one
+2. {cook} Title two: detail two
+3. {eat} Title three: detail three
+`;
+
+/** Q29: the runs the fixture's graphics print, in the file's order. */
+export const BACK_GRAPHICS_RUNS = ["Bar lead", "Label one", "Label two", "Label three", "Steps lead", "Title one", "detail one", "Title two", "detail two", "Title three", "detail three"];
+
+/**
+ * Q29 (§ 14 item 3): built with the back at `backPath`, every flyer's page 2 carries each of `runs` as text in the PDF,
+ * in that order, in poppler's reading order or the page's drawing order. The problems.
+ */
+export async function backGraphicsProblems(root, backPath, runs = BACK_GRAPHICS_RUNS) {
+  return withTmp(async (dir) => {
+    const out = join(dir, "dist-print");
+    const built = await build(root, { outDir: out, fourFlyers: false, backPath });
+    const problems = [];
+    for (const p of built.planned.filter((q) => q.piece.id === "flyer")) {
+      const pdf = join(out, `${p.stem}.pdf`);
+      const read = (args) => flat(execFileSync(PDFTOTEXT, [...args, "-f", "2", "-l", "2", pdf, "-"]).toString("utf8"));
+      const inOrder = (text) => {
+        let at = 0;
+        for (const run of runs) {
+          const i = text.indexOf(flat(run), at);
+          if (i < 0) return run;
+          at = i + flat(run).length;
+        }
+        return null;
+      };
+      const [missText, missRaw] = [inOrder(read([])), inOrder(read(["-raw"]))];
+      if (missText !== null && missRaw !== null) problems.push(`${p.stem}.pdf page 2 lacks the back's "${missRaw}" in order`);
     }
     return problems;
   });

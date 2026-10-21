@@ -6,7 +6,9 @@
 //   accent    the index of the headline's line set in the brand's green (optional); and within any line, words
 //             between asterisks (*LIKE THIS*) are set in it too
 //   size      the headline's size in layout px for this take (optional; FRONT_B_HEAD_PX otherwise)
-//   lede      one line of text, the line that says what the headline leaves out
+//   lede      one line of text, the line that says what the headline leaves out; words between asterisks are set in
+//             the colour `ledeAccent` names (§ 14 item 1)
+//   ledeAccent orange, blue or green: the lede's accent colour (optional; orange otherwise)
 //   callout   one to three short lines for the one callout over the photo's corner (optional)
 //   approved  true once the Advisor approves the words (optional; anything but true is a proof)
 import { readFile } from "node:fs/promises";
@@ -14,7 +16,9 @@ import { basename } from "node:path";
 
 /** § 13: the committed home of front B's words, once they are approved. */
 export const FRONT_PATH = new URL("../data/flyer-front.json", import.meta.url).pathname;
-const KEYS = ["headline", "accent", "lede", "callout", "approved", "size"];
+const KEYS = ["headline", "accent", "lede", "ledeAccent", "callout", "approved", "size"];
+/** § 14 item 1: the lede's accent colours, by the template's own tokens. */
+export const LEDE_ACCENTS = ["orange", "blue", "green"];
 const SIZE_MIN_PX = 24;
 const SIZE_MAX_PX = 56;
 const MAX_LINES = 3;
@@ -36,6 +40,8 @@ export async function readFront(path) {
   if (raw.callout !== undefined && !lineList(raw.callout)) refuse(`"callout" must be one to ${MAX_LINES} lines of text`);
   if (raw.approved !== undefined && typeof raw.approved !== "boolean") refuse(`"approved" must be true or false`);
   if (raw.headline.some((line) => (line.match(/\*/g) ?? []).length % 2)) refuse(`"headline": an accent's asterisks come in pairs`);
+  if ((raw.lede.match(/\*/g) ?? []).length % 2) refuse(`"lede": an accent's asterisks come in pairs`);
+  if (raw.ledeAccent !== undefined && !LEDE_ACCENTS.includes(raw.ledeAccent)) refuse(`"ledeAccent" must be one of ${LEDE_ACCENTS.join(", ")}`);
   if (raw.size !== undefined && !(Number.isInteger(raw.size) && raw.size >= SIZE_MIN_PX && raw.size <= SIZE_MAX_PX)) {
     refuse(`"size" must be a whole number of layout px from ${SIZE_MIN_PX} to ${SIZE_MAX_PX}`);
   }
@@ -44,6 +50,7 @@ export async function readFront(path) {
     headline: raw.headline.map((s) => s.trim()),
     accent: raw.accent ?? null,
     lede: raw.lede.trim(),
+    ledeAccent: raw.ledeAccent ?? "orange",
     callout: raw.callout ? raw.callout.map((s) => s.trim()) : null,
     approved: raw.approved === true,
     size: raw.size ?? null,
