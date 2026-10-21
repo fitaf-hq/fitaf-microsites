@@ -28,6 +28,11 @@
 // 5f55cbc's record, all six contents were byte-identical; the six served pages and their visible page at all seven
 // fragments moved (the footer is on every one; SPEC-why-fit-af § 4 lists the lines). From here the reference is
 // f02807e's tree.
+// ⚠ RE-RECORDED at 9a19f48 (`node test/u-04-record.mjs --commit 9a19f48`): SPEC-every-menu-and-nutrition.md §§ 2–4
+// (2026-10-21) put the chooser's fieldset, its styles and the card's new script on every page, by design. Against
+// f02807e's record, all six contents and the visible page at all seven fragments were byte-identical (none of these
+// weeks has a second list or meals, § 2 item 4); only the six served pages moved, each by 8,768 bytes (its § 9 lists the
+// lines). From here the reference is 9a19f48's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -36,7 +41,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to f02807e's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "f02807e");
+test("U4: a normal week, the content and the page as served, byte-identical to 9a19f48's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "9a19f48");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

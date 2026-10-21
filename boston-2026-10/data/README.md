@@ -28,11 +28,17 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   escapes); `npm run build`'s page does not change with it (S20). **`chefs_choice`** is the result card's
   Chef's Choice (`SPEC-chefs-choice.md` § 3): `open`, `heading` (`{count}`, `{date}`), `meal_qty` (`{meal}`,
   `{n}`), `note`, `checkout`, `own`; ⚠ placeholders (`status`) for the copy review. `npm run build` reads it only
-  when a week in `picks/` is open, and refuses a missing phrase or placeholder.
+  when a week in `picks/` is open, and refuses a missing phrase or placeholder. **`menus`** (since
+  `SPEC-every-menu-and-nutrition.md` § 4) names each list a week may carry, in the chooser's order, `chefs-choice` first
+  (`status` is its note); a list without a name here is refused, and ⛔ none but `chefs-choice` is named until the
+  Advisor approves one. **`nutrition`**: `line` (`{cal}`, `{protein}`, `{carbs}`, `{fat}`), `ingredients` and
+  `contains` (`{text}`); placeholders, refused missing.
 - **`picks/<sunday>.json`**: this week's Chef's Choice, one file per delivery Sunday, written by Fit AF's emitter
   from the week's picks (never by hand): `{ "delivery", "menus": { "<count>": [{ "name", "display", "qty" }] } }`;
   `name` as the store's cards show it (the only key), `display` the KMS's name, which the page shows
-  (`SPEC-chefs-choice.md` § 7), public fields only. Only `.json` files here are read, each named by its Sunday; every
+  (`SPEC-chefs-choice.md` § 7), public fields only; a version-2 week (`SPEC-meal-selection.md` § 5) may carry, since
+  `SPEC-every-menu-and-nutrition.md` § 1, a list `menus` names besides `chefs-choice`, and `meals` (each meal's
+  nutrition per size, ingredients and Contains). Only `.json` files here are read, each named by its Sunday; every
   one is checked by the link tool's own rules and a broken one fails the build. The page carries each week whose
   window (the Friday nine days before to the Thursday three days before) has not ended on the build's `--on`.
   ⚠ Until its window ends, a committed file changes the production page (`SPEC-chefs-choice.md` § 6).
