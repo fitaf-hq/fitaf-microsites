@@ -19,8 +19,10 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
 
 /** index.html of the production build with no week, at 45549a9 (test/s20-production-golden.json there), re-recorded once
  *  at 5f55cbc for SPEC-meal-selection § 12 (the page MEANT to change: each pair's default first, *Weekdays only* the
- *  default, the snack block inside the card's list; § 12.1 lists the lines). It was 03fcc0c1… until then. */
-const TODAY_NO_PICKS_SHA256 = "bb17e256b5dc658eaf96df2dfabf0ad297ab548d280c13bc4e106f9618262217";
+ *  default, the snack block inside the card's list; § 12.1 lists the lines). It was 03fcc0c1… until then. Re-recorded
+ *  once more at f02807e for SPEC-why-fit-af § 2 (the footer's "Why Fit AF?" button, its dialog and its no-script link;
+ *  its § 4 lists the lines). It was bb17e256… until then. */
+const TODAY_NO_PICKS_SHA256 = "1c68a68b79d9fa1ecea8ef3840924043922b89dd5ae5f785ff47234583b20498";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
