@@ -8,7 +8,9 @@
 //   list: no group, and the card as the base's (76ee36e, this contract's commit) shows it, text and boxes.
 //   EM3, nutrition: each meal's line for the chosen size, changing with the size; the meal a button whose aria-expanded
 //   follows the panel it opens beneath it (the ingredients, and Contains when there is one) and a second press closes;
-//   each meal on its own; a meal with no entry has no line and no control, one without the chosen size no line.
+//   each meal on its own; a meal with no entry has no line and no control, one without the chosen size no line, and
+//   (§ 1 item 2, amended at 1fb2b19) one without ingredients no control: numbers alone are a line, ingredients alone a
+//   control without a line.
 // ⭐ Mutants, each on a copy of the built page with ONE line of its script changed (read from the page, never written
 // here: SM-4), its control the copy as built: the checkout link taken from Chef's Choice's cart whatever is chosen
 // fails EM2; the line read from the first size present rather than the chosen one fails EM3.
@@ -264,15 +266,16 @@ async function nutritionProblems(dir = menusOut) {
   const problems = [];
   const fail = (what) => problems.push(what);
   const meals = em.MENUS.meals;
-  /** What each meal of `list`'s cart for `key` must show at `size`: its line, whether it is a control, its panel's lines. */
+  /** What each meal of `list`'s cart for `key` must show at `size`: its line (its numbers for that size, if any), whether
+   *  it is a control (it has ingredients), its panel's lines. */
   const expected = (list, key, size) =>
     cartOf(list, key).items.map((m) => {
       const entry = meals[m.name];
       return {
         name: em.displayOf(m, WORDS),
-        line: entry?.nutrition[size] ? em.lineOf(entry.nutrition[size], WORDS) : null,
-        control: Boolean(entry),
-        more: entry ? em.moreOf(entry, WORDS) : null,
+        line: entry?.nutrition?.[size] ? em.lineOf(entry.nutrition[size], WORDS) : null,
+        control: Boolean(entry?.ingredients),
+        more: entry?.ingredients ? em.moreOf(entry, WORDS) : null,
       };
     });
   const compare = (s, list, key, size) => {
@@ -325,8 +328,10 @@ async function nutritionProblems(dir = menusOut) {
 }
 
 test("EM3: each meal's line for the chosen size, changing with it; the meal a disclosure of its ingredients and Contains (Chrome, 390)", { timeout: TIMEOUT_MS }, async () => {
-  const sizes = em.SIZES.map((size) => Object.values(em.MENUS.meals).filter((e) => e.nutrition[size]).length);
+  const sizes = em.SIZES.map((size) => Object.values(em.MENUS.meals).filter((e) => e.nutrition?.[size]).length);
   assert.ok(sizes.every((n) => n > 0), `fixture control: every size has numbers (${sizes})`);
+  const shown = [...em.cartsOf(CC)["or-7d"].items, ...em.cartsOf(TWO)["or-7d"].items].map((m) => em.MENUS.meals[m.name]).filter(Boolean);
+  assert.ok(shown.some((e) => !e.ingredients) && shown.some((e) => !e.nutrition), "fixture control: a meal of numbers alone and one of ingredients alone on the carts EM3 reads");
   assert.deepEqual(await nutritionProblems(), []);
 });
 

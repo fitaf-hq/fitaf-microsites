@@ -260,6 +260,27 @@
       },
       "ingredients": "Tofu, rice noodles, Thai basil, bok choy, garlic",
       "contains": "Soy, Wheat"
+    },
+    "Turkey Chili Verde": {
+      "ingredients": "Ground turkey, tomatillo, poblano pepper, white beans, cumin"
+    },
+    "Cumin Lamb Rice Bowl": {
+      "nutrition": {
+        "lean": {
+          "cal": 450,
+          "protein": 36,
+          "carbs": 44,
+          "fat": 14,
+          "fiber": 5
+        },
+        "signature": {
+          "cal": 565,
+          "protein": 44,
+          "carbs": 58,
+          "fat": 17,
+          "fiber": 6
+        }
+      }
     }
   }
 }

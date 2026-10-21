@@ -79,7 +79,7 @@ function marked() {
     for (const snacks of Object.values(list.snacks ?? {})) snacks.forEach(markName);
   }
   for (const entry of Object.values(week.meals)) {
-    entry.ingredients = mark();
+    if (entry.ingredients !== undefined) entry.ingredients = mark();
     if (entry.contains !== undefined) entry.contains = mark();
   }
   return { messages, week, shown };

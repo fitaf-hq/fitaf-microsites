@@ -9,6 +9,10 @@
 // field in a size, in an entry, or a size the plans do not have. (An unknown field in `meals` itself is a name no
 // cart carries: § 1 item 2's keys are the meals' names.) And, the build's choice where § 2 item 2 needs it, a week of
 // two lists whose words' heading has no `{menu}` to name the menu shown.
+// § 1 item 2 as amended at 1fb2b19: each of `nutrition` and `ingredients` is optional, an entry carries at least one of
+// them, `contains` appears only beside `ingredients`, and `"meals": {}` is accepted. So an entry of numbers alone and one
+// of ingredients alone are accepted (ACCEPTED), an empty entry and `contains` without `ingredients` refused, and a week
+// with `"meals": {}` makes the content of the same week without `meals` (§ 1 item 3: it carries none of the additions).
 import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -39,13 +43,25 @@ export const REFUSALS = [
   ["a size missing one of the five", changed((w) => delete entry(w).nutrition.signature.fiber), /meals "Smoked Paprika Chicken Bowl"\.nutrition\.signature: missing field "fiber"/],
   ["blank ingredients", changed((w) => (entry(w).ingredients = "  \n ")), /meals "Smoked Paprika Chicken Bowl": ingredients is blank/],
   ["blank contains", changed((w) => (entry(w).contains = " ")), /meals "Smoked Paprika Chicken Bowl": contains is blank/],
-  // § 1 item 2 names `contains` alone as optional: an entry carries `nutrition` (any of the sizes) and `ingredients`.
-  ["an entry without ingredients", changed((w) => delete entry(w).ingredients), /meals "Smoked Paprika Chicken Bowl": missing field "ingredients"/],
+  // § 1 item 2, amended (1fb2b19): an entry carries at least one of nutrition and ingredients; contains only beside
+  // ingredients. A nutrition holding no size gives no numbers, so beside nothing else it is an empty entry too.
+  ["an empty entry", changed((w) => (w.meals[SHOWN] = {})), /meals "Smoked Paprika Chicken Bowl": carries neither nutrition nor ingredients/],
+  ["an entry of a nutrition with no size, alone", changed((w) => (w.meals[SHOWN] = { nutrition: {} })), /meals "Smoked Paprika Chicken Bowl": carries neither nutrition nor ingredients/],
+  ["contains without ingredients", changed((w) => delete entry(w).ingredients), /meals "Smoked Paprika Chicken Bowl": contains without ingredients/],
   ["an unknown field in a size", changed((w) => (entry(w).nutrition.lean.sodium = 400)), /meals "Smoked Paprika Chicken Bowl"\.nutrition\.lean: unknown field "sodium"/],
   ["an unknown field in an entry (a price)", changed((w) => (entry(w).price_cents = 1250)), /meals "Smoked Paprika Chicken Bowl": unknown field "price_cents"/],
   ["a size the plans do not have (Family's)", changed((w) => (entry(w).nutrition.family = structuredClone(entry(w).nutrition.lean))), /meals "Smoked Paprika Chicken Bowl"\.nutrition: unknown field "family"/],
   ["meals not an object", changed((w) => (w.meals = [entry(w)])), /meals must be an object/],
   ["a week of two lists, the heading without {menu}", changed(() => {}), /2 lists, and data\/messages\.json's chefs_choice\.heading has no \{menu\} to name the menu shown/, "no-menu-heading"],
+];
+
+/** [label, the fixture changed, what its content must equal: null, or the fixture changed so]: each accepted (§ 1 item 2,
+ *  amended), its content made with the fixture's words. */
+export const ACCEPTED = [
+  ["an entry of numbers alone (no ingredients)", changed((w) => (w.meals[SHOWN] = { nutrition: entry(w).nutrition })), null],
+  ["an entry of ingredients alone (no numbers)", changed((w) => (w.meals[SHOWN] = { ingredients: entry(w).ingredients })), null],
+  ["an entry of ingredients and contains (no numbers)", changed((w) => delete entry(w).nutrition), null],
+  ['"meals": {}, its content that of the week without meals', changed((w) => (w.meals = {})), changed((w) => delete w.meals)],
 ];
 
 const WORDS = {
@@ -110,6 +126,25 @@ export async function acceptanceProblems(root = ROOT) {
   }
   const { cal, protein } = MENUS.meals[SHOWN].nutrition.signature;
   if (!text.includes(String(cal)) || !text.includes(String(protein))) problems.push(`the content does not carry ${SHOWN}'s numbers`);
+  return problems;
+}
+
+/** EM1's acceptances (§ 1 item 2, amended): each changed fixture makes its content, and where a second week is given, the
+ *  same content as that week's. `only` limits it to the cases whose label is listed. */
+export async function acceptedProblems(root = ROOT, only = null) {
+  const problems = [];
+  for (const [label, week, same] of ACCEPTED) {
+    if (only && !only.includes(label)) continue;
+    const got = await attempt(root, week, fixtureWords());
+    if (got.error) {
+      problems.push(`${label}: refused: ${got.error.message}`);
+      continue;
+    }
+    if (!same) continue;
+    const want = await attempt(root, same, fixtureWords());
+    if (want.error) problems.push(`${label}: the week to compare with was refused: ${want.error.message}`);
+    else if (JSON.stringify(got.data) !== JSON.stringify(want.data)) problems.push(`${label}: its content is not that of the week without meals`);
+  }
   return problems;
 }
 
