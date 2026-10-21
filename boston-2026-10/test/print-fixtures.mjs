@@ -16,13 +16,33 @@ import { CHROME_DEFAULT } from "../mockups/png.mjs";
 
 export const CHROME = process.env.CHROME || CHROME_DEFAULT;
 
+/** § 12 item 4: the one HTML comment the words file may hold, as its last line (the spec's own words, not back.mjs's). */
+export const MARK = "<!-- approved -->";
+
+/**
+ * The words file without its approval mark (the mark's line and the blank line before it), the same words otherwise: a
+ * copy of an approved back that is a proof (§ 12 item 4). A file with no mark is returned as it is, its blank lines at the
+ * end trimmed to one newline.
+ */
+export function unmarked(text) {
+  const lines = text.replace(/\n+$/, "").split("\n");
+  if (lines.at(-1) === MARK) {
+    lines.pop();
+    while (lines.length && lines.at(-1).trim() === "") lines.pop();
+  }
+  return `${lines.join("\n")}\n`;
+}
+
 /**
  * SPEC-print-pieces.md § 12 item 5: a back whose words do not fit is REFUSED, and the whole build with it. The words are
  * the Advisor's to edit (data/flyer-back.md), so the cases about anything else build with words that fit: the committed
- * file less its last paragraph (read from it at run time, so every other word is the committed one), written to a
- * temporary file once per test process. Whether the committed file itself fits is a case of its own (Q23), the only one.
+ * file without its approval mark (so a proof: a case that wants the back approved marks its own copy, Q26), less its last
+ * paragraph (read from it at run time, so every other word is the committed one), written to a temporary file once per
+ * test process. Whether the committed file itself fits is a case of its own (Q23), the only one. ⚠ Since 2026-10-21 the
+ * committed file ends with the mark (§ 15 item 8, approved for print): until the mark was taken off here first, "less its
+ * last paragraph" took the mark and nothing else. It takes the last block of words again (on 2026-10-21, the statement).
  */
-export const fittingBackText = (text) => `${text.replace(/\n+$/, "").split("\n\n").slice(0, -1).join("\n\n")}\n`;
+export const fittingBackText = (text) => `${unmarked(text).replace(/\n+$/, "").split("\n\n").slice(0, -1).join("\n\n")}\n`;
 const FIT_DIR = mkdtempSync(join(tmpdir(), "boston-print-back-"));
 export const FITTING_BACK_PATH = join(FIT_DIR, "flyer-back.md");
 writeFileSync(FITTING_BACK_PATH, fittingBackText(readFileSync(BACK_PATH, "utf8")));

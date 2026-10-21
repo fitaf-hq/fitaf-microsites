@@ -1,7 +1,8 @@
 // Q23 (SPEC-print-pieces.md § 12 items 3 and 5): the back must fit, not shrink. Too many words (a fixture file: the
-// committed words with their paragraphs said twice more) are refused, nothing printed, the refusal naming how many layout
-// px over it is; words that fit are not (print-fixtures.mjs: the committed file less its last paragraph), and no type
-// on their back is below 14 layout px (8.4 pt): qb-checks.mjs
+// committed words with their blocks said twice more, before the approval mark the committed file ends with since § 15
+// item 8, so the file stays of the subset and the refusal is the overflow's, not a second comment's) are refused, nothing
+// printed, the refusal naming how many layout px over it is; words that fit are not (print-fixtures.mjs: the committed
+// file without its mark, less its last paragraph), and no type on their back is below 14 layout px (8.4 pt): qb-checks.mjs
 // fitProblems, which the mutant "the overflow check off" runs on a mirror. The check itself (checks.mjs backFindings),
 // over made-up measurements, no Chrome: the overflow is the words' bottom against the bottom row's top less the gap
 // between them, to the layout px; type below the floor and text outside the safe margin are refused too. And the words

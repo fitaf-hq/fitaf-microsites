@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { BACK_SOURCE, parseBack } from "../print/back.mjs";
-import { approved, committedBack, MARK } from "./qb-checks.mjs";
+import { approved, committedBack, MARK, unmarked } from "./qb-checks.mjs";
 
 const text = await committedBack();
 // The refusal cases edit a FIXED text of the subset's shape, not the committed words, which the Advisor edits: a case
@@ -35,17 +35,48 @@ const withLine = (n, line, { insert = false } = {}) => [...lines.slice(0, n - 1)
 // assert.throws tests a RegExp against the error as a string, "Error: <message>", so the pattern opens with the name.
 const refused = (source, line, what) => new RegExp(`^Error: ${source.replace(/[.]/g, "\\.")}, line ${line}: ${what}`);
 
-test("Q21 control: the committed file is read: its heading, its lede and its paragraphs, each lead-in apart", () => {
+/**
+ * The committed file's blocks, read the plain way (not by back.mjs): each a run of lines after a blank one, the approval
+ * mark not one; its first line, its line number, and how many of its lines are §§ 14–15's items. A block is a lead-in on
+ * its own line followed by items (a bar, steps or plans), a lead-in alone (a statement), or a paragraph of words, which
+ * may open with a lead-in; the first block is the lede only when it is words (§ 15 item 8).
+ */
+const LEAD_ALONE = /^\*\*([^*]+)\*\*$/;
+const LEAD_OPENING = /^\*\*([^*]+)\*\* /;
+const PLAN_ITEM = /^- \{(lean|signature|performance|family)\} /;
+const blocks = [];
+committedLines.forEach((line, i) => {
+  if (i === 0 || !line.trim() || line === MARK) return;
+  if (!committedLines[i - 1].trim()) blocks.push({ first: line, line: i + 1, items: [] });
+  else if (/^(-|\d+\.) \{/.test(line)) blocks.at(-1).items.push(line);
+});
+const kindOf = (b) => {
+  if (!LEAD_ALONE.test(b.first)) return "text";
+  if (b.items.length === 0) return "statement";
+  if (/^\d+\./.test(b.items[0])) return "steps";
+  return PLAN_ITEM.test(b.items[0]) ? "plans" : "bar";
+};
+const leadOf = (b) => (LEAD_ALONE.exec(b.first) ?? LEAD_OPENING.exec(b.first))?.[1] ?? null;
+
+// § 15 item 8 (2026-10-21) amends this control on purpose: the committed back is now graphics and a statement with no
+// lede, and approved, so the control reads its blocks in order (each kind, line, lead-in and count of items) and its mark
+// from the file, where it had pinned a lede followed by paragraphs, and the file unapproved
+test("Q21 control: the committed file is read: its heading, its blocks in order (a lede only when the first is words), each lead-in apart, its mark", () => {
   const back = parseBack(text);
   assert.equal(back.heading.text, committedLines[0].replace(/^# /, ""));
   assert.equal(back.heading.line, 1);
-  assert.equal(back.paragraphs.length, committedLines.filter((l, i) => i > 0 && l.trim()).length, "one paragraph a block");
-  assert.equal(back.paragraphs[0].lead, null, "the lede has no lead-in");
-  assert.ok(back.paragraphs.slice(1).every((p) => typeof p.lead === "string" && p.lead && !p.lead.includes("*") && !p.text.includes("*")), "each later paragraph's lead-in, its asterisks gone");
-  assert.deepEqual(back.paragraphs.map((p) => p.line), committedLines.flatMap((l, i) => (i > 0 && l.trim() ? [i + 1] : [])), "each paragraph's line");
-  assert.equal(back.approved, false);
+  assert.ok(blocks.length >= 2, `the file has its blocks (control): ${blocks.length}`);
+  assert.equal(back.paragraphs.length, blocks.length, "one paragraph a block");
+  assert.deepEqual(back.paragraphs.map((p) => p.line), blocks.map((b) => b.line), "each block's line");
+  assert.deepEqual(back.paragraphs.map((p) => p.kind), blocks.map(kindOf), "each block's kind, in order");
+  assert.deepEqual(back.paragraphs.map((p) => p.items?.length ?? 0), blocks.map((b) => b.items.length), "each block's items");
+  assert.deepEqual(back.paragraphs.map((p) => p.lead), blocks.map(leadOf), "each lead-in, its asterisks gone, or none");
+  assert.ok(back.paragraphs.every((p) => !(p.lead ?? "").includes("*") && !(p.text ?? "").includes("*")), "no asterisk left in the words");
+  assert.equal(back.paragraphs[0].kind === "text", kindOf(blocks[0]) === "text", "a lede only when the first block is words");
+  assert.equal(back.approved, committedLines.at(-1) === MARK, "approved when, and only when, its last line is the mark");
   assert.equal(parseBack(FIXTURE).paragraphs.length, 6, "the fixture the refusal cases edit is read whole (so each refusal is its own edit's)");
-  assert.equal(parseBack(approved(text)).approved, true, "the approval mark as the last line");
+  assert.equal(parseBack(unmarked(text)).approved, false, "the file without the approval mark");
+  assert.equal(parseBack(approved(unmarked(text))).approved, true, "the approval mark as the last line");
   assert.equal(parseBack(FIXTURE.replace("We've", "We’ve")).paragraphs[1].text.includes("We’ve"), true, "’ is allowed");
 });
 

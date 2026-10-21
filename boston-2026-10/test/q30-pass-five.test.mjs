@@ -1,19 +1,22 @@
 // Q30 (SPEC-print-pieces.md § 15): pass 5. Front B's `logo` key (each treatment builds; the reversed logo is the band's
 // image, on no plate; an unknown one refused) and its `banner` (read from the PDF in the foot above the offer; a
 // 33-character one refused); a back with plans and a statement builds, its lead-ins, names and lines in the PDF in the
-// file's order; each malformed plans item refused naming its line. Every word is a fixture's, never a candidate's: the
-// candidates are not approved and this repository is public.
+// file's order; each malformed plans item refused naming its line; and (§ 15 item 8) the back's meal names in the flow
+// under its photos: names long enough to overflow the back are refused, naming the overflow, never shrunk. Every word is
+// a fixture's, never a candidate's: the candidates are not approved and this repository is public.
 import test from "node:test";
 import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
+import { BACK_POSITIONS } from "../print/assign.mjs";
 import { parseBack } from "../print/back.mjs";
 import { BANNER_MAX_CHARS, LOGO_TREATMENTS, readFront } from "../print/front.mjs";
-import { lockedBuild, NO_CHROME } from "./print-fixtures.mjs";
-import { backFile, backGraphicsProblems, FRONT_FIXTURE, frontFile, NO_POPPLER, PLANS_FIXTURE, PLANS_RUNS } from "./qb-checks.mjs";
+import { BACK_MIN_TEXT_PX } from "../print/sizes.mjs";
+import { lockedBuild, NO_CHROME, photoSet } from "./print-fixtures.mjs";
+import { backFile, backGraphicsProblems, FRONT_FIXTURE, frontFile, mealNames, NO_POPPLER, overflowOf, PLANS_FIXTURE, PLANS_RUNS, TIGHT_BACK_FIXTURE } from "./qb-checks.mjs";
 
 /** § 15 item 1: the reversed logos' files and their pixel size (print/assets/). */
 const REVERSED_FILES = { reversed: "fitaf-logo-reversed.png", "reversed-white": "fitaf-logo-reversed-white.png" };
@@ -136,5 +139,43 @@ test("Q30: built, the back's plans and statement are in the PDF in the file's or
     assert.deepEqual(await backGraphicsProblems(ROOT, path, PLANS_RUNS), []);
   } finally {
     await rm(dir, { recursive: true, force: true });
+  }
+});
+
+// § 15 item 8 (2026-10-21) puts the back's meal names in one band under its photos, in the flow, so a long name pushes the
+// words down; § 12 item 5 still holds: the build refuses an overflow, naming it, and never shrinks to fit. The same back
+// (qb-checks.mjs TIGHT_BACK_FIXTURE) fits with short names (the control: each name on the back at its type's size) and is
+// refused with names at § 14 item 4's limit, the refusal naming how many layout px over, nothing printed.
+test("Q30 (§ 15 item 8, § 12 item 5): the back's names push its words down; names long enough to overflow it are refused, naming the overflow, never shrunk", { skip: NO_CHROME }, async () => {
+  const set = await photoSet();
+  const dir = await mkdtemp(join(tmpdir(), "boston-q30-names-"));
+  const { dir: backDir, path: backPath } = await backFile(TIGHT_BACK_FIXTURE);
+  try {
+    const namesPath = join(dir, "names.json");
+    const options = { fourFlyers: false, backPath, photoNamesPath: namesPath, ...set.photos };
+    const short = mealNames(set.ids);
+    await writeFile(namesPath, JSON.stringify(short));
+    const built = await lockedBuild({ outDir: join(dir, "short"), ...options });
+    assert.ok(built.back.spacePx >= 0, `with short names the back fits: ${built.back.spacePx} layout px to spare (control)`);
+    const runs = built.planned.find((p) => p.piece.id === "flyer").back.measured.faces[0].texts;
+    const placed = built.chosen.assignment.positions;
+    for (const position of BACK_POSITIONS) {
+      const run = runs.find((t) => t.text === short[placed[position]]);
+      assert.ok(run && run.size >= BACK_MIN_TEXT_PX, `${position}'s name is on the back at its type's size (control)`);
+    }
+    // § 14 item 4: a name may run to 60 characters
+    await writeFile(namesPath, JSON.stringify(mealNames(set.ids, 60)));
+    const out = join(dir, "long");
+    await assert.rejects(lockedBuild({ outDir: out, ...options }), (err) => {
+      assert.match(err.message, /^refused, nothing printed:/);
+      assert.match(err.message, /^flyer: the back's words do not fit between the photos and the bottom row: /m);
+      assert.ok(overflowOf(err.message) > 0, `the refusal names the overflow: ${err.message}`);
+      return true;
+    });
+    assert.deepEqual(await readdir(out).catch(() => []), [], "nothing printed");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+    await rm(backDir, { recursive: true, force: true });
+    await rm(set.dir, { recursive: true, force: true });
   }
 });

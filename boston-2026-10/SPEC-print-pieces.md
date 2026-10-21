@@ -439,3 +439,23 @@ were checked against Fit AF's record of the offer's numbers before this amendmen
    from a square; § 12 item 6 made them square), which, with the band, the margins and the ribbon, is what lets the back
    fit: measured in a scratch copy, the back was 58.6 layout px over with square photos and 2.8 over at 3:2, closed by
    the tightening above. Q10's list of square positions amended on purpose. Q30 holds each.
+9. **The cases, amended for the approved back (2026-10-21), on purpose.** With `data/flyer-back.md` approved (its last
+   line the mark), all graphics and a statement and no lede, and the back's photos 3:2, twelve cases that had held the
+   back as it was went red; each now holds the contract as it stands, and none was deleted. **Q20** reads every
+   expectation from the committed file: its plain reading of the file (`qb-checks.mjs` `fileWords`) reads an item as it
+   prints (no marker, no `{<name>}`, no `: ` between a step's or a plan's two parts), and the word its mirror changes is
+   the file's first plain word after the heading that is in it once (it had been the lede's first). **Q21**'s control
+   reads the committed file's blocks in order, each kind, line, lead-in and count of items, a lede only when the first is
+   words, and the mark, from the file. **Q22** holds three 3:2 windows across the top, into the bleed, each the photo as
+   composed though the deliverable lists squares for two of them. **Q23** and the § 12 mutants' control build too many
+   words by saying the committed blocks twice more **before** the mark (words after it are refused as a second comment,
+   not as an overflow). **Q26**: the committed back is approved and final; its copy without the mark is unapproved and a
+   proof; that copy with the mark put back is approved, so the § 12 mutant (the mark ignored) is red whichever way the
+   committed file stands. The cases' fitting back (`print-fixtures.mjs`) is the committed file **without its mark** (a
+   proof), less its last paragraph, as before. **Q29**'s 60-character names build with a back that leaves room, and read
+   the back's three from the PDF too, each wrapped, its type not below 14 px. **New, Q30**: one back fixture fits with
+   short names and is refused with 60-character ones, naming the overflow (§ 12 item 5: nothing shrinks). The print set:
+   128 of 128 on this tree, the mutants red on their cases and their controls green. ⚠ *"Q30 holds each"* above is wider
+   than the cases: the names band's place under the photos, the body's margins, the statement drawn as a ribbon and the
+   bar's ground have no case that measures them (the names' words are read from the PDF, Q28 and Q29, and a statement's,
+   Q30).

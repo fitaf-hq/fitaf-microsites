@@ -10,12 +10,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
-import { CHROME, FITTING_BACK_PATH, fittingBackText, oneAtATime, pdfPages, randomId, rungsDoc } from "./print-fixtures.mjs";
+import { CHROME, FITTING_BACK_PATH, fittingBackText, MARK, oneAtATime, pdfPages, randomId, rungsDoc, unmarked } from "./print-fixtures.mjs";
 
 /** The date the builds pick the offer on: fixed, so a run does not depend on today. */
 export const ON = "2026-10-20";
-/** § 12 item 4: the one HTML comment the words file may hold, as its last line. */
-export const MARK = "<!-- approved -->";
+/** § 12 item 4: the one HTML comment the words file may hold, as its last line; and the file without it (print-fixtures.mjs). */
+export { MARK, unmarked };
 /** § 12 item 1: every flyer PDF has two pages, the front then the back, each the flyer's page (324 × 414 pt, Q1's). */
 export const FLYER_PAGES = 2;
 export const FLYER_BOX = [0, 0, 324, 414];
@@ -30,24 +30,52 @@ const load = (root, rel) => import(pathToFileURL(join(root, rel)).href);
 export const committedBackPath = (root = ROOT) => join(root, "data", "flyer-back.md");
 export const committedBack = (root = ROOT) => readFile(committedBackPath(root), "utf8");
 
-/** The words file with the approval mark as its last line (after one blank line). */
-export const approved = (text) => `${text.replace(/\n+$/, "")}\n\n${MARK}\n`;
+/** The words file with the approval mark as its last line (after one blank line); a file already marked keeps one mark. */
+export const approved = (text) => `${unmarked(text).replace(/\n+$/, "")}\n\n${MARK}\n`;
 
-/** Too many words (Q23): the committed file with its paragraphs, all but the heading and the lede, said twice more. */
+/**
+ * Too many words (Q23): the committed file with its blocks, all but the heading, said twice more, before its approval
+ * mark when it has one (§ 15 item 8: the committed back is approved, so its last line is the mark, and words after it
+ * would be refused as a second comment, not as an overflow). An approved back that does not fit is refused as any other.
+ */
 export function tooLong(text) {
-  const blocks = text.replace(/\n+$/, "").split("\n\n");
-  const body = blocks.slice(2);
-  return `${[...blocks, ...body, ...body].join("\n\n")}\n`;
+  const blocks = unmarked(text).replace(/\n+$/, "").split("\n\n");
+  const body = blocks.slice(1);
+  const long = `${[...blocks, ...body, ...body].join("\n\n")}\n`;
+  return isMarked(text) ? approved(long) : long;
+}
+
+/** Whether the words file's last line (blank lines at the end aside) is the approval mark. */
+export const isMarked = (text) => text.replace(/\n+$/, "").split("\n").at(-1) === MARK;
+
+/** § 15 item 3: the plans a plans item may name (the spec's list, not back.mjs's). */
+const PLAN_NAMES = ["lean", "signature", "performance", "family"];
+/** §§ 14–15: an item's marker and its `{<name>}`: `- {<icon or plan>} ` or `<n>. {<icon>} `. */
+const ITEM_HEAD = /^(-|\d+\.) \{([^}]*)\} /;
+
+/**
+ * An item line as a reader sees it (§ 14 item 3, § 15 item 3): its marker and its `{<name>}` are not printed (the icon is
+ * drawn, a plan is its colour), nor the `: ` that parts a step's title from its detail and a plan's name from its line.
+ * A bar's label is printed whole. Any other line is returned as it is.
+ */
+function itemWords(line) {
+  const m = ITEM_HEAD.exec(line);
+  if (!m) return line;
+  const rest = line.slice(m[0].length);
+  const parted = m[1] !== "-" || PLAN_NAMES.includes(m[2]);
+  return parted ? rest.replace(": ", " ") : rest;
 }
 
 /**
  * The words a reader sees, from the file itself (an oracle independent of the build's parser, § 12 item 4's subset
- * read the plain way): the heading's mark, the lead-ins' asterisks and the approval mark gone; whitespace normalised.
+ * read the plain way): the heading's mark, the lead-ins' asterisks and the approval mark gone; §§ 14–15's items read as
+ * itemWords says; whitespace normalised.
  */
 export function fileWords(text) {
   return text
     .split("\n")
     .filter((line) => line.trim() !== MARK)
+    .map(itemWords)
     .join("\n")
     .replace(/^# /, "")
     .replaceAll("**", "")
@@ -160,9 +188,9 @@ export const overflowOf = (message) => {
 
 /**
  * Q23 (§ 12 items 3 and 5): too many words are refused, not shrunk: a fixture file of the committed words with its
- * paragraphs said twice more is refused, nothing printed, the refusal naming how many layout px over it is (a number
- * above zero); words that fit (print-fixtures.mjs FITTING_BACK_PATH) are not (the control), and no type on that back is
- * below the floor. Whether the committed file fits is committedFitProblems'.
+ * blocks said twice more (tooLong: before its approval mark) is refused, nothing printed, the refusal naming how many
+ * layout px over it is (a number above zero); words that fit (print-fixtures.mjs FITTING_BACK_PATH) are not (the
+ * control), and no type on that back is below the floor. Whether the committed file fits is committedFitProblems'.
  */
 export async function fitProblems(root) {
   const problems = [];
@@ -202,10 +230,12 @@ export async function fitProblems(root) {
 }
 
 /**
- * Q26's rule (§ 12 item 4, § 4), no Chrome: without the approval mark the back is a proof, and with it, not. The committed
- * file is unapproved; a mirror with `<!-- approved -->` as its last line is approved and says the same words; with every
- * photo present and a named offer, the flyer's page is `flyer-PROOF` with the committed words, its one placeholder the
- * back's words, and `flyer` with the approved mirror.
+ * Q26's rule (§ 12 item 4, § 4), no Chrome: without the approval mark the back is a proof, and with it, not. Since
+ * 2026-10-21 (§ 15 item 8) the committed file is approved: its last line is the mark, and it reads as approved. Its copy
+ * without the mark (print-fixtures.mjs unmarked) is unapproved, and that copy with `<!-- approved -->` put back as its last
+ * line (approved) is approved, all three saying the same words: so the mark is what decides, whichever way the committed
+ * file stands. With every photo present and a named offer, the flyer's page is `flyer-PROOF` with the copy without the
+ * mark, its one placeholder the back's words, and `flyer` with the marked copy and with the committed file.
  */
 export async function approvalProblems(root) {
   const { parseBack } = await load(root, "print/back.mjs");
@@ -215,13 +245,15 @@ export async function approvalProblems(root) {
   const { PRINT_PIECES } = await load(root, "print/sizes.mjs");
   const problems = [];
   const text = await committedBack(root);
+  if (!isMarked(text)) problems.push("the committed file's last line is not the approval mark (§ 15 item 8: approved for print)");
   const committed = parseBack(text);
-  const marked = parseBack(approved(text));
-  if (committed.approved !== false) problems.push("the committed words read as approved");
+  const bare = parseBack(unmarked(text));
+  const marked = parseBack(approved(unmarked(text)));
+  if (committed.approved !== true) problems.push("the committed words read as unapproved");
+  if (bare.approved !== false) problems.push("the words without the approval mark read as approved");
   if (marked.approved !== true) problems.push("the words with the approval mark read as unapproved");
-  if (JSON.stringify(marked.paragraphs) !== JSON.stringify(committed.paragraphs) || marked.heading.text !== committed.heading.text) {
-    problems.push("the approval mark changed the words");
-  }
+  const words = (b) => JSON.stringify([b.heading.text, b.paragraphs]);
+  if (words(marked) !== words(bare) || words(committed) !== words(bare)) problems.push("the approval mark changed the words");
   return withTmp(async (dir) => {
     const offers = JSON.parse(await readFile(OFFERS_PATH, "utf8"));
     const named = join(dir, "offers.json");
@@ -235,12 +267,15 @@ export async function approvalProblems(root) {
     const page = pagesToPrint().find((p) => p.base === "flyer");
     const front = placeholdersOf(flyer, inputs);
     if (front.length) problems.push(`the front still has placeholders (the fixture): ${front.join(", ")}`);
-    const unapproved = backPlaceholders(inputs, committed);
+    const unapproved = backPlaceholders(inputs, bare);
     if (unapproved.length !== 1 || !/data\/flyer-back\.md/.test(unapproved[0])) problems.push(`the unapproved back's placeholders: ${JSON.stringify(unapproved)}`);
     if (stemOf(page, [...front, ...unapproved]) !== "flyer-PROOF") problems.push("the unapproved back did not make the flyer a proof");
-    const ok = backPlaceholders(inputs, marked);
-    if (ok.length) problems.push(`the approved back's placeholders: ${JSON.stringify(ok)}`);
-    if (stemOf(page, [...front, ...ok]) !== "flyer") problems.push("the approved back still made the flyer a proof");
+    const approvedBacks = [["the marked copy", marked], ["the committed file", committed]];
+    for (const [what, back] of approvedBacks) {
+      const ok = backPlaceholders(inputs, back);
+      if (ok.length) problems.push(`the approved back's placeholders (${what}): ${JSON.stringify(ok)}`);
+    }
+    if (approvedBacks.some(([, back]) => stemOf(page, [...front, ...backPlaceholders(inputs, back)]) !== "flyer")) problems.push("the approved back still made the flyer a proof");
     return problems;
   });
 }
@@ -412,6 +447,42 @@ The lede words.
 
 /** Q30: the runs the plans fixture prints, in the file's order. */
 export const PLANS_RUNS = ["Plans lead", "Plan one", "line one", "Plan two", "line two", "Plan three", "line three", "Plan four", "line four", "Statement words"];
+
+/**
+ * Q29 (§ 14 item 4, § 15 item 8): a back that leaves room for the meal names' band under its photos, whatever their
+ * length up to the limit: since 2026-10-21 the back's names are in the flow, so long names push its words down, and a
+ * case about the names on front B builds with this back, not the committed words (with 60-character names those were
+ * 14.3 layout px over on 2026-10-21, and the build refused them, as § 12 item 5 says it must).
+ */
+export const ROOMY_BACK_FIXTURE = `# Heading words
+
+The lede words.
+`;
+
+/**
+ * Q30 (§ 15 item 8 with § 12 item 5): a back that fits with short meal names and not with 60-character ones, because
+ * the names' band under the photos is in the flow and grows as they wrap: a heading, a lede, ten one-line paragraphs and
+ * one of two lines, neutral words. Measured 2026-10-21 (a scratch build of this tree): no names 49.5 layout px to spare;
+ * short names (one line each) 23.0 to spare; 60-character names (four lines each) refused, 29.5 over. Both margins are
+ * wide of zero, so the case does not turn on a fraction of a pixel; a change to the back's layout that moves either by
+ * more than that is the case's to report.
+ */
+export const TIGHT_BACK_FIXTURE = `${[
+  "# Heading words",
+  "",
+  "The lede words.",
+  ...["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"].flatMap((n) => ["", `Fixture words, paragraph ${n}.`]),
+  "",
+  "A longer paragraph of fixture words that runs over two lines at the type size of the back, set as any other is.",
+].join("\n")}\n`;
+
+/**
+ * Meal names for a photo set's every photo (`ids`: { role: id }), so whichever the rules place carries one (§ 13 item 8):
+ * of `length` characters, words as a meal's name is (a run with no space cannot wrap, and no meal's name is one), or,
+ * without a length, a short bracketed one.
+ */
+export const mealNames = (ids, length) =>
+  Object.fromEntries(Object.entries(ids).map(([role, id]) => [id, length === undefined ? `[Meal ${role}]` : `Meal ${role}${" with words".repeat(8)}`.slice(0, length).replace(/ $/, "w")]));
 
 /** Q29: the runs the fixture's graphics print, in the file's order. */
 export const BACK_GRAPHICS_RUNS = ["Bar lead", "Label one", "Label two", "Label three", "Steps lead", "Title one", "detail one", "Title two", "detail two", "Title three", "detail three"];

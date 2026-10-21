@@ -10,11 +10,13 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ROOT } from "../build.mjs";
+import { BACK_POSITIONS } from "../print/assign.mjs";
 import { parseBack } from "../print/back.mjs";
 import { readFront } from "../print/front.mjs";
 import { ICON_NAMES, icon } from "../print/icons.mjs";
+import { BACK_MIN_TEXT_PX } from "../print/sizes.mjs";
 import { lockedBuild, NO_CHROME, photoSet } from "./print-fixtures.mjs";
-import { BACK_GRAPHICS_FIXTURE, backFile, backGraphicsProblems, FRONT_FIXTURE, frontFile, NO_POPPLER } from "./qb-checks.mjs";
+import { BACK_GRAPHICS_FIXTURE, backFile, backGraphicsProblems, FRONT_FIXTURE, frontFile, mealNames, NO_POPPLER, ROOMY_BACK_FIXTURE } from "./qb-checks.mjs";
 
 /** The template's tokens each `ledeAccent` names (src/template.html), as RGB. */
 const ACCENT_RGB = { orange: [0xff, 0x93, 0x1e], blue: [0x48, 0xae, 0xee], green: [0x8c, 0xc6, 0x3f] };
@@ -123,28 +125,42 @@ test("Q29: built, the back's graphics are in the PDF in the file's order", { ski
   }
 });
 
-test("Q29 (§ 14 item 4): a 60-character meal name prints on front B; a 61-character one is refused", { skip: NO_CHROME || NO_POPPLER }, async () => {
+// § 15 item 8 (2026-10-21) amends this case on purpose: the back's names are now in the flow, under its photos, so with
+// the committed words and a 60-character name on every photo the back overflowed (14.3 layout px) and the build refused,
+// as § 12 item 5 says it must. The case builds with a back that leaves room (qb-checks.mjs ROOMY_BACK_FIXTURE), so its
+// subject stays the names; it reads the back's three from page 2 too, each wrapped at its type's size (never shrunk).
+// Whether long names that do not leave the words room are refused is Q30's.
+test("Q29 (§ 14 item 4): a 60-character meal name prints on front B and on the back, wrapped, not shrunk; a 61-character one is refused", { skip: NO_CHROME || NO_POPPLER }, async () => {
   const set = await photoSet();
   const dir = await mkdtemp(join(tmpdir(), "boston-q29-names-"));
   const { dir: wordsDir, path } = await frontFile(FRONT_FIXTURE);
+  const { dir: backDir, path: backPath } = await backFile(ROOMY_BACK_FIXTURE);
   try {
-    // a name of words, as a meal's is (a run with no space cannot wrap, and no meal's name is one)
-    const named = (length) => Object.fromEntries(Object.entries(set.ids).map(([role, id]) => [id, `Meal ${role}${" with words".repeat(8)}`.slice(0, length).replace(/ $/, "w")]));
     const namesPath = join(dir, "names.json");
-    const sixty = named(60);
+    const sixty = mealNames(set.ids, 60);
+    assert.ok(Object.values(sixty).every((name) => name.length === 60), "every name is 60 characters (control)");
     await writeFile(namesPath, JSON.stringify(sixty));
     const out = join(dir, "out");
-    const built = await lockedBuild({ outDir: out, fourFlyers: false, frontPath: path, photoNamesPath: namesPath, ...set.photos });
+    const built = await lockedBuild({ outDir: out, fourFlyers: false, frontPath: path, backPath, photoNamesPath: namesPath, ...set.photos });
     const flyer = built.planned.find((p) => p.piece.id === "flyer");
-    const page1 = execFileSync("pdftotext", ["-raw", "-f", "1", "-l", "1", join(out, `${flyer.stem}.pdf`), "-"]).toString("utf8");
+    const page = (n) => execFileSync("pdftotext", ["-raw", "-f", String(n), "-l", String(n), join(out, `${flyer.stem}.pdf`), "-"]).toString("utf8");
     const flat = (s) => s.replace(/\s+/g, "");
-    assert.ok(flat(page1).includes(flat(sixty[built.chosen.assignment.positions.flyer])), "the 60-character name is on front B");
+    const placed = built.chosen.assignment.positions;
+    assert.ok(flat(page(1)).includes(flat(sixty[placed.flyer])), "the 60-character name is on front B");
+    const runs = flyer.back.measured.faces[0].texts;
+    for (const position of BACK_POSITIONS) {
+      const name = sixty[placed[position]];
+      assert.ok(flat(page(2)).includes(flat(name)), `the 60-character name of ${position} is on the back`);
+      const run = runs.find((t) => t.text === name);
+      assert.ok(run && run.size >= BACK_MIN_TEXT_PX && run.lines > 1, `${position}'s name wraps at its type's size: ${JSON.stringify(run && { size: run.size, lines: run.lines })}`);
+    }
     assert.deepEqual(built.lines.filter((l) => l.startsWith("safe margin")), []);
-    await writeFile(namesPath, JSON.stringify(named(61)));
-    await assert.rejects(lockedBuild({ outDir: join(dir, "out2"), fourFlyers: false, frontPath: path, photoNamesPath: namesPath, ...set.photos }), /at most 60 characters/);
+    await writeFile(namesPath, JSON.stringify(mealNames(set.ids, 61)));
+    await assert.rejects(lockedBuild({ outDir: join(dir, "out2"), fourFlyers: false, frontPath: path, backPath, photoNamesPath: namesPath, ...set.photos }), /at most 60 characters/);
   } finally {
     await rm(dir, { recursive: true, force: true });
     await rm(wordsDir, { recursive: true, force: true });
+    await rm(backDir, { recursive: true, force: true });
     await rm(set.dir, { recursive: true, force: true });
   }
 });
