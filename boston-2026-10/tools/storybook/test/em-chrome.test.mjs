@@ -141,7 +141,8 @@ async function chooserProblems(dir = menusOut) {
     if (s.heading !== em.headingOf(CC, WORDS)) fail(`Chef's Choice's heading: ${s.heading}`);
     if (JSON.stringify(s.meals.map((m) => m.name)) !== JSON.stringify(linesOf(CC, "or-7d"))) fail(`Chef's Choice's meals: ${JSON.stringify(s.meals.map((m) => m.name))}`);
     // The state, as assistive technology reads it: radios, checked as shown.
-    const ax = await page.accessibility.snapshot({ root: await page.$("#cc-menus") });
+    // Every node (the default keeps only those it finds interesting, which leaves out a radio the arrow keys reach).
+    const ax = await page.accessibility.snapshot({ root: await page.$("#cc-menus"), interestingOnly: false });
     const axRadios = [];
     const walk = (n) => n && (n.role === "radio" && axRadios.push({ name: n.name, checked: Boolean(n.checked) }), (n.children ?? []).forEach(walk));
     walk(ax);

@@ -20,6 +20,11 @@
 // the page shows `chefs-choice` only: a CART per answer set of data/plans.json's `selection`, through the row's plan, and
 // the week's snacks for 7 and 5 days). Either becomes the same thing, carts keyed by the answer set (`or-7d`,
 // `and-5d-b`): a version-1 `7` is the cart of or, every day, no breakfast, and its `14` of and, every day, no breakfast.
+//
+// SPEC-every-menu-and-nutrition § 1: a version-2 file's `lists` may hold more than `chefs-choice`, each checked as it is,
+// and ⛔ each NAMED by the page's words (data/messages.json `menus`: what makes a list one the page shows); and an
+// optional `meals` map, keyed by a cart's meal's `name`, each meal's nutrition per individual size, its ingredients and
+// its Contains. A week of more than one list carries the others in the words' order (`lists`), `chefs-choice` first.
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join, relative, sep } from "node:path";
 import { esc, ROOT, scriptJson, sheetUrl, shownCounts } from "../build.mjs";
@@ -43,6 +48,19 @@ const MEAL_FIELDS = ["name", "display", "qty"];
 const VERSIONS = [1, 2];
 const V2_FILE_FIELDS = ["delivery", "version", "lists"];
 const SHOWN_LIST = "chefs-choice";
+/** SPEC-every-menu-and-nutrition § 1 item 2: a version-2 file's optional field, an entry's fields (`contains` alone
+ *  optional), and a size's five numbers (grams, and calories). § 4: the nutrition phrases, and `menus`' own note. */
+const V2_OPTIONAL_FIELDS = ["meals"];
+const ENTRY_FIELDS = ["nutrition", "ingredients"];
+const ENTRY_OPTIONAL_FIELDS = ["contains"];
+const ENTRY_TEXTS = ["ingredients", "contains"];
+const FACTS = ["cal", "protein", "carbs", "fat", "fiber"];
+const NUTRITION_PHRASES = { line: ["{cal}", "{protein}", "{carbs}", "{fat}"], ingredients: ["{text}"], contains: ["{text}"] };
+const MENUS_NOTE = "status";
+/** The heading's placeholder naming the menu shown (§ 4: `chefs_choice.heading` may carry it). */
+const MENU_PLACEHOLDER = "{menu}";
+/** Without the words (a caller giving none): the one list the page always shows. */
+const ONLY_SHOWN = { menus: [[SHOWN_LIST, null]], heading: null };
 const LIST_FIELDS = ["carts", "snacks"];
 const CART_FIELDS = ["lunch_dinner", "weekends", "breakfast", "plan", "items"];
 /** § 3's phrases in data/messages.json's `chefs_choice` the card shows, and the placeholders each must carry. Since
@@ -84,12 +102,40 @@ export function chefsChoiceWords(messages) {
   return Object.fromEntries(Object.keys(PHRASES).map((key) => [key, words[key]]));
 }
 
+/**
+ * SPEC-every-menu-and-nutrition § 4: data/messages.json's `menus` (each list the page shows and its name, in display
+ * order, `chefs-choice` first; `status` is its note, not a list) and `nutrition` (`line`, `ingredients`, `contains`, each
+ * with its placeholders), checked: a missing name, phrase or placeholder refuses the build. Returns { menus: [[list,
+ * name], …], nutrition: { line, ingredients, contains } }, each name as the page shows it.
+ */
+export function menuWords(messages) {
+  const menus = messages.menus;
+  if (!isObject(menus)) throw new Error(`data/messages.json: menus is missing (each list's name, ${SHOWN_LIST} first)`);
+  const names = Object.entries(menus).filter(([list]) => list !== MENUS_NOTE);
+  if (!names.some(([list]) => list === SHOWN_LIST)) throw new Error(`data/messages.json: menus.${SHOWN_LIST} is missing`);
+  if (names[0][0] !== SHOWN_LIST) throw new Error(`data/messages.json: menus must name ${SHOWN_LIST} first (the chooser's order is theirs)`);
+  for (const [list, name] of names) {
+    if (typeof name !== "string" || !asShown(name)) throw new Error(`data/messages.json: menus.${list} is missing`);
+  }
+  const words = messages.nutrition ?? {};
+  for (const [key, placeholders] of Object.entries(NUTRITION_PHRASES)) {
+    if (typeof words[key] !== "string" || !words[key].trim()) throw new Error(`data/messages.json: nutrition.${key} is missing`);
+    for (const p of placeholders) if (!words[key].includes(p)) throw new Error(`data/messages.json: nutrition.${key} has no ${p}`);
+  }
+  return {
+    menus: names.map(([list, name]) => [list, asShown(name)]),
+    nutrition: Object.fromEntries(Object.keys(NUTRITION_PHRASES).map((key) => [key, words[key]])),
+  };
+}
+
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 
-/** Refuse any field but `allowed`, and a missing one. `where` names the object in the message. */
-function onlyFields(value, allowed, where) {
+/** Refuse any field but `allowed` and `optional`, and a missing one of `allowed`. `where` names the object in the message. */
+function onlyFields(value, allowed, where, optional = []) {
   if (!isObject(value)) throw new Error(`${where} must be an object`);
-  for (const key of Object.keys(value)) if (!allowed.includes(key)) throw new Error(`${where}: unknown field ${JSON.stringify(key)}`);
+  for (const key of Object.keys(value)) {
+    if (!allowed.includes(key) && !optional.includes(key)) throw new Error(`${where}: unknown field ${JSON.stringify(key)}`);
+  }
   for (const key of allowed) if (!(key in value)) throw new Error(`${where}: missing field ${JSON.stringify(key)}`);
 }
 
@@ -196,17 +242,28 @@ function snackLists(snacks, at) {
   return out;
 }
 
-/** Version 2 (SPEC-meal-selection § 5): the `chefs-choice` list's carts, each a row of the selection through that row's
- *  plan, at most one per row (a row without one falls back, § 4), and its snacks. */
+/** Version 2 (SPEC-meal-selection § 5): the `chefs-choice` list's carts and snacks; and (SPEC-every-menu-and-nutrition
+ *  § 1) every other list the words name, checked as it is, in the words' order (`lists`, only when there are others),
+ *  and the `meals` map, if any (`meals`). ⛔ A list the words do not name is refused: the page does not show it. */
 function v2Carts(json, rows, ctx) {
   const lists = json.lists;
   if (!isObject(lists)) throw new Error("lists must be an object, the lists by name");
   for (const name of Object.keys(lists)) {
-    if (name !== SHOWN_LIST) throw new Error(`lists: ${JSON.stringify(name)} is not a list the page shows (${SHOWN_LIST})`);
+    if (!ctx.names.includes(name)) throw new Error(`lists: ${JSON.stringify(name)} is not a list the page shows (${ctx.names.join(", ")}): data/messages.json's menus has no name for it`);
   }
   if (!(SHOWN_LIST in lists)) throw new Error(`lists: no ${JSON.stringify(SHOWN_LIST)}`);
-  const list = lists[SHOWN_LIST];
-  const at = `lists.${SHOWN_LIST}`;
+  const checked = ctx.names.filter((name) => name in lists).map((name) => ({ list: name, ...listCarts(lists[name], `lists.${name}`, rows, ctx) }));
+  if (checked.length > 1 && ctx.heading !== null && !ctx.heading.includes(MENU_PLACEHOLDER)) {
+    throw new Error(`${checked.length} lists, and data/messages.json's chefs_choice.heading has no ${MENU_PLACEHOLDER} to name the menu shown`);
+  }
+  const meals = json.meals === undefined ? null : mealEntries(json.meals, checked, ctx.plans);
+  const [shown] = checked; // chefs-choice: the words name it first
+  return { carts: shown.carts, snacks: shown.snacks, ...(checked.length > 1 ? { lists: checked } : {}), ...(meals ? { meals } : {}) };
+}
+
+/** One version-2 list (SPEC-meal-selection § 5): its carts, each a row of the selection through that row's plan, at most
+ *  one per row (a row without one falls back, § 4), and its snacks. `at` names it in a refusal. */
+function listCarts(list, at, rows, ctx) {
   if (!isObject(list)) throw new Error(`${at} must be an object`);
   for (const key of Object.keys(list)) if (!LIST_FIELDS.includes(key)) throw new Error(`${at}: unknown field ${JSON.stringify(key)}`);
   if (!Array.isArray(list.carts)) throw new Error(`${at}.carts must be a list of carts`);
@@ -235,6 +292,46 @@ function v2Carts(json, rows, ctx) {
   return { carts, snacks };
 }
 
+/**
+ * SPEC-every-menu-and-nutrition § 1 item 2: the `meals` map, checked. Each key is a meal's `name` in a cart of the file
+ * (as the link tool reads a name: whitespace collapsed and trimmed; a snack is not a cart's meal); each entry carries
+ * `nutrition` (any of data/plans.json's individual sizes, each with all five numbers, whole and 0 or more), `ingredients`
+ * (text, not blank) and, optionally, `contains` (text, not blank), and nothing else. Returns the entries by the name as
+ * the tool reads it, their texts as the page shows them.
+ */
+function mealEntries(meals, lists, plans) {
+  if (!isObject(meals)) throw new Error("meals must be an object, an entry per meal by its name");
+  const named = new Set(lists.flatMap(({ carts }) => Object.values(carts).flatMap((cart) => cart.meals.map((m) => m.name))));
+  const sizes = plans.individual.map((p) => p.id);
+  const out = {};
+  for (const [name, entry] of Object.entries(meals)) {
+    const at = `meals ${JSON.stringify(name)}`;
+    const key = asShown(name);
+    if (!named.has(key)) throw new Error(`${at}: no meal of the file's carts has this name`);
+    if (key in out) throw new Error(`${at}: named twice (as the store's names are read, whitespace collapsed)`);
+    onlyFields(entry, ENTRY_FIELDS, at, ENTRY_OPTIONAL_FIELDS);
+    if (!isObject(entry.nutrition)) throw new Error(`${at}.nutrition must be an object, the numbers per size`);
+    for (const [size, facts] of Object.entries(entry.nutrition)) {
+      if (!sizes.includes(size)) throw new Error(`${at}.nutrition: unknown field ${JSON.stringify(size)} (the sizes are ${sizes.join(", ")})`);
+      onlyFields(facts, FACTS, `${at}.nutrition.${size}`);
+      for (const fact of FACTS) {
+        const n = facts[fact];
+        if (!Number.isInteger(n) || n < 0) throw new Error(`${at}.nutrition.${size}.${fact} must be a whole number, 0 or more; got ${JSON.stringify(n)}`);
+      }
+    }
+    for (const field of ENTRY_TEXTS.filter((f) => f in entry)) {
+      if (typeof entry[field] !== "string") throw new Error(`${at}: ${field} must be text, got ${JSON.stringify(entry[field])}`);
+      if (!asShown(entry[field])) throw new Error(`${at}: ${field} is blank`);
+    }
+    out[key] = {
+      nutrition: entry.nutrition,
+      ingredients: asShown(entry.ingredients),
+      ...(entry.contains !== undefined ? { contains: asShown(entry.contains) } : {}),
+    };
+  }
+  return out;
+}
+
 /** SPEC-week-content § 8 item 1: an updating file's `updating` is exactly true and its `lists` empty (any list, the shown
  *  one included, is refused, naming it). The week has no carts and no snacks: the page shows the updating card. */
 function updatingWeek(json) {
@@ -250,29 +347,38 @@ function updatingWeek(json) {
  * Sunday; a version-1 file's fields are exactly `delivery` and `menus`, a version-2 file's `delivery`, `version` and
  * `lists`, and an updating week's (SPEC-week-content § 8) those and `updating`, true, its `lists` empty. Returns
  * { delivery, carts: { answerKey: { meals, links } }, snacks: { "7d"|"5d": meals } }, an updating week's with
- * `updating: true` and no cart and no snack. `photo`
+ * `updating: true` and no cart and no snack; a version-2 week of more than one list also `lists` ([{ list, carts,
+ * snacks }], in the words' order, `chefs-choice` first), and one with `meals` its entries by name. `words` ({ menus:
+ * [[list, name], …], heading }: menuWords' menus and chefs_choice.heading) names the lists the page shows; without it,
+ * `chefs-choice` alone. `photo`
  * ({ photos, host }: the photo sheets' manifest and the code of the host the page is served from) gives each link the
  * week's cells, by the tool's own --photos; without it, or with no sheet for the week, the links are today's.
  */
-export function checkPicks(json, fileName, plans, photo = null) {
+export function checkPicks(json, fileName, plans, photo = null, words = ONLY_SHOWN) {
   const date = PICKS_FILE.exec(fileName)?.[1];
   if (!date || !isSunday(date)) throw new Error(`the file name is not a Sunday's date (YYYY-MM-DD.json)`);
   if (!isObject(json)) throw new Error("the file must be an object");
   const version = json.version ?? 1;
   if (!VERSIONS.includes(version)) throw new Error(`version ${JSON.stringify(json.version)} is not one the page reads (${VERSIONS.join(", ")})`);
   const updating = version === 2 && "updating" in json;
-  onlyFields(json, version === 1 ? [...FILE_FIELDS, ...("version" in json ? ["version"] : [])] : updating ? UPDATING_FILE_FIELDS : V2_FILE_FIELDS, "the file");
+  onlyFields(
+    json,
+    version === 1 ? [...FILE_FIELDS, ...("version" in json ? ["version"] : [])] : updating ? UPDATING_FILE_FIELDS : V2_FILE_FIELDS,
+    "the file",
+    version === 2 && !updating ? V2_OPTIONAL_FIELDS : [],
+  );
   if (json.delivery !== date) throw new Error(`delivery ${JSON.stringify(json.delivery)} is not the file's date (${date})`);
   const { rows } = checkSelection(plans);
   if (updating) return { delivery: date, ...updatingWeek(json) };
   // SPEC-rung2-fill-c § 8: mpid -> the plan's allowed totals, the link tool's (and the block's) own table.
   const totals = new Map(Object.entries(countTable(plans)).map(([mpid, allowed]) => [Number(mpid), allowed]));
-  const ctx = { plans, totals, photo, date };
+  // SPEC-every-menu-and-nutrition § 1 item 1: the lists the words name, in their order; § 2 item 2: the heading.
+  const ctx = { plans, totals, photo, date, names: words.menus.map(([list]) => list), heading: words.heading };
   return { delivery: date, ...(version === 1 ? v1Carts(json, rows, ctx) : v2Carts(json, rows, ctx)) };
 }
 
 /** Every picks file in `dir`, each checked; a file breaking a rule throws, naming it. Sorted by delivery. */
-export async function readPicks(dir, plans, photo = null) {
+export async function readPicks(dir, plans, photo = null, words = ONLY_SHOWN) {
   const names = (await readdir(dir)).filter((name) => name.endsWith(".json")).sort();
   const weeks = [];
   for (const name of names) {
@@ -284,7 +390,7 @@ export async function readPicks(dir, plans, photo = null) {
       } catch (err) {
         throw new Error(`not JSON: ${err.message}`);
       }
-      weeks.push(checkPicks(json, basename(path), plans, photo));
+      weeks.push(checkPicks(json, basename(path), plans, photo, words));
     } catch (err) {
       throw new Error(`${shown(path)}: ${err.message}`);
     }
@@ -316,13 +422,38 @@ function thumbStyle(url, sheet, name) {
   );
 }
 
-/** What the page's script reads: the zone, and per open week its window and, per answer set with a cart
- *  (SPEC-meal-selection § 8 item 2: `or-5d`, `and-5d-b`), the heading, the list (with each meal's tile style, or null),
- *  and one checkout link per size (by mpid); with `snacks` (data/plans.json's `snacks.shown`), the week's snack lists by
- *  days (`7d`, `5d`), shown and never linked (§ 9 item 3). Every word is a phrase of data/messages.json filled here.
- *  `photos` is the photo sheets' manifest; every URL in it is built from its `base` (sheetUrl). § 7.2: each line shows
- *  the meal's `display`; its tile is the cell of its `name`, the key. */
+/**
+ * SPEC-every-menu-and-nutrition § 3: a week's `meals` as the page shows them, or null without: `list`, one entry per meal
+ * ({ lines: { size: the line }, ingredients, contains? }, each a phrase of `nutrition` filled here), and `at`, a meal's
+ * place in it by its name as the link tool reads it.
+ */
+function factsOf(meals, phrases) {
+  if (!meals) return null;
+  const list = Object.values(meals).map((entry) => ({
+    lines: Object.fromEntries(Object.entries(entry.nutrition).map(([size, facts]) => [size, fill(phrases.line, facts)])),
+    ingredients: fill(phrases.ingredients, { text: entry.ingredients }),
+    ...(entry.contains !== undefined ? { contains: fill(phrases.contains, { text: entry.contains }) } : {}),
+  }));
+  return { list, at: new Map(Object.keys(meals).map((name, i) => [name, i])) };
+}
+
+/**
+ * What the page's script reads: the zone, and per open week its window and, per answer set with a cart
+ * (SPEC-meal-selection § 8 item 2: `or-5d`, `and-5d-b`), the heading, the list (with each meal's tile style, or null),
+ * and one checkout link per size (by mpid); with `snacks` (data/plans.json's `snacks.shown`), the week's snack lists by
+ * days (`7d`, `5d`), shown and never linked (§ 9 item 3). Every word is a phrase of data/messages.json filled here.
+ * `photos` is the photo sheets' manifest; every URL in it is built from its `base` (sheetUrl). § 7.2: each line shows
+ * the meal's `display`; its tile is the cell of its `name`, the key.
+ *
+ * SPEC-every-menu-and-nutrition (`words` carries menuWords' `menus` and `nutrition`): each heading names its menu (§ 4's
+ * `{menu}`, when the phrase carries it). A week of more than one list adds `menus`, the lists in the words' order, each
+ * { list, name }, and each but the first (`chefs-choice`, whose carts and snacks are the week's own) its `carts` and
+ * `snacks` (§ 2). A week with `meals` adds `facts`, an entry per meal (factsOf), and each cart holding a meal with one
+ * its own `facts`, per meal the entry's place in the week's, or null (§ 3). A week without them is byte for byte what
+ * it was (§ 1 item 3).
+ */
 export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", snacks = false, carted = false }) {
+  const names = new Map(words.menus ?? []);
   return {
     zone,
     // SPEC-snacks-in-the-cart § 4: while carted, the card takes an answer set's snack link and hides Q4 where the week
@@ -333,25 +464,40 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", 
       const url = sheetUrl(photos, sheet, assetPrefix);
       const lines = (meals) => meals.map((m) => (m.qty > 1 ? fill(words.meal_qty, { meal: m.display, n: m.qty }) : m.display));
       const thumbs = (meals) => meals.map((m) => thumbStyle(url, sheet, m.name));
+      const facts = factsOf(w.meals, words.nutrition);
+      const cartsOf = (carts, list) =>
+        Object.fromEntries(
+          Object.entries(carts).map(([key, cart]) => [
+            key,
+            {
+              heading: fill(words.heading, { week: weekRange(w.delivery), menu: names.get(list) ?? "" }),
+              meals: lines(cart.meals),
+              thumbs: thumbs(cart.meals),
+              links: cart.links,
+              ...(snacks && cart.snackLinks ? { snack_links: cart.snackLinks } : {}),
+              ...(facts && cart.meals.some((m) => facts.at.has(m.name)) ? { facts: cart.meals.map((m) => facts.at.get(m.name) ?? null) } : {}),
+            },
+          ]),
+        );
+      const snacksOf = (lists) => Object.fromEntries(Object.entries(lists).map(([d, meals]) => [d, { meals: lines(meals), thumbs: thumbs(meals) }]));
       return {
         delivery: w.delivery,
         ...windowOf(w.delivery),
         // SPEC-week-content § 8 item 2: an updating week says so, its carts an empty object (the shape the Workers' check
         // reads, so they serve it); a week without `updating` is byte for byte what it was.
         ...(w.updating ? { updating: true } : {}),
-        carts: Object.fromEntries(
-          Object.entries(w.carts).map(([key, cart]) => [
-            key,
-            {
-              heading: fill(words.heading, { week: weekRange(w.delivery) }),
-              meals: lines(cart.meals),
-              thumbs: thumbs(cart.meals),
-              links: cart.links,
-              ...(snacks && cart.snackLinks ? { snack_links: cart.snackLinks } : {}),
-            },
-          ]),
-        ),
-        ...(snacks ? { snacks: Object.fromEntries(Object.entries(w.snacks).map(([d, meals]) => [d, { meals: lines(meals), thumbs: thumbs(meals) }])) } : {}),
+        carts: cartsOf(w.carts, SHOWN_LIST),
+        ...(snacks ? { snacks: snacksOf(w.snacks) } : {}),
+        ...(w.lists
+          ? {
+              menus: w.lists.map(({ list, carts, snacks: lists }, i) => ({
+                list,
+                name: names.get(list),
+                ...(i ? { carts: cartsOf(carts, list), ...(snacks ? { snacks: snacksOf(lists) } : {}) } : {}),
+              })),
+            }
+          : {}),
+        ...(facts ? { facts: facts.list } : {}),
       };
     }),
   };
@@ -383,6 +529,7 @@ function cardHtml(template, words, file = "card.html", markup = {}) {
 export async function chefsChoice({ plans, messages, zone }) {
   const weeks = []; // ⛔ SPEC-week-content § 7's ruling: no build embeds a week; the bucket is the only source of one.
   const words = chefsChoiceWords(messages);
+  menuWords(messages); // SPEC-every-menu-and-nutrition § 4: the menus' names and the nutrition phrases, refused when missing
   const read = (name) => readFile(join(CHEFS_CHOICE_SRC, name), "utf8");
   // SPEC-meal-selection § 9 item 3: the snack block only while Q4 is on the page. SPEC-snacks-in-the-cart § 4.3: while
   // snacks are carted, without the not-carted line (the list keeps its heading). § 12 item 3: the block is INSIDE the
