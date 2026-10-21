@@ -374,3 +374,98 @@ test("EM3 (mutant): the line read from the first size present, not the chosen on
   t.diagnostic(problems.join("\n"));
   assert.ok(problems.some((p) => / signature .*: the line /.test(p)), `EM3 fails it:\n${problems.join("\n")}`);
 });
+
+// EM6 (§ 10, the Advisor's word of 2026-10-21): every target the card adds is at least the standard target of OurFans'
+// design philosophy (10 mm, at the densest logical density it uses, 163 CSS px per inch: 64 CSS px) in its smaller
+// dimension, the menu chips and every meal control; the meal's WHOLE ROW is the control, so a press on its tile, its name
+// or its line opens it; and its mark says "more", not "add": no "+" (or "−") as text or as CSS content, a mark hidden from
+// assistive technology that turns when the meal opens. At 390 and 1280, each menu in turn.
+/** § 10 item 1: the contract's number (10 mm × 163 / 25.4 = 64.2, so at least 64 CSS px). */
+const TARGET_PX = 64;
+const ADD_MARKS = /[+−]/;
+
+/** Runs in the page: the chips' and the meal controls' boxes, and each control's marks. */
+function readTargets() {
+  const box = (el) => {
+    const r = el.getBoundingClientRect();
+    return { w: Math.round(r.width * 10) / 10, h: Math.round(r.height * 10) / 10 };
+  };
+  const pseudo = (el) => ["::before", "::after"].map((p) => getComputedStyle(el, p).content).filter((c) => c && c !== "none" && c !== "normal");
+  return {
+    chips: [...document.querySelectorAll("#cc-menus label")].map((l) => ({ text: l.textContent.trim(), ...box(l) })),
+    controls: [...document.querySelectorAll("#cc-meals button")].map((b) => ({
+      text: b.textContent,
+      ...box(b),
+      contents: [b, ...b.querySelectorAll("*")].flatMap(pseudo),
+      hiddenMarks: b.querySelectorAll('[aria-hidden="true"]').length,
+    })),
+  };
+}
+
+/** Runs in the page: the first meal control's state and its hidden mark's transform. */
+function readFirstControl() {
+  const b = document.querySelector("#cc-meals button");
+  const mark = b?.querySelector('[aria-hidden="true"]');
+  return { expanded: b?.getAttribute("aria-expanded") ?? null, turn: mark ? getComputedStyle(mark).transform : null };
+}
+
+/** One line per thing EM6 does not hold on the fixture's page; [] when all do. */
+async function targetProblems(dir = menusOut) {
+  if (dir === menusOut) await menusPage();
+  const problems = [];
+  for (const width of [VIEWPORTS.w390.width, VIEWPORTS.w1280.width]) {
+    const fail = (what) => problems.push(`${width}: ${what}`);
+    await withPage({ dir, hash: "#lean-or-7d", width }, async (page) => {
+      for (const menu of [CC, TWO]) {
+        if (menu === TWO) await chooseMenu(page, TWO);
+        const t = await page.evaluate(readTargets);
+        if (t.chips.length !== 2 || !t.controls.length) fail(`${menu}: fixture control: ${t.chips.length} chips, ${t.controls.length} meal controls`);
+        for (const c of t.chips) if (Math.min(c.w, c.h) < TARGET_PX) fail(`${menu}: the chip "${c.text}" is ${c.w} × ${c.h}`);
+        for (const c of t.controls) {
+          const what = `${menu}: the control "${c.text.replace(/\s+/g, " ").trim().slice(0, 40)}"`;
+          if (Math.min(c.w, c.h) < TARGET_PX) fail(`${what} is ${c.w} × ${c.h}`);
+          if (ADD_MARKS.test(c.text) || c.contents.some((s) => ADD_MARKS.test(s))) fail(`${what}: its mark is "+" or "−" (${JSON.stringify(c.contents)})`);
+          if (!c.hiddenMarks) fail(`${what}: no mark hidden from assistive technology`);
+        }
+      }
+      // The whole row: a press on Chef's Choice's first meal control's tile, name or line opens it; the mark turns.
+      await chooseMenu(page, CC);
+      for (const part of [".cc-thumb", ".cc-name", ".cc-line"]) {
+        const closed = await page.evaluate(readFirstControl);
+        if (closed.expanded !== "false") fail(`before the press on its ${part}: the meal is ${closed.expanded === "true" ? "open" : "not a control"}`);
+        const handle = await page.$(`#cc-meals > li:has(button) ${part}`);
+        const r = handle && (await handle.boundingBox());
+        if (!r) {
+          fail(`the first meal control has no ${part}`);
+          continue;
+        }
+        await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
+        await settle(page);
+        const open = await page.evaluate(readFirstControl);
+        if (open.expanded !== "true") fail(`a press on its ${part} did not open the meal`);
+        else if (open.turn === closed.turn) fail(`the mark did not turn (${open.turn})`);
+        if (open.expanded === "true") await press(page, "#cc-meals button");
+      }
+    });
+  }
+  return problems;
+}
+
+test("EM6: every chip and meal control at least 64 CSS px; the whole row opens the meal; the mark is not \"+\" (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
+  assert.deepEqual(await targetProblems(), []);
+});
+
+/** The meal control's parts: the script's one line putting the tile, the name's column and the mark in the button. */
+const ROW_LINE = /^(\s*)appendAll\(meal, \[tile, text, mark\]\);$/m;
+
+test("EM6 (mutant): the row's control shrunk to the name alone fails EM6; the copy as built passes", { timeout: TIMEOUT_MS }, async (t) => {
+  const control = await copyWith(t, (html) => once(html, ROW_LINE));
+  assert.deepEqual(await targetProblems(control), [], "control: the copy as built");
+  const mutant = await copyWith(t, (html) =>
+    once(html, ROW_LINE).replace(ROW_LINE, (whole, indent) => `${indent}appendAll(li, [tile, text]); text.insertBefore(meal, name); appendAll(meal, [name, mark]);`),
+  );
+  const problems = await targetProblems(mutant);
+  t.diagnostic(problems.join("\n"));
+  assert.ok(problems.some((p) => /is [\d.]+ × [\d.]+$/.test(p)), `EM6 fails it on a control's size:\n${problems.join("\n")}`);
+  assert.ok(problems.some((p) => /a press on its \.cc-(thumb|line) did not open the meal/.test(p)), `and on a press beside the name:\n${problems.join("\n")}`);
+});
