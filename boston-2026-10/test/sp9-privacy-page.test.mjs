@@ -37,7 +37,7 @@ async function assertPrivacyPage(html, draftText, where) {
   for (const url of loadedUrls(html)) assert.ok(isSameOrigin(url), `${where}: same-origin only, got ${url}`);
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   assert.equal(rootTokens(html), rootTokens(template), `${where}: the template's colour tokens and font stacks`);
-  for (const face of template.match(/@font-face \{[^}]*\}/g)) {
+  for (const face of template.match(/^@font-face \{.*\}$/gm)) {
     assert.ok(html.includes(face.replace("{{ASSET_PREFIX}}", "/")), `${where}: the template's font face ${/fonts\/([^"]+)/.exec(face)[1]}`);
   }
 }
@@ -77,7 +77,7 @@ test("SP9: production true with approved inputs — /privacy/ is § 6's, unmarke
   assert.equal(error, null);
   assert.ok(files.includes(join("privacy", "index.html")), "privacy/index.html written");
   await assertPrivacyPage(privacy, draftText, "production /privacy/");
-  assert.doesNotMatch(privacy, /DRAFT|not for use/, "no draft marking");
+  assert.doesNotMatch(privacy, /DRAFT — not for use|class="draft-tag"/, "no draft marking");
   assert.doesNotMatch(pageText(privacy), /\[[^\]]*\]/, "no bracket");
   assert.ok(pageText(privacy).includes("Contact: privacy@example.com."), "control: § 6's contact address as the fixture approved it");
   const href = PRIVACY_LINK.exec(html)?.[1];

@@ -1,5 +1,5 @@
 [
-  { "id": "demo", "name": "the Fit AF demo event", "url": "https://eatfitaf.com/" },
-  { "id": "boston", "name": "Fit AF in Boston, 26–29 October 2026", "url": "https://eatfitaf.com/?e=boston" },
+  { "id": "demo", "name": "eatfitaf.com", "url": "https://eatfitaf.com/" },
+  { "id": "boston", "name": "Fit AF's Boston event", "url": "https://eatfitaf.com/?e=boston" },
   { "id": "seminar", "name": "the seminar of 23 October 2026", "url": "https://eatfitaf.com/?e=seminar" }
 ]

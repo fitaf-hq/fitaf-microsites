@@ -14,12 +14,14 @@
 // try, and nothing is sent either.
 // It reads what app.js and the Chef's Choice card render and changes nothing: no listener here prevents a press, and
 // no href is touched (the hand-off's links and fragment are exactly as today: § 3, A9).
+// The QR events an `?e=` may name (§ 9): data/events.json's ids, which the build writes in place of this empty list. A
+// global of the page, read with qrEvent (src/qr-event.js, inlined before this script's first line) here and by the save
+// step (SPEC-save-offer-production § 9 item 2): one list, one reading.
+var QR_IDS = /*QR_IDS*/[];
 (function () {
   "use strict";
   var w = window, d = document, perf = w.performance, rnd = w.crypto;
   if (!perf || !rnd || !rnd.getRandomValues) return;
-  // The QR events an `?e=` may name (§ 9): data/events.json's ids, which the build writes in place of this empty list.
-  var QR_IDS = /*QR_IDS*/[];
   // The funnel's steps in order: `leave` carries the deepest reached (§ 3).
   var STEPS = ["open", "answer", "result", "click"];
   var left = 20, deepest = 0, gone = 0, failed = 0, shown = "";
@@ -52,11 +54,11 @@
     failed = 1;
   });
   // `open`: the viewport's band (§ 1.4), the load time, the QR event if the URL names one data/events.json has (§ 9).
-  var x = w.innerWidth || 0, qr = /(?:^|[?&])e=([^&#]*)/.exec(w.location.search || "");
+  var x = w.innerWidth || 0;
   send("open", {
     viewport: x < 400 ? "<400" : x < 768 ? "400-767" : x < 1200 ? "768-1199" : ">=1200",
     load_ms: ms(),
-    qr: qr && QR_IDS.indexOf(qr[1]) >= 0 ? qr[1] : ""
+    qr: qrEvent(w.location.search, QR_IDS)
   });
   // `answer` and `click`, read off the pressed element (in the capture phase, before the page's own handlers).
   d.addEventListener("click", function (e) {

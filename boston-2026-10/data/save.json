@@ -10,5 +10,5 @@
   "expansion_retention_days": 365,
   "expansion_retention_status": "proposed",
   "production": false,
-  "privacy_notice_url": null
+  "privacy_notice_url": "/privacy/"
 }

@@ -133,7 +133,8 @@ export async function printMirror(edit = async () => {}) {
   const photos = join(ROOT, "mockups", "photos");
   const notPhotos = (path) => path !== photos && !path.startsWith(photos + sep);
   for (const name of ["build.mjs", "package.json", "wrangler.jsonc"]) await copyFile(join(ROOT, name), join(dir, name));
-  for (const name of ["data", "scripts", "src", "mockups", "print"]) await cp(join(ROOT, name), join(dir, name), { recursive: true, filter: notPhotos });
+  // consent/: the build reads DRAFT.md since SPEC-save-offer-production § 9 item 1.
+  for (const name of ["data", "scripts", "src", "consent", "mockups", "print"]) await cp(join(ROOT, name), join(dir, name), { recursive: true, filter: notPhotos });
   await symlink(join(ROOT, "node_modules"), join(dir, "node_modules"));
   await edit(dir);
   return dir;

@@ -16,7 +16,8 @@ import { qrEventProblems } from "./a-checks.mjs";
 import { mirror } from "./cc-harness.mjs";
 
 const PAGE_JS = join("src", "analytics.js");
-const READING = 'qr: qr && QR_IDS.indexOf(qr[1]) >= 0 ? qr[1] : ""';
+// Since SPEC-save-offer-production § 9 item 2 the reading is src/qr-event.js's qrEvent, which the save step calls too.
+const READING = "qr: qrEvent(w.location.search, QR_IDS)";
 
 test("A-QR: an open from ?e=boston or ?e=seminar (as from every event data/events.json names) carries that id; any other query none", async () => {
   assert.deepEqual(await qrEventProblems(), []);

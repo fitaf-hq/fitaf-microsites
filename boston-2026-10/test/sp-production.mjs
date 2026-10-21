@@ -73,7 +73,8 @@ export async function productionInputs({ unfixed = null, production = true } = {
   save.production = production;
   if (!leave("a draft wording version")) save.wording_version = APPROVED_VERSION;
   if (!leave("v1 not a known version")) save.known_wording_versions = [...save.known_wording_versions, APPROVED_VERSION];
-  if (!leave("no privacy notice to link")) save.privacy_notice_url = PRIVACY_URL;
+  // Since § 9 item 1 the committed address is /privacy/; the case sets none, as before it was committed.
+  save.privacy_notice_url = leave("no privacy notice to link") ? null : PRIVACY_URL;
 
   let draft = await readFile(DRAFT_FILE, "utf8");
   if (!leave("the status line still a draft")) draft = draft.replace(/^\*\*Status\*\*:.*$/m, APPROVED_STATUS);

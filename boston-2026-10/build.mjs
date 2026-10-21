@@ -25,6 +25,7 @@ import { checkSelection, legacyKey } from "./scripts/selection.mjs";
 import { formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 import { e1, ex } from "./src/worker/messages.js";
 import { productionRefusals } from "./scripts/production-inputs.mjs";
+import { qrEvent } from "./src/qr-event.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
 export const PLANS_PATH = join(ROOT, "data", "plans.json");
@@ -513,7 +514,9 @@ export const QR_IDS_MARK = "/*QR_IDS*/[]";
 export async function analyticsSlot(events) {
   const text = await readFile(ANALYTICS_PATH, "utf8");
   if (text.split(QR_IDS_MARK).length !== 2) throw new Error(`src/analytics.js must hold ${QR_IDS_MARK} exactly once`);
-  const code = text
+  // SPEC-save-offer-production § 9 item 2: the page's one reading of `?e=` (src/qr-event.js), inlined as written at the
+  // script's head, where the analytics and the save step both find it.
+  const code = `${declaration(qrEvent)}\n${text}`
     .replace(QR_IDS_MARK, () => scriptJson(events.map((e) => checkEventId(e.id))))
     .split("\n")
     .map((line) => line.trim())
@@ -632,6 +635,67 @@ async function writeDevPages(plans, events, outDir, offersPath, messages, picks,
   return written;
 }
 
+/** The privacy notice's page (SPEC-save-offer-production § 9 item 1): written to <out>/privacy/index.html, served as /why/
+ *  is; the development build always, the production build only with `production` true. */
+export const PRIVACY_DIR = "privacy";
+export const PRIVACY_STYLE_PATH = join(ROOT, "src", "privacy", "style.css");
+
+/** consent/DRAFT.md § 6's paragraphs, as written: its blockquote, a paragraph starting at each line that opens with a bold
+ *  heading ("> **Who we are.** …"), continuation lines joined by a space. */
+export function privacyParagraphs(draftText) {
+  const section = draftText.split(/^## 6\. .*$/m)[1]?.split(/^## /m)[0];
+  if (!section) throw new Error("consent/DRAFT.md has no § 6, the privacy notice");
+  const paragraphs = [];
+  for (const line of section.split("\n").filter((l) => l.startsWith(">")).map((l) => l.replace(/^>\s?/, ""))) {
+    if (line.startsWith("**") || !paragraphs.length) paragraphs.push(line);
+    else paragraphs[paragraphs.length - 1] += ` ${line}`;
+  }
+  return paragraphs.map((p) => p.trim()).filter(Boolean);
+}
+
+/**
+ * /privacy/: § 6's paragraphs (escaped; the draft's **bold** as <strong>), the logo and a heading, in the template's
+ * colour tokens and fonts (its :root and @font-face rules, the fonts from the root as /why/'s), src/privacy/style.css,
+ * no script. `draft`: the step's DRAFT marking (the development build's).
+ */
+export async function privacyPage({ draftText, save, draft }) {
+  const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
+  const tokens = /:root\s*\{[^{}]*\}/.exec(template)[0];
+  const faces = template.match(/^@font-face \{.*\}$/gm).map((face) => face.replace("{{ASSET_PREFIX}}", DEV_ASSET_PREFIX));
+  const draftToken = /:root \{ --draft: #[0-9a-f]{6}; \}/.exec(await readFile(join(ROOT, "src", "save", "style.css"), "utf8"))[0];
+  // The stylesheet's rules, without its comments (they are for maintainers).
+  const style = (await readFile(PRIVACY_STYLE_PATH, "utf8")).replace(/\/\*[\s\S]*?\*\/\n?/g, "").trim();
+  const paragraphs = privacyParagraphs(draftText).map((p) => `<p>${esc(p).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")}</p>`);
+  const tag = draft ? `\n<p class="draft-tag">DRAFT — not for use · wording ${esc(save.wording_version)}</p>` : "";
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fit AF — Privacy notice</title>
+<style>
+${[tokens, ...(draft ? [draftToken] : []), ...faces, style].join("\n")}
+</style>
+</head>
+<body>
+<main class="privacy">${tag}
+<img class="logo" src="${DEV_ASSET_PREFIX}assets/fitaf-logo.png" alt="Fit AF" width="88" height="56">
+<h1>Privacy notice</h1>
+${paragraphs.join("\n")}
+</main>
+</body>
+</html>
+`;
+}
+
+/** Write /privacy/ beside the pages. */
+async function writePrivacy(outDir, html) {
+  const path = join(outDir, PRIVACY_DIR, "index.html");
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, html);
+  return { path, bytes: Buffer.byteLength(html) };
+}
+
 /** What a production page prints, as words: the markup's text without its scripts and styles, the ZIP slot's default
  *  (filled with the visitor's ZIP before it is shown) apart. */
 export function printedText(html) {
@@ -660,17 +724,21 @@ function printedEmails({ offers, events, vars, save }) {
  * SPEC-save-offer-production § 3 item 2: the production page with `production` true, rendered in memory, and the refusal
  * of every input not yet approved (scripts/production-inputs.mjs), each named, before anything is written.
  */
-async function productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftPath, productionVars }) {
+async function productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftText, productionVars }) {
   const offers = await loadJson(offersPath);
   const zips = await loadJson(zipsPath);
-  const draftText = await readFile(draftPath, "utf8");
   const vars = productionVars ?? (await productionConfig()).vars ?? {};
   const inputs = { save, zips, siteKey: vars.TURNSTILE_SITE_KEY ?? "", eventId: checkEventId(events[0].id), offers };
   const html = await renderPage(plans, await productionSlots(plans, inputs), messages, card, photos, events);
-  const printed = [{ where: "the page", text: printedText(html) }, ...printedEmails({ offers, events, vars, save })];
+  const privacy = await privacyPage({ draftText, save, draft: false });
+  const printed = [
+    { where: "the page", text: printedText(html) },
+    { where: "the privacy page", text: printedText(privacy) },
+    ...printedEmails({ offers, events, vars, save }),
+  ];
   const refusals = productionRefusals({ save, offers, zips, draftText, vars, printed });
   if (refusals.length) throw new Error(`production build refused (data/save.json production is true):\n${refusals.map((r) => `- ${r}`).join("\n")}`);
-  return html;
+  return { html, privacy };
 }
 
 /** The Chef's Choice card for the page (SPEC-chefs-choice; SPEC-week-content § 2.1): always carried, holding NO week
@@ -709,12 +777,13 @@ export async function build({
   // SPEC-save-offer-production § 3: with `production` false the production page is the one before it, byte for byte (S20);
   // true, it carries Flow 1, and the build refuses here, writing nothing, until every input is approved.
   const save = await loadJson(savePath);
-  const prodHtml =
+  const draftText = await readFile(draftPath, "utf8");
+  const prod =
     target !== "prod"
       ? null
       : save.production === true
-        ? await productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftPath, productionVars })
-        : await renderPage(plans, PROD_SLOTS, messages, card, photos, events);
+        ? await productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftText, productionVars })
+        : { html: await renderPage(plans, PROD_SLOTS, messages, card, photos, events), privacy: null };
   // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
   if (target === "dev") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
@@ -723,10 +792,14 @@ export async function build({
     pages = await writeDevPages(plans, events, outDir, offersPath, messages, card, photos);
   } else {
     const path = join(outDir, "index.html");
-    await writeFile(path, prodHtml);
-    pages = [{ path, bytes: Buffer.byteLength(prodHtml) }];
+    await writeFile(path, prod.html);
+    pages = [{ path, bytes: Buffer.byteLength(prod.html) }];
   }
   const files = await copyStatic(outDir, photos, sheetsDir);
+  // § 9 item 1: /privacy/, a static page beside the plan pages (as /why/): the development build always, marked as the
+  // step is; the production build only with `production` true.
+  const privacy = target === "dev" ? await privacyPage({ draftText, save, draft: true }) : prod.privacy;
+  if (privacy) files.push((await writePrivacy(outDir, privacy)).path);
   // QR codes point at the production URL, so only the production build writes them.
   const qr = target === "prod" ? await writeQrCodes(events, outDir) : [];
   return { indexPath: pages[0].path, bytes: pages[0].bytes, pages, files, qr };

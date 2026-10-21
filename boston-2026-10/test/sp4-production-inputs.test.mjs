@@ -34,7 +34,8 @@ test("SP4: the committed inputs with production true — refused, every unapprov
       /DRAFT\.md § 6 holds a placeholder: \[email\]/,
       /DRAFT\.md § 6 holds a placeholder: \[30\]/,
       /DRAFT\.md § 6 holds a placeholder: \[Mailchimp\]/,
-      /the page prints a placeholder: \[Privacy notice\]/,
+      // Since § 9 item 1 the page links /privacy/ (data/save.json), which prints § 6 and its placeholders.
+      /the privacy page prints a placeholder: \[email\]/,
       /data\/offers\.json: status is placeholder, not approved/,
       /data\/delivery-zips\.json: status is mock, not official/,
       /MAIL_FROM is the placeholder/,
