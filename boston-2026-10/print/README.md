@@ -81,6 +81,18 @@ npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --d
 npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --deliverable FILE --on 2026-10-23 --event demo
 ```
 
+**Front B, the meals' names, a draft back, another folder** (`SPEC-print-pieces.md` § 13): `--front-words FILE` prints
+front B with that file's words (`print/front.mjs`; until approved the file lives outside this repository and every
+flyer is a proof; approved words are committed as `data/flyer-front-<take>.json`); `--photo-names FILE` prints each
+meal's name on its photo (`{ "<photo id>": "<name>" }`, always outside this repository, since it names photos by ID); 
+`--back-words FILE` builds with a back other than `data/flyer-back.md`; `--out-dir DIR` writes there instead of
+`dist-print/` (emptied first; keep it under `dist-print/`, which git ignores, e.g. `dist-print/take-h4/`).
+
+```sh
+npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --deliverable FILE \
+  --front-words data/flyer-front-h4.json --photo-names NAMES.json --out-dir dist-print/take-h4   # paths from the package
+```
+
 `dist-print/` (**git-ignored, emptied at every run, never hand-edited**): `tent-card.pdf`, `flyer.pdf` and `flyer-1.pdf`
 to `flyer-4.pdf` (each flyer two pages since § 12, its front and its back), a PNG proof of each at 1× (one pixel per CSS
 pixel, 96 per inch: the PDF's page as Chrome draws it; a flyer's, its front), `flyer-back.png` (the one back, § 12),

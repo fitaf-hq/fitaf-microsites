@@ -278,6 +278,11 @@ const RASTER_DPI = 72;
 const QR_DARK_MIN = 0.25;
 const DARK_LEVEL = 128;
 const norm = (s) => s.split(/\s+/).filter(Boolean).join(" ");
+/**
+ * § 13: a text run's characters, in order, with case and whitespace set aside: CSS's text-transform sets front B's
+ * headline and callout in capitals the DOM's text does not carry, and poppler breaks a rotated run (the callout) apart.
+ */
+const flat = (s) => s.replace(/\s+/g, "").toLowerCase();
 
 /** A page of a PDF drawn by pdftoppm in gray: { width, height, data } (one byte a pixel), from its PGM. */
 function grayPage(pdf, n) {
@@ -310,17 +315,21 @@ function darkShare(raster, box, origin) {
  * in the page's text (pdftotext), and every QR code's box is drawn, at least QR_DARK_MIN of it dark (pdftoppm). The
  * problems.
  */
-export async function pdfCarriesProblems(root, { fourFlyers = false } = {}) {
+export async function pdfCarriesProblems(root, { fourFlyers = false, ...options } = {}) {
   return withTmp(async (dir) => {
     const out = join(dir, "dist-print");
-    const built = await build(root, { outDir: out, fourFlyers });
+    const built = await build(root, { outDir: out, fourFlyers, ...options });
     const problems = [];
     for (const p of built.planned) {
       const pdf = join(out, `${p.stem}.pdf`);
       for (const [i, sheet] of (p.measured.sheets ?? [p.measured]).entries()) {
         const n = i + 1;
         const text = norm(execFileSync(PDFTOTEXT, ["-f", String(n), "-l", String(n), pdf, "-"]).toString("utf8"));
-        for (const t of sheet.faces.flatMap((f) => f.texts)) if (!text.includes(norm(t.text))) problems.push(`${p.stem}.pdf page ${n} lacks the text "${t.text}"`);
+        // § 13: the content stream's order too (-raw), the order the page draws its text in: poppler's reading order
+        // puts a rotated run's letters out of order (front B's callout), the drawing order keeps them
+        const raw = norm(execFileSync(PDFTOTEXT, ["-raw", "-f", String(n), "-l", String(n), pdf, "-"]).toString("utf8"));
+        const carries = (run) => flat(text).includes(flat(run)) || flat(raw).includes(flat(run));
+        for (const t of sheet.faces.flatMap((f) => f.texts)) if (!carries(t.text)) problems.push(`${p.stem}.pdf page ${n} lacks the text "${t.text}"`);
         const qrs = sheet.faces.flatMap((f) => f.qrs);
         const raster = qrs.length ? grayPage(pdf, n) : null;
         for (const qr of qrs) {
@@ -328,6 +337,43 @@ export async function pdfCarriesProblems(root, { fourFlyers = false } = {}) {
           if (share < QR_DARK_MIN) problems.push(`${p.stem}.pdf page ${n}: the QR code's box is ${Math.round(share * 100)}% dark, under ${QR_DARK_MIN * 100}%: not drawn`);
         }
       }
+    }
+    return problems;
+  });
+}
+
+/** Q28 (§ 13): front B's words for the cases: neutral and bracketed, never a candidate's (they are not approved). */
+export const FRONT_FIXTURE = {
+  headline: ["[A HEADLINE]", "[ITS ACCENT]"],
+  accent: 1,
+  lede: "[The line that says what the headline leaves out.]",
+  callout: ["[3]", "[call]", "[out]"],
+};
+
+/** Write front B's `words` (an object, or a file's text) to a new temporary folder as front-words.json: { dir, path }. */
+export async function frontFile(words) {
+  const dir = await mkdtemp(join(tmpdir(), "boston-qb-front-"));
+  const path = join(dir, "front-words.json");
+  await writeFile(path, typeof words === "string" ? words : JSON.stringify(words));
+  return { dir, path };
+}
+
+/**
+ * Q28 (§ 13): built with front B's words (the file at `frontPath`, holding `words`), every flyer's page 1 carries each of
+ * its headline's lines, its lede and its callout's lines as text in the PDF, in poppler's reading order or the page's
+ * drawing order (the callout is rotated). The problems.
+ */
+export async function frontWordsProblems(root, frontPath, words) {
+  return withTmp(async (dir) => {
+    const out = join(dir, "dist-print");
+    const built = await build(root, { outDir: out, fourFlyers: false, frontPath });
+    const runs = [...words.headline, words.lede, ...(words.callout ?? [])];
+    const problems = [];
+    for (const p of built.planned.filter((q) => q.piece.id === "flyer")) {
+      const pdf = join(out, `${p.stem}.pdf`);
+      const read = (args) => flat(execFileSync(PDFTOTEXT, [...args, "-f", "1", "-l", "1", pdf, "-"]).toString("utf8"));
+      const [text, raw] = [read([]), read(["-raw"])];
+      for (const run of runs) if (!text.includes(flat(run)) && !raw.includes(flat(run))) problems.push(`${p.stem}.pdf page 1 lacks front B's "${run}"`);
     }
     return problems;
   });

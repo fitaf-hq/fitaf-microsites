@@ -16,6 +16,11 @@ import {
   BACK_TEXT_PX,
   BLEED_IN,
   CSS_PX_PER_INCH,
+  FRONT_B_CALLOUT_PX,
+  FRONT_B_HEAD_PX,
+  FRONT_B_LEDE_PX,
+  FRONT_B_OFFER_PX,
+  FRONT_B_QR_IN,
   FRONT_OFFER_PX,
   FRONT_QR_IN,
   LAYOUT_PX_PER_INCH,
@@ -79,6 +84,8 @@ export function sizeRules(piece) {
     // § 12: the flyer's front, its offer at the headline's size and its QR code 1.25 in, § 12.1 (print.css reads them for the flyer
     // alone); and, for a piece with a back, the back's paragraphs' type, their lines and the gap between the words' blocks
     `.print-face > .board { --offer-size: ${FRONT_OFFER_PX}px; --qr-side: ${px(FRONT_QR_IN)}px; }`,
+    // § 13: front B's sizes (print.css reads them for front B alone)
+    `.print-face > .board { --fb-head: ${FRONT_B_HEAD_PX}px; --fb-lede: ${FRONT_B_LEDE_PX}px; --fb-offer: ${FRONT_B_OFFER_PX}px; --fb-callout: ${FRONT_B_CALLOUT_PX}px; --fb-qr: ${px(FRONT_B_QR_IN)}px; }`,
     ...(piece.back ? [`.print-face > .board { --back-text: ${BACK_TEXT_PX}px; --back-line: ${BACK_LINE_HEIGHT}; --back-gap: ${BACK_GAP_PX}px; }`] : []),
   ].join("\n");
 }
@@ -102,12 +109,14 @@ export function withBackPhotos(inputs) {
  * One side of a piece as a sheet: its front face, as §§ 9–10 have it (the tent's twice, the upper turned); or, given the
  * back's words (§ 12), the flyer's back. The sheet is the PDF page's printed size.
  */
-function sheetOf(piece, inputs, words) {
+function sheetOf(piece, inputs, words, front) {
   const [faceOf, options] = FACES[piece.id];
   const back = words ? { ...FLYER_BACK, back: { positions: piece.back.positions, words } } : {};
-  const face = faceOf(campaign(inputs), makeParts(inputs), { ...options, ...back }).trim();
+  // § 13: front B, given its words (print/front.mjs readFront); the back is the same whichever front a flyer has
+  const b = !words && front && piece.id === "flyer" ? { front } : {};
+  const face = faceOf(campaign(inputs), makeParts(inputs), { ...options, ...back, ...b }).trim();
   const turns = piece.faces === 1 ? [""] : [" print-face-turned", ""];
-  const board = words ? `board board-${piece.id} board-${piece.id}-back` : `board board-${piece.id}`;
+  const board = words ? `board board-${piece.id} board-${piece.id}-back` : b.front ? `board board-${piece.id} board-${piece.id}-b` : `board board-${piece.id}`;
   const faces = turns.map((turn) => `<div class="print-face${turn}"><div class="${board}">\n${face}\n</div></div>`);
   return `<div class="print-sheet${words ? " print-sheet-back" : ""}"><div class="print-page">\n${faces.join("\n")}\n</div></div>`;
 }
@@ -130,8 +139,8 @@ export function backPage(inputs, back, printCss) {
  * § 12 item 1: the document a piece's PDF is printed from, a page per side: the tent card's one; the flyer's front then
  * its back (the back upright, for a flip on the long edge), the same back for every flyer.
  */
-export function printDocument(piece, inputs, printCss, back) {
-  const sheets = [sheetOf(piece, inputs)];
+export function printDocument(piece, inputs, printCss, back, front) {
+  const sheets = [sheetOf(piece, inputs, undefined, front)];
   if (piece.sides === 2) sheets.push(sheetOf(piece, withBackPhotos(inputs), back));
   return pageHtml(piece, inputs, printCss, sheets);
 }
@@ -171,10 +180,15 @@ export function offerIsPlaceholder(inputs) {
   return inputs.data.offers.status === "placeholder";
 }
 
-/** What still stands in on a piece: each photo position without a photo, and the offer while it is a placeholder. */
-export function placeholdersOf(piece, inputs) {
+/**
+ * What still stands in on a piece: each photo position without a photo, the offer while it is a placeholder, and § 13's
+ * front B's words until they are approved (a flyer made with front B).
+ */
+export function placeholdersOf(piece, inputs, front) {
   const photos = piece.positions.filter((position) => !inputs.photos[position]?.present).map((position) => `photo ${position}`);
-  return offerIsPlaceholder(inputs) ? [...photos, `the offer "${campaign(inputs).offer.value}"`] : photos;
+  const offer = offerIsPlaceholder(inputs) ? [`the offer "${campaign(inputs).offer.value}"`] : [];
+  const words = front && piece.id === "flyer" && !front.approved ? [`front B's words, ${front.source} not approved`] : [];
+  return [...photos, ...offer, ...words];
 }
 
 /**

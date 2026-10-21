@@ -254,3 +254,56 @@ the print build reads an offer carrying `label_approved` as final (`pages.mjs` `
 a bracketed label is a placeholder whatever it carries. Q6 builds its placeholder cases from a placeholder copy of the
 file and checks the committed one. ⚠ The flyers stay proofs until `data/flyer-back.md` is marked approved (§ 12 item 4);
 the tent card is final.
+
+## 13. Amendment, 2026-10-20 (evening): front B, the Owner's energy on a brief. CONTRACT, written beside a spike
+
+**Why.** The Advisor, 2026-10-20, on the Owner's ask that our flyers be *"spiced up"* so he feels *"confident"* at the
+Boston event: *"we've addressed the style but not the substance of the critique … The (much more difficult) goal is to
+replicate the \*feeling\* that the Owner has when seeing this material – while still making it as effective as
+possible"*, and *"This flyer has to go out tomorrow morning."* The front of § 12 carries no words saying what Fit AF is
+(the offer, the code, the address and the logo only). The brief, the candidates and the measurements are Fit AF's
+(`docs/design-analysis/2026-10-20-boston-flyer-fronts.md`), not this repository's: they quote words not yet approved.
+⚠ **Built the same evening as a spike, under the deadline, before its cases**; the cases of item 7 are written and run
+before anything of it is committed, the mechanism's mutant red first.
+
+1. **Two fronts.** Front A is § 12's, unchanged, and the default. **Front B** is made when the build is given its words
+   (`--front-words FILE`); the back is § 12's, the same page whichever front a flyer has.
+2. **Front B, top to bottom**: a dark band (the template's `--ink`) running into the bleed on the top, left and right,
+   holding the headline (Poppins 700, uppercase, `FRONT_B_HEAD_PX`; one of its lines, `accent`, in `--signature`) and
+   the lede (`FRONT_B_LEDE_PX`); a torn lower edge, a fixed path drawn over the photo's top; the photo across the face
+   into the bleed on the left and right, by § 3 and § 7's rules as front A's, taking the height the band and the foot
+   leave; **at most one callout**, a level green disc over the photo's lower right corner (Q2: nothing but the tent's face
+   turns); then the foot: the offer
+   (`FRONT_B_OFFER_PX`, at most two lines, § 12 item 2's check) with the logo under it at the left, and the QR code
+   (`FRONT_B_QR_IN`, 1 in) with the address under it at the right. **One logo** a side. Every size is `sizes.mjs`'s;
+   every colour the template's. Every part inside the safe margin (the build's report names any that is not).
+3. **The words: one JSON file**, `print/front.mjs`'s keys only (`headline` one to three lines, set as given and never
+   rewrapped; `accent`; `lede`; `callout` one to three lines; `approved`), anything else refused naming the key. ⛔
+   **Until the Advisor approves them, the words live outside this repository** (a public one) and every flyer made with
+   them is a proof (`-PROOF`, the report's last line naming the file). Once approved they are committed as
+   `data/flyer-front.json` with `"approved": true`, and the build is given that file.
+4. `--back-words FILE` builds with a back other than `data/flyer-back.md` (a draft kept outside the repository), read
+   and checked by § 12 item 4's rules and named by its file in the report; `--out-dir DIR` writes the pieces there.
+5. **Unchanged**: front A and every case that holds it; the tent card; the back; the mock-ups and their screen build
+   (front B is print-only, as the back is); `data/offers.json`; `data/events.json`.
+6. ⛔ **Not here**: the words (the Advisor's, and the Owner's); which front prints; a field test of the two fronts
+   (it would need event codes of its own in `data/events.json`, and production to know them, before 2026-10-26).
+8. **The meal's name on its photo** (the Advisor, 2026-10-20: *"Can we also add the meal names under (or on?) the
+   photos?"*). Given `--photo-names FILE` (`{ "<photo id>": "<the meal's name>" }`, a line of at most 40 characters,
+   kept **outside this repository**: it names photos by their IDs, which § 3 keeps out), each flyer prints the name of
+   the meal each of its photos shows: front B's at the photo's lower left, the back's three at each square's foot, a
+   solid chip of `--ink` with white type (14px), inside the safe margin; the back's names are out of the photos' grid
+   flow, so no photo moves. A photo the flyer carries with no name is refused (a flyer names all its meals or none).
+   **Which dish a photo shows, and its name, come from Fit AF's KMS** (the Advisor, 2026-10-20: *"All of the meal names
+   should come via the KMS – these meals themselves should be grains"*): a person binds each photo to a meal record, and
+   the KMS writes the names file. ⚠ The glam set's photos are not bound to meal records yet (the KMS's meal-image
+   decisions cover the meal library's photos), and several of its dishes have no record; so **pass 1 (2026-10-20)
+   prints no names**. A stand-in from the Owner's file names was built and set aside.
+9. **The callout is optional and, by the Advisor's word, unused**: the claim it carried was *"a "our water is wet"
+   style claim – true but fairly meaningless."* The lede's two
+   lines are balanced (`text-wrap: balance`), as the offer's are.
+10. **Cases**: **Q28** `readFront` refuses each malformed key, naming it; with a fixture's neutral bracketed words, every
+   flyer's page 1 carries the headline's lines, the lede, the callout, the offer and the address as text in the PDF and
+   its QR code drawn (Q27's reader, `pdfCarriesProblems`), page 2 is the same page as front A's back, no part is less
+   than the safe margin inside the trim, and the flyers are proofs; with `"approved": true` (and the back approved) they
+   are final. **Mutant**: the front words ignored (front A printed): Q28 red.

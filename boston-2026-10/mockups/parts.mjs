@@ -74,6 +74,15 @@ export function makeParts(inputs) {
   note([TOKENS_SOURCE], "colours and fonts (:root)");
 
   return {
+    /**
+     * The meal's name on a photo (SPEC-print-pieces.md § 13 item 8, print-only): the name the print build was given for
+     * the photo at `slot` (`inputs.captions`, from --photo-names, kept outside this repository), or nothing. No legend
+     * lists it: the mock-ups never pass captions.
+     */
+    caption(slot, cls = "") {
+      const name = inputs.captions?.[slot];
+      return name ? `<p class="photo-name ${cls}" data-src="photo-names#${esc(slot)}">${esc(name)}</p>` : "";
+    },
     /** An element whose whole text is one value. */
     text(tag, cls, value, label) {
       note(value.src, label);

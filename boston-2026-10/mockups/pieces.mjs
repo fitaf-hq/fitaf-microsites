@@ -114,8 +114,9 @@ export function tentCard(inputs) {
  * `back.positions`' photos across its top, then `back.words` (print/back.mjs, data/flyer-back.md read), and at the bottom
  * the address and the logo; no QR code and no offer.
  */
-export function flyerFace(c, parts, { short = false, header = true, logo, side = "front", back } = {}) {
+export function flyerFace(c, parts, { short = false, header = true, logo, side = "front", back, front } = {}) {
   if (side === "back") return flyerBack(c, parts, back);
+  if (front) return flyerFrontB(c, parts, front);
   const bar = header ? parts.line("p", "event-bar", c.eventLine, "event line") : "";
   const photo = parts.photo("flyer");
   const plate = logo === undefined ? `<div class="logo-plate">${parts.logo()}</div>` : "";
@@ -140,6 +141,33 @@ ${bar}
 }
 
 /**
+ * The printed flyer's front B (SPEC-print-pieces.md § 13), print-only: a dark band with the headline (its accent line in
+ * the brand's green) and the lede; the photo, a torn edge where the band meets it, and the one callout over its corner;
+ * then the offer and the logo beside the QR code with the address under it. Its words are the front words file's
+ * (`words`, print/front.mjs), cited by key, which no legend lists: front B is on no mock-up's sheet.
+ */
+function flyerFrontB(c, parts, words) {
+  const cite = (key) => `data-src="${esc(`${words.source}#${key}`)}"`;
+  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}">${esc(t)}</span>`).join("");
+  const callout = words.callout ? `<p class="fb-callout" ${cite("callout")}>${words.callout.map((t) => `<span>${esc(t)}</span>`).join("")}</p>` : "";
+  return `
+<div class="fb-band">
+  <h1 class="fb-head" ${cite("headline")}>${lines}</h1>
+  <p class="fb-lede" ${cite("lede")}>${esc(words.lede)}</p>
+</div>
+<div class="fb-hero">${parts.photo("flyer")}${parts.caption("flyer", "fb-name")}<svg class="fb-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE}"/></svg>${callout}</div>
+<div class="fb-foot">
+  <div class="fb-cta">${parts.text("p", "offer", c.offer, "the offer")}${parts.logo("fb-logo")}</div>
+  ${scanBlock(parts, c, "fb-scan", { under: true })}
+</div>`;
+}
+
+/** Front B's torn edge (§ 13): the band's lower edge, drawn over the photo's top, a fixed path so every build is the same. */
+const TORN_EDGE =
+  "M0 0H510V7L497 11L486 6L471 12L458 8L441 13L430 7L414 12L399 9L386 14L370 8L357 12L341 7L327 13L311 9L296 14L283 8" +
+  "L268 12L252 6L238 13L223 9L207 14L194 8L179 12L163 7L150 13L134 9L119 14L106 8L91 12L75 7L62 13L46 9L31 14L18 8L0 12Z";
+
+/**
  * The printed flyer's back (SPEC-print-pieces.md § 12 item 3), print-only: three square photos across the top; the
  * words, the heading at the headline's size, the first paragraph (the lede) at the tagline's, then each paragraph, its
  * lead-in apart; and the bottom row, the address at the left and the logo at the right. Each word is cited by its line in
@@ -150,7 +178,7 @@ function flyerBack(c, parts, { positions, words }) {
   const paragraph = (p, cls) => `<p class="${cls}" ${cite(p.line)}>${p.lead === null ? "" : `<b class="flyer-back-lead">${esc(p.lead)}</b> `}${esc(p.text)}</p>`;
   const [lede, ...rest] = words.paragraphs;
   return `
-<div class="flyer-back-photos">${positions.map((position) => parts.photo(position)).join("")}</div>
+<div class="flyer-back-photos">${positions.map((position) => parts.photo(position)).join("")}${positions.map((position, i) => parts.caption(position, `flyer-back-name flyer-back-name-${i + 1}`)).join("")}</div>
 <div class="flyer-back-body">
   <div class="flyer-back-words">
   <h1 class="headline" ${cite(words.heading.line)}>${esc(words.heading.text)}</h1>

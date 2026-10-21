@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { NO_CHROME } from "./print-fixtures.mjs";
-import { approvalProblems, backRuleProblems, fitProblems, NO_POPPLER, pdfCarriesProblems, twoSidesProblems } from "./qb-checks.mjs";
+import { approvalProblems, backRuleProblems, fitProblems, FRONT_FIXTURE, frontFile, frontWordsProblems, NO_POPPLER, pdfCarriesProblems, twoSidesProblems } from "./qb-checks.mjs";
 import { printMirror } from "./qe-checks.mjs";
 
 /** Replace `from` (present exactly once) with `to` in the mirror's file `rel`. */
@@ -41,6 +41,8 @@ const MUTANTS = {
   approval: [join("print", "back.mjs"), "approved: marked,", "approved: false,"],
   /** Q27 (§ 12.1 item 5): the sheet no longer contained, so printing fragments the front and its lower parts are lost. */
   contained: [join("print", "print.css"), ".print-sheet { contain: strict; }", ".print-sheet { }"],
+  /** Q28 (§ 13): front B's words read and ignored, so every flyer prints front A. */
+  frontB: [join("print", "pages.mjs"), 'const b = !words && front && piece.id === "flyer" ? { front } : {};', "const b = {};"],
 };
 
 test("§ 12 mutants (control): the unchanged mirror passes Q22's rule and Q26's", async () => {
@@ -106,4 +108,18 @@ test("§ 12.1 mutant: the sheet not contained fails Q27", { skip: NO_CHROME || N
     assert.ok(problems.some((p) => /^flyer-PROOF\.pdf page 1 lacks the text "eatfitaf\.com"$/.test(p)), problems.join("\n"));
     assert.ok(problems.some((p) => /^flyer-PROOF\.pdf page 1: the QR code's box is \d+% dark/.test(p)), problems.join("\n"));
   });
+});
+
+test("§ 13 mutant: front B's words ignored fails Q28 (the unchanged mirror, its control, passes)", { skip: NO_CHROME || NO_POPPLER }, async (t) => {
+  const { dir: wordsDir, path } = await frontFile(FRONT_FIXTURE);
+  try {
+    await withMirror(async () => {}, async (dir) => assert.deepEqual(await frontWordsProblems(dir, path, FRONT_FIXTURE), [], "control"));
+    await withMirror((dir) => edit(dir, ...MUTANTS.frontB), async (dir) => {
+      const problems = await frontWordsProblems(dir, path, FRONT_FIXTURE);
+      t.diagnostic(`Q28 on the mutant: ${problems.length} problems: ${JSON.stringify(problems)}`);
+      assert.ok(problems.some((p) => p === 'flyer-PROOF.pdf page 1 lacks front B\'s "[A HEADLINE]"'), problems.join("\n"));
+    });
+  } finally {
+    await rm(wordsDir, { recursive: true, force: true });
+  }
 });

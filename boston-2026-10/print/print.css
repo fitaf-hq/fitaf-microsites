@@ -108,3 +108,51 @@ html, body { margin: 0; padding: 0; background: var(--white); }
    take them). The address under the QR code, centred on it: the scan block a column as wide as the code (its place is
    §§ 9–10's, above); the address keeps its own 4px margin ---------- */
 .scan-under { flex-direction: column; align-items: center; gap: 0; align-self: flex-start; }
+
+/* ---------- § 13 (2026-10-20): front B, the Owner's energy on the brief's order. A dark band (the template's ink) with
+   the headline, its accent line in the brand's green, and the lede, running into the bleed on the top, left and right;
+   the photo across the face, into the bleed on the left and right, taking the height the band and the foot leave; the
+   band's torn lower edge drawn over the photo's top; the one callout, a green disc over the photo's lower right corner (level:
+   Q2 lets nothing but the tent's face turn);
+   then the foot: the offer and the logo at the left, the QR code with the address under it at the right, inside the safe
+   margin. Its sizes are sizes.mjs's (--fb-*); its colours the template's ---------- */
+.print-flyer .board-flyer-b { display: flex; flex-direction: column; }
+.print-flyer .fb-band {
+  flex: none; margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0;
+  padding: calc(var(--bleed) + 26px) calc(var(--bleed) + 24px) 14px;
+  background: var(--ink); color: var(--white);
+}
+.print-flyer .fb-head { margin: 0; color: var(--white); font: 700 var(--fb-head)/1.02 var(--head); letter-spacing: -.01em; text-transform: uppercase; }
+.print-flyer .fb-line { display: block; white-space: nowrap; }
+.print-flyer .fb-accent { color: var(--signature); }
+.print-flyer .fb-lede { margin: 9px 0 0; color: var(--white); font: 600 var(--fb-lede)/1.3 var(--body); text-wrap: balance; }
+.print-flyer .fb-hero { position: relative; flex: 1; min-height: 0; margin: 0 calc(-1 * var(--bleed)); }
+.print-flyer .fb-edge { position: absolute; left: 0; top: -1px; width: 100%; height: 13px; fill: var(--ink); }
+.print-flyer .fb-callout {
+  position: absolute; right: calc(var(--bleed) + 18px); bottom: 14px; margin: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: var(--fb-callout); height: var(--fb-callout); border-radius: 50%;
+  background: var(--signature); color: var(--ink); font: 700 14px/1.05 var(--head); text-align: center; text-transform: uppercase;
+}
+.print-flyer .fb-callout span { display: block; }
+.print-flyer .fb-callout span:first-child { font-size: 30px; line-height: 1; }
+.print-flyer .fb-foot { flex: none; display: flex; align-items: stretch; gap: 18px; padding: 14px 24px 20px; }
+.print-flyer .fb-cta { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+.print-flyer .fb-cta > .offer { font-size: var(--fb-offer); text-wrap: balance; }
+.print-flyer .fb-logo { width: 84px; }
+.print-flyer .fb-scan { flex: none; display: flex; flex-direction: column; align-items: center; }
+.print-flyer .fb-scan .qr { width: var(--fb-qr); height: var(--fb-qr); }
+/* § 13 item 8 (2026-10-20): the meal's name on its photo, a solid chip of the band's ink with white type (nothing
+   translucent): on front B at the photo's lower left, inside the safe margin; on the back, in each square's own grid
+   cell at its foot, the outer two kept the safe margin inside the trim */
+.print-flyer .photo-name {
+  margin: 0; padding: 4px 8px 3px; border-radius: 4px; background: var(--ink); color: var(--white);
+  font: 600 14px/1.25 var(--head);
+}
+.print-flyer .fb-name { position: absolute; left: calc(var(--bleed) + 24px); bottom: 12px; max-width: calc(100% - 2 * var(--bleed) - 48px); }
+/* the back's names are out of the grid's flow (absolute, in their square's grid area), so the photos keep their cells */
+.print-flyer .flyer-back-photos { position: relative; }
+.print-flyer .flyer-back-photos .flyer-back-name { position: absolute; grid-row: 1; bottom: 8px; max-width: calc(var(--tile) - 16px); }
+.print-flyer .flyer-back-name-1 { grid-column: 1; left: calc(var(--bleed) + var(--safe)); max-width: calc(var(--tile) - var(--safe) - 8px); }
+.print-flyer .flyer-back-name-2 { grid-column: 2; left: 8px; }
+.print-flyer .flyer-back-name-3 { grid-column: 3; left: 8px; max-width: calc(var(--tile) - var(--safe) - 8px); }

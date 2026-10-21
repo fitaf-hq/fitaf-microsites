@@ -32,6 +32,16 @@ export const BACK_MIN_TEXT_PX = 14;
 export const BACK_TEXT_PX = 14;
 export const BACK_LINE_HEIGHT = 1.4;
 export const BACK_GAP_PX = 10;
+/**
+ * § 13 (2026-10-20): front B's sizes, in the mock-ups' layout px (120 an inch) but the QR code's. The headline at 40px
+ * (24 pt printed), the lede at 17px, the offer at 26px beside the code, the callout's disc 92px across, and the QR code
+ * 1 in square (the mock-up's was 0.93 in; at a handout's reading distance a phone reads it at well under a foot).
+ */
+export const FRONT_B_HEAD_PX = 40;
+export const FRONT_B_LEDE_PX = 17;
+export const FRONT_B_OFFER_PX = 26;
+export const FRONT_B_CALLOUT_PX = 92;
+export const FRONT_B_QR_IN = 1;
 
 /**
  * The two printed pieces (§ 2): `id` is the mock-up whose face is printed (mockups/pieces.mjs PIECES), `stem` the output
