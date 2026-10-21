@@ -8,10 +8,10 @@
 
 **Allergen and diet sensitive**
 - {gluten-free} Gluten-free
-- {diabetic} Diabetic
+- {high-protein} High protein
 - {low-carb} Low carb
-- {vegetarian} Vegetarian
-- {vegan} Vegan
+- {keto} Keto
+- {dairy-free} Dairy-free
 
 **How it works**
 1. {order} Order online: by Thursday midnight

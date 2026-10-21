@@ -114,7 +114,10 @@ test("Q30: built, each logo treatment is the band's image, the reversed ones on 
 test("Q30: the back's plans refused outside § 15 item 3, naming the line; a lead-in alone is a statement", () => {
   const head = "# Heading words\n\nThe lede words.\n\n";
   const cases = [
-    ["**Plans lead**\n- {keto} Keto: a line\n- {lean} Lean: a line\n", /line 6: an icon must be one of/],
+    // § 16 (2026-10-21) amends this case on purpose: its unknown plan was `{keto}`, and § 16 made `keto` an icon, so the
+    // line read as a bar's item and the refusal moved to line 7 (a block mixing a bar's items and plans); the unknown
+    // plan is now a name that is neither a plan nor an icon
+    ["**Plans lead**\n- {unknown} Unknown: a line\n- {lean} Lean: a line\n", /line 6: an icon must be one of/],
     ["**Plans lead**\n- {lean} Lean without its line\n- {family} Family: a line\n", /line 6: an icon must be one of/],
     ["**Plans lead**\n- {lean} Lean: a line\n- {vegan} Vegan\n", /line 7: a block mixes plans and a bar/],
     ["**Plans lead**\n- {lean} Lean: a line\n", /plans must have 2 to 4 items, not 1/],
