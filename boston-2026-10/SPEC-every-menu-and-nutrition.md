@@ -516,3 +516,12 @@ carry `{menu}`). Cases first (`68d4ca1`), then the code (`f2d1748`), then the go
   CC-8 not moved. Sizes, raw / gzip: production 50,842 / 14,852 → 50,860 / 14,858; development `/` 74,474 / 21,762 →
   74,492 / 21,769 (`seminar/` 74,495 / 21,770).
 
+
+## 10. Amendment, 2026-10-21: every meal a surface sized for a fingertip, and its mark. CONTRACT, before any code
+
+**Why.** The Advisor (Fit AF's decision record `2026-10-17-…` § 7q item 7): *"every meal is going to have the ability to get more info. This also goes to our design guidelines about tappable surfaces and the size of adult human fingertips"*, and *"we're going to allow customers to pick a menu as a start and then swap meals as much as they'd like – or start from a completely empty bag"*. The guideline is OurFans' (`ourfans:docs/arch/design-philosophy.md`, *"Real-world device ergonomics"*; its constants: a standard target **10 mm**, a primary **14 mm**, at a device's logical density of 153–163 CSS px per inch); this repository had none.
+
+1. **Every target this card adds meets the standard target**: 10 mm in its smaller dimension at the densest logical density OurFans uses, so **at least 64 CSS px** (one named constant, its source in a comment). The menu chips; and **the meal's whole row** (its tile, its name and its line together) is the disclosure control, not a mark beside the name.
+2. **The mark says "more", not "add"**: the + and − become a chevron that turns when the meal is open (drawn here, `currentColor`, `aria-hidden`), because + will mean *add a meal* in the picker to come. `aria-expanded` and `aria-controls` stay as built.
+3. **Not here**: the page's other controls (the answers, *Continue to checkout*, *Choose my own meals*, *See all plans*): a site-wide rule is its own contract.
+4. **Cases**: EM6 (Chrome, at 390 and 1280): every chip's and every meal control's bounding box at least 64 CSS px in its smaller dimension; a press anywhere on a meal's row (the tile, the name, the line) opens it; the mark is not the text "+". Mutant: the row's control shrunk to the name alone (EM6 red). The renders (`dist-dev/renders/`) re-made at 390 and 1280, opened and described.
