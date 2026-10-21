@@ -49,7 +49,7 @@ test("SP2: the new pairs are declared and pass; no pair still draws a save butto
   const dev = pairsFile.pairs.filter((p) => p.build === "dev");
   const buttons = dev.filter((p) => /Save my offer/.test(p.where) && /Tell me when you deliver here/.test(p.where));
   assert.deepEqual(buttons.map((p) => [p.fg, p.bg, p.role]), [["--navy", "--white", "body"]], "the two save buttons: navy on white, body text");
-  const line = dev.filter((p) => /offer's line/.test(p.where));
+  const line = dev.filter((p) => /save step's offer line/.test(p.where));
   assert.deepEqual(line.map((p) => [p.fg, p.bg, p.role]), [["--navy", "--white", "body"]], "the step's offer line: navy on white, body text");
   const onCta = pairsFile.pairs.filter((p) => p.bg === "--cta" || p.bg === "--cta-hover");
   assert.ok(onCta.length > 0, "control: the store's button is declared");

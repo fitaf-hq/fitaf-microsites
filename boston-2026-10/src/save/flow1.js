@@ -53,6 +53,7 @@
     var outOfArea = s.name === "OUT_OF_AREA" || s.name === "EXPANSION_SAVED" ||
       (s.kind === "expansion" && (busy || s.name === "ERROR"));
     el("save-offer-label").textContent = offer;
+    el("save-step-offer-label").textContent = offer; // the step names its offer where it asks (SPEC-save-offer-production § 1)
     el("save-open").hidden = collapsed;
     el("save-collapsed").hidden = !collapsed;
     el("save-form").hidden = s.name === "SAVED" || s.name === "EXPANSION_SAVED";
