@@ -148,6 +148,7 @@ async function chooserProblems(dir = menusOut) {
     const axRadios = [];
     const walk = (n) => n && (n.role === "radio" && axRadios.push({ name: n.name, checked: Boolean(n.checked) }), (n.children ?? []).forEach(walk));
     walk(ax);
+    if (ax?.role !== "group" || ax?.name !== WORDS.chefs_choice.menus_label) fail(`the group's own name: ${ax?.role} ${JSON.stringify(ax?.name)}, not the words' ${JSON.stringify(WORDS.chefs_choice.menus_label)}`);
     if (JSON.stringify(axRadios) !== JSON.stringify([{ name: WORDS.menus[CC], checked: true }, { name: WORDS.menus[TWO], checked: false }])) fail(`the accessibility tree: ${JSON.stringify(axRadios)}`);
 
     await chooseMenu(page, TWO);

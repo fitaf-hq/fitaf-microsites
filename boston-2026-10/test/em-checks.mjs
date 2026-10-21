@@ -14,7 +14,7 @@
 // of ingredients alone are accepted (ACCEPTED), an empty entry and `contains` without `ingredients` refused, and a week
 // with `"meals": {}` makes the content of the same week without `meals` (§ 1 item 3: it carries none of the additions).
 import { existsSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -67,7 +67,12 @@ export const ACCEPTED = [
 const WORDS = {
   fixture: () => fixtureWords(),
   committed: () => MESSAGES,
-  "no-menu-heading": () => ({ ...fixtureWords(), chefs_choice: { ...fixtureWords().chefs_choice, heading: MESSAGES.chefs_choice.heading } }),
+  // The committed heading with its {menu} written out as Chef's Choice's name: the phrase a one-list week reads, unable to
+  // name another menu.
+  "no-menu-heading": () => {
+    const words = fixtureWords();
+    return { ...words, chefs_choice: { ...words.chefs_choice, heading: words.chefs_choice.heading.replace("{menu}", words.menus["chefs-choice"]) } };
+  },
 };
 
 /** The content of the package at `root` for `week`, made with `messages` and written as the program writes it: the
@@ -144,6 +149,29 @@ export async function acceptedProblems(root = ROOT, only = null) {
     const want = await attempt(root, same, fixtureWords());
     if (want.error) problems.push(`${label}: the week to compare with was refused: ${want.error.message}`);
     else if (JSON.stringify(got.data) !== JSON.stringify(want.data)) problems.push(`${label}: its content is not that of the week without meals`);
+  }
+  return problems;
+}
+
+/** The real list EM1 names (SPEC-every-menu-and-nutrition § 4, the Advisor's ruling of 2026-10-21: four lists' names
+ *  approved for this repository): the fixture's second list under that id. */
+export const REAL_LIST = "gluten-free";
+
+/** EM1: a week naming one of the real lists makes its content with data/messages.json AS COMMITTED (no fixture words),
+ *  the list shown under the words' name; and the build takes those words. */
+export async function realListProblems(root = ROOT) {
+  const problems = [];
+  const words = JSON.parse(await readFile(join(root, "data", "messages.json"), "utf8"));
+  const built = await buildWith(root, words);
+  if (built) problems.push(`the build: ${built.message}`);
+  const week = structuredClone(MENUS);
+  week.lists = { "chefs-choice": week.lists["chefs-choice"], [REAL_LIST]: week.lists[FIXTURE_LIST] };
+  const { error, data } = await attempt(root, week, words);
+  if (error) return [...problems, `a week naming ${REAL_LIST}: ${error.message}`];
+  const menus = data.weeks[0].menus ?? [];
+  const named = menus.map((m) => [m.list, m.name]);
+  if (JSON.stringify(named) !== JSON.stringify([["chefs-choice", words.menus["chefs-choice"]], [REAL_LIST, words.menus[REAL_LIST]]])) {
+    problems.push(`its menus ${JSON.stringify(named)}`);
   }
   return problems;
 }

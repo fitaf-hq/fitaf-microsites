@@ -20,17 +20,29 @@ const NUTRITION = { line: ["{cal}", "{protein}", "{carbs}", "{fat}"], ingredient
 /** The card's phrases a visitor reads with snacks carted (data/plans.json as committed): the not-carted line is not on
  *  the page then (SPEC-snacks-in-the-cart § 4.3), nor `updating` on a week that is not updating. */
 const CARD = { heading: ["{menu}", "{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [] };
+/** SPEC-every-menu-and-nutrition § 4 and the Advisor's ruling of 2026-10-21 (Fit AF decision 2026-10-17 § 7q item 6): the
+ *  menus approved for this repository, in this order, after Chef's Choice. */
+const APPROVED = [
+  ["chefs-choice", "Chef's Choice"],
+  ["poultry-and-fish", "Poultry & Fish"],
+  ["gluten-free", "Gluten Free"],
+  ["comfort-classics", "Comfort Classics"],
+  ["global-explorers", "Global Explorers"],
+];
+/** The chooser's own name (the ruling: "Menu"), a phrase of the card's words. */
+const GROUP = "menus_label";
 const PARTS = ["cc-list", "cc-own"];
 const HASH = "#lean-or-7d-s"; // both lists have a cart for it, and a snack list for every day
 
-test("EM4a: data/messages.json names the menus, Chef's Choice first, and has nutrition's three phrases with their placeholders, each marked a placeholder", () => {
+test("EM4a: data/messages.json names the five approved menus in order, the chooser's own name, the heading's {menu}, and nutrition's three phrases, each marked a placeholder", () => {
   const { menus, nutrition } = MESSAGES;
   assert.ok(menus && typeof menus === "object", "data/messages.json has `menus`");
   assert.equal(menus.status, "placeholder", "menus.status");
   const lists = Object.keys(menus).filter((k) => k !== "status");
   assert.equal(lists[0], "chefs-choice", "Chef's Choice first");
-  assert.deepEqual(lists, ["chefs-choice"], "no list but chefs-choice is named in this repository (§ 4)");
-  assert.ok(typeof menus["chefs-choice"] === "string" && menus["chefs-choice"].trim(), "chefs-choice's name");
+  assert.deepEqual(Object.entries(menus).filter(([k]) => k !== "status"), APPROVED, "the approved menus, by id and name, in order");
+  assert.equal(MESSAGES.chefs_choice[GROUP], "Menu", `chefs_choice.${GROUP}, the chooser's name`);
+  assert.ok(MESSAGES.chefs_choice.heading.includes("{menu}") && MESSAGES.chefs_choice.heading.includes("{week}"), "the heading names the menu and the week");
   assert.ok(nutrition && typeof nutrition === "object", "data/messages.json has `nutrition`");
   assert.equal(nutrition.status, "placeholder", "nutrition.status");
   for (const [key, placeholders] of Object.entries(NUTRITION)) {
@@ -64,11 +76,12 @@ function marked() {
   const messages = fixtureWords();
   const shown = [];
   const must = (text) => (shown.push(text.split(" ")[0]), text);
+  const week = structuredClone(MENUS);
   for (const [key, placeholders] of Object.entries(CARD)) messages.chefs_choice[key] = must(mark(...placeholders));
   for (const key of Object.keys(messages.chefs_choice)) if (!(key in CARD) && key !== "status") messages.chefs_choice[key] = mark();
-  for (const list of Object.keys(messages.menus)) if (list !== "status") messages.menus[list] = must(mark());
+  // Every menu's name marked; those of the week's lists must be shown (the others are names the week does not carry).
+  for (const list of Object.keys(messages.menus)) if (list !== "status") messages.menus[list] = list in week.lists ? must(mark()) : mark();
   for (const [key, placeholders] of Object.entries(NUTRITION)) messages.nutrition[key] = must(mark(...placeholders));
-  const week = structuredClone(MENUS);
   const names = new Map();
   const markName = (item) => {
     if (!names.has(item.name)) names.set(item.name, mark());
@@ -82,7 +95,7 @@ function marked() {
     if (entry.ingredients !== undefined) entry.ingredients = mark();
     if (entry.contains !== undefined) entry.contains = mark();
   }
-  return { messages, week, shown };
+  return { messages, week, shown, group: messages.chefs_choice[GROUP] };
 }
 
 /** The card's words at HASH with each menu chosen in turn: one string per menu, and the chooser as first shown. */
@@ -92,6 +105,7 @@ async function cardTexts(messages, week) {
     const html = await menusPage({ messages, picks: picks.dir });
     const page = openMenus(html, HASH);
     const chooser = chooserOf(page);
+    chooser.label = page.document.getElementById("cc-menus")?.getAttribute("aria-label") ?? null;
     const texts = [];
     for (const list of chooser.values) {
       chooseMenu(page, list);
@@ -104,9 +118,10 @@ async function cardTexts(messages, week) {
 }
 
 test("EM4c: with every phrase, menu name and text a letterless marker, the card with two menus shows no letter but the week", async () => {
-  const { messages, week, shown } = marked();
+  const { messages, week, shown, group } = marked();
   const { chooser, texts } = await cardTexts(messages, week);
   assert.deepEqual(chooser.values, ["chefs-choice", FIXTURE_LIST], "the chooser shows both menus, in the words' order");
+  assert.equal(chooser.label, group, "the chooser's own name is the words' (its aria-label)");
   const seen = new Set();
   texts.forEach((text, i) => {
     for (const m of text.match(SENTINEL) ?? []) seen.add(m);

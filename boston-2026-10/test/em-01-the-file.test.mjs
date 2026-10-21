@@ -6,7 +6,7 @@
 // amendment (1fb2b19): an entry of numbers alone, or of ingredients alone, is accepted, and `"meals": {}` too.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ACCEPTED, acceptanceProblems, acceptedProblems, REFUSALS, refusalProblems } from "./em-checks.mjs";
+import { ACCEPTED, acceptanceProblems, acceptedProblems, REAL_LIST, realListProblems, REFUSALS, refusalProblems } from "./em-checks.mjs";
 import { BOTH, CC_ONLY, FIXTURE_LIST, MENUS, SIZES } from "./em-harness.mjs";
 
 test("EM1 (fixture control): the week has two lists, a cart for some answers in both and for others in Chef's Choice alone, and meals", () => {
@@ -22,6 +22,10 @@ test("EM1 (fixture control): the week has two lists, a cart for some answers in 
 
 test("EM1: the fixture week builds and makes its content with the fixture's words", async () => {
   assert.deepEqual(await acceptanceProblems(), []);
+});
+
+test(`EM1: a week naming a real list (${REAL_LIST}) builds and makes its content with data/messages.json as committed`, async () => {
+  assert.deepEqual(await realListProblems(), []);
 });
 
 for (const [label] of ACCEPTED) {

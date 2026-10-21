@@ -19,7 +19,7 @@ import { LOG_PREFIX } from "./r2-harness.mjs";
 export { mpidOf } from "./ms-harness.mjs";
 export { weekOf };
 
-export { FIXTURE_LIST, FIXTURE_LIST_NAME, FIXTURE_HEADING, menusMessages } from "./fixtures/menus-words.mjs";
+export { FIXTURE_LIST, FIXTURE_LIST_NAME, menusMessages } from "./fixtures/menus-words.mjs";
 
 /** The fixture week: two lists (`chefs-choice`, the v2 fixture's own, and the invented one) and `meals`. */
 export const MENUS_DIR = join(ROOT, "test", "fixtures", "picks-menus");
