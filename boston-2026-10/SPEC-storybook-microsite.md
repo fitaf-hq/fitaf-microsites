@@ -138,8 +138,8 @@ Turnstile there.
 - **Where**: `tools/storybook/node_modules/.cache/fitaf-microsite/<build>/<date>/`, git-ignored with the install and
   outside `dist/` and `dist-dev/`; SM-4 does not read it (the site's output, not a file of the tool's).
   `MICROSITE_PAGES_DIR` moves it (the cases do, so no two builds share one). Served under `/microsite/`. The development
-  page asks for `/fonts/…` and `/assets/fitaf-logo.png` at the site's root, so its build's `fonts/` and `assets/` are also
-  served at Storybook's root (in the static build, beside Storybook's own `assets/`, with distinct names).
+  page asks for `/fonts/…`, `/assets/fitaf-logo.png` and (since `SPEC-why-fit-af.md` § 6) its `/why/` frame at the site's
+  root, so its build's `fonts/`, `assets/` and `why/` are also served at Storybook's root (in the static build, beside Storybook's own `assets/`, with distinct names).
 - **A change** shows after a restart, or after `npm run pages` (the pages rebuilt in place while the server runs) and a
   reload of the story. No watch: a new picks file changes the dates, read at the start.
 - **The clock** starts at the instant and runs on (`Date.now()`, `new Date()`; a `Date` given a value, and the rest of

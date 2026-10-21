@@ -49,7 +49,7 @@ block's source or words shows after a restart, or after `npm run pages` and a re
 
 | path | what |
 |---|---|
-| `.storybook/main.js` | the stories, the two addons, `@storybook/html-vite`, telemetry and "what's new" off; the build hook (`staticDirs`: the pages under `/microsite/`, and the development build's `fonts/` and `assets/` at the root, where that page asks for them); the virtual module `virtual:microsite-pages` (the pages' manifest) |
+| `.storybook/main.js` | the stories, the two addons, `@storybook/html-vite`, telemetry and "what's new" off; the build hook (`staticDirs`: the pages under `/microsite/`, and the development build's `fonts/`, `assets/` and `why/` at the root, where that page asks for them: `ROOT_STATIC`); the virtual module `virtual:microsite-pages` (the pages' manifest) |
 | `.storybook/middleware.js` | the development server sends the pages with `microsite/serve.mjs`'s policy, and serves the Hand-off stories' store at `/order`, `/checkout` and `/img/` by `handoff/serve.mjs`'s rule |
 | `.storybook/preview.js` | the two widths as viewports, 390 (the default) and 1280; a full-bleed canvas |
 | `microsite/pages.mjs` | the build hook: the site's build for each build × date, the clock script where the date is fixed, and `pages.json` beside them (`npm run pages` runs it) |

@@ -3,9 +3,9 @@
 //
 // When Storybook starts (or builds), microsite/pages.mjs runs the site's build for each build and date, once, into the
 // package's node_modules/.cache/fitaf-microsite/ (MICROSITE_PAGES_DIR overrides it), and Storybook serves those files
-// as static files under /microsite/. The development page asks for its fonts and logo from the site's root
-// (/fonts/, /assets/), so those two directories of its build are served there too: the same files the production
-// page finds beside itself. What the stories offer (the dates, the goals, the counts) reaches them as the virtual
+// as static files under /microsite/. The development page asks for its fonts, its logo and its /why/ frame from the
+// site's root (/fonts/, /assets/, /why/), so those three directories of its build are served there too (ROOT_STATIC):
+// the same files the production page finds beside itself. What the stories offer (the dates, the goals, the counts) reaches them as the virtual
 // module virtual:microsite-pages, the pages' own manifest.
 //
 // § 8, the Hand-off stories: at the same moment handoff/store.mjs builds the block (scripts/build-storefront.mjs's own
