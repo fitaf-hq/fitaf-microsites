@@ -459,3 +459,28 @@ were checked against Fit AF's record of the offer's numbers before this amendmen
    than the cases: the names band's place under the photos, the body's margins, the statement drawn as a ribbon and the
    bar's ground have no case that measures them (the names' words are read from the PDF, Q28 and Q29, and a statement's,
    Q30).
+
+## 16. Amendment, 2026-10-21 (evening): the back's diets, the Owner's five. CONTRACT, before any code
+
+**Why.** The Owner, relayed by the Advisor (2026-10-21, after the flyers went to print): *"make the allgerns on the back:
+gluten free, high protein, low carb, keto, dairy free"*; the Advisor: *"We can format them how we want – he mostly just
+wanted to replace "diabetic" etc"*. The bar's list was the Owner's to confirm (§ 14 item 3's caution, Fit AF's decision
+record § 7o item 2); this is his list.
+
+1. **The words** (`data/flyer-back.md`, the bar under *"Allergen and diet sensitive"*), in his order: *Gluten-free*,
+   *High protein*, *Low carb*, *Keto*, *Dairy-free* (the house's hyphen on the two *-free* compounds, as the bar's
+   *Gluten-free* already has it). The file stays approved: these are the Owner's words, given through the Advisor.
+2. **Three new icons** in `print/icons.mjs`, drawn here as the others are (plain line drawings on the 24-unit square,
+   `currentColor`, no outside icon set), each with its one-line comment: **`high-protein`**, a dumbbell; **`keto`**, an
+   avocado halved, its stone showing; **`dairy-free`**, a milk carton in a circle, struck through, as `gluten-free`'s
+   grain stalk is. `diabetic`, `vegetarian` and `vegan` stay in the set, unused.
+3. **Unchanged**: every other rule of §§ 12–15; the back must still fit (§ 12 item 5: refused in layout px, never
+   shrunk) with the type floor; if it does not, the build says by how much and the Advisor chooses.
+4. **Cases**: the committed back's bar reads, from the PDF, the five labels in the file's order (Q21's reading of the
+   committed file); each new icon draws (a case per name, as the existing icons' are held); Q20–Q30 green, each failure
+   shown to be the base's or amended on purpose with the reason. The print set and P1 green.
+5. **Then**: the print-ready pages and the 4-up rebuilt (`scripts/print-delivery/`, Fit AF's), every PDF read as on
+   2026-10-21 (§ 15's release), for the next run on the in-house printer or the shop. Not before the Advisor has seen a
+   render of the new back.
+
+### 16.1 Built (to be filled by the build)
