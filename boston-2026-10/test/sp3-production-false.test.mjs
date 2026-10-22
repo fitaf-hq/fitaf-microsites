@@ -42,6 +42,8 @@ test.after(() => base.dispose());
 // Since § 10 (the offer a price promise): data/offers.json (the Boston offer's code_mode none and valid_to), data/delivery-
 // zips.json (the official list), src/worker/messages.js (E1's date held), src/worker/redeem.js (/o's) and
 // src/worker/zip-class.js (the near ring by prefix beside an exact list).
+// Since § 10.3 (the Worker's pages in the site's look): src/worker/pages.js (page(), already moved by § 3) and
+// src/worker/redeem.js (the saved offer's one action) again, and src/worker/page-style.json (new: the derived stylesheet).
 const MOVED_WORKER_FILES = [
   "data/delivery-zips.json",
   "data/events.json",
@@ -49,6 +51,7 @@ const MOVED_WORKER_FILES = [
   "data/save.json",
   "src/worker/choose-sender.js",
   "src/worker/messages.js",
+  "src/worker/page-style.json",
   "src/worker/pages.js",
   "src/worker/redeem.js",
   "src/worker/site.js",
