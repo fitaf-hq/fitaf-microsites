@@ -624,3 +624,83 @@ from E1's orange button, so it must look like the site it came from.
    cases do): the template's body font in use, the logo present, the button's box at least 64 px tall; the confirmation
    and lapse pages carry the same head. ⛔ Nothing about what the pages say changes.
 5. **Renders** of `/o` at 390 and 1280 and of the confirmation page, for the Advisor's pass with the wording.
+
+## 10.4 Built (2026-10-22): the Worker's pages in the site's look
+
+Built on `boston/save-offer-brief` after `cc1d2bb`. Every case was run as a single file at `nice -n 15`; the whole site
+suite once, at `0b4884b`.
+
+| commit | what |
+|---|---|
+| `2eb1d35` | the cases first, run red on `cc1d2bb`'s code: SP15 1/6, its Chrome half 0/3, SP3 4/5 |
+| `a70a8f9` | the code; SP15's fixture fixed (below) |
+| `0b4884b` | CC-8b's golden, re-recorded once from `a70a8f9`'s own tree |
+| the next commit | these notes; the READMEs |
+
+**Cases**
+- **SP15** (`test/sp15-worker-pages-look.test.mjs`, with `test/sp-worker-pages.mjs`): every page `page()` draws, from the
+  Worker's own handlers over a fake D1, at fixed dates. Green 6/6.
+  - The derived stylesheet equals its sources.
+  - Every page has the same head, its title apart.
+  - Every page opens one `<main class="worker-page">` with the logo, linking to `/`.
+  - The saved offer has one `.action`, drawn in `--cta` and at least 64 px tall; no other page has one.
+  - Each page's words and status are `cc1d2bb`'s, page by page.
+  - The `"worker"` contrast pairs are declared and pass.
+- **SP15 in Chrome** (`tools/storybook/test/wp-chrome.test.mjs`): the development Worker in Miniflare with its local D1, its
+  fonts and logo answered from `copyStatic`, nothing else requested. Green 3/3.
+  - `/o` at 390 and 1280: `--body`'s font in use and loaded, and `--head` on the heading; the logo drawn and linking to `/`;
+    the button 64 px tall or more in `--cta`'s orange; the column 16 px from the edge at 390, and at most 680 px and
+    centred at 1280.
+  - The confirmation and the ended offer's pages at 390: the same stylesheet, font and logo. The ended page's link is
+    underlined and not orange.
+  - SM-1, SM-3, SM-4 and SM-9 pass over the new file.
+- **SP3**: its list of moved Worker files gains `src/worker/page-style.json`. Green 5/5.
+- ⚠ **SP15's fixture as committed at `2eb1d35` was wrong.** Its codes (`SP15CODE`) were outside the code alphabet, so the
+  "saved" and "ended" pages it rendered were the unknown-code page. Fixed in `a70a8f9` (`SPQXCDE2`, `SPQXRE23`), and SP15's
+  words case now checks each page is the one its name says. The fixed fixture was not re-run on `2eb1d35`'s tree: SP15 reads
+  its base through git, and an archive is not a repository.
+
+**Built**
+- **`src/worker/pages.js` `page()`**: its `<style>` is `src/worker/page-style.json`, and its body is one `main` opening (after
+  the DRAFT line while the wording is a draft) with the logo, `/assets/fitaf-logo.png`, linking to `/`.
+- **`src/worker/page.css`** holds tokens only:
+  - the body in `--body`, the heading in `--head` and `--navy`;
+  - a column of at most 680 px with 16 px gutters;
+  - links back in the plan page's quieter style;
+  - `.action a`, the store button's look, at least 64 px tall;
+  - the confirmation's two answers drawn alike;
+  - the DRAFT line in `--draft`.
+- **`npm run worker:style`** (`scripts/worker-style.mjs`) writes `src/worker/page-style.json`. It uses `build.mjs`
+  `siteStyle`, which `privacyPage` now uses too; the development build is byte-identical to `8f3baf0`'s, `/privacy/`
+  included.
+- **`redeem.js`**: the saved offer's *Build my plan →* is wrapped in `<p class="action">`, so its link's markup is unchanged.
+- **Contrast**: `scripts/contrast.mjs` reads `page.css` (`--worker-style`), and `src/contrast-pairs.json` gains seven
+  `"worker"` pairs.
+
+**Chosen where § 10.3 is silent**
+1. The pages § 10.3 names map onto `page()`'s callers:
+   - the saved offer is `/o` ORIGINAL;
+   - the lapse pages are `/o`'s ended (WELCOME_BACK) and unknown (CURRENT) offers, each with its link back in the quieter
+     style;
+   - the confirmation is `/confirm`'s landing and its two answers, plus GONE.
+
+   **There is no erase page:** erase is a CLI.
+2. The confirmation's *Yes, keep me posted* and *No thanks* are drawn alike, as outlined pills 48 px tall, as easy to
+   withhold as to give (rung 5 § 9's rule for E1).
+3. The DRAFT token is in the derived stylesheet for every page, used only while the wording is a draft.
+
+**Goldens**
+- **CC-8b**:
+  - `src/worker/pages.js` `9128c1fa…` → `42be770a…`
+  - `src/worker/redeem.js` `2d5e1010…` → `55b172e7…`
+  - `src/worker/page-style.json` added, `8ed72850…`
+
+  MS-9 and PR-10 read the same golden. Not moved: S20, U4, M14, WC-9, MS.
+
+**Gates at `0b4884b`:** the whole site suite **1019 of 1020**, with S22 alone, as before. `npm run contrast` passes 90 of 90.
+`wp-chrome` passes 3/3.
+
+**Renders** (`dist-dev/renders/`, git-ignored):
+- `o-page-390.png`, `o-page-1280.png` and `confirm-390.png`: the Worker's pages in Chrome from the local Worker. The `/o`
+  save is the Boston offer's, saved on 2026-10-24 from `?e=boston`.
+- `e1-ticked-600.png` and `e1-unticked-600.png`, re-made and unchanged.
