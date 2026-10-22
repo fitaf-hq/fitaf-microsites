@@ -59,6 +59,15 @@
 // bytes each (the analytics script alone: S20's note lists the lines); the three development pages by +370 each (the same
 // lines, the link in place of "[Privacy notice]", flow1.js's event lines) and their visible
 // page at the six answered fragments (the link's words). From here the reference is e11f775's tree.
+// ⚠ RE-RECORDED at 596d116 (`node test/u-04-record.mjs --commit 596d116`): the merge into boston/live-week-every-menu
+// (2026-10-21) of boston/every-menu, boston/save-offer-production and boston/analytics-json onto boston/why-button,
+// whose three records above (e2284f1, f72040a, e11f775) each held one branch's pages. Against each: all six contents
+// byte-identical; the visible page at all 42 entries byte-identical to e11f775's record (save-offer-production's six
+// answered development fragments, the only visible change of the three branches; why-button's and every-menu's records
+// equal f02807e's there); the six served pages moved by exactly the union of the three branches' lines (`git merge-file`
+// of every-menu's and save-offer-production's page into why-button's, each over 84807ce's, gives 596d116's byte for
+// byte with no conflict; each production page +10,772 bytes and each development page +11,714 against f02807e's
+// record). analytics-json changes no page. From here the reference is 596d116's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -67,7 +76,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to e2284f1's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "e2284f1");
+test("U4: a normal week, the content and the page as served, byte-identical to 596d116's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "596d116");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });
