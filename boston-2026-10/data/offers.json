@@ -1,6 +1,6 @@
 {
   "status": "placeholder",
-  "status_note": "PLACEHOLDERS until the Owner approves the offers: no terms, no codes. Since 2026-10-22 (SPEC-save-offer-production.md section 10) an offer may carry code_mode none: a price promise, not a discount code, so it has no shared_code and no code is issued, shown or needed at the store, and a save holds its pricing until its valid_to; the Boston event offer is one, held until 2026-10-29. Dates are calendar dates in America/New_York, inclusive at both ends. Exactly one `general` offer is current on any date (test S11b checks the file). The past offer exists so the expired paths (WELCOME_BACK, an expired /confirm token, the lapse) are reachable in development.",
+  "status_note": "PLACEHOLDERS until the Owner approves the offers: no terms, no codes. Since 2026-10-22 (SPEC-save-offer-production.md section 10) an offer may carry code_mode none: a price promise, not a discount code, so it has no shared_code and no code is issued, shown or needed at the store, and a save holds its pricing until its valid_to; the Boston event offer is one, held until 2026-10-29. Its label is approved (label_approved 2026-10-21; SPEC-save-offer-production.md section 10.2); every other offer is still a placeholder. Dates are calendar dates in America/New_York, inclusive at both ends. Exactly one `general` offer is current on any date (test S11b checks the file). The past offer exists so the expired paths (WELCOME_BACK, an expired /confirm token, the lapse) are reachable in development.",
   "offers": [
     {
       "id": "event-past-placeholder",
@@ -13,7 +13,8 @@
     },
     {
       "id": "event-boston-2026-10-placeholder",
-      "label": "[The offer]",
+      "label": "Sign up today to save 25%",
+      "label_approved": "2026-10-21",
       "applies_to": "event",
       "valid_from": "2026-10-01",
       "valid_to": "2026-10-29",
