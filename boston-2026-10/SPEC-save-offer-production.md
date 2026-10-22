@@ -704,3 +704,30 @@ suite once, at `0b4884b`.
 - `o-page-390.png`, `o-page-1280.png` and `confirm-390.png`: the Worker's pages in Chrome from the local Worker. The `/o`
   save is the Boston offer's, saved on 2026-10-24 from `?e=boston`.
 - `e1-ticked-600.png` and `e1-unticked-600.png`, re-made and unchanged.
+
+## 10.5 Finding and fix, 2026-10-22: S17's chance failure ("no column holds 187")
+
+**Finding.** S17 searched every column of every row for 187 (its protein value) as a whole number. The columns the system
+fills with machine values can hold that number by chance: a UUID's *"…-a187b…"* (`save_id`) or an instant's *".187Z"*
+(`created_at`, `state_at`, `consent_at`). Nothing private is stored there.
+
+The cause was measured, not assumed. A scratch copy of S17 (never committed) printed, for each run, every column holding
+any three-digit whole number and the shape of its value. Over 60 runs at `nice -n 15`, all 60 were green and **only those
+five columns** ever held one: the two `save_id`s held the same UUID, and the three instants were the same instant. That is
+about 2.3 distinct numbers a run, so 187 turns up about once in 400 runs (S17 also runs inside SP6). It is a chance
+failure with no privacy fault.
+
+**Fix** (`test/s17-no-ip-ua-calculator.test.mjs`).
+- `MACHINE_COLUMNS` names the machine columns with their exact shapes:
+  - the UUIDs: `save_id` in both tables, and `reissued_from`;
+  - the offer token, in the code alphabet;
+  - the `/confirm` token's SHA-256;
+  - the seven ISO instants.
+- `holds` searches every other column exactly as before.
+- `offShape` requires each machine column to be **exactly** its shape, so it has no room for an IP, a user agent or a
+  calculator value.
+- The IP and user-agent checks over the whole dump are unchanged.
+- **S17c** is the control. 187 planted in a real column (the wording version, the email, the event id, the provider's
+  message id) is still found. A machine column off its shape is caught. A chance 187 in an exact UUID and instant is read
+  as a finding by the old check and not by the new one.
+- After the fix, S17 passed 50 runs of 50, 3/3 each.
