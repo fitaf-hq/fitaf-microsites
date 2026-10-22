@@ -559,3 +559,22 @@ morning"*, *"we'll send your code here tomorrow"*, *"to send this code once"*), 
 - `e1-ticked-600.png` and `e1-unticked-600.png`: E1 for the Boston event's offer, saved at noon New York on 2026-10-24
   from `?e=boston`, with the logo read from the local build;
 - `o-page-390.png` and `o-page-1280.png`: `/o/<token>` on 2026-10-25, the Worker's own handler over a fake row.
+
+### 10.2 Rulings, 2026-10-22 (the orchestrator, on § 10.1's open questions). CONTRACT, before any code
+
+**"The plan as saved" is struck from item 3.** It was the contract's defect: it contradicts `flows/01-save-offer.md` § 4
+(*"No plan is sent"*), `consent/DRAFT.md` § 5 (*"Not collected: … plan choice"*) and `SPEC-rung4-save-offer.md` § 4
+(*"⛔ No … plan"*). No plan is sent or stored. E1 and the `/o` page say the pricing is held until the date, and link back
+to the page, as § 10.1 built them; nothing further is built for this ruling.
+
+**The Boston event offer's label is *"Sign up today to save 25%"***, approved 2026-10-21 (Fit AF's decision record
+2026-10-17 § 7p item 7). This branch's `data/offers.json` carries it with the same `label` and `label_approved` fields and
+values as `boston/print-final`'s (`28e951a`) for that offer, so that branch's later merge is a no-op on them; this
+branch's `code_mode: "none"` and `valid_to` 2026-10-29 stay. The file's `status` stays `placeholder` (the general and past
+offers are still placeholders). **Cases first**: S11b holds the Boston offer to that label and `label_approved`, and every
+other offer to `[The offer]`; every golden this moves is re-recorded once, with its proof.
+
+**Left open, for the Advisor:**
+- what a Boston save's `/o` page shows from 2026-10-30, and the general offers (placeholders that still carry codes)
+  behind it (§ 10.1 item 8);
+- DRAFT §§ 1 and 5's *"code"* wording for the page and the record (§ 10.1, for the wording pass).

@@ -75,14 +75,19 @@ test("S11: CURRENT — unknown and malformed codes get byte-identical pages, and
 });
 
 // Since SPEC-save-offer-production § 10 an offer may carry `code_mode: "none"` (no code field): the Boston event's does.
-test("S11b: data/offers.json — placeholders only, and exactly one general offer current on every date", () => {
+// Since its § 10.2 (2026-10-22) the Boston event offer's label is approved, with the same `label` and `label_approved` as
+// boston/print-final's (28e951a); the file's status stays placeholder, every other offer still "[The offer]".
+const APPROVED_LABELS = { "event-boston-2026-10-placeholder": { label: "Sign up today to save 25%", label_approved: "2026-10-21" } };
+test("S11b: data/offers.json — placeholders but the Boston offer's approved label, and exactly one general offer current on every date", () => {
   assert.equal(offersFile.status, "placeholder");
   const { offers } = offersFile;
   const ids = offers.map((o) => o.id);
   assert.equal(new Set(ids).size, ids.length, "ids unique");
   for (const o of offers) {
-    assert.deepEqual(Object.keys(o).filter((k) => !["id", "label", "applies_to", "valid_from", "valid_to", "code_mode", "shared_code"].includes(k)), []);
-    assert.equal(o.label, "[The offer]", `${o.id} is a placeholder`);
+    assert.deepEqual(Object.keys(o).filter((k) => !["id", "label", "label_approved", "applies_to", "valid_from", "valid_to", "code_mode", "shared_code"].includes(k)), []);
+    const approved = APPROVED_LABELS[o.id];
+    if (approved) assert.deepEqual({ label: o.label, label_approved: o.label_approved }, approved, `${o.id}: its approved label`);
+    else assert.deepEqual({ label: o.label, label_approved: o.label_approved }, { label: "[The offer]", label_approved: undefined }, `${o.id} is a placeholder`);
     assert.ok(["event", "general"].includes(o.applies_to));
     assert.ok(["unique", "shared", "none"].includes(o.code_mode));
     assert.equal(o.code_mode === "shared" ? o.shared_code : undefined, o.code_mode === "shared" ? "PLACEHOLDER" : undefined);
