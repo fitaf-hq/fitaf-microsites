@@ -21,12 +21,17 @@
   // the Worker's send time zone. SPEC-save-offer-production § 10.7: when no offer is live (after the last one's
   // valid_to), no offer is offered: neither the box nor this flow is drawn. If the file breaks its at-most-one rule
   // (offerForSave throws), the box stays empty and the flow is drawn, as before.
+  // § 10.9: the step says the date the pricing is held until, as the Worker will for a save made now: the later of the
+  // offer's last day and tomorrow (the day its E1 is due).
   function chooseOffer() {
     try {
-      var chosen = offerForSave(zonedDate(Date.now(), cfg.send_time_zone), cfg.offers);
-      return chosen ? { live: true, label: chosen.label } : { live: false, label: "" };
+      var today = zonedDate(Date.now(), cfg.send_time_zone);
+      var chosen = offerForSave(today, cfg.offers);
+      return chosen
+        ? { live: true, label: chosen.label, held: longDate(heldUntil(chosen, addDays(today, 1))) }
+        : { live: false, label: "", held: "" };
     } catch (e) {
-      return { live: true, label: "" };
+      return { live: true, label: "", held: "" };
     }
   }
   var offer = chooseOffer();
@@ -62,6 +67,7 @@
       (s.kind === "expansion" && (busy || s.name === "ERROR"));
     el("save-offer-label").textContent = offer.label;
     el("save-step-offer-label").textContent = offer.label; // the step names its offer where it asks (SPEC-save-offer-production § 1)
+    el("save-held-date").textContent = offer.held;
     el("save-open").hidden = collapsed;
     el("save-collapsed").hidden = !collapsed;
     el("save-form").hidden = s.name === "SAVED" || s.name === "EXPANSION_SAVED";

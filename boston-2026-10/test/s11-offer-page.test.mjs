@@ -46,7 +46,8 @@ test("S11: WELCOME_BACK — an expired offer's code gets the current offer and O
   const original = saveRows(validateSave(validSave({ email: "dummy-o2@example.com" })), {
     nowMs: TEST_NOW_MS,
     state: "lapsed",
-    saveOverrides: { offer_id: PAST_OFFER_ID, message_state: "sent" },
+    // A save of the past offer, its E1 due within it (since § 10.9 a save is held through its E1's day).
+    saveOverrides: { offer_id: PAST_OFFER_ID, message_state: "sent", send_at: "2026-06-01T13:00:00.000Z" },
   });
   await insertRows(db, [{ saveRow: original.saveRow }]); // a year on: the contact is long gone
   const code = original.saveRow.offer_code;

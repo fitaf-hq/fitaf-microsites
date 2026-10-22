@@ -16,21 +16,24 @@ on the development page.
 > ### Your Boston offer
 > **[The offer, e.g. "N free meals on your first order of $X or more"]**
 >
-> Not ready today? Save it — we'll email your code tomorrow morning, with a link back here. We'll send it once.
+> Not ready today? Save it — tomorrow morning we'll email you a link back here, with today's pricing held until [date]. We'll send it once.
 >
-> **Email** — *we'll send your code here tomorrow*
+> **Email** — *we'll send your link here tomorrow*
 > **Delivery ZIP code** — *so we can check we deliver to you*
 >
-> ☐ **Also email me** Fit AF menus and offers. About once a week; unsubscribe anytime. We'll ask you to confirm.
+> ☐ **Also email me** Fit AF menus and offers. Weekly; unsubscribe anytime. We'll ask you to confirm.
 >
 > **[ Save my offer ]**
 >
-> We'll use your email to send this code once, tomorrow. Only if you tick the box and then confirm it will we
+> We'll use your email to send this once, tomorrow. Only if you tick the box and then confirm it will we
 > send you anything else. We delete your details 30 days after the offer ends unless you've confirmed. We
 > don't sell your information. [Privacy notice]
 
 Below the form, without saving anything: **Build my plan →** (and **See this week's menu →** once a menu is
 published). The box starts **unticked** and is not required.
+
+*[date]* in the lead is the date the pricing is held until, as the page knows it (`SPEC-save-offer-production.md` § 10.9:
+the offer's last day, or the next day on that day); the page fills it.
 
 ⚠ **Layout note, not wording** (`SPEC-rung4-save-offer.md` § 2b, 2026-10-18): on the page, the heading and the offer line are the offer box at the top; the lines from *"Not ready today?"* to the privacy line, the form and § 2 sit at the end, directly after *Choose your meals*, once a plan is chosen; **Build my plan →** is not shown there.
 
@@ -71,7 +74,7 @@ offer that carries a code. Since § 10.7 an E1 that goes after its offer's last 
 ## 4. The confirmation page (`/confirm/…`)
 
 > **Keep hearing from Fit AF?**
-> Menus and offers by email, about once a week. Unsubscribe from any email, anytime.
+> Menus and offers by email, weekly. Unsubscribe from any email, anytime.
 > **[ Yes, keep me posted ]**   **[ No thanks ]**
 
 For an out-of-area request: *"We'll email you when Fit AF delivers near [ZIP] — nothing else. **[ Yes, tell
@@ -82,7 +85,7 @@ hear from us again."*
 
 | field | why |
 |---|---|
-| email | to send the code, or the expansion news, they asked for |
+| email | to send the saved offer, or the expansion news, they asked for |
 | delivery ZIP | to check delivery; for an out-of-area request, the whole purpose |
 | the event (e.g. `boston-2026-10`) | which event the offer belongs to; how the trip's results are counted |
 | for each consent: whether given, **when confirmed**, and **the exact wording version** | proof of consent |
@@ -92,7 +95,7 @@ A daily protein or calorie target typed into the plan calculator **never leaves 
 
 **Kept for**: 30 days after the offer ends, unless marketing was confirmed; an out-of-area request 7 days if
 unconfirmed, up to 12 months if confirmed. After export to the email service, deleted from our records. The
-offer code and its event are kept without any contact details. Deleted on request at any time.
+saved offer and its event are kept without any contact details. Deleted on request at any time.
 
 ## 6. The privacy notice (linked from the form)
 
@@ -114,7 +117,7 @@ offer code and its event are kept without any contact details. Deleted on reques
 - **E1 as a service message**: it is the one email the person asked for, with one optional confirmation link
   inside it. Legal to confirm that is not a marketing email.
 - **F5**: the stated email frequency must match what is sent (the Owner). ✅ Answered 2026-10-22 (the Advisor): the menus
-  email is **weekly**, as §§ 1 and 4 say (*"about once a week"*).
+  email is **weekly**, as §§ 1 and 4 now say (`SPEC-save-offer-production.md` § 10.9).
 - The texting forks of v0.2 (F3) are parked with texting.
 
 ## 8. Where these lines come from

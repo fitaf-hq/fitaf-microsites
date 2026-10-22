@@ -96,18 +96,19 @@ const message = (template, to, subject, siteUrl, lines, footer) => ({
  * `code_mode: "none"` is a price promise, so it says the date its pricing is held until (the offer's valid_to) and no
  * code; an offer that carries a code says the code. Either way `code` is the save's /o token, in See my offer's path only.
  */
-const savedLine = (offer, code) =>
+const savedLine = (offer, code, held) =>
   offer.code_mode === "none"
-    ? ["Your pricing is held until ", strong(longDate(offer.valid_to))]
+    ? ["Your pricing is held until ", strong(longDate(held))]
     : [strong(`Your code: ${displayCode(code)}`), " · good until ", strong(longDate(offer.valid_to))];
 /** § 10.7: an E1 that goes after its offer's last day (a save on that day) says the offer has ended (DRAFT § 3's form). */
 const ENDED_LINE = ["This offer has ended"];
 
-/** E1. `token` is present only when the marketing box was ticked; `ended` when it goes after its offer's last day. */
-export function e1({ to, code, offer, event, siteUrl, token, ended = false }) {
+/** E1. `token` is present only when the marketing box was ticked; `held` the save's held date (§ 10.9; its offer's
+ *  valid_to unless later); `ended` when it goes after that date. */
+export function e1({ to, code, offer, event, siteUrl, token, held = offer.valid_to, ended = false }) {
   const lines = [
     ["You saved this offer at ", strong(event.name), " yesterday — here it is."],
-    ended ? ENDED_LINE : savedLine(offer, code),
+    ended ? ENDED_LINE : savedLine(offer, code, held),
     [button("See my offer", `${siteUrl}/o/${code}`)],
   ];
   if (token) {

@@ -46,13 +46,15 @@ test.after(() => base.dispose());
 // src/worker/redeem.js (the saved offer's one action) again, and src/worker/page-style.json (new: the derived stylesheet).
 // Since § 10.7 (no offer after the last one's valid_to): src/worker/index.js (offer_ended), src/worker/offers.js (at most
 // one current general offer, null after the last), src/worker/send-due.js (E1 after the end), and messages.js, redeem.js
-// and data/offers.json again.
+// and data/offers.json again. Since § 10.9 (a save held through its E1's day; the wording): src/worker/confirm.js (its
+// token held as long, "weekly"), and offers.js, send-due.js, messages.js and redeem.js again.
 const MOVED_WORKER_FILES = [
   "data/delivery-zips.json",
   "data/events.json",
   "data/offers.json",
   "data/save.json",
   "src/worker/choose-sender.js",
+  "src/worker/confirm.js",
   "src/worker/index.js",
   "src/worker/messages.js",
   "src/worker/offers.js",

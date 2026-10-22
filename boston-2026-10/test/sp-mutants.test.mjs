@@ -86,8 +86,8 @@ test("mutant 5: E1 printing the token as a code -> SP12 fails", async () => {
   const { module, dispose } = await mutantModule(
     join("src", "worker"),
     "messages.js",
-    '["Your pricing is held until ", strong(longDate(offer.valid_to))]',
-    '[strong(`Your code: ${displayCode(code)}`), " · ", "Your pricing is held until ", strong(longDate(offer.valid_to))]',
+    '["Your pricing is held until ", strong(longDate(held))]',
+    '[strong(`Your code: ${displayCode(code)}`), " · ", "Your pricing is held until ", strong(longDate(held))]',
   );
   try {
     await assert.rejects(assertE1Promise(module.e1), /no "code" in any visible text/);

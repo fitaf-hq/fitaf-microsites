@@ -4,7 +4,8 @@
 // SPEC-save-offer-production § 10: an offer with `code_mode: "none"` is a price promise, so its page says the date its
 // pricing is held until and shows no code (the path's token is the link's identifier, never printed), and a current offer
 // without a code is shown with its date and nothing reissued.
-import { currentGeneral, isLive, longDate, offerById } from "./offers.js";
+import saveConfig from "../../data/save.json" with { type: "json" };
+import { currentGeneral, heldUntilOfSave, longDate, offerById } from "./offers.js";
 import { OFFER_CODE_ALPHABET, newOfferCode } from "./offer-code.js";
 import { displayCode } from "./messages.js";
 import { esc, htmlResponse, page } from "./pages.js";
@@ -12,7 +13,7 @@ import { esc, htmlResponse, page } from "./pages.js";
 const CODE_RE = new RegExp(`^[${OFFER_CODE_ALPHABET}]{4}-?[${OFFER_CODE_ALPHABET}]{4}$`);
 const MAX_CODE_ATTEMPTS = 5;
 
-const FIND_SQL = "SELECT save_id, event_id, offer_id, ring FROM saves WHERE offer_code = ?";
+const FIND_SQL = "SELECT save_id, event_id, offer_id, ring, send_at FROM saves WHERE offer_code = ?";
 const REISSUED_SQL = "SELECT offer_code FROM saves WHERE kind = 'reissue' AND reissued_from = ? AND offer_id = ?";
 const REISSUE_SQL =
   "INSERT OR IGNORE INTO saves (save_id, event_id, kind, offer_code, offer_id, ring, reissued_from, created_at, " +
@@ -41,10 +42,10 @@ const endedPage = (href) => page(ENDED, `<h1>${ENDED}</h1>\n${planLink(href)}`);
 const actionLink = (href) => `<p class="action"><a href="${esc(href)}">Build my plan →</a></p>`;
 const codeLine = (code, offer) =>
   `<p>Your code: <strong>${esc(displayCode(code))}</strong> · good until ${esc(longDate(offer.valid_to))}</p>`;
-/** A saved offer's line: the date its pricing is held until (no code), or its code. */
-const savedLine = (code, offer) =>
+/** A saved offer's line: the date its pricing is held until (no code; § 10.9, the save's held date), or its code. */
+const savedLine = (code, offer, held) =>
   offer.code_mode === "none"
-    ? `<p>Your pricing is held until <strong>${esc(longDate(offer.valid_to))}</strong></p>`
+    ? `<p>Your pricing is held until <strong>${esc(longDate(held))}</strong></p>`
     : codeLine(code, offer);
 /** The current offer's line on WELCOME_BACK: its code (reissued, or shared), or, without one, its date. */
 function currentLine(current, newCode) {
@@ -73,10 +74,12 @@ export async function handleOffer(env, rawCode, { now, today }) {
   const backTo = `/?e=${row.event_id}#from-email`;
   const back = planLink(backTo);
   const offer = offerById(row.offer_id);
-  if (offer && isLive(offer, today)) {
+  // § 10.9: a save is held from its offer's first day through its held date (its offer's last day, or its E1's day).
+  const held = offer && heldUntilOfSave(offer, row.send_at, saveConfig.send_time_zone);
+  if (offer && offer.valid_from <= today && today <= held) {
     return htmlResponse(
       200,
-      page("Your offer", `<h1>Your offer</h1>\n<p><strong>${esc(offer.label)}</strong></p>\n${savedLine(code, offer)}\n${actionLink(backTo)}`),
+      page("Your offer", `<h1>Your offer</h1>\n<p><strong>${esc(offer.label)}</strong></p>\n${savedLine(code, offer, held)}\n${actionLink(backTo)}`),
     );
   }
   const current = currentGeneral(today);

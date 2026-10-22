@@ -17,12 +17,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
 import { mealsADayOf, parseTarget, shareLines } from "./src/save/calculator.js";
-import { currentGeneral, isLive, offerForSave } from "./src/worker/offers.js";
+import { currentGeneral, heldUntil, isLive, longDate, offerForSave } from "./src/worker/offers.js";
 import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
 import { scriptJson } from "./src/worker/script-json.js";
 import { checkSelection, legacyKey } from "./scripts/selection.mjs";
-import { formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
+import { addDays, DAYS as MS_PER_DAY, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 import { e1, ex } from "./src/worker/messages.js";
 import { productionRefusals } from "./scripts/production-inputs.mjs";
 import { qrEvent } from "./src/qr-event.js";
@@ -435,7 +435,9 @@ export async function saveSlots(plans, { save, zips, siteKey, eventId, offers, m
   const shared = [
     ...[classifyZip, ...(share ? [shareLines, parseTarget, mealsADayOf] : [])].map(declaration),
     "const FORMATTERS = new Map();",
-    ...[isLive, currentGeneral, offerForSave, ...ZONED_DATE_HELPERS].map(declaration),
+    // § 10.9: the date held, as the Worker computes it (heldUntil), a day on (addDays, with its constant) and written out.
+    `const MS_PER_DAY = ${MS_PER_DAY};`,
+    ...[isLive, currentGeneral, offerForSave, heldUntil, longDate, ...ZONED_DATE_HELPERS, addDays].map(declaration),
   ].join("\n");
   return {
     read,

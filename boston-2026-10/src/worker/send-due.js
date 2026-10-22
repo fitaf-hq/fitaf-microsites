@@ -14,6 +14,7 @@
 // again, so it can never be re-sent (to any address). Returns counts only.
 import saveConfig from "../../data/save.json" with { type: "json" };
 import { e1, ex } from "./messages.js";
+import { heldUntilOfSave } from "./offers.js";
 import { tokenHash } from "./token.js";
 import { zonedDate } from "./zoned-time.js";
 
@@ -21,7 +22,7 @@ export const MAX_SEND_ATTEMPTS = 5;
 export const SEND_LEASE_MS = 15 * 60 * 1000; // longer than a cron interval (5 min) and a request's timeout
 
 export const DUE_SQL =
-  "SELECT s.save_id, s.kind, s.event_id, s.offer_code, s.offer_id, c.email, c.zip, c.consent_marketing " +
+  "SELECT s.save_id, s.kind, s.event_id, s.offer_code, s.offer_id, s.send_at, c.email, c.zip, c.consent_marketing " +
   "FROM saves s JOIN save_contacts c ON c.save_id = s.save_id " +
   "WHERE s.message_state = 'scheduled' AND s.send_at <= ? ORDER BY s.send_at, s.save_id";
 
@@ -44,12 +45,14 @@ const SET_RETRY_SQL =
   "WHERE save_id = ?1 AND message_state = 'scheduled' RETURNING message_state";
 const SET_TOKEN_SQL = "UPDATE save_contacts SET confirm_token_hash = ?1 WHERE save_id = ?2";
 
-/** `today`: the send date in the send time zone. § 10.7: an E1 that goes after its offer's last day says it has ended. */
+/** `today`: the send date in the send time zone. § 10.9: E1 says the save's held date (the later of its offer's last
+ *  day and the day E1 is due); § 10.7: one that goes after that date says the offer has ended. */
 function messageFor(row, token, { offers, events, siteUrl, unconfirmedDays }, today) {
   if (row.kind === "expansion") return ex({ to: row.email, zip: row.zip, siteUrl, token, unconfirmedDays });
   const offer = offers.find((o) => o.id === row.offer_id);
   const event = events.find((e) => e.id === row.event_id);
-  return e1({ to: row.email, code: row.offer_code, offer, event, siteUrl, token, ended: today > offer.valid_to });
+  const held = heldUntilOfSave(offer, row.send_at, saveConfig.send_time_zone);
+  return e1({ to: row.email, code: row.offer_code, offer, event, siteUrl, token, held, ended: today > held });
 }
 
 /** A Sender's answer as { outcome, providerMessageId }: rung 4's senders answer a bare string. */

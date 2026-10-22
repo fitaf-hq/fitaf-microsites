@@ -51,7 +51,8 @@ test("S10: unknown, expired and purged tokens give a byte-identical GONE (and so
     saveRows(validateSave(validSave({ email: "dummy-c-exp@example.com", consent_marketing: true })), {
       nowMs: TEST_NOW_MS,
       state: "messaged",
-      saveOverrides: { offer_id: PAST_OFFER_ID, message_state: "sent" },
+      // A save of the past offer, its E1 due within it (since § 10.9 a save is held through its E1's day).
+      saveOverrides: { offer_id: PAST_OFFER_ID, message_state: "sent", send_at: "2026-06-01T13:00:00.000Z" },
       contactOverrides: { confirm_token_hash: await tokenHash(expiredToken) },
     }),
   ]);
