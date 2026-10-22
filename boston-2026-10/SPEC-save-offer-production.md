@@ -753,3 +753,22 @@ The `date` response header is the clock, not the Worker's behaviour.
   - two that differ in another header (`cache-control`, `content-type`) still fail SP3;
   - a `date` on one side only fails.
 - SP3 alone passed 20 runs of 20, 6/6 each.
+
+### 10.7 Ruling, 2026-10-22: every visitor gets the Boston offer until 10-29; after it, no offer is offered
+
+The Advisor (`ts=2026-10-22T21:37:36.391Z`): *"1) general visitors get the same offer until 10-29 2) the Owner and I are
+currently discussing how much grace period to give for the offer. Let's say 10-29 but we might extend it"*.
+
+1. **The general offer is the Boston offer**: the same approved label (*"Sign up today to save 25%"*, 2026-10-21),
+   `code_mode: "none"`, `valid_to` **2026-10-29**; a save from any visitor (with or without `?e=`) holds the pricing until
+   that date. The placeholder general offers go; `offers.json` holds no placeholder an approved file would refuse.
+2. **After the last offer's `valid_to`, no offer is offered**: the save step does not render on the page (nothing to
+   save), and a saved offer's page and E1 after that date take the lapse path (*"This offer has ended"*, the link to the
+   plans). S11b's *"exactly one general offer is current on any date"* becomes *"at most one"*, with a case for a date
+   after every offer.
+3. **The date is provisional** (*"we might extend it"*): an extension is one `valid_to` in `data/offers.json`, released
+   as the page is (a re-gate and the pins). ⬜ Making it a content-level change (no pin) is a later contract if the
+   Advisor wants extensions without a release.
+4. **Cases**: a plain visit's save on 2026-10-24 holds until 2026-10-29 and E1 says so; a page built for 2026-10-30
+   (the build's clock seam, as the existing date cases use) renders no save step; the `/o` page for a save after its
+   offer's end shows the lapse; the gate passes with no placeholder offer. Every golden that moves, re-recorded once.
