@@ -16,11 +16,12 @@ import { join } from "node:path";
 import { ROOT } from "../build.mjs";
 import { measure } from "../scripts/contrast.mjs";
 import { pageText } from "./sp-production.mjs";
-import { headOf, packageAt, workerPages } from "./sp-worker-pages.mjs";
+import { headOf, packageAt, workerPages, workerPagesLive } from "./sp-worker-pages.mjs";
 
 /** The contract's own commit (§ 10.3 written, none of its code). */
 const BASE = "cc1d2bb";
-const base = await packageAt(BASE);
+// Since § 10.7 the offers are this tree's in both (the words compared are the pages', not the data's).
+const base = await packageAt(BASE, { overlay: ["data/offers.json"] });
 after(() => base.dispose());
 const pages = await workerPages();
 const PAGE_CSS = join(ROOT, "src", "worker", "page.css");
@@ -72,17 +73,19 @@ test("SP15: the saved offer's one action is the orange button; every other page 
   assert.ok(Number(/min-height:\s*(\d+)px/.exec(rule)?.[1]) >= 64, "at least 64 px tall");
 });
 
-test("SP15: nothing the pages say changes — each page's words and status are cc1d2bb's", async () => {
-  const before = await workerPages(base.pkg);
-  assert.deepEqual(Object.keys(pages), Object.keys(before));
-  // Control: each page is the one its name says (the saved offer, the ended one, an unknown code).
-  assert.match(pages.original.html, /<h1>Your offer<\/h1>/);
-  assert.match(pages.welcome_back.html, /that offer ended/);
-  assert.doesNotMatch(pages.current.html, /<h1>Your offer<\/h1>|that offer ended/);
-  for (const name of Object.keys(pages)) {
-    assert.equal(pages[name].status, before[name].status, `${name}: its status`);
-    assert.equal(pageText(pages[name].html), pageText(before[name].html), `${name}: its words`);
-    assert.ok(pageText(before[name].html).length > 10, `control: ${name} has words`);
+test("SP15: nothing the pages say changes — each page's words and status are cc1d2bb's (§ 10.7's lapse page apart)", async () => {
+  // § 10.7 rewords the ended offer's page (the lapse: no offer after it), which cc1d2bb's code cannot draw from this tree's
+  // offers (its rule wanted one general offer on every date); it is held to § 10.7's words, the rest to cc1d2bb's.
+  const live = Object.fromEntries(Object.entries(pages).filter(([name]) => name !== "ended"));
+  const baseLive = await workerPagesLive(base.pkg);
+  assert.deepEqual(Object.keys(live), Object.keys(baseLive));
+  assert.match(pages.original.html, /<h1>Your offer<\/h1>/, "control: the saved offer");
+  assert.doesNotMatch(pages.current.html, /<h1>Your offer<\/h1>/, "control: an unknown code");
+  assert.match(pages.ended.html, /<h1>This offer has ended<\/h1>/, "the ended offer: § 10.7's lapse");
+  for (const name of Object.keys(live)) {
+    assert.equal(pages[name].status, baseLive[name].status, `${name}: its status`);
+    assert.equal(pageText(pages[name].html), pageText(baseLive[name].html), `${name}: its words`);
+    assert.ok(pageText(baseLive[name].html).length > 10, `control: ${name} has words`);
   }
 });
 

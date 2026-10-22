@@ -1,11 +1,11 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import offersFile from "../data/offers.json" with { type: "json" };
-import { longDate, offerById } from "../src/worker/offers.js";
+import { currentGeneral, longDate, offerById, offerForSave } from "../src/worker/offers.js";
 import { validateSave } from "../src/worker/validate-save.js";
 import { addDays } from "../src/worker/zoned-time.js";
 import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
-import { CODE_RE, dumpAllTables, fetchPage, PAST_OFFER_ID, postSave, rows, startWorker, validSave } from "./worker-harness.mjs";
+import { CODE_RE, dumpAllTables, fetchPage, PAST_OFFER, PAST_OFFER_ID, postSave, rows, startWorker, TEST_NOW_MS, validSave } from "./worker-harness.mjs";
 
 const { mf, db } = await startWorker();
 after(() => mf.dispose());
@@ -35,8 +35,16 @@ test("S11: /o/<code> ORIGINAL — a known code whose offer is live shows that of
   }
 });
 
-test("S11: WELCOME_BACK — an expired offer's code gets the current offer and ONE reissued code, idempotent on revisit", async () => {
+// Since SPEC-save-offer-production § 10.7 the committed file has one offer and no other after it, so WELCOME_BACK (an
+// ended offer, a CURRENT offer with codes after it) is reached with offers of the case's own, in a Worker of its own: the
+// past fixture offer, and a general offer with unique codes current at the Worker's clock.
+const LATER = { id: "general-later-fixture", label: "Fixture: a later offer", applies_to: "general", valid_from: "2000-01-01", valid_to: "9999-12-31", code_mode: "unique" };
+test("S11: WELCOME_BACK — an expired offer's code gets the current offer and ONE reissued code, idempotent on revisit", async (t) => {
+  const own = await startWorker({ offers: { status: "fixture", offers: [PAST_OFFER, LATER] } });
+  t.after(() => own.mf.dispose());
+  const [mf, db] = [own.mf, own.db];
   const original = saveRows(validateSave(validSave({ email: "dummy-o2@example.com" })), {
+    nowMs: TEST_NOW_MS,
     state: "lapsed",
     saveOverrides: { offer_id: PAST_OFFER_ID, message_state: "sent" },
   });
@@ -75,29 +83,29 @@ test("S11: CURRENT — unknown and malformed codes get byte-identical pages, and
 });
 
 // Since SPEC-save-offer-production § 10 an offer may carry `code_mode: "none"` (no code field): the Boston event's does.
-// Since its § 10.2 (2026-10-22) the Boston event offer's label is approved, with the same `label` and `label_approved` as
-// boston/print-final's (28e951a); the file's status stays placeholder, every other offer still "[The offer]".
+// Since its § 10.2 (2026-10-22) the Boston offer's label is approved, with the same `label` and `label_approved` as
+// boston/print-final's (28e951a). Since its § 10.7 (the Advisor, 2026-10-22) it is every visitor's (the general offer)
+// and the file's one offer: "exactly one general offer is current on any date" became "AT MOST ONE", and after the
+// offer's valid_to none is (no offer is offered). The status stays placeholder until the switch-on approves the file.
 const APPROVED_LABELS = { "event-boston-2026-10-placeholder": { label: "Sign up today to save 25%", label_approved: "2026-10-21" } };
-test("S11b: data/offers.json — placeholders but the Boston offer's approved label, and exactly one general offer current on every date", () => {
+test("S11b: data/offers.json — approved labels only, and at most one general offer current on any date; none after the last offer", () => {
   assert.equal(offersFile.status, "placeholder");
   const { offers } = offersFile;
   const ids = offers.map((o) => o.id);
   assert.equal(new Set(ids).size, ids.length, "ids unique");
   for (const o of offers) {
     assert.deepEqual(Object.keys(o).filter((k) => !["id", "label", "label_approved", "applies_to", "valid_from", "valid_to", "code_mode", "shared_code"].includes(k)), []);
-    const approved = APPROVED_LABELS[o.id];
-    if (approved) assert.deepEqual({ label: o.label, label_approved: o.label_approved }, approved, `${o.id}: its approved label`);
-    else assert.deepEqual({ label: o.label, label_approved: o.label_approved }, { label: "[The offer]", label_approved: undefined }, `${o.id} is a placeholder`);
+    assert.deepEqual({ label: o.label, label_approved: o.label_approved }, APPROVED_LABELS[o.id], `${o.id}: its approved label (no placeholder)`);
     assert.ok(["event", "general"].includes(o.applies_to));
     assert.ok(["unique", "shared", "none"].includes(o.code_mode));
-    assert.equal(o.code_mode === "shared" ? o.shared_code : undefined, o.code_mode === "shared" ? "PLACEHOLDER" : undefined);
+    assert.ok(o.code_mode !== "shared" || !/placeholder/i.test(o.shared_code), `${o.id}: no placeholder code`);
     assert.ok(o.valid_from <= o.valid_to, `${o.id} dates in order`);
   }
-  const general = offers.filter((o) => o.applies_to === "general").sort((x, y) => x.valid_from.localeCompare(y.valid_from));
-  assert.ok(general[0].valid_from <= "2000-01-01", "covered from the start");
-  assert.equal(general.at(-1).valid_to, "9999-12-31", "covered to the end");
-  for (let i = 1; i < general.length; i++) {
-    assert.equal(general[i].valid_from, addDays(general[i - 1].valid_to, 1), "contiguous: no gap, no overlap");
+  const last = offers.map((o) => o.valid_to).sort().at(-1);
+  for (let day = "2026-01-01"; day <= "2027-12-31"; day = addDays(day, 1)) {
+    assert.ok(offers.filter((o) => o.applies_to === "general" && o.valid_from <= day && day <= o.valid_to).length <= 1, `${day}: at most one general offer`);
+    assert.doesNotThrow(() => currentGeneral(day), `${day}: currentGeneral answers`);
   }
-  assert.ok(offers.some((o) => o.id === PAST_OFFER_ID && o.valid_to < "2026-09-01"), "a past offer exists for the expired paths");
+  for (const day of [addDays(last, 1), "2027-06-01", "9999-12-31"]) assert.equal(offerForSave(day), null, `${day}, after every offer: no offer`);
+  assert.throws(() => currentGeneral("2026-10-24", [LATER, { ...LATER, id: "general-twin" }]), /at most one current general offer/, "two current: refused");
 });

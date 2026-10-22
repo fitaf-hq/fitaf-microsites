@@ -52,14 +52,16 @@ export async function saveRow(db, email) {
 
 export const send = (db, nowMs, sender) => runSendDue(db, { nowMs, sender, redemptions: new FixedRedemptions() });
 
-/** SPEC-save-offer-production § 10: E1's second line has two forms in DRAFT § 3, each marked: for an offer without a code
- *  (`code_mode` "none") the date its pricing is held until, for one with a code the code. A marked line is kept only for
- *  the form `codeMode` names, its marker removed. */
+/** SPEC-save-offer-production § 10: E1's second line has forms in DRAFT § 3, each marked: for an offer without a code
+ *  (`code_mode` "none") the date its pricing is held until, for one with a code the code, and (§ 10.7) for an E1 that goes
+ *  after its offer's last day, that the offer has ended. A marked line is kept only for the form `codeMode` and `ended`
+ *  name, its marker removed. */
 const FORMS = [
-  ["*(an offer without a code)*", (codeMode) => codeMode === "none"],
-  ["*(an offer with a code)*", (codeMode) => codeMode !== "none"],
+  ["*(an offer without a code)*", (codeMode, ended) => codeMode === "none" && !ended],
+  ["*(an offer with a code)*", (codeMode, ended) => codeMode !== "none" && !ended],
+  ["*(sent after the offer's last day)*", (codeMode, ended) => ended],
 ];
-export const keepForm = (codeMode) => (line) => FORMS.every(([marker, keep]) => !line.startsWith(marker) || keep(codeMode));
+export const keepForm = (codeMode, ended = false) => (line) => FORMS.every(([marker, keep]) => !line.startsWith(marker) || keep(codeMode, ended));
 export const dropForm = (line) => FORMS.reduce((l, [marker]) => (l.startsWith(marker) ? l.slice(marker.length) : l), line);
 
 /** DRAFT § 3's message as lines of plain text: emphasis, the "(only if…)" note and button brackets removed; for E1, the

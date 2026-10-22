@@ -2,7 +2,8 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { FAR_ZIP, NEAR_ZIP, postSave, rows, startWorker, validSave } from "./worker-harness.mjs";
 
-const { mf, db } = await startWorker();
+// The Worker's clock is the harness's (SPEC-save-offer-production § 10.7): its "now" is `now`.
+const { mf, db, now } = await startWorker();
 after(() => mf.dispose());
 
 test("S6: an expansion save -> no code; ring near or far; send_at = now", async () => {
@@ -11,7 +12,6 @@ test("S6: an expansion save -> no code; ring near or far; send_at = now", async 
     ["dummy-s6b@example.com", FAR_ZIP, "far"],
   ];
   for (const [email, zip] of cases) {
-    const before = Date.now();
     const res = await postSave(mf, validSave({ kind: "expansion", email, zip }));
     assert.equal(res.status, 200);
     assert.deepEqual(res.json, { ok: true });
@@ -25,7 +25,7 @@ test("S6: an expansion save -> no code; ring near or far; send_at = now", async 
     assert.equal(row.offer_id, null, "no offer");
     assert.equal(row.ring, cases.find((c) => c[0] === email)[2]);
     assert.equal(row.send_at, row.created_at, "E-X goes at once");
-    assert.ok(Date.parse(row.send_at) >= before - 1000 && Date.parse(row.send_at) <= Date.now() + 1000, "now");
+    assert.equal(row.send_at, new Date(now).toISOString(), "now, by the Worker's clock");
     assert.equal(row.message_state, "scheduled");
     assert.equal(row.consent_expansion, 1, "CP-E recorded");
     assert.equal(row.consent_marketing, 0);

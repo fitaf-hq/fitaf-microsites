@@ -19,6 +19,7 @@ import saveConfig from "../data/save.json" with { type: "json" };
 import { devConfig, ROOT } from "../build.mjs";
 import { tokenMinter } from "../src/worker/confirm-token.js";
 import { d1Adapter } from "../src/worker/d1-adapter.js";
+import offersFile from "../data/offers.json" with { type: "json" };
 import { OFFERS } from "../src/worker/offers.js";
 import { sendDue } from "../src/worker/send-due.js";
 import { RESEND_URL } from "../src/worker/resend-sender.js";
@@ -35,19 +36,44 @@ export const NEAR_ZIP = "03101";
 export const FAR_ZIP = "10001";
 export const CODE_RE = /^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 export const ISO_RE = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/;
-export const PAST_OFFER_ID = "event-past-placeholder";
+/** § 10.7: data/offers.json holds one offer, the Boston offer, so an offer that ended before TEST_NOW_MS is a fixture: a
+ *  case that needs one starts its Worker with `offers: withPastOffer()` (the committed offers and this one). */
+export const PAST_OFFER = Object.freeze({
+  id: "event-past-fixture",
+  label: "Fixture: an offer that ended",
+  applies_to: "event",
+  valid_from: "2026-01-01",
+  valid_to: "2026-06-30",
+  code_mode: "none",
+});
+export const PAST_OFFER_ID = PAST_OFFER.id;
+/** The committed offers file with PAST_OFFER added (a fixture's; never written). */
+export const withPastOffer = () => ({ ...offersFile, offers: [PAST_OFFER, ...offersFile.offers] });
+/**
+ * SPEC-save-offer-production § 10.7: the Worker's clock in the cases. The offers end (the Boston offer, every visitor's,
+ * is held until 2026-10-29, and none follows it), so a case that saves through the Worker would depend on the day it
+ * runs. Every Worker started here reads this instant as now (its Date.now(), frozen there), unless a case gives its own
+ * `now`: noon in New York on 2026-10-24, a day of the Boston offer.
+ */
+export const TEST_NOW_MS = Date.parse("2026-10-24T16:00:00.000Z");
+/** The bundle's first statement: the Worker's Date.now() reads `now`. Only the cases' bundles carry it. */
+const clockBanner = (now) => `Date.now = () => ${Number(now)}; // test clock (worker-harness.mjs TEST_NOW_MS)`;
 /** Rung 5 § 8: a CONFIRM_TOKEN_KEY for tests only — public, and nothing real is keyed with it. */
 export const TEST_CONFIRM_TOKEN_KEY = "test-only-confirm-token-key-0000000000000";
 
-async function bundleWorker(main, { save } = {}) {
-  // `save`: data/save.json's contents as the bundle sees them (the production flag), the file itself never written.
-  const plugins = save
-    ? [{ name: "save-json", setup: (b) => b.onLoad({ filter: /[\\/]data[\\/]save\.json$/ }, () => ({ contents: JSON.stringify(save), loader: "json" })) }]
-    : [];
+async function bundleWorker(main, { save, offers, now = TEST_NOW_MS } = {}) {
+  // `save`: data/save.json's contents as the bundle sees them (the production flag), the file itself never written; and
+  // `offers` (§ 10.7) data/offers.json's, likewise.
+  const json = (name, file, contents) => ({
+    name,
+    setup: (b) => b.onLoad({ filter: new RegExp(`[\\\\/]data[\\\\/]${file.replace(".", "\\.")}$`) }, () => ({ contents: JSON.stringify(contents), loader: "json" })),
+  });
+  const plugins = [...(save ? [json("save-json", "save.json", save)] : []), ...(offers ? [json("offers-json", "offers.json", offers)] : [])];
   // Production's entry also exports its helpers by name (site.js: WEEK_OBJECT, PAGE_CACHE_CONTROL, …), which workerd
   // would read as entrypoints; the bundle exports its default alone, as wc-harness's wrapper does.
   const out = await esbuild({
     stdin: { contents: `export { default } from ${JSON.stringify(main)};`, resolveDir: ROOT, loader: "js" },
+    banner: { js: clockBanner(now) },
     bundle: true,
     format: "esm",
     write: false,
@@ -92,7 +118,7 @@ export async function applyMigrations(db, dir) {
  * would answer it ("/x/" serves the table's "/x/"; anything else 404), for either Worker; without it, production's
  * ASSETS answers 404 to everything and development's has none (its assets come first in wrangler's router).
  */
-export async function startWorker({ bindings = {}, resend, worker: which = process.env.BOSTON_SAVE_WORKER ?? "development", production = true, assets } = {}) {
+export async function startWorker({ bindings = {}, resend, worker: which = process.env.BOSTON_SAVE_WORKER ?? "development", production = true, assets, now = TEST_NOW_MS, offers } = {}) {
   const isProduction = which === "production";
   const cfg = isProduction ? await productionWranglerConfig() : await devConfig();
   const [d1] = cfg.d1_databases;
@@ -102,7 +128,7 @@ export async function startWorker({ bindings = {}, resend, worker: which = proce
   const worker = {
     name: cfg.name,
     modules: true,
-    script: await bundleWorker(resolve(ROOT, cfg.main), isProduction ? { save: { ...saveConfig, production } } : {}),
+    script: await bundleWorker(resolve(ROOT, cfg.main), { now, offers, ...(isProduction ? { save: { ...saveConfig, production } } : {}) }),
     compatibilityDate: cfg.compatibility_date,
     d1Databases: { [d1.binding]: "test-d1" },
     ratelimits: Object.fromEntries(
@@ -148,7 +174,7 @@ export async function startWorker({ bindings = {}, resend, worker: which = proce
   if (isProduction && process.env.BOSTON_SAVE_WORKER_LOG) {
     await appendFile(process.env.BOSTON_SAVE_WORKER_LOG, `${JSON.stringify({ main: relative(ROOT, resolve(ROOT, cfg.main)), database: d1.database_name, production })}\n`);
   }
-  return { mf, db, outbound, vars: cfg.vars, main: relative(ROOT, resolve(ROOT, cfg.main)), assetRequests };
+  return { mf, db, outbound, vars: cfg.vars, main: relative(ROOT, resolve(ROOT, cfg.main)), assetRequests, now };
 }
 
 let ipCounter = 0;

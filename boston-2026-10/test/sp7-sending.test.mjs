@@ -33,7 +33,7 @@ test("SP7: development with no allowlist sends nothing; a value other than \"tru
 });
 
 test("SP7: the production Worker's cron, with the key and no allowlist, sends what is due (E-X at once)", async () => {
-  const { mf, db, outbound } = await startWorker({
+  const { mf, db, outbound, now } = await startWorker({
     worker: "production",
     bindings: { RESEND_API_KEY: DUMMY_KEY, CONFIRM_TOKEN_KEY: TEST_CONFIRM_TOKEN_KEY, MAIL_FROM: "Fit AF <offers-sp7@example.com>" },
     resend: () => Response.json({ id: "sp7-accepted" }),
@@ -42,7 +42,7 @@ test("SP7: the production Worker's cron, with the key and no allowlist, sends wh
     const res = await postSave(mf, validSave({ kind: "expansion", email: "dummy-sp7-ex@example.com", zip: NEAR_ZIP }));
     assert.deepEqual(res.json, { ok: true });
     const worker = await mf.getWorker();
-    const outcome = await worker.scheduled({ cron: "*/5 * * * *", scheduledTime: new Date(Date.now() + MINUTE_MS) });
+    const outcome = await worker.scheduled({ cron: "*/5 * * * *", scheduledTime: new Date(now + MINUTE_MS) }); // the Worker's clock, the harness's (§ 10.7)
     assert.equal(outcome.outcome, "ok");
     const sent = outbound.filter((r) => r.url === RESEND_URL);
     assert.equal(sent.length, 1, "one message to Resend");

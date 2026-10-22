@@ -24,7 +24,7 @@ const site = (...parts) => import(pathToFileURL(siteFile(...parts)).href);
 const { copyStatic } = await site("build.mjs");
 const { insertRows, saveRows } = await site("scripts", "dummy-saves.mjs");
 const { validateSave } = await site("src", "worker", "validate-save.js");
-const { PAST_OFFER_ID, startWorker, validSave } = await site("test", "worker-harness.mjs");
+const { startWorker, TEST_NOW_MS, validSave } = await site("test", "worker-harness.mjs");
 const { savedAndSent } = await site("test", "confirm-fixture.mjs");
 
 /** § 10.3 item 2: the button "at least 64 CSS px tall". */
@@ -47,28 +47,29 @@ const statics = await mkdtemp(join(tmpdir(), "fitaf-storybook-wp-static-"));
 after(() => rm(statics, { recursive: true, force: true }));
 await copyStatic(statics, { base: null, sheets: [] });
 
+// The Workers' clocks are the site harness's (SPEC-save-offer-production § 10.7): one on a day of the offer, for the saved
+// offer and the confirmation; one after its last day, for the ended offer's page (the lapse).
 const { mf, db } = await startWorker();
-after(() => mf.dispose());
+const late = await startWorker({ now: Date.parse("2026-10-30T16:00:00.000Z") });
+after(() => Promise.all([mf.dispose(), late.mf.dispose()]));
 const origin = new URL(await mf.ready).origin;
+const lateOrigin = new URL(await late.mf.ready).origin;
 
-// The saves: one whose offer is live today (whatever today is: the general offers cover every date), one of the past
-// offer (its page the ended offer's), and the confirmation fixture's (a token the system itself minted).
-const live = saveRows(validateSave(validSave({ email: "dummy-wp-live@example.com" })), { nowMs: Date.now() });
-const ended = saveRows(validateSave(validSave({ email: "dummy-wp-ended@example.com" })), {
-  state: "lapsed",
-  saveOverrides: { offer_id: PAST_OFFER_ID, message_state: "sent" },
-});
-await insertRows(db, [live, { saveRow: ended.saveRow }]);
+// The saves, made on the harness's day: one for each Worker, and the confirmation fixture's (a token the system minted).
+const live = saveRows(validateSave(validSave({ email: "dummy-wp-live@example.com" })), { nowMs: TEST_NOW_MS });
+const ended = saveRows(validateSave(validSave({ email: "dummy-wp-ended@example.com" })), { nowMs: TEST_NOW_MS });
+await insertRows(db, [live]);
+await insertRows(late.db, [ended]);
 const tokens = await savedAndSent(mf, db);
 const PAGES = {
-  saved: `/o/${live.saveRow.offer_code}`,
-  ended: `/o/${ended.saveRow.offer_code}`,
-  confirmation: `/confirm/${tokens.yes.token}`,
+  saved: { origin, path: `/o/${live.saveRow.offer_code}` },
+  ended: { origin: lateOrigin, path: `/o/${ended.saveRow.offer_code}` },
+  confirmation: { origin, path: `/confirm/${tokens.yes.token}` },
 };
 
 /** `fn(page)` on the Worker's `path`, `width` wide, in a fresh Chrome; the Worker's static paths answered from the build,
  *  every other request to the Worker passed on, any other origin refused (and recorded). */
-async function withPage(path, width, fn) {
+async function withPage({ origin, path }, width, fn) {
   const chrome = await freshChrome();
   try {
     const page = await chrome.browser.newPage();

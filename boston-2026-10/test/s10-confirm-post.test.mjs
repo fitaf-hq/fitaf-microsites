@@ -4,10 +4,12 @@ import { validateSave } from "../src/worker/validate-save.js";
 import { purge } from "../src/worker/purge.js";
 import { newToken, tokenHash } from "../src/worker/token.js";
 import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
-import { d1Adapter, fetchPage, PAST_OFFER_ID, rows, startWorker, validSave } from "./worker-harness.mjs";
+import { d1Adapter, fetchPage, PAST_OFFER_ID, rows, startWorker, TEST_NOW_MS, validSave, withPastOffer } from "./worker-harness.mjs";
 import { savedAndSent } from "./confirm-fixture.mjs";
 
-const { mf, db } = await startWorker();
+// SPEC-save-offer-production § 10.7: the committed file has one offer, live at the Worker's clock; the expired token's
+// save names the harness's past fixture offer, which this Worker is given beside it.
+const { mf, db } = await startWorker({ offers: withPastOffer() });
 after(() => mf.dispose());
 
 const HEADERS = { "referrer-policy": "no-referrer", "cache-control": "no-store", "x-robots-tag": "noindex" };
@@ -47,6 +49,7 @@ test("S10: unknown, expired and purged tokens give a byte-identical GONE (and so
   const expiredToken = newToken();
   await insertRows(db, [
     saveRows(validateSave(validSave({ email: "dummy-c-exp@example.com", consent_marketing: true })), {
+      nowMs: TEST_NOW_MS,
       state: "messaged",
       saveOverrides: { offer_id: PAST_OFFER_ID, message_state: "sent" },
       contactOverrides: { confirm_token_hash: await tokenHash(expiredToken) },
@@ -56,6 +59,7 @@ test("S10: unknown, expired and purged tokens give a byte-identical GONE (and so
   const purgedToken = newToken();
   await insertRows(db, [
     saveRows(validateSave(validSave({ email: "dummy-c-pur@example.com", consent_marketing: true })), {
+      nowMs: TEST_NOW_MS,
       state: "exported",
       contactOverrides: { confirm_token_hash: await tokenHash(purgedToken) },
     }),

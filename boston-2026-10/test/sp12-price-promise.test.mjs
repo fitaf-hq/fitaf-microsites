@@ -21,7 +21,7 @@ import saveConfig from "../data/save.json" with { type: "json" };
 import { hrefsOf, lineTexts } from "./email-html.mjs";
 import { pageText } from "./sp-production.mjs";
 import { assertE1Promise, assertNoCodeText, BOSTON_OFFER_ID, draftHeldLine, HELD_LINE, HELD_UNTIL, workerTreeWith } from "./sp-promise.mjs";
-import { d1Adapter, FixedRedemptions, linkIn, PAST_OFFER_ID, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
+import { d1Adapter, FixedRedemptions, linkIn, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
 
 const BOSTON = offerById(BOSTON_OFFER_ID);
 const ZONE = saveConfig.send_time_zone;
@@ -117,7 +117,8 @@ test("SP12: after valid_to, the lapse path — /o says the offer ended, the /con
     const last = await offerPage(db, code, BOSTON.valid_to);
     assert.ok(pageText(last.html).includes(HELD_LINE), "on its last day the offer is still held");
     const ended = await offerPage(db, code, addDays(BOSTON.valid_to, 1));
-    assert.match(ended.html, /that offer ended/, "the day after valid_to: the offer has ended");
+    // § 10.7: no offer follows it, so the ended offer's page is the lapse (This offer has ended, the link to the plans).
+    assert.match(ended.html, /<h1>This offer has ended<\/h1>/, "the day after valid_to: the offer has ended");
     assert.ok(!pageText(ended.html).includes(HELD_LINE), "and no longer says it is held");
 
     const confirm = async (today) =>
@@ -140,20 +141,20 @@ test("SP12: after valid_to, the lapse path — /o says the offer ended, the /con
 });
 
 test("SP12: an ended offer's page whose current offer has no code — the current offer and its date, no code, nothing reissued", async () => {
-  // A copy of the Worker's modules and data in which the current general offer has `code_mode: "none"` (today's general
-  // offers are placeholders with codes; § 10 item 1's rule is for any offer without a code).
+  // A copy of the Worker's modules and data in which a later general offer without a code follows the Boston offer (since
+  // § 10.7 none does in the committed file; § 10 item 1's rule is for any offer without a code).
   const tree = await workerTreeWith((offers) => {
-    const general = offers.offers.find((o) => o.applies_to === "general" && o.valid_from <= "2026-10-30" && "2026-10-30" <= o.valid_to);
-    general.code_mode = "none";
-    delete general.shared_code;
-    return general;
+    const later = { id: "general-later-fixture", label: "SP12 fixture: a later offer", applies_to: "general", valid_from: "2026-10-30", valid_to: "2026-12-31", code_mode: "none" };
+    offers.offers.push(later);
+    return later;
   });
   const { mf, db } = await startWorker();
   try {
     const { handleOffer: copied } = await import(tree.module("redeem.js"));
     const original = saveRows(validateSave(validSave({ email: "dummy-sp12-ended@example.com" })), {
+      nowMs: noonOn("2026-10-24"),
       state: "lapsed",
-      saveOverrides: { offer_id: PAST_OFFER_ID, message_state: "sent" },
+      saveOverrides: { message_state: "sent" },
     });
     await insertRows(db, [{ saveRow: original.saveRow }]);
     const code = original.saveRow.offer_code;

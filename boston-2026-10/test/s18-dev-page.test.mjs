@@ -13,7 +13,7 @@ import { zonedDate } from "../src/worker/zoned-time.js";
 import { assertOneWhyFrame, isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
 import { devPage } from "./dev-page.mjs";
 import { assertPageBudget } from "./page-budget.mjs";
-import { simulatePage } from "./page-sim.mjs";
+import { PAGE_NOW_MS, simulatePage } from "./page-sim.mjs";
 
 const devHtml = await devPage();
 const prodHtml = await renderPage(await loadPlans());
@@ -71,9 +71,9 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   // The offer line (§ 2a): a slot under the heading, filled in the browser with offers.json's own label.
   assert.ok(!text.includes(all[1]), "the draft's literal offer line is not on the page");
   assert.match(devHtml, /<h2 id="save-title">Your Boston offer<\/h2>\s*<p class="save-offer"><strong id="save-offer-label"><\/strong><\/p>/);
-  const now = Date.now();
+  const now = PAGE_NOW_MS; // a day of the offer (SPEC-save-offer-production § 10.7: after the last one, no step is drawn)
   const label = offerForSave(zonedDate(now, saveConfig.send_time_zone)).label;
-  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, label, "offers.json's own label (`[The offer]` today)");
+  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, label, "offers.json's own label");
 });
 
 test("S18: marked `DRAFT — not for use · wording v0.3-draft`; the production page carries none of it", () => {

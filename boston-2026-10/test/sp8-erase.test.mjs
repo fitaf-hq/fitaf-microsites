@@ -12,7 +12,7 @@ import { databaseFor, eraseArgs, ERASE_DATABASES, productionConfig, wranglerD1Ar
 import { erase } from "../src/worker/erase.js";
 import { validateSave } from "../src/worker/validate-save.js";
 import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
-import { d1Adapter, dumpAllTables, rows, startWorker, validSave } from "./worker-harness.mjs";
+import { d1Adapter, dumpAllTables, rows, startWorker, TEST_NOW_MS, validSave } from "./worker-harness.mjs";
 
 test("SP8: the database of each environment: production's binding is fitaf-leads-prod, development's fitaf-leads-dev", async () => {
   assert.deepEqual(ERASE_DATABASES, { dev: "fitaf-leads-dev", prod: "fitaf-leads-prod" });
@@ -57,8 +57,8 @@ test("SP8: the CLI refuses before any database is touched — no --email, an unk
 test("SP8: erase on the production Worker's database — a dry run counts only; --apply as S16", async () => {
   const { mf, db } = await startWorker({ worker: "production" });
   try {
-    const target = saveRows(validateSave(validSave({ email: "dummy-sp8@example.com" })));
-    const bystander = saveRows(validateSave(validSave({ email: "dummy-sp8-other@example.com" })));
+    const target = saveRows(validateSave(validSave({ email: "dummy-sp8@example.com" })), { nowMs: TEST_NOW_MS });
+    const bystander = saveRows(validateSave(validSave({ email: "dummy-sp8-other@example.com" })), { nowMs: TEST_NOW_MS });
     await insertRows(db, [target, bystander]);
     const before = await dumpAllTables(db);
     assert.deepEqual(await erase(d1Adapter(db), { email: "dummy-sp8@example.com" }), { dry_run: true, contacts: 1, messages_to_cancel: 1 });

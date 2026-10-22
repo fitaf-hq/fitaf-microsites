@@ -3,7 +3,7 @@
 // answered by its SQL), from the package at `root`: this one, or another commit's tree extracted by `git archive`, so the
 // words of the two can be compared. The dates are fixed, so nothing here depends on the day a case runs.
 import { spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, realpath, rm, symlink } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, realpath, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -42,10 +42,10 @@ const post = (action) =>
 
 /**
  * Every Worker page, as { name: { status, html } }, from the package at `root`: the saved offer (ORIGINAL, the Boston
- * offer live), the ended offer (WELCOME_BACK), an unknown code (CURRENT), the confirmation (an offer's and an expansion's
- * LANDING), CONFIRMED, DECLINED, GONE and TOO_MANY.
+ * offer live), the ended offer (since § 10.7 the lapse page: the Boston offer after its last day, no offer after it), an
+ * unknown code (CURRENT), the confirmation (an offer's and an expansion's LANDING), CONFIRMED, DECLINED, GONE and TOO_MANY.
  */
-export async function workerPages(root = ROOT) {
+export async function workerPages(root = ROOT, { ended = true } = {}) {
   const mod = (file) => import(pathToFileURL(join(root, "src", "worker", file)).href);
   const { handleOffer } = await mod("redeem.js");
   const { handleConfirm, GONE } = await mod("confirm.js");
@@ -54,7 +54,7 @@ export async function workerPages(root = ROOT) {
   const confirm = (kind, request) => handleConfirm(request, { DB: fakeDb(confirmRow(kind)) }, TOKEN, LIVE).then(text);
   return {
     original: await offer(offerRow("event-boston-2026-10-placeholder"), CODE, LIVE),
-    welcome_back: await offer(offerRow("event-past-placeholder"), CODE, ENDED),
+    ...(ended ? { ended: await offer(offerRow("event-boston-2026-10-placeholder"), CODE, ENDED) } : {}),
     current: await offer(() => null, "ZZZZ9999", LIVE),
     landing_offer: await confirm("offer", new Request("http://localhost/confirm/x")),
     landing_expansion: await confirm("expansion", new Request("http://localhost/confirm/x")),
@@ -65,11 +65,15 @@ export async function workerPages(root = ROOT) {
   };
 }
 
+/** Every page but the ended offer's (§ 10.7's lapse page, which an earlier tree's code cannot draw from this tree's offers). */
+export const workerPagesLive = (root = ROOT) => workerPages(root, { ended: false });
+
 /** A page's head without its <title>, and its <main> (or body) markup. */
 export const headOf = (html) => /<head>([\s\S]*?)<\/head>/.exec(html)[1].replace(/<title>[^<]*<\/title>\n?/, "");
 
-/** `commit`'s package, extracted by `git archive` into a temporary directory (read only), node_modules linked in. */
-export async function packageAt(commit) {
+/** `commit`'s package, extracted by `git archive` into a temporary directory (read only), node_modules linked in; each
+ *  path of `overlay` (relative to the package) this tree's file, copied over the commit's. */
+export async function packageAt(commit, { overlay = [] } = {}) {
   const scratch = await realpath(await mkdtemp(join(tmpdir(), "boston-sp15-base-")));
   const run = (cmd, args, input) => {
     const r = spawnSync(cmd, args, { input, maxBuffer: 256 * 1024 * 1024 });
@@ -82,5 +86,6 @@ export async function packageAt(commit) {
   run("tar", ["-x", "-C", join(scratch, "base")], run("git", ["-C", top, "archive", "--format=tar", commit, prefix]));
   const pkg = join(scratch, "base", prefix);
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
+  for (const path of overlay) await copyFile(join(ROOT, path), join(pkg, path));
   return { pkg, dispose: () => rm(scratch, { recursive: true, force: true }) };
 }
