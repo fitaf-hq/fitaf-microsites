@@ -68,6 +68,12 @@
 // of every-menu's and save-offer-production's page into why-button's, each over 84807ce's, gives 596d116's byte for
 // byte with no conflict; each production page +10,772 bytes and each development page +11,714 against f02807e's
 // record). analytics-json changes no page. From here the reference is 596d116's tree.
+// ⚠ RE-RECORDED at 5231265 (`node test/u-04-record.mjs --commit 5231265`): SPEC-every-menu-and-nutrition § 11
+// (2026-10-22) with SPEC-meal-selection § 13. Every entry moved, and by § 11 alone: each content's week/picks-data.json
+// is ce91cba's with each heading's " (<range>)" removed (cc-harness rangeless; 2, 8 and 8 headings; every other file
+// byte-identical), and each served page is 5231265's own build's page with that content put in (pageWithWeek), byte for
+// byte, so it moves by the build's § 11 lines and the headings alone (S20's note; § 11.1); the visible pages follow (the
+// heading, the button and its no-script link above the tabs). From here the reference is 5231265's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -76,7 +82,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 596d116's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "596d116");
+test("U4: a normal week, the content and the page as served, byte-identical to 5231265's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "5231265");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

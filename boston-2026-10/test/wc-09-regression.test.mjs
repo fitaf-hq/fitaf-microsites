@@ -19,6 +19,11 @@
 // app.js, inlined in the page) by `node test/wc-09-record.mjs --visible-at e2284f1`, as § 6 item 4 asks: only
 // `visible_at` moved. All 20 visible pages are f02807e's byte for byte (visible() reads the page without its scripts,
 // and the change is script alone); picks_data, page_sha256 and the sheet still 409b805's.
+// ⚠ RE-RECORDED for SPEC-every-menu-and-nutrition.md § 11 (2026-10-22, with SPEC-meal-selection § 13, which moves no
+// page) by `node test/wc-09-record.mjs --visible-at 5231265`: `visible` at all 20 fragments (the heading the menu's name
+// alone, Why Fit AF? and its no-script link above the tabs), each the page production's Worker serves from 5231265's tree
+// with its content, which is 409b805's with the headings' range removed (WC-9a, amended); picks_data, page_sha256 and the
+// sheet still 409b805's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -39,7 +44,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
-  assert.equal(golden.visible_at, "e2284f1", "the visible pages: e2284f1's served page (SPEC-why-fit-af §§ 2 and 6)");
+  assert.equal(golden.visible_at, "5231265", "the visible pages: 5231265's served page (SPEC-every-menu-and-nutrition § 11)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {

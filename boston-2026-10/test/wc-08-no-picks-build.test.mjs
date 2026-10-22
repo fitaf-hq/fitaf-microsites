@@ -23,8 +23,10 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  once more at f02807e for SPEC-why-fit-af § 2 (the footer's "Why Fit AF?" button, its dialog and its no-script link;
  *  its § 4 lists the lines). It was bb17e256… until then. Re-recorded once more at e2284f1 for SPEC-why-fit-af § 6 (the
  *  /why/ page's link back to the plan page closes the dialog: app.js's seven added lines, its § 6.1 lists them). It was
- *  1c68a68b… until then. */
-const TODAY_NO_PICKS_SHA256 = "21abbe56543ab0e556bed72491b0baabb2c91e715d5c1aeddddad25229af5f69";
+ *  1c68a68b… until then. Re-recorded once more at 5231265 for SPEC-every-menu-and-nutrition § 11 (2026-10-22: Why Fit
+ *  AF? above the tabs, the card's rings and circled i; its § 11.1 says which lines): renderPage at ce91cba's own tree
+ *  reproduces 21abbe56…, at 5231265's gives this. */
+const TODAY_NO_PICKS_SHA256 = "321da0a6f5baab946e14f5879189ea443f702b08fa65acf43e8f78df99b4ca7f";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
