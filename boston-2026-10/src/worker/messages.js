@@ -91,11 +91,21 @@ const message = (template, to, subject, siteUrl, lines, footer) => ({
   html: renderHtml(subject, { lines, footer, siteUrl }),
 });
 
+/**
+ * E1's second line, what the save holds (DRAFT § 3, its two marked forms). SPEC-save-offer-production § 10: an offer with
+ * `code_mode: "none"` is a price promise, so it says the date its pricing is held until (the offer's valid_to) and no
+ * code; an offer that carries a code says the code. Either way `code` is the save's /o token, in See my offer's path only.
+ */
+const savedLine = (offer, code) =>
+  offer.code_mode === "none"
+    ? ["Your pricing is held until ", strong(longDate(offer.valid_to))]
+    : [strong(`Your code: ${displayCode(code)}`), " · good until ", strong(longDate(offer.valid_to))];
+
 /** E1. `token` is present only when the marketing box was ticked. */
 export function e1({ to, code, offer, event, siteUrl, token }) {
   const lines = [
     ["You saved this offer at ", strong(event.name), " yesterday — here it is."],
-    [strong(`Your code: ${displayCode(code)}`), " · good until ", strong(longDate(offer.valid_to))],
+    savedLine(offer, code),
     [button("See my offer", `${siteUrl}/o/${code}`)],
   ];
   if (token) {

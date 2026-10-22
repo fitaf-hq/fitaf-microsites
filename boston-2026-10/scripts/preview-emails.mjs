@@ -17,7 +17,7 @@ export const PREVIEW_DIR = join(DIST_DEV, "email-preview");
 export const SAMPLE_CODE = "SAMPLE23";
 export const SAMPLE_TOKEN = "SAMPLE-TOKEN-FOR-A-PREVIEW-ONLY";
 const SAMPLE_TO = "delivered@resend.dev";
-const SAMPLE_ZIP = "01602";
+const SAMPLE_ZIP = "03101"; // out of the official area (SPEC-save-offer-production § 10), in the near ring
 
 /** The two previews, as { name: html }, and the values they were rendered from. */
 export async function previews({ nowMs = Date.now() } = {}) {

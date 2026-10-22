@@ -53,7 +53,11 @@ test("SP9: the development build carries /privacy/, marked as the step is; every
     const html = await readFile(join(out, "privacy", "index.html"), "utf8");
     await assertPrivacyPage(html, await readFile(DRAFT_FILE, "utf8"), "dev /privacy/");
     assert.match(pageText(html), new RegExp(`DRAFT — not for use · wording ${saveConfig.wording_version}`), "the step's DRAFT marking");
-    assert.ok(pageText(html).includes("[email]"), "control: the draft's own placeholders, shown on the development page");
+    // Since SPEC-save-offer-production § 10 item 5 the draft's contact and response days are filled; its export provider is
+    // still the Owner's placeholder.
+    assert.ok(pageText(html).includes("[Mailchimp]"), "control: the draft's own placeholder, shown on the development page");
+    assert.ok(pageText(html).includes("Contact: privacy@eatfitaf.com."), "§ 10 item 5: the decided contact");
+    assert.ok(pageText(html).includes("we'll answer within 30 days"), "§ 10 item 5: the decided response days");
     assertLinkResolves(await readFile(join(out, "index.html"), "utf8"), "/", out);
     for (const e of events) assertLinkResolves(await readFile(join(out, e.id, "index.html"), "utf8"), `/${e.id}/`, out);
   } finally {
@@ -79,7 +83,7 @@ test("SP9: production true with approved inputs — /privacy/ is § 6's, unmarke
   await assertPrivacyPage(privacy, draftText, "production /privacy/");
   assert.doesNotMatch(privacy, /DRAFT — not for use|class="draft-tag"/, "no draft marking");
   assert.doesNotMatch(pageText(privacy), /\[[^\]]*\]/, "no bracket");
-  assert.ok(pageText(privacy).includes("Contact: privacy@example.com."), "control: § 6's contact address as the fixture approved it");
+  assert.ok(pageText(privacy).includes("Contact: privacy@eatfitaf.com."), "control: § 6's contact address as committed (§ 10 item 5)");
   const href = PRIVACY_LINK.exec(html)?.[1];
   assert.equal(new URL(href, "https://site.invalid/").pathname, "/privacy/", "the production page's link resolves to /privacy/");
 });
@@ -87,6 +91,6 @@ test("SP9: production true with approved inputs — /privacy/ is § 6's, unmarke
 test("SP9: a bracket left in DRAFT § 6 refuses the production build, naming the privacy page that would print it", async () => {
   const { error, files } = await productionBuild({ unfixed: "a bracket left in DRAFT § 6" });
   assert.ok(error);
-  assert.match(error.message, /the privacy page prints a placeholder: \[email\]/);
+  assert.match(error.message, /the privacy page prints a placeholder: \[Mailchimp\]/);
   assert.deepEqual(files, [], "nothing written");
 });

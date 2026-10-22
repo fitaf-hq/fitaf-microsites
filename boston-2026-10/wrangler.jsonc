@@ -41,8 +41,8 @@
   ],
   // The scheduled Worker, as development's: send what is due, lapse, purge.
   "triggers": { "crons": ["*/5 * * * *"] },
-  // SITE_URL: the address E1's and E-X's links use. MAIL_FROM: ⬜ the PLACEHOLDER until the Owner names a sender (the
-  // production build refuses it). TURNSTILE_SITE_KEY: the production widget's site key (public), ⬜ fitaf-infra's, empty
+  // SITE_URL: the address E1's and E-X's links use. MAIL_FROM: the decided sender (SPEC-save-offer-production § 10 item 4;
+  // the production build refuses an empty sender or one outside eatfitaf.com). TURNSTILE_SITE_KEY: the production widget's site key (public), ⬜ fitaf-infra's, empty
   // until it exists (the production build refuses an empty or test key). SEND_WITHOUT_ALLOWLIST: production sends to
   // anyone who saved (§ 4 item 4); development never sets it and keeps its allowlist.
   // ⛔ RESEND_API_KEY, CONFIRM_TOKEN_KEY and TURNSTILE_SECRET_KEY are Worker SECRETS, set by fitaf-infra, never here.
@@ -116,7 +116,7 @@
       // Cloudflare's PUBLISHED Turnstile test keys (always pass, invisible widget). Not secrets.
       // Production will set TURNSTILE_SECRET_KEY as a secret in the infrastructure code, never here.
       // SITE_URL: the dev Worker's public address, for the links inside E1 and E-X.
-      // MAIL_FROM (rung 5): the sender address, public; ⬜ a PLACEHOLDER until the Owner names one.
+      // MAIL_FROM (rung 5): the sender address, public; the decided sender (SPEC-save-offer-production § 10 item 4).
       // ⛔ RESEND_API_KEY, SEND_ALLOWLIST and CONFIRM_TOKEN_KEY are Worker SECRETS, never here: the
       // infrastructure code sets them (the `secret:*` scripts that did are retired, 2026-09-29).
       // Without the Resend key nothing is sent.

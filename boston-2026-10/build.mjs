@@ -374,8 +374,8 @@ export const DEV_PHOTO_HOST = 1;
 const MENU_LINK =
   '\n            <p class="skips"><button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button></p>';
 
-/** What the development page's scripts read: the save endpoint, the ZIP list (mock), the sizes, and (§ 2a)
- *  what the offer box needs to choose as the Worker does. ⛔ Never a code: no shared_code, no code_mode. */
+/** What the development page's scripts read: the save endpoint, the ZIP list (official; its near ring a mock), the sizes,
+ *  and (§ 2a) what the offer box needs to choose as the Worker does. ⛔ Never a code: no shared_code, no code_mode. */
 export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) {
   const prefixesOnly = (list) => (list ?? []).map((z) => (z.zip ? { zip: z.zip } : { prefix: z.prefix }));
   return {

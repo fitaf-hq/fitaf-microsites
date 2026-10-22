@@ -1,7 +1,7 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { newToken } from "../src/worker/token.js";
-import { dumpAllTables, fetchPage, startWorker } from "./worker-harness.mjs";
+import { dumpAllTables, fetchPage, NEAR_ZIP, startWorker } from "./worker-harness.mjs";
 import { savedAndSent } from "./confirm-fixture.mjs";
 
 const { mf, db } = await startWorker();
@@ -17,7 +17,8 @@ test("S9: GET /confirm/<token> changes nothing (every row equal before and after
   assert.match(offer.text, /<h1>Keep hearing from Fit AF\?<\/h1>/, "LANDING");
   assert.match(offer.text, /<form method="post">/, "the confirmation is a button (a POST), not the link");
   const expansion = await fetchPage(mf, `/confirm/${t.expansion.token}`);
-  assert.match(expansion.text, /We'll email you when Fit AF delivers near 01602 — nothing else\./);
+  // The expansion save's ZIP is the harness's NEAR_ZIP (since SPEC-save-offer-production § 10, 03101: 01602 is on the list).
+  assert.ok(expansion.text.includes(`We'll email you when Fit AF delivers near ${NEAR_ZIP} — nothing else.`));
   const gone = await fetchPage(mf, `/confirm/${newToken()}`);
   assert.equal(gone.status, 404);
   for (let i = 0; i < 3; i++) await fetchPage(mf, `/confirm/${t.no.token}`);

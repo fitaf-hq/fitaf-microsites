@@ -11,15 +11,18 @@
 //   - and nothing printed with a bracket: the production page as built (the ZIP slot apart), and E1 and E-X as the
 //     Worker would render them from these inputs;
 //   - ⛔ the draft tag ("DRAFT — not for use") never in the production page;
-//   - data/offers.json "status": "approved", no placeholder label, no placeholder code;
+//   - data/offers.json "status": "approved", no placeholder label, and each offer's code as its code_mode says (SPEC § 10
+//     item 4): "none" (a price promise: no code is issued, shown or needed) with no code field, "shared" with a real code,
+//     "unique" (the Worker draws them); any other code_mode refused;
 //   - data/delivery-zips.json "status": "official" (data/README.md's rule);
-//   - the sender (vars.MAIL_FROM) set and not the placeholder; the production site key (vars.TURNSTILE_SITE_KEY) set and
-//     not one of Cloudflare's published test keys (SPEC § 8: chosen where the contract is silent); vars.SITE_URL set.
-// What cannot be read off a file is not claimed here: that the offers give 25% on every cart is the Owner's, approved
-// with the file's status.
+//   - the sender (vars.MAIL_FROM) set and an address at eatfitaf.com (SPEC § 10 item 4: Fit AF <offers@eatfitaf.com> is the
+//     decided sender, not a placeholder); the production site key (vars.TURNSTILE_SITE_KEY) set and not one of
+//     Cloudflare's published test keys (SPEC § 8: chosen where the contract is silent); vars.SITE_URL set.
 
-/** SPEC-rung5-sending.md § 0: the sender address the dev vars carry until the Owner names one. */
-export const SENDER_PLACEHOLDER = "Fit AF <offers@eatfitaf.com>";
+/** SPEC § 10 item 4: the sender's domain. The decided sender is Fit AF <offers@eatfitaf.com>. */
+export const SENDER_DOMAIN = "eatfitaf.com";
+/** An offer's code_mode; SPEC § 10 item 1 adds "none". */
+const CODE_MODES = ["none", "unique", "shared"];
 /** Cloudflare's published Turnstile test site keys: 1x… always passes, 2x… always blocks, 3x… forces a challenge. */
 export const TEST_SITE_KEY = /^[123]x0{20}[A-Z]{2}$/;
 /** In DRAFT.md: a button is written `[ Label ]`; these are filled by the code or link the notice. */
@@ -31,6 +34,14 @@ const PRINTED_SECTIONS = /^## ([1-6])\. /;
 const DRAFT_NAME = "consent/DRAFT.md";
 
 const brackets = (text) => [...new Set(text.match(/\[[^\]\n]*\]/g) ?? [])];
+
+/** A sender's address: the part in `<…>` of `Name <address>`, or the whole value. */
+const senderAddress = (from) => (/<([^<>]*)>\s*$/.exec(from)?.[1] ?? from).trim();
+/** One address (one @, no space or angle bracket) whose domain is SENDER_DOMAIN or a subdomain of it. */
+function atSenderDomain(from) {
+  const domain = /^[^\s@<>]+@([^\s@<>]+)$/.exec(senderAddress(from))?.[1].toLowerCase();
+  return domain === SENDER_DOMAIN || Boolean(domain?.endsWith(`.${SENDER_DOMAIN}`));
+}
 
 /** DRAFT.md's §§ 1-6, as [number, text]. */
 function printedSections(draftText) {
@@ -70,7 +81,11 @@ function offerRefusals(offers) {
   if (offers.status !== "approved") out.push(`data/offers.json: status is ${offers.status}, not approved`);
   for (const o of offers.offers ?? []) {
     if (/\[|placeholder/i.test(o.label ?? "[]")) out.push(`data/offers.json: offer ${o.id}'s label is a placeholder: ${o.label}`);
-    if (o.code_mode === "shared" && (!o.shared_code || /placeholder/i.test(o.shared_code))) {
+    if (!CODE_MODES.includes(o.code_mode)) {
+      out.push(`data/offers.json: offer ${o.id}'s code_mode ${o.code_mode} is not one of ${CODE_MODES.join(", ")}`);
+    } else if (o.code_mode === "none" && "shared_code" in o) {
+      out.push(`data/offers.json: offer ${o.id} carries a code (shared_code) but its code_mode is none`);
+    } else if (o.code_mode === "shared" && (!o.shared_code || /placeholder/i.test(o.shared_code))) {
       out.push(`data/offers.json: offer ${o.id}'s shared_code is a placeholder`);
     }
   }
@@ -81,8 +96,7 @@ function varRefusals(vars) {
   const out = [];
   const set = (name) => typeof vars[name] === "string" && vars[name].trim() !== "";
   for (const name of ["SITE_URL", "MAIL_FROM", "TURNSTILE_SITE_KEY"]) if (!set(name)) out.push(`wrangler.jsonc vars.${name} is not set`);
-  if (vars.MAIL_FROM === SENDER_PLACEHOLDER) out.push(`wrangler.jsonc vars.MAIL_FROM is the placeholder ${SENDER_PLACEHOLDER}`);
-  else if (set("MAIL_FROM") && /\[/.test(vars.MAIL_FROM)) out.push(`wrangler.jsonc vars.MAIL_FROM is a placeholder`);
+  if (set("MAIL_FROM") && !atSenderDomain(vars.MAIL_FROM)) out.push(`wrangler.jsonc vars.MAIL_FROM is not an address at ${SENDER_DOMAIN}`);
   if (set("TURNSTILE_SITE_KEY") && TEST_SITE_KEY.test(vars.TURNSTILE_SITE_KEY)) {
     out.push("wrangler.jsonc vars.TURNSTILE_SITE_KEY is one of Cloudflare's test keys");
   }

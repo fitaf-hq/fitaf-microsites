@@ -5,8 +5,8 @@
 // the approved set and leaves ONE part unfixed (`unfixed`), so each refusal is seen alone:
 //   - data/save.json: `production` true, `wording_version` "v1" (added to `known_wording_versions`), and the privacy
 //     notice's address (`privacy_notice_url`), so the page links the notice in place of DRAFT § 1's "[Privacy notice]";
-//   - consent/DRAFT.md: its status line approving v1 with a date, and § 6's Owner placeholders filled ([email], [30],
-//     [Mailchimp]); every other word as committed;
+//   - consent/DRAFT.md: its status line approving v1 with a date, and § 6's Owner placeholder filled ([Mailchimp]; since
+//     § 10 item 5 the committed draft fills [email] and [30] itself); every other word as committed;
 //   - data/offers.json: "status": "approved", every label the fixture's (distinct, no bracket), the shared code a
 //     fixture's (no PLACEHOLDER; invented, it is no store's code);
 //   - data/delivery-zips.json: "status": "official" (the list itself as committed; since § 10 the committed list is the
@@ -44,7 +44,7 @@ export const PRIVACY_URL = "/privacy/";
 export const FIXTURE_CODE = "SPFIXTURE25"; // invented: no store has it
 /** DRAFT § 6's Owner placeholders and what the fixture fills them with. Since § 10 item 5 the committed draft fills [email]
  *  and [30] itself (privacy@eatfitaf.com, 30), so only [Mailchimp] is left for the fixture to fill. */
-export const DRAFT_FILLS = { "[email]": "privacy@example.com", "[30]": "30", "[Mailchimp]": "Mailchimp" };
+export const DRAFT_FILLS = { "[Mailchimp]": "Mailchimp" };
 
 /** The parts a refusal case may leave unfixed, each with the words its refusal must name. */
 export const UNFIXED = {
