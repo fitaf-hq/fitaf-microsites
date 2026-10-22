@@ -595,3 +595,32 @@ week's lists.
    has released (Fit AF's `scripts/switch/unattended-switch.spec.md` § 12: nothing merges into
    `boston/rung-4-save-offer` until then). A dev pin first, as every release.
 5. ⛔ **Not here**: carting snacks (`SPEC-snacks-in-the-cart.md`), a snack price, which snacks.
+
+### 13.1 Built (found at the build, not ruled)
+
+Built on `boston/review-1022` with `SPEC-every-menu-and-nutrition.md` § 11 (whose § 11.1 carries the shared goldens and
+gates), from `1c10839` (the merge of this contract, `c269ab7`), in two commits: `0c2e3e3` (the cases, red) and
+`dfca126` (items 1–2); the goldens once, after both sections, at `c61548b`. The Advisor lifted item 4's order
+(2026-10-22, through the orchestrator: *"the snack rules were not implemented – we should not be doing 1 snack per
+day"*): it ships with § 11. §§ 0–13 are unchanged.
+
+| case | file | before (`0c2e3e3`, on `1c10839`'s code) | after (`dfca126`) |
+|---|---|---|---|
+| MS-19: the v2 fixture with a snack list of 5 for every day (2 + 2 + 1) and of 3 for weekdays (1 + 1 + 1), snacks shown and carted, builds and makes its content; at `#lean-or-7d-s` and `#lean-or-5d-s` the card's snack lines are each list's, and its checkout link carries 5 and 3 snack units; a list of 8 for 7 days refused (*"lists.chefs-choice.snacks.7: the snacks for 7 days are at least 1 and at most 7; the list has 8"*) and an empty list refused (*"lists.chefs-choice.snacks.5 must be a list of meals"*), each naming the file | `test/ms-19-snack-counts.test.mjs` | 1 of 4 (the empty list, refused before as after; the fixture refused, *"the snacks for 5 days are 5; the list has 3"*) | 4 of 4 |
+| MS-19's mutant: the old exact check put back in a mirror of the package (`cc-harness` `mirror`) | the same | red on its anchor (absent) | red as required (*"… the snacks for 5 days are 5; the list has 3"*), its control (the unchanged mirror) green |
+| MS-20: `npm run content` for every committed week of `data/picks/` (2026-10-11, -18, -25), production and `--env dev`, byte-identical to `1c10839`'s tree, files, report and message | `test/ms-20-committed-weeks.test.mjs` | 7 of 7 (an invariance case) | 7 of 7 |
+| Readers of the lists amended: MS-6's refusal of a list over its days (the message names both bounds); MS-7's sum of a link's snack units, the list's own total | `ms-06-refusals`, `ms-07-snacks-off` | 36 of 37; 5 of 5 | 37 of 37; 5 of 5 |
+
+**Where § 13 was silent, and what was done**
+
+1. **"The recap shows 5 and 3"** is read on the card's link: the checkout's recap prints `recap_snacks` with `{s}` the
+   link's snack units (`src/storefront/fitaf-handoff.js`: `V = p.units - p.total`; SN-2f), so MS-19 holds the link's
+   units to the list's total and does not run the store's checkout. `data/messages.json`'s `recap_snacks` needed no
+   change: its `{s}` was already the list's own total.
+2. **The lower bound** is the list's own: an empty list was already refused (*"must be a list of meals"*) and an item's
+   `qty` is at least 1 (the link tool), so *"at least 1"* in the new message is never what refuses a list.
+3. **The words that counted by the days**: § 2's *Snacks* and § 5's snack lists are amended in place, each marked;
+   `SPEC-snacks-in-the-cart.md` § 4 item 4 and the README's rows too; `scripts/selection.mjs`'s comment. ⚠ That file is
+   one the development Worker reaches, so CC-8b's golden moved by the comment alone (§ 11.1's table), and SP3's base
+   carries it.
+4. **No page moves** for this section, and no content of a committed week (MS-20).

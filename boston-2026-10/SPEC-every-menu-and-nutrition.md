@@ -802,3 +802,115 @@ make it look nicer than raw output on the page)"*.
    the code, each shown to move only by this section's lines.
 7. **Release**: re-gated whole by the orchestrator, then the dev and production pins (the Advisor's go: § 7q item 9).
    ⛔ Not here: the analytics page; the meal picker (K-89); the photo sheet's size (a separate amendment).
+
+### 11.1 Built (found at the build, not ruled)
+
+Built on `boston/review-1022` from `ce91cba` (this contract), with `SPEC-meal-selection.md` § 13 (merged at `1c10839`;
+its notes are that file's § 13.1), in these commits: `2e4907c` (§ 11's cases, red), `bc259e4` (items 1–5, and the cases
+the code made stale), `8555e7e` (SP3's base), `1c10839` (the merge of § 13's contract), `0c2e3e3` and `dfca126` (§ 13's
+cases, then its code), `2955e93` (SP3's base again), `5231265` (the rings' colour tokens moved, below), `c61548b` (the
+goldens, re-recorded once, after both sections), and this section's. **To be re-gated by the orchestrator.** §§ 1–11
+are unchanged.
+
+**The cases, and what they did before the code** (each file alone, `nice -n 15 node --test <file>`; before on
+`2e4907c`'s tree, after on `bc259e4` and again where a later commit touched them)
+
+| case | file | before | after |
+|---|---|---|---|
+| EM7: the heading the menu's name alone, no range: production and development; the two-menu fixture, a week naming a real list (`gluten-free`) with the committed words, a week of one list; the phrase `{menu}`, a heading with `{week}` still built | `test/em-07-heading.test.mjs` | 0 of 7 (every heading *"… (October 5–11)"*) | 7 of 7 |
+| EM8: no line in a row, the row its tile and its name; the mark an inline SVG, a circle round its centre, the i's dot above it and its stem beneath, each in `currentColor`, hidden from assistive technology, the same markup open or closed; the build without `nutrition.line` | `test/em-08-row-and-mark.test.mjs` | 1 of 3 (the fixture control) | 3 of 3 |
+| EM9 (Chrome, 390 and 1280, every size, both menus, every control opened): five rings in the contract's order, labels and values by the words, each arc's share of its circle the value over its daily amount (clamped), the store's colours on the store's track, radius 17 in a 40 viewBox, stroke 2.5, round caps from 12 o'clock, about 56 px, the value in the middle and the label beneath in the page's text colour, inside the panel, one row at 1280; then the ingredients and Contains; no numbers for the size, no rings | `tools/storybook/test/em-chrome.test.mjs` | 0 of 1 (no rings) | 1 of 1 |
+| W1: the button directly above the tabs (nothing between but its no-script link and its dialog), its no-script link after it, nothing of *Why Fit AF?* in the footer | `test/w1-why-button.test.mjs` | 0 of 2 | 2 of 2 |
+| W2/W3 moved: the button drawn directly above the tabs, at least 64 px, in See all plans' look (colour, type, underline, background, border, compared computed), the footer showing no *Why Fit AF?*; then W2 as before (focus back on the button). Without script, one link to `/why/` in the button's place, above the plan's panel, none in the footer | `tools/storybook/test/w-why-chrome.test.mjs` | 3 of 11 (§ 6's two cases and its mutant) | 11 of 11 |
+| Cases that pinned what § 11 changes, amended with it: EM2's one-list comparison (the base's heading without its range), EM3 (no line; a control with numbers for the size or ingredients), EM6 (tile and name; the mark about 24 px and unchanged when open), EM4 (the rings' labels, `grams`, `ingredients`, `contains`; the build's refusals), PR-17 and CC-7a (the heading `{menu}`) | `em-chrome`, `em-04-words`, `pr-17-week-heading`, `cc-07-words` | em-chrome 2 of 9 in all; EM4 0 of 5; PR-17 0 of 1; CC-7 4 of 5 | 9 of 9; 5 of 5; 1 of 1; 5 of 5 |
+
+**The mutants** (each on a copy, its control the copy as built, green)
+
+- *A ring's arc taken over another number's daily amount* (the built page's one `var share = …` line reading the next
+  ring's daily amount): EM9 red at every ring, e.g. *Calories: its arc is 1.0000 of the circle, not 0.2050*.
+- *The rings for another size* (the one `return isMap(all) && has(all, size) …` line made the first size present):
+  EM9 red, *signature … Calories: the value "410", not "520"*, and *Basil Tofu Noodles: no numbers for lean, yet 5 rings*.
+- *The button left in the footer* (the copy's button markup moved beside *See all plans*): W2 red, *the footer shows Why
+  Fit AF?* and *the button is not directly above the tabs*.
+- EM3's mutant (the line of the first size) went with the line. EM6's mutant now keeps the row a flex row: with the tile
+  outside the button in a block row the empty tile drew no box, so a press on it landed on the button and the mutant
+  passed (found at the build; the copy as built still passes).
+
+**Where § 11 was silent, and what was done**
+
+1. **The rings' words** are `data/messages.json`'s, placeholders like the rest: `nutrition.rings` (a label per number,
+   *Calories, Protein, Carbs, Fat, Fiber*, in the rings' order) and `nutrition.grams` (*"{n}g"*, the value of a ring of
+   grams; calories show the number alone). The build refuses a missing label or a `grams` without `{n}`.
+   `nutrition.line` is removed from the words, not only from the required ones: nothing shows it.
+2. **The content carries the numbers.** A week's `facts` entries carry each size's five numbers (`nutrition`, as the
+   file gives them) instead of a filled line, and a week one of whose meals has numbers carries the rings' words
+   (`rings`: `labels` and `grams`); the page draws every arc from its number. The Worker is unchanged (its shape check
+   reads neither). ⚠ **So the live week shows rings only once its content is made again by this tree**: a page of this
+   tree with content made before it draws no rings (it finds no numbers) and still opens a meal's ingredients; a page
+   before it with new content shows no line and the ingredients.
+3. ⚠ **The heading is a phrase the content fills** (§ 9 item 3), so every week's `week/picks-data.json` moves by its
+   headings' *" (<range>)"*, and the live page reads *"Chef's Choice"* only once the live week's content is made again.
+   W4, EM5c and WC-9a, which compare content with base trees, read the base's file with that range removed and every
+   other byte the base's (`cc-harness` `rangeless`); CC-3, which told the weeks apart by the heading, reads the first meal.
+4. **A meal with numbers alone** is a control at a size it has numbers for (its panel the rings alone), and a plain row
+   at a size it has none for (item 4.2's *"a meal with neither"* read as neither numbers for the chosen size nor
+   ingredients). A meal with ingredients and no numbers for the size opens to its ingredients, no rings.
+5. **The value is text over the circle**, not SVG text: the circle (track and arc) is hidden from assistive technology
+   and the value and label are ordinary text a screen reader reads (*"410 Calories, 38g Protein, …"*). Value 14 px/700,
+   label 12 px/600, the page's body face; each ring 56 px wide; 10 × 12 px gaps, so five wrap three and two at 390 and
+   sit in one row at 1280; the panel indented to the name's column, as § 10.1 left it.
+6. **The geometry and amounts** are `chefs-choice.js`'s named constants, their source in the comment above them
+   (`fitaf-ring.liquid`, `fitaf.css` `.fam-macros`): the circle's length 2π × 17 (the snippet's 106.8, unrounded here),
+   the clamp 0.06–1, the daily amounts. One function, `ring(spec, n)`, draws a ring.
+7. **The colours** are six tokens (`--ring-track` and one per number, the store's) in a `:root` of the card's own
+   stylesheet, not the template's: the template's `:root` is carried by the other pages built from it, and the
+   development build's `privacy/index.html` moved by them (found comparing the builds; moved at `5231265`). Contrast:
+   the five arcs as non-text pairs on `--white` (Lc 35.0 to 99.6, minimum 30), the rings' text `--ink` on `--white`,
+   the track (Lc 7.7) not measured, by declaration, as the decoration beside the printed number.
+8. **The mark** is a 24 px SVG (a circle of radius 10.5 in a 24 square, a dot and a stem), navy by `currentColor`.
+9. **The button** keeps See all plans' class (`.all-link`, the page's quieter button: navy Poppins 16 px/600,
+   underlined) with `.why-link`: the column's width, 64 px tall, its words centred, 420 px wide from 720 px up as the
+   tabs are. Its dialog moved with it, between the button and the tabs (closed, it draws nothing), so the footer holds
+   *See all plans* and the footnote alone. ⬜ **For the Advisor**: in the quieter style it reads as an underlined link
+   in a 64 px band; if *"in a button"* means a drawn button, an outline (navy on white passes) is one rule.
+10. **Cases made stale by the move, amended at `bc259e4`**: S29's proxy lists the page's dialogs in document order
+    (`#why` now first); EM2's one-list comparison reads each box from the card's own corner (the button moves the card
+    72 px down the page). **SP3** held the production page to `768ca36`'s with SPEC-save-offer-production § 9 item 2's
+    reading alone; its base now has `ce91cba..5231265`'s diff over the page's sources applied (`sp-production.mjs`
+    `LATER`, by `patch`), so it still says exactly that.
+
+**What did not change, shown**: every built file but the pages byte-identical (`diff -rq` of `ce91cba`'s and
+`5231265`'s production and development builds, each from its own tree: `why/`, `privacy/`, fonts, photo sheets, QR
+codes); the Worker (CC-8b moves by § 13's one comment alone, below), the Footer block and the watch's expectation;
+`npm run content` for every committed week byte-identical to `1c10839`'s (MS-20), and to `ce91cba`'s but for the
+headings' range.
+
+**The goldens, re-recorded once (`c61548b`, from `5231265`)**
+
+| golden | before → after | shown |
+|---|---|---|
+| S20 | `index.html` `37fe139c…` → `07855a06…`, 52,846 → 59,013 bytes | 56 lines removed and 147 added in 19 places against `ce91cba`'s page, each § 11's; each development page by the same lines (`why/` read `/why/`); every other file byte-identical |
+| U4 (`node test/u-04-record.mjs --commit 5231265`) | all six entries | each content `ce91cba`'s with its headings' range removed (2, 8 and 8 headings); each served page `5231265`'s own build's page with that content put in, byte for byte; the visible pages follow |
+| WC-9 (`node test/wc-09-record.mjs --visible-at 5231265`) | `visible` at all 20 fragments | `picks_data`, `page_sha256` and the sheet still `409b805`'s; the page is the U4 composition for the same week |
+| WC-8's `TODAY_NO_PICKS_SHA256` | `21abbe56…` → `321da0a6…` | `renderPage` at `ce91cba`'s tree reproduces the old value |
+| CC-8b | `scripts/selection.mjs` `42de9e6c…` → `7aa10685…` | § 13 item 2's comment, one line made two |
+
+Sizes, raw / gzip: production 52,846 / 15,560 → 59,013 / 17,647; development `/` 77,420 / 22,822 → 83,587 / 24,919
+(`seminar/` 83,590 / 24,921), under SPEC.md § 1's 61,440 gzip.
+
+**Gated by the build's own run** (`nice -n 15`; the orchestrator re-runs every gate)
+
+| gate | result |
+|---|---|
+| `npm --prefix boston-2026-10 test` (once, on `c61548b`, 08:12–08:15 PDT) | **999 of 1000**. The one failure is **S22** (*"the page has no element #save-offer-label"*), production's own tree's known failure (SPEC-why-fit-af § 6.2) |
+| `npm --prefix boston-2026-10 run contrast` | 82 pairs, 82 pass, 0 problems |
+| `tools/storybook/test/w-why-chrome.test.mjs` and `em-chrome.test.mjs`, each alone, on `c61548b` | 11 of 11; 9 of 9 |
+
+Not run here, as asked: Storybook's whole suite and the storefront watch.
+
+**The renders** (`dist-dev/renders/`, never committed; the production build with the two-menu fixture week and the
+committed words, every photograph refused (the photo sheets; the logo shown)), at 390 and 1280: `11-top-*` the top of the page, *Why Fit AF?* above the
+tabs; `11-card-open-*` Chef's Choice with *Smoked Paprika Chicken Bowl × 2* opened, its five Lean rings (three and two at
+390), then *"Ingredients: …"* and *"Contains: Milk"*, the other controls marked with the circled i; `11-card-second-menu-
+signature-*` *Fixture Two* at Signature, *Charred Corn Chicken Plate × 2* opened (rings and ingredients) and *Cumin Lamb
+with Rice × 2* opened (rings alone).
