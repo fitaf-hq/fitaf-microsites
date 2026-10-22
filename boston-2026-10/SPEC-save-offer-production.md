@@ -869,3 +869,28 @@ the Worker or drew the page on the real date would fail on the day it runs.
 - `page-2026-10-24-390-top.png` and `page-2026-10-24-390-end.png`: the offer box, and the step after the card;
 - `page-2026-10-30-390-top.png` and `page-2026-10-30-390-end.png`: neither;
 - § 10.1's and § 10.3's renders, re-made.
+
+### 10.9 Ruling, 2026-10-22: a save holds through the morning its email arrives; the wording without a code
+
+The Advisor (2026-10-22, on the orchestrator's question that a save made on the offer's last day gets its E1 the next
+morning, after the offer ends): ***"Yes the keep the offers active through 10-30 as needed. Please deploy these copy
+changes so I can review"***.
+
+1. **A save's held date is the later of its offer's `valid_to` and the day its E1 is due** (the next morning at 09:00
+   Eastern): a save made on 2026-10-29 is held until **2026-10-30** and its E1 says so; a save made earlier keeps
+   2026-10-29. Saves are still accepted only through the offer's `valid_to` (§ 10.7 unchanged): the offer is not on the
+   page on 10-30, but a save from 10-29 is honoured through it. E1 never says *"This offer has ended"* for a save made
+   within the offer; the ended form remains for a save whose E1 is due after its held date (none, by this rule) and for
+   the `/o` page after the held date.
+2. **The wording without a code**, in `consent/DRAFT.md` and everything built from it, as the orchestrator proposed and
+   the Advisor asked to see deployed (still `v0.3-draft` until his v1): the step's intro *"Not ready today? Save it —
+   tomorrow morning we'll email you a link back here, with today's pricing held until {date}. We'll send it once."*; the
+   email field's hint *"we'll send your link here tomorrow"*; the fine print *"We'll use your email to send this once,
+   tomorrow."*; the privacy table *"to send the saved offer, or the expansion news, they asked for"*; retention *"the
+   saved offer and its event are kept …"*; the confirmation page and the box's line *"weekly"* in place of *"about once a
+   week"*. `{date}` is the held date of item 1 as the page can know it (the offer's `valid_to`, or the next day on the
+   last day).
+3. **Cases**: a save on 2026-10-29 at 15:00 Eastern → E1 due 2026-10-30, *"held until October 30, 2026"*; a save on
+   2026-10-24 → October 29; the `/o` page on 2026-10-30 for the 10-29 save shows the held offer, on 2026-10-31 the
+   lapse; the page's text carries no "code" in the step (a case over the rendered step), and the confirmation page says
+   *"weekly"*. Every golden that moves, re-recorded once.
