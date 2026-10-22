@@ -224,7 +224,8 @@ text is `ad25f93d…` (R2-32, PR-10 and CC-8 re-recorded for it, CC-8's golden `
    (7 *every day*, 5 *weekdays*: § 2's row) as snack items. With *No snacks*, the link is today's, byte-identical.
 3. **The not-carted line goes** while `carted` is true; the list keeps its heading. The snack price follows § 9 a.
 4. **Picks version 2's `snacks` lists** (§ 5): `name` is the store's card title (the key), `display` the shown name, as
-   for meals; the build checks each list's `qty` sums to 7 or 5.
+   for meals; the build checks each list's `qty` sums to 7 or 5 (⚠ since SPEC-meal-selection § 13, 2026-10-20: at least
+   1 and at most 7 or 5, the list's own total).
 5. **A week with no snack list, while `carted` is true**: Q4 is hidden for that week (the page never offers what the
    cart cannot hold). With `carted` false, § 9 item 3 of `SPEC-meal-selection.md` as today.
 

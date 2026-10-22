@@ -233,8 +233,9 @@ function rowOfCart(cart, rows) {
   return valid ? rows.get(answerKey(cart)) : undefined;
 }
 
-/** Version 2's snack lists (SPEC-meal-selection § 5): by days, "7" or "5", each the link tool's item checks, their qty
- *  making the days (one snack a day); no mpid. Keyed as the fragment names the days: "7d", "5d". */
+/** Version 2's snack lists (SPEC-meal-selection § 5): by days, "7" or "5", each the link tool's item checks; no mpid.
+ *  Keyed as the fragment names the days: "7d", "5d". SPEC-meal-selection § 13 (2026-10-20, the Owner's rule to try: 5
+ *  for every day, 3 for weekdays): a list's qty total is at least 1 and at most its days, no longer exactly its days. */
 function snackLists(snacks, at) {
   const out = {};
   if (snacks === undefined) return out;
@@ -251,7 +252,7 @@ function snackLists(snacks, at) {
       throw new Error(`${where}: ${err.message}`);
     }
     const total = items.reduce((sum, it) => sum + it.qty, 0);
-    if (total !== Number(d)) throw new Error(`${where}: the snacks for ${d} days are ${d}; the list has ${total}`);
+    if (total < 1 || total > Number(d)) throw new Error(`${where}: the snacks for ${d} days are at least 1 and at most ${d}; the list has ${total}`);
     out[dayToken(Number(d) === daysOf(true))] = items.map(({ name, qty }, i) => ({ name, display: asShown(meals[i].display), qty }));
   }
   return out;

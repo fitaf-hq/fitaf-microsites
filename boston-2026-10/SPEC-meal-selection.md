@@ -55,7 +55,8 @@ The file gains a **`selection`** table, one row per answer set, and a **`snacks`
 - `meals` is what the answers come to; **`plan` is the store's plan the cart goes through**, the largest count the store
   sells at or below `meals`. The build refuses a `plan` that is not among each individual plan's `counts`, and a row
   whose `plan` is above its `meals`.
-- **Snacks**: 7 with *every day*, 5 with *weekdays*, **beside** the plan, never in its count (the store sells snacks as
+- **Snacks**: the week's snack list for the chosen days, as Fit AF's picks hold it (⚠ **amended by § 13**, 2026-10-20:
+  it read *"7 with every day, 5 with weekdays"*), **beside** the plan, never in its count (the store sells snacks as
   add-ons, not as plan meals).
 - **The result card shows the plan**: its meals a week (⚠ **new**: today the count is on the button, not the card;
   § 8 item 4), its price per meal and its weekly total. When `plan` is below `meals`, one line says so (`plan_page.rounded`, a placeholder: *"{meals} meals go through as our {plan}-meal plan
@@ -99,7 +100,8 @@ unknown fragment opens the page at its start, as today. The partial states keep 
   rule, `checkDistinct`, 1 to `MAX_QTY`), `name` the store's name and the only key, `display` the KMS's name, shown
   (`SPEC-chefs-choice.md` § 7). A cart's `(lunch_dinner, weekends, breakfast)` must be a row of `selection` and its
   `plan` that row's; two carts for one row are refused; a missing row is allowed (§ 4's fallback).
-- Snack lists: the same item checks, their `qty` summing to 7 or 5; no `mpid`.
+- Snack lists: the same item checks, their `qty` summing to 7 or 5; no `mpid`. ⚠ **Amended by § 13** (2026-10-20): at
+  least 1 and at most 7 or 5, the list's own total.
 - **A version-1 file** (`menus` with `"7"` and `"14"`) still builds: its `7` is the cart for *or*, every day, no
   breakfast, and its `14` for *and*, every day, no breakfast, in `chefs-choice`. So the week delivered 10-18, written
   before this lands, shows under the new questions without a re-emit.
