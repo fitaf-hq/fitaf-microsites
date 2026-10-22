@@ -20,10 +20,15 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   last line links the privacy notice (DRAFT § 6); `null` shows DRAFT § 1's `[Privacy notice]` placeholder, which a
   production build refuses. Since § 9 (2026-10-21) **`"/privacy/"`**: the page the build makes from DRAFT § 6 (the
   development build always, marked DRAFT; the production build only with `production` true).
-- **`offers.json`** (rung 4): ⛔ **placeholders** (`"status": "placeholder"`; every `label` is `[The offer]`,
-  every `shared_code` `PLACEHOLDER`) until the Owner's offers are approved. Dates are calendar dates in New
-  York, inclusive. A save gets the live `event` offer, else the current `general` one; **exactly one
-  `general` offer is current on every date** (test S11b). The past offer exists so the expired paths can be
+- **`offers.json`** (rung 4): ⭐ since `SPEC-save-offer-production.md` § 10.7 (the Advisor, 2026-10-22) **one offer,
+  every visitor's**: the Boston offer (`applies_to: "general"`), its approved label, `code_mode: "none"`, held until
+  **2026-10-29**; after that day no offer is offered (the page draws no save step, an offer save is refused `offer_ended`,
+  `/o` and E1 say *"This offer has ended"*). An extension is its `valid_to`, released as the page is. The `status` stays
+  `placeholder` until the switch-on approves the file; nothing in it is a placeholder. What follows was the file before:
+  ⛔ **placeholders** (`"status": "placeholder"`; every `label` is `[The offer]`, every `shared_code` `PLACEHOLDER`) until
+  the Owner's offers are approved. Dates are calendar dates in New
+  York, inclusive. A save gets the live `event` offer, else the current `general` one; **at most one
+  `general` offer is current on any date** (test S11b; it was *exactly one* until § 10.7). The past offer exists so the expired paths can be
   exercised in development. ⭐ Since `SPEC-save-offer-production.md` § 10 (2026-10-22) an offer's `code_mode` may be
   **`none`**: a price promise, not a discount code. It carries no `shared_code`; a save issues no code (the save's
   token is only the `/o/` link's identifier); E1 and `/o` say *"Your pricing is held until"* its `valid_to`; and the

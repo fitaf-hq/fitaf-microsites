@@ -772,3 +772,100 @@ currently discussing how much grace period to give for the offer. Let's say 10-2
 4. **Cases**: a plain visit's save on 2026-10-24 holds until 2026-10-29 and E1 says so; a page built for 2026-10-30
    (the build's clock seam, as the existing date cases use) renders no save step; the `/o` page for a save after its
    offer's end shows the lapse; the gate passes with no placeholder offer. Every golden that moves, re-recorded once.
+
+### 10.8 Built (2026-10-22): every visitor's offer until 10-29, and none after it
+
+Built on `boston/save-offer-brief` after `d0bcb0a`. Every case was run as a single file at `nice -n 15`; the whole site
+suite once, at `16dff97`.
+
+| commit | what |
+|---|---|
+| `0e34c98` | the clock seams and the cases first, run red on `d0bcb0a`'s code and data |
+| `1dc7b05` | the code and the data; the cases found pinned to the old offers, fixed (below) |
+| `16dff97` | the goldens it moves (CC-8b, U4), re-recorded once from `1dc7b05`'s own tree |
+| the next commit | these notes; README and `data/README.md` |
+
+**The clock seams (the cases would otherwise fail from 2026-10-30).** With no offer after 10-29, a case that saved through
+the Worker or drew the page on the real date would fail on the day it runs.
+- `test/worker-harness.mjs` gives each Worker a test clock. It reads `TEST_NOW_MS` (noon New York, 2026-10-24) at its first
+  request and runs on from there; a case can give its own `now`.
+- `startWorker` also takes an `offers` file, as it took `save.json`.
+- `PAST_OFFER` is a fixture offer that ended 2026-06-30.
+- `test/page-sim.mjs`'s clock, when a case gives none, is `PAGE_NOW_MS`, the same instant.
+- These cases moved to those clocks: S6, SP7, S10, S16, SP8, S18, S11's WELCOME_BACK (offers of its own), the lapse fixture
+  (S14, S14b, S15), the mock-up cases (P3–P6, SS-01, on 2026-10-20) and `wp-chrome` (a second Worker on 2026-10-30).
+- **Proof:** the whole suite run with Node's clock at 2026-11-15 (a scratch preload, never committed) gave 1028 of 1029,
+  S22 alone, the same as the real date's run.
+
+**Cases**
+- **SP16** (`test/sp16-every-visitor.test.mjs`): red 1/7, green 7/7.
+  - the file holds one offer, the general one: the Boston offer;
+  - with its status approved, the gate refuses nothing about the offers;
+  - a plain visit's save on 10-24 holds until 10-29, and E1 says so;
+  - the page on 10-30 draws no save step and no offer box; on 10-24 and 10-29 it draws both (the development page and
+    the approved production page);
+  - after the end, `/o` and an unknown code take the lapse;
+  - an offer save is refused `offer_ended`, while an expansion save is still taken;
+  - an E1 sent after the end says the offer has ended.
+- **Amended:**
+  - S11b now reads *"at most one"*, with none after the last offer: S11 3/4 → 4/4.
+  - S14 2/3 → 3/3.
+  - S21 2/3 → 3/3.
+  - SP12 3/5 → 5/5.
+  - SP15 compares the words of `cc1d2bb`'s code over this tree's offers, and holds the ended page to § 10.7's words:
+    5/6 → 6/6.
+- ⚠ **Missed at `0e34c98`, found running the code, fixed in `1dc7b05`:**
+  - SP12's `applies_to`;
+  - where SP16 read the page's label from;
+  - SP4's two placeholder parts, which now set their placeholder;
+  - S23's control: the committed file has no code, so the fixture still provides the leak;
+  - SP1's week case and its production dates;
+  - S28's date;
+  - SP3's list of moved files;
+  - S2: the test clock as first written was frozen, so two saves got one time. It now runs on.
+
+**Built**
+- **`data/offers.json`**: one offer, `applies_to: "general"`, its id kept so that saves already made still find it. The
+  placeholders are gone.
+- **`offers.js`**: *"at most one"*; `null` after the last offer.
+- **`index.js`**: refuses an offer save with `offer_ended` when no offer is live.
+- **`redeem.js`**: the lapse page, *"This offer has ended"* with *Build my plan →* to `/?e=<event>` (or `/` for an unknown
+  code), in the quieter style; nothing is reissued.
+- **`messages.js` and `send-due.js`**: E1's third form. DRAFT § 3 has it, marked.
+- **`flow1.js`**: with no live offer, neither the box nor the step is drawn.
+- **`dummy-saves.mjs`** and the mock-ups refuse a day with no offer, by name. `preview:emails` previews the ended E1.
+
+**Chosen where § 10.7 is silent**
+1. *"A page built for 2026-10-30"*: the build is the same on any date (S24), so the case opens the built page with its
+   clock at 10-30.
+2. **E1 after the end** keeps its button, *See my offer* to `/o`, which shows the lapse with the link to the plans. Its
+   second line is *"This offer has ended"*. ⚠ **An open question for the Advisor:** whether an E1 due after the end should
+   be sent at all.
+3. **The lapse page's link** keeps the existing words, *Build my plan →*.
+4. **An expansion save after the end** is still accepted by the Worker; the page offers none.
+5. **The status stays `placeholder`**, since approving the file is the switch-on's. SP16 shows that approval would be its
+   only change.
+
+⚠ **Merging `boston/print-final`'s `offers.json`** (`git merge-file`, the base `cff49c0`) now conflicts twice: on
+`status_note`, and on the offers list, which § 10.7 cut to one. The label lines are identical, so take this branch's file.
+
+**Goldens**
+- **CC-8b** (six moved, none added or removed):
+  - `data/offers.json` → `25f73b01…`
+  - `index.js` → `9716e304…`
+  - `offers.js` → `f8846e1e…`
+  - `redeem.js` → `a1cb6b71…`
+  - `messages.js` → `031c361b…`
+  - `send-due.js` → `01442a3e…`
+- **U4** (`8f3baf0` → `1dc7b05`): the three development pages +19 bytes each, and their visible pages.
+  - Proof: the development builds differ by `save-data`'s offers and by `offers.js`'s and `flow1.js`'s lines.
+  - U4 reads the visible pages on 2026-09-29, before the one offer. Element by element they only lose lines: the box (6
+    lines) at no fragment; the box and the step (37) at `#lean-7` and `#family`.
+- **Not moved:** S20, M14, WC-9, MS.
+
+**Gates at `16dff97`:** the whole site suite **1028 of 1029**, S22 alone. `npm run contrast` 90 of 90. `wp-chrome` 3/3.
+
+**Renders** (`dist-dev/renders/`, git-ignored; at 390 px, with `#lean-or-7d` chosen and no photograph):
+- `page-2026-10-24-390-top.png` and `page-2026-10-24-390-end.png`: the offer box, and the step after the card;
+- `page-2026-10-30-390-top.png` and `page-2026-10-30-390-end.png`: neither;
+- § 10.1's and § 10.3's renders, re-made.
