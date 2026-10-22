@@ -137,10 +137,13 @@ test("SP16: after the offer's end, the Worker refuses an offer save (offer_ended
   }
 });
 
-test("SP16: E1 that goes after its offer's end says the offer has ended (DRAFT § 3's form), not the date held", async () => {
-  const { mf, db } = await startWorker({ now: at(HELD_UNTIL, 12) });
+// Since § 10.9 a save is held through the morning its E1 is due (a save on the last day until the next), so E1 says the
+// offer has ended only when it goes after its held date: here a save of 2026-10-24 (held until 2026-10-29) whose E1 goes
+// only on 2026-10-30 (no cron ran in between).
+test("SP16: E1 that goes after its held date says the offer has ended (DRAFT § 3's form), not the date held", async () => {
+  const { mf, db } = await startWorker({ now: at(SAVE_DAY, 12) });
   try {
-    await postSave(mf, validSave({ email: "dummy-sp16-lastday@example.com" }));
+    await postSave(mf, validSave({ email: "dummy-sp16-late@example.com" }));
     const sender = new RecordingSender();
     await runSendDue(db, { nowMs: at(AFTER, 9), sender, redemptions: new FixedRedemptions() });
     const [m] = sender.messages;

@@ -84,7 +84,9 @@ test("SP15: nothing the pages say changes — each page's words and status are c
   assert.match(pages.ended.html, /<h1>This offer has ended<\/h1>/, "the ended offer: § 10.7's lapse");
   for (const name of Object.keys(live)) {
     assert.equal(pages[name].status, baseLive[name].status, `${name}: its status`);
-    assert.equal(pageText(pages[name].html), pageText(baseLive[name].html), `${name}: its words`);
+    // § 10.9 rewords one phrase of the confirmation (weekly, for "about once a week"); every other word is cc1d2bb's.
+    const before = pageText(baseLive[name].html).replace("about once a week", "weekly");
+    assert.equal(pageText(pages[name].html), before, `${name}: its words`);
     assert.ok(pageText(baseLive[name].html).length > 10, `control: ${name} has words`);
   }
 });

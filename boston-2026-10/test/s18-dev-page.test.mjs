@@ -61,7 +61,9 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   assert.deepEqual(all.map(isOfferLine), [false, true, ...Array(11).fill(false)], "one piece is the offer line: the second, under the heading");
   // SPEC-save-offer-production § 9 item 1: DRAFT § 1's "[Privacy notice]" is the form's link to /privacy/ (data/save.json
   // privacy_notice_url), so the page shows its words without the brackets, as a link.
-  const linked = (piece) => piece.replace("[Privacy notice]", "Privacy notice");
+  // SPEC-save-offer-production § 10.9: the step's "[date]" is a slot the page's script fills with the date held (SP17
+  // reads it filled); in the markup it is empty.
+  const linked = (piece) => piece.replace("[Privacy notice]", "Privacy notice").replace("[date]", "");
   for (const piece of all.filter((p) => !isOfferLine(p))) assert.ok(text.includes(linked(piece)), `missing from the page: ${piece}`);
   assert.match(devHtml, /<a class="save-privacy" href="\/privacy\/">Privacy notice<\/a>/, "the notice linked (§ 9 item 1)");
   // SPEC-rung4 § 2b item 3: DRAFT § 1's last line (below the form, "Build my plan →") no longer applies at the end, where
