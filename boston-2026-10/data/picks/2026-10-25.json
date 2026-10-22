@@ -551,5 +551,401 @@
         ]
       }
     }
+  },
+  "meals": {
+    "Sesame Chicken Teriyaki with Fried Rice": {
+      "nutrition": {
+        "lean": {
+          "cal": 400,
+          "protein": 33,
+          "carbs": 39,
+          "fat": 13,
+          "fiber": 5
+        },
+        "signature": {
+          "cal": 600,
+          "protein": 53,
+          "carbs": 54,
+          "fat": 19,
+          "fiber": 6
+        },
+        "performance": {
+          "cal": 770,
+          "protein": 64,
+          "carbs": 70,
+          "fat": 26,
+          "fiber": 7
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Vegetable Fried Rice (White Rice, Eggs, Carrots, Peas, Onions, Tamari (Water, Soybeans, Salt), Sesame Oil), Broccoli, Grilled Pineapple, Carrots, Scallions, House-Made Teriyaki Sauce (Wildflower Honey, Brown Sugar, Fresh Lime Juice, Fresh Ginger, Fresh Garlic), Sesame Seeds, Olive Oil.",
+      "contains": "Soy, Egg, Sesame."
+    },
+    "BBQ Pulled Pork Mac & Cheese": {
+      "nutrition": {
+        "lean": {
+          "cal": 510,
+          "protein": 38,
+          "carbs": 33,
+          "fat": 26,
+          "fiber": 6
+        },
+        "signature": {
+          "cal": 670,
+          "protein": 50,
+          "carbs": 44,
+          "fat": 34,
+          "fiber": 8
+        },
+        "performance": {
+          "cal": 770,
+          "protein": 57,
+          "carbs": 54,
+          "fat": 39,
+          "fiber": 10
+        }
+      }
+    },
+    "Grass-Fed Beef Taco Bowl": {
+      "nutrition": {
+        "lean": {
+          "cal": 430,
+          "protein": 31,
+          "carbs": 35,
+          "fat": 17,
+          "fiber": 3
+        },
+        "signature": {
+          "cal": 580,
+          "protein": 43,
+          "carbs": 48,
+          "fat": 22,
+          "fiber": 3
+        },
+        "performance": {
+          "cal": 750,
+          "protein": 53,
+          "carbs": 65,
+          "fat": 29,
+          "fiber": 4
+        }
+      },
+      "ingredients": "90% Lean Grass-fed Ground Beef, Jasmine Rice, Red Bell Peppers, Onions, Sour Cream (Milk), Salsa (Tomatoes, Water, Jalapeno Peppers, Tomato Paste, Onions, Garlic, Salt), Cheddar Cheese, Cumin, Jalapeno Peppers, Adobo, Cilantro, Olive Oil, Lime Juice, Paprika, Cayenne Pepper, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Elk Chili": {
+      "nutrition": {
+        "lean": {
+          "cal": 420,
+          "protein": 28,
+          "carbs": 49,
+          "fat": 13,
+          "fiber": 7
+        },
+        "signature": {
+          "cal": 570,
+          "protein": 38,
+          "carbs": 66,
+          "fat": 17,
+          "fiber": 9
+        },
+        "performance": {
+          "cal": 730,
+          "protein": 48,
+          "carbs": 83,
+          "fat": 22,
+          "fiber": 10
+        }
+      },
+      "ingredients": "Pasture-Raised Elk, White Rice, Crushed Tomatoes, Sour Cream, Pepper Jack Cheese (Milk), Kidney Beans, Black Beans, Red Bell Peppers, Onions, Bacon, Chipotle Peppers in Adobo, Broccoli, Zucchini, Carrots, Cacao Powder, Fresh Garlic, Olive Oil, Beef Broth, Organic Apple Cider Vinegar, Cumin, Cinnamon, Oregano, Espresso Powder, Cayenne Pepper, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Honey-Chipotle Pulled Chicken": {
+      "nutrition": {
+        "lean": {
+          "cal": 400,
+          "protein": 35,
+          "carbs": 33,
+          "fat": 15,
+          "fiber": 6
+        },
+        "signature": {
+          "cal": 540,
+          "protein": 49,
+          "carbs": 44,
+          "fat": 20,
+          "fiber": 8
+        },
+        "performance": {
+          "cal": 670,
+          "protein": 59,
+          "carbs": 57,
+          "fat": 24,
+          "fiber": 10
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Sweet Potatoes, Green Beans, Honey-Chipotle Sauce (Wild Flower Honey, Chipotle Peppers in Adobo, Olive Oil, Lime Juice, White Vinegar, Smoked Paprika), Fresh Garlic, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Balsamic Grilled Free-Range Chicken": {
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Basmati Brown Rice, Green Beans, Balsamic Vinegar, Wild Flower Honey, Balsamic Glaze, Fresh Garlic, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Herb Roasted Turkey Breast with Butternut Squash Stuffing & Bone Broth Gravy": {
+      "nutrition": {
+        "lean": {
+          "cal": 340,
+          "protein": 36,
+          "carbs": 23,
+          "fat": 12,
+          "fiber": 6
+        },
+        "signature": {
+          "cal": 440,
+          "protein": 46,
+          "carbs": 31,
+          "fat": 16,
+          "fiber": 8
+        },
+        "performance": {
+          "cal": 580,
+          "protein": 55,
+          "carbs": 32,
+          "fat": 28,
+          "fiber": 8
+        }
+      },
+      "ingredients": "Antibiotic & Hormone Free Turkey Breast, Butternut Squash, Parsnips, Celery, Onions, Fresh Garlic, Bone Broth Gravy (Organic Chicken Bones, Water, Spices, Tapioca Starch), Organic Grass-fed Butter, Wild Flower Honey, White Wine, Olive Oil, Fresh Parsley, Thyme, Sage , Rosemary, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Lemon Dill Coho Salmon": {
+      "nutrition": {
+        "lean": {
+          "cal": 400,
+          "protein": 31,
+          "carbs": 33,
+          "fat": 16,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 520,
+          "protein": 42,
+          "carbs": 43,
+          "fat": 19,
+          "fiber": 5
+        },
+        "performance": {
+          "cal": 680,
+          "protein": 51,
+          "carbs": 54,
+          "fat": 29,
+          "fiber": 6
+        }
+      },
+      "ingredients": "Coho Salmon, Broccoli, Couscous (Wheat), Onions, Lemons, Fresh Dill, Fresh Parsley, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Grass-fed Beef Bourguignon": {
+      "nutrition": {
+        "lean": {
+          "cal": 370,
+          "protein": 30,
+          "carbs": 17,
+          "fat": 22,
+          "fiber": 6
+        },
+        "signature": {
+          "cal": 600,
+          "protein": 45,
+          "carbs": 38,
+          "fat": 30,
+          "fiber": 5
+        },
+        "performance": {
+          "cal": 740,
+          "protein": 55,
+          "carbs": 49,
+          "fat": 37,
+          "fiber": 6
+        }
+      },
+      "ingredients": "Grass-Fed Beef Roast, Yukon Gold Potatoes, Cauliflower, Mushrooms, Carrots, Organic Beef Bone Broth (Organic Beef Bones, Water, Carrots, Onions, Apple Cider Vinegar), Pearl Onions, Sour Cream (Milk), Prepared Horseradish, Organic Grass-Fed Butter (Milk), Fresh Garlic, Olive Oil, Red Wine, Rice Flour, Fresh Parsley, Bay Leaf, Thyme, Rosemary, Sea Salt, Black Pepper",
+      "contains": "Milk"
+    },
+    "BBQ Pulled Pork Cauliflower Mac & Cheese": {
+      "nutrition": {
+        "lean": {
+          "cal": 379,
+          "protein": 31,
+          "carbs": 12,
+          "fat": 22,
+          "fiber": 3
+        },
+        "signature": {
+          "cal": 497,
+          "protein": 45,
+          "carbs": 14,
+          "fat": 29,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 616,
+          "protein": 61,
+          "carbs": 16,
+          "fat": 34,
+          "fiber": 5
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Pork Shoulder, Cauliflower, Milk, Organic Grass-fed Butter (Milk), Cheddar Cheese, Parmesan Cheese, Fit AF Root Veggie BBQ Sauce (Tomato Sauce, Maple Syrup, Brown Sugar, Carrots, Beets, Onion, Worcestershire Sauce, Apple Cider Vinegar), Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Onion, Granulated Garlic"
+    },
+    "Vodka Chicken Parm Zucchini Noodle Lasagna": {
+      "nutrition": {
+        "lean": {
+          "cal": 410,
+          "protein": 30,
+          "carbs": 17,
+          "fat": 26,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 500,
+          "protein": 38,
+          "carbs": 20,
+          "fat": 32,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 610,
+          "protein": 45,
+          "carbs": 24,
+          "fat": 39,
+          "fiber": 6
+        }
+      },
+      "ingredients": "Zucchini, Green Beans, Antibiotic & Hormone-Free Ground Chicken, Ricotta Cheese (Milk), Vodka Sauce  (tomatoes, onion, garlic, cream, olive oil, vodka, parmesan cheese, organic grass-fed butter, oregano, basil, carrot, red pepper flakes, sea salt), Mozzarella Cheese, Eggs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Buffalo Chicken Cheesesteak Bowl": {
+      "nutrition": {
+        "lean": {
+          "cal": 420,
+          "protein": 34,
+          "carbs": 32,
+          "fat": 17,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 570,
+          "protein": 50,
+          "carbs": 44,
+          "fat": 22,
+          "fiber": 5
+        },
+        "performance": {
+          "cal": 740,
+          "protein": 58,
+          "carbs": 58,
+          "fat": 30,
+          "fiber": 6
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Brown Rice,  Mushrooms, Bell Peppers, Onions, Cheese Sauce (Milk) (milk, gruyère cheese, cheddar cheese, cooper cheese, organic grass-fed butter, potato starch, white pepper, black pepper, garlic powder, onion powder, sea salt), Honey Buffalo Sauce (Louisiana Hot Sauce, Organic Grass-Fed Butter, Wildflower Honey, Garlic), Tamari (Soy), Olive Oil"
+    },
+    "Grass-Fed Beef Taco Bowl with Cauliflower Rice": {
+      "nutrition": {
+        "lean": {
+          "cal": 380,
+          "protein": 32,
+          "carbs": 15,
+          "fat": 22,
+          "fiber": 7
+        },
+        "signature": {
+          "cal": 480,
+          "protein": 43,
+          "carbs": 15,
+          "fat": 28,
+          "fiber": 7
+        },
+        "performance": {
+          "cal": 630,
+          "protein": 54,
+          "carbs": 19,
+          "fat": 38,
+          "fiber": 8
+        }
+      },
+      "ingredients": "90% Lean Grass-fed Ground Beef, Riced Cauliflower, Red Bell Peppers, Onions, Sour Cream (Milk), Salsa (Tomatoes, Water, Jalapeno Peppers, Tomato Paste, Onions, Garlic, Salt), Cheddar Cheese, Cumin, Jalapeno Peppers, Adobo, Cilantro, Olive Oil, Lime Juice, Paprika, Cayenne Pepper, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Steak & Eggs": {
+      "nutrition": {
+        "lean": {
+          "cal": 360,
+          "protein": 30,
+          "carbs": 24,
+          "fat": 17,
+          "fiber": 2
+        },
+        "signature": {
+          "cal": 530,
+          "protein": 45,
+          "carbs": 32,
+          "fat": 26,
+          "fiber": 2
+        },
+        "performance": {
+          "cal": 690,
+          "protein": 60,
+          "carbs": 41,
+          "fat": 34,
+          "fiber": 3
+        }
+      },
+      "ingredients": "Flank Steak, Organic Free-Range Eggs, Yukon Gold Potatoes, Red Bell Peppers, Onions, Olive Oil, Smoked Paprika, Rosemary, Thyme, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Pumpkin Pie Greek Yogurt Parfait": {
+      "nutrition": {
+        "lean": {
+          "cal": 390,
+          "protein": 24,
+          "carbs": 55,
+          "fat": 10,
+          "fiber": 7
+        },
+        "signature": {
+          "cal": 470,
+          "protein": 30,
+          "carbs": 59,
+          "fat": 15,
+          "fiber": 8
+        },
+        "performance": {
+          "cal": 680,
+          "protein": 45,
+          "carbs": 90,
+          "fat": 19,
+          "fiber": 11
+        }
+      },
+      "ingredients": "Nonfat Plain Greek Yogurt (Milk), Pumpkin, Pecans, Organic Gluten-Free Granola, Raisins, Organic Coconut Flakes (Tree Nut), Half & Half ((Milk)), Allulose, Stevia, Cinnamon, Pumpkin Pie Spice"
+    },
+    "Strawberry Shortcake Protein Waffles": {
+      "nutrition": {
+        "lean": {
+          "cal": 410,
+          "protein": 35,
+          "carbs": 52,
+          "fat": 7,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 610,
+          "protein": 52,
+          "carbs": 79,
+          "fat": 10,
+          "fiber": 6
+        },
+        "performance": {
+          "cal": 830,
+          "protein": 70,
+          "carbs": 105,
+          "fat": 15,
+          "fiber": 8
+        }
+      },
+      "ingredients": "Whole Oat Flour, Whey Protein Isolate, Nonfat Plain Greek Yogurt (Milk), White Rice Flour, Brown Rice Flour, 2% Milk, Eggs, Freeze-Dried Strawberries, Cream Cheese, Fresh Strawberries, Potato Starch, Whole Sorghum Flour, Tapioca Flour, Organic Grass-fed Butter, Allulose, Wild Flower Honey, Xanthan Gum, Buttermilk Powder, Stevia, Olive Oil, Vanilla Extract, Strawberry Extract, Sea Salt"
+    }
   }
 }
