@@ -690,3 +690,66 @@ page against `f72040a`'s.)
 >       if (isMap(at)) detail(li, tile, name, at, id + "|" + j);
 >       else appendAll(li, [tile, name]);
 ```
+
+
+## Integration (2026-10-21)
+
+**Where.** Branch `boston/live-week-every-menu`, from `f4b04e7` (`boston/why-button`, what production served), so the
+merged site can be released. Three merges, each `--no-ff`, in this order, then two commits of tests and goldens:
+
+| commit | what |
+|---|---|
+| `768ca36` | merge of `boston/every-menu` at `78ede74` (this contract, §§ 1–10.1) |
+| `0a0ea16` | merge of `boston/save-offer-production` at `9744c69` (SPEC-save-offer-production §§ 1–9.2; `data/save.json`'s `production` stays `false`, unchanged) |
+| `596d116` | merge of `boston/analytics-json` at `9c40305` (SPEC-analytics § 11, `npm run analytics -- --json`) |
+| `5dfe2c7` | SP3's base at the merge (below) |
+| `c293a9a` | the goldens re-recorded once, from `596d116` |
+
+**Conflicts, and how each was resolved.** No conflict was in code (`src/`, `scripts/`, `build.mjs`, the Worker): no code
+file was changed by both sides of any merge.
+
+- `README.md` (all three merges): the union. At `768ca36`, the test table's row gained every-menu's U4 note after
+  why-button's (`e2284f1`, then `9a19f48`) and EM1, EM4 and EM5 after W1 and W4. At `0a0ea16`, SP1–SP10 inside S1–S31's
+  entry and save-offer-production's U4 note (`1305f62`) after every-menu's. At `596d116`, analytics-json's
+  `scripts/analytics.mjs` row (`--json`) and AJ1–AJ4 after A1–A11, its SPEC-analytics row beside this contract's row.
+  Each resolved line was checked to be exactly the base plus both sides' insertions.
+- `tools/storybook/README.md` (`768ca36`): the union; the `test/` row keeps why-button's § 6 words and gains EM2 and EM3.
+- `test/u-04-normal-week.test.mjs` (`768ca36`, `0a0ea16`): the union of the comments, each branch's RE-RECORDED notes
+  kept whole and in merge order (why-button's `e2284f1`; this contract's `9a19f48`, `f2d1748`, `f72040a`;
+  save-offer-production's `1305f62`, `e11f775`); its pin stayed why-button's until the re-record, which names `596d116`.
+- `test/s20-production-golden.json` and `test/u-04-golden.json` (`768ca36`, `0a0ea16`): never hand-merged; resolved to
+  why-button's side at each merge and re-recorded once after all three (below).
+- Auto-merged and checked against both sides: `data/README.md` and `test/cc-harness.mjs` (this contract's `headingFor`
+  and save-offer-production's `consent/` in the mirror, both kept), `tools/storybook/microsite/layout.js` (`ROOT_STATIC`
+  with `why`, and the `menus` date).
+
+**A test made stale by the merge, not by a conflict: SP3** (`5dfe2c7`). SP3 (S20) and SP3 (T5) held the production page to
+`63275a8`'s page with SPEC-save-offer-production § 9 item 2's reading alone; the merged page also carries why-button's
+and this contract's lines, so both failed. `test/sp-production.mjs` `BASE` (read by SP3 alone) is now `768ca36`, the
+merged tree before save-offer-production, so SP3 still says that branch changes the production page by § 9's reading
+and nothing else. `63275a8` is `84807ce` plus that contract's text, and `768ca36` differs from it outside the tests only
+in files neither Worker reaches, so SP3's Worker and CC-8b cases compare with the same files. A test-only change.
+
+**The goldens, re-recorded once, from `596d116`** (`c293a9a`; its message carries the proof)
+
+| golden | before → after | shown |
+|---|---|---|
+| S20 `test/s20-production-golden.json` (every file of `596d116`'s production build, hashed over its own tree) | `index.html` `c5a35d44…` (why-button's) → `37fe139c…`, 42,590 → 52,846 bytes, 15,560 gzip | only `index.html` differs from each branch's golden (why-button `c5a35d44`, this contract `c0fde5fc`, save-offer-production `6093af72`); the other 17 files, `why/index.html` among them, byte-identical; no `privacy/`. `git merge-file` of this contract's and then save-offer-production's page into why-button's, each over `84807ce`'s, gives `596d116`'s byte for byte; against `84807ce`'s page +7, +186 −15 and +7 −3 lines, +200 −18 in all |
+| U4 `test/u-04-golden.json` (`node test/u-04-record.mjs --commit 596d116`) | `recorded_at` `e2284f1` → `596d116`; pages: v1 fixture prod `6725cbd4…` → `49e3cac4…`, dev `b5056032…` → `52ec8037…`; v2 fixture prod `e3e40f6f…` → `b6b5dc40…`, dev `ac582b7b…` → `bfc0eeab…`; the committed week prod `263482a1…` → `e90a3122…`, dev `286f1e51…` → `e39ad3f8…` | all six contents byte-identical to every branch's record; all 42 visible entries equal to save-offer-production's record (its six answered development fragments the only visible change of the three branches); each served page the `git merge-file` union, byte for byte (production +10,772 bytes, development +11,714 against `f02807e`'s record); analytics-json's pages why-button's |
+| WC-9 `test/wc-09-golden.json` | not re-recorded | its recorder (`--visible-at 596d116`) changed `visible_at` alone; green as committed (`e2284f1`) |
+| WC-8's `TODAY_NO_PICKS_SHA256` | not moved | its control green on the merged tree (`21abbe56…`) |
+| CC-8b `test/cc-08-unchanged-golden.json` | not moved | save-offer-production's map, green |
+
+Sizes, raw / gzip (`test/page-budget.mjs`): production 52,846 / 15,560; development `/` 77,420 / 22,822 (`seminar/`
+77,423 / 22,823), under SPEC.md § 1's 61,440 gzip.
+
+**Gated by the integration's own run, on `c293a9a`** (each at `nice -n 15`; the orchestrator re-runs every gate)
+
+| gate | result |
+|---|---|
+| `npm --prefix boston-2026-10 test` (once, 20:35–20:38 PDT) | **978 of 979**. The one failure is **S22** (*"the page has no element #save-offer-label"*), the known failure of production's own tree (§ 6.2 of SPEC-why-fit-af shows it on `6e0f6bd`) |
+| `npm --prefix boston-2026-10 run build` | exit 0; `dist/index.html` is S20's `37fe139c…` |
+| `npm --prefix boston-2026-10 run build:dev` | exit 0 |
+| `npm ci` in the package, `tools/storybook` and `tools/storefront-watch` | each exit 0, from the lockfiles (no branch changes a lockfile) |
+
+Not run here, as asked: Storybook's suite, the contrast suite and the storefront watch.
