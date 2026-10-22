@@ -604,3 +604,23 @@ other offer to `[The offer]`; every golden this moves is re-recorded once, with 
   - Not moved: S20, M14, WC-9, MS.
 - **Gates at `8140395`:** the whole site suite **1013 of 1014**, S22 alone, as before; `npm run contrast` 83 of 83.
 - **The four renders** were re-made from that tree (`dist-dev/renders/`); `/o` now shows the approved label.
+
+### 10.3 Amendment, 2026-10-22: the Worker's pages in the site's look. CONTRACT, before any code
+
+Found by the orchestrator reading § 10's renders: the saved offer's page (`/o/…`), and with it every page
+`src/worker/pages.js` `page()` draws (the confirmation, the lapse and the erase pages), shows the browser's default
+fonts and a bare blue link, while `/privacy/` already wears the template's fonts and colours. A customer reaches `/o/…`
+from E1's orange button, so it must look like the site it came from.
+
+1. **`page()` draws in the site's look**, as `build.mjs`'s `privacyPage` does: the template's `:root` tokens and
+   `@font-face` rules (the fonts served from the site's own `/fonts/`), Fit AF's logo at the top linking to `/`, the
+   content in one column (max 680 px, 16 px side gutter at 390 px), headings in the template's heading font.
+2. **The one action on `/o/…` is a button** (*"Build my plan"*), styled as the plan card's store button (orange, at
+   least 64 CSS px tall: the page's one action, as the store button is on the plan page); a lapse page's link back is
+   the quieter style.
+3. **Contrast**: every text and colour pair these pages draw is in `src/contrast-pairs.json` (`"build": "worker"`) and
+   passes `npm run contrast`.
+4. **Cases**: the `/o` page at 390 and 1280 px (Chrome, a local Worker with a fake D1, as the existing rung-4 Chrome
+   cases do): the template's body font in use, the logo present, the button's box at least 64 px tall; the confirmation
+   and lapse pages carry the same head. ⛔ Nothing about what the pages say changes.
+5. **Renders** of `/o` at 390 and 1280 and of the confirmation page, for the Advisor's pass with the wording.
