@@ -32,6 +32,9 @@ async function reissue(db, original, offer, now) {
 }
 
 const planLink = (href) => `<p><a href="${esc(href)}">Build my plan →</a></p>`;
+/** The saved offer's one action (SPEC-save-offer-production § 10.3 item 2): the same link, drawn as the store button
+ *  (page.css .action); the ended and unknown offers' link back stays the quieter style. */
+const actionLink = (href) => `<p class="action"><a href="${esc(href)}">Build my plan →</a></p>`;
 const codeLine = (code, offer) =>
   `<p>Your code: <strong>${esc(displayCode(code))}</strong> · good until ${esc(longDate(offer.valid_to))}</p>`;
 /** A saved offer's line: the date its pricing is held until (no code), or its code. */
@@ -62,12 +65,13 @@ export async function handleOffer(env, rawCode, { now, today }) {
 
   // SPEC-save-offer-production § 9.2: the page at / (production serves no other), the save's event in ?e= (read by the page's
   // qrEvent), Flow 1 collapsed (#from-email). The event id is one of data/events.json's (validate-save.js), [a-z0-9-].
-  const back = planLink(`/?e=${row.event_id}#from-email`);
+  const backTo = `/?e=${row.event_id}#from-email`;
+  const back = planLink(backTo);
   const offer = offerById(row.offer_id);
   if (offer && isLive(offer, today)) {
     return htmlResponse(
       200,
-      page("Your offer", `<h1>Your offer</h1>\n<p><strong>${esc(offer.label)}</strong></p>\n${savedLine(code, offer)}\n${back}`),
+      page("Your offer", `<h1>Your offer</h1>\n<p><strong>${esc(offer.label)}</strong></p>\n${savedLine(code, offer)}\n${actionLink(backTo)}`),
     );
   }
   const current = currentGeneral(today);

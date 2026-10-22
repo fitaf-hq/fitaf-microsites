@@ -19,6 +19,7 @@
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",
     "email:tokens": "node scripts/email-tokens.mjs",
+    "worker:style": "node scripts/worker-style.mjs",
     "preview:emails": "node scripts/preview-emails.mjs",
     "render:flows": "npm --prefix tools/render-flows run render",
     "db:migrate:dev": "wrangler d1 migrations apply fitaf-leads-dev --env dev --remote",

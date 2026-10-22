@@ -75,6 +75,10 @@ test("SP15: the saved offer's one action is the orange button; every other page 
 test("SP15: nothing the pages say changes — each page's words and status are cc1d2bb's", async () => {
   const before = await workerPages(base.pkg);
   assert.deepEqual(Object.keys(pages), Object.keys(before));
+  // Control: each page is the one its name says (the saved offer, the ended one, an unknown code).
+  assert.match(pages.original.html, /<h1>Your offer<\/h1>/);
+  assert.match(pages.welcome_back.html, /that offer ended/);
+  assert.doesNotMatch(pages.current.html, /<h1>Your offer<\/h1>|that offer ended/);
   for (const name of Object.keys(pages)) {
     assert.equal(pages[name].status, before[name].status, `${name}: its status`);
     assert.equal(pageText(pages[name].html), pageText(before[name].html), `${name}: its words`);

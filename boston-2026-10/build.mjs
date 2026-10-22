@@ -658,13 +658,22 @@ export function privacyParagraphs(draftText) {
  * colour tokens and fonts (its :root and @font-face rules, the fonts from the root as /why/'s), src/privacy/style.css,
  * no script. `draft`: the step's DRAFT marking (the development build's).
  */
-export async function privacyPage({ draftText, save, draft }) {
+/**
+ * The site's look for a page beside the plan page (/privacy/ here; the Worker's pages through `npm run worker:style`,
+ * SPEC-save-offer-production § 10.3): the template's :root tokens, the DRAFT token when `draft`, its @font-face rules (the
+ * fonts from the site's own /fonts/), then the stylesheet at `stylePath`'s rules, without its comments (they are for
+ * maintainers).
+ */
+export async function siteStyle(stylePath, { draft }) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const tokens = /:root\s*\{[^{}]*\}/.exec(template)[0];
   const faces = template.match(/^@font-face \{.*\}$/gm).map((face) => face.replace("{{ASSET_PREFIX}}", DEV_ASSET_PREFIX));
   const draftToken = /:root \{ --draft: #[0-9a-f]{6}; \}/.exec(await readFile(join(ROOT, "src", "save", "style.css"), "utf8"))[0];
-  // The stylesheet's rules, without its comments (they are for maintainers).
-  const style = (await readFile(PRIVACY_STYLE_PATH, "utf8")).replace(/\/\*[\s\S]*?\*\/\n?/g, "").trim();
+  const style = (await readFile(stylePath, "utf8")).replace(/\/\*[\s\S]*?\*\/\n?/g, "").trim();
+  return [tokens, ...(draft ? [draftToken] : []), ...faces, style].join("\n");
+}
+
+export async function privacyPage({ draftText, save, draft }) {
   const paragraphs = privacyParagraphs(draftText).map((p) => `<p>${esc(p).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")}</p>`);
   const tag = draft ? `\n<p class="draft-tag">DRAFT — not for use · wording ${esc(save.wording_version)}</p>` : "";
   return `<!doctype html>
@@ -674,7 +683,7 @@ export async function privacyPage({ draftText, save, draft }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fit AF — Privacy notice</title>
 <style>
-${[tokens, ...(draft ? [draftToken] : []), ...faces, style].join("\n")}
+${await siteStyle(PRIVACY_STYLE_PATH, { draft })}
 </style>
 </head>
 <body>

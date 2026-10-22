@@ -12,6 +12,9 @@ import { ROOT } from "../build.mjs";
 /** A /confirm token's shape (TOKEN_RE): 43 base64url characters. Invented; no message carries it. */
 const TOKEN = "SP15-confirm-token-0000000000000000000000000".slice(0, 43);
 const LIVE = { today: "2026-10-25", now: "2026-10-25T13:00:00.000Z" };
+/** A save's token and a reissued one, in the code alphabet (redeem.js reads anything else as an unknown code). */
+const CODE = "SPQXCDE2";
+const REISSUED = "SPQXRE23";
 const ENDED = { today: "2026-10-30", now: "2026-10-30T13:00:00.000Z" };
 
 /** A D1 stand-in: `first()` answers by the statement's SQL; writes succeed and change nothing anyone reads. */
@@ -29,9 +32,9 @@ const offerRow = (offerId) => (sql) =>
   /FROM saves WHERE offer_code/.test(sql)
     ? { save_id: "sp15", event_id: "boston", offer_id: offerId, ring: "in" }
     : /kind = 'reissue'/.test(sql)
-      ? { offer_code: "SP15RE23" }
+      ? { offer_code: REISSUED }
       : null;
-const confirmRow = (kind) => () => ({ save_id: "sp15", kind, offer_id: "event-boston-2026-10-placeholder", offer_code: "SP15CODE", state: "messaged", zip: "03101" });
+const confirmRow = (kind) => () => ({ save_id: "sp15", kind, offer_id: "event-boston-2026-10-placeholder", offer_code: CODE, state: "messaged", zip: "03101" });
 
 const text = async (response) => ({ status: response.status, html: await response.text() });
 const post = (action) =>
@@ -50,8 +53,8 @@ export async function workerPages(root = ROOT) {
   const offer = (row, code, at) => handleOffer({ DB: fakeDb(row) }, code, at).then(text);
   const confirm = (kind, request) => handleConfirm(request, { DB: fakeDb(confirmRow(kind)) }, TOKEN, LIVE).then(text);
   return {
-    original: await offer(offerRow("event-boston-2026-10-placeholder"), "SP15CODE", LIVE),
-    welcome_back: await offer(offerRow("event-past-placeholder"), "SP15CODE", ENDED),
+    original: await offer(offerRow("event-boston-2026-10-placeholder"), CODE, LIVE),
+    welcome_back: await offer(offerRow("event-past-placeholder"), CODE, ENDED),
     current: await offer(() => null, "ZZZZ9999", LIVE),
     landing_offer: await confirm("offer", new Request("http://localhost/confirm/x")),
     landing_expansion: await confirm("expansion", new Request("http://localhost/confirm/x")),
