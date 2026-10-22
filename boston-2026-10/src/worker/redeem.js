@@ -32,6 +32,10 @@ async function reissue(db, original, offer, now) {
 }
 
 const planLink = (href) => `<p><a href="${esc(href)}">Build my plan →</a></p>`;
+/** § 10.7: no offer follows the last one's end, so an ended offer's page, and an unknown code's, is the lapse: the offer
+ *  has ended, and the link to the plans (the quieter style). */
+const ENDED = "This offer has ended";
+const endedPage = (href) => page(ENDED, `<h1>${ENDED}</h1>\n${planLink(href)}`);
 /** The saved offer's one action (SPEC-save-offer-production § 10.3 item 2): the same link, drawn as the store button
  *  (page.css .action); the ended and unknown offers' link back stays the quieter style. */
 const actionLink = (href) => `<p class="action"><a href="${esc(href)}">Build my plan →</a></p>`;
@@ -51,6 +55,7 @@ function currentLine(current, newCode) {
 
 function currentPage(today) {
   const offer = currentGeneral(today);
+  if (!offer) return endedPage("/");
   return page(
     "Our current offer",
     `<h1>Our current offer</h1>\n<p><strong>${esc(offer.label)}</strong></p>\n` +
@@ -75,6 +80,7 @@ export async function handleOffer(env, rawCode, { now, today }) {
     );
   }
   const current = currentGeneral(today);
+  if (!current) return htmlResponse(200, endedPage(`/?e=${row.event_id}`));
   const newCode = current.code_mode === "unique" ? await reissue(env.DB, row, current, now) : null;
   const line = currentLine(current, newCode);
   return htmlResponse(

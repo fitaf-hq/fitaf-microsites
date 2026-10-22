@@ -2,7 +2,7 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { FAR_ZIP, NEAR_ZIP, postSave, rows, startWorker, validSave } from "./worker-harness.mjs";
 
-// The Worker's clock is the harness's (SPEC-save-offer-production § 10.7): its "now" is `now`.
+// The Worker's clock is the harness's (SPEC-save-offer-production § 10.7): it reads `now` at its first request and runs on.
 const { mf, db, now } = await startWorker();
 after(() => mf.dispose());
 
@@ -25,7 +25,7 @@ test("S6: an expansion save -> no code; ring near or far; send_at = now", async 
     assert.equal(row.offer_id, null, "no offer");
     assert.equal(row.ring, cases.find((c) => c[0] === email)[2]);
     assert.equal(row.send_at, row.created_at, "E-X goes at once");
-    assert.equal(row.send_at, new Date(now).toISOString(), "now, by the Worker's clock");
+    assert.ok(Date.parse(row.send_at) >= now && Date.parse(row.send_at) <= now + 60_000, "now, by the Worker's clock");
     assert.equal(row.message_state, "scheduled");
     assert.equal(row.consent_expansion, 1, "CP-E recorded");
     assert.equal(row.consent_marketing, 0);

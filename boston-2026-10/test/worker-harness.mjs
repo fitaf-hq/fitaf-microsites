@@ -52,12 +52,14 @@ export const withPastOffer = () => ({ ...offersFile, offers: [PAST_OFFER, ...off
 /**
  * SPEC-save-offer-production § 10.7: the Worker's clock in the cases. The offers end (the Boston offer, every visitor's,
  * is held until 2026-10-29, and none follows it), so a case that saves through the Worker would depend on the day it
- * runs. Every Worker started here reads this instant as now (its Date.now(), frozen there), unless a case gives its own
- * `now`: noon in New York on 2026-10-24, a day of the Boston offer.
+ * runs. Every Worker started here reads this instant as now when it first asks (its Date.now(), which then runs on with
+ * the real clock, so two requests still see two times), unless a case gives its own `now`: noon in New York on 2026-10-24,
+ * a day of the Boston offer.
  */
 export const TEST_NOW_MS = Date.parse("2026-10-24T16:00:00.000Z");
 /** The bundle's first statement: the Worker's Date.now() reads `now`. Only the cases' bundles carry it. */
-const clockBanner = (now) => `Date.now = () => ${Number(now)}; // test clock (worker-harness.mjs TEST_NOW_MS)`;
+const clockBanner = (now) =>
+  `{ const real = Date.now.bind(Date); let offset; Date.now = () => { const r = real(); offset ??= ${Number(now)} - r; return r + offset; }; } // test clock (worker-harness.mjs TEST_NOW_MS)`;
 /** Rung 5 § 8: a CONFIRM_TOKEN_KEY for tests only — public, and nothing real is keyed with it. */
 export const TEST_CONFIRM_TOKEN_KEY = "test-only-confirm-token-key-0000000000000";
 

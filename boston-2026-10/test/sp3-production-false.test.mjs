@@ -44,16 +44,22 @@ test.after(() => base.dispose());
 // src/worker/zip-class.js (the near ring by prefix beside an exact list).
 // Since § 10.3 (the Worker's pages in the site's look): src/worker/pages.js (page(), already moved by § 3) and
 // src/worker/redeem.js (the saved offer's one action) again, and src/worker/page-style.json (new: the derived stylesheet).
+// Since § 10.7 (no offer after the last one's valid_to): src/worker/index.js (offer_ended), src/worker/offers.js (at most
+// one current general offer, null after the last), src/worker/send-due.js (E1 after the end), and messages.js, redeem.js
+// and data/offers.json again.
 const MOVED_WORKER_FILES = [
   "data/delivery-zips.json",
   "data/events.json",
   "data/offers.json",
   "data/save.json",
   "src/worker/choose-sender.js",
+  "src/worker/index.js",
   "src/worker/messages.js",
+  "src/worker/offers.js",
   "src/worker/page-style.json",
   "src/worker/pages.js",
   "src/worker/redeem.js",
+  "src/worker/send-due.js",
   "src/worker/site.js",
   "src/worker/zip-class.js",
 ];

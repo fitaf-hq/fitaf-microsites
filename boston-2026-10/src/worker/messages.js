@@ -100,12 +100,14 @@ const savedLine = (offer, code) =>
   offer.code_mode === "none"
     ? ["Your pricing is held until ", strong(longDate(offer.valid_to))]
     : [strong(`Your code: ${displayCode(code)}`), " · good until ", strong(longDate(offer.valid_to))];
+/** § 10.7: an E1 that goes after its offer's last day (a save on that day) says the offer has ended (DRAFT § 3's form). */
+const ENDED_LINE = ["This offer has ended"];
 
-/** E1. `token` is present only when the marketing box was ticked. */
-export function e1({ to, code, offer, event, siteUrl, token }) {
+/** E1. `token` is present only when the marketing box was ticked; `ended` when it goes after its offer's last day. */
+export function e1({ to, code, offer, event, siteUrl, token, ended = false }) {
   const lines = [
     ["You saved this offer at ", strong(event.name), " yesterday — here it is."],
-    savedLine(offer, code),
+    ended ? ENDED_LINE : savedLine(offer, code),
     [button("See my offer", `${siteUrl}/o/${code}`)],
   ];
   if (token) {

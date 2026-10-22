@@ -46,7 +46,7 @@ async function offerPage(db, code, today) {
 
 test("SP12: the Boston event's offer — code_mode none, no code field, valid_to 2026-10-29 (§ 10 item 1)", () => {
   assert.ok(BOSTON, `data/offers.json holds ${BOSTON_OFFER_ID}`);
-  assert.equal(BOSTON.applies_to, "event");
+  assert.equal(BOSTON.applies_to, "general", "every visitor's since § 10.7");
   assert.equal(BOSTON.code_mode, "none");
   assert.ok(!("shared_code" in BOSTON), "no code field");
   assert.equal(BOSTON.valid_to, HELD_UNTIL);

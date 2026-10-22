@@ -39,7 +39,7 @@ test("SP1: the step stays at the end, the line inside it: Flow 1 whole, directly
 
 test("SP1: with a week's Chef's Choice, the line in the step after the card's last link", async () => {
   const { html: withWeek } = await pageWithPicks({ target: "dev", picks: FIXTURE_DIR });
-  const now = ccMidday(DAYS["S-5"]);
+  const now = ccMidday(DAYS["S-3"]); // a day of the week's window and of the offer (§ 10.7: it runs from 2026-10-01)
   const label = assertOfferLineAsRun(withWeek, offersFile.offers, { hash: "#lean-7", now });
   assert.ok(label, "control: data/offers.json gives a label on that date");
 });
@@ -52,7 +52,7 @@ test("SP1: a label is written as text, never as markup; no offer to choose leave
 
   const broken = structuredClone(FIXTURE_OFFERS);
   broken.offers.find((o) => o.id === "general-b-fixture").valid_from = "2026-09-01";
-  assert.throws(() => offerForSave(S21_DATES.before, broken.offers), /expected one current general offer/, "control: no offer can be chosen");
+  assert.throws(() => offerForSave(S21_DATES.before, broken.offers), /at most one current general offer/, "control: no offer can be chosen");
   const run = openPlanPage(await devPage({ offers: broken, card: true }), { hash: "#lean-or-7d", now: midday(S21_DATES.before) });
   assert.equal(run.el(STEP_OFFER_LABEL).textContent, "", "the step's line shows nothing in place of a label");
   assert.equal(run.el("save-offer-label").textContent, "", "as the box at the top does");
@@ -64,8 +64,12 @@ test("SP1: a label is written as text, never as markup; no offer to choose leave
 test("SP1 (production true): the step's offer line directly above the save lead, the box at the top as it was", async () => {
   const { html, inputs } = await approvedPage();
   assertOfferLineInMarkup(html);
+  // Since § 10.7 the file has one offer, so the dates where it is live show its line; on the others (before it, after
+  // it) no step is drawn (SP16).
+  const live = Object.values(S21_DATES).filter((ymd) => offerForSave(ymd, inputs.offers.offers));
+  assert.ok(live.length >= 2 && live.length < Object.values(S21_DATES).length, `control: S21's dates straddle the offer (${live})`);
   for (const hash of ["#lean-or-7d", "#family"]) {
-    const shown = Object.values(S21_DATES).map((ymd) => assertOfferLineAsRun(html, inputs.offers.offers, { hash, now: midday(ymd) }));
-    assert.equal(new Set(shown).size, 2, `${hash}: control: two labels across the event offer`);
+    const shown = live.map((ymd) => assertOfferLineAsRun(html, inputs.offers.offers, { hash, now: midday(ymd) }));
+    assert.equal(new Set(shown).size, 1, `${hash}: the one offer's label`);
   }
 });

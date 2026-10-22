@@ -24,7 +24,7 @@ import saveConfig from "../data/save.json" with { type: "json" };
 import { devPage } from "./dev-page.mjs";
 import { simulatePage } from "./page-sim.mjs";
 import { lineTexts } from "./email-html.mjs";
-import { approvedPage, pageText, productionInputs } from "./sp-production.mjs";
+import { approvedPage, pageText, productionInputs, saveData } from "./sp-production.mjs";
 import { assertNoCodeText, BOSTON_OFFER_ID, HELD_LINE, HELD_UNTIL } from "./sp-promise.mjs";
 import { count, FixedRedemptions, IN_ZIP, NEAR_ZIP, postSave, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
 
@@ -95,7 +95,7 @@ test("SP16: the page opened on 2026-10-30 renders no save step and no offer box;
     for (const day of [SAVE_DAY, HELD_UNTIL]) {
       const on = stepAt(html, at(day, 12));
       assert.ok(on.step && on.box, `${name} on ${day}: the step and the box`);
-      assert.equal(on.label, offerForSave(day).label, `${name} on ${day}: the offer's label`);
+      assert.equal(on.label, offerForSave(day, saveData(html).offers).label, `${name} on ${day}: the offer's label (the page's own offers)`);
     }
     for (const instant of [at(AFTER, 0) + 60_000, at(AFTER, 12), at("2027-06-01", 12)]) {
       const off = stepAt(html, instant);

@@ -52,14 +52,15 @@ No offer code is issued for an out-of-area ZIP. ⬜ The 12 months is proposed.
 > You saved this offer at **[event]** yesterday — here it is.
 > *(an offer without a code)* Your pricing is held until **[date]**
 > *(an offer with a code)* **Your code: XXXX-XXXX** · good until **[date]**
+> *(sent after the offer's last day)* This offer has ended
 > **[ See my offer ]**
 > *(only if the box was ticked)* You asked to hear about Fit AF menus and offers. **[ Yes, keep me posted ]**
 > Already ordered? Enjoy your meals!
 > You're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.
 
 Since `SPEC-save-offer-production.md` § 10 (2026-10-22) the Boston offer is a price promise with no code
-(`code_mode: "none"`): its E1 has the first of the two marked lines, *[date]* the offer's last day. The second is for an
-offer that carries a code.
+(`code_mode: "none"`): its E1 has the first of the marked lines, *[date]* the offer's last day. The second is for an
+offer that carries a code. Since § 10.7 an E1 that goes after its offer's last day (a save made on that day) has the third.
 
 **E-X — at once, to an out-of-area request.** Subject: *Confirm: we'll tell you when Fit AF delivers near you*
 

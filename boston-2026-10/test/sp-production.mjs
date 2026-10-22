@@ -93,9 +93,12 @@ export async function productionInputs({ unfixed = null, production = true } = {
   const offers = JSON.parse(await readFile(OFFERS_FILE, "utf8"));
   if (!leave("offers a placeholder")) offers.status = "approved";
   for (const [i, o] of offers.offers.entries()) {
-    if (!(leave("an offer's label a placeholder") && i === 0)) o.label = `SP fixture offer ${i + 1}: 25% off every cart`;
-    if ("shared_code" in o && !leave("an offer's code a placeholder")) o.shared_code = FIXTURE_CODE;
+    o.label = `SP fixture offer ${i + 1}: 25% off every cart`;
+    if ("shared_code" in o) o.shared_code = FIXTURE_CODE;
   }
+  // Since § 10.7 the committed file holds no placeholder at all, so these two parts set one on its first offer.
+  if (leave("an offer's label a placeholder")) offers.offers[0].label = "[The offer]";
+  if (leave("an offer's code a placeholder")) Object.assign(offers.offers[0], { code_mode: "shared", shared_code: "PLACEHOLDER" });
   if (leave("a code on an offer without codes")) {
     Object.assign(offers.offers.find((o) => o.id === "event-boston-2026-10-placeholder"), { code_mode: "none", shared_code: FIXTURE_CODE });
   }

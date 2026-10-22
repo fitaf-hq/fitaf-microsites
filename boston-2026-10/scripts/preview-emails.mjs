@@ -7,7 +7,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { devConfig, DIST_DEV, EVENTS_PATH, loadJson, SAVE_PATH } from "../build.mjs";
+import { devConfig, DIST_DEV, EVENTS_PATH, loadJson, OFFERS_PATH, SAVE_PATH } from "../build.mjs";
 import { e1, ex } from "../src/worker/messages.js";
 import { offerForSave } from "../src/worker/offers.js";
 import { zonedDate } from "../src/worker/zoned-time.js";
@@ -24,10 +24,13 @@ export async function previews({ nowMs = Date.now() } = {}) {
   const save = await loadJson(SAVE_PATH);
   const [event] = await loadJson(EVENTS_PATH);
   const siteUrl = (await devConfig()).vars.SITE_URL;
-  const offer = offerForSave(zonedDate(nowMs, save.send_time_zone)); // what a save made today would get
+  const today = zonedDate(nowMs, save.send_time_zone);
+  // What a save made today would get; after the last offer (§ 10.7), the last one, in E1's form for an ended offer.
+  const live = offerForSave(today);
+  const offer = live ?? [...(await loadJson(OFFERS_PATH)).offers].sort((a, b) => a.valid_to.localeCompare(b.valid_to)).at(-1);
   const token = SAMPLE_TOKEN;
   const html = {
-    "e1.html": e1({ to: SAMPLE_TO, code: SAMPLE_CODE, offer, event, siteUrl, token }).html,
+    "e1.html": e1({ to: SAMPLE_TO, code: SAMPLE_CODE, offer, event, siteUrl, token, ended: !live }).html,
     "ex.html": ex({ to: SAMPLE_TO, zip: SAMPLE_ZIP, siteUrl, token, unconfirmedDays: save.unconfirmed_expansion_days }).html,
   };
   return { html, used: { siteUrl, event: event.name, offer: offer.id, valid_to: offer.valid_to, code: SAMPLE_CODE, zip: SAMPLE_ZIP } };
