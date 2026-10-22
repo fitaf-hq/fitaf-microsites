@@ -578,3 +578,29 @@ other offer to `[The offer]`; every golden this moves is re-recorded once, with 
 - what a Boston save's `/o` page shows from 2026-10-30, and the general offers (placeholders that still carry codes)
   behind it (§ 10.1 item 8);
 - DRAFT §§ 1 and 5's *"code"* wording for the page and the record (§ 10.1, for the wording pass).
+
+**Built (2026-10-22).**
+
+| commit | what |
+|---|---|
+| `9828ace` | § 10.2 and its case first: S11b holds the Boston label, red 3/4 on that tree; Q6 reads what remains from the committed label (6/6 before and after) |
+| `8f3baf0` | `data/offers.json`: the label and `label_approved` lines as `boston/print-final`'s, its status note; S11 4/4 |
+| `8140395` | the goldens it moves, re-recorded once from `8f3baf0`'s tree |
+| the next commit | this note; `data/README.md` |
+
+- **Merging `boston/print-final`'s `offers.json` over this one** (`git merge-file`, the base `cff49c0`): the offer's lines
+  merge clean. The one conflict is the `status_note` line, which both branches rewrote (this one since `a593811`).
+- **Q6** (the print pieces' proofs, not one of this contract's files): this line's print build still lists the offer while
+  the file's status is `placeholder`, so what remains is now the approved label. Q6 reads it from the file;
+  `boston/print-final` rewrote Q6 and `print/pages.mjs` for `label_approved`, so that merge conflicts in Q6.
+- **Goldens:**
+  - **CC-8b**: `data/offers.json` alone, `82b49dd5…` → `c03385b3…`. MS-9 and PR-10 read the same golden.
+  - **U4** (`recorded_at` `a593811` → `8f3baf0`): the three development pages, +14 bytes each.
+    - the v1 fixture: 89675 `bef4158c…` → 89689 `84f36aa2…`
+    - the v2 fixture: 95547 `2709de98…` → 95561 `c5170393…`
+    - the committed week: 119291 `899beea3…` → 119305 `59787b79…`
+  - Proof for U4: `build:dev` of both trees differs by one `save-data` line per page, the Boston label. The production
+    builds are identical.
+  - Not moved: S20, M14, WC-9, MS.
+- **Gates at `8140395`:** the whole site suite **1013 of 1014**, S22 alone, as before; `npm run contrast` 83 of 83.
+- **The four renders** were re-made from that tree (`dist-dev/renders/`); `/o` now shows the approved label.
