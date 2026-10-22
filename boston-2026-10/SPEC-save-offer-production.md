@@ -894,3 +894,70 @@ changes so I can review"***.
    2026-10-24 → October 29; the `/o` page on 2026-10-30 for the 10-29 save shows the held offer, on 2026-10-31 the
    lapse; the page's text carries no "code" in the step (a case over the rendered step), and the confirmation page says
    *"weekly"*. Every golden that moves, re-recorded once.
+
+### 10.10 Built (2026-10-22): a save held through its E1's day; the wording without a code
+
+Built on `boston/save-offer-brief` after `43d2279`. Every case was run as a single file at `nice -n 15`; the whole site
+suite once, at `cf4ad49`.
+
+| commit | what |
+|---|---|
+| `9167077` | the cases first, run red: SP17 1/6, SP15 5/6 (SP16 and S18 amended, guards green) |
+| `a3897d8` | the code and the words |
+| `cf4ad49` | CC-8b and U4 re-recorded once from `a3897d8`'s own tree |
+| the next commit | this note |
+
+**SP17** (`test/sp17-held-through-e1.test.mjs`), green 6/6:
+- a save on 2026-10-29 at 15:00 Eastern has its E1 due 2026-10-30, saying *"held until October 30, 2026"*, never the
+  ended form;
+- a save on 10-24 keeps October 29;
+- the 10-29 save's `/o` is the held offer on 10-30 and the lapse on 10-31;
+- its E1's `/confirm` link works on 10-30 and is gone on 10-31;
+- the step, on the development page and the approved production page, says October 29 through 10-28 and October 30 on
+  10-29, and carries no *"code"* but the label *"Delivery ZIP code"*;
+- DRAFT carries item 2's words and no *"about once a week"*, and the confirmation page says *"weekly"*.
+
+**Amended:**
+- SP16's ended E1 is now an E1 sent after its held date: a save of 10-24 whose E1 goes only on 10-30.
+- S18 reads the step's `[date]` as a slot.
+- SP15's word comparison reads *"about once a week"* as *"weekly"*.
+- ⚠ **Found on the code:** S10's and S11's past-offer saves carried an October `send_at` from their fixture's clock, so
+  the held-date rule rightly kept them live. A save of an offer that ended on 2026-06-30 now has its E1 due within it
+  (`send_at` 2026-06-01).
+- SP3's list of moved files gains `confirm.js`, and the SP mutant 5's site follows E1's held line.
+
+**Built**
+- `offers.js` `heldUntil` and `heldUntilOfSave`: the later of the offer's last day and the day its E1 is due, in the send
+  zone.
+- E1 (`send-due.js`, which now reads each save's `send_at`), the `/o` page and the `/confirm` token all hold through that
+  date. Saves are still taken only through `valid_to` (`index.js` unchanged).
+- `consent/DRAFT.md` and what is built from it carry item 2's words: § 1's lead, the email field's hint, the box line
+  (*"Weekly"*) and the fine print; § 4 (*"weekly"*, on the confirmation page); § 5's table and the line on what is kept.
+  `wording_version` stays `v0.3-draft`.
+- The page fills `[date]` as the Worker will hold it: the later of the offer's last day and tomorrow. It inlines
+  `heldUntil`, `longDate` and `addDays`, with `MS_PER_DAY` taken from `zoned-time.js`.
+
+**Chosen where § 10.9 is silent**
+1. **The `/confirm` token now lasts through the held date** rather than the offer's last day; otherwise the link in E1 on
+   10-30 would arrive dead.
+2. **"No code"** is read as no code of the offer's. The field's label *"Delivery ZIP code"* stays.
+3. **`flows/01-save-offer.md`** still has the old lines. It is a design record, nothing is built from it, and it was not
+   changed.
+
+**Goldens**
+- **CC-8b**: `confirm.js`, `messages.js`, `offers.js`, `redeem.js` and `send-due.js` moved; none added or removed. MS-9 and
+  PR-10 read the same golden.
+- **U4** (`1dc7b05` → `a3897d8`): the three development pages +997 bytes each. Their visible pages are unchanged, because
+  U4 reads them on 2026-09-29, when no step is drawn.
+  - Proof: the two trees' development builds differ only by the step's four reworded lines, the inlined functions and
+    `flow1.js`'s date lines.
+- **Not moved:** M14, S20, WC-9, MS.
+
+**Gates at `cf4ad49`:** the whole site suite **1034 of 1035**, S22 alone. `npm run contrast` 90 of 90. `wp-chrome` 3/3.
+
+**Renders** (`dist-dev/renders/`, git-ignored):
+- `page-2026-10-24-390-end.png` (held until October 29) and `page-2026-10-29-390-end.png` (October 30): the step;
+- `page-2026-10-30-390-end.png` and its `-top`: no step;
+- `e1-ticked-600.png` and `e1-unticked-600.png`: E1 for a save on 10-29, held until October 30;
+- `o-page-390.png` and `o-page-1280.png`: `/o` on 10-30 for that save, held;
+- `confirm-390.png`: the confirmation page, *"weekly"*.
