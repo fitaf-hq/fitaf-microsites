@@ -17,6 +17,8 @@
 // ⚠ At the merge into boston/live-week-every-menu (2026-10-21) "the base" is 768ca36, the merged tree before this
 // contract's branch (sp-production.mjs BASE says why): the production page carries boston/why-button's and
 // boston/every-menu's lines from that tree, and this contract's § 9 item 2 reading alone on top of them.
+// ⚠ Since SPEC-every-menu-and-nutrition § 11 (2026-10-22) changes the production page, "the base" is 768ca36 with that
+// section's own diff applied (sp-production.mjs LATER): the page is still the base's with § 9 item 2's reading alone.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

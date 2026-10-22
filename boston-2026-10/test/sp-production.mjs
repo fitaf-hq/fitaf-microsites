@@ -200,6 +200,12 @@ export function assertProductionT5(html, { production }) {
  *  scripts/chefs-choice.mjs, scripts/week-content.mjs and data/messages.json, none of which either Worker reaches (CC-8b's
  *  map is unmoved by both branches), so SP3's Worker and CC-8b cases compare with the same files as before. */
 export const BASE = "768ca36";
+/** ⚠ Changes to the production page made after this contract merged, each by its own contract, as [from, to] commits:
+ *  BASE's package gets each one's diff over the page's sources (LATER_PATHS), applied by `patch`, so SP3 still holds
+ *  the production page to the base's with § 9 item 2's reading alone. SPEC-every-menu-and-nutrition § 11 (2026-10-22,
+ *  the Advisor's review of the live page): ce91cba (its contract) to bc259e4 (its code). */
+export const LATER = [["ce91cba", "bc259e4"]];
+const LATER_PATHS = ["build.mjs", "data", "scripts", "src"];
 
 function run(cmd, args, { input } = {}) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 256 * 1024 * 1024 });
@@ -208,7 +214,8 @@ function run(cmd, args, { input } = {}) {
 }
 
 /** BASE's package, extracted by `git archive` into a temporary directory (read only), this package's node_modules linked
- *  in. Returns its path and a disposer. */
+ *  in, and each of LATER's diffs applied (`patch` refuses one that does not apply cleanly). Returns its path and a
+ *  disposer. */
 export async function basePackage() {
   const scratch = await realpath(await mkdtemp(join(tmpdir(), "boston-sp-base-")));
   const top = run("git", ["-C", ROOT, "rev-parse", "--show-toplevel"]).toString("utf8").trim();
@@ -217,6 +224,10 @@ export async function basePackage() {
   run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", BASE, prefix]) });
   const pkg = join(scratch, "base", prefix);
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
+  for (const [from, to] of LATER) {
+    const diff = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...LATER_PATHS.map((p) => `${prefix}/${p}`)]);
+    if (diff.length) run("patch", ["-p1", "--forward", "--silent", "-d", join(scratch, "base")], { input: diff });
+  }
   return { pkg, dispose: () => rm(scratch, { recursive: true, force: true }) };
 }
 
