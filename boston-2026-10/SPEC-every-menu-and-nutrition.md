@@ -753,3 +753,52 @@ Sizes, raw / gzip (`test/page-budget.mjs`): production 52,846 / 15,560; developm
 | `npm ci` in the package, `tools/storybook` and `tools/storefront-watch` | each exit 0, from the lockfiles (no branch changes a lockfile) |
 
 Not run here, as asked: Storybook's suite, the contrast suite and the storefront watch.
+
+## 11. Amendment, 2026-10-22: the Advisor's review of the live page. CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-22 (Fit AF decision record `2026-10-17-…` § 7r), looking at eatfitaf.com before the
+Owner meeting: *"Please make "Why Fit AF?" more prominent on the microsite. Let's try putting it in a button and then
+putting it above the Individual/Family chooser"* · *"The microsite should use the nutrition rings (we've built them at
+least 3 times at this point) and all of that information should be in the expander with the ingredients. Rather than a
+caret, let's please try a "circled i" info icon – we'll likely end up iterating on this because it is the same UI
+repeated multiple times"* · *"The name of the menu is just "Chef's Choice", etc – the date range is for internal
+reference"* · *"I also cannot show the nutrition information until it is properly formatted (… we should be able to
+make it look nicer than raw output on the page)"*.
+
+1. **The heading is the menu's name alone**: `chefs_choice.heading` becomes `"{menu}"` (*Chef's Choice*, *Poultry &
+   Fish*, …); `{week}` stays a placeholder the build accepts but this page's words no longer use. The week range is
+   not shown.
+2. **The meal's row is its tile and its name**: the nutrition line under the name is removed from the row
+   (`nutrition.line` leaves the required words). The row stays one button of at least 64 CSS px (§ 10 item 1),
+   `aria-expanded` and `aria-controls` as built.
+3. **The mark is a circled "i"**, not a chevron: an inline SVG (a circle and a lowercase *i*, `currentColor`,
+   `aria-hidden`, about 24 px), the same whether open or closed (the open state is the panel and `aria-expanded`, not
+   the mark). It must not read as *add* (§ 10 item 2).
+4. **The panel, in order**: the **rings** for the size chosen, then *Ingredients*, then *Contains*, as today.
+   1. **The rings are the store's own**, as Fit AF's Shopify theme already copies them from the live order page's meal
+      dialog: `fitaf` `scripts/commerce/theme/snippets/fitaf-ring.liquid` and `assets/fitaf.css` (`.fam-macros`). One
+      ring per number, in this order: **Calories, Protein, Carbs, Fat, Fiber**. Each is an SVG circle (viewBox 40, radius
+      17, stroke 2.5, track `#eceef0`), its arc the value over a daily amount (calories 2,000; protein 50 g; carbs 275 g;
+      fat 77 g; fiber 28 g, the store catalogue's `recommended_daily_intake`, calories the live dialog's), clamped to
+      0.06–1, round caps, starting at 12 o'clock; the value in the middle (`g` after all but calories), the label beneath.
+      Arc colours the store's: Calories `#888888`, Protein `#ffad0d`, Carbs `#3ed3a3`, Fat `#ff5d5d`, Fiber `#303030`.
+      About 56 px each, in one row that wraps at 390 px; numbers and labels in the page's text colour, so the contrast
+      suite's text pairs hold (the arcs are graphics beside the printed number, not text).
+   2. **The size is the plan card's** (Lean, Signature, Performance), as the line was; a meal with no numbers for that
+      size shows no rings and keeps its ingredients; a meal with neither has no panel and no mark (as today's rule).
+   3. One function draws a ring (one unit), and its numbers are named constants with their source.
+5. **"Why Fit AF?" is a button above the Individual/Family chooser**: the dialog of `SPEC-why-fit-af.md` §§ 2 and 6,
+   opened from a button placed directly above the tabs (`#tab-individual`'s list), in the page's quieter button style
+   (the store button stays the page's one orange button, Fit AF decision § 7e), at least 64 CSS px tall. The footer's
+   *Why Fit AF?* entry is removed (one entry point); the footer keeps *See all plans*. **Without script**, the same place
+   holds a link to `/why/` (W3's case, moved). Focus returns to the new button when the dialog closes.
+6. **Cases (written first, run red)**: **EM7** the heading reads the menu's name, no range (production and development,
+   each menu); **EM8** no nutrition line in a row; the mark is an SVG circle with an *i*, not a chevron; **EM9** (Chrome,
+   390 and 1280) opening a meal shows five rings in order, each ring's value its size's number and its arc fraction
+   value/daily amount (clamped), then the ingredients; a meal with numbers for no size shows no rings; **W2/W3 moved**:
+   the button above the tabs opens the dialog and gets focus back; no *Why Fit AF?* in the footer; without script, a
+   link to `/why/` above the tabs. **Mutants**: the arc from another number's daily amount (EM9 red); the rings for
+   another size (EM9 red); the button left in the footer (W2 red). Every golden that moves is re-recorded once, after
+   the code, each shown to move only by this section's lines.
+7. **Release**: re-gated whole by the orchestrator, then the dev and production pins (the Advisor's go: § 7q item 9).
+   ⛔ Not here: the analytics page; the meal picker (K-89); the photo sheet's size (a separate amendment).
