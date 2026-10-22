@@ -1,4 +1,8 @@
 /* This week's Chef's Choice on the result card (SPEC-chefs-choice § 3). Tokens only: npm run contrast reads this file. */
+/* SPEC-every-menu-and-nutrition § 11 item 4.1: the meal's rings, the store's own colours (Fit AF's theme,
+   snippets/fitaf-ring.liquid): the track, and each number's arc. Tokens of the card's own, here and not in the
+   template's :root, which the other pages built from it (privacy/) carry too */
+:root { --ring-track: #eceef0; --ring-cal: #888888; --ring-protein: #ffad0d; --ring-carbs: #3ed3a3; --ring-fat: #ff5d5d; --ring-fiber: #303030; }
 .result .cta[hidden], .cc-list[hidden], .cc-own[hidden] { display: none; }
 button.cta { width: 100%; border: 0; cursor: pointer; }
 .cc-list { margin: 12px 0 0; padding: 16px 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
