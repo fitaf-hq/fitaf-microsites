@@ -374,7 +374,7 @@
     "2026-10-25": {
       "file": "chefs-choice-2026-10-25.jpg",
       "width": 208,
-      "height": 4992,
+      "height": 6032,
       "cells": {
         "Sesame Chicken Teriyaki with Fried Rice": {
           "x": 16,
@@ -478,45 +478,75 @@
           "w": 176,
           "h": 176
         },
-        "🟠NEW: Caramel Apple ProNuts": {
+        "Low Carb Herb Roasted Turkey Breast with Cauliflower Stuffing & Bone Broth Gravy": {
           "x": 16,
           "y": 3552,
           "w": 176,
           "h": 176
         },
-        "🟠NEW: Cheesecake Brownie Bites": {
+        "Italian Chicken Trio": {
           "x": 16,
           "y": 3760,
           "w": 176,
           "h": 176
         },
-        "Cognition Superfood Bites: Blueberry Cream & Lion's Mane": {
+        "Chipotle Chicken Sliders": {
           "x": 16,
           "y": 3968,
           "w": 176,
           "h": 176
         },
-        "Cookies & Cream Protein Dirt": {
+        "Grilled Chipotle Free-Range Chicken": {
           "x": 16,
           "y": 4176,
           "w": 176,
           "h": 176
         },
-        "Golden Oreo Protein Sand": {
+        "🟠NEW: Nashville Hot Chicken Mac & Cheese": {
           "x": 16,
           "y": 4384,
           "w": 176,
           "h": 176
         },
-        "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga": {
+        "🟠NEW: Caramel Apple ProNuts": {
           "x": 16,
           "y": 4592,
           "w": 176,
           "h": 176
         },
-        "Relaxation Superfood Bites: Apple Crisp & Reishi": {
+        "🟠NEW: Cheesecake Brownie Bites": {
           "x": 16,
           "y": 4800,
+          "w": 176,
+          "h": 176
+        },
+        "Cognition Superfood Bites: Blueberry Cream & Lion's Mane": {
+          "x": 16,
+          "y": 5008,
+          "w": 176,
+          "h": 176
+        },
+        "Cookies & Cream Protein Dirt": {
+          "x": 16,
+          "y": 5216,
+          "w": 176,
+          "h": 176
+        },
+        "Golden Oreo Protein Sand": {
+          "x": 16,
+          "y": 5424,
+          "w": 176,
+          "h": 176
+        },
+        "Immunity Superfood Bites: Chocolate Peanut Butter & Chaga": {
+          "x": 16,
+          "y": 5632,
+          "w": 176,
+          "h": 176
+        },
+        "Relaxation Superfood Bites: Apple Crisp & Reishi": {
+          "x": 16,
+          "y": 5840,
           "w": 176,
           "h": 176
         }
