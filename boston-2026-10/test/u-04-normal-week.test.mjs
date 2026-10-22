@@ -33,6 +33,19 @@
 // f02807e's record, all six contents and the visible page at all seven fragments were byte-identical; the six served
 // pages moved (each +516 bytes: app.js's seven added lines, SPEC-why-fit-af § 6.1 lists them). From here the reference
 // is e2284f1's tree.
+// ⚠ RE-RECORDED at 9a19f48 (`node test/u-04-record.mjs --commit 9a19f48`): SPEC-every-menu-and-nutrition.md §§ 2–4
+// (2026-10-21) put the chooser's fieldset, its styles and the card's new script on every page, by design. Against
+// f02807e's record, all six contents and the visible page at all seven fragments were byte-identical (none of these
+// weeks has a second list or meals, § 2 item 4); only the six served pages moved, each by 8,768 bytes (its § 9 lists the
+// lines). From here the reference is 9a19f48's tree.
+// ⚠ RE-RECORDED at f2d1748 (`node test/u-04-record.mjs --commit f2d1748`): the approved menu names (the Advisor's ruling
+// of 2026-10-21) give the chooser's fieldset its aria-label, the page's one changed line. Against 9a19f48's record, all six
+// contents (the heading now "{menu} ({week})", filled as before) and every visible fragment were byte-identical; only the
+// six served pages moved, each by 18 bytes. From here the reference is f2d1748's tree.
+// ⚠ RE-RECORDED at f72040a (`node test/u-04-record.mjs --commit f72040a`): SPEC-every-menu-and-nutrition § 10 (the
+// Advisor, 2026-10-21) puts the 64 px touch target, the meal row as a button and its chevron in the card's style and
+// script. Against f2d1748's record, all six contents and every visible fragment were byte-identical; only the six served
+// pages moved, each by 1,407 bytes (§ 10.1 lists the lines). From here the reference is f72040a's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

@@ -25,6 +25,7 @@ import { CLOCK_ATTRIBUTE } from "../microsite/clock.mjs";
 import { BUILDS, PAGES_ROUTE, pageUrl } from "../microsite/layout.js";
 import { SITE } from "./paths.mjs";
 import { CONTENT_SCRIPT } from "../microsite/paths.mjs";
+import { wordsFile } from "../microsite/pages.mjs";
 import { serveStatic } from "./serve-static.mjs";
 import { readManifest, removeStorybookStatic, storybookStatic } from "./storybook-static.mjs";
 
@@ -42,14 +43,16 @@ after(removeStorybookStatic);
 /** The site's own build of `build`, into a fresh directory: its index.html, with the week `week` (a delivery Sunday)
  *  put in when there is one: `npm run content -- --week <week> --out <dir> [--env dev] [--picks <picks>]` (`picks`, the
  *  fixture week's directory, SPEC-meal-selection § 9), its week/picks-data.json by the site's pageWithWeek. */
-async function freshPage(build, work, dateId, week = null, picks = null) {
+async function freshPage(build, work, dateId, week = null, picks = null, words = null) {
   const out = join(work, `${build}-${dateId}`);
   await run("npm", ["--prefix", SITE, "run", SITE_SCRIPT[build], "--", "--out", out], { maxBuffer: 16 * 1024 * 1024 });
   const html = await readFile(join(out, "index.html"), "utf8");
   if (!week) return html;
   const content = join(out, "content");
   const env = build === "development" ? ["--env", "dev"] : [];
-  await run("npm", ["--prefix", SITE, "run", "content", "--", "--week", week, "--out", content, ...env, ...(picks ? ["--picks", picks] : [])], { maxBuffer: 16 * 1024 * 1024 });
+  // SPEC-every-menu-and-nutrition: a date with its own words (the two-menu fixture week) gives them as --messages.
+  const messages = words ? ["--messages", await wordsFile(words, out)] : [];
+  await run("npm", ["--prefix", SITE, "run", "content", "--", "--week", week, "--out", content, ...env, ...(picks ? ["--picks", picks] : []), ...messages], { maxBuffer: 16 * 1024 * 1024 });
   const { pageWithWeek } = await import(pathToFileURL(CONTENT_SCRIPT).href);
   return pageWithWeek(html, JSON.parse(await readFile(join(content, "week", "picks-data.json"), "utf8")));
 }
@@ -67,7 +70,7 @@ async function oneSource(staticDir) {
         const served = await (await fetch(`${server.base}/${pageUrl(build, date.id)}`)).text();
         const clocks = [...served.matchAll(CLOCK)];
         const own = served.replace(CLOCK, "");
-        const fresh = await freshPage(build, work, date.id, date.delivery ?? null, date.picks);
+        const fresh = await freshPage(build, work, date.id, date.delivery ?? null, date.picks, date.words ?? null);
         checked++;
         const where = `${build}/${date.id} (${date.delivery ? `the week delivered ${date.delivery}` : "no week"})`;
         if (clocks.length !== (date.instant ? 1 : 0)) problems.push(`${where}: ${clocks.length} clock scripts`);

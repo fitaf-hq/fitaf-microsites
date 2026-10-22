@@ -126,8 +126,10 @@ export function weekOf(delivery) {
   const [a, b] = [day(1), day(7)];
   return month(a) === month(b) ? `${month(a)} ${a.getUTCDate()}–${b.getUTCDate()}` : `${month(a)} ${a.getUTCDate()} – ${month(b)} ${b.getUTCDate()}`;
 }
-/** The list's heading for the week delivered on `delivery` (since § 8 item 6 the same for every count). */
-export const headingFor = (count, delivery, messages = MESSAGES) => fill(words(messages).heading, { week: weekOf(delivery) });
+/** The list's heading for the week delivered on `delivery` (since § 8 item 6 the same for every count); since
+ *  SPEC-every-menu-and-nutrition § 4 its `{menu}` is Chef's Choice's name (data/messages.json `menus`). */
+export const headingFor = (count, delivery, messages = MESSAGES) =>
+  fill(words(messages).heading, { week: weekOf(delivery), menu: messages.menus?.["chefs-choice"] });
 /** One meal as the list shows it: since § 7.2 its `display` (as the link tool reads a name: whitespace collapsed and
  *  trimmed), with its count when above 1. Never its `name`, which is the key. */
 export const mealLine = ({ display, qty }, messages = MESSAGES) => {

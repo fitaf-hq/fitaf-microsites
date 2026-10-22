@@ -6,8 +6,10 @@
 //   (a colour token) of their :root, compared with whitespace, comments and quote style set aside.
 //   ⚠ This file is under tools/storybook/ too, and so are the cases: neither may quote a rule or a phrase.
 // - A PHRASE of data/messages.json of ten characters or more: each string of the file but its two notes about itself
-//   (`about`, `status`), cut at its {placeholders}, each piece of ten characters or more; compared after the escapes a
-//   copy would carry (&#39;, \') are undone. (The block's words are its `handoff` strings, so they are phrases too.)
+//   (`about`, `status`) and the menus' NAMES (`menus`, SPEC-every-menu-and-nutrition § 4: a name, which the stories
+//   use to name their states, *Individual · Chef's Choice*, as SPEC-storybook-microsite § 3 names it), cut at its
+//   {placeholders}, each piece of ten characters or more; compared after the escapes a copy would carry (&#39;, \') are
+//   undone. (The block's words are its `handoff` strings, so they are phrases too.)
 // - A RULE of the BLOCK (SPEC-storybook-microsite § 8.4, SM-4 extended): each rule of the hand-off block's two style
 //   sheets as it ships them, the progress screen's (CSS) and the stripped checkout's (DEEP), read as rules are above.
 //   They are string expressions in the block's text (scripts/build-storefront.mjs's storefrontText(), the text the Footer
@@ -19,7 +21,7 @@ import { runInNewContext } from "node:vm";
 import { filesUnder } from "./paths.mjs";
 
 export const MIN_PHRASE_CHARS = 10;
-const NOT_PHRASES = new Set(["about", "status"]);
+const NOT_PHRASES = new Set(["about", "status", "menus"]);
 const PLACEHOLDER = /\{[a-z_]+\}/g;
 const ENTITIES = { "&#39;": "'", "&apos;": "'", "&quot;": '"', "&amp;": "&", "&lt;": "<", "&gt;": ">" };
 

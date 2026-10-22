@@ -119,16 +119,20 @@ test("MS-10: a version-1 14 mapped to or fails MS-5", async () => {
 });
 
 // The card choosing its cart by the mpid in Choose your meals' link (the card before § 8 item 2), not by the answer set.
-const CHOSEN = `  function chosen(sel) {
+// SPEC-every-menu-and-nutrition § 2: chosen() takes the chosen menu, whose carts are Chef's Choice's (the week's own) or
+// another list's; the mutant chooses within them by mpid, as it chose within the week's before.
+const CHOSEN = `  function chosen(sel, menu) {
     var key = sel.replace(/-s$/, "");
-    var cart = has(week.carts, key) ? week.carts[key] : null;
+    var carts = cartsOf(menu);
+    var cart = has(carts, key) ? carts[key] : null;
     var m = cart && /[?&]mpid=(\\d+)$/.exec(choose.getAttribute("href") || "");
     var links = cart && ((/-s$/.test(sel) && cart.snack_links) || cart.links);
     return m && has(links, m[1]) ? { menu: cart, link: links[m[1]] } : null;
   }`;
-const CHOSEN_BY_MPID = `  function chosen(sel) {
+const CHOSEN_BY_MPID = `  function chosen(sel, menu) {
+    var carts = cartsOf(menu);
     var m = sel && /[?&]mpid=(\\d+)$/.exec(choose.getAttribute("href") || "");
-    for (var key in week.carts) if (m && has(week.carts[key].links, m[1])) return { menu: week.carts[key], link: week.carts[key].links[m[1]] };
+    for (var key in carts) if (m && has(carts[key].links, m[1])) return { menu: carts[key], link: carts[key].links[m[1]] };
     return null;
   }`;
 

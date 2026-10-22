@@ -11,6 +11,12 @@
 // snack list for the chosen days: never an answer the cart cannot hold. With no week live, Q4 is hidden.
 // SPEC-week-content § 8: a week whose data says `updating` shows the updating card (#cc-updating, its words the build's)
 // in the list's place; an updating week is no week for everything below: no cart, no link, Choose your meals as it is.
+// SPEC-every-menu-and-nutrition § 2: a week of more than one list (`menus`) offers, above the list, a radio group of the
+// menus with a cart for the answers (#cc-menus), Chef's Choice first; the chosen menu's cart, snacks and links are the
+// card's, by the same reading as Chef's Choice's. § 3: a meal with nutrition (`facts`) shows its line for the chosen size
+// (#result's data-accent, the plan app.js rendered) and, with ingredients, its whole row is a button opening them beneath
+// it, its mark a chevron (§ 10). What the
+// Worker's shape check does not read (`menus`, `facts`) is read here only in the shape the content writes.
 var picks = JSON.parse(document.getElementById("picks-data").textContent);
 var week = picks.weeks.length === 1 ? picks.weeks[0] : null;
 var updatingCard = document.getElementById("cc-updating");
@@ -24,26 +30,119 @@ function start(week) {
   var $ = function (id) { return document.getElementById(id); };
   var result = $("result"), choose = $("result-cta"), list = $("cc-list"), own = $("cc-own");
   var snackBox = $("cc-snacks"); // only while Q4 is on the page (§ 9 item 3)
+  var group = $("cc-menus"); // SPEC-every-menu-and-nutrition § 2: the chooser
   var has = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+  var isList = Array.isArray;
+  var isMap = function (v) { return v !== null && typeof v === "object" && !isList(v); };
+  var isText = function (v) { return typeof v === "string"; };
+
+  // § 2: the week's menus in the words' order, Chef's Choice first (its carts and snacks the week's own); a week of one
+  // list carries none, and the card is as it was. Read only in the shape the content writes (each other menu's carts and
+  // snacks as the Worker checks the week's: lines, tiles and links), else as one list.
+  var isLines = function (v) { return isMap(v) && isList(v.meals) && isList(v.thumbs); };
+  var isCart = function (c) { return isLines(c) && isMap(c.links) && (c.snack_links === undefined || isMap(c.snack_links)); };
+  var each = function (o, ok) { return isMap(o) && Object.keys(o).every(function (k) { return ok(o[k]); }); };
+  var menus = (function (m) {
+    if (!isList(m) || 2 > m.length) return [];
+    for (var i = 0; m.length > i; i++) {
+      if (!isMap(m[i]) || !isText(m[i].list) || !isText(m[i].name)) return [];
+      if (i && (!each(m[i].carts, isCart) || (m[i].snacks !== undefined && !each(m[i].snacks, isLines)))) return [];
+    }
+    return m;
+  })(week.menus);
+  var picked = menus.length ? menus[0].list : null; // the menu chosen: Chef's Choice first (§ 2 item 2)
+  var cartsOf = function (menu) { return menu && menu.carts ? menu.carts : week.carts; };
+  var snacksOf = function (menu) { return menu && menu.carts ? menu.snacks : week.snacks; };
+  function menuNamed(id) {
+    for (var i = 0; menus.length > i; i++) if (menus[i].list === id) return menus[i];
+    return null;
+  }
+  // § 3: the week's nutrition entries; a cart's `facts` names each meal's entry, or null.
+  var entries = isList(week.facts) ? week.facts : [];
+  var opened = {}; // the meals left open, by menu, answers and place: kept while only the size changes
 
   // The answer set the card shows ("" when it is hidden): the fragment's answer part, snacks mark and all.
   function selection() {
     return result.hidden ? "" : result.getAttribute("data-selection") || "";
   }
 
-  // The chosen answers' cart (the selection without its snacks mark), and in it the chosen size's link (by its mpid):
-  // with snacks chosen and carted, the cart's snack link (SPEC-snacks-in-the-cart § 4.2), else today's.
-  function chosen(sel) {
+  // The chosen answers' cart in `menu` (the selection without its snacks mark), and in it the chosen size's link (by its
+  // mpid): with snacks chosen and carted, the cart's snack link (SPEC-snacks-in-the-cart § 4.2), else today's.
+  function chosen(sel, menu) {
     var key = sel.replace(/-s$/, "");
-    var cart = has(week.carts, key) ? week.carts[key] : null;
+    var carts = cartsOf(menu);
+    var cart = has(carts, key) ? carts[key] : null;
     var m = cart && /[?&]mpid=(\d+)$/.exec(choose.getAttribute("href") || "");
     var links = cart && ((/-s$/.test(sel) && cart.snack_links) || cart.links);
     return m && has(links, m[1]) ? { menu: cart, link: links[m[1]] } : null;
   }
 
+  // § 3 item 3: a meal's line for the chosen size only, never another size's numbers.
+  function lineFor(lines, size) {
+    return lines && has(lines, size) && typeof lines[size] === "string" ? lines[size] : null;
+  }
+
+  // A meal with its entry (§ 3): its name and the size's line in one column beside its tile; with ingredients, § 10 item 1:
+  // the WHOLE ROW (tile, name, line) is the button opening the panel beneath it (aria-expanded, aria-controls), a second
+  // press closing it, each meal on its own; its mark (§ 10 item 2) a chevron the style draws, hidden from assistive
+  // technology, turning when the meal is open.
+  function appendAll(parent, children) {
+    children.forEach(function (child) { parent.appendChild(child); });
+  }
+  function detail(li, tile, name, entry, place) {
+    var line = lineFor(isMap(entry.lines) ? entry.lines : null, result.getAttribute("data-accent"));
+    var more = isText(entry.ingredients) ? entry.ingredients : null;
+    if (!line && !more) return appendAll(li, [tile, name]);
+    var text = document.createElement("span");
+    text.className = "cc-text";
+    text.appendChild(name);
+    if (line) {
+      var numbers = document.createElement("span");
+      numbers.className = "cc-line";
+      numbers.textContent = line;
+      text.appendChild(numbers);
+    }
+    if (!more) {
+      li.className = "cc-detail";
+      return appendAll(li, [tile, text]);
+    }
+    li.className = "cc-control";
+    var meal = document.createElement("button");
+    meal.type = "button";
+    meal.className = "cc-meal";
+    var mark = document.createElement("span");
+    mark.className = "cc-mark";
+    mark.setAttribute("aria-hidden", "true");
+    appendAll(meal, [tile, text, mark]);
+    li.appendChild(meal);
+    var panel = document.createElement("div");
+    panel.className = "cc-more";
+    panel.id = "cc-more-" + place.split("|").pop();
+    var ingredients = document.createElement("p");
+    ingredients.textContent = more;
+    panel.appendChild(ingredients);
+    if (isText(entry.contains)) {
+      var contains = document.createElement("p");
+      contains.textContent = entry.contains;
+      panel.appendChild(contains);
+    }
+    li.appendChild(panel);
+    meal.setAttribute("aria-controls", panel.id);
+    var show = function (open) {
+      meal.setAttribute("aria-expanded", String(open));
+      panel.hidden = !open;
+    };
+    show(!!opened[place]);
+    meal.addEventListener("click", function () {
+      opened[place] = meal.getAttribute("aria-expanded") !== "true";
+      show(opened[place]);
+    });
+  }
+
   // A list of meals, each with a tile to the left of its name: its cell of the week's photo sheet (the build's style,
-  // from the manifest), or plain, so the rows align (SPEC-plan-page-refinement § 2 item 5).
-  function fill(ul, lines, thumbs) {
+  // from the manifest), or plain, so the rows align (SPEC-plan-page-refinement § 2 item 5). `facts` (a cart's, § 3)
+  // gives a meal its nutrition; `id` names the list for the meals left open.
+  function fill(ul, lines, thumbs, facts, id) {
     while (ul.firstChild) ul.removeChild(ul.firstChild);
     for (var j = 0; lines.length > j; j++) {
       var li = document.createElement("li");
@@ -53,20 +152,22 @@ function start(week) {
       var name = document.createElement("span");
       name.className = "cc-name";
       name.textContent = lines[j];
-      li.appendChild(tile);
-      li.appendChild(name);
+      var at = isList(facts) && typeof facts[j] === "number" ? entries[facts[j]] : null;
+      if (isMap(at)) detail(li, tile, name, at, id + "|" + j);
+      else appendAll(li, [tile, name]);
       ul.appendChild(li);
     }
   }
 
-  // Add snacks (§ 9 item 3): the week's snacks for the chosen days under their heading, and the not-carted line; with no
-  // list for those days, the line alone. While not carted, snacks are shown, never in a link. While carted
+  // Add snacks (§ 9 item 3): the chosen menu's snacks for the chosen days under their heading, and the not-carted line;
+  // with no list for those days, the line alone. While not carted, snacks are shown, never in a link. While carted
   // (SPEC-snacks-in-the-cart § 4.3–4.5) the line is not on the page, the list is in the link, and Q4 is hidden for days
   // with no list (so is the box, whatever the fragment says).
-  function renderSnacks(sel) {
+  function renderSnacks(sel, menu) {
     if (!snackBox) return;
     var days = /-(\d+d)(?:-|$)/.exec(sel);
-    var snacks = days && week.snacks && has(week.snacks, days[1]) ? week.snacks[days[1]] : null;
+    var all = snacksOf(menu);
+    var snacks = days && isMap(all) && has(all, days[1]) ? all[days[1]] : null;
     if (picks.carted && snackQuestion) snackQuestion.hidden = !snacks;
     var on = /-s$/.test(sel) && !(picks.carted && !snacks);
     snackBox.hidden = !on;
@@ -75,16 +176,58 @@ function start(week) {
     if (snacks) fill($("cc-snack-list"), snacks.meals, snacks.thumbs);
   }
 
+  // § 2 item 1: the radios of the menus offered, in their order, the chosen one checked; shown when there are two or
+  // more. Rebuilt only when the menus offered change, so a radio keeps the focus the arrow keys gave it. A week of one
+  // list never touches the group (item 4: the card as it was).
+  var offeredShown = "", radios = [];
+  function renderMenus(offered) {
+    if (!group || !menus.length) return;
+    group.hidden = 2 > offered.length;
+    var ids = offered.map(function (m) { return m.list; }).join("\n");
+    if (ids !== offeredShown) {
+      offeredShown = ids;
+      while (group.firstChild) group.removeChild(group.firstChild);
+      radios = group.hidden ? [] : offered.map(function (m) {
+        var label = document.createElement("label");
+        label.className = "cc-menu";
+        var radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "cc-menu";
+        radio.value = m.list;
+        var name = document.createElement("span");
+        name.textContent = m.name;
+        label.appendChild(radio);
+        label.appendChild(name);
+        group.appendChild(label);
+        return radio;
+      });
+    }
+    radios.forEach(function (radio) { radio.checked = radio.value === picked; });
+  }
+  if (group && menus.length) {
+    group.addEventListener("change", function (e) {
+      if (!e.target || e.target.name !== "cc-menu") return;
+      picked = e.target.value;
+      render();
+    });
+  }
+
   // The list is always open (SPEC-plan-page-refinement § 2 item 5): shown whenever the week has a cart for the answers.
+  // § 2 item 3: an answer change keeps the chosen menu when it has a cart for the new answers, else Chef's Choice.
   function render() {
     var sel = selection();
-    var c = sel ? chosen(sel) : null;
+    var key = sel.replace(/-s$/, "");
+    var offered = menus.filter(function (m) { return sel && has(cartsOf(m), key); });
+    if (sel && menus.length && !offered.some(function (m) { return m.list === picked; })) picked = menus[0].list;
+    var menu = menuNamed(picked);
+    var c = sel ? chosen(sel, menu) : null;
     choose.hidden = !!c;
     list.hidden = own.hidden = !c;
-    renderSnacks(sel);
+    renderMenus(c ? offered : []);
+    renderSnacks(sel, menu);
     if (!c) return;
     $("cc-heading").textContent = c.menu.heading;
-    fill($("cc-meals"), c.menu.meals, c.menu.thumbs);
+    fill($("cc-meals"), c.menu.meals, c.menu.thumbs, c.menu.facts, picked + "|" + key);
     $("cc-checkout").href = c.link;
     own.href = choose.getAttribute("href");
   }
