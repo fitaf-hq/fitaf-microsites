@@ -394,3 +394,48 @@ The audit found one such link, in `src/worker/redeem.js`:
 S11 4/4. 44 files (S1–S17, SP1–SP11 with SP6's S1–S17 against production, the mutants, CC-8 and M1–M13): 112 of 112.
 
 **Goldens.** Only CC-8b moved: `src/worker/redeem.js`, `d2689a2b…` → `d1c45d59…`; none added or removed. The pages, S20, U4, M14 and WC-9 did not move, because the link is the Worker's, not the build's.
+
+## 10. Amendment, 2026-10-22: the offer as the Advisor's brief states it. CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-22: *"As written, production requires "real codes giving 25% on every cart" … It should not
+have been written that way – we need up to update the contract to reflect the actual brief please"*. **The brief**, in
+his words (Fit AF's decision record `2026-10-17-…`): the Boston offer is *"Lock in your exclusive pricing now; Estimated
+value: {~120-160% of current list price}; Your value: {current list price}"*, which *"moves the "offer" into the realm of
+marketing and a promise (to lock in rates)"* (his note of 2026-10-13, § 7r item 5); the secondary offer, *"If you do not
+want to checkout right now, you can save this offer to lock in this pricing … (i.e., the email loop we built)"* (§ 7a);
+*"this was a marketing exercise … we're showing marked down prices on the site"*, *"we already picked an end date to
+coincide with the end of the Boston event"*, answered *"Yes, Thursday 10-29"*; *"We already decided on
+offers@eatfitaf.com as the sender"*; *"Privacy is privacy@eatfitaf.com … 30 days is fine"*; *"The menu email is weekly"*
+(§ 7r item 5). **§ 3 item 2's** *"its codes real (no `PLACEHOLDER`), giving 25% as its label says on every cart"* was
+the orchestrator's misreading of an offer as a store discount, and is struck by this section.
+
+1. **The offer is a price promise, not a discount code.** A customer pays the store's list price; the page already
+   shows the value beside it (the plan card's offer line, *"Sign up today to save 25%"*, approved 2026-10-21). **No
+   code is issued, shown, or needed at the store.** `data/offers.json` gains `code_mode: "none"`: an offer with it
+   carries no `shared_code` and the save issues no code. The Boston event's offer: its label the approved one, its
+   `valid_to` **2026-10-29**, `code_mode: "none"`.
+2. **What a save promises, and until when**: the pricing the visitor saw, **held until the offer's `valid_to`**
+   (2026-10-29 for Boston), whatever day the save is made. (§ 7d's *"the saved offer holds 14 days"* of 2026-10-18 is
+   superseded by the Advisor's ruling of 2026-10-22.) After that date, as today, the lapse path.
+3. **The email (E1) and the saved offer's page (`/o/…`)** say the promise, not a code: no *"Your code"* line, no code in
+   any visible text; *"Your pricing is held until {date}"* (its words in `consent/DRAFT.md`, for the Advisor's v1 pass),
+   the plan as saved, and the button back to the page. The link's identifier stays an unguessable opaque token in the
+   path (as today's code is), never shown or named as a code. The erase and lapse paths unchanged.
+4. **The production gate** (`scripts/production-inputs.mjs`, § 3 item 2): `offers.json` approved means `"status":
+   "approved"`, each label approved, its dates, and either `code_mode: "none"` with no code field or a real code; the
+   comment's *"25% on every cart"* goes. ⭐ **The sender `Fit AF <offers@eatfitaf.com>` is the decided sender, not a
+   placeholder**: the gate refuses only an empty sender or one outside `eatfitaf.com`.
+5. **The inputs, as decided**, committed with this section's build: `data/delivery-zips.json` the store's Boston zone
+   (316 five-digit codes, Fit AF's `responses/2026-10-22-boston-delivery-zips/boston-zips.json`, `"match": "exact"`,
+   `"status": "official"`; the `near_ring` stays a mock and is said so); the privacy notice's contact
+   **privacy@eatfitaf.com** and **30 days** in place of their `[brackets]`; the menus email's frequency **weekly**. ⛔
+   `data/save.json`'s `production` stays **false**: the switch-on is § 6 item 3's, on the Advisor's word, after his
+   wording pass (`v1`) and `fitaf-infra`'s amendment.
+6. **Cases (written first, run red)**: E1 and the `/o` page for a `code_mode: "none"` offer carry no code text and say
+   the date held (2026-10-29), at every save date before it; a save after `valid_to` takes the lapse path; the gate
+   accepts `code_mode: "none"` without a code, refuses one carrying a code, accepts `Fit AF <offers@eatfitaf.com>`,
+   refuses an empty sender and one at another domain; the ZIP check with the official list (a Boston code inside, a
+   Pennsylvania code outside). Mutants: E1 printing the token as a code; the gate still refusing the decided sender.
+   Every golden that moves, re-recorded once.
+7. **Not here**: the wording's v1 (the Advisor's pass on the dev site); `fitaf-infra`'s production database, keys and
+   cron (Amendment 1.10, his two bootstrap runs); the production switch.
