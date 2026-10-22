@@ -35,6 +35,7 @@
     { "fg": "--on-cta", "bg": "--cta-hover", "role": "large-text", "where": "the same buttons on hover" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the button's own shape against the card" },
     { "fg": "--ink", "bg": "--white", "role": "body", "where": "a meal's rings (SPEC-every-menu-and-nutrition § 11 item 4): each value 14px/700 in its circle, each label 12px/600 beneath" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "Why Fit AF? above the tabs (SPEC-every-menu-and-nutrition § 11.2): an outline button in the unselected menu chip's look, 15px/600; its border --line, as the chips'" },
     { "fg": "--ring-cal", "bg": "--white", "role": "non-text", "where": "the Calories ring's arc, a graphic beside its printed number (§ 11 item 4.1, the store's colour)" },
     { "fg": "--ring-protein", "bg": "--white", "role": "non-text", "where": "the Protein ring's arc, beside its printed number" },
     { "fg": "--ring-carbs", "bg": "--white", "role": "non-text", "where": "the Carbs ring's arc, beside its printed number" },

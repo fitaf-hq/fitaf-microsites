@@ -171,11 +171,15 @@ section.panel { padding-top: 28px; }
 .cell b { display: block; font-size: 17px; color: var(--navy); font-variant-numeric: tabular-nums; }
 .cell small { display: block; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* Why Fit AF? (SPEC-why-fit-af § 2): a button in See all plans' style, the page's quieter button, opening the /why/ page
-   in a frame inside the plans dialog's box, as tall as the viewport allows; the page scrolls inside the frame. Since
-   SPEC-every-menu-and-nutrition § 11 item 5 (the Advisor's review, 2026-10-22) it sits directly above the tabs, the
-   column's width and at least the card's touch target tall (64 px, § 10), its no-script link in the same place */
-.why-link { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 64px; margin: 0 0 8px; }
+/* Why Fit AF? (SPEC-why-fit-af § 2): a button opening the /why/ page in a frame inside the plans dialog's box, as tall as
+   the viewport allows; the page scrolls inside the frame. Since SPEC-every-menu-and-nutrition § 11 item 5 (the Advisor's
+   review, 2026-10-22) it sits directly above the tabs, its no-script link in the same place; since § 11.2 ("in a
+   button") it is an outline button in the look of the menu chooser's unselected chip: a white pill, the chips' border,
+   navy words in their type, at least the card's touch target tall (64 px, § 10), sized to its words, centred above the
+   tabs (the column's centre on a phone; from 720 px, where the tabs are 420 px at the column's left, their centre).
+   Never orange: the store's button stays the page's one --cta button. Its focus ring is the page's (:focus-visible) */
+.why-link { display: flex; align-items: center; justify-content: center; width: fit-content; min-height: 64px; margin: 0 auto 12px; padding: 0 20px; border: 1px solid var(--line); border-radius: 32px; background: var(--white); color: var(--navy); font: 600 15px/1.3 var(--head); text-decoration: none; cursor: pointer; }
+.why-link:hover { border-color: var(--field); }
 .why { height: calc(100% - 24px); }
 .why .all-box { display: flex; flex-direction: column; height: 100%; }
 .why-frame { flex: 1; display: block; width: 100%; min-height: 0; border: 0; }
@@ -191,7 +195,8 @@ section.panel { padding-top: 28px; }
 .footnote { margin: 2px 0 0; }
 
 @media (min-width: 720px) {
-  .tabs, .why-link { max-width: 420px; }
+  .tabs { max-width: 420px; }
+  .why-link { margin-left: 210px; transform: translateX(-50%); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{DEV_STYLE}}{{PICKS_STYLE}}
 </style>
@@ -203,7 +208,7 @@ section.panel { padding-top: 28px; }
 </div>{{OFFER_BOX}}
 
 <main class="wrap">
-  <button type="button" class="all-link why-link js-only" id="why-link" aria-haspopup="dialog" aria-controls="why">Why Fit AF?</button><noscript><a class="all-link why-link" href="{{ASSET_PREFIX}}why/">Why Fit AF?</a></noscript>
+  <button type="button" class="why-link js-only" id="why-link" aria-haspopup="dialog" aria-controls="why">Why Fit AF?</button><noscript><a class="why-link" href="{{ASSET_PREFIX}}why/">Why Fit AF?</a></noscript>
   <dialog class="all why" id="why" aria-label="Why Fit AF?">
     <div class="all-box">
       <div class="all-head js-only"><button type="button" class="all-close" id="why-close" aria-label="Close">&times;</button></div>
