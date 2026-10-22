@@ -23,7 +23,8 @@
 // page) by `node test/wc-09-record.mjs --visible-at 5231265`: `visible` at all 20 fragments (the heading the menu's name
 // alone, Why Fit AF? and its no-script link above the tabs), each the page production's Worker serves from 5231265's tree
 // with its content, which is 409b805's with the headings' range removed (WC-9a, amended); picks_data, page_sha256 and the
-// sheet still 409b805's.
+// sheet still 409b805's. Re-recorded once more by `--visible-at 773e597` for § 11.2 (the button an outline button in the
+// unselected chip's look: its class): `visible` at all 20 fragments, nothing else.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -44,7 +45,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
-  assert.equal(golden.visible_at, "5231265", "the visible pages: 5231265's served page (SPEC-every-menu-and-nutrition § 11)");
+  assert.equal(golden.visible_at, "773e597", "the visible pages: 773e597's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {

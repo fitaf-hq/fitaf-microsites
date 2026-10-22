@@ -205,9 +205,9 @@ export const BASE = "768ca36";
  *  the production page to the base's with § 9 item 2's reading alone. SPEC-every-menu-and-nutrition § 11 (2026-10-22,
  *  the Advisor's review of the live page), and SPEC-meal-selection § 13 (2026-10-20, built 2026-10-22: one comment of
  *  scripts/selection.mjs, a file the development Worker reaches, and no page), built together on boston/review-1022:
- *  ce91cba (§ 11's contract) to 5231265 (the last of their code; between them only tests, goldens and contract text
- *  outside LATER_PATHS). */
-export const LATER = [["ce91cba", "5231265"]];
+ *  ce91cba (§ 11's contract) to 773e597 (the last of their code, § 11.2's button; between them only tests, goldens and
+ *  contract text outside LATER_PATHS). */
+export const LATER = [["ce91cba", "773e597"]];
 const LATER_PATHS = ["build.mjs", "data", "scripts", "src"];
 
 function run(cmd, args, { input } = {}) {

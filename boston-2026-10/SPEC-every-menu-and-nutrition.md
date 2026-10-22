@@ -914,3 +914,24 @@ tabs; `11-card-open-*` Chef's Choice with *Smoked Paprika Chicken Bowl × 2* ope
 390), then *"Ingredients: …"* and *"Contains: Milk"*, the other controls marked with the circled i; `11-card-second-menu-
 signature-*` *Fixture Two* at Signature, *Charred Corn Chicken Plate × 2* opened (rings and ingredients) and *Cumin Lamb
 with Rice × 2* opened (rings alone).
+
+### 11.2 Ruled, 2026-10-22: *Why Fit AF?* a drawn button (on § 11.1 item 9)
+
+The Advisor asked for *Why Fit AF?* *"in a button"* (§ 11's *Why*), and the orchestrator ruled on § 11.1 item 9 that
+underlined text in a band does not read as one: **an outline button in the look of the menu chooser's unselected
+chip** (a rounded pill, white fill, navy words in the chips' type, the chips' border, at least 64 CSS px tall, sized to
+its words with horizontal padding, centred above the tabs, the chips' focus ring; never orange, the store's button
+staying the page's one orange button). Built at `773e597` (its cases first, red, at `753b917`): `.why-link` on its own
+class (See all plans' `all-link` dropped from the button and its no-script link), the chip's pill, `--line` border
+(`--field` on hover), Poppins 15 px/600 navy on `--white`, 20 px each side, `width: fit-content`, centred in the column
+on a phone and, from 720 px where the tabs are 420 px at the column's left, over their centre (`margin-left: 210px;
+transform: translateX(-50%)`); its focus ring the page's `:focus-visible`, which is the chips'. W1 holds the class; W2
+holds the look on every page (white pill, `--line` border, navy, no underline, no `--cta`, sized to its words, centred
+over the tabs) and, on the two-menu fixture week, compares it property by property with an unselected chip's and its
+keyboard focus ring with a chip's, at 390 and 1280 (`w-why-chrome` 6 of 12 → 12 of 12; W1 0 of 2 → 2 of 2).
+`npm run contrast` 83 of 83 (navy on white for its words; its border `--line`, not measured, as the chips'). Goldens
+re-recorded once from `773e597`, each against `5231265`: S20 `index.html` `07855a06…` → `34c6b298…` (59,013 → 59,660
+bytes; the `.why-link` rules, the 720 px rule and the two class attributes, each development page by the same lines,
+every other file byte-identical); U4's six served pages +647 bytes each, each `773e597`'s own build's page with the same
+content, its six contents byte-identical; WC-9's `visible` at its 20 fragments; WC-8 `321da0a6…` → `01270dca…`; SP3's
+base range now ends at `773e597`. Renders `dist-dev/renders/11-top-390.png` and `11-top-1280.png` re-made.

@@ -74,6 +74,10 @@
 // byte-identical), and each served page is 5231265's own build's page with that content put in (pageWithWeek), byte for
 // byte, so it moves by the build's § 11 lines and the headings alone (S20's note; § 11.1); the visible pages follow (the
 // heading, the button and its no-script link above the tabs). From here the reference is 5231265's tree.
+// ⚠ RE-RECORDED at 773e597 (`node test/u-04-record.mjs --commit 773e597`): § 11.2 (Why Fit AF? an outline button in the
+// unselected chip's look). All six contents byte-identical to 5231265's record; each served page 773e597's own build's
+// page with the same content put in, byte for byte (+647 bytes each, the build's lines: S20's note); the visible pages
+// follow (the button's and its no-script link's class). From here the reference is 773e597's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -82,7 +86,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 5231265's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "5231265");
+test("U4: a normal week, the content and the page as served, byte-identical to 773e597's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "773e597");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });
