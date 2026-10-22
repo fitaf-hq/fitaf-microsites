@@ -83,9 +83,10 @@ test("SP6: S1-S17's cases, run against the production Worker with production tru
     const tally = (name) => Number(new RegExp(`^# ${name} (\\d+)$`, "m").exec(r.stdout)?.[1]);
     assert.equal(r.status, 0, `the S cases against production: ${r.stdout.split("\n").filter((l) => /^not ok|# fail/.test(l)).join("; ")}`);
     assert.equal(tally("fail"), 0);
-    // 38: S1-S17's cases as the development Worker runs them (all 18 files, measured 2026-10-21); none skipped here.
-    assert.equal(tally("tests"), 38, "every case ran");
-    assert.equal(tally("pass"), 38, "every case passed");
+    // 38: S1-S17's cases as the development Worker runs them (all 18 files, measured 2026-10-21); none skipped here. 39
+    // since SPEC-save-offer-production § 10.5 added S17c (its control).
+    assert.equal(tally("tests"), 39, "every case ran");
+    assert.equal(tally("pass"), 39, "every case passed");
     const started = (await readFile(log, "utf8")).trim().split("\n").map((l) => JSON.parse(l));
     assert.ok(started.length >= 17, `a production Worker started for each file that starts one (${started.length})`);
     for (const w of started) assert.deepEqual(w, { main: "src/worker/site.js", database: "fitaf-leads-prod", production: true });

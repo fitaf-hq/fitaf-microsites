@@ -731,3 +731,8 @@ failure with no privacy fault.
   message id) is still found. A machine column off its shape is caught. A chance 187 in an exact UUID and instant is read
   as a finding by the old check and not by the new one.
 - After the fix, S17 passed 50 runs of 50, 3/3 each.
+- SP6, which runs S1–S17 against the production Worker and counts their cases, expects 39 (it was 38) for S17c.
+- ⚠ **Found on the suite run after the fix, and not changed here:** SP3's § 4 item 1 case compares each response's
+  headers, `date` included, between two Workers asked one after the other. It failed once (`19:36:08` against
+  `19:36:09`), a second boundary falling between the two requests, and it passed alone. It is a chance failure of the
+  same kind, and fixing it is the orchestrator's to rule.
