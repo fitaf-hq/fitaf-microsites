@@ -439,3 +439,123 @@ the orchestrator's misreading of an offer as a store discount, and is struck by 
    Every golden that moves, re-recorded once.
 7. **Not here**: the wording's v1 (the Advisor's pass on the dev site); `fitaf-infra`'s production database, keys and
    cron (Amendment 1.10, his two bootstrap runs); the production switch.
+
+### 10.1 Built (2026-10-22)
+
+Built on `boston/save-offer-brief` from `5f1e9f8`. Every case was run as a single file at `nice -n 15`; the whole site
+suite once, at `e80ea09`. `data/save.json`'s `production` is still **false** and its wording still `v0.3-draft`.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `600b2a6` | the cases first, run red on `5f1e9f8`'s code and data: SP12–SP14, mutants 5 and 6, and the cases § 10 amends |
+| `a593811` | the code and the inputs as decided; S9's and SP9's fixes found running the cases (below) |
+| `e80ea09` | the goldens it moves (M14, CC-8b, U4), each re-recorded once from `a593811`'s own tree |
+| the next commit | these notes; README and `data/README.md` |
+
+**Cases** (red at `600b2a6`, green at `a593811` with the goldens of `e80ea09`)
+
+| case | red | green |
+|---|---|---|
+| SP12, the price promise (`sp12-price-promise.test.mjs`) | 0/5 | 5/5 |
+| SP13, the gate's offers and sender (`sp13-gate-offer-and-sender.test.mjs`) | 1/3 (the fixture's sender control) | 3/3 |
+| SP14, the official ZIP list (`sp14-official-zips.test.mjs`) | 1/4 (the Worker's in and out, a guard) | 4/4 |
+| SP mutants (`sp-mutants.test.mjs`) | 5/6 (mutant 5's site not yet in `messages.js`) | 6/6 |
+| SP4 | 1/5 | 5/5 |
+| SP3 (its list of moved Worker files) | 4/5 | 5/5 |
+| M14 (two new keys) | 0/1 | 1/1 |
+| SP1, SP2, SP5, SP9, SP10, SP11 | 5/6, 4/5, 2/3, 3/5, 4/6, 1/2: the approved page refused, the base gate refusing the decided sender | 6/6, 5/5, 3/3, 5/5, 6/6, 2/2 |
+
+- **SP12**:
+  - the Boston offer is `code_mode: "none"`, with no code field and `valid_to` 2026-10-29;
+  - E1 for an offer without a code says DRAFT § 3's *"Your pricing is held until October 29, 2026"* and shows no code;
+  - a save on every date from 2026-10-01 to 2026-10-28 (28 dates, the cron's own step, a recording sender): its E1, and
+    its `/o` page on the next morning and on the 29th, say the date held, with no code text. The token appears only in
+    `/o/`'s path;
+  - after `valid_to`, the lapse path: `/o` says the offer ended, the `/confirm` link answers 404, and the contact is kept
+    at 30 days and lapsed at 31;
+  - an ended offer whose current offer has no code shows that offer and *"Good until"*, and nothing is reissued.
+- **SP13**: `code_mode: "none"` without a code is accepted; with a code, or with an unknown `code_mode`, it is refused,
+  naming the offer. `Fit AF <offers@eatfitaf.com>` and `offers@eatfitaf.com` are accepted. An empty sender is refused,
+  and so is one at `example.com`, `eatfitaf.com.example.net`, `noteatfitaf.com` or a bracket.
+- **SP14**: the file holds 316 five-digit codes, exact and sorted, and says its near ring is a mock. 02118 is in;
+  01602 (Worcester, on the list) is in; 18407 (Carbondale, PA) is far; 03101 is near. Every code under the listed prefixes
+  is in exactly when it is listed. The same holds through the Worker's `/api/save` and the development page.
+- **Mutants**: 5, E1 printing the token as a code, fails SP12 at *"no "code" in any visible text"*. 6, the gate still
+  refusing the decided sender, fails SP13 at *"the approved set with the decided sender: nothing refused"*.
+- **Amended, green before and after** (they read E1's second line in the form the offer's `code_mode` names, because a
+  save the Worker makes today gets the Boston offer until 10-29 and the general offer after): S11 4/4, S13 1/1, M8 1/1, M1
+  1/1, M21 3/3 and M15–M20 13/13. S5 is 3/3 with the harness's `NEAR_ZIP` now 03101.
+- ⚠ **Two fixes in `a593811`, missed at `600b2a6`:**
+  - **S9** read its expansion ZIP as a literal 01602 while its save used `NEAR_ZIP`, so `600b2a6` broke it (0/1 there, and
+    SP6's run of it). It now reads `NEAR_ZIP`, and passes on `600b2a6`'s tree too.
+  - **SP9** pinned DRAFT § 6's `[email]` and the fixture's contact. On `600b2a6`'s tree, `a593811`'s SP9 is 3/5, its two
+    contact cases red; it is 5/5 at `a593811`.
+
+**The whole site suite** (`npm test` at `e80ea09`): **1013 of 1014**. The one failure is **S22**, with *"the page has no
+element #save-offer-label"*; it fails the same way on `5f1e9f8`'s own tree (a control run from `git archive`).
+`npm run contrast`: 83 of 83. The rung-4 and rung-5 Chrome files and Storybook were not run: nothing they pin moved.
+
+**Goldens, every changed line** (each re-recorded from `a593811`'s tree extracted by `git archive`)
+
+- **M14** (`recorded_held_from` `a593811`):
+  - the three texts recorded from `4ddd5c4` were checked byte for byte before writing, and are unchanged;
+  - two keys added, `e1_held_ticked` and `e1_held_unticked`: E1 with *"Your pricing is held until October 29, 2026"* in
+    place of the code line, from `inputs.heldOffer`. This is a wording change, § 10 item 3's sentence.
+- **CC-8b**: exactly the five files SP3 names moved, and none was added or removed. The Footer's text and
+  `watch_expected_footer` are unchanged; MS-9 reads the same golden.
+  - `data/delivery-zips.json`: `2b1cef0f…` → `973cdcc4…`
+  - `data/offers.json`: `b1fc0171…` → `82b49dd5…`
+  - `src/worker/messages.js`: `f65e8ca2…` → `45d57b1e…`
+  - `src/worker/redeem.js`: `d1c45d59…` → `2d5e1010…`
+  - `src/worker/zip-class.js`: `29e3d59c…` → `2fc7da26…`
+- **U4** (`node test/u-04-record.mjs --commit a593811`; `recorded_at` `773e597` → `a593811`):
+  - only the three development pages moved, +4,929 bytes each:
+    - the v1 fixture: 84746 `6a3826dc…` → 89675 `bef4158c…`
+    - the v2 fixture: 90618 `e2f65700…` → 95547 `2709de98…`
+    - the committed week: 114362 `dc256760…` → 119291 `899beea3…`
+  - all six contents, production's three entries and every visible page are unchanged.
+  - Proof: `build:dev` of `5f1e9f8`'s and `a593811`'s trees differ in `index.html`, `demo/`, `boston/` and `seminar/` by
+    `save-data` alone (the official list's 316 codes for the mock's eight prefixes; the Boston offer's `valid_to`) and
+    `classifyZip`'s lines. `privacy/index.html` differs by § 6's two filled placeholders. Everything else is identical.
+- **Not moved**: S20 (SP3: the production build is the golden's, byte for byte), WC-9, MS's golden, W4 and QE15.
+
+**Chosen where § 10 is silent, or read**
+
+1. ⚠ **"The plan as saved" (item 3) is not built.** No plan is sent or stored:
+   - `flows/01-save-offer.md` § 4: *"No plan is sent"*;
+   - `flows/01-save-offer.md` § 6: the email does not remember the plan;
+   - `consent/DRAFT.md` § 5: *"Not collected: … plan choice"*;
+   - `SPEC-rung4-save-offer.md` § 4: *"⛔ No … plan"*.
+
+   Saving the plan would change the request, the schema and the consent wording. **An open question** for the
+   orchestrator. E1 and `/o` say the date held and keep their button and link back.
+2. ⚠ **The Boston offer's label stays `[The offer]` here.** The approved label, *"Sign up today to save 25%"*
+   (`label_approved` 2026-10-21), is `boston/print-final`'s (`28e951a`), and that branch carries its print cases.
+   Committing it here would duplicate that change, so it arrives with that merge. The `/o` render shows the placeholder.
+3. **The token.** A save still draws the 8-symbol token into `saves.offer_code`; the column keeps its name and needs no
+   migration. It is the `/o/` link's identifier and is never printed or named as a code.
+4. **DRAFT § 3 carries both forms of E1's second line, each marked.** The code form stays for an offer that carries a code
+   (today's general and past placeholders). A short note under the message says which form the Boston offer takes.
+5. **"Weekly" has no bracket.** §§ 1 and 4 already say *"about once a week"*, so it is recorded as F5's answer in DRAFT § 7,
+   which is not printed. No printed word changed but § 6's contact and days, and the status line is as it was.
+6. **The sender rule.** The gate reads the address of `Name <address>` (or a bare address) and accepts `eatfitaf.com` or a
+   subdomain of it. Its refusal names no value. An unknown `code_mode` is refused too.
+7. **The near ring is read by prefix whatever the list's `match`.** Beside an exact list it would otherwise never match.
+   The official list holds codes under 014–016 and 027–029, which the mock ring's prefixes also name: a listed code is
+   `in`, an unlisted one there is `near`. 01602 is on the list, so the near-ring ZIP of the harness, the dummy saves and
+   the email preview is now 03101.
+8. **`/o` after `valid_to`** shows the current general offer, a placeholder that still has a code (`unique`), with a
+   reissued code. A current offer without a code would show *"Good until"* and nothing reissued (SP12). **An open
+   question:** what the Boston saves' `/o` should show from 10-30.
+9. `delivery-zips.json`'s `region` is now *"the store's Boston delivery zone"*. The zone reaches beyond Massachusetts.
+
+**For the wording pass (not changed):** DRAFT § 1 still promises a code on the page (*"we'll email your code tomorrow
+morning"*, *"we'll send your code here tomorrow"*, *"to send this code once"*), and § 5 speaks of *"the code"* and
+*"The offer code and its event"*.
+
+**Renders** (`dist-dev/renders/`, git-ignored; the development build at `e80ea09`):
+- `e1-ticked-600.png` and `e1-unticked-600.png`: E1 for the Boston event's offer, saved at noon New York on 2026-10-24
+  from `?e=boston`, with the logo read from the local build;
+- `o-page-390.png` and `o-page-1280.png`: `/o/<token>` on 2026-10-25, the Worker's own handler over a fake row.

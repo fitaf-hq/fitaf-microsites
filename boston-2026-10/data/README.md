@@ -15,7 +15,8 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   Worker are as they were (S20, SP3); `true`, the production page carries the save step and the production Worker its
   routes and cron, and `npm run build` **refuses, naming each**, until the wording is `v1` (DRAFT.md's status line with
   its date, no Owner placeholder left), `offers.json` is `approved`, `delivery-zips.json` is `official`, and production's
-  `MAIL_FROM` and `TURNSTILE_SITE_KEY` (wrangler.jsonc's top level) are real. **`privacy_notice_url`**: where the step's
+  `MAIL_FROM` (an address at eatfitaf.com: since § 10 `Fit AF <offers@eatfitaf.com>` is the decided sender, not a
+  placeholder) and `TURNSTILE_SITE_KEY` (wrangler.jsonc's top level) are real. **`privacy_notice_url`**: where the step's
   last line links the privacy notice (DRAFT § 6); `null` shows DRAFT § 1's `[Privacy notice]` placeholder, which a
   production build refuses. Since § 9 (2026-10-21) **`"/privacy/"`**: the page the build makes from DRAFT § 6 (the
   development build always, marked DRAFT; the production build only with `production` true).
@@ -23,7 +24,11 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   every `shared_code` `PLACEHOLDER`) until the Owner's offers are approved. Dates are calendar dates in New
   York, inclusive. A save gets the live `event` offer, else the current `general` one; **exactly one
   `general` offer is current on every date** (test S11b). The past offer exists so the expired paths can be
-  exercised in development.
+  exercised in development. ⭐ Since `SPEC-save-offer-production.md` § 10 (2026-10-22) an offer's `code_mode` may be
+  **`none`**: a price promise, not a discount code. It carries no `shared_code`; a save issues no code (the save's
+  token is only the `/o/` link's identifier); E1 and `/o` say *"Your pricing is held until"* its `valid_to`; and the
+  production build refuses a `none` offer carrying a code. The Boston event's offer is one, held until **2026-10-29**
+  (its label is still `[The offer]` on this line: the approved label is `boston/print-final`'s).
 - **`messages.json`**: the campaign's phrases (the M of POEMS). The page's headline, intro line, tagline (the
   first sentence of its meta description) and top bar come from here (`build.mjs` `messageSlots`), and so
   do the same phrases on the four mock-ups (`mockups/`), plus the mock-ups' own (the scan prompt, the
@@ -62,8 +67,10 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   and **`seminar`** (`?e=seminar`, for the organizers' slide) after `demo`, which **stays first**: the mock-ups'
   default, the development page at `/` and the save step's built-in id read the first event. The printed pieces carry
   `boston` by default (`print/build-print.mjs` `PRINT_EVENT`). Both URLs serve the production page as `/` does.
-- **`delivery-zips.json`**: ⛔ **a MOCK** (`"status": "mock"`) of greater Boston by three-digit ZIP prefix,
-  so the ZIP check of `flows/01-save-offer.md` § 5 can be built. It is **not** the store's delivery area.
-  Replace it with the official list (five-digit ZIPs, `"match": "exact"`, `"status": "official"`); a
-  production build must refuse a `mock` list. Its `near_ring` (equally a mock) lists the areas just outside that reach,
-  so an out-of-area expansion request is classed `near` or `far` (`flows/01-save-offer.md` § 5).
+- **`delivery-zips.json`**: ⭐ since `SPEC-save-offer-production.md` § 10 (2026-10-22) **the store's official Boston
+  delivery zone** (`"status": "official"`, `"match": "exact"`): its 316 five-digit codes, read 2026-10-22, sorted, each
+  `{ "zip" }` in `prefixes` (the key `src/worker/zip-class.js` reads). A snapshot: re-read it from the store when the
+  zone changes. Its `near_ring` is still ⛔ **a MOCK** by three-digit prefix (the areas just outside the mocked reach, so
+  an out-of-area expansion request is classed `near` or `far`, `flows/01-save-offer.md` § 5), read by prefix whatever
+  the list's `match`: a code on the list is `in`, one in the ring's prefixes but not on the list `near`. A production
+  build refuses a `mock` list.
