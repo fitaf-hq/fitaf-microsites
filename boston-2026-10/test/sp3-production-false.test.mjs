@@ -131,6 +131,31 @@ const REQUESTS = [
   ["GET", "/fonts/poppins-latin-700-normal.woff2"],
 ];
 
+/** SPEC-save-offer-production § 10.6 (the orchestrator's ruling, 2026-10-22): the `date` response header is the clock,
+ *  not the Worker's behaviour (two Workers asked one after the other can straddle a second). Its VALUE is the one thing
+ *  not compared; whether a response carries one is (measured: the Worker's own /week/ responses carry none, every other
+ *  response here does, and the case below holds that list). Every other header, the status and the body, byte for byte. */
+const CLOCK_HEADER = "date";
+/** The requests whose responses carry no `date` (the sheets the Worker answers itself from the bucket). */
+const WITHOUT_DATE = ["GET /week/chefs-choice-2026-10-18.jpg", "GET /week/nothing-here.jpg"];
+function assertSameResponse(a, b, where) {
+  assert.equal(a.status, b.status, `${where}: status`);
+  assert.equal(CLOCK_HEADER in a.headers, CLOCK_HEADER in b.headers, `${where}: a ${CLOCK_HEADER} header on both responses or neither`);
+  const { [CLOCK_HEADER]: _a, ...aHeaders } = a.headers;
+  const { [CLOCK_HEADER]: _b, ...bHeaders } = b.headers;
+  assert.deepEqual(aHeaders, bHeaders, `${where}: headers`);
+  assert.ok(a.body.equals(b.body), `${where}: body`);
+}
+
+test("SP3 (§ 10.6, control): responses differing only in their date are the same; in any other header, or without a date, they are not", () => {
+  const response = (headers) => ({ status: 200, headers: { "content-type": "font/woff2", date: "Thu, 22 Oct 2026 19:36:08 GMT", ...headers }, body: Buffer.from("font") });
+  assertSameResponse(response({}), response({ date: "Thu, 22 Oct 2026 19:36:09 GMT" }), "a second apart");
+  assert.throws(() => assertSameResponse(response({}), response({ "cache-control": "no-store" }), "control"), /control: headers/, "another header differing still fails");
+  assert.throws(() => assertSameResponse(response({}), response({ "content-type": "text/html" }), "control"), /control: headers/);
+  const { date, ...withoutDate } = response({}).headers;
+  assert.throws(() => assertSameResponse(response({}), { ...response({}), headers: withoutDate }, "control"), /a date header on both responses or neither/, "a date on one side only fails");
+});
+
 test("SP3 (§ 4 item 1): the production Worker answers every request as the base's, byte for byte, and has no scheduled handler", async () => {
   const page = "<!doctype html><title>p</title><script type=\"application/json\" id=\"picks-data\">{\"weeks\":[]}</script>";
   const week = JSON.stringify({ weeks: [{ carts: {} }] });
@@ -142,9 +167,9 @@ test("SP3 (§ 4 item 1): the production Worker answers every request as the base
     for (const [method, path, body] of REQUESTS) {
       const init = { method, ...(body ? { body, headers: { "content-type": "application/json" } } : {}) };
       const [a, b] = [await now.get(path, init), await before.get(path, init)];
-      assert.equal(a.status, b.status, `${method} ${path}: status`);
-      assert.deepEqual(a.headers, b.headers, `${method} ${path}: headers`);
-      assert.ok(a.body.equals(b.body), `${method} ${path}: body`);
+      assertSameResponse(a, b, `${method} ${path}`);
+      const dated = CLOCK_HEADER in a.headers;
+      assert.equal(dated, !WITHOUT_DATE.includes(`${method} ${path}`), `${method} ${path}: ${dated ? "carries" : "carries no"} ${CLOCK_HEADER} header, as measured`);
     }
     assert.deepEqual(now.assetRequests, before.assetRequests, "the same requests of the assets");
   } finally {

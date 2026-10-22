@@ -736,3 +736,20 @@ failure with no privacy fault.
   headers, `date` included, between two Workers asked one after the other. It failed once (`19:36:08` against
   `19:36:09`), a second boundary falling between the two requests, and it passed alone. It is a chance failure of the
   same kind, and fixing it is the orchestrator's to rule.
+
+## 10.6 Ruling, 2026-10-22 (the orchestrator, on § 10.5's SP3 finding): the `date` header is the clock
+
+The `date` response header is the clock, not the Worker's behaviour.
+
+- SP3's § 4 item 1 case (`assertSameResponse`) compares every response's status, body and headers with the base's,
+  `date`'s value alone apart. That exception is named once, with its reason, in the test.
+- **What the ruling assumed did not hold.** Measured, the Worker's own `/week/` responses (its sheets answered from the
+  bucket) carry no `date` at all; the other eight responses do. So instead of asserting that every response carries a
+  `date`, the case asserts two things:
+  - a `date` header is on both responses or on neither;
+  - which responses carry one is exactly that measured list.
+- **The control** (its own case):
+  - two otherwise-equal responses a second apart are the same;
+  - two that differ in another header (`cache-control`, `content-type`) still fail SP3;
+  - a `date` on one side only fails.
+- SP3 alone passed 20 runs of 20, 6/6 each.
