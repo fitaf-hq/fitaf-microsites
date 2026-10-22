@@ -39,7 +39,21 @@ test.after(() => base.dispose());
 
 /** The files this contract changes in the development Worker's reach (SPEC § 8 lists why each moves). */
 // src/worker/redeem.js since § 9.2: /o's Build my plan is /?e=<event_id>#from-email.
-const MOVED_WORKER_FILES = ["data/events.json", "data/save.json", "src/worker/choose-sender.js", "src/worker/pages.js", "src/worker/redeem.js", "src/worker/site.js"];
+// Since § 10 (the offer a price promise): data/offers.json (the Boston offer's code_mode none and valid_to), data/delivery-
+// zips.json (the official list), src/worker/messages.js (E1's date held), src/worker/redeem.js (/o's) and
+// src/worker/zip-class.js (the near ring by prefix beside an exact list).
+const MOVED_WORKER_FILES = [
+  "data/delivery-zips.json",
+  "data/events.json",
+  "data/offers.json",
+  "data/save.json",
+  "src/worker/choose-sender.js",
+  "src/worker/messages.js",
+  "src/worker/pages.js",
+  "src/worker/redeem.js",
+  "src/worker/site.js",
+  "src/worker/zip-class.js",
+];
 
 /** § 9 item 2's change to a page's analytics script, applied to the base's page: qrEvent's declaration and QR_IDS at the
  *  script's head, the open reading qrEvent. The only difference SP3 allows the production page with production false. */

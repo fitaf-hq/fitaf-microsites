@@ -1,5 +1,6 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
+import { offerById } from "../src/worker/offers.js";
 import { RESEND_URL, USER_AGENT } from "../src/worker/resend-sender.js";
 import { tokenHash } from "../src/worker/token.js";
 import { linkIn, startWorker, TEST_CONFIRM_TOKEN_KEY } from "./worker-harness.mjs";
@@ -39,7 +40,8 @@ test("M1: accepted -> `sent`, provider_message_id stored; the request carries fr
   assert.equal(body.from, MAIL_FROM);
   assert.deepEqual(body.to, [to]);
   assert.equal(body.subject, "Your Fit AF offer, as promised");
-  assert.match(body.text, /Your code: /);
+  // SPEC-save-offer-production § 10: an offer without a code (the Boston event's) says the date its pricing is held until.
+  assert.match(body.text, offerById(before.offer_id).code_mode === "none" ? /Your pricing is held until / : /Your code: /);
   assert.match(body.html, /^<!doctype html>/);
 
   const row = await saveRow(db, to);

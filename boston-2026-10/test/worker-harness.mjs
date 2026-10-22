@@ -29,7 +29,9 @@ export const TOKEN_THAT_FAILS = "fail-token";
 export const TOKEN = "XXXX.DUMMY.TOKEN.XXXX"; // what Cloudflare's test sitekeys hand the page
 export const EVENT_ID = events[0].id;
 export const IN_ZIP = "02118";
-export const NEAR_ZIP = "01602";
+// SPEC-save-offer-production § 10 item 5: 01602 (Worcester) is on the store's official list, so the near ring's case is a
+// code in its (mock) 030 that the list does not hold: Manchester, NH.
+export const NEAR_ZIP = "03101";
 export const FAR_ZIP = "10001";
 export const CODE_RE = /^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 export const ISO_RE = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/;

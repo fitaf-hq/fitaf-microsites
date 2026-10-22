@@ -9,10 +9,12 @@
 //     [Mailchimp]); every other word as committed;
 //   - data/offers.json: "status": "approved", every label the fixture's (distinct, no bracket), the shared code a
 //     fixture's (no PLACEHOLDER; invented, it is no store's code);
-//   - data/delivery-zips.json: "status": "official" (the list itself as committed);
-//   - the production vars (wrangler.jsonc's top level): a sender that is not the placeholder, and a site key that is not
-//     one of Cloudflare's published test keys (both invented).
-// ⛔ Nothing here is a real code, key or address: every address is @example.com.
+//   - data/delivery-zips.json: "status": "official" (the list itself as committed; since § 10 the committed list is the
+//     official one, and "the ZIPs a mock" sets it back);
+//   - the production vars (wrangler.jsonc's top level): the decided sender (§ 10 item 4: Fit AF <offers@eatfitaf.com>, no
+//     longer a placeholder), and a site key that is not one of Cloudflare's published test keys (invented).
+// ⛔ Nothing here is a real code or key, and no address is a person's: every address is @example.com but the business's
+//    own decided sender.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -32,7 +34,7 @@ export const TURNSTILE_SCRIPT = "https://challenges.cloudflare.com/turnstile/v0/
 /** The production vars a release would carry (§ 4.3), invented: none of them is real. */
 export const APPROVED_VARS = Object.freeze({
   SITE_URL: "https://eatfitaf.com",
-  MAIL_FROM: "Fit AF <offers-sp-fixture@example.com>",
+  MAIL_FROM: "Fit AF <offers@eatfitaf.com>", // § 10 item 4: the decided sender
   TURNSTILE_SITE_KEY: "0x4AAAAAAA-sp-fixture-site-key",
   SEND_WITHOUT_ALLOWLIST: "true",
 });
@@ -40,7 +42,8 @@ export const APPROVED_VERSION = "v1";
 export const APPROVED_STATUS = "**Status**: ✅ **Approved — v1, 2026-10-24** (the sp fixture's: no word below is changed by it).";
 export const PRIVACY_URL = "/privacy/";
 export const FIXTURE_CODE = "SPFIXTURE25"; // invented: no store has it
-/** DRAFT § 6's Owner placeholders and what the fixture fills them with. */
+/** DRAFT § 6's Owner placeholders and what the fixture fills them with. Since § 10 item 5 the committed draft fills [email]
+ *  and [30] itself (privacy@eatfitaf.com, 30), so only [Mailchimp] is left for the fixture to fill. */
 export const DRAFT_FILLS = { "[email]": "privacy@example.com", "[30]": "30", "[Mailchimp]": "Mailchimp" };
 
 /** The parts a refusal case may leave unfixed, each with the words its refusal must name. */
@@ -48,13 +51,17 @@ export const UNFIXED = {
   "a draft wording version": { name: /wording_version v0\.3-draft is a draft/ },
   "the status line still a draft": { name: /consent\/DRAFT\.md.*status line does not approve v1/ },
   "v1 not a known version": { name: /known_wording_versions does not hold v1/ },
-  "a bracket left in DRAFT § 6": { name: /DRAFT\.md § 6 holds a placeholder: \[email\]/ },
+  "a bracket left in DRAFT § 6": { name: /DRAFT\.md § 6 holds a placeholder: \[Mailchimp\]/ },
   "no privacy notice to link": { name: /the page prints a placeholder: \[Privacy notice\]/ },
   "offers a placeholder": { name: /data\/offers\.json: status is placeholder, not approved/ },
   "an offer's label a placeholder": { name: /data\/offers\.json: offer .* label is a placeholder: \[The offer\]/ },
   "an offer's code a placeholder": { name: /data\/offers\.json: offer .* shared_code is a placeholder/ },
   "the ZIPs a mock": { name: /data\/delivery-zips\.json: status is mock, not official/ },
-  "the placeholder sender": { name: /MAIL_FROM is the placeholder Fit AF <offers@eatfitaf\.com>/ },
+  // § 10 item 4: the decided sender is not a placeholder; the gate refuses only an empty sender or one outside eatfitaf.com,
+  // and an offer whose code_mode is none carrying a code.
+  "an empty sender": { name: /vars\.MAIL_FROM is not set/ },
+  "a sender outside eatfitaf.com": { name: /vars\.MAIL_FROM is not an address at eatfitaf\.com/ },
+  "a code on an offer without codes": { name: /offer event-boston-2026-10-placeholder carries a code/ },
   "a test site key": { name: /TURNSTILE_SITE_KEY is one of Cloudflare's test keys/ },
 };
 
@@ -79,7 +86,7 @@ export async function productionInputs({ unfixed = null, production = true } = {
   let draft = await readFile(DRAFT_FILE, "utf8");
   if (!leave("the status line still a draft")) draft = draft.replace(/^\*\*Status\*\*:.*$/m, APPROVED_STATUS);
   for (const [placeholder, value] of Object.entries(DRAFT_FILLS)) {
-    if (leave("a bracket left in DRAFT § 6") && placeholder === "[email]") continue;
+    if (leave("a bracket left in DRAFT § 6") && placeholder === "[Mailchimp]") continue;
     draft = draft.replaceAll(placeholder, value);
   }
 
@@ -89,12 +96,16 @@ export async function productionInputs({ unfixed = null, production = true } = {
     if (!(leave("an offer's label a placeholder") && i === 0)) o.label = `SP fixture offer ${i + 1}: 25% off every cart`;
     if ("shared_code" in o && !leave("an offer's code a placeholder")) o.shared_code = FIXTURE_CODE;
   }
+  if (leave("a code on an offer without codes")) {
+    Object.assign(offers.offers.find((o) => o.id === "event-boston-2026-10-placeholder"), { code_mode: "none", shared_code: FIXTURE_CODE });
+  }
 
   const zips = JSON.parse(await readFile(ZIPS_FILE, "utf8"));
-  if (!leave("the ZIPs a mock")) zips.status = "official";
+  zips.status = leave("the ZIPs a mock") ? "mock" : "official";
 
   const vars = { ...APPROVED_VARS };
-  if (leave("the placeholder sender")) vars.MAIL_FROM = "Fit AF <offers@eatfitaf.com>";
+  if (leave("an empty sender")) vars.MAIL_FROM = "";
+  if (leave("a sender outside eatfitaf.com")) vars.MAIL_FROM = "Fit AF <offers-sp-fixture@example.com>";
   if (leave("a test site key")) vars.TURNSTILE_SITE_KEY = "1x00000000000000000000AA";
 
   const paths = { savePath: join(dir, "save.json"), offersPath: join(dir, "offers.json"), zipsPath: join(dir, "delivery-zips.json"), draftPath: join(dir, "DRAFT.md") };

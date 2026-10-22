@@ -4,6 +4,8 @@
 //   2. production sending through the allowlist           -> SP7 (production sends) fails
 //   3. the draft tag kept in production                   -> SP4 (the approved page has no draft tag) fails
 //   4. (§ 9 item 3) the page sends the first event whatever the code -> SP10 fails
+//   5. (§ 10 item 6) E1 printing the token as a code                  -> SP12 (no code text) fails
+//   6. (§ 10 item 6) the gate still refusing the decided sender        -> SP13 (the decided sender accepted) fails
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -16,6 +18,7 @@ import { approvedPage, assertEachRefusal, assertNoDraftMarking } from "./sp-prod
 import { assertProductionSends } from "./sp-sending.mjs";
 import { assertEventFromCode } from "./sp-fixture.mjs";
 import { devPage } from "./dev-page.mjs";
+import { assertE1Promise, assertGateRules } from "./sp-promise.mjs";
 
 /** `file` (relative to `dir`) with `from` replaced by `to`, exactly once. */
 async function mutate(dir, file, from, to) {
@@ -64,4 +67,45 @@ test("mutant 4: the page sends the first event whatever the code -> SP10 fails",
   const site = "qrEvent(location.search, QR_IDS) || cfg.event_id";
   assert.equal(html.split(site).length - 1, 1, "the mutation site occurs exactly once in the page");
   await assert.rejects(assertEventFromCode(html.replace(site, "cfg.event_id"), { fallback: "demo" }), /\?e=boston sends boston/);
+});
+
+/** A copy of `file` (under src/worker/ or scripts/) with `from` replaced by `to`, exactly once, its relative imports
+ *  pointing at the real modules; returns the copy's module. */
+async function mutantModule(dir, file, from, to) {
+  const path = join(ROOT, dir, file);
+  const source = await readFile(path, "utf8");
+  assert.equal(source.split(from).length - 1, 1, `the mutation site occurs exactly once in ${file}`);
+  const tmp = await mkdtemp(join(tmpdir(), "boston-sp-mutant-"));
+  const copy = source.replace(from, to).replace(/from "\.\/([^"]+)"/g, (_, f) => `from "${pathToFileURL(join(ROOT, dir, f)).href}"`);
+  const out = join(tmp, file.replace(/\.(m?js)$/, ".mutant.$1"));
+  await writeFile(out, copy);
+  return { module: await import(pathToFileURL(out).href), dispose: () => rm(tmp, { recursive: true, force: true }) };
+}
+
+test("mutant 5: E1 printing the token as a code -> SP12 fails", async () => {
+  const { module, dispose } = await mutantModule(
+    join("src", "worker"),
+    "messages.js",
+    '["Your pricing is held until ", strong(longDate(offer.valid_to))]',
+    '[strong(`Your code: ${displayCode(code)}`), " · ", "Your pricing is held until ", strong(longDate(offer.valid_to))]',
+  );
+  try {
+    await assert.rejects(assertE1Promise(module.e1), /no "code" in any visible text/);
+  } finally {
+    await dispose();
+  }
+});
+
+test("mutant 6: the gate still refusing the decided sender -> SP13 fails", async () => {
+  const { module, dispose } = await mutantModule(
+    "scripts",
+    "production-inputs.mjs",
+    "function varRefusals(vars) {\n  const out = [];\n",
+    'function varRefusals(vars) {\n  const out = [];\n  if (vars.MAIL_FROM === "Fit AF <offers@eatfitaf.com>") out.push("wrangler.jsonc vars.MAIL_FROM is the placeholder Fit AF <offers@eatfitaf.com>"); // MUTANT\n',
+  );
+  try {
+    await assert.rejects(assertGateRules(module.productionRefusals), /the approved set with the decided sender: nothing refused/);
+  } finally {
+    await dispose();
+  }
 });

@@ -13,7 +13,7 @@ import { postSave, rows, runSendDue, validSave, FixedRedemptions, TEST_CONFIRM_T
 import { hrefsOf, lineTexts } from "./email-html.mjs";
 
 export const DUMMY_KEY = "re_DUMMY_KEY_FOR_TESTS_ONLY"; // not a key: nothing it is sent to exists
-export const MAIL_FROM = "Fit AF <offers@eatfitaf.com>"; // the committed placeholder
+export const MAIL_FROM = "Fit AF <offers@eatfitaf.com>"; // the committed sender (SPEC-save-offer-production § 10 item 4: decided)
 export const DELIVERED = "delivered@resend.dev";
 export const BOUNCED = "bounced@resend.dev";
 export const MINUTE_MS = 60_000;
@@ -52,17 +52,29 @@ export async function saveRow(db, email) {
 
 export const send = (db, nowMs, sender) => runSendDue(db, { nowMs, sender, redemptions: new FixedRedemptions() });
 
-/** DRAFT § 3's message as lines of plain text: emphasis, the "(only if…)" note and button brackets removed. */
-export async function draftMessage(heading) {
+/** SPEC-save-offer-production § 10: E1's second line has two forms in DRAFT § 3, each marked: for an offer without a code
+ *  (`code_mode` "none") the date its pricing is held until, for one with a code the code. A marked line is kept only for
+ *  the form `codeMode` names, its marker removed. */
+const FORMS = [
+  ["*(an offer without a code)*", (codeMode) => codeMode === "none"],
+  ["*(an offer with a code)*", (codeMode) => codeMode !== "none"],
+];
+export const keepForm = (codeMode) => (line) => FORMS.every(([marker, keep]) => !line.startsWith(marker) || keep(codeMode));
+export const dropForm = (line) => FORMS.reduce((l, [marker]) => (l.startsWith(marker) ? l.slice(marker.length) : l), line);
+
+/** DRAFT § 3's message as lines of plain text: emphasis, the "(only if…)" note and button brackets removed; for E1, the
+ *  form of its second line for `codeMode` (the offer's code_mode). */
+export async function draftMessage(heading, { codeMode } = {}) {
   const md = await readFile(join(ROOT, "consent", "DRAFT.md"), "utf8");
   const part = md.split("## 3. The emails")[1].split("## 4.")[0].split(heading)[1].split(/\n\*\*E|\n## /)[0];
   const subject = /Subject: \*([^*]+)\*/.exec(part)[1];
   const lines = part
     .split("\n")
     .filter((l) => l.startsWith("> "))
+    .map((l) => l.slice(2))
+    .filter(keepForm(codeMode))
     .map((l) =>
-      l
-        .slice(2)
+      dropForm(l)
         .replace(/\*\(only if the box was ticked\)\*\s*/, "")
         .replace(/\[ ([^\]]+) \]/g, "$1")
         .replace(/\*+/g, "")

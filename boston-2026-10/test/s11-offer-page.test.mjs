@@ -1,6 +1,7 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import offersFile from "../data/offers.json" with { type: "json" };
+import { longDate, offerById } from "../src/worker/offers.js";
 import { validateSave } from "../src/worker/validate-save.js";
 import { addDays } from "../src/worker/zoned-time.js";
 import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
@@ -10,14 +11,23 @@ const { mf, db } = await startWorker();
 after(() => mf.dispose());
 const codeOnPage = (text) => /Your code: <strong>([A-Z0-9]{4})-([A-Z0-9]{4})<\/strong>/.exec(text)?.slice(1).join("");
 
-test("S11: /o/<code> ORIGINAL — a known code whose offer is live shows that code", async () => {
+// The save is made today, so its offer is the one live today: since SPEC-save-offer-production § 10 the Boston event's
+// offer (2026-10-01 to 2026-10-29) has no code and its page says the date its pricing is held until, and the general
+// offer after it has one (SP12 holds the Boston offer's page at fixed dates).
+test("S11: /o/<code> ORIGINAL — a known code whose offer is live shows that offer: its code, or the date it is held until", async () => {
   await postSave(mf, validSave({ email: "dummy-o1@example.com" }));
-  const { offer_code: code, event_id } = await db.prepare("SELECT offer_code, event_id FROM saves").first();
+  const { offer_code: code, event_id, offer_id } = await db.prepare("SELECT offer_code, event_id, offer_id FROM saves").first();
+  const offer = offerById(offer_id);
   for (const path of [`/o/${code}`, `/o/${code.slice(0, 4)}-${code.slice(4)}`]) {
     const res = await fetchPage(mf, path);
     assert.equal(res.status, 200);
     assert.match(res.text, /<h1>Your offer<\/h1>/);
-    assert.equal(codeOnPage(res.text), code);
+    if (offer.code_mode === "none") {
+      assert.match(res.text, new RegExp(`<p>Your pricing is held until <strong>${longDate(offer.valid_to)}</strong></p>`));
+      assert.ok(!res.text.includes(code) && !/code/i.test(res.text.replace(/<[^>]*>/g, " ")), "no code on the page");
+    } else {
+      assert.equal(codeOnPage(res.text), code);
+    }
     // SPEC-save-offer-production § 9.2 (ruled 2026-10-21): the page at /, the save's event in ?e=, #from-email (production
     // serves the page at / alone; /<event-id>/ is the development build's).
     assert.match(res.text, new RegExp(`href="/\\?e=${event_id}#from-email">Build my plan →`));
@@ -64,6 +74,7 @@ test("S11: CURRENT — unknown and malformed codes get byte-identical pages, and
   assert.equal((await dumpAllTables(db)).text, before);
 });
 
+// Since SPEC-save-offer-production § 10 an offer may carry `code_mode: "none"` (no code field): the Boston event's does.
 test("S11b: data/offers.json — placeholders only, and exactly one general offer current on every date", () => {
   assert.equal(offersFile.status, "placeholder");
   const { offers } = offersFile;
@@ -73,7 +84,7 @@ test("S11b: data/offers.json — placeholders only, and exactly one general offe
     assert.deepEqual(Object.keys(o).filter((k) => !["id", "label", "applies_to", "valid_from", "valid_to", "code_mode", "shared_code"].includes(k)), []);
     assert.equal(o.label, "[The offer]", `${o.id} is a placeholder`);
     assert.ok(["event", "general"].includes(o.applies_to));
-    assert.ok(["unique", "shared"].includes(o.code_mode));
+    assert.ok(["unique", "shared", "none"].includes(o.code_mode));
     assert.equal(o.code_mode === "shared" ? o.shared_code : undefined, o.code_mode === "shared" ? "PLACEHOLDER" : undefined);
     assert.ok(o.valid_from <= o.valid_to, `${o.id} dates in order`);
   }
