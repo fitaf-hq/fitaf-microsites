@@ -26,6 +26,7 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
+import { rangeless } from "./cc-harness.mjs";
 import { scriptJsonRef } from "./wc-checks.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW, sheetUrlCount, WEEK_SHEET_URL } from "./wc-regression.mjs";
 import { contentOf, noWeekPage, pageAsset, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
@@ -49,13 +50,18 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
     assert.deepEqual(written, ["chefs-choice-2026-10-18.jpg", "picks-data.json"], "the week's data and its one sheet");
     const text = await readFile(join(out, WEEK_DATA_KEY), "utf8");
     const before = JSON.stringify(golden.picks_data);
-    const after = asWeekUrls(before);
+    // ⚠ Amended for SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): each heading is the menu's name alone, a
+    // phrase the content fills, so 409b805's is read with each heading's " (<range>)" removed (cc-harness rangeless),
+    // every other byte its own.
+    const read = rangeless(Buffer.from(asWeekUrls(before), "utf8"), WEEK_1018);
+    assert.ok(read.headings > 0, "control: 409b805's headings name the week's range");
+    const after = read.bytes.toString("utf8");
     assert.ok(sheetUrlCount(before) > 0 && sheetUrlCount(after) === 0, "control: the URLs were rewritten");
     assert.equal(sheetUrlCount(text), 0, "no URL of the build's sheet path is left");
     assert.ok(text.includes(WEEK_SHEET_URL), `the sheet at ${WEEK_SHEET_URL}`);
     assert.deepEqual(JSON.parse(text), JSON.parse(after), "the JSON value, the sheet's URL apart");
     assert.equal(text, scriptJsonRef(JSON.parse(after)), "the bytes: the element's text as the build writes it, the URL apart");
-    assert.notDeepEqual(JSON.parse(text), golden.picks_data, "control: the URL is the one difference");
+    assert.notDeepEqual(JSON.parse(text), golden.picks_data, "control: the URL and the headings' range are the differences");
     const sheet = await readFile(join(out, sheetKeyOf(SHEET_1018)));
     assert.ok(sheet.equals(SHEET), "the sheet byte-identical to src/assets/photo-sheets/");
     assert.equal(sha256(sheet), golden.sheet.sha256, "and to 409b805's");

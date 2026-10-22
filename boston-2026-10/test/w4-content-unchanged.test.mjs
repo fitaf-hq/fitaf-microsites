@@ -8,6 +8,9 @@
 // ⚠ Pinned to 6e0f6bd's inputs: a week's picks file committed later (2026-11-01's, at the store's switch) changes what
 // this tree makes for that week by design and turns its half of W4 red; it is then retired, as the contract's
 // comparison was a release check of this change.
+// ⚠ AMENDED for SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): the heading, a phrase the content fills, is the
+// menu's name alone, so the base's week/picks-data.json is compared as § 11 makes it, each cart's heading's " (<range>)"
+// removed (cc-harness rangeless: every other byte the base's), and the report's line for it names those bytes.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -16,8 +19,10 @@ import { mkdir, mkdtemp, readdir, readFile, realpath, rm, symlink } from "node:f
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { ROOT } from "../build.mjs";
+import { rangeless, reportWith } from "./cc-harness.mjs";
 
 const BASE = "6e0f6bd";
+const DATA_FILE = "week/picks-data.json";
 const WEEKS = ["2026-10-25", "2026-11-01"];
 const TARGETS = [[], ["--env", "dev"]];
 
@@ -70,6 +75,12 @@ for (const week of WEEKS) {
     test(`W4 (${week}, ${target}): npm run content byte-identical to ${BASE}'s`, async () => {
       const before = await contentAt(basePackage, week, args, scratch);
       const after = await contentAt(ROOT, week, args, scratch);
+      if (before.files[DATA_FILE]) {
+        const read = rangeless(before.files[DATA_FILE], week);
+        assert.ok(read.headings > 0, `control: ${BASE}'s headings name the week's range`);
+        before.files[DATA_FILE] = read.bytes;
+        before.stdout = reportWith(before.stdout, DATA_FILE, read.bytes);
+      }
       assert.equal(after.status, before.status, `the exit code (${BASE}: ${before.status}; ${before.stderr.trim()})`);
       assert.deepEqual(Object.keys(after.files), Object.keys(before.files), "the same files");
       for (const [path, bytes] of Object.entries(before.files)) assert.ok(after.files[path].equals(bytes), `${path} byte for byte`);

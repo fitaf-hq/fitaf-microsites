@@ -26,6 +26,14 @@
   --signature: #8cc63f;
   --performance: #f7941d;
   --family: #f5bb00;
+  /* SPEC-every-menu-and-nutrition § 11 item 4.1: the meal's rings, the store's own colours (Fit AF's theme,
+     snippets/fitaf-ring.liquid): the track, and each number's arc */
+  --ring-track: #eceef0;
+  --ring-cal: #888888;
+  --ring-protein: #ffad0d;
+  --ring-carbs: #3ed3a3;
+  --ring-fat: #ff5d5d;
+  --ring-fiber: #303030;
   --radius: 6px;
   --head: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -171,10 +179,11 @@ section.panel { padding-top: 28px; }
 .cell b { display: block; font-size: 17px; color: var(--navy); font-variant-numeric: tabular-nums; }
 .cell small { display: block; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* Why Fit AF? (SPEC-why-fit-af § 2): a second button beside See all plans, in its style, opening the /why/ page in a
-   frame inside the plans dialog's box, as tall as the viewport allows; the page scrolls inside the frame */
-.all-link + .all-link { margin-left: 24px; }
-.all-link[hidden] + .all-link { margin-left: 0; }
+/* Why Fit AF? (SPEC-why-fit-af § 2): a button in See all plans' style, the page's quieter button, opening the /why/ page
+   in a frame inside the plans dialog's box, as tall as the viewport allows; the page scrolls inside the frame. Since
+   SPEC-every-menu-and-nutrition § 11 item 5 (the Advisor's review, 2026-10-22) it sits directly above the tabs, the
+   column's width and at least the card's touch target tall (64 px, § 10), its no-script link in the same place */
+.why-link { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 64px; margin: 0 0 8px; }
 .why { height: calc(100% - 24px); }
 .why .all-box { display: flex; flex-direction: column; height: 100%; }
 .why-frame { flex: 1; display: block; width: 100%; min-height: 0; border: 0; }
@@ -190,7 +199,7 @@ section.panel { padding-top: 28px; }
 .footnote { margin: 2px 0 0; }
 
 @media (min-width: 720px) {
-  .tabs { max-width: 420px; }
+  .tabs, .why-link { max-width: 420px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{DEV_STYLE}}{{PICKS_STYLE}}
 </style>
@@ -202,6 +211,13 @@ section.panel { padding-top: 28px; }
 </div>{{OFFER_BOX}}
 
 <main class="wrap">
+  <button type="button" class="all-link why-link js-only" id="why-link" aria-haspopup="dialog" aria-controls="why">Why Fit AF?</button><noscript><a class="all-link why-link" href="{{ASSET_PREFIX}}why/">Why Fit AF?</a></noscript>
+  <dialog class="all why" id="why" aria-label="Why Fit AF?">
+    <div class="all-box">
+      <div class="all-head js-only"><button type="button" class="all-close" id="why-close" aria-label="Close">&times;</button></div>
+      <iframe class="why-frame" id="why-frame" src="{{ASSET_PREFIX}}why/" title="Why Fit AF?" loading="lazy"></iframe>
+    </div>
+  </dialog>
   <div class="tabs js-only" role="tablist" aria-label="Who is this for?">
     <button class="tab" role="tab" id="tab-individual" aria-controls="panel-individual" aria-selected="true" data-tab="individual">Individual</button>
     <button class="tab" role="tab" id="tab-family" aria-controls="panel-family" aria-selected="false" data-tab="family" tabindex="-1">Family</button>
@@ -251,13 +267,7 @@ section.panel { padding-top: 28px; }
 </main>
 
 <footer class="foot">
-  <div class="wrap"><button type="button" class="all-link js-only" id="all-link" aria-haspopup="dialog" aria-controls="all">See all plans</button><button type="button" class="all-link js-only" id="why-link" aria-haspopup="dialog" aria-controls="why">Why Fit AF?</button><noscript><a class="all-link" href="{{ASSET_PREFIX}}why/">Why Fit AF?</a></noscript><p class="footnote">{{FOOTNOTE}}</p></div>
-  <dialog class="all why" id="why" aria-label="Why Fit AF?">
-    <div class="all-box">
-      <div class="all-head js-only"><button type="button" class="all-close" id="why-close" aria-label="Close">&times;</button></div>
-      <iframe class="why-frame" id="why-frame" src="{{ASSET_PREFIX}}why/" title="Why Fit AF?" loading="lazy"></iframe>
-    </div>
-  </dialog>
+  <div class="wrap"><button type="button" class="all-link js-only" id="all-link" aria-haspopup="dialog" aria-controls="all">See all plans</button><p class="footnote">{{FOOTNOTE}}</p></div>
 </footer>
 
 {{ANALYTICS}}

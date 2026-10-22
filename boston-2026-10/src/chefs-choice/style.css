@@ -30,16 +30,27 @@ button.cta { width: 100%; border: 0; cursor: pointer; }
 .cc-menu span:hover { border-color: var(--field); }
 .cc-menu input:checked + span { border-color: var(--navy); background: var(--navy); color: var(--white); }
 .cc-menu input:focus-visible + span { outline: 3px solid var(--navy); outline-offset: 3px; }
-/* Each meal's nutrition (§ 3): its line for the chosen size under its name. With ingredients the meal's whole row (its
-   tile, its name and its line) is the button (§ 10 item 1), at least the touch target tall, its mark a chevron that
-   turns when the meal is open (§ 10 item 2: "more", never the + of adding a meal), the ingredients beneath it. A meal
-   with neither keeps the row it always had */
-.cc-text { display: block; flex: 1; min-width: 0; }
-.cc-text .cc-name { display: block; }
+/* Each meal's nutrition (§ 3, § 11: the Advisor's review of 2026-10-22). A meal with numbers for the chosen size or
+   ingredients: its whole row, its tile and its name, is the button (§ 10 item 1), at least the touch target tall, its
+   mark a circled "i" (§ 11 item 3: "more", never the + of adding a meal; the same open or closed), the panel beneath it.
+   A meal with neither keeps the row it always had */
 .cc-meals li.cc-control { display: block; }
 .cc-meal { display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--touch-target); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.cc-mark { flex: none; width: 10px; height: 10px; margin: 0 8px 4px 4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; color: var(--navy); transform: rotate(45deg); transition: transform .15s ease-out; }
-button.cc-meal[aria-expanded="true"] .cc-mark { transform: translateY(4px) rotate(-135deg); }
-.cc-line { display: block; margin-top: 2px; color: var(--muted); font-size: 14px; }
+.cc-meal .cc-name { flex: 1; min-width: 0; }
+.cc-mark { flex: none; display: block; width: 24px; height: 24px; margin-right: 4px; color: var(--navy); }
 .cc-more { margin: 4px 0 2px 68px; color: var(--ink); font-size: 14px; }
 .cc-more p { margin: 0 0 4px; }
+/* § 11 item 4: the panel's rings first, the store's own (Fit AF's theme, fitaf.css .fam-macros and fitaf-ring.liquid):
+   one row of five that wraps on a phone, each a circle of about 56 px, its value in the middle and its label beneath, in
+   the page's text colour; the arcs and the track are graphics beside the printed numbers, each colour a token */
+.cc-rings { display: flex; flex-wrap: wrap; gap: 10px 12px; margin: 6px 0 12px; }
+.cc-ring { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px; color: var(--ink); }
+.cc-ring svg { display: block; width: 56px; height: 56px; }
+.cc-ring-value { position: absolute; top: 0; left: 0; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font: 700 14px/1 var(--body); }
+.cc-ring-label { font: 600 12px/1.2 var(--body); text-align: center; white-space: nowrap; }
+.cc-track { stroke: var(--ring-track); }
+.cc-ring-cal .cc-arc { stroke: var(--ring-cal); }
+.cc-ring-protein .cc-arc { stroke: var(--ring-protein); }
+.cc-ring-carbs .cc-arc { stroke: var(--ring-carbs); }
+.cc-ring-fat .cc-arc { stroke: var(--ring-fat); }
+.cc-ring-fiber .cc-arc { stroke: var(--ring-fiber); }

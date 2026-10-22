@@ -5,6 +5,9 @@
 // fake ASSETS and a fake WEEK; their shape check passes it, and the page so served offers both menus. And `npm run
 // content` for a week without the additions (2026-10-25), production and `--env dev`, is byte for byte the base's
 // (76ee36e, this contract's own commit, extracted by `git archive`; W4's way), its report and its message too.
+// ⚠ AMENDED for § 11 item 1 (2026-10-22): the heading, a phrase the content fills, is the menu's name alone, so the
+// base's week/picks-data.json is compared as § 11 makes it, each heading's " (<range>)" removed (cc-harness rangeless:
+// every other byte the base's), and the report's line for it names those bytes.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -18,6 +21,7 @@ import { weekContent } from "../scripts/week-content.mjs";
 import { scriptJsonRef } from "./wc-checks.mjs";
 import { noWeekPage, pageAsset, startSite, WEEK_DATA_KEY, withPicksText } from "./wc-harness.mjs";
 import { chooserOf, FIXTURE_LIST, fixtureWords, messagesFile, MENUS_DIR, MENUS_WEEK, openMenus } from "./em-harness.mjs";
+import { rangeless, reportWith } from "./cc-harness.mjs";
 
 const BASE = "76ee36e";
 const WEEK = "2026-10-25";
@@ -95,6 +99,10 @@ for (const args of [[], ["--env", "dev"]]) {
     const before = await contentAt(basePackage, args, scratch);
     const after = await contentAt(ROOT, args, scratch);
     assert.equal(before.status, 0, `control: ${BASE} makes the week (${before.stderr.trim()})`);
+    const read = rangeless(before.files[WEEK_DATA_KEY], WEEK);
+    assert.ok(read.headings > 0, `control: ${BASE}'s headings name the week's range`);
+    before.files[WEEK_DATA_KEY] = read.bytes;
+    before.stdout = reportWith(before.stdout, WEEK_DATA_KEY, read.bytes);
     assert.ok(Object.keys(before.files).length >= 2, `control: ${BASE} wrote the week's data and its sheet`);
     assert.equal(after.status, before.status, `the exit code (${after.stderr.trim()})`);
     assert.deepEqual(Object.keys(after.files), Object.keys(before.files), "the same files");

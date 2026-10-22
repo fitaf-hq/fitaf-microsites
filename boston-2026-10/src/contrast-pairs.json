@@ -34,6 +34,12 @@
     { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "the store's button, the page's one orange button: Choose your meals, and with a week Continue to checkout, 19px/700 uppercase" },
     { "fg": "--on-cta", "bg": "--cta-hover", "role": "large-text", "where": "the same buttons on hover" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the button's own shape against the card" },
+    { "fg": "--ink", "bg": "--white", "role": "body", "where": "a meal's rings (SPEC-every-menu-and-nutrition § 11 item 4): each value 14px/700 in its circle, each label 12px/600 beneath" },
+    { "fg": "--ring-cal", "bg": "--white", "role": "non-text", "where": "the Calories ring's arc, a graphic beside its printed number (§ 11 item 4.1, the store's colour)" },
+    { "fg": "--ring-protein", "bg": "--white", "role": "non-text", "where": "the Protein ring's arc, beside its printed number" },
+    { "fg": "--ring-carbs", "bg": "--white", "role": "non-text", "where": "the Carbs ring's arc, beside its printed number" },
+    { "fg": "--ring-fat", "bg": "--white", "role": "non-text", "where": "the Fat ring's arc, beside its printed number" },
+    { "fg": "--ring-fiber", "bg": "--white", "role": "non-text", "where": "the Fiber ring's arc, beside its printed number" },
     { "fg": "--orange", "bg": "--white", "role": "non-text", "where": "the offer box's and the save-the-offer section's top bar (dev; SPEC-rung4 § 2b: the box at the top, the section at the end)", "build": "dev" },
     { "fg": "--white", "bg": "--draft", "role": "body", "where": "DRAFT banner, 14px (dev)", "build": "dev" },
     { "fg": "--draft", "bg": "--white", "role": "body", "where": "DRAFT tag 12px/600, save error 16px/600 (dev)", "build": "dev" },
@@ -91,6 +97,10 @@
     { "fg": "#ffffff", "bg": "#d66400", "role": "large-text", "why": "option B, chosen: the same orange family darkened (hsl 28 100% 42%) keeps the store's white uppercase label" }
   ],
   "not_measured": [
+    {
+      "token": "--ring-track",
+      "why": "the unfilled track under a ring's arc (SPEC-every-menu-and-nutrition § 11 item 4.1, the store's own #eceef0): decoration beside a printed number and its label (--ink on --white, measured above), carrying nothing a visitor must find"
+    },
     { "token": "--line", "why": "decorative hairline around cards and under the header, and (mock-ups) the outline of a piece on its sheet and the stripes of a photo placeholder; each card is identified by its text, and its state by the navy outline (measured above)" },
     { "token": "--ice", "as": "tile on white", "why": "ice tiles and chips on a white card are grouping, not a boundary anyone must find" },
     { "token": "--navy", "as": "disabled button", "why": "the save step's two buttons (the page's quieter button since SPEC-save-offer-production § 1 item 2) at 60% opacity while a save is sending: a disabled control is exempt" }

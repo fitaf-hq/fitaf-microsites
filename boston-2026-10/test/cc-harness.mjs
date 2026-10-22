@@ -126,6 +126,23 @@ export function weekOf(delivery) {
   const [a, b] = [day(1), day(7)];
   return month(a) === month(b) ? `${month(a)} ${a.getUTCDate()}–${b.getUTCDate()}` : `${month(a)} ${a.getUTCDate()} – ${month(b)} ${b.getUTCDate()}`;
 }
+/**
+ * SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): the heading is the menu's name alone, and the heading is a
+ * phrase the CONTENT fills (week/picks-data.json), so a week's content made before § 11 reads, as § 11 makes it, with
+ * each heading's " (<range>)" (the week's range, escaped as the content writes it) removed and every other byte as it
+ * was. Returns those bytes and how many headings lost a range (the invariance cases, W4 and EM5c, compare by it).
+ */
+export function rangeless(bytes, delivery) {
+  const range = JSON.stringify(` (${weekOf(delivery)})`).slice(1, -1).replace(/</g, "\\u003c");
+  const parts = bytes.toString("utf8").split(`${range}"`);
+  return { bytes: Buffer.from(parts.join('"'), "utf8"), headings: parts.length - 1 };
+}
+/** A content command's report with its line for `key` naming `bytes`' size and SHA-256 (the report's own form). */
+export function reportWith(report, key, bytes) {
+  const line = new RegExp(`(${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}) \\(\\d+ bytes\\) sha256:[0-9a-f]{64}`);
+  return report.replace(line, `$1 (${bytes.length} bytes) sha256:${createHash("sha256").update(bytes).digest("hex")}`);
+}
+
 /** The list's heading for the week delivered on `delivery` (since § 8 item 6 the same for every count); since
  *  SPEC-every-menu-and-nutrition § 4 its `{menu}` is Chef's Choice's name (data/messages.json `menus`). */
 export const headingFor = (count, delivery, messages = MESSAGES) =>

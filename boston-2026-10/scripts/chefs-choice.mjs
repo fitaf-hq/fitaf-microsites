@@ -50,13 +50,16 @@ const V2_FILE_FIELDS = ["delivery", "version", "lists"];
 const SHOWN_LIST = "chefs-choice";
 /** SPEC-every-menu-and-nutrition § 1 item 2: a version-2 file's optional field, an entry's fields (as amended at 1fb2b19,
  *  each optional: at least one of `nutrition` and `ingredients`, `contains` only beside `ingredients`), and a size's five
- *  numbers (grams, and calories). § 4: the nutrition phrases, and `menus`' own note. */
+ *  numbers (grams, and calories). § 4: the nutrition phrases, and `menus`' own note. Since § 11 (2026-10-22) the phrases
+ *  are the rings' (`rings`, a label per number, in FACTS' order, and `grams`, a ring's value of grams) and the panel's two
+ *  lines; the line under a meal's name (`line`) has left them. */
 const V2_OPTIONAL_FIELDS = ["meals"];
 const ENTRY_FIELDS = [];
 const ENTRY_OPTIONAL_FIELDS = ["nutrition", "ingredients", "contains"];
 const ENTRY_TEXTS = ["ingredients", "contains"];
 const FACTS = ["cal", "protein", "carbs", "fat", "fiber"];
-const NUTRITION_PHRASES = { line: ["{cal}", "{protein}", "{carbs}", "{fat}"], ingredients: ["{text}"], contains: ["{text}"] };
+const NUTRITION_PHRASES = { grams: ["{n}"], ingredients: ["{text}"], contains: ["{text}"] };
+const RING_LABELS = "rings";
 const MENUS_NOTE = "status";
 /** The heading's placeholder naming the menu shown (§ 4: `chefs_choice.heading` may carry it). */
 const MENU_PLACEHOLDER = "{menu}";
@@ -66,9 +69,11 @@ const LIST_FIELDS = ["carts", "snacks"];
 const CART_FIELDS = ["lunch_dinner", "weekends", "breakfast", "plan", "items"];
 /** § 3's phrases in data/messages.json's `chefs_choice` the card shows, and the placeholders each must carry. Since
  *  SPEC-plan-page-refinement § 1–2 the list is always open: `open` (its button) and `note` are kept there, not read.
+ *  SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): the heading is the menu's name alone (`{menu}`); `{week}` is
+ *  still filled when a phrase carries it, and no longer required.
  *  SPEC-meal-selection § 9 item 3: the snack block's heading and its not-carted line. SPEC-every-menu-and-nutrition § 2 (the
  *  Advisor's ruling of 2026-10-21): `menus_label`, the chooser's own name (its aria-label). */
-const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [], updating: [], menus_label: [] };
+const PHRASES = { heading: [], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [], updating: [], menus_label: [] };
 /** SPEC-week-content § 8 item 1: an UPDATING week's file is exactly { delivery, version: 2, updating: true, lists: {} }
  *  (Fit AF's emitter, `--updating`: the store has switched and this week's carts are not made yet). */
 const UPDATING_FILE_FIELDS = [...V2_FILE_FIELDS, "updating"];
@@ -106,9 +111,10 @@ export function chefsChoiceWords(messages) {
 
 /**
  * SPEC-every-menu-and-nutrition § 4: data/messages.json's `menus` (each list the page shows and its name, in display
- * order, `chefs-choice` first; `status` is its note, not a list) and `nutrition` (`line`, `ingredients`, `contains`, each
- * with its placeholders), checked: a missing name, phrase or placeholder refuses the build. Returns { menus: [[list,
- * name], …], nutrition: { line, ingredients, contains } }, each name as the page shows it.
+ * order, `chefs-choice` first; `status` is its note, not a list) and `nutrition` (since § 11: `rings`, a label for each of
+ * the five numbers; `grams`, `ingredients`, `contains`, each with its placeholders), checked: a missing name, label,
+ * phrase or placeholder refuses the build. Returns { menus: [[list, name], …], nutrition: { rings: { cal, … }, grams,
+ * ingredients, contains } }, each name as the page shows it.
  */
 export function menuWords(messages) {
   const menus = messages.menus;
@@ -120,13 +126,20 @@ export function menuWords(messages) {
     if (typeof name !== "string" || !asShown(name)) throw new Error(`data/messages.json: menus.${list} is missing`);
   }
   const words = messages.nutrition ?? {};
+  const labels = isObject(words[RING_LABELS]) ? words[RING_LABELS] : {};
+  for (const fact of FACTS) {
+    if (typeof labels[fact] !== "string" || !labels[fact].trim()) throw new Error(`data/messages.json: nutrition.${RING_LABELS}.${fact} is missing`);
+  }
   for (const [key, placeholders] of Object.entries(NUTRITION_PHRASES)) {
     if (typeof words[key] !== "string" || !words[key].trim()) throw new Error(`data/messages.json: nutrition.${key} is missing`);
     for (const p of placeholders) if (!words[key].includes(p)) throw new Error(`data/messages.json: nutrition.${key} has no ${p}`);
   }
   return {
     menus: names.map(([list, name]) => [list, asShown(name)]),
-    nutrition: Object.fromEntries(Object.keys(NUTRITION_PHRASES).map((key) => [key, words[key]])),
+    nutrition: {
+      [RING_LABELS]: Object.fromEntries(FACTS.map((fact) => [fact, labels[fact]])),
+      ...Object.fromEntries(Object.keys(NUTRITION_PHRASES).map((key) => [key, words[key]])),
+    },
   };
 }
 
@@ -432,17 +445,22 @@ function thumbStyle(url, sheet, name) {
 
 /**
  * SPEC-every-menu-and-nutrition § 3: a week's `meals` as the page shows them, or null without: `list`, one entry per meal
- * ({ lines?: { size: the line }, ingredients?, contains? }, each a phrase of `nutrition` filled here, and each only when
- * the meal has it: § 3 item 3, no data, no claim), and `at`, a meal's place in it by its name as the link tool reads it.
+ * ({ nutrition?: { size: { cal, protein, carbs, fat, fiber } }, ingredients?, contains? }, each only when the meal has it:
+ * § 3 item 3, no data, no claim), and `at`, a meal's place in it by its name as the link tool reads it. Since § 11
+ * (2026-10-22) a size's five numbers go to the page as the file gives them, for its rings (the page draws each arc from
+ * its number), in FACTS' order; the ingredients and Contains are their phrases filled here, as before. `rings` is the
+ * rings' words (nutrition.rings and nutrition.grams), for a week one of whose meals has numbers, else null.
  */
 function factsOf(meals, phrases) {
   if (!meals) return null;
+  const numbers = (facts) => Object.fromEntries(FACTS.map((fact) => [fact, facts[fact]]));
   const list = Object.values(meals).map((entry) => ({
-    ...(entry.nutrition ? { lines: Object.fromEntries(Object.entries(entry.nutrition).map(([size, facts]) => [size, fill(phrases.line, facts)])) } : {}),
+    ...(entry.nutrition ? { nutrition: Object.fromEntries(Object.entries(entry.nutrition).map(([size, facts]) => [size, numbers(facts)])) } : {}),
     ...(entry.ingredients !== undefined ? { ingredients: fill(phrases.ingredients, { text: entry.ingredients }) } : {}),
     ...(entry.contains !== undefined ? { contains: fill(phrases.contains, { text: entry.contains }) } : {}),
   }));
-  return { list, at: new Map(Object.keys(meals).map((name, i) => [name, i])) };
+  const rings = list.some((entry) => entry.nutrition) ? { labels: phrases[RING_LABELS], grams: phrases.grams } : null;
+  return { list, at: new Map(Object.keys(meals).map((name, i) => [name, i])), rings };
 }
 
 /**
@@ -457,8 +475,9 @@ function factsOf(meals, phrases) {
  * `{menu}`, when the phrase carries it). A week of more than one list adds `menus`, the lists in the words' order, each
  * { list, name }, and each but the first (`chefs-choice`, whose carts and snacks are the week's own) its `carts` and
  * `snacks` (§ 2). A week with `meals` adds `facts`, an entry per meal (factsOf), and each cart holding a meal with one
- * its own `facts`, per meal the entry's place in the week's, or null (§ 3). A week without them is byte for byte what
- * it was (§ 1 item 3).
+ * its own `facts`, per meal the entry's place in the week's, or null (§ 3); and, since § 11, when a meal has numbers,
+ * `rings`, the rings' words ({ labels: { cal, … }, grams }). A week without them is byte for byte what it was (§ 1
+ * item 3).
  */
 export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", snacks = false, carted = false }) {
   const names = new Map(words.menus ?? []);
@@ -506,6 +525,7 @@ export function pageData(weeks, { words, zone, photos = null, assetPrefix = "", 
             }
           : {}),
         ...(facts ? { facts: facts.list } : {}),
+        ...(facts?.rings ? { rings: facts.rings } : {}),
       };
     }),
   };

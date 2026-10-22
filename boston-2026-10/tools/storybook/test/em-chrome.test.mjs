@@ -237,14 +237,17 @@ async function baseSite() {
   await weekSite(baseOut, { picks: ms.V2_DIR, week: em.MENUS_WEEK, messages: JSON.parse(await readFile(join(pkg, "data", "messages.json"), "utf8")), weekData: base.weekData, pageWithWeek: base.pageWithWeek });
 }
 
-/** Runs in the page: the result card's drawn text, and each drawn box in it (its tag, id or class, and rectangle). */
+/** Runs in the page: the result card's drawn text, and each drawn box in it (its tag, id or class, and rectangle, from
+ *  the card's own top left: since § 11 item 5 the Why Fit AF? button above the tabs moves the whole card down the page,
+ *  and the card itself is what EM2 holds to the base's). */
 function readResult() {
   const result = document.getElementById("result");
+  const at = result.getBoundingClientRect();
   const boxes = [...result.querySelectorAll("*")]
     .filter((el) => el.checkVisibility())
     .map((el) => {
       const r = el.getBoundingClientRect();
-      return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${el.className} ${[r.x, r.y, r.width, r.height].map((n) => Math.round(n * 10) / 10).join(",")}`;
+      return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${el.className} ${[r.x - at.x, r.y - at.y, r.width, r.height].map((n) => Math.round(n * 10) / 10).join(",")}`;
     });
   return { text: result.innerText, boxes, group: Boolean(document.getElementById("cc-menus")?.checkVisibility()) };
 }
@@ -630,7 +633,8 @@ test("EM6 (mutant): the row's control shrunk to the name alone fails EM6; the co
   const control = await copyWith(t, (html) => once(html, ROW_LINE));
   assert.deepEqual(await targetProblems(control), [], "control: the copy as built");
   const mutant = await copyWith(t, (html) =>
-    once(html, ROW_LINE).replace(ROW_LINE, (whole, indent) => `${indent}li.appendChild(tile); appendAll(meal, [name, mark]);`),
+    // The tile beside the button, the row laid out as before § 10 (a flex row), so the tile is drawn where a press finds it.
+    once(html, ROW_LINE).replace(ROW_LINE, (whole, indent) => `${indent}li.appendChild(tile); li.style.display = "flex"; appendAll(meal, [name, mark]);`),
   );
   const problems = await targetProblems(mutant);
   t.diagnostic(problems.join("\n"));

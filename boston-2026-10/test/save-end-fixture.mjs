@@ -149,9 +149,10 @@ export function assertNoModalForFlowOne(html, { now = NOW } = {}) {
     for (const n of [node, ...node.querySelectorAll("*")]) assert.ok(!n.hasAttribute("style"), `${label(n)}: no inline style`);
   }
   assert.deepEqual([...document.querySelectorAll("[aria-modal]")].map(label), [], "no [aria-modal] anywhere on the page");
-  // Since SPEC-why-fit-af.md § 2 item 2 the footer's "Why Fit AF?" is a second dialog (#why, the /why/ page in a frame);
-  // neither is Flow 1's.
-  assert.deepEqual([...document.querySelectorAll("dialog")].map((d) => d.id), ["all", "why"], "the page's dialogs are Flow 2's See all plans (#all) and the footer's /why/ (#why)");
+  // Since SPEC-why-fit-af.md § 2 item 2 "Why Fit AF?" is a second dialog (#why, the /why/ page in a frame); neither is
+  // Flow 1's. Since SPEC-every-menu-and-nutrition § 11 item 5 (2026-10-22) its button and dialog sit above the tabs, so
+  // #why comes first in the page.
+  assert.deepEqual([...document.querySelectorAll("dialog")].map((d) => d.id), ["why", "all"], "the page's dialogs are /why/'s above the tabs (#why) and Flow 2's See all plans (#all)");
   const css = [...document.querySelectorAll("style")].map((s) => s.textContent).join("\n");
   for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     if (FLOW_ONE_SELECTOR.test(selector)) assert.doesNotMatch(body, OVERLAY_CSS, `no overlay: ${selector.trim()} { ${body.trim()} }`);

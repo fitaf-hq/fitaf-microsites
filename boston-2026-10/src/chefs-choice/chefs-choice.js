@@ -13,10 +13,34 @@
 // in the list's place; an updating week is no week for everything below: no cart, no link, Choose your meals as it is.
 // SPEC-every-menu-and-nutrition § 2: a week of more than one list (`menus`) offers, above the list, a radio group of the
 // menus with a cart for the answers (#cc-menus), Chef's Choice first; the chosen menu's cart, snacks and links are the
-// card's, by the same reading as Chef's Choice's. § 3: a meal with nutrition (`facts`) shows its line for the chosen size
-// (#result's data-accent, the plan app.js rendered) and, with ingredients, its whole row is a button opening them beneath
-// it, its mark a chevron (§ 10). What the
-// Worker's shape check does not read (`menus`, `facts`) is read here only in the shape the content writes.
+// card's, by the same reading as Chef's Choice's. § 3 and § 11 (the Advisor's review, 2026-10-22): a meal with numbers
+// for the chosen size (#result's data-accent, the plan app.js rendered) or ingredients (`facts`) is a row of its tile and
+// its name, the whole row a button (§ 10) marked with a circled "i", opening beneath it the size's rings, then the
+// ingredients and Contains. What the Worker's shape check does not read (`menus`, `facts`, `rings`) is read here only in
+// the shape the content writes.
+// SPEC-every-menu-and-nutrition § 11 item 4 (the Advisor's review, 2026-10-22): the store's own rings, as Fit AF's
+// Shopify theme copies them from the live order page's meal dialog (fitaf scripts/commerce/theme/snippets/
+// fitaf-ring.liquid; assets/fitaf.css .fam-macros). One ring per number, in this order; each arc is the number over its
+// daily amount: the store catalogue's recommended_daily_intake (protein 50 g, carbs 275 g, fat 77 g, fiber 28 g) and,
+// for calories, the 2,000 the live meal dialog states; `grams` marks the rings whose value is grams. The snippet's
+// geometry: a 40-unit square, radius 17 (so the circle's length 2π × 17, the snippet's 106.8), stroke 2.5, the arc
+// clamped to 0.06–1 of it. The colours are the style's (style.css), by number.
+var RINGS = [
+  { fact: "cal", daily: 2000, grams: false },
+  { fact: "protein", daily: 50, grams: true },
+  { fact: "carbs", daily: 275, grams: true },
+  { fact: "fat", daily: 77, grams: true },
+  { fact: "fiber", daily: 28, grams: true }
+];
+var RING_VIEWBOX = 40;
+var RING_CENTRE = RING_VIEWBOX / 2;
+var RING_RADIUS = 17;
+var RING_STROKE = 2.5;
+var RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+var RING_SHARE_LEAST = 0.06;
+var RING_SHARE_MOST = 1;
+var SVG_NS = "http://www.w3.org/2000/svg";
+
 var picks = JSON.parse(document.getElementById("picks-data").textContent);
 var week = picks.weeks.length === 1 ? picks.weeks[0] : null;
 var updatingCard = document.getElementById("cc-updating");
@@ -57,8 +81,13 @@ function start(week) {
     for (var i = 0; menus.length > i; i++) if (menus[i].list === id) return menus[i];
     return null;
   }
-  // § 3: the week's nutrition entries; a cart's `facts` names each meal's entry, or null.
+  // § 3: the week's nutrition entries; a cart's `facts` names each meal's entry, or null. § 11: the rings' words (a label
+  // per number, and the value of grams), without which no ring is drawn.
   var entries = isList(week.facts) ? week.facts : [];
+  var ringWords = (function (w) {
+    var ok = isMap(w) && isMap(w.labels) && isText(w.grams) && RINGS.every(function (r) { return isText(w.labels[r.fact]); });
+    return ok ? w : null;
+  })(week.rings);
   var opened = {}; // the meals left open, by menu, answers and place: kept while only the size changes
 
   // The answer set the card shows ("" when it is hidden): the fragment's answer part, snacks mark and all.
@@ -77,51 +106,96 @@ function start(week) {
     return m && has(links, m[1]) ? { menu: cart, link: links[m[1]] } : null;
   }
 
-  // § 3 item 3: a meal's line for the chosen size only, never another size's numbers.
-  function lineFor(lines, size) {
-    return lines && has(lines, size) && typeof lines[size] === "string" ? lines[size] : null;
+  // § 3 item 3, § 11 item 4.2: a meal's numbers for the chosen size only (all five, each a number), never another size's.
+  function numbersFor(all, size) {
+    return isMap(all) && has(all, size) && isNumbers(all[size]) ? all[size] : null;
+  }
+  function isNumbers(n) {
+    return isMap(n) && RINGS.every(function (r) { return typeof n[r.fact] === "number"; });
   }
 
-  // A meal with its entry (§ 3): its name and the size's line in one column beside its tile; with ingredients, § 10 item 1:
-  // the WHOLE ROW (tile, name, line) is the button opening the panel beneath it (aria-expanded, aria-controls), a second
-  // press closing it, each meal on its own; its mark (§ 10 item 2) a chevron the style draws, hidden from assistive
-  // technology, turning when the meal is open.
   function appendAll(parent, children) {
     children.forEach(function (child) { parent.appendChild(child); });
   }
+  function svgOf(tag, attributes) {
+    var el = document.createElementNS(SVG_NS, tag);
+    for (var name in attributes) el.setAttribute(name, String(attributes[name]));
+    return el;
+  }
+
+  // § 11 item 3: the mark, a circled "i" (a circle, the i's dot and its stem) in currentColor, hidden from assistive
+  // technology, the same whether the meal is open or closed (the open state is the panel and aria-expanded). It says
+  // "more", never the + of adding a meal (§ 10 item 2).
+  function infoMark() {
+    var mark = svgOf("svg", { "class": "cc-mark", viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" });
+    appendAll(mark, [
+      svgOf("circle", { cx: 12, cy: 12, r: 10.5, fill: "none", stroke: "currentColor", "stroke-width": 1.75 }),
+      svgOf("circle", { cx: 12, cy: 7.25, r: 1.4, fill: "currentColor" }),
+      svgOf("line", { x1: 12, y1: 10.75, x2: 12, y2: 17.25, stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round" })
+    ]);
+    return mark;
+  }
+
+  // § 11 item 4.3: one ring (the store's, fitaf-ring.liquid): a track and an arc in a 40-unit square, the arc the number
+  // over its daily amount (clamped), from 12 o'clock with round caps, its colour the style's by `spec.fact`; the value in
+  // the middle (the words' grams after all but calories) and the label beneath, each text in the page's text colour.
+  // The circle is hidden from assistive technology: the value and the label are its words.
+  function ring(spec, n) {
+    var share = Math.min(RING_SHARE_MOST, Math.max(RING_SHARE_LEAST, n / spec.daily));
+    var box = document.createElement("div");
+    box.className = "cc-ring cc-ring-" + spec.fact;
+    var circle = { cx: RING_CENTRE, cy: RING_CENTRE, r: RING_RADIUS, fill: "none", "stroke-width": RING_STROKE };
+    var svg = svgOf("svg", { viewBox: "0 0 " + RING_VIEWBOX + " " + RING_VIEWBOX, "aria-hidden": "true", focusable: "false" });
+    var track = svgOf("circle", circle);
+    track.setAttribute("class", "cc-track");
+    var arc = svgOf("circle", circle);
+    arc.setAttribute("class", "cc-arc");
+    arc.setAttribute("stroke-dasharray", (share * RING_LENGTH).toFixed(2) + " " + RING_LENGTH.toFixed(2));
+    arc.setAttribute("stroke-linecap", "round");
+    arc.setAttribute("transform", "rotate(-90 " + RING_CENTRE + " " + RING_CENTRE + ")");
+    appendAll(svg, [track, arc]);
+    var value = document.createElement("span");
+    value.className = "cc-ring-value";
+    value.textContent = spec.grams ? ringWords.grams.replace("{n}", String(n)) : String(n);
+    var label = document.createElement("span");
+    label.className = "cc-ring-label";
+    label.textContent = ringWords.labels[spec.fact];
+    appendAll(box, [svg, value, label]);
+    return box;
+  }
+  // § 11 item 4.1: the five rings in their order, in one row the style wraps.
+  function ringsOf(numbers) {
+    var row = document.createElement("div");
+    row.className = "cc-rings";
+    RINGS.forEach(function (spec) { row.appendChild(ring(spec, numbers[spec.fact])); });
+    return row;
+  }
+
+  // A meal with its entry (§ 3, § 11): with numbers for the chosen size or ingredients, § 10 item 1 and § 11 item 2: the
+  // WHOLE ROW (its tile and its name) is the button opening the panel beneath it (aria-expanded, aria-controls), a second
+  // press closing it, each meal on its own, its mark a circled "i"; the panel the size's rings, then the ingredients and
+  // Contains (§ 11 item 4). A meal with neither keeps the row it always had: no panel, no mark.
   function detail(li, tile, name, entry, place) {
-    var line = lineFor(isMap(entry.lines) ? entry.lines : null, result.getAttribute("data-accent"));
+    var numbers = ringWords ? numbersFor(entry.nutrition, result.getAttribute("data-accent")) : null;
     var more = isText(entry.ingredients) ? entry.ingredients : null;
-    if (!line && !more) return appendAll(li, [tile, name]);
-    var text = document.createElement("span");
-    text.className = "cc-text";
-    text.appendChild(name);
-    if (line) {
-      var numbers = document.createElement("span");
-      numbers.className = "cc-line";
-      numbers.textContent = line;
-      text.appendChild(numbers);
-    }
-    if (!more) {
-      li.className = "cc-detail";
-      return appendAll(li, [tile, text]);
-    }
+    if (!numbers && !more) return appendAll(li, [tile, name]);
     li.className = "cc-control";
     var meal = document.createElement("button");
     meal.type = "button";
     meal.className = "cc-meal";
-    var mark = document.createElement("span");
-    mark.className = "cc-mark";
-    mark.setAttribute("aria-hidden", "true");
-    appendAll(meal, [tile, text, mark]);
+    var mark = infoMark();
+    appendAll(meal, [tile, name, mark]);
     li.appendChild(meal);
     var panel = document.createElement("div");
     panel.className = "cc-more";
     panel.id = "cc-more-" + place.split("|").pop();
-    var ingredients = document.createElement("p");
-    ingredients.textContent = more;
-    panel.appendChild(ingredients);
-    if (isText(entry.contains)) {
+    if (numbers) panel.appendChild(ringsOf(numbers));
+    if (more) {
+      var ingredients = document.createElement("p");
+      ingredients.textContent = more;
+      panel.appendChild(ingredients);
+    }
+    if (more && isText(entry.contains)) {
       var contains = document.createElement("p");
       contains.textContent = entry.contains;
       panel.appendChild(contains);
