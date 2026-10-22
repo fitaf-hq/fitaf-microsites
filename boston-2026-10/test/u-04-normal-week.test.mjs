@@ -85,6 +85,11 @@
 // classifyZip's lines (the near ring by prefix). Built from 5f1e9f8's and a593811's trees (git archive), the development
 // build differs in index.html, demo/, boston/ and seminar/ by those lines alone, and in /privacy/ by § 6's contact and
 // response days. From here the reference is a593811's tree.
+// ⚠ RE-RECORDED at 8f3baf0 (`node test/u-04-record.mjs --commit 8f3baf0`): its § 10.2 (the Boston offer's approved label).
+// Against a593811's record, all six contents, production's three entries and every visible page byte-identical; the
+// three development pages +14 bytes each, the save-data line alone (the Boston offer's label "[The offer]" -> "Sign up today
+// to save 25%"; build:dev of both trees differs by that line in index.html, demo/, boston/ and seminar/, nothing else;
+// the production builds identical). From here the reference is 8f3baf0's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -93,7 +98,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to a593811's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "a593811");
+test("U4: a normal week, the content and the page as served, byte-identical to 8f3baf0's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "8f3baf0");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });
