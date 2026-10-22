@@ -192,8 +192,14 @@ export function assertProductionT5(html, { production }) {
 
 // ---- The base tree (the contract's own commit, before any of its code): SP3 compares the Worker's behaviour with it ----
 
-/** The contract's commit: SPEC-save-offer-production.md written, no code of it. */
-export const BASE = "63275a8";
+/** The contract's commit: SPEC-save-offer-production.md written, no code of it. ⚠ At the merge into
+ *  boston/live-week-every-menu (2026-10-21) the base is 768ca36 (it was 63275a8): the merged tree before this contract's
+ *  branch, boston/why-button (f4b04e7) with boston/every-menu (78ede74) merged, so SP3 holds the production page to THAT
+ *  page with § 9 item 2's reading alone (the other two branches' lines are 768ca36's). 63275a8 is 84807ce plus this
+ *  contract's text, and 768ca36 differs from it outside the tests only in app.js, the card's three files,
+ *  scripts/chefs-choice.mjs, scripts/week-content.mjs and data/messages.json, none of which either Worker reaches (CC-8b's
+ *  map is unmoved by both branches), so SP3's Worker and CC-8b cases compare with the same files as before. */
+export const BASE = "768ca36";
 
 function run(cmd, args, { input } = {}) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 256 * 1024 * 1024 });

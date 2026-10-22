@@ -14,6 +14,9 @@
 // script of EVERY page, the production page's with `production` false too, so that page is the base's with exactly that
 // change (withSection9Reading below: its lines are S20's note's) and every other file the base's, byte for byte; S20's
 // golden is re-recorded once for it. The Worker's behaviour is still the base's, byte for byte.
+// ⚠ At the merge into boston/live-week-every-menu (2026-10-21) "the base" is 768ca36, the merged tree before this
+// contract's branch (sp-production.mjs BASE says why): the production page carries boston/why-button's and
+// boston/every-menu's lines from that tree, and this contract's § 9 item 2 reading alone on top of them.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
