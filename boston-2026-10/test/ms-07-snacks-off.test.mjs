@@ -8,7 +8,7 @@
 //   cart's meals, which make the plan.
 // - ⭐ Shown and carted (a week with a snack list for 7 days and for 5): for every size and all eight answer sets, *Add
 //   snacks*' Continue to checkout is its cart's meals (making the plan, in today's order), then the week's list for its
-//   Q2's days as snack items (7 or 5 units, the plan's count unmoved); *No snacks*' link is byte-identical to the same
+//   Q2's days as snack items (the list's own total of units, § 13; the plan's count unmoved); *No snacks*' link is byte-identical to the same
 //   answers' link when not carted.
 // - Carted, a week with no list for 5 days (the committed fixture): Q4 hidden for the weekday answer sets (the page never
 //   offers what the cart cannot hold) and a `-s` fragment there gives the link without snacks; shown for every day.
@@ -95,7 +95,8 @@ test("MS-7 (carted, SPEC-snacks-in-the-cart § 4.2): every size and answer set �
         assert.deepEqual(snacks, listKeys(list, "_"), `${where}: the week's list for ${row.weekends ? 7 : 5} days`);
         const mealCount = Object.entries(keys).filter(([k]) => !k.startsWith("_")).reduce((a, [, n]) => a + n, 0);
         assert.equal(mealCount, row.plan, `${where}: the plan's count unmoved by the snacks`);
-        assert.equal(Object.values(snacks).reduce((a, b) => a + b, 0), row.weekends ? 7 : 5, `${where}: one snack a day`);
+        // SPEC-meal-selection § 13: the list's own total (between 1 and its days), not one a day.
+        assert.equal(Object.values(snacks).reduce((a, b) => a + b, 0), list.reduce((a, m) => a + m.qty, 0), `${where}: the list's own total`);
         assert.equal(new URL(withSnacks.checkout).search, new URL(plain.checkout).search, `${where}: the same plan's mpid`);
       }
     }

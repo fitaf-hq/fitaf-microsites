@@ -89,7 +89,9 @@ for (const [label, change, reason] of PLAN_CASES) {
 // the cart's plan as the count), its (lunch_dinner, weekends, breakfast) must be a row of data/plans.json's selection
 // and its plan that row's; two carts for one row, a plan not sold, an unknown field or list, a version other than 1 or 2,
 // and a snack list whose meals do not make its days (7 or 5) are refused. The refusal names the file and the cart. A
-// missing cart is allowed (§ 4's fallback).
+// missing cart is allowed (§ 4's fallback). ⚠ Amended by § 13 (2026-10-20, the Owner's rule to try): a snack list holds
+// at least 1 and at most its days, so the refusal is of a list OVER its days, and its message names both bounds (MS-19
+// holds the lists under their days, and an empty one).
 const V2 = JSON.parse(await readFile(join(ROOT, "test", "fixtures", "picks-v2", "2026-10-04.json"), "utf8"));
 const FILE = "2026-10-04.json";
 const changedV2 = (change) => {
@@ -141,7 +143,7 @@ const PICKS_CASES = [
   ["no list", (w) => (w.lists = {}), /lists: no "chefs-choice"/],
   ["a version the page does not read", (w) => (w.version = 3), /version 3 is not one the page reads \(1, 2\)/],
   ["a cart with no meals", (w) => (carts(w)[0].items = []), /carts\[0\] \(or, every day, no breakfast\)\.items must be a list of meals/],
-  ["snacks that do not make their days", (w) => (w.lists["chefs-choice"].snacks["7"][0].qty += 1), /snacks\.7: the snacks for 7 days are 7; the list has 8/],
+  ["snacks over their days", (w) => (w.lists["chefs-choice"].snacks["7"][0].qty += 1), /snacks\.7: the snacks for 7 days are at least 1 and at most 7; the list has 8/],
   ["snacks for days the page does not offer", (w) => (w.lists["chefs-choice"].snacks["6"] = w.lists["chefs-choice"].snacks["7"]), /snacks: "6" is not 7 or 5 days/],
   ["a snack named twice", (w) => (w.lists["chefs-choice"].snacks["7"][1].name = w.lists["chefs-choice"].snacks["7"][0].name), /snacks\.7: .*named twice/],
 ];
