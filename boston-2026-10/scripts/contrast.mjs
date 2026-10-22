@@ -9,7 +9,8 @@
 //      token that does not exist.
 //
 // Options (for the mutant cases; the committed files are never written):
-//   --template <path>  --save-style <path>  --mockup-style <path>  --picks-style <path>  --pairs <path>
+//   --template <path>  --save-style <path>  --mockup-style <path>  --picks-style <path>  --privacy-style <path>  --pairs <path>
+// Since SPEC-save-offer-production § 9 item 1 the privacy notice's page's stylesheet, src/privacy/style.css, is read too.
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +22,7 @@ export const DEFAULTS = {
   saveStyle: join(ROOT, "src", "save", "style.css"),
   mockupStyle: join(ROOT, "mockups", "mockups.css"),
   picksStyle: join(ROOT, "src", "chefs-choice", "style.css"),
+  privacyStyle: join(ROOT, "src", "privacy", "style.css"),
   pairs: join(ROOT, "src", "contrast-pairs.json"),
 };
 
@@ -30,10 +32,10 @@ const RAW_COLOUR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(/i;
 
 /** The CSS drawn: the template's <style> blocks, the dev build's stylesheet, the mock-ups' stylesheet and the Chef's
  *  Choice card's (SPEC-chefs-choice § 3, inlined by the build when a week is open). */
-async function readCss({ template, saveStyle, mockupStyle, picksStyle }) {
+async function readCss({ template, saveStyle, mockupStyle, picksStyle, privacyStyle }) {
   const html = await readFile(template, "utf8");
   const inline = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]);
-  const files = [saveStyle, mockupStyle, picksStyle];
+  const files = [saveStyle, mockupStyle, picksStyle, privacyStyle];
   return [...inline, ...(await Promise.all(files.map((f) => readFile(f, "utf8"))))].join("\n");
 }
 
@@ -119,6 +121,7 @@ function argsOf(argv) {
     "--save-style": "saveStyle",
     "--mockup-style": "mockupStyle",
     "--picks-style": "picksStyle",
+    "--privacy-style": "privacyStyle",
     "--pairs": "pairs",
   };
   for (let i = 0; i < argv.length; i += 2) {

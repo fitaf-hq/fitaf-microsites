@@ -28,6 +28,10 @@
   }
   var offer = offerLabel();
 
+  // The event a save names (SPEC-save-offer-production § 9 item 2): the `?e=` code the page was opened with, read as the
+  // analytics beacon reads it (qrEvent over QR_IDS, the page's analytics script's), else the page's own event.
+  var eventId = qrEvent(location.search, QR_IDS) || cfg.event_id;
+
   // Where this flow sits (SPEC-rung4 § 2b, save the offer at the END): directly after the button that leaves for the
   // store — the result card's once a plan is chosen, the Family card's on Family — and nowhere before a plan is chosen.
   // Read off Flow 2's own panels, which app.js renders (as the share panel reads its card); never written here.
@@ -53,6 +57,7 @@
     var outOfArea = s.name === "OUT_OF_AREA" || s.name === "EXPANSION_SAVED" ||
       (s.kind === "expansion" && (busy || s.name === "ERROR"));
     el("save-offer-label").textContent = offer;
+    el("save-step-offer-label").textContent = offer; // the step names its offer where it asks (SPEC-save-offer-production § 1)
     el("save-open").hidden = collapsed;
     el("save-collapsed").hidden = !collapsed;
     el("save-form").hidden = s.name === "SAVED" || s.name === "EXPANSION_SAVED";
@@ -136,7 +141,7 @@
       email: state.email,
       zip: state.zip,
       consent_marketing: state.kind === "offer" && el("save-marketing").checked === true,
-      event_id: cfg.event_id,
+      event_id: eventId,
       wording_version: cfg.wording_version,
       turnstile_token: token
     };

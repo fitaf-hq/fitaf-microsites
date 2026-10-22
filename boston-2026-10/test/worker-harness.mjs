@@ -2,10 +2,16 @@
 // Runs the Worker in Miniflare (local workerd) with an in-memory D1, the dev config's rate-limit bindings
 // and vars, and a stubbed Turnstile. ⛔ No request leaves the machine: any outbound fetch other than
 // Turnstile's siteverify gets a 599, and siteverify is answered here.
+// SPEC-save-offer-production.md SP6: with `worker: "production"` (or BOSTON_SAVE_WORKER=production in the environment,
+// which SP6 sets to run S1-S17 against it) the Worker is PRODUCTION's: wrangler.jsonc's top level (its `main`,
+// src/worker/site.js; its D1, rate limits and vars), bundled with data/save.json's `production` set to `production`
+// (true unless given), the Turnstile secret the test key (production's is a secret, never in the config), and an ASSETS
+// binding that answers 404 and records each request. Each production Worker started is appended to the file
+// BOSTON_SAVE_WORKER_LOG names, if set, so SP6 can see the cases ran against it.
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { build as esbuild } from "esbuild";
 import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import events from "../data/events.json" with { type: "json" };
@@ -31,10 +37,31 @@ export const PAST_OFFER_ID = "event-past-placeholder";
 /** Rung 5 § 8: a CONFIRM_TOKEN_KEY for tests only — public, and nothing real is keyed with it. */
 export const TEST_CONFIRM_TOKEN_KEY = "test-only-confirm-token-key-0000000000000";
 
-async function bundleWorker(main) {
-  const out = await esbuild({ entryPoints: [main], bundle: true, format: "esm", write: false, logLevel: "silent" });
+async function bundleWorker(main, { save } = {}) {
+  // `save`: data/save.json's contents as the bundle sees them (the production flag), the file itself never written.
+  const plugins = save
+    ? [{ name: "save-json", setup: (b) => b.onLoad({ filter: /[\\/]data[\\/]save\.json$/ }, () => ({ contents: JSON.stringify(save), loader: "json" })) }]
+    : [];
+  // Production's entry also exports its helpers by name (site.js: WEEK_OBJECT, PAGE_CACHE_CONTROL, …), which workerd
+  // would read as entrypoints; the bundle exports its default alone, as wc-harness's wrapper does.
+  const out = await esbuild({
+    stdin: { contents: `export { default } from ${JSON.stringify(main)};`, resolveDir: ROOT, loader: "js" },
+    bundle: true,
+    format: "esm",
+    write: false,
+    logLevel: "silent",
+    plugins,
+  });
   return out.outputFiles[0].text;
 }
+
+/** wrangler.jsonc's top level (production), as wrangler reads it. */
+async function productionWranglerConfig() {
+  const { unstable_readConfig } = await import("wrangler");
+  return unstable_readConfig({ config: join(ROOT, "wrangler.jsonc") }, { hideWarnings: true });
+}
+/** The Turnstile secret the stub accepts: Cloudflare's published test secret, as the dev vars carry it. */
+const TEST_TURNSTILE_SECRET = "1x0000000000000000000000000000000AA";
 
 /** SQL files -> statements. The migrations carry `--` comments and no string literal containing `--`. */
 export function statements(sql) {
@@ -58,20 +85,42 @@ export async function applyMigrations(db, dir) {
  * Rung 5: `bindings` adds to (or overrides) the dev vars — e.g. a DUMMY RESEND_API_KEY, SEND_ALLOWLIST —
  * and `resend(request)` answers requests to Resend's API in place of the network (else they get the 599).
  */
-export async function startWorker({ bindings = {}, resend } = {}) {
-  const cfg = await devConfig();
+/**
+ * `assets` (SPEC-save-offer-production § 9.2, SP11): the Worker's ASSETS, as a path -> HTML table answered as the assets
+ * would answer it ("/x/" serves the table's "/x/"; anything else 404), for either Worker; without it, production's
+ * ASSETS answers 404 to everything and development's has none (its assets come first in wrangler's router).
+ */
+export async function startWorker({ bindings = {}, resend, worker: which = process.env.BOSTON_SAVE_WORKER ?? "development", production = true, assets } = {}) {
+  const isProduction = which === "production";
+  const cfg = isProduction ? await productionWranglerConfig() : await devConfig();
   const [d1] = cfg.d1_databases;
+  assert.ok(d1, `wrangler.jsonc gives the ${which} Worker a D1 binding`);
   const outbound = [];
+  const assetRequests = [];
   const worker = {
     name: cfg.name,
     modules: true,
-    script: await bundleWorker(resolve(ROOT, cfg.main)),
+    script: await bundleWorker(resolve(ROOT, cfg.main), isProduction ? { save: { ...saveConfig, production } } : {}),
     compatibilityDate: cfg.compatibility_date,
     d1Databases: { [d1.binding]: "test-d1" },
     ratelimits: Object.fromEntries(
       cfg.ratelimits.map((r) => [r.name, { namespace_id: r.namespace_id, simple: r.simple }]),
     ),
-    bindings: { ...cfg.vars, ...bindings },
+    bindings: { ...cfg.vars, ...(isProduction ? { TURNSTILE_SECRET_KEY: TEST_TURNSTILE_SECRET } : {}), ...bindings },
+    ...(isProduction || assets
+      ? {
+          serviceBindings: {
+            ASSETS: async (request) => {
+              const { pathname } = new URL(request.url);
+              assetRequests.push(`${request.method} ${pathname}`);
+              const html = assets?.[pathname];
+              return html === undefined
+                ? new Response(null, { status: 404 })
+                : new Response(request.method === "HEAD" ? null : html, { headers: { "content-type": "text/html; charset=utf-8" } });
+            },
+          },
+        }
+      : {}),
     outboundService: async (request) => {
       const body = await request.clone().text();
       outbound.push({ url: request.url, body, headers: Object.fromEntries(request.headers) });
@@ -86,9 +135,18 @@ export async function startWorker({ bindings = {}, resend } = {}) {
   // Miniflare 5 takes a new options shape; wrangler itself converts from the V4 shape this way.
   // cf: false: Miniflare's own placeholder request.cf, never https://workers.cloudflare.com/cf.json (SPEC-analytics § 10.1).
   const mf = new Miniflare(convertV4MiniflareOptions({ cf: false, workers: [worker] }));
-  const db = await mf.getD1Database(d1.binding, cfg.name);
-  await applyMigrations(db, resolve(ROOT, d1.migrations_dir));
-  return { mf, db, outbound, vars: cfg.vars };
+  let db;
+  try {
+    db = await mf.getD1Database(d1.binding, cfg.name);
+    await applyMigrations(db, resolve(ROOT, d1.migrations_dir));
+  } catch (err) {
+    await mf.dispose(); // a workerd left running keeps the test file's process from ever exiting
+    throw err;
+  }
+  if (isProduction && process.env.BOSTON_SAVE_WORKER_LOG) {
+    await appendFile(process.env.BOSTON_SAVE_WORKER_LOG, `${JSON.stringify({ main: relative(ROOT, resolve(ROOT, cfg.main)), database: d1.database_name, production })}\n`);
+  }
+  return { mf, db, outbound, vars: cfg.vars, main: relative(ROOT, resolve(ROOT, cfg.main)), assetRequests };
 }
 
 let ipCounter = 0;
@@ -174,9 +232,10 @@ export class FixedRedemptions {
   }
 }
 
-/** Run send-due against the Miniflare database as the cron would, at `nowMs`. */
+/** Run send-due against the Miniflare database as the cron would, at `nowMs`, with the vars of the Worker the cases run
+ *  against (production's under BOSTON_SAVE_WORKER=production, so its links name production's SITE_URL). */
 export async function runSendDue(db, { nowMs, sender, redemptions }) {
-  const { vars } = await devConfig();
+  const { vars } = process.env.BOSTON_SAVE_WORKER === "production" ? await productionWranglerConfig() : await devConfig();
   return sendDue(db, {
     now: new Date(nowMs).toISOString(),
     sender,

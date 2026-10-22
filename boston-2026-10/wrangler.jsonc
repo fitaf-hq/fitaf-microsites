@@ -29,6 +29,32 @@
   "analytics_engine_datasets": [{ "binding": "ANALYTICS", "dataset": "fitaf_microsite_analytics_prod" }],
   "kv_namespaces": [{ "binding": "SALTS" }],
 
+  // SPEC-save-offer-production.md § 4 item 3: the save step in production, the interface with fitaf-infra (its own
+  // amendment creates the database, the keys and the cron). The script serves rung 4's routes and the cron ONLY while
+  // data/save.json's `production` is true (src/worker/site.js); with it false these bindings are unused. The database's
+  // id is fitaf-infra's and is not kept here; its schema is migrations/, as development's.
+  "d1_databases": [{ "binding": "DB", "database_name": "fitaf-leads-prod", "migrations_dir": "migrations" }],
+  // As development's (5 per 60 s per IP each); their own namespaces, so production's counts are not development's.
+  "ratelimits": [
+    { "name": "SAVE_RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 5, "period": 60 } },
+    { "name": "LOOKUP_RATE_LIMITER", "namespace_id": "2002", "simple": { "limit": 5, "period": 60 } }
+  ],
+  // The scheduled Worker, as development's: send what is due, lapse, purge.
+  "triggers": { "crons": ["*/5 * * * *"] },
+  // SITE_URL: the address E1's and E-X's links use. MAIL_FROM: ⬜ the PLACEHOLDER until the Owner names a sender (the
+  // production build refuses it). TURNSTILE_SITE_KEY: the production widget's site key (public), ⬜ fitaf-infra's, empty
+  // until it exists (the production build refuses an empty or test key). SEND_WITHOUT_ALLOWLIST: production sends to
+  // anyone who saved (§ 4 item 4); development never sets it and keeps its allowlist.
+  // ⛔ RESEND_API_KEY, CONFIRM_TOKEN_KEY and TURNSTILE_SECRET_KEY are Worker SECRETS, set by fitaf-infra, never here.
+  "vars": {
+    "SITE_URL": "https://eatfitaf.com",
+    "MAIL_FROM": "Fit AF <offers@eatfitaf.com>",
+    "TURNSTILE_SITE_KEY": "",
+    "SEND_WITHOUT_ALLOWLIST": "true"
+  },
+  // Invocation logs would carry request metadata (rung 4 § 7: observability off), as development's.
+  "observability": { "enabled": false },
+
   // ⛔ No per-version preview URLs (<version>-<name>.<subdomain>.workers.dev). On 2026-09-27 a version
   // uploaded by mistake stayed PUBLIC at its preview URL after later deploys replaced it on the main
   // address; only deleting the Worker removed it. A replaced version must not stay reachable.
@@ -47,7 +73,9 @@
 
   // ⛔ The top level above is PRODUCTION. Rungs 3 and 4 left it unchanged (no script, no bindings); since
   // SPEC-week-content § 4 it has one script and two bindings (ASSETS, WEEK), for the week and nothing else; since
-  // SPEC-analytics.md § 6 two more (ANALYTICS, SALTS), for the page's analytics and nothing else.
+  // SPEC-analytics.md § 6 two more (ANALYTICS, SALTS), for the page's analytics and nothing else; since
+  // SPEC-save-offer-production.md § 4 the save step's (DB, the two rate limiters, the cron, the vars), used only while
+  // data/save.json's `production` is true.
   "env": {
     // Rungs 3–4 (SPEC-rung4-save-offer.md): development only, dummy data only.
     "dev": {

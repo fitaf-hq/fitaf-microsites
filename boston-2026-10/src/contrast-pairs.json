@@ -31,12 +31,18 @@
     { "fg": "--navy", "bg": "--signature", "role": "ui-or-heading", "where": "check mark on the Signature disc" },
     { "fg": "--navy", "bg": "--performance", "role": "ui-or-heading", "where": "check mark on the Performance disc" },
     { "fg": "--white", "bg": "--navy", "role": "ui-or-heading", "where": "check mark on the navy disc (meal-count cards)" },
-    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "Choose your meals / Save my offer / Tell me when you deliver here, 19px/700 uppercase" },
+    { "fg": "--on-cta", "bg": "--cta", "role": "large-text", "where": "the store's button, the page's one orange button: Choose your meals, and with a week Continue to checkout, 19px/700 uppercase" },
     { "fg": "--on-cta", "bg": "--cta-hover", "role": "large-text", "where": "the same buttons on hover" },
     { "fg": "--cta", "bg": "--white", "role": "ui-or-heading", "where": "the button's own shape against the card" },
     { "fg": "--orange", "bg": "--white", "role": "non-text", "where": "the offer box's and the save-the-offer section's top bar (dev; SPEC-rung4 § 2b: the box at the top, the section at the end)", "build": "dev" },
     { "fg": "--white", "bg": "--draft", "role": "body", "where": "DRAFT banner, 14px (dev)", "build": "dev" },
     { "fg": "--draft", "bg": "--white", "role": "body", "where": "DRAFT tag 12px/600, save error 16px/600 (dev)", "build": "dev" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "the save step's offer line, 16px/600, directly above Not ready today? (dev; SPEC-save-offer-production § 1 item 1)", "build": "dev" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "the save step's two buttons, Save my offer and Tell me when you deliver here: the page's quieter button (.skip, See all plans' style), 16px/600 underlined (dev; SPEC-save-offer-production § 1 item 2)", "build": "dev" },
+    { "fg": "--ink", "bg": "--white", "role": "body", "where": "/privacy/: § 6's paragraphs, 16px (SPEC-save-offer-production § 9 item 1)", "build": "privacy" },
+    { "fg": "--navy", "bg": "--white", "role": "body", "where": "/privacy/: each paragraph's bold heading, 16px/600", "build": "privacy" },
+    { "fg": "--navy", "bg": "--white", "role": "large-text", "where": "/privacy/: the heading Privacy notice, 30px/700", "build": "privacy" },
+    { "fg": "--draft", "bg": "--white", "role": "body", "where": "/privacy/: the DRAFT tag, 12px/600 (the development build)", "build": "privacy" },
     { "fg": "--navy", "bg": "--ice", "role": "body", "where": "share panel title 18px/600 (dev)", "build": "dev" },
     { "fg": "--ink", "bg": "--ice", "role": "body", "where": "share panel results 16px (dev)", "build": "dev" },
     { "fg": "--muted", "bg": "--ice", "role": "body", "where": "share panel help and hint 14px (dev)", "build": "dev" },
@@ -87,6 +93,6 @@
   "not_measured": [
     { "token": "--line", "why": "decorative hairline around cards and under the header, and (mock-ups) the outline of a piece on its sheet and the stripes of a photo placeholder; each card is identified by its text, and its state by the navy outline (measured above)" },
     { "token": "--ice", "as": "tile on white", "why": "ice tiles and chips on a white card are grouping, not a boundary anyone must find" },
-    { "token": "--cta", "as": "disabled button", "why": "the submit button at 60% opacity while a save is sending: a disabled control is exempt" }
+    { "token": "--navy", "as": "disabled button", "why": "the save step's two buttons (the page's quieter button since SPEC-save-offer-production § 1 item 2) at 60% opacity while a save is sending: a disabled control is exempt" }
   ]
 }

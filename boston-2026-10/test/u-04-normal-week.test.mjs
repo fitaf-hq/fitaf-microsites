@@ -46,6 +46,19 @@
 // Advisor, 2026-10-21) puts the 64 px touch target, the meal row as a button and its chevron in the card's style and
 // script. Against f2d1748's record, all six contents and every visible fragment were byte-identical; only the six served
 // pages moved, each by 1,407 bytes (§ 10.1 lists the lines). From here the reference is f72040a's tree.
+// ⚠ RE-RECORDED at 1305f62 (`node test/u-04-record.mjs --commit 1305f62`): SPEC-save-offer-production.md § 1 (2026-10-21)
+// puts the offer's line in the save step and makes its two buttons the page's quieter button, on the development page by
+// design. Against f02807e's record, the three production entries (page and visible) and all six contents were
+// byte-identical; the three development pages moved (+635 bytes each: the line, its style and comment, the buttons'
+// class, the render line) and their visible page at the six answered fragments (the step is shown there; "(no fragment)"
+// unchanged, the step hidden before a plan is chosen). From here the reference is 1305f62's tree.
+// ⚠ RE-RECORDED at e11f775 (`node test/u-04-record.mjs --commit e11f775`): SPEC-save-offer-production.md § 9 (2026-10-21)
+// puts the page's one reading of ?e= (src/qr-event.js) at the head of the analytics script on EVERY page, and on the
+// development page links the form's Privacy notice to /privacy/ and sends the ?e= event. Against 1305f62's record, all six
+// contents and the three production entries' visible pages were byte-identical; the three production pages moved by +63
+// bytes each (the analytics script alone: S20's note lists the lines); the three development pages by +370 each (the same
+// lines, the link in place of "[Privacy notice]", flow1.js's event lines) and their visible
+// page at the six answered fragments (the link's words). From here the reference is e11f775's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

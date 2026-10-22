@@ -269,7 +269,9 @@ export async function mirror(edit = async () => {}) {
   // temporary directory may be reached through a link (/var -> /private/var).
   const dir = await realpath(await mkdtemp(join(tmpdir(), "boston-cc-mirror-")));
   for (const name of ["build.mjs", "package.json"]) await copyFile(join(ROOT, name), join(dir, name));
-  for (const name of ["data", "scripts", "src"]) await cp(join(ROOT, name), join(dir, name), { recursive: true });
+  // consent/: since SPEC-save-offer-production § 9 item 1 the build reads DRAFT.md (the privacy notice's page, and the
+  // production build's wording check).
+  for (const name of ["data", "scripts", "src", "consent"]) await cp(join(ROOT, name), join(dir, name), { recursive: true });
   await symlink(join(ROOT, "node_modules"), join(dir, "node_modules"));
   await edit(dir);
   return dir;

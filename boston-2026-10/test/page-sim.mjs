@@ -23,8 +23,9 @@ function clockAt(now) {
   };
 }
 
-/** `now`: the browser's clock, fixed at that instant (ms); omitted, the real clock. */
-export function simulatePage(html, { hash = "", turnstile = "pass", fetchReply = { ok: true, json: { ok: true } }, now } = {}) {
+/** `now`: the browser's clock, fixed at that instant (ms); omitted, the real clock. `search`: the URL's query, as
+ *  `location.search` gives it ("?e=boston"; SPEC-save-offer-production § 9 item 2). */
+export function simulatePage(html, { hash = "", search = "", turnstile = "pass", fetchReply = { ok: true, json: { ok: true } }, now } = {}) {
   const record = { fetches: [], xhr: 0, beacons: [], hashWrites: [], history: [], storage: [], cookies: [], lookups: new Set() };
   const elements = new Map();
   const windowListeners = {};
@@ -64,9 +65,9 @@ export function simulatePage(html, { hash = "", turnstile = "pass", fetchReply =
   }
 
   const location = {
-    href: `https://dev.example.invalid/${hash}`,
+    href: `https://dev.example.invalid/${search}${hash}`,
     pathname: "/",
-    search: "",
+    search,
     get hash() { return this._hash; },
     set hash(v) {
       const h = v.startsWith("#") ? v : `#${v}`;
