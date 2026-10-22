@@ -8,6 +8,9 @@
 // element between them but its no-script link and its dialog, neither drawn with script), and the footer carries no
 // *Why Fit AF?* (one entry point): no button, no link, no dialog; its no-script link directly follows the button. Its
 // height and its place as drawn are W2's (Chrome).
+// ⚠ § 11.2 (the Advisor, 2026-10-22, through the orchestrator: "in a button"): the button is no longer in See all plans'
+// style (`all-link`) but an outline button in the look of the menu chooser's unselected chip (`why-link`), and so is its
+// no-script link; W2 compares the look as drawn.
 // The behaviour (opening, closing, focus, the frame loaded) is W2's and the page without script W3's, in Chrome:
 // tools/storybook/test/w-why-chrome.test.mjs.
 import test from "node:test";
@@ -43,7 +46,8 @@ function problemsOf(html, servedAt, out) {
   if (!button) return [`${servedAt}: no #why-link`];
   if (button.tagName !== "BUTTON" || button.getAttribute("type") !== "button") fail(`#why-link is <${button.tagName.toLowerCase()} type="${button.getAttribute("type")}">, not a button`);
   if (button.textContent.trim() !== LABEL) fail(`#why-link reads "${button.textContent.trim()}"`);
-  for (const name of ["all-link", "js-only"]) if (!button.classList.contains(name)) fail(`#why-link lacks the class ${name}`);
+  for (const name of ["why-link", "js-only"]) if (!button.classList.contains(name)) fail(`#why-link lacks the class ${name}`);
+  if (button.classList.contains("all-link")) fail("#why-link still carries See all plans' class (all-link): § 11.2 makes it an outline button");
   if (button.getAttribute("aria-haspopup") !== "dialog") fail(`#why-link aria-haspopup="${button.getAttribute("aria-haspopup")}"`);
   if (button.getAttribute("aria-controls") !== "why") fail(`#why-link aria-controls="${button.getAttribute("aria-controls")}"`);
   // § 11 item 5: directly above the tabs, in the page's column; nothing of it in the footer.
@@ -59,6 +63,7 @@ function problemsOf(html, servedAt, out) {
   const noscript = button.nextElementSibling;
   const fallback = noscript?.tagName === "NOSCRIPT" ? parseHTML(`<div>${noscript.innerHTML}</div>`).document.querySelector("a") : null;
   if (!fallback || fallback.textContent.trim() !== LABEL || new URL(fallback.getAttribute("href"), `${ORIGIN}${servedAt}`).pathname !== WHY_PATH) fail("no no-script link to /why/, reading the label, directly after #why-link");
+  else if (fallback.getAttribute("class") !== "why-link") fail(`the no-script link's class="${fallback.getAttribute("class")}", not the button's look (why-link)`);
   const footer = document.querySelector("footer");
   if (!footer?.contains(plans)) fail("#all-link is not in the footer (it stays there)");
   if (footer && (footer.textContent.includes(LABEL) || footer.innerHTML.includes(WHY_PATH.slice(1)) || footer.querySelector("#why, #why-link"))) fail("the footer still carries Why Fit AF?");
