@@ -1,6 +1,6 @@
 {
   "about": "U4's before (SPEC-week-content § 8 item 5): test/u-checks.mjs normalWeekRecord() over recorded_at's own tree (test/u-04-record.mjs, which wrote this file): per normal week and target, the content command's files, the page as served with that week once its lines naming `updating` are removed (recorded_at's page has none), and the visible page per fragment. Re-record only by running the recorder; never by hand.",
-  "recorded_at": "1dc7b05",
+  "recorded_at": "a3897d8",
   "record": {
     "the v1 fixture, 2026-10-04 · prod": {
       "content": {
@@ -21,7 +21,7 @@
       "content": {
         "week/picks-data.json": "1374 bytes sha256:e03fde2974b9c9b472013e281b40d4916eba6e1b1a3f08fcf97861c5332d0645"
       },
-      "page": "89708 bytes sha256:54706b1ec526fcf5fce1b8440e0568ecbfd55da4ff4e06123487fa739cb0ce24",
+      "page": "90705 bytes sha256:d6b4657dd7afddfb9f5a2935a4b45d6a9009b548fa5c2a7e54321fbd36b0bae3",
       "visible": {
         "(no fragment)": "e67af14f2424a0c378ae5bc3d995e32997d2406451d43a99d33ff751daf5ffe5",
         "#lean-7": "4680950b1de58e82177638015f18b6f4b0bc2fbd2d85190b6c2f21a7c14e46f0",
@@ -51,7 +51,7 @@
       "content": {
         "week/picks-data.json": "7246 bytes sha256:ed14a2662d642fd651f5ab950794ef59b3e31d7bf04a5939cea3ed12b800f9ed"
       },
-      "page": "95580 bytes sha256:7fbcf8c45a7387a4c546405b8342ed7dbeb759ab722bcabfe5d63cdfa3f68a24",
+      "page": "96577 bytes sha256:40bae0016f155a231b006159192cb37ab6e0fecf4ddbc4dc01fd87f8bf989962",
       "visible": {
         "(no fragment)": "e67af14f2424a0c378ae5bc3d995e32997d2406451d43a99d33ff751daf5ffe5",
         "#lean-7": "fbf024f9825f935bd4a6a59ab985c08dd006f072e17406424cab3e96c1cea510",
@@ -83,7 +83,7 @@
         "week/picks-data.json": "30990 bytes sha256:8177932d30aa04d7fa0cfd5d60872caf266b0ba1ec0c03c3ee2a31940e231a9b",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "119324 bytes sha256:c3b439feaf93bdc4b2aad1176adbb8f774dfbf549c73658865f06a38d9d09faf",
+      "page": "120321 bytes sha256:ab20e362c2c99e2cbede7b156ab0e2564bba8e1f8efb4c25c9751265dec7ec65",
       "visible": {
         "(no fragment)": "e67af14f2424a0c378ae5bc3d995e32997d2406451d43a99d33ff751daf5ffe5",
         "#lean-7": "2f30889dc6be185cb9268b246786c431d590cea366094451a7f179f40850faee",
