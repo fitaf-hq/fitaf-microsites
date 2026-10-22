@@ -90,6 +90,14 @@
 // three development pages +14 bytes each, the save-data line alone (the Boston offer's label "[The offer]" -> "Sign up today
 // to save 25%"; build:dev of both trees differs by that line in index.html, demo/, boston/ and seminar/, nothing else;
 // the production builds identical). From here the reference is 8f3baf0's tree.
+// ⚠ RE-RECORDED at 1dc7b05 (`node test/u-04-record.mjs --commit 1dc7b05`): § 10.7 (one offer, every visitor's, from
+// 2026-10-01 to 2026-10-29; after it no offer is offered). Against 8f3baf0's record, all six contents and production's three
+// entries byte-identical; the three development pages +19 bytes each (save-data's one offer; offers.js's and flow1.js's
+// lines, the box and the step drawn only while an offer is live), and their visible pages at all seven fragments: U4 reads
+// them at 2026-09-29, before the one offer, where 8f3baf0's page showed the general placeholder ("[The offer]"); now the
+// offer box and the save step are not drawn. Element by element (scratch proof over both trees' development pages) the
+// visible pages only lose lines: the box (6) at "(no fragment)", the box and the step (37) at #lean-7 and #family; nothing
+// is added. From here the reference is 1dc7b05's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -98,7 +106,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 8f3baf0's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "8f3baf0");
+test("U4: a normal week, the content and the page as served, byte-identical to 1dc7b05's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "1dc7b05");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });
