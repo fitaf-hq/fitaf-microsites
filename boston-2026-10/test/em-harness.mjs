@@ -101,8 +101,9 @@ export function chooseMenu(page, list) {
   radio.dispatchEvent(new page.document.defaultView.Event("change", { bubbles: true }));
 }
 
-/** Each meal of the card's list as a visitor reads it: its name, its nutrition line (or null), whether it is a disclosure
- *  control (a button) with its aria-expanded and the panel it controls, and that panel's lines when shown. */
+/** Each meal of the card's list as a visitor reads it: its name, its nutrition line (or null: since § 11 item 2 there is
+ *  none), whether it is a disclosure control (a button) with its aria-expanded and the panel it controls, that panel's
+ *  lines (its ingredients and Contains) and its rings' words (each ring's value and label), and whether it is shown. */
 export function mealsOf(page) {
   const ul = page.document.getElementById("cc-meals");
   return [...(ul?.children ?? [])].filter((el) => el.tagName === "LI").map((li) => {
@@ -117,13 +118,44 @@ export function mealsOf(page) {
       expanded: button?.getAttribute("aria-expanded") ?? null,
       panelInside: Boolean(panel) && li.contains(panel),
       open: Boolean(panel) && !hiddenInTree(panel),
-      more: panel ? [...panel.children].map((p) => shownText(p.textContent)) : null,
+      more: panel ? [...panel.querySelectorAll("p")].map((p) => shownText(p.textContent)) : null,
+      rings: panel ? [...panel.querySelectorAll(".cc-ring")].map((r) => shownText(r.textContent)) : null,
     };
   });
 }
 
-/** The line § 3 item 1 shows for `facts` (one size's five numbers), by the words' `nutrition.line`. */
-export const lineOf = (facts, messages = fixtureWords()) => fill(messages.nutrition.line, facts);
+/**
+ * § 11 item 4.1 (the Advisor's review of 2026-10-22): the store's own rings, as Fit AF's Shopify theme copies them from
+ * the live order page's meal dialog (fitaf scripts/commerce/theme/snippets/fitaf-ring.liquid, assets/fitaf.css
+ * `.fam-macros`), written here from the contract: one per number, in this order, each arc its value over a daily amount
+ * (the store catalogue's recommended_daily_intake; calories the live dialog's 2,000) clamped to RING_SHARE, in the store's
+ * colour, on a track; the circle radius 17 in a 40 viewBox, its stroke 2.5; the value `g` after all but calories.
+ */
+export const RINGS = [
+  { fact: "cal", daily: 2000, colour: "#888888", grams: false },
+  { fact: "protein", daily: 50, colour: "#ffad0d", grams: true },
+  { fact: "carbs", daily: 275, colour: "#3ed3a3", grams: true },
+  { fact: "fat", daily: 77, colour: "#ff5d5d", grams: true },
+  { fact: "fiber", daily: 28, colour: "#303030", grams: true },
+];
+export const RING_TRACK = "#eceef0";
+export const RING_SHARE = { least: 0.06, most: 1 };
+export const RING_GEOMETRY = { viewBox: 40, radius: 17, stroke: 2.5 };
+/** About 56 CSS px each (§ 11 item 4.1). */
+export const RING_PX = 56;
+
+/** The rings § 11 item 4 shows for a meal's `entry` at `size`, by the words: [{ label, value, share, colour }] in order,
+ *  or null when the meal has no numbers for that size (§ 11 item 4.2: no rings, never another size's). */
+export function ringsOf(entry, size, messages = fixtureWords()) {
+  const numbers = entry?.nutrition?.[size];
+  if (!numbers) return null;
+  return RINGS.map(({ fact, daily, colour, grams }) => ({
+    label: messages.nutrition.rings?.[fact] ?? null,
+    value: grams ? fill(messages.nutrition.grams ?? "", { n: numbers[fact] }) : String(numbers[fact]),
+    share: Math.min(RING_SHARE.most, Math.max(RING_SHARE.least, numbers[fact] / daily)),
+    colour,
+  }));
+}
 /** The panel's lines for a meal's entry: its ingredients, and its Contains when it has one (§ 3 item 2). */
 export const moreOf = (entry, messages = fixtureWords()) => [
   fill(messages.nutrition.ingredients, { text: shownText(entry.ingredients) }),

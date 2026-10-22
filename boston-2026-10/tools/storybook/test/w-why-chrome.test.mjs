@@ -1,21 +1,27 @@
 // W2 and W3 of the site's SPEC-why-fit-af.md (§ 2 items 3-4, § 3), in Chrome, here because this package drives Chrome
 // and the site never installs a driver (the plans dialog's own case, PR-8 in pr-chrome.test.mjs, is the model):
-//   W2: the footer's button opens its dialog modally, focus moving in, with the frame loaded at /why/ (its document the
+// ⚠ MOVED by SPEC-every-menu-and-nutrition.md § 11 item 5 (the Advisor's review of 2026-10-22: *"Please make "Why Fit
+// AF?" more prominent on the microsite. Let's try putting it in a button and then putting it above the Individual/Family
+// chooser"*): the button is drawn directly above the tabs (nothing drawn between them), at least 64 CSS px tall, in the
+// page's quieter button style (See all plans': its colour, type, underline, background and border), and the footer
+// shows no *Why Fit AF?*; without script, the same place holds the link to /why/ and the footer none.
+//   W2: the button opens its dialog modally, focus moving in, with the frame loaded at /why/ (its document the
 //   site's src/why/index.html, known by its title) and as tall as the viewport allows, the /why/ page scrolling inside
 //   it, and not requested before the button is pressed (`loading="lazy"`); Escape (with focus on the dialog's own
 //   controls, and again with focus inside the frame, after a press in it), the close button and a press on the backdrop
 //   each close it, and focus returns to the button. On the
 //   production page at 390 (#lean-7) and at 1280 (#family, the other tab), and on a development page one directory down
 //   (/<event-id>/, whose assets are addressed from the root) at 390.
-//   W3: the same pages with JavaScript off: neither the button nor the dialog shown; the footer's one link shown, reading
-//   the button's label and going to /why/; the plans dialog still shown, as the page's no-script rule always showed it
-//   (a control).
+//   W3: the same pages with JavaScript off: neither the button nor the dialog shown; one link shown to /why/, reading
+//   the button's label, in the button's place above the tabs (no link in the footer); the plans dialog still shown, as
+//   the page's no-script rule always showed it (a control).
 //   W2, since SPEC-why-fit-af § 6 (2026-10-21): with the dialog open, a press on the /why/ page's link to this site's
 //   plan page (found in the frame by where it goes, its URL resolved against the frame's document: this origin, path
 //   "/"; never by its words, SM-4) closes the dialog, focus back on the button, the top page's URL unchanged, nothing
 //   navigated (the frame's document still /why/). On the production page at 390 and the development page /demo/ at 390.
 // ⭐ Mutant: a copy of the production build without the one line of its script that wires the button (the button wired
-// to nothing) fails W2; the copy left as built (its control) passes. ⭐ And § 6's: a copy without the one line that
+// to nothing) fails W2; the copy left as built (its control) passes. ⭐ And § 11's: a copy with the button left in the
+// footer, beside See all plans (moved there in the copy's markup), fails W2; the copy as built passes. ⭐ And § 6's: a copy without the one line that
 // listens for a click on the frame's document (the link's listener removed: the frame navigates to the plan page, the
 // dialog stays open) fails § 6's case; the copy as built (its control) passes.
 // The pages are the site's own builds (`node build.mjs [--env dev] --out`, as the stories' pages are built), served on
@@ -45,6 +51,10 @@ const PLAN_PATH = "/";
 /** § 6: how long the network must be quiet after the press before the case reads what happened (a navigation the
  *  press started would be under way by then). */
 const SETTLE_MS = 750;
+/** SPEC-every-menu-and-nutrition § 11 item 5: "at least 64 CSS px tall" (the card's touch target, § 10). */
+const TARGET_PX = 64;
+/** The quieter button's look (SPEC-save-offer-production § 9.1 item 2: See all plans' style), as SP2 compares it. */
+const LOOK = ["color", "fontFamily", "fontSize", "fontWeight", "textDecorationLine", "backgroundColor", "borderTopWidth"];
 
 /** The /why/ page's title, read from the site's source (the frame's document is that page). */
 const WHY_TITLE = /<title>([^<]+)<\/title>/.exec(await readFile(siteFile("src", "why", "index.html"), "utf8"))[1];
@@ -161,9 +171,48 @@ async function planLinkProblems(page) {
   return problems;
 }
 
+/** Runs in the page: where the button is drawn (§ 11 item 5): its box and look, See all plans' look, the tabs' box,
+ *  whether anything is drawn between the button and the tabs, and what of Why Fit AF? the footer draws. */
+function readPlace(look) {
+  const button = document.getElementById("why-link");
+  const tabs = document.querySelector('[role="tablist"]');
+  const plans = document.getElementById("all-link");
+  const styleOf = (el) => (el ? Object.fromEntries(look.map((k) => [k, getComputedStyle(el)[k]])) : null);
+  const between = [];
+  let next = button?.nextElementSibling;
+  for (; next && next !== tabs; next = next.nextElementSibling) if (next.checkVisibility()) between.push(next.tagName.toLowerCase());
+  const label = button?.textContent.trim() ?? "";
+  const footer = document.querySelector("footer");
+  return {
+    drawn: Boolean(button?.checkVisibility()),
+    box: button?.getBoundingClientRect().toJSON() ?? null,
+    tabs: tabs?.checkVisibility() ? tabs.getBoundingClientRect().toJSON() : null,
+    sibling: next === tabs && Boolean(tabs),
+    between,
+    look: styleOf(button),
+    plansLook: styleOf(plans),
+    inFooter: Boolean(footer?.contains(button)),
+    footerWhy: footer ? [...footer.querySelectorAll("button, a")].filter((el) => el.checkVisibility() && el.textContent.trim() === label).length : null,
+  };
+}
+
+/** § 11 item 5: one line per thing the button's place does not hold on `page`; [] when all do. */
+async function placeProblems(page) {
+  const problems = [];
+  const p = await page.evaluate(readPlace, LOOK);
+  if (!p.drawn || !p.box) return ["the button is not drawn"];
+  if (p.inFooter || p.footerWhy) problems.push(`the footer shows Why Fit AF? (the button in it: ${p.inFooter}; ${p.footerWhy} drawn there)`);
+  if (!p.sibling) problems.push("the button is not directly above the tabs (not their preceding sibling)");
+  if (p.between.length) problems.push(`drawn between the button and the tabs: ${p.between.join(", ")}`);
+  if (!p.tabs || p.box.bottom > p.tabs.top + 1) problems.push(`the button is not above the tabs (${JSON.stringify({ button: p.box, tabs: p.tabs })})`);
+  if (p.box.height < TARGET_PX) problems.push(`the button is ${p.box.height} px tall, under ${TARGET_PX}`);
+  if (JSON.stringify(p.look) !== JSON.stringify(p.plansLook)) problems.push(`the button's look ${JSON.stringify(p.look)} is not See all plans' ${JSON.stringify(p.plansLook)}`);
+  return problems;
+}
+
 /** One line per thing W2 does not hold on `page`; [] when all do. Stops at the first close that does not happen. */
 async function behaviourProblems(page, requested) {
-  const problems = [];
+  const problems = await placeProblems(page);
   if (requested.includes(WHY_PATH)) problems.push(`${WHY_PATH} was requested before the button was pressed (the frame is not lazy)`);
   const state = () => page.evaluate(readWhy);
   const open = async (how) => {
@@ -223,16 +272,28 @@ for (const where of PLAN_LINK_PAGES) {
 }
 
 for (const where of PAGES) {
-  test(`W3 (${where.name}): without script, no button and no dialog; the footer's link to /why/; the plans still shown (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
+  test(`W3 (${where.name}): without script, no button and no dialog; the link to /why/ in the button's place above the tabs, none in the footer; the plans still shown (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
     const read = await withPage({ ...where, script: false }, async (page, base) => {
-      const seen = await page.evaluate(() => ({
-        label: document.getElementById("why-link")?.textContent.trim() ?? null,
-        button: document.getElementById("why-link")?.checkVisibility() ?? null,
-        dialog: document.getElementById("why")?.checkVisibility() ?? null,
-        frame: document.querySelector("#why iframe")?.checkVisibility() ?? null,
-        plans: document.getElementById("all")?.checkVisibility() ?? null,
-        links: [...document.querySelectorAll("footer a")].filter((a) => a.checkVisibility()).map((a) => ({ text: a.textContent.trim(), href: a.href })),
-      }));
+      const seen = await page.evaluate((path) => {
+        const button = document.getElementById("why-link");
+        const tabs = document.querySelector('[role="tablist"]');
+        const why = [...document.querySelectorAll("a")].filter((a) => a.checkVisibility() && new URL(a.href).pathname === path);
+        // The button's place: the elements from the button to the tabs (its no-script link among them), none drawn but it.
+        const place = [];
+        for (let el = button; el && el !== tabs; el = el.nextElementSibling) place.push(el);
+        const panel = document.getElementById("panel-individual");
+        return {
+          label: button?.textContent.trim() ?? null,
+          button: button?.checkVisibility() ?? null,
+          dialog: document.getElementById("why")?.checkVisibility() ?? null,
+          frame: document.querySelector("#why iframe")?.checkVisibility() ?? null,
+          plans: document.getElementById("all")?.checkVisibility() ?? null,
+          links: why.map((a) => ({ text: a.textContent.trim(), href: a.href })),
+          inPlace: why.length === 1 && place.some((el) => el.contains(why[0])),
+          above: why.length === 1 && panel ? why[0].getBoundingClientRect().bottom <= panel.getBoundingClientRect().top + 1 : null,
+          footer: [...document.querySelectorAll("footer a")].filter((a) => a.checkVisibility()).length,
+        };
+      }, WHY_PATH);
       let landed = null;
       if (seen.links.length === 1) {
         await page.goto(seen.links[0].href, { waitUntil: "load" });
@@ -243,7 +304,10 @@ for (const where of PAGES) {
     assert.ok(read.label, "control: the button is in the markup");
     assert.equal(read.plans, true, "control: the page's no-script rule still shows the plans dialog");
     assert.deepEqual([read.button, read.dialog, read.frame], [false, false, false], "neither the button nor the dialog (nor its frame) shown");
-    assert.deepEqual(read.links, [{ text: read.label, href: `${read.base}${WHY_PATH}` }], "the footer's one link, the button's label, to /why/");
+    assert.deepEqual(read.links, [{ text: read.label, href: `${read.base}${WHY_PATH}` }], "one link, the button's label, to /why/");
+    assert.equal(read.inPlace, true, "the link in the button's place, between it and the tabs");
+    assert.equal(read.above, true, "the link drawn above the plan's panel");
+    assert.equal(read.footer, 0, "no link in the footer");
     assert.deepEqual(read.landed, { path: WHY_PATH, title: WHY_TITLE }, "the link opens the /why/ page");
   });
 }
@@ -281,4 +345,25 @@ test("W2 (mutant, SPEC-why-fit-af § 6): the link's listener removed (its line o
   const problems = await withPage(where, (page) => planLinkProblems(page));
   assert.ok(problems.some((p) => /did not close the dialog/.test(p)), problems.join("\n"));
   assert.ok(problems.some((p) => /navigated after the press: a frame to \/(;|$)/.test(p)), problems.join("\n"));
+});
+
+/** § 11 item 5's mutant: the button's markup, and See all plans' in the footer, each read from the page. */
+const BUTTON_MARKUP = /<button\b[^>]*\bid="why-link"[^>]*>[^<]*<\/button>/g;
+const PLANS_MARKUP = /<button\b[^>]*\bid="all-link"[^>]*>[^<]*<\/button>/g;
+
+test("W2 (mutant, SPEC-every-menu-and-nutrition § 11): the button left in the footer, beside See all plans, fails W2; the copy as built passes (Chrome, 390)", { timeout: TIMEOUT_MS }, async (t) => {
+  const copy = await mkdtemp(join(tmpdir(), "fitaf-storybook-why-footer-mutant-"));
+  t.after(() => rm(copy, { recursive: true, force: true }));
+  await siteBuild({ build: "production", out: copy });
+  const index = join(copy, "index.html");
+  const html = await readFile(index, "utf8");
+  const where = { dir: copy, path: "/index.html", hash: "#lean-7", width: VIEWPORTS.w390.width };
+  const [button] = html.match(BUTTON_MARKUP) ?? [];
+  assert.equal(html.match(BUTTON_MARKUP)?.length, 1, "fixture control: the button's markup, once");
+  assert.equal(html.match(PLANS_MARKUP)?.length, 1, "fixture control: See all plans' markup, once");
+  assert.deepEqual(await withPage(where, (page, base, requested) => behaviourProblems(page, requested)), [], "control: the copy as built passes W2");
+  await writeFile(index, html.replace(BUTTON_MARKUP, "").replace(PLANS_MARKUP, (plans) => plans + button));
+  const problems = await withPage(where, (page, base, requested) => behaviourProblems(page, requested));
+  t.diagnostic(problems.join("\n"));
+  assert.ok(problems.some((p) => /the footer shows Why Fit AF\?/.test(p)) && problems.some((p) => /not directly above the tabs/.test(p)), problems.join("\n"));
 });

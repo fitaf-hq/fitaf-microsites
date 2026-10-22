@@ -65,10 +65,13 @@ async function withCopies(messages, picks, fn) {
 test("CC-7a: data/messages.json has each phrase of § 3, each with its placeholders; none is in the source", async () => {
   const words = MESSAGES.chefs_choice;
   assert.ok(words, "data/messages.json has a chefs_choice key");
-  for (const [key, placeholders] of Object.entries(PHRASES)) {
+  // SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): the committed heading is the menu's name alone, `{menu}`;
+  // `{week}` is a placeholder the build still accepts (CC-7b and CC-7c use it) and these words no longer carry.
+  for (const [key, placeholders] of Object.entries({ ...PHRASES, heading: ["{menu}"] })) {
     assert.equal(typeof words[key], "string", `chefs_choice.${key}`);
     for (const p of placeholders) assert.ok(words[key].includes(p), `chefs_choice.${key} has ${p}`);
   }
+  assert.ok(!words.heading.includes("{week}"), "chefs_choice.heading shows no range (§ 11 item 1)");
   const sources = [
     "src/template.html",
     "src/app.js",

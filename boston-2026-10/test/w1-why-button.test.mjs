@@ -1,8 +1,13 @@
 // W1 (SPEC-why-fit-af.md § 2 items 1-2, § 3): the built page, production's (`npm run build`) and every development page
-// (`npm run build:dev`: `/` and `/<event-id>/`), carries the button in the footer, beside *See all plans* and in its
-// style, and its dialog built as the plans dialog is: the box, the close button at its head, and ONE frame whose `src`,
+// (`npm run build:dev`: `/` and `/<event-id>/`), carries the button in See all plans' style (the page's quieter button),
+// and its dialog built as the plans dialog is: the box, the close button at its head, and ONE frame whose `src`,
 // resolved against the address the page is served at, is the built /why/ page (the build's copy of src/why/index.html,
 // beside the page). Each build into a temporary directory of its own; nothing is written in the package.
+// ⚠ MOVED by SPEC-every-menu-and-nutrition.md § 11 item 5 (the Advisor's review of 2026-10-22: *"Let's try putting it in
+// a button and then putting it above the Individual/Family chooser"*): the button sits directly above the tabs (no
+// element between them but its no-script link and its dialog, neither drawn with script), and the footer carries no
+// *Why Fit AF?* (one entry point): no button, no link, no dialog; its no-script link directly follows the button. Its
+// height and its place as drawn are W2's (Chrome).
 // The behaviour (opening, closing, focus, the frame loaded) is W2's and the page without script W3's, in Chrome:
 // tools/storybook/test/w-why-chrome.test.mjs.
 import test from "node:test";
@@ -41,8 +46,22 @@ function problemsOf(html, servedAt, out) {
   for (const name of ["all-link", "js-only"]) if (!button.classList.contains(name)) fail(`#why-link lacks the class ${name}`);
   if (button.getAttribute("aria-haspopup") !== "dialog") fail(`#why-link aria-haspopup="${button.getAttribute("aria-haspopup")}"`);
   if (button.getAttribute("aria-controls") !== "why") fail(`#why-link aria-controls="${button.getAttribute("aria-controls")}"`);
-  if (!button.closest("footer.foot")) fail("#why-link is not in the footer");
-  if (!plans || button.previousElementSibling !== plans) fail("#why-link is not beside #all-link");
+  // § 11 item 5: directly above the tabs, in the page's column; nothing of it in the footer.
+  const tabs = document.querySelector('[role="tablist"]');
+  if (!tabs || !tabs.querySelector("#tab-individual")) fail("fixture control: no tab list holding #tab-individual");
+  if (button.closest("footer")) fail("#why-link is in the footer");
+  if (!button.closest("main")) fail("#why-link is not in the page's column (main)");
+  const between = [];
+  let next = button.nextElementSibling;
+  for (; next && next !== tabs; next = next.nextElementSibling) between.push(next);
+  if (next !== tabs) fail("#why-link is not directly above the tabs (they are not its following sibling)");
+  else if (between.some((el) => !(el.tagName === "NOSCRIPT" || el.id === "why"))) fail(`between #why-link and the tabs: ${between.map((el) => el.tagName.toLowerCase()).join(", ")}`);
+  const noscript = button.nextElementSibling;
+  const fallback = noscript?.tagName === "NOSCRIPT" ? parseHTML(`<div>${noscript.innerHTML}</div>`).document.querySelector("a") : null;
+  if (!fallback || fallback.textContent.trim() !== LABEL || new URL(fallback.getAttribute("href"), `${ORIGIN}${servedAt}`).pathname !== WHY_PATH) fail("no no-script link to /why/, reading the label, directly after #why-link");
+  const footer = document.querySelector("footer");
+  if (!footer?.contains(plans)) fail("#all-link is not in the footer (it stays there)");
+  if (footer && (footer.textContent.includes(LABEL) || footer.innerHTML.includes(WHY_PATH.slice(1)) || footer.querySelector("#why, #why-link"))) fail("the footer still carries Why Fit AF?");
 
   const dialog = document.getElementById("why");
   if (!dialog) return [...problems, `${servedAt}: no #why`];
@@ -71,7 +90,7 @@ function problemsOf(html, servedAt, out) {
 }
 
 for (const target of ["prod", "dev"]) {
-  test(`W1 (${target}): the footer's button and its dialog, the frame's src the built /why/ page`, async () => {
+  test(`W1 (${target}): the button directly above the tabs, none in the footer, and its dialog, the frame's src the built /why/ page`, async () => {
     const out = await mkdtemp(join(tmpdir(), `boston-w1-${target}-`));
     try {
       await build({ target, outDir: out });

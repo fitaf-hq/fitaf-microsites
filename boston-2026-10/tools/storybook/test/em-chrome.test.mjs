@@ -6,14 +6,19 @@
 //   (the SHIPPED reader of #fitaf=, the site's cc-harness readWithFillB) to THAT list's cart and the size's mpid; an
 //   answer change the chosen menu has a cart for keeps it, one it has none for returns to Chef's Choice. A week of one
 //   list: no group, and the card as the base's (76ee36e, this contract's commit) shows it, text and boxes.
-//   EM3, nutrition: each meal's line for the chosen size, changing with the size; the meal a button whose aria-expanded
-//   follows the panel it opens beneath it (the ingredients, and Contains when there is one) and a second press closes;
-//   each meal on its own; a meal with no entry has no line and no control, one without the chosen size no line, and
-//   (§ 1 item 2, amended at 1fb2b19) one without ingredients no control: numbers alone are a line, ingredients alone a
-//   control without a line.
+//   EM3, nutrition: the meal a button whose aria-expanded follows the panel it opens beneath it and a second press
+//   closes; each meal on its own. Since § 11 (the Advisor's review of 2026-10-22) there is no line under a meal's name at
+//   any size; a meal is a control when it has numbers for the chosen size or ingredients (§ 11 item 4.2: "a meal with
+//   neither has no panel and no mark"), its panel the ingredients and Contains when it has them; a meal with no entry
+//   is no control.
+//   EM9 (§ 11 items 4 and 6, at 390 and 1280): opening a meal shows its rings for the chosen size first, five in the
+//   contract's order (Calories, Protein, Carbs, Fat, Fiber, by the words), each its size's number, its arc the value
+//   over the number's daily amount (clamped), in the store's colour on the store's track, then the ingredients and
+//   Contains; a meal with no numbers for the size shows no rings and keeps its ingredients.
 // ⭐ Mutants, each on a copy of the built page with ONE line of its script changed (read from the page, never written
 // here: SM-4), its control the copy as built: the checkout link taken from Chef's Choice's cart whatever is chosen
-// fails EM2; the line read from the first size present rather than the chosen one fails EM3.
+// fails EM2; a ring's arc taken over another number's daily amount fails EM9; the rings read from the first size
+// present rather than the chosen one fail EM9. (EM3's own mutant, the line from the first size, went with the line.)
 // The page is the site's own production build (`node build.mjs --out`), the fixture week (the site's
 // test/fixtures/picks-menus/, invented names) made into content by the site's own weekData with the fixture's words
 // (test/fixtures/menus-words.mjs) and put into #picks-data by its own pageWithWeek, as the Workers put the bucket's;
@@ -108,7 +113,7 @@ function readCard() {
         expanded: button ? button.getAttribute("aria-expanded") : null,
         open: drawn(panel),
         below,
-        more: panel ? [...panel.children].map(text) : null,
+        more: panel ? [...panel.querySelectorAll("p")].map(text) : null,
       };
     }),
     snacks: drawn($("cc-snack-list")) ? [...$("cc-snack-list").children].map(text) : null,
@@ -244,7 +249,7 @@ function readResult() {
   return { text: result.innerText, boxes, group: Boolean(document.getElementById("cc-menus")?.checkVisibility()) };
 }
 
-test("EM2: a week of one list shows no chooser, and the card as the base's, its text and every box (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
+test("EM2: a week of one list shows no chooser, and the card as the base's, its text (the heading by § 11 item 1) and every box (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
   await siteBuild({ build: "production", out: oneOut });
   await weekSite(oneOut, { picks: ms.V2_DIR, week: em.MENUS_WEEK, messages: JSON.parse(await readFile(siteFile("data", "messages.json"), "utf8")) });
   await baseSite();
@@ -255,7 +260,11 @@ test("EM2: a week of one list shows no chooser, and the card as the base's, its 
       const first = ms.V2_CARTS[hash.replace(/^#[a-z]+-/, "").replace(/-s$/, "")].items[0].display;
       assert.ok(before.text.includes(first), `control: ${BASE}'s card at ${width} ${hash} shows the week (${first})`);
       assert.equal(after_.group, false, `${width} ${hash}: no chooser`);
-      assert.equal(after_.text, before.text, `${width} ${hash}: the card's text`);
+      // § 11 item 1 (2026-10-22): the heading is the menu's name alone, the base's "<name> (<week>)" without its range.
+      const name = WORDS.menus[CC];
+      const dated = `${name} (${em.weekOf(em.MENUS_WEEK)})`;
+      assert.ok(before.text.includes(dated), `control: ${BASE}'s heading names the week`);
+      assert.equal(after_.text, before.text.replace(dated, name), `${width} ${hash}: the card's text, the heading the menu's name alone`);
       assert.deepEqual(after_.boxes, before.boxes, `${width} ${hash}: the card's boxes`);
     }
   }
@@ -267,16 +276,16 @@ async function nutritionProblems(dir = menusOut) {
   const problems = [];
   const fail = (what) => problems.push(what);
   const meals = em.MENUS.meals;
-  /** What each meal of `list`'s cart for `key` must show at `size`: its line (its numbers for that size, if any), whether
-   *  it is a control (it has ingredients), its panel's lines. */
+  /** What each meal of `list`'s cart for `key` must show at `size`: no line (§ 11 item 2), whether it is a control (it
+   *  has numbers for that size or ingredients: § 11 item 4.2), its panel's lines (its ingredients and Contains). */
   const expected = (list, key, size) =>
     cartOf(list, key).items.map((m) => {
       const entry = meals[m.name];
       return {
         name: em.displayOf(m, WORDS),
-        line: entry?.nutrition?.[size] ? em.lineOf(entry.nutrition[size], WORDS) : null,
-        control: Boolean(entry?.ingredients),
-        more: entry?.ingredients ? em.moreOf(entry, WORDS) : null,
+        line: null,
+        control: Boolean(entry?.ingredients) || Boolean(entry?.nutrition?.[size]),
+        more: entry?.ingredients ? em.moreOf(entry, WORDS) : [],
       };
     });
   const compare = (s, list, key, size) => {
@@ -328,12 +337,161 @@ async function nutritionProblems(dir = menusOut) {
   return problems;
 }
 
-test("EM3: each meal's line for the chosen size, changing with it; the meal a disclosure of its ingredients and Contains (Chrome, 390)", { timeout: TIMEOUT_MS }, async () => {
+test("EM3: no line under a meal's name at any size; a meal with numbers for the size or ingredients a disclosure of its panel (Chrome, 390)", { timeout: TIMEOUT_MS }, async () => {
   const sizes = em.SIZES.map((size) => Object.values(em.MENUS.meals).filter((e) => e.nutrition?.[size]).length);
   assert.ok(sizes.every((n) => n > 0), `fixture control: every size has numbers (${sizes})`);
   const shown = [...em.cartsOf(CC)["or-7d"].items, ...em.cartsOf(TWO)["or-7d"].items].map((m) => em.MENUS.meals[m.name]).filter(Boolean);
   assert.ok(shown.some((e) => !e.ingredients) && shown.some((e) => !e.nutrition), "fixture control: a meal of numbers alone and one of ingredients alone on the carts EM3 reads");
   assert.deepEqual(await nutritionProblems(), []);
+});
+
+// EM9 (§ 11 items 4 and 6): the rings. Expectations from the contract (em-harness RINGS, ringsOf), never the page's.
+/** A share read off an arc agrees with the expected one to this much of the circle. */
+const SHARE_SLACK = 0.005;
+/** "About 56 px": a ring's circle within this of RING_PX; the value centred within CENTRE_SLACK_PX of the circle's centre. */
+const RING_SLACK_PX = 6;
+const CENTRE_SLACK_PX = 3;
+/** rotate(-90) about the circle's centre: the arc starts at 12 o'clock (the snippet's transform). */
+const START_MATRIX = (c) => [0, -1, 1, 0, 0, 2 * c];
+const rgbOf = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
+
+/** Runs in the page: the panel of the `index`th meal (its button pressed open first), as drawn: its children's kinds in
+ *  order, each ring's circle, arc, value and label, and the boxes EM9 compares. */
+function readPanel(index) {
+  const li = document.getElementById("cc-meals").children[index];
+  const button = li?.querySelector("button");
+  const panel = button && document.getElementById(button.getAttribute("aria-controls"));
+  if (!panel) return null;
+  const box = (el) => el.getBoundingClientRect().toJSON();
+  const body = getComputedStyle(document.body).color;
+  const rings = [...panel.querySelectorAll(".cc-ring")].map((ring) => {
+    const svg = ring.querySelector("svg");
+    const circles = svg ? [...svg.querySelectorAll("circle")] : [];
+    const arc = circles.find((c) => c.hasAttribute("stroke-dasharray"));
+    const track = circles.find((c) => c !== arc);
+    const value = ring.querySelector(".cc-ring-value");
+    const label = ring.querySelector(".cc-ring-label");
+    const m = arc?.transform.baseVal.consolidate()?.matrix;
+    return {
+      drawn: ring.checkVisibility(),
+      viewBox: svg ? [svg.viewBox.baseVal.width, svg.viewBox.baseVal.height] : null,
+      hidden: svg?.getAttribute("aria-hidden"),
+      circles: circles.length,
+      radius: arc ? [arc.r.baseVal.value, track?.r.baseVal.value] : null,
+      dash: arc ? arc.getAttribute("stroke-dasharray").split(/[\s,]+/).map(Number) : null,
+      matrix: m ? [m.a, m.b, m.c, m.d, m.e, m.f] : null,
+      cap: arc ? getComputedStyle(arc).strokeLinecap : null,
+      width: arc ? [getComputedStyle(arc).strokeWidth, track && getComputedStyle(track).strokeWidth] : null,
+      arcColour: arc ? getComputedStyle(arc).stroke : null,
+      trackColour: track ? getComputedStyle(track).stroke : null,
+      value: value?.textContent.replace(/\s+/g, " ").trim() ?? null,
+      label: label?.textContent.replace(/\s+/g, " ").trim() ?? null,
+      inkValue: value ? getComputedStyle(value).color === body : null,
+      inkLabel: label ? getComputedStyle(label).color === body : null,
+      svgBox: svg ? box(svg) : null,
+      valueBox: value ? box(value) : null,
+      labelBox: label ? box(label) : null,
+      ringBox: box(ring),
+    };
+  });
+  const kinds = [...panel.children].map((c) => (c.querySelector(".cc-ring") || c.classList.contains("cc-ring") ? "rings" : c.tagName.toLowerCase()));
+  return {
+    open: panel.checkVisibility(),
+    kinds,
+    svgs: panel.querySelectorAll("svg").length,
+    lines: [...panel.querySelectorAll("p")].map((p) => p.textContent.replace(/\s+/g, " ").trim()),
+    panelBox: box(panel),
+    rings,
+  };
+}
+
+/** One line per thing EM9 does not hold on the fixture's page; [] when all do. */
+async function ringProblems(dir = menusOut) {
+  if (dir === menusOut) await menusPage();
+  const problems = [];
+  const meals = em.MENUS.meals;
+  for (const width of [VIEWPORTS.w390.width, VIEWPORTS.w1280.width]) {
+    await withPage({ dir, hash: "#lean-or-7d", width }, async (page) => {
+      let sawRings = 0;
+      let sawNone = 0;
+      for (const size of em.SIZES) {
+        if (size !== "lean") await press(page, `[data-goal="${size}"]`);
+        for (const list of [CC, TWO]) {
+          await chooseMenu(page, list);
+          const items = cartOf(list, "or-7d").items;
+          for (let i = 0; i < items.length; i++) {
+            const entry = meals[items[i].name];
+            const want = em.ringsOf(entry, size, WORDS);
+            if (!want && !entry?.ingredients) continue; // no control: EM3's
+            const where = `${width} ${size} ${list} ${em.displayOf(items[i], WORDS)}`;
+            const fail = (what) => problems.push(`${where}: ${what}`);
+            const button = `#cc-meals > li:nth-child(${i + 1}) > button`;
+            if (!(await page.$(button))) {
+              fail("not a control");
+              continue;
+            }
+            await press(page, button);
+            const panel = await page.evaluate(readPanel, i);
+            if (!panel?.open) {
+              fail("pressed, its panel is not shown");
+              continue;
+            }
+            const lines = entry?.ingredients ? em.moreOf(entry, WORDS) : [];
+            if (JSON.stringify(panel.lines) !== JSON.stringify(lines)) fail(`the panel's lines ${JSON.stringify(panel.lines)}, not ${JSON.stringify(lines)}`);
+            const kinds = [...(want ? ["rings"] : []), ...lines.map(() => "p")];
+            if (JSON.stringify(panel.kinds) !== JSON.stringify(kinds)) fail(`the panel holds ${JSON.stringify(panel.kinds)}, not ${JSON.stringify(kinds)} (the rings first, then the ingredients and Contains)`);
+            if (!want) {
+              sawNone += 1;
+              if (panel.rings.length || panel.svgs) fail(`no numbers for ${size}, yet ${panel.rings.length} rings (${panel.svgs} svg)`);
+            } else {
+              sawRings += 1;
+              if (panel.rings.length !== want.length) fail(`${panel.rings.length} rings, not ${want.length}`);
+              const tops = new Set();
+              panel.rings.forEach((r, k) => {
+                const w = want[k];
+                if (!w) return;
+                const at = `ring ${k + 1} (${w.label})`;
+                if (!r.drawn) fail(`${at}: not drawn`);
+                if (r.label !== w.label) fail(`${at}: the label ${JSON.stringify(r.label)}`);
+                if (r.value !== w.value) fail(`${at}: the value ${JSON.stringify(r.value)}, not ${JSON.stringify(w.value)}`);
+                if (r.hidden !== "true") fail(`${at}: its circle is not hidden from assistive technology (the value and label are its words)`);
+                if (JSON.stringify(r.viewBox) !== JSON.stringify([em.RING_GEOMETRY.viewBox, em.RING_GEOMETRY.viewBox])) fail(`${at}: viewBox ${JSON.stringify(r.viewBox)}`);
+                if (r.circles !== 2 || JSON.stringify(r.radius) !== JSON.stringify([em.RING_GEOMETRY.radius, em.RING_GEOMETRY.radius])) fail(`${at}: ${r.circles} circles, radii ${JSON.stringify(r.radius)}`);
+                if (JSON.stringify(r.width) !== JSON.stringify([`${em.RING_GEOMETRY.stroke}px`, `${em.RING_GEOMETRY.stroke}px`])) fail(`${at}: stroke ${JSON.stringify(r.width)}`);
+                if (r.cap !== "round") fail(`${at}: the arc's caps ${r.cap}`);
+                const start = START_MATRIX(em.RING_GEOMETRY.viewBox / 2);
+                if (!r.matrix || r.matrix.some((n, j) => Math.abs(n - start[j]) > 1e-6)) fail(`${at}: the arc does not start at 12 o'clock (${JSON.stringify(r.matrix)})`);
+                const share = r.dash ? r.dash[0] / (2 * Math.PI * em.RING_GEOMETRY.radius) : NaN;
+                if (!(Math.abs(share - w.share) <= SHARE_SLACK)) fail(`${at}: its arc is ${share.toFixed(4)} of the circle, not ${w.share.toFixed(4)}`);
+                if (r.dash && !(r.dash[1] >= 2 * Math.PI * em.RING_GEOMETRY.radius - 0.1)) fail(`${at}: the arc's gap ${r.dash[1]} is shorter than the circle`);
+                if (r.arcColour !== rgbOf(w.colour)) fail(`${at}: the arc ${r.arcColour}, not the store's ${rgbOf(w.colour)}`);
+                if (r.trackColour !== rgbOf(em.RING_TRACK)) fail(`${at}: the track ${r.trackColour}, not the store's ${rgbOf(em.RING_TRACK)}`);
+                if (!r.inkValue || !r.inkLabel) fail(`${at}: the value or the label is not in the page's text colour`);
+                if (!r.svgBox || Math.abs(r.svgBox.width - em.RING_PX) > RING_SLACK_PX) fail(`${at}: the circle is ${r.svgBox?.width} px, not about ${em.RING_PX}`);
+                const centre = (b) => [b.x + b.width / 2, b.y + b.height / 2];
+                if (r.svgBox && r.valueBox) {
+                  const [a, b] = [centre(r.svgBox), centre(r.valueBox)];
+                  if (Math.abs(a[0] - b[0]) > CENTRE_SLACK_PX || Math.abs(a[1] - b[1]) > CENTRE_SLACK_PX) fail(`${at}: the value is not in the middle of its circle`);
+                }
+                if (r.svgBox && r.labelBox && (r.labelBox.top < r.svgBox.bottom - 1 || Math.abs(centre(r.labelBox)[0] - centre(r.svgBox)[0]) > CENTRE_SLACK_PX)) fail(`${at}: the label is not beneath its circle`);
+                if (r.ringBox.left < panel.panelBox.left - 1 || r.ringBox.right > panel.panelBox.right + 1) fail(`${at}: outside the panel (${r.ringBox.left}–${r.ringBox.right} in ${panel.panelBox.left}–${panel.panelBox.right})`);
+                tops.add(Math.round(r.ringBox.top));
+              });
+              if (width === VIEWPORTS.w1280.width && tops.size !== 1) fail(`at 1280 the rings are not one row (${[...tops]})`);
+            }
+            await press(page, button);
+          }
+        }
+        await chooseMenu(page, CC);
+      }
+      if (!sawRings || !sawNone) problems.push(`${width}: fixture control: meals opened with rings ${sawRings}, without ${sawNone}`);
+    });
+  }
+  return problems;
+}
+
+test("EM9: opening a meal shows its five rings for the chosen size in order, each its number and its arc value over the daily amount, then the ingredients; no numbers for the size, no rings (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS * 2 }, async () => {
+  assert.deepEqual(await ringProblems(), []);
 });
 
 // The mutants: a copy of the built page with one line of its script changed, each anchor read from the page.
@@ -348,8 +506,10 @@ async function copyWith(t, change) {
 }
 /** The chosen cart's link: the script's one line taking it from the cart. */
 const LINK_LINE = /^(\s*)var links = cart && (.*)$/m;
-/** The size's line: the script's one line reading it for the size. */
-const SIZE_LINE = /^(\s*)return lines && has\(lines, size\).*$/m;
+/** § 11 item 4.2: the size's numbers, the script's one line reading them for the chosen size. */
+const SIZE_LINE = /^(\s*)return isMap\(all\) && has\(all, size\).*$/m;
+/** § 11 item 4.1: a ring's share of its circle, the script's one line taking the value over the number's daily amount. */
+const SHARE_LINE = /^(\s*)var share = (.*)\bspec\.daily\b(.*)$/m;
 const once = (html, re) => {
   assert.equal(html.match(new RegExp(re.source, "gm"))?.length, 1, `fixture control: one line ${re}`);
   return html;
@@ -366,23 +526,20 @@ test("EM2 (mutant): the checkout link taken from Chef's Choice's cart whatever i
   assert.ok(problems.some((p) => p.startsWith("the second menu's link decodes to")), `EM2 fails it:\n${problems.join("\n")}`);
 });
 
-test("EM3 (mutant): the line read from the first size present, not the chosen one, fails EM3; the copy as built passes", { timeout: TIMEOUT_MS }, async (t) => {
-  const control = await copyWith(t, (html) => once(html, SIZE_LINE));
-  assert.deepEqual(await nutritionProblems(control), [], "control: the copy as built");
-  const mutant = await copyWith(t, (html) => once(html, SIZE_LINE).replace(SIZE_LINE, (whole, indent) => `${indent}for (var first in lines) return lines[first]; return null;`));
-  const problems = await nutritionProblems(mutant);
-  t.diagnostic(problems.join("\n"));
-  assert.ok(problems.some((p) => / signature .*: the line /.test(p)), `EM3 fails it:\n${problems.join("\n")}`);
-});
 
 // EM6 (§ 10, the Advisor's word of 2026-10-21): every target the card adds is at least the standard target of OurFans'
 // design philosophy (10 mm, at the densest logical density it uses, 163 CSS px per inch: 64 CSS px) in its smaller
-// dimension, the menu chips and every meal control; the meal's WHOLE ROW is the control, so a press on its tile, its name
-// or its line opens it; and its mark says "more", not "add": no "+" (or "−") as text or as CSS content, a mark hidden from
-// assistive technology that turns when the meal opens. At 390 and 1280, each menu in turn.
+// dimension, the menu chips and every meal control; the meal's WHOLE ROW is the control, so a press on its tile or its
+// name (since § 11 item 2 the row is those two) opens it; and its mark says "more", not "add": no "+" (or "−") as text or
+// as CSS content, a mark hidden from assistive technology. Since § 11 item 3 (2026-10-22) the mark is a circled "i",
+// about 24 px, the SAME whether open or closed (it no longer turns; EM8 reads its shape). At 390 and 1280, each menu in
+// turn.
 /** § 10 item 1: the contract's number (10 mm × 163 / 25.4 = 64.2, so at least 64 CSS px). */
 const TARGET_PX = 64;
 const ADD_MARKS = /[+−]/;
+/** § 11 item 3: the mark "about 24 px". */
+const MARK_PX = 24;
+const MARK_SLACK_PX = 4;
 
 /** Runs in the page: the chips' and the meal controls' boxes, and each control's marks. */
 function readTargets() {
@@ -402,11 +559,17 @@ function readTargets() {
   };
 }
 
-/** Runs in the page: the first meal control's state and its hidden mark's transform. */
+/** Runs in the page: the first meal control's state and its hidden mark: its drawn transform, markup and box. */
 function readFirstControl() {
   const b = document.querySelector("#cc-meals button");
   const mark = b?.querySelector('[aria-hidden="true"]');
-  return { expanded: b?.getAttribute("aria-expanded") ?? null, turn: mark ? getComputedStyle(mark).transform : null };
+  const r = mark?.getBoundingClientRect();
+  return {
+    expanded: b?.getAttribute("aria-expanded") ?? null,
+    turn: mark ? getComputedStyle(mark).transform : null,
+    markup: mark?.outerHTML ?? null,
+    size: r ? [Math.round(r.width * 10) / 10, Math.round(r.height * 10) / 10] : null,
+  };
 }
 
 /** One line per thing EM6 does not hold on the fixture's page; [] when all do. */
@@ -428,9 +591,9 @@ async function targetProblems(dir = menusOut) {
           if (!c.hiddenMarks) fail(`${what}: no mark hidden from assistive technology`);
         }
       }
-      // The whole row: a press on Chef's Choice's first meal control's tile, name or line opens it; the mark turns.
+      // The whole row: a press on Chef's Choice's first meal control's tile or name opens it; the mark stays as it was.
       await chooseMenu(page, CC);
-      for (const part of [".cc-thumb", ".cc-name", ".cc-line"]) {
+      for (const part of [".cc-thumb", ".cc-name"]) {
         const closed = await page.evaluate(readFirstControl);
         if (closed.expanded !== "false") fail(`before the press on its ${part}: the meal is ${closed.expanded === "true" ? "open" : "not a control"}`);
         const handle = await page.$(`#cc-meals > li:has(button) ${part}`);
@@ -444,8 +607,9 @@ async function targetProblems(dir = menusOut) {
         // The mark's turn may be animated: its end state is read once every running animation has finished.
         await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
         const open = await page.evaluate(readFirstControl);
+        if (!closed.size || closed.size.some((n) => Math.abs(n - MARK_PX) > MARK_SLACK_PX)) fail(`the mark is ${JSON.stringify(closed.size)} px, not about ${MARK_PX}`);
         if (open.expanded !== "true") fail(`a press on its ${part} did not open the meal`);
-        else if (open.turn === closed.turn) fail(`the mark did not turn (${open.turn})`);
+        else if (open.turn !== closed.turn || open.markup !== closed.markup) fail(`the mark changed when the meal opened (${closed.turn} -> ${open.turn})`);
         if (open.expanded === "true") await press(page, "#cc-meals button");
         await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
       }
@@ -454,22 +618,43 @@ async function targetProblems(dir = menusOut) {
   return problems;
 }
 
-test("EM6: every chip and meal control at least 64 CSS px; the whole row opens the meal; the mark is not \"+\" (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
+test("EM6: every chip and meal control at least 64 CSS px; the whole row opens the meal; the mark is not \"+\", about 24 px, the same open or closed (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
   assert.deepEqual(await targetProblems(), []);
 });
 
-/** The meal control's parts: the script's one line putting the tile, the name's column and the mark in the button. */
-const ROW_LINE = /^(\s*)appendAll\(meal, \[tile, text, mark\]\);$/m;
+/** The meal control's parts: the script's one line putting the tile, the name and the mark in the button (§ 11 item 2:
+ *  the row is the tile and the name). */
+const ROW_LINE = /^(\s*)appendAll\(meal, \[tile, name, mark\]\);$/m;
 
 test("EM6 (mutant): the row's control shrunk to the name alone fails EM6; the copy as built passes", { timeout: TIMEOUT_MS }, async (t) => {
   const control = await copyWith(t, (html) => once(html, ROW_LINE));
   assert.deepEqual(await targetProblems(control), [], "control: the copy as built");
   const mutant = await copyWith(t, (html) =>
-    once(html, ROW_LINE).replace(ROW_LINE, (whole, indent) => `${indent}appendAll(li, [tile, text]); text.insertBefore(meal, name); appendAll(meal, [name, mark]);`),
+    once(html, ROW_LINE).replace(ROW_LINE, (whole, indent) => `${indent}li.appendChild(tile); appendAll(meal, [name, mark]);`),
   );
   const problems = await targetProblems(mutant);
   t.diagnostic(problems.join("\n"));
-  // The shrunk button keeps its style's 64 px (min-height, the row's width), so EM6 fails it where the row is no longer
-  // the control: a press on the tile or the line opens nothing.
-  assert.ok(problems.some((p) => /a press on its \.cc-(thumb|line) did not open the meal/.test(p)), `EM6 fails it on a press beside the name:\n${problems.join("\n")}`);
+  // The shrunk button keeps its style's 64 px (min-height), so EM6 fails it where the row is no longer the control: a
+  // press on the tile opens nothing.
+  assert.ok(problems.some((p) => /a press on its \.cc-thumb did not open the meal/.test(p)), `EM6 fails it on a press beside the name:\n${problems.join("\n")}`);
+});
+
+test("EM9 (mutant): a ring's arc taken over another number's daily amount fails EM9; the copy as built passes", { timeout: TIMEOUT_MS * 2 }, async (t) => {
+  const control = await copyWith(t, (html) => once(html, SHARE_LINE));
+  assert.deepEqual(await ringProblems(control), [], "control: the copy as built");
+  const mutant = await copyWith(t, (html) =>
+    once(html, SHARE_LINE).replace(SHARE_LINE, (whole, indent, head, tail) => `${indent}var share = ${head}RINGS[(RINGS.indexOf(spec) + 1) % RINGS.length].daily${tail}`),
+  );
+  const problems = await ringProblems(mutant);
+  t.diagnostic(problems.join("\n"));
+  assert.ok(problems.some((p) => /: its arc is [\d.]+ of the circle, not /.test(p)), `EM9 fails it:\n${problems.join("\n")}`);
+});
+
+test("EM9 (mutant): the rings read from the first size present, not the chosen one, fail EM9; the copy as built passes", { timeout: TIMEOUT_MS * 2 }, async (t) => {
+  const control = await copyWith(t, (html) => once(html, SIZE_LINE));
+  assert.deepEqual(await ringProblems(control), [], "control: the copy as built");
+  const mutant = await copyWith(t, (html) => once(html, SIZE_LINE).replace(SIZE_LINE, (whole, indent) => `${indent}for (var first in all) return all[first]; return null;`));
+  const problems = await ringProblems(mutant);
+  t.diagnostic(problems.join("\n"));
+  assert.ok(problems.some((p) => / signature .*: the value /.test(p)), `EM9 fails it:\n${problems.join("\n")}`);
 });
