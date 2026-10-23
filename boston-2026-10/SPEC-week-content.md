@@ -381,3 +381,72 @@ list refusal removed): U3 red, the three updating files with a list accepted.
 content -- --week 2026-11-01` in a copy of the package over § 8 item 1's file: exit 0 twice, one file, 166 bytes,
 `398b26fd…`, byte-identical. **Not run**: Storybook and the watch (their own packages; Storybook's SM-4 reads
 `chefs_choice`); the page in a browser (linkedom only); nothing deployed, no bucket written.
+
+## 9. Amendment, 2026-10-23: the guards over the committed weeks. CONTRACT, before any code
+
+**Written 2026-10-23 (Fit AF session 258), before any code**, by the orchestrator (engineering: no copy, no page, no
+data changes; the Advisor's rulings are untouched).
+
+**Why.** The development line (`boston/rung-4-save-offer`) cannot take `boston/save-offer-brief`'s merge (`f26d964`)
+while the site suite is red on it, and Friday 2026-10-30's switch commits the next week onto that line, whose
+`checkPicks` must by then take five lists (SPEC-every-menu-and-nutrition § 1). Measured: the merge over the updating
+week the switch's fallback committed (`83b2133`) fails **seven** cases; the content branch production serves
+(`boston/week-2026-11-01-five`, `9da353c`, 2026-11-01 a five-menu week) fails **six** (2026-10-23 10:37 PDT,
+`node --test` over the five files below). **None is a defect in the code.** Each case reads the committed weeks
+(`data/picks/`) or the built pages as they stood when it was written:
+
+| Case | Fails because | On the updating week | On a five-menu week |
+|---|---|---|---|
+| MS-20 (SPEC-meal-selection § 13 item 3, base `1c10839`) | it compares **every** week of `data/picks/` with `1c10839`'s build, and 2026-11-01 has no file there | red ×2 | red ×2 |
+| W4 (SPEC-why-fit-af § 2 item 5, base `6e0f6bd`) | its 2026-11-01 half compares a refusal at the base with a week committed since; its own header says that half is then *retired*, and it was not | red ×2 | red ×2 |
+| PR-3, the committed-tree case (SPEC-plan-page-refinement § 3, § 5) | "the committed week" is the latest file, and an updating week has no list and no photo sheet (§ 8) | red | green |
+| WC-10b (§ 3's refusals) | its "no picks file" case is the literal 2026-11-01, which now has one | red | red |
+| S22 (SPEC-rung4-save-offer § 2a) | it reads every built `index.html` as a page with an offer box, and `why/index.html` (since SPEC-why-fit-af) has none; red on every gate since 2026-10-21, recorded as "the known S22" | red | red |
+
+**The rule.** A committed week is a weekly input (README), and § 8's updating week may be committed on any Friday that
+stops after the store's switch, so a guard over the committed weeks holds **whatever is committed**: a one-menu week, a
+five-menu week, an updating week, and the weeks to come. Hence: (a) a guard that compares this tree with a base tree
+compares only the weeks the two trees were given alike; (b) a guard about *the* committed week takes one the guard can
+be about; (c) a guard that needs a week with no picks file derives one; (d) **a narrowed population is never silent**:
+the case's own message (or its control's) names what it compared and what it left out, and why.
+
+1. **MS-20**: its weeks are those of `data/picks/` whose file at this tree is **byte-identical** to the same path at
+   `1c10839` (today 2026-10-11, 2026-10-18, 2026-10-25). A week absent there or changed since is outside the claim (it
+   has no *before*), and the control names each one so (today 2026-11-01, *"added after 1c10839"*). The control keeps
+   its two assertions (at least three weeks compared; one of them carries snack lists).
+2. **W4**: its two weeks stay as written (2026-10-25, 2026-11-01). Each is compared while its file is byte-identical at
+   both trees **or absent from both** (the refusal half, as written); otherwise it is **retired**, as its header already
+   rules, by that test and not by deleting the literal, and the control names it (*"2026-11-01: committed after 6e0f6bd;
+   retired"*). The control requires at least one week compared.
+3. **PR-3's committed-tree case**: the week is the **latest week of `data/picks/` that is not updating** (§ 8 item 1's
+   shape); a control that one exists; when the latest file is an updating week the message names it as passed over
+   (U1 is that page's case). `pr-harness.mjs`'s `latestCommittedWeek()` keeps its meaning for its other reader
+   (`bothPages`, PR-1: green on the updating week, measured; item 7 measures the other shape); the new reading is its
+   own named function.
+4. **WC-10b's first refusal**: the week with no picks file is **the Sunday seven days after the latest week of
+   `data/picks/`** (any kind), derived in the case; a control asserts `data/picks/` has no file for it; the refusal's
+   message must name that week, as it names 2026-11-01 today.
+5. **S22**: the pages that must carry the offer box are **the pages the build makes from the template** (`/` and one per
+   event of `data/events.json`, from the build's own list or that file, never a count written in the case); every other
+   built file, `why/index.html` and `privacy/index.html` among them, falls to the case's existing loop: **byte-unchanged
+   by the label change**. The control stays (at least two pages). If a page outside the template's list does change
+   with the label, that is a finding, reported, not narrowed away.
+6. **Nothing else changes.** Only files under `test/` (and `tools/storybook/` only if item 7 finds a reader there), this
+   section's § 9.1, and the README's rows that name these cases. No file under `src/`, `scripts/`, `data/`, `build.mjs`,
+   `consent/`, no golden.
+7. **Proof, on both shapes.** (i) This branch's tip (2026-11-01 the five-menu week): the whole site suite green, and
+   `tools/storybook` and `tools/storefront-watch` green. (ii) The same with `data/picks/2026-11-01.json` replaced by
+   `83b2133`'s updating file, in a **throwaway copy** (a scratch worktree on a scratch branch, never pushed, or a
+   `git archive` with its own repository; never this branch's tree): the same three suites green. Any reader of the
+   committed weeks found red in (ii) outside the five above is reported and, if it is the same defect, fixed by this
+   section's rule and listed.
+8. **Not vacuous.** For each of the five, one mutant of the code the case guards, in a mirror (`protocols`'
+   mutate-in-a-mirror: the copy is the script's, by default), that the narrowed case still catches: a byte moved in a
+   compared week's content (MS-20, W4), a meal's photo tile dropped (PR-3), a file written on the derived no-file week
+   (WC-10b), the label left unchanged on one template page (S22). Committed beside the package's existing mutants where
+   that case has a mutants file; otherwise run and recorded in § 9.1 with its command.
+
+**Order**: the cases first, each run on this branch's tip **before** its change (red, as measured above) and after
+(green); then item 7; then § 9.1 (*Built — found at the build, not ruled*: commits, counts with commands and wall
+times, the populations each control printed, anything the rule did not settle). **Not in this contract**: merging into
+the development line, `merge-after-1023`, any deploy (the orchestrator's).
