@@ -188,3 +188,26 @@ week content of 2026-10-18 and 2026-10-25, production and `--env dev`, **byte-id
 `diff -r`); `test/pv-05-record.mjs --commit f2c7fca`'s `files` **equal** to `test/pv-05-golden.json`'s (recorded from
 `8081b46`); Storybook (`tools/storybook`, after `npm ci --offline`) **41 of 41**. ⛔ Merged after Friday 2026-10-23's
 switch, which builds from `boston/rung-4-save-offer`.
+
+## 8. Ruling, 2026-10-22 (the orchestrator, engineering, within the Advisor's rulings): a preview leaves out "Why Fit AF?"
+
+**Found at the merge into `boston/merge-after-1023`** (`4e73661`, this contract's part 2 with `boston/save-offer-brief`):
+PV1 red, *"the built page: a.why-link leads somewhere (/why/)"*, and § 4's mutants' control with it. Two clauses meet on
+the preview page:
+
+- `SPEC-every-menu-and-nutrition.md` § 11 item 5: *"**"Why Fit AF?" is a button above the Individual/Family chooser**:
+  the dialog of `SPEC-why-fit-af.md` §§ 2 and 6, opened from a button placed directly above the tabs … **Without
+  script**, the same place holds a link to `/why/` (W3's case, moved)."*
+- This contract's § 7 item 3: *"No link holds an address at any moment a visitor can act"*; and § 7 item 8: *"Static
+  files are `/fonts/…` and `/assets/…` only"*, so on a preview the button's dialog frame and the no-script link reach
+  `/why/` as the Worker's 404.
+
+**Ruled**: **a preview build leaves out the "Why Fit AF?" button, its dialog and its no-script `/why/` link**, exactly as it
+already leaves out the save step and `/privacy/`. § 7 items 3 and 8 govern the preview page;
+`SPEC-every-menu-and-nutrition.md` § 11 item 5 governs the production and development pages and is unchanged there.
+
+**Why**: a preview reviews a planned week's menus; the Why page does not change by week.
+
+**Case**: **PV8**, the preview build carries no `.why-link`, Why button or dialog markup and no `/why/` anywhere (and
+writes no `why/`), while the production and development builds still carry § 11 item 5's button, dialog and no-script
+link, unchanged.
