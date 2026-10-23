@@ -11,6 +11,8 @@
 //   … and its narrow form                       (site.js: the ".." refusal alone removed)            fails WC-5
 //   the build embeds the open week              (chefs-choice.mjs: data/picks/'s week open on the     fails WC-12
 //                                                case's date, 2026-10-11, put in #picks-data)
+//   a file written on the no-file week          (week-content.mjs: the no-picks-file refusal gone)  fails WC-10b
+//                                                (SPEC-week-content § 9 item 8; its week derived, § 9 item 4)
 import test from "node:test";
 import assert from "node:assert/strict";
 import { copyFile, readdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -18,7 +20,7 @@ import { join } from "node:path";
 import { ROOT } from "../build.mjs";
 import { windowOf } from "../scripts/chefs-choice.mjs";
 import { mirror } from "./cc-harness.mjs";
-import { buildWeekProblems, dateProblems, pathProblems, rewriteProblems, RULING_ON, shapeProblems } from "./wc-checks.mjs";
+import { buildWeekProblems, dateProblems, noFileProblems, pathProblems, rewriteProblems, RULING_ON, shapeProblems, weekWithNoFile } from "./wc-checks.mjs";
 
 /** Replace `from` (present exactly once) with `to` in the mirror's file `rel`. */
 async function edit(dir, rel, from, to) {
@@ -142,6 +144,25 @@ test("WC-11: the build embedding the open week fails WC-12", async () => {
       for (const label of ["build", "build:dev"]) {
         assert.ok(problems.includes(`${label}: #picks-data holds ${JSON.stringify(OPEN_WEEKS)}, not []`), `WC-12 fails it (${label}):\n${problems.join("\n")}`);
       }
+    },
+  );
+});
+
+// SPEC-week-content § 9 item 8 (WC-10b's first refusal on a derived week, § 9 item 4): the content command's refusal of a
+// week with no picks file removed, so it writes the week's content (no week in it) for the derived week; read by
+// WC-10b's own check over the mirror. The unchanged mirror first, its control.
+const NO_FILE_REFUSAL = "  if (week !== undefined && !weeks.length) throw new Error(`no picks file for ${week}: data/picks/${week}.json`);\n";
+
+test("WC-11 (SPEC-week-content § 9): a file written on the derived no-file week fails WC-10b", async (t) => {
+  const { latest, week } = await weekWithNoFile();
+  t.diagnostic(`the week with no picks file: ${week}, seven days after ${latest}`);
+  await withMirror(async () => {}, async (dir) => assert.deepEqual(await noFileProblems(dir), [], "control: the unchanged mirror refuses it"));
+  await withMirror(
+    (dir) => edit(dir, join("scripts", "week-content.mjs"), NO_FILE_REFUSAL, ""),
+    async (dir) => {
+      const problems = await noFileProblems(dir);
+      assert.ok(problems.includes(`${week}: wrote week/picks-data.json`), `WC-10b fails it (a file written):\n${problems.join("\n")}`);
+      assert.ok(problems.includes(`${week}: exit 0, not refused`), `and it was not refused:\n${problems.join("\n")}`);
     },
   );
 });
