@@ -6,6 +6,14 @@
 //   (--cta) with the white words of its offer (--on-cta), in the heading font at 700, on a level ribbon (notched ends,
 //   nothing turned); the words inside the ribbon, none cut off, no sideways scroll; "Your Boston offer" not drawn, and
 //   still the box's accessible name (Chrome's own accessibility tree).
+//   UC8 (§ 1 item 8, "I want to fix the menu chips … a circled number overlayed on the top right corner of the meal
+//   image"): on the week delivered 2026-11-01 (its five menus; breakfasts twice in a weekday cart), the chips sit evenly,
+//   no row of one: three, then two, each row's chips one width and the row the group's, no word cut off, each at least the
+//   card's 64 px target; a meal twice is a navy circle (the template's tokens, white figures) on its tile's top-right
+//   corner, its "× 2" not drawn but in the row's accessible name (the content's line); a meal once has no badge.
+//   The save step's states, in Chrome (§ 1 items 2–3, with the week's card): open beside the card's checkout button; an
+//   email refused, its message drawn directly under its field; saved, only the done line; after the offer's end, neither
+//   the box nor the step. And See all plans while the offer is current (item 7). Turnstile and /api/save are stood in for.
 // The page is the site's own development build (`node build.mjs --env dev --out`, as the stories' pages are built), its
 // clock fixed at noon in New York on 2026-10-24 (a day of the offer: microsite/clock.mjs's fixClock, before the page's
 // own scripts), served on 127.0.0.1; nothing else is requested (Turnstile's script is refused, as SM-8 has it). The words
@@ -39,12 +47,43 @@ const HEADLINE = offers.offers[0].headline;
 /** The box's accessible name before this contract: its heading's words, read from the template's own markup. */
 const BOX_NAME = /<span id="save-title" hidden>([^<]+)<\/span>/.exec(await readFile(siteFile("src", "save", "offer-box.html"), "utf8"))?.[1];
 
+/** § 1 item 8's week: five menus, and the breakfasts twice in the weekday cart with breakfast. */
+const WEEK = "2026-11-01";
+const TWICE = "#lean-or-5d-b";
+/** The card's touch target (SPEC-every-menu-and-nutrition § 10: 64 CSS px, its smaller dimension). */
+const TARGET_PX = 64;
+/** A layout's tolerance: sub-pixel rounding between equal boxes. */
+const EVEN_PX = 1;
+
 const devOut = await mkdtemp(join(tmpdir(), "fitaf-storybook-uc-dev-"));
-after(() => rm(devOut, { recursive: true, force: true }));
+const weekOut = await mkdtemp(join(tmpdir(), "fitaf-storybook-uc-week-"));
+const devWeekOut = await mkdtemp(join(tmpdir(), "fitaf-storybook-uc-devweek-"));
+after(() => Promise.all([devOut, weekOut, devWeekOut].map((d) => rm(d, { recursive: true, force: true }))));
 let devReady = null;
 const devSite = () => (devReady ??= siteBuild({ build: "development", out: devOut }));
+let weekReady = null;
+const weekSite = () => (weekReady ??= siteBuild({ build: "production", out: weekOut, week: WEEK }));
+let devWeekReady = null;
+const devWeekSite = () => (devWeekReady ??= siteBuild({ build: "development", out: devWeekOut, week: WEEK }));
+const picks = JSON.parse(await readFile(siteFile("data", "picks", `${WEEK}.json`), "utf8"));
+const messages = JSON.parse(await readFile(siteFile("data", "messages.json"), "utf8"));
 
-/** `fn(page)` on the page served from `dir` at `hash`, `width` wide, its clock at `now`, in a fresh Chrome. */
+/** Turnstile, stood in for in the page (its own script is refused): it passes at once with the test token. */
+function standInTurnstile() {
+  window.turnstile = {
+    render(_selector, options) {
+      window.__ucTurnstile = options;
+      return "uc-widget";
+    },
+    reset() {},
+    execute() {
+      window.__ucTurnstile.callback("XXXX.DUMMY.TOKEN.XXXX");
+    },
+  };
+}
+
+/** `fn(page)` on the page served from `dir` at `hash`, `width` wide, its clock at `now`, in a fresh Chrome. No
+ *  photograph is requested (a render never shows one); /api/save answers { ok: true } (the Worker, stood in for). */
 async function withPage({ dir, hash = "", width, now = OFFER_DAY_MS }, fn) {
   const server = await serveStatic(dir);
   const chrome = await freshChrome();
@@ -52,8 +91,14 @@ async function withPage({ dir, hash = "", width, now = OFFER_DAY_MS }, fn) {
     const page = await chrome.browser.newPage();
     await page.setViewport({ width: width.width, height: width.height });
     await page.setRequestInterception(true);
-    page.on("request", (r) => (isLocal(r.url()) ? r.continue() : r.abort()));
+    page.on("request", (r) => {
+      const url = new URL(r.url());
+      if (url.pathname === "/api/save") return r.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+      if (!isLocal(r.url()) || /\.jpe?g$/i.test(url.pathname)) return r.abort();
+      return r.continue();
+    });
     await page.evaluateOnNewDocument(fixClock, now);
+    await page.evaluateOnNewDocument(standInTurnstile);
     await page.goto(`${server.base}/index.html${hash}`, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     return await fn(page);
@@ -138,4 +183,155 @@ test("UC1 (Chrome, 390 and 1280): the offer box draws the headline, more promine
       await render(page, "#offer-box", `uc1-offer-box-${width.width}`);
     });
   }
+});
+
+/** Runs in the page: the chips as drawn (each a menu's span, its label's look), and the group's box. */
+function readChips() {
+  const group = document.getElementById("cc-menus");
+  const g = group.getBoundingClientRect();
+  return {
+    drawn: group.checkVisibility(),
+    group: { left: g.left, right: g.right },
+    chips: [...group.querySelectorAll(".cc-menu span")].map((span) => {
+      const r = span.getBoundingClientRect();
+      return { text: span.textContent, left: r.left, right: r.right, top: Math.round(r.top), width: r.width, height: r.height, cut: span.scrollWidth > span.clientWidth + 1 };
+    }),
+  };
+}
+
+/** Runs in the page: each meal row's tile, its badge (if any) and what of its name is hidden, and the tokens' colours. */
+function readRows() {
+  const token = (name) => {
+    const probe = document.body.appendChild(document.createElement("div"));
+    probe.style.color = `var(${name})`;
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  };
+  const rows = [...document.getElementById("cc-meals").children].map((li) => {
+    const tile = li.querySelector(".cc-thumb").getBoundingClientRect();
+    const badge = li.querySelector(".cc-thumb .cc-qty");
+    const hidden = [...li.querySelector(".cc-name").querySelectorAll(".visually-hidden")].map((n) => n.getBoundingClientRect()).map((r) => [r.width, r.height]);
+    if (!badge) return { badge: null, hidden, button: Boolean(li.querySelector("button.cc-meal")) };
+    const b = badge.getBoundingClientRect();
+    const cs = getComputedStyle(badge);
+    return {
+      button: Boolean(li.querySelector("button.cc-meal")),
+      hidden,
+      tile: { right: tile.right, top: tile.top },
+      badge: {
+        drawn: badge.checkVisibility(),
+        width: b.width,
+        height: b.height,
+        cx: b.left + b.width / 2,
+        cy: b.top + b.height / 2,
+        radius: parseFloat(cs.borderTopLeftRadius),
+        background: cs.backgroundColor,
+        color: cs.color,
+        figure: getComputedStyle(badge, "::before").content,
+      },
+    };
+  });
+  return { rows, navy: token("--navy"), white: token("--white") };
+}
+
+/** The content's line of a meal, as the card's words write it (data/messages.json meal_qty), worked out here. */
+const lineOf = (m) => (m.qty > 1 ? messages.chefs_choice.meal_qty.replace("{meal}", m.display).replace("{n}", String(m.qty)) : m.display);
+
+test("UC8 (Chrome, 390 and 1280): the five chips sit evenly, no row of one; a meal twice is a circled count on its tile's corner", { timeout: TIMEOUT_MS }, async () => {
+  const cart = picks.lists["chefs-choice"].carts.find((c) => c.lunch_dinner === "or" && !c.weekends && c.breakfast);
+  assert.ok(Object.keys(picks.lists).length === 5 && cart.items.some((m) => m.qty > 1), "control: five menus, and a meal twice in the cart");
+  await weekSite();
+  for (const width of WIDTHS) {
+    await withPage({ dir: weekOut, hash: TWICE, width }, async (page) => {
+      const where = `${width.width}`;
+      await page.waitForSelector("#cc-list:not([hidden])");
+      const { drawn, chips, group } = await page.evaluate(readChips);
+      assert.equal(drawn, true, `${where}: the chooser is drawn`);
+      assert.equal(chips.length, 5, `${where}: five chips`);
+      const rows = [...new Set(chips.map((c) => c.top))].sort((a, b) => a - b).map((top) => chips.filter((c) => c.top === top));
+      assert.deepEqual(rows.map((r) => r.length), [3, 2], `${where}: three, then two (${rows.map((r) => r.map((c) => c.text).join(" | ")).join(" / ")})`);
+      for (const row of rows) {
+        const widths = row.map((c) => c.width);
+        assert.ok(Math.max(...widths) - Math.min(...widths) <= EVEN_PX, `${where}: a row's chips one width (${widths.map(Math.round)})`);
+        assert.ok(Math.abs(row[0].left - group.left) <= EVEN_PX && Math.abs(row.at(-1).right - group.right) <= EVEN_PX, `${where}: each row the group's width`);
+        const heights = row.map((c) => c.height);
+        assert.ok(Math.max(...heights) - Math.min(...heights) <= EVEN_PX, `${where}: a row's chips one height (${heights.map(Math.round)})`);
+      }
+      for (const c of chips) {
+        assert.equal(c.cut, false, `${where}: ${c.text}: no word cut off`);
+        assert.ok(Math.min(c.width, c.height) >= TARGET_PX - 0.5, `${where}: ${c.text}: at least ${TARGET_PX} px (${Math.round(c.width)} × ${Math.round(c.height)})`);
+      }
+
+      const { rows: meals, navy, white } = await page.evaluate(readRows);
+      assert.equal(meals.length, cart.items.length, `${where}: control: a row per meal`);
+      let named = 0;
+      for (const [i, meal] of cart.items.entries()) {
+        const row = meals[i];
+        const at = `${where}, ${meal.display}`;
+        if (meal.qty === 1) {
+          assert.equal(row.badge, null, `${at}: once, no badge`);
+          assert.deepEqual(row.hidden, [], `${at}: nothing of its line hidden`);
+          continue;
+        }
+        const b = row.badge;
+        assert.ok(b && b.drawn, `${at}: a badge drawn`);
+        assert.ok(Math.abs(b.width - b.height) <= EVEN_PX && b.radius >= b.height / 2 - 0.5, `${at}: a circle (${Math.round(b.width)} × ${Math.round(b.height)}, radius ${b.radius})`);
+        assert.ok(Math.abs(b.cx - row.tile.right) <= b.height / 2 && Math.abs(b.cy - row.tile.top) <= b.height / 2, `${at}: on the tile's top-right corner`);
+        assert.deepEqual([b.background, b.color], [navy, white], `${at}: navy with white figures, the template's tokens`);
+        assert.equal(b.figure, `"${meal.qty}"`, `${at}: the figure ${meal.qty}`);
+        assert.ok(row.hidden.length > 0 && row.hidden.every(([w, h]) => w <= 1 && h <= 1), `${at}: its "× ${meal.qty}" not drawn`);
+        if (row.button) {
+          const handle = (await page.$$("#cc-meals > li"))[i];
+          const name = (await page.accessibility.snapshot({ root: await handle.$("button.cc-meal") }))?.name;
+          assert.equal(name, lineOf(meal), `${at}: the count in the row's accessible name`);
+          named++;
+        }
+      }
+      assert.ok(named > 0, `${where}: control: a meal twice whose row is a button, its name read from Chrome's accessibility tree`);
+      await render(page, "#result", `uc8-card-${width.width}`);
+    });
+  }
+});
+
+test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7): drawn as the cases say; their PNGs with UC_RENDERS", { timeout: TIMEOUT_MS }, async () => {
+  await devWeekSite();
+  const width = VIEWPORTS.w390;
+  const plan = "#lean-or-7d";
+  const drawn = (page, id) => page.evaluate((x) => Boolean(document.getElementById(x)?.checkVisibility()), id);
+  await withPage({ dir: devWeekOut, hash: plan, width }, async (page) => {
+    await page.waitForSelector("#cc-list:not([hidden])");
+    assert.equal(await drawn(page, "save"), true, "open: the step, beside the card's checkout button");
+    assert.equal(await drawn(page, "save-form"), true, "open: its form");
+    await render(page, "#save", "uc2-step-open-390");
+    await page.type("#save-email", "not-an-address");
+    await page.click("#save-submit");
+    const under = await page.evaluate(() => {
+      const input = document.getElementById("save-email").getBoundingClientRect();
+      const error = document.getElementById("save-email-error").getBoundingClientRect();
+      const zip = document.getElementById("save-zip").closest("label").getBoundingClientRect();
+      return { drawn: document.getElementById("save-email-error").checkVisibility(), below: error.top >= input.bottom - 1, above: error.bottom <= zip.top + 1 };
+    });
+    assert.deepEqual(under, { drawn: true, below: true, above: true }, "an email refused: its message drawn under the email field, above the ZIP code's");
+    await render(page, "#save", "uc3-step-email-error-390");
+    await page.$eval("#save-email", (el) => { el.value = ""; });
+    await page.type("#save-email", "dummy-uc@example.com");
+    await page.type("#save-zip", "02118");
+    await page.click("#save-submit");
+    await page.waitForSelector("#save-done:not([hidden])");
+    const left = await page.evaluate(() => [...document.querySelectorAll("#save *")].filter((n) => n.checkVisibility() && [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())).map((n) => n.id || n.className));
+    assert.deepEqual(left.filter((n) => n !== "draft-tag"), ["save-done", "save-done-email"], "saved: only the done line drawn (the DRAFT tag apart)");
+    await render(page, "#save", "uc2-step-saved-390");
+    await page.click("#all-link");
+    await page.waitForSelector("#all[open]");
+    const struck = await page.evaluate(() => [...document.querySelectorAll("#all .cell small s")].filter((n) => n.checkVisibility()).length);
+    assert.ok(struck > 0, "See all plans: the weekly prices struck through");
+    await render(page, "#all .all-box", "uc7-all-plans-390");
+  });
+  await withPage({ dir: devWeekOut, hash: plan, width, now: Date.parse("2026-10-30T16:00:00.000Z") }, async (page) => {
+    await page.waitForSelector("#cc-list:not([hidden])");
+    assert.equal(await drawn(page, "offer-box"), false, "after the offer's end: no box");
+    assert.equal(await drawn(page, "save"), false, "and no step (SPEC-save-offer-production § 10.7; § 1 item 9 not built)");
+    await render(page, "#result", "uc9-after-the-offer-390");
+  });
 });
