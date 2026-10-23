@@ -174,8 +174,8 @@ function flyerFrontB(c, parts, words) {
 
 /**
  * The giveaway tout (SPEC-print-pieces.md § 17), print-only: front B's look laid out landscape. Across the top, the dark
- * band (the headline, its accent words green, the lede; the reversed logo at its top right) and beside it the flyer's
- * photo with its caption, running into the bleed on the top and the right; under both the orange foot, its torn upper
+ * band (the headline, its accent words green, the lede; the reversed logo at its top right) and beside it its photo
+ * (§ 17.2 item 3: one the printed set does not use) with its caption, running into the bleed on the top and the right; under both the orange foot, its torn upper
  * edge drawn over them: the banner's ribbon and the fine print, then `scan` beside the QR code with the address under it.
  * Its words are the tout's words file's (`words`, print/tout.mjs), cited by key; no legend lists it. A box whose words
  * must not overflow it carries `data-fit` (print/checks.mjs giveawayFindings): the band, each headline line, the foot.
@@ -195,7 +195,7 @@ export function toutFace(c, parts, words) {
   <h1 class="fb-head tout-head" ${cite("headline")}${size}>${lines}</h1>
   <p class="fb-lede tout-lede" data-lede-accent="${esc(words.ledeAccent)}" ${cite("lede")}>${lede}</p>
 </div>
-<div class="tout-hero">${parts.photo("flyer")}${parts.caption("flyer", "fb-name tout-name")}</div>
+<div class="tout-hero">${parts.photo("tout")}${parts.caption("tout", "fb-name tout-name")}</div>
 </div>
 <div class="fb-foot tout-foot" data-fit="the foot"><svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>
   <div class="fb-cta tout-cta"><p class="fb-banner" ${cite("banner")}><span>${esc(words.banner)}</span></p><p class="tout-fine" ${cite("fine")}>${esc(words.fine)}</p></div>
@@ -205,34 +205,43 @@ export function toutFace(c, parts, words) {
 }
 
 /**
- * The giveaway's entry card (SPEC-print-pieces.md § 17 item 3), print-only and plain, for a pen: on white, the template's
- * ink and one accent (its headings), no photo. Its front (`side`) is the heading, each field a label over a writing line,
- * and the draw and consent lines; its back the heading and the rules. The logo small at the bottom right of each side.
+ * The giveaway's entry card (SPEC-print-pieces.md § 17 item 3, as § 17.2 has it), print-only and plain, for a pen: on
+ * white, the template's ink and one accent (its headings), no photo. `side`: the "front", its heading, each field a label
+ * over a writing line (a field holding blanks, the email's, its own line: each blank a writing line as long as its run,
+ * the words between them printed), then its paragraphs (the draw, consent and rules lines); the "one-sided" front, the
+ * same with its last paragraph the words file's one-sided ones; the "back", the heading and the rules; the "sign" (§ 17.2
+ * item 1), the back's heading and rules at a size to read from a step away. The logo small at the bottom right of each.
  * Its words are the entry words file's (`words`, print/entry.mjs), each cited by its line; no legend lists it. The boxes
  * its words must not overflow carry `data-fit` (print/checks.mjs giveawayFindings).
  */
 export function entryFace(c, parts, words, side) {
   const cite = (line) => `data-src="${esc(`${words.source}#L${line}`)}"`;
-  const own = words[side];
-  const head = `<h1 class="entry-head" ${cite(own.heading.line)}>${esc(own.heading.text)}</h1>`;
   const foot = `<div class="entry-foot">${parts.logo("entry-logo")}</div>`;
-  if (side === "back") {
+  if (side === "back" || side === "sign") {
+    const own = words.back;
     const rule = (p) => `<p class="entry-rule" ${cite(p.line)}>${p.lead === null ? "" : `<b class="entry-lead">${esc(p.lead)}</b>${p.space ? " " : ""}`}${esc(p.text)}</p>`;
     return `
-<div class="entry-body entry-body-back">
-  ${head}
+<div class="entry-body entry-body-back${side === "sign" ? " entry-body-sign" : ""}">
+  <h1 class="entry-head" ${cite(own.heading.line)}>${esc(own.heading.text)}</h1>
   <div class="entry-rules" data-fit="the rules">
   ${own.paragraphs.map(rule).join("\n  ")}
   </div>
   ${foot}
 </div>`;
   }
-  const field = (f) => `<div class="entry-field" ${cite(f.line)}><p class="entry-label">${esc(f.label)}</p><span class="entry-line"></span></div>`;
+  const own = words.front;
+  // § 17.2 item 1: on the one-sided page, the front's last paragraph (its rules line) is the one-sided section's
+  const notes = side === "one-sided" && words.oneSided ? [...own.paragraphs.slice(0, -1), ...words.oneSided.paragraphs] : own.paragraphs;
+  const blank = (n) => `<span class="entry-line entry-blank" style="flex-grow: ${n}"></span>`;
+  const field = (f) =>
+    f.parts
+      ? `<div class="entry-field entry-email" ${cite(f.line)}>${f.parts.map((p) => (p.blank ? blank(p.blank) : `<span class="entry-email-word">${esc(p.text)}</span>`)).join("")}</div>`
+      : `<div class="entry-field" ${cite(f.line)}><p class="entry-label">${esc(f.label)}</p><span class="entry-line"></span></div>`;
   return `
 <div class="entry-body" data-fit="the front">
-  ${head}
+  <h1 class="entry-head" ${cite(own.heading.line)}>${esc(own.heading.text)}</h1>
   <div class="entry-fields">${own.fields.map(field).join("")}</div>
-  <div class="entry-notes">${own.paragraphs.map((p) => `<p class="entry-note" ${cite(p.line)}>${esc(p.text)}</p>`).join("")}</div>
+  <div class="entry-notes">${notes.map((p) => `<p class="entry-note" ${cite(p.line)}>${esc(p.text)}</p>`).join("")}</div>
   ${foot}
 </div>`;
 }

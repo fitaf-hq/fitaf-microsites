@@ -1,9 +1,10 @@
-// QG31 (SPEC-print-pieces.md § 17 item 5's Q31; § 16.1 holds Q31, so "G" for the giveaway, test/qg-checks.mjs): the tout.
-// Its words file is refused outside print/tout.mjs's keys, naming the key; its page is 6.25 × 4.25 in with the bleed (450 ×
-// 306 pt), landscape, one page; built with a fixture's invented words and the fixture photos, the PDF's own text carries
-// the headline's lines, the lede, the banner, the scan line, `eatfitaf.com`, the fine print whole and the flyer's caption
-// of its photo (the tout's one photo is the flyer's); its QR code, drawn from the PDF, decodes to the `boston` URL; nothing
-// less than the safe margin inside the trim; nothing under the type floor. And it must fit, not shrink: a headline line
+// QG31 (SPEC-print-pieces.md § 17 item 5's Q31, as § 17.2 item 4 amends it; § 16.1 holds Q31, so "G" for the giveaway,
+// test/qg-checks.mjs): the tout. Its words file is refused outside print/tout.mjs's keys, naming the key; its own page is
+// 6.25 × 4.25 in with the bleed (450 × 306 pt), landscape, one page; built with a fixture's invented words and the fixture
+// photos, the PDF's own text carries the headline's lines, the lede, the banner, the scan line, `eatfitaf.com`, the fine
+// print whole and its photo's caption; its QR code, drawn from the PDF, decodes to the `boston` URL; nothing less than the
+// safe margin inside the trim; nothing under the type floor. § 17.2: letter-touts, one US Letter page of two, each code
+// decoding, nothing within 36 pt of the paper's edge or outside the two. And it must fit, not shrink: a headline line
 // that runs into the logo, and fine print that overflows the foot, are each refused, naming the layout px over.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -19,7 +20,7 @@ const tout = GIVEAWAY_PIECES.find((p) => p.id === "tout");
 test("QG31: the tout is one 6 × 4 in landscape face, its page 450 × 306 pt (the trim and the bleed), one side", () => {
   assert.deepEqual([tout.face, tout.faces, tout.sides ?? 1], [{ w: 6, h: 4 }, 1, 1]);
   assert.deepEqual(pagePoints(tout), { w: 450, h: 306 });
-  assert.deepEqual(tout.positions, ["flyer"], "its one photo is the flyer's");
+  assert.deepEqual(tout.positions, ["tout"], "its one photo its own position (§ 17.2 item 3)");
 });
 
 test("QG31: a tout words file outside its keys is refused, naming the key", async () => {
@@ -50,7 +51,7 @@ test("QG31: a tout words file outside its keys is refused, naming the key", asyn
   }
 });
 
-test("QG31: built, the tout's PDF carries its words and its QR code decodes to the boston URL, inside the safe margin and at the floor", { skip: NO_CHROME || NO_POPPLER }, async () => {
+test("QG31: built, the tout's PDF and its letter sheet carry its words, their QR codes decode to the boston URL, inside the margins and at the floor", { skip: NO_CHROME || NO_POPPLER }, async () => {
   const file = await wordsFile(TOUT_FIXTURE, "tout-words.json");
   try {
     assert.deepEqual(await toutProblems(ROOT, file.path, TOUT_FIXTURE), []);

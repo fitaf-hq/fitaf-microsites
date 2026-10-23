@@ -9,6 +9,8 @@ import {
   ENTRY_LINE_PITCH_MIN_IN,
   FRONT_OFFER_MAX_LINES,
   LAYOUT_PX_PER_INCH,
+  LETTER,
+  LETTER_MARGIN_IN,
   MIN_PPI,
   pageOf,
   SAFE_IN,
@@ -151,37 +153,79 @@ function roomOf(fit) {
 /**
  * § 17 items 2–3, over one side of a giveaway piece as measured (its sheet: { page, faces }): it must FIT, not shrink.
  * REFUSED, each naming by how much: words that run past the box they must stay in (each [data-fit]: the tout's band, its
- * headline's lines and its foot; the entry card's fields and rules), in layout px; any run of text, or the QR code, less
- * than SAFE_IN inside a cut edge (refused, as on the flyer's back: no approved layout here forbids moving a part); any
- * type below TYPE_FLOOR_PX; a QR code under TOUT_QR_MIN_IN square; the entry card's writing lines closer than
- * ENTRY_LINE_PITCH_MIN_IN. Returns { refusals, smallestPx, spacePx } (spacePx: the least room any fit box leaves below
- * its words or to their right, in layout px; below zero, over).
+ * headline's lines and its foot; the entry card's front and its rules), in layout px; any run of text, or the QR code,
+ * less than `inset` (SAFE_IN) inside a cut edge (refused, as on the flyer's back: no approved layout here forbids moving
+ * a part), the cut edges a face's sides one BLEED_IN inside the page's or, on a letter sheet (`everySide`), all four
+ * (§ 17.2 item 1: each piece's own edge is a cut); any type below TYPE_FLOOR_PX; a QR code under TOUT_QR_MIN_IN square; the
+ * entry card's writing lines closer than ENTRY_LINE_PITCH_MIN_IN. Every face of the sheet. Returns { refusals,
+ * smallestPx, spacePx } (spacePx: the least room any fit box leaves below its words or to their right, in layout px;
+ * below zero, over).
  */
-export function giveawayFindings(piece, sheet) {
+export function giveawayFindings(piece, sheet, { inset = SAFE_IN, everySide = false } = {}) {
   const refusals = [];
-  const [face] = sheet.faces;
-  const trim = edgesOf(face.trim);
-  const cuts = cutsOf(trim, edgesOf(sheet.page));
-  const fits = face.fits.filter((f) => f.words);
-  for (const fit of fits) {
-    const over = Object.fromEntries(Object.entries(roomOf(fit)).filter(([, px]) => px < -FIT_TOLERANCE_PX).map(([side, px]) => [side, -px]));
-    const worst = Math.max(0, ...Object.values(over));
-    if (worst > 0) refusals.push(`${fit.what} does not fit: its words run ${worst.toFixed(1)} layout px over (${Object.keys(over).join(", ")}) (§ 17 item 2: fewer words; nothing is shrunk)`);
-  }
-  for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
-    const short = shortOf(edgesOf(item), trim, cuts);
-    if (short.length) refusals.push(`${item.what} is less than ${SAFE_IN} in inside the trim (${short.join(", ")})`);
-    if (item.size !== undefined && item.size < TYPE_FLOOR_PX) refusals.push(`"${item.text}" is ${item.size} layout px, below the floor of ${TYPE_FLOOR_PX}`);
-  }
-  for (const qr of face.qrs) if (Math.min(qr.w, qr.h) < TOUT_QR_MIN_IN - TOLERANCE_IN) refusals.push(`the QR code is ${inches(Math.min(qr.w, qr.h))} in, under ${TOUT_QR_MIN_IN} in square`);
-  face.lines.slice(1).forEach((line, i) => {
-    const pitch = line.y - face.lines[i].y;
-    if (pitch < ENTRY_LINE_PITCH_MIN_IN - TOLERANCE_IN) refusals.push(`writing lines ${i + 1} and ${i + 2} are ${inches(pitch)} in apart, under ${ENTRY_LINE_PITCH_MIN_IN} in`);
+  const said = [];
+  const many = sheet.faces.length > 1;
+  sheet.faces.forEach((face, f) => {
+    const name = (r) => (many ? `copy ${f + 1}: ${r}` : r);
+    const trim = edgesOf(face.trim);
+    const cuts = everySide ? SIDES : cutsOf(trim, edgesOf(sheet.page));
+    const fits = face.fits.filter((fit) => fit.words);
+    for (const fit of fits) {
+      const room = roomOf(fit);
+      const over = Object.fromEntries(Object.entries(room).filter(([, px]) => px < -FIT_TOLERANCE_PX).map(([side, px]) => [side, -px]));
+      const worst = Math.max(0, ...Object.values(over));
+      if (worst > 0) refusals.push(name(`${fit.what} does not fit: its words run ${worst.toFixed(1)} layout px over (${Object.keys(over).join(", ")}) (§ 17 item 2: fewer words; nothing is shrunk)`));
+      // the room said is below and to the right: words are set from their box's top left, so its other two sides hold none
+      said.push(...Object.entries(room).filter(([side]) => side === "right" || side === "bottom").map(([, px]) => px));
+    }
+    for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
+      const short = cuts.filter((side) => (edgesOf(item)[side] - trim[side]) * INWARD[side] < inset - TOLERANCE_IN);
+      if (short.length) refusals.push(name(`${item.what} is less than ${inset} in inside the trim (${short.join(", ")})`));
+      if (item.size !== undefined && item.size < TYPE_FLOOR_PX) refusals.push(name(`"${item.text}" is ${item.size} layout px, below the floor of ${TYPE_FLOOR_PX}`));
+    }
+    for (const qr of face.qrs) if (Math.min(qr.w, qr.h) < TOUT_QR_MIN_IN - TOLERANCE_IN) refusals.push(name(`the QR code is ${inches(Math.min(qr.w, qr.h))} in, under ${TOUT_QR_MIN_IN} in square`));
+    face.lines.slice(1).forEach((line, i) => {
+      const pitch = line.y - face.lines[i].y;
+      if (pitch < ENTRY_LINE_PITCH_MIN_IN - TOLERANCE_IN) refusals.push(name(`writing lines ${i + 1} and ${i + 2} are ${inches(pitch)} in apart, under ${ENTRY_LINE_PITCH_MIN_IN} in`));
+    });
   });
-  const smallestPx = Math.min(...face.texts.map((t) => t.size));
-  // the room said is below and to the right: words are set from their box's top left, so its other two sides hold none
-  const said = fits.flatMap((f) => Object.entries(roomOf(f)).filter(([side]) => side === "right" || side === "bottom").map(([, px]) => px));
+  const smallestPx = Math.min(...sheet.faces.flatMap((face) => face.texts.map((t) => t.size)));
   return { refusals, smallestPx, spacePx: said.length ? Math.min(...said) : null };
+}
+
+/**
+ * § 17.2 item 1, over one page of a letter sheet as measured: the page is US Letter; it holds a copy of the piece in each
+ * of the sheet's cells, each its trim's size; each copy's words fit and sit `sheet.inset` inside its own edge, a cut
+ * (giveawayFindings, every side); and nothing is drawn within LETTER_MARGIN_IN of the paper's edge: no run of text, QR
+ * code, logo, writing line or cut guide, and no painted field as drawn (a field is drawn inside its copy's cell, which
+ * clips what runs past it). REFUSED, each naming it. Returns { refusals, smallestPx, spacePx }.
+ */
+export function letterFindings(sheet, piece, measured) {
+  const refusals = [];
+  const face = sheet.face ?? piece.face;
+  if (!near(measured.page.w, LETTER.w) || !near(measured.page.h, LETTER.h)) refusals.push(`the page is ${inches(measured.page.w)} × ${inches(measured.page.h)} in, not US Letter`);
+  if (measured.faces.length !== sheet.cells.length) refusals.push(`${measured.faces.length} copies drawn, not ${sheet.cells.length}`);
+  measured.faces.forEach((f, i) => {
+    if (!near(f.trim.w, face.w) || !near(f.trim.h, face.h)) refusals.push(`copy ${i + 1}: its trim is ${inches(f.trim.w)} × ${inches(f.trim.h)} in, not ${face.w} × ${face.h}`);
+  });
+  const fit = giveawayFindings(piece, measured, { inset: sheet.inset, everySide: true });
+  const page = edgesOf(measured.page);
+  const clip = (r, cell) => ({ x: Math.max(r.x, cell.x), y: Math.max(r.y, cell.y), w: Math.min(r.x + r.w, cell.x + cell.w) - Math.max(r.x, cell.x), h: Math.min(r.y + r.h, cell.y + cell.h) - Math.max(r.y, cell.y) });
+  const drawn = [
+    ...measured.faces.flatMap((f, i) => [
+      ...f.texts.map((t) => [`copy ${i + 1}: the text "${t.text}"`, t]),
+      ...f.qrs.map((q) => [`copy ${i + 1}: the QR code`, q]),
+      ...f.logos.map((l) => [`copy ${i + 1}: a logo`, l]),
+      ...f.fields.map((field) => [`copy ${i + 1}: ${field.what}`, clip(field, f.trim)]).filter(([, r]) => r.w > 0 && r.h > 0),
+    ]),
+    ...measured.faces.flatMap((f, i) => f.lines.map((l) => [`copy ${i + 1}: a writing line`, l])),
+    ...(measured.guides ?? []).map((g) => ["a cut guide", g]),
+  ];
+  for (const [what, r] of drawn) {
+    const short = SIDES.filter((side) => (edgesOf(r)[side] - page[side]) * INWARD[side] < LETTER_MARGIN_IN - TOLERANCE_IN);
+    if (short.length) refusals.push(`${what} is less than ${LETTER_MARGIN_IN} in from the paper's edge (${short.join(", ")})`);
+  }
+  return { refusals: [...refusals, ...fit.refusals], smallestPx: fit.smallestPx, spacePx: fit.spacePx };
 }
 
 /**

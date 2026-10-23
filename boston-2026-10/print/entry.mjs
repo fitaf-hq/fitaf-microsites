@@ -4,8 +4,12 @@
 //   # Front                      then, each after one blank line:
 //   ## <heading>
 //   - <label>                    the fields, one to ENTRY_FIELDS_MAX lines, each printed as a label over a writing line
-//                                (an optional one says so in its label: "Phone (optional)")
-//   <paragraph>                  one or more (the draw line, the consent line), separated by one blank line
+//                                (an optional one says so in its label: "ZIP code (optional)"); a field holding runs of
+//                                underscores (§ 17.2 item 2: "Email: ________ @ __________ . ___") is printed as its own
+//                                line, each run a writing line as long as the run, the words between them printed
+//   <paragraph>                  one or more (the draw line, the consent line, the rules line), separated by one blank line
+//   # Front, one-sided           (optional, § 17.2 item 1) then:
+//   <paragraph>                  one or more: on the one-sided page they take the place of the front's last paragraph
 //   # Back
 //   ## <heading>
 //   <paragraph>                  the rules, each of which may open with **<lead-in>**, followed by anything
@@ -19,12 +23,16 @@ import { APPROVED_MARK, COPY_CHAR } from "./back.mjs";
 
 const SECTION = "§ 17 item 3";
 export const ENTRY_FIELDS_MAX = 6;
-const SIDE = /^# (Front|Back)$/;
+const SIDE = /^# (Front|Front, one-sided|Back)$/;
+/** Each side's key in the words read, by its heading, in the order the file must give them. */
+const SIDE_KEYS = { Front: "front", "Front, one-sided": "oneSided", Back: "back" };
+/** § 17.2 item 2: a run of underscores in a field is a writing line. */
+const BLANK = /(_{2,})/;
 const HEADING = /^## (\S.*)$/;
 const FIELD = /^- (\S.*)$/;
 const LEAD_IN = /^\*\*([^*\s][^*]*?)\*\*(.*)$/;
 /** A bracket is a placeholder; anything else of the page's own copy's characters (print/back.mjs) is a word. */
-const ENTRY_CHAR = (ch) => ch === "[" || ch === "]" || COPY_CHAR.test(ch);
+const ENTRY_CHAR = (ch) => ch === "[" || ch === "]" || ch === "@" || COPY_CHAR.test(ch);
 /** What each refused construct is called, by the first sign of it in a line of words, in this order. */
 const REFUSED = [
   [/^\s+\S/, "an indented line (Markdown reads it as code or a continuation)"],
@@ -69,11 +77,23 @@ export function parseEntry(text, source) {
     const block = next();
     const m = SIDE.exec(block.lines[0]);
     if (!m) refuse(block.n, side ? `"${block.lines[0]}": a block out of its place` : `the first line must be "# Front"`);
-    side = m[1].toLowerCase();
+    side = SIDE_KEYS[m[1]];
     if (block.lines.length > 1) refuse(block.n + 1, `"# ${m[1]}" stands alone, a blank line after it`);
     if (sides[side]) refuse(block.n, `a second "# ${m[1]}"`);
     if (side === "front" && Object.keys(sides).length) refuse(block.n, `"# Front" comes first`);
+    if (side === "oneSided" && (!sides.front || sides.back)) refuse(block.n, `"# Front, one-sided" comes after "# Front" and before "# Back"`);
     if (side === "back" && !sides.front) refuse(block.n, `"# Back" comes after "# Front"`);
+    if (side === "oneSided") {
+      // § 17.2 item 1: paragraphs alone, for the one-sided page's last
+      const own = { paragraphs: [] };
+      while (at < blocks.length && !SIDE.test(blocks[at].lines[0])) {
+        const p = next();
+        own.paragraphs.push({ lead: null, space: false, text: p.lines.map((line, j) => words(p.n + j, line)).join(" ").trim(), line: p.n });
+      }
+      if (!own.paragraphs.length) refuse(block.n, `"# Front, one-sided" has no paragraph`);
+      sides.oneSided = own;
+      continue;
+    }
     const head = next();
     const h = head && HEADING.exec(head.lines[0]);
     if (!h || head.lines.length > 1) refuse(head?.n ?? block.n, `"# ${m[1]}" is followed by its "## <heading>", alone`);
@@ -84,7 +104,10 @@ export function parseEntry(text, source) {
       list.lines.forEach((line, j) => {
         const f = FIELD.exec(line);
         if (!f) refuse(list.n + j, "a field is one line, - <label>");
-        own.fields.push({ label: words(list.n + j, f[1]).trim(), line: list.n + j });
+        // § 17.2 item 2: the runs of underscores are writing lines (their lengths kept), the words between them words
+        const parts = f[1].split(BLANK).map((part) => (BLANK.test(part) ? { blank: part.length } : { text: words(list.n + j, part.trim()) })).filter((part) => part.blank || part.text);
+        const label = parts.map((part) => part.text ?? "").filter(Boolean).join(" ");
+        own.fields.push({ label, parts: parts.some((part) => part.blank) ? parts : null, line: list.n + j });
       });
       if (own.fields.length > ENTRY_FIELDS_MAX) refuse(list.n, `${own.fields.length} fields, more than ${ENTRY_FIELDS_MAX}`);
     }
@@ -99,8 +122,8 @@ export function parseEntry(text, source) {
     sides[side] = own;
   }
   if (!sides.back) refuse(lines.length, `there is no "# Back"`);
-  const texts = Object.values(sides).flatMap((s) => [s.heading.text, ...s.fields.map((f) => f.label), ...s.paragraphs.flatMap((p) => [p.lead ?? "", p.text])]);
-  return { source, front: sides.front, back: sides.back, approved, texts };
+  const texts = Object.values(sides).flatMap((s) => [s.heading?.text ?? "", ...(s.fields ?? []).map((f) => f.label), ...s.paragraphs.flatMap((p) => [p.lead ?? "", p.text])]);
+  return { source, front: sides.front, oneSided: sides.oneSided ?? null, back: sides.back, approved, texts };
 }
 
 /** The entry card's words from `path`, checked; `source` is the file's name, which each word on the card cites. */

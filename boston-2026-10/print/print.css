@@ -299,26 +299,50 @@ html, body { margin: 0; padding: 0; background: var(--white); }
   color: var(--white); font: 700 var(--tout-scan)/1.15 var(--head);
 }
 
-/* ---------- § 17 item 3: the giveaway entry card, 6 × 4 in landscape, two sides, plain for a pen: the page's white, the
-   template's ink and one accent (the headings, --cta), no photo, nothing into the bleed. The front: the heading, then each
-   field a label over a writing line, the lines --entry-pitch apart (sizes.mjs: never under 0.3 in), then the draw and
-   consent lines at the foot, kept clear of the logo; the back: the heading, the rules at the type floor, then a row for
-   the logo. The logo --entry-logo wide at the bottom right of each side, inside the safe margin ---------- */
+/* ---------- § 17 item 3, as § 17.2 has it: the giveaway entry card, a quarter of a US Letter sheet (4.25 × 5.5 in,
+   portrait), two sides, plain for a pen: the page's white, the template's ink and one accent (the headings, --cta), no
+   photo, nothing into the bleed, and every word --entry-inset (0.5 in) inside its edge, which is a cut. The front: the
+   heading, then each field a label over a writing line, the lines --entry-pitch apart (sizes.mjs: never under 0.3 in), the
+   email's its own taller line (--entry-email-pitch), its blanks writing lines as long as their runs with the @ and the .
+   large between them; then the draw, consent and rules lines at the foot, kept clear of the logo. The back: the heading,
+   the rules at the type floor, then a row for the logo. The logo --entry-logo wide at the bottom right of each side ---------- */
 .print-entry-card .entry-body {
   position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column;
-  padding: 26px 36px 24px; color: var(--ink); font: 400 var(--entry-text)/1.3 var(--body);
+  padding: var(--entry-inset); color: var(--ink); font: 400 var(--entry-text)/1.3 var(--body);
+  padding-top: calc(var(--entry-inset) + 6px); /* a heading's glyphs stand above its tight line: kept inside the inset */
 }
-.print-entry-card .entry-head { margin: 0 0 6px; color: var(--cta); font: 700 var(--entry-head)/1.15 var(--head); }
+.print-entry-card .entry-head { margin: 0 0 8px; color: var(--cta); font: 700 var(--entry-head)/1.15 var(--head); }
 .print-entry-card .entry-fields { flex: none; display: flex; flex-direction: column; }
 .print-entry-card .entry-field { display: flex; flex-direction: column; height: var(--entry-pitch); }
 .print-entry-card .entry-label { margin: 0; font: 600 var(--entry-text)/1.3 var(--head); }
-.print-entry-card .entry-field + .entry-field .entry-label { margin-top: 6px; } /* clear of the line above it */
+.print-entry-card .entry-field + .entry-field .entry-label { margin-top: 14px; } /* clear of the line above it */
 .print-entry-card .entry-line { display: block; flex: none; height: 2px; margin-top: auto; background: var(--ink); }
-.print-entry-card .entry-notes { margin-top: auto; padding-right: calc(var(--entry-logo) + 20px); }
-.print-entry-card .entry-note { margin: 6px 0 0; }
-.print-entry-card .entry-foot { position: absolute; right: 36px; bottom: 24px; }
+/* § 17.2 item 2: the email, its own line: its words and its blanks in a row on one baseline, the blanks writing lines
+   sharing the width by their runs' lengths (their flex-grow, from the words file) */
+.print-entry-card .entry-email { flex-direction: row; align-items: flex-end; gap: 6px; height: var(--entry-email-pitch); }
+.print-entry-card .entry-email .entry-line { flex: 1 1 0; min-width: 0; margin-top: 0; margin-bottom: 4px; }
+.print-entry-card .entry-email-word { flex: none; font: 700 var(--entry-email)/1 var(--head); }
+.print-entry-card .entry-email-word:first-child { font: 600 var(--entry-text)/1.3 var(--head); }
+.print-entry-card .entry-notes { margin-top: auto; padding-right: calc(var(--entry-logo) + 14px); }
+.print-entry-card .entry-note { margin: 6px 0 0; font-size: var(--entry-rules); line-height: 1.28; }
+.print-entry-card .entry-foot { position: absolute; right: var(--entry-inset); bottom: var(--entry-inset); }
 .print-entry-card .entry-logo { width: var(--entry-logo); }
-.print-entry-card .entry-body-back .entry-rules { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; }
-.print-entry-card .entry-rule { margin: 0; font-size: var(--entry-rules); line-height: 1.32; }
+.print-entry-card .entry-body-back .entry-head { font-size: 20px; }
+.print-entry-card .entry-body-back .entry-rules { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+.print-entry-card .entry-rule { margin: 0; font-size: var(--entry-rules); line-height: 1.24; }
 .print-entry-card .entry-lead { font-family: var(--head); font-weight: 700; }
-.print-entry-card .entry-body-back .entry-foot { position: static; flex: none; display: flex; justify-content: flex-end; margin-top: 6px; }
+.print-entry-card .entry-body-back .entry-foot { position: static; flex: none; display: flex; justify-content: flex-end; margin-top: 4px; }
+/* § 17.2 item 1: the rules sign, a letter page's own face (less its margin): the back's heading and rules at a size to read
+   from a step away, the logo small at its foot */
+.print-entry-card .entry-body-sign { padding: 30px; }
+.print-entry-card .entry-body-sign .entry-head { margin-bottom: 18px; font-size: var(--sign-head); }
+.print-entry-card .entry-body-sign .entry-rules { gap: 14px; }
+.print-entry-card .entry-body-sign .entry-rule { font-size: var(--sign-text); line-height: 1.32; }
+.print-entry-card .entry-body-sign .entry-logo { width: calc(2 * var(--entry-logo)); }
+
+/* ---------- § 17.2 item 1: the letter sheets: each copy of a piece in its cell (pages.mjs letterDocument places it), its
+   trim with no bleed (the cell, .print-face, clips what front B's rules run past it); and on the cards' fronts a light
+   dashed cut guide through each centre line, stopping short of the paper's margin (pages.mjs letterRules) ---------- */
+.print-letter .letter-guide { position: absolute; display: block; border: 0 dashed var(--line); }
+.print-letter .letter-guide-v { width: 0; border-left-width: 1px; }
+.print-letter .letter-guide-h { height: 0; border-top-width: 1px; }

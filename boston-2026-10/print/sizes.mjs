@@ -3,7 +3,7 @@
 // on one flat sheet, the upper turned 180° so that, folded on the centre line into an A-frame, both read upright. Every
 // PDF page is the sheet plus BLEED_IN on every edge; text and the QR code sit at least SAFE_IN inside a face's edges.
 import { PX_PER_INCH } from "../mockups/pieces.mjs";
-import { BACK_POSITIONS } from "./assign.mjs";
+import { BACK_POSITIONS, TOUT_POSITION } from "./assign.mjs";
 
 export const BLEED_IN = 0.125;
 export const SAFE_IN = 0.125;
@@ -85,28 +85,65 @@ export const TOUT_FINE_PX = TYPE_FLOOR_PX;
 export const TOUT_QR_IN = 1;
 export const TOUT_QR_MIN_IN = 0.75;
 /**
- * § 17 item 3: the entry card, plain for a pen. Each field is a label above a writing line, the lines ENTRY_LINE_PITCH_IN
- * apart (never under ENTRY_LINE_PITCH_MIN_IN); its words at ENTRY_TEXT_PX, the heading at ENTRY_HEAD_PX, the rules on
- * the back at the floor; the logo ENTRY_LOGO_PX wide at the bottom right of each side.
+ * § 17 item 3, as § 17.2 item 2 has it: the entry card, plain for a pen, a quarter of a US Letter sheet. Each field is a
+ * label above a writing line, the lines ENTRY_LINE_PITCH_IN apart (never under ENTRY_LINE_PITCH_MIN_IN); the email field
+ * is its own line, drawn as writing lines with its `@` and `.` between them at ENTRY_EMAIL_PX, ENTRY_EMAIL_PITCH_IN
+ * tall; its words at ENTRY_TEXT_PX, the heading at ENTRY_HEAD_PX, the rules on the back at the floor; the logo
+ * ENTRY_LOGO_PX wide at the bottom right of each side; every word CARD_INSET_IN inside the card's edge, which is a cut.
+ * The rules sign (§ 17.2 item 1): the rules at SIGN_TEXT_PX, to read from a step away, its heading at SIGN_HEAD_PX.
  */
-export const ENTRY_LINE_PITCH_IN = 0.55;
+export const ENTRY_LINE_PITCH_IN = 0.65;
 export const ENTRY_LINE_PITCH_MIN_IN = 0.3;
+export const ENTRY_EMAIL_PITCH_IN = 0.95;
+export const ENTRY_EMAIL_PX = 30;
 export const ENTRY_TEXT_PX = 15;
-export const ENTRY_HEAD_PX = 26;
+export const ENTRY_HEAD_PX = 22;
 export const ENTRY_RULES_PX = TYPE_FLOOR_PX;
-export const ENTRY_LOGO_PX = 72;
+export const ENTRY_LOGO_PX = 60;
+export const CARD_INSET_IN = 0.5;
+export const SIGN_TEXT_PX = 30;
+export const SIGN_HEAD_PX = 52;
 const ENTRY_CARD_SIDES = 2;
 
 /**
- * § 17 (2026-10-23): the giveaway's two pieces, each one 6 × 4 in landscape face, built only when their words are given
- * (--tout-words, --entry-words). Not in PRINT_PIECES, whose `id` is a mock-up's (mockups/pieces.mjs PIECES): neither has
- * a mock-up. `words` names the words file that makes it; `look: "flyer"` gives the tout front B's rules (print.css's
- * .print-flyer .fb-*); the tout's one photo is the flyer's (`positions`), its caption the flyer's.
+ * § 17.2 item 1 (2026-10-23, evening): office paper. Every letter sheet is a US Letter page, portrait, with no marks;
+ * nothing printed within LETTER_MARGIN_IN of the paper's edge; each piece drawn at its trim, no bleed (its own edge is the
+ * cut). Each sheet: `base` its file's name, `piece` the piece it repeats (GIVEAWAY_PIECES), `face` its cell when not the
+ * piece's, `cells` each copy's top left corner on the page (inches), `sides` the face each page draws (the card's
+ * "front", "back", "one-sided", or the sign's "sign"), `inset` how far inside each cell every word sits, `guides` the
+ * pages that carry a light dashed cut guide through the centre lines (the cards' fronts: their backs carry none, so a
+ * flip that lands a little off shows no second line).
+ */
+export const LETTER = { w: 8.5, h: 11 };
+export const LETTER_MARGIN_IN = 0.5;
+export const TOUT_GAP_IN = 1;
+const QUARTERS = [
+  { x: 0, y: 0 },
+  { x: LETTER.w / 2, y: 0 },
+  { x: 0, y: LETTER.h / 2 },
+  { x: LETTER.w / 2, y: LETTER.h / 2 },
+];
+const SIGN_MARGIN_IN = 0.5;
+export const LETTER_SHEETS = [
+  // two touts, centred, one above the other, the space above, between and below them shared evenly (1 in each)
+  { base: "letter-touts", piece: "tout", sides: ["front"], inset: SAFE_IN, guides: [], cells: [0, 1].map((i) => ({ x: (LETTER.w - 6) / 2, y: TOUT_GAP_IN + i * (4 + TOUT_GAP_IN) })) },
+  { base: "letter-entry-cards", piece: "entry-card", sides: ["front", "back"], inset: CARD_INSET_IN, guides: ["front"], cells: QUARTERS },
+  { base: "letter-entry-cards-one-sided", piece: "entry-card", sides: ["one-sided"], inset: CARD_INSET_IN, guides: ["one-sided"], cells: QUARTERS },
+  { base: "letter-rules-sign", piece: "entry-card", face: { w: LETTER.w - 2 * SIGN_MARGIN_IN, h: LETTER.h - 2 * SIGN_MARGIN_IN }, sides: ["sign"], inset: SAFE_IN, guides: [], cells: [{ x: SIGN_MARGIN_IN, y: SIGN_MARGIN_IN }] },
+];
+
+/**
+ * § 17 (2026-10-23): the giveaway's two pieces, built only when their words are given (--tout-words, --entry-words), each
+ * its own PDF at its trim plus the bleed (a shop's run) and its copies on the letter sheets (LETTER_SHEETS). Not in
+ * PRINT_PIECES, whose `id` is a mock-up's (mockups/pieces.mjs PIECES): neither has a mock-up. `words` names the words file
+ * that makes it; `look: "flyer"` gives the tout front B's rules (print.css's .print-flyer .fb-*). The tout, 6 × 4 in
+ * landscape; its one photo its own position (§ 17.2 item 3: a photo the print set does not use, print/assign.mjs
+ * toutPhoto), captioned as the flyer's is. The entry card, since § 17.2 a quarter of a letter sheet, 4.25 × 5.5 in portrait.
  */
 export const GIVEAWAY_PIECES = [
-  { id: "tout", stem: "tout", title: "Giveaway tout", words: "tout", look: "flyer", face: { w: 6, h: 4 }, faces: 1, positions: ["flyer"] },
+  { id: "tout", stem: "tout", title: "Giveaway tout", words: "tout", look: "flyer", face: { w: 6, h: 4 }, faces: 1, positions: [TOUT_POSITION] },
   // two sides, the front the fields and the back the rules, upright for a flip on the long edge (§ 12's flyer)
-  { id: "entry-card", stem: "entry-card", title: "Giveaway entry card", words: "entry", face: { w: 6, h: 4 }, faces: 1, sides: ENTRY_CARD_SIDES, positions: [] },
+  { id: "entry-card", stem: "entry-card", title: "Giveaway entry card", words: "entry", face: { w: LETTER.w / 2, h: LETTER.h / 2 }, faces: 1, sides: ENTRY_CARD_SIDES, positions: [] },
 ];
 
 /** The flat sheet (the faces stacked) and the PDF page (the sheet plus the bleed), in inches. */

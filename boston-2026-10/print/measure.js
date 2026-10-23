@@ -83,9 +83,12 @@
       return { x, w: Math.max(...across.map((r) => r.x + r.w)) - x, y, h: y === null ? null : Math.max(...down.map((r) => r.y + r.h)) - y };
     };
     const fits = [...board.querySelectorAll("[data-fit]")].map((el) => ({ what: el.dataset.fit, content: contentOf(el), words: wordsBox(el) }));
-    const lines = [...board.querySelectorAll(".entry-line")].map((el) => inches(el.getBoundingClientRect()));
+    // each field's writing lines (the email's are several on one line, § 17.2 item 2), and each field's first, whose pitch is checked
+    const entryFields = [...board.querySelectorAll(".entry-field")].map((el) => ({ lines: [...el.querySelectorAll(".entry-line")].map((line) => inches(line.getBoundingClientRect())) }));
+    const lines = entryFields.filter((field) => field.lines.length).map((field) => field.lines[0]);
     return {
       fits,
+      entryFields,
       lines,
       trim: inches(board.getBoundingClientRect()),
       photos: [...board.querySelectorAll("[data-slot]")].map((el) => ({ slot: el.dataset.slot, ...inches(el.getBoundingClientRect()) })),
@@ -100,7 +103,9 @@
   function sheet(el) {
     const page = el.querySelector(".print-page");
     const pageColour = getComputedStyle(page).backgroundColor;
-    return { page: inches(page.getBoundingClientRect()), faces: [...el.querySelectorAll(".print-face > .board")].map((board) => face(board, pageColour)) };
+    // § 17.2 item 1: a letter sheet's cut guides, drawn on the page between its cells
+    const guides = [...el.querySelectorAll(".letter-guide")].map((guide) => inches(guide.getBoundingClientRect()));
+    return { page: inches(page.getBoundingClientRect()), faces: [...el.querySelectorAll(".print-face > .board")].map((board) => face(board, pageColour)), guides };
   }
 
   function measure() {
