@@ -566,3 +566,36 @@ removes the mirror. This branch's `git status` was unchanged across every run, a
 - On the updating week Storybook's *today* date names the committed week open today, 2026-11-01, so its stories carry
   the updating week (read from `microsite/dates.mjs`, not looked at); no case reads them.
 - **Not run here**: the page in a browser beyond Storybook's own cases; nothing merged, deployed or written to a bucket.
+
+### 9.2 Amendment, 2026-10-23: the photo sheets in the production build. CONTRACT, before any code
+
+**Written by the orchestrator on § 9.1's first finding** (engineering; no page, no copy, no data changes).
+
+**Why.** S20 and SP3 are red on both shapes for one file: the production build copies every file of
+`src/assets/photo-sheets/`, and `chefs-choice-2026-11-01.jpg` (committed with the week, `d5cf76d`, re-written at
+`9da353c`) is in neither S20's golden nor SP3's base build (`63275a8`). **It is the third time**: 2026-10-25's sheet
+turned S20 red at `62d1751` and was added to the golden by hand (`b8f041f`), and every Friday's week would do it again
+on the development line. Those files are **inputs written by Fit AF's emitter, never by hand here** (README,
+`data/photo-sheets.json` + `src/assets/photo-sheets/`), so by § 9's rule a guard over the production build holds
+whatever sheets are committed; a re-record each week is the standing red § 9 removed.
+
+1. **The emitter's files are compared as copies.** One helper, in a harness S20 and SP3 already import or a new small
+   one, splits a production build's file map into **the sheets** (every path under `assets/photo-sheets/`) and **the
+   rest**. Its rule is the directory, never a list of weeks or a count.
+2. **S20 and SP3** compare *the rest* exactly as now (S20 against the golden; SP3 against the golden and against the
+   base tree's build, its § 9 item 2 reading unchanged), and *the sheets* against the tree's own
+   `src/assets/photo-sheets/`: the same file names, each byte for byte (SHA-256 equal). Each case's message names the
+   sheets it compared that way.
+3. **The golden pins the code, not the week**: its entries under `assets/photo-sheets/` are **removed** and nothing else
+   changes (a deletion of keys; every remaining hash the previous golden's, which a check in the commit shows), and its
+   `about` and `built_from` say why and point here.
+4. **The other readers** of the golden (WC-8, CC-4, `ms-harness.mjs`) read `index.html` alone: confirmed unaffected, by
+   running them, and nothing else changed for them.
+5. **Two specs' text brought up to date** (text only): `SPEC-storybook-microsite.md` § 2 item 4 (*a week with picks*
+   is the latest committed week that is **not updating**, as `microsite/dates.mjs` now reads it) and
+   `SPEC-why-fit-af.md`'s W4 count (now 3 cases: the control and 2026-10-25's two).
+6. **Cases first**, red on this tip before the change and green after: S20 and SP3 as above, and two **mutants** in a
+   mirror, each caught: a sheet in the build that differs from its committed file by one byte (S20 and SP3 red), and a
+   one-byte change to a file that is not a sheet (S20 red, as before). **Only the touched files and their neighbours
+   are run** (S20, SP3, WC-8, CC-4, the mutants), at `nice -n 15`: another session holds the machine for a long gate,
+   and the whole suite is the orchestrator's, after it.
