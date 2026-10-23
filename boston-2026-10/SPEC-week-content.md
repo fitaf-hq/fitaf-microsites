@@ -599,3 +599,65 @@ whatever sheets are committed; a re-record each week is the standing red § 9 re
    one-byte change to a file that is not a sheet (S20 red, as before). **Only the touched files and their neighbours
    are run** (S20, SP3, WC-8, CC-4, the mutants), at `nice -n 15`: another session holds the machine for a long gate,
    and the whole suite is the orchestrator's, after it.
+
+#### 9.2.1 Built — found at the build, not ruled
+
+**Commits**: `a1d589c` items 1–2 (`test/production-sheets.mjs`, S20, SP3); `b6c721e` item 3 (the golden); `42afad9` item
+5 (the two specs' text); this section and the README's rows at the commit that carries them. § 9.2 is unchanged. Nothing
+under `src/`, `scripts/`, `data/`, `build.mjs`, `consent/`; the golden's one change is item 3's.
+
+**Red before, green after** (only the touched files and their neighbours, as § 9.2 item 6 says; `nice -n 15`; times
+PDT, 2026-10-23, read from `date`). The command: `node --test test/s20-production-build.test.mjs
+test/sp3-production-false.test.mjs test/wc-08-no-picks-build.test.mjs test/cc-04-no-file.test.mjs`.
+
+| Tree | When | Result |
+|---|---|---|
+| `777ddfb`, before | 11:52:40–11:52:46 | 10 of 12: S20 and SP3 (S20) red, 2026-11-01's sheet not in the golden; WC-8 and CC-4 green |
+| `a1d589c`, the cases with the golden unchanged (S20 and SP3 alone) | 11:53:23–11:53:27 | 5 of 7: S20 and SP3 (S20) still red, now for the golden's five sheet entries, which the rest does not hold |
+| `b6c721e`, after | 11:54:11–11:54:17 | 12 of 12 |
+
+S20 and SP3 each print (and put in their messages) *"6 sheets compared as byte copies of src/assets/photo-sheets/:
+carousel.jpg, chefs-choice-2026-10-04.jpg, chefs-choice-2026-10-11.jpg, chefs-choice-2026-10-18.jpg,
+chefs-choice-2026-10-25.jpg, chefs-choice-2026-11-01.jpg"*.
+
+**The deletion check (item 3)**: a script outside this repository (not committed) compares the golden's `files` at
+`a1d589c` with `b6c721e`'s: before 18 entries, after 13; removed 5, every one under `assets/photo-sheets/`
+(`carousel.jpg`, `chefs-choice-2026-10-04.jpg`, `-10-11`, `-10-18`, `-10-25`), none left under it; added 0; changed 0;
+kept equal 13. `about` gains a sentence; `built_from` gains an entry before the chain (*SHEETS REMOVED 2026-10-23 …
+Before: RE-RECORDED 2026-10-22 at 773e597 …*), the chain unchanged.
+
+**The other readers (item 4)**: CC-4 reads the golden's `index.html` alone, green before and after; WC-8 reads no golden
+(its reference is `45549a9`'s page), green before and after; `ms-harness.mjs` and `suite-in-mirror.mjs` name the golden
+in a comment and read no file of it (`git grep s20-production-golden`). Nothing changed for any of them.
+
+**The mutants (item 6)**, each in a mirror of `b6c721e`, the unchanged mirror first (S20 and SP3, 7 of 7), recorded with
+§ 9.1's runner (`node mutant-in-mirror.mjs … test/s20-production-build.test.mjs test/sp3-production-false.test.mjs`),
+11:54:36–11:54:51:
+
+| Mutant (`build.mjs`, `copyStatic`) | Caught |
+|---|---|
+| a sheet differing from its committed file by one byte: the sheets' `copyFile(from, to)` replaced by a read and a write with the last byte XOR 1, for the last sheet the manifest names (2026-11-01's) | S20 (*the sheets: 6 sheets compared …*) and SP3 (S20) (the same); 5 of 7 |
+| a file that is not a sheet, one byte: the static copy of `assets/fitaf-logo.png` the same way | S20 (*every file but the sheets: the golden*) and SP3 (S20) (*S20's golden (every file but the sheets)*); 5 of 7 |
+
+**The choices, where § 9.2 left one open**
+
+1. **The helper is a new file**, `test/production-sheets.mjs`: no harness was imported by both S20 (none) and SP3. It
+   splits by the prefix `assets/photo-sheets/`, the manifest's relative `base` as a file map names it.
+2. **"The tree's own `src/assets/photo-sheets/`"** is every file of the directory but a dot-file (a system's, e.g.
+   `.DS_Store`, which no build copies). Every other file counts, so a file there that the manifest does not name would
+   turn S20 red: a finding, not narrowed away.
+3. **SP3's base comparison** is over the rest alone (the base tree's sheets are its own week's, not compared); its § 9
+   item 2 reading of `index.html` is unchanged.
+4. **The mutants are recorded, not committed**: S20 has no mutants file, and SP3's family file (`sp-mutants.test.mjs`)
+   runs SP checks over cc-harness mirrors, which S20's and SP3's cases are not written as.
+
+**Found**
+
+- ⚠ § 9.2's *"the production build copies every file of `src/assets/photo-sheets/`"* is not quite so: it copies the
+  sheets `data/photo-sheets.json` names (`build.mjs` `sheetsToCopy`, the carousel and each week's). Today the two are the
+  same six files; the case compares the build's sheets with the whole directory, so the day they differ it says so.
+- The golden held **five** sheet entries (the carousel and four weeks), never 2026-11-01's.
+- `tools/storybook/node_modules` (my link to the dev line's install, untracked: `.git/info/exclude` lists the site's
+  and the watch's links, not this one) is **left**: Storybook's suite needs it in this worktree.
+- **Not run here**, as § 9.2 item 6 says: the whole site suite, Storybook and the watch (the orchestrator's, after); nor
+  the updating shape (S20 and SP3 read no picks file, and the sheets are the same in both shapes).
