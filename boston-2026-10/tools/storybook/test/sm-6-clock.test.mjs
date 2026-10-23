@@ -1,6 +1,9 @@
 // SM-6 (SPEC-storybook-microsite.md § 5, § 2 item 4): the clock. *A week with picks* resolves to the latest committed
 // week's Thursday (S − 3), noon in data/save.json's send_time_zone, and *no picks* to the day after the last committed
 // window (S − 2), from the committed data/picks/; *today* adds no script, and the other two add exactly one, their own.
+// ⚠ The site's SPEC-week-content § 9: *a week with picks* is the latest committed week that is not UPDATING (its § 8 item
+// 1: `"updating": true`, no list), a later updating week passed over and named; *no picks* stays the day after the last
+// committed window, of any kind.
 // The expected dates are worked out here from the file names, by calendar arithmetic and Intl, not by the tool's code.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -37,16 +40,21 @@ function wallClock(instant, zoneName) {
 }
 const byId = (dates) => Object.fromEntries(dates.map((d) => [d.id, d]));
 
-test("SM-6: a week with picks is the latest committed week's Thursday at noon; no picks the day after its window", async () => {
+test("SM-6: a week with picks is the latest committed week's Thursday at noon; no picks the day after its window", async (t) => {
   const sundays = (await readdir(join(SITE, "data", "picks"))).map((f) => SUNDAY_FILE.exec(f)?.[1]).filter(Boolean).sort();
   assert.ok(sundays.length > 0, "fixture control: a committed picks file");
   const latest = sundays.at(-1);
+  const updating = [];
+  for (const s of sundays) if ((await readJson(join(SITE, "data", "picks", `${s}.json`))).updating === true) updating.push(s);
+  const listed = sundays.filter((s) => !updating.includes(s)).at(-1);
+  t.diagnostic(`a week with picks: ${listed}; passed over (updating): ${sundays.filter((s) => updating.includes(s) && s > listed).join(", ") || "none"}`);
+  assert.ok(listed, `fixture control: a committed week that is not updating (updating: ${updating})`);
   const z = await zone();
   const dates = byId(await clockDates({ now: A_DATE_INSIDE_NO_WINDOW }));
-  assert.equal(dates.week.on, plusDays(latest, -3));
+  assert.equal(dates.week.on, plusDays(listed, -3));
   assert.equal(weekday(dates.week.on), THURSDAY, "S − 3 is a Thursday");
-  assert.equal(wallClock(Date.parse(dates.week.instant), z), `${plusDays(latest, -3)} ${NOON}`);
-  assert.equal(dates.week.delivery, latest);
+  assert.equal(wallClock(Date.parse(dates.week.instant), z), `${plusDays(listed, -3)} ${NOON}`);
+  assert.equal(dates.week.delivery, listed);
   assert.equal(dates.none.on, plusDays(latest, -2));
   assert.equal(weekday(dates.none.on), FRIDAY, "the day after the window is the store's Friday switch");
   assert.equal(wallClock(Date.parse(dates.none.instant), z), `${plusDays(latest, -2)} ${NOON}`);
@@ -87,6 +95,14 @@ test("SM-6: the latest of several weeks; without a picks file, no dated choice",
     const none = byId(await clockDates({ picksDir, zone: await zone(), now: A_DATE_INSIDE_NO_WINDOW }));
     assert.deepEqual([none.week.on, none.week.instant, none.none.on], [null, null, null], picksDir);
   }
+  // The site's SPEC-week-content § 9: a later updating week (its § 8 item 1's file) is passed over by a week with picks;
+  // no picks is still the day after the last window (2026-10-18's).
+  const withUpdating = join(dir, "with-updating");
+  await mkdir(withUpdating);
+  for (const name of ["2026-10-11.json", "2026-10-04.json"]) await writeFile(join(withUpdating, name), "{}");
+  await writeFile(join(withUpdating, "2026-10-18.json"), JSON.stringify({ delivery: "2026-10-18", version: 2, updating: true, lists: {} }));
+  const passed = byId(await clockDates({ picksDir: withUpdating, zone: await zone(), now: A_DATE_INSIDE_NO_WINDOW }));
+  assert.deepEqual([passed.week.on, passed.week.delivery, passed.none.on], ["2026-10-08", "2026-10-11", "2026-10-16"]);
 });
 
 test("SM-6: today adds no script; a week with picks, no picks and the fixture week each add one, their own date's", { timeout: PAGES_TIMEOUT_MS }, async (t) => {
