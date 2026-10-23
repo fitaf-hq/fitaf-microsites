@@ -6,13 +6,20 @@
 // array missing is refused, naming it. IDs only: no path, and an ID that is not a plain name (it becomes a file name) is
 // refused. Which FILE each position prints (§ 7 item 2, § 10 item 3): each of the tent's windows, square since § 10,
 // Image Gauge's first good square for the photo (`<id>-sq-<key>.jpg`, the first key the glam deliverable lists), or the
-// photo as composed when the deliverable has no square for it; the flyer, the photo as composed.
+// photo as composed when the deliverable has no square for it; the flyer, the photo as composed. § 12 (2026-10-20): the
+// flyer's back takes three more, the first array of rung 3 holding none of the photos placed elsewhere, each its square.
 export const POOL = "glam";
 export const FLYER_POSITION = "flyer";
 export const TENT_POSITIONS = ["tent-large", "tent-top", "tent-bottom"];
 /**
+ * § 12 item 6: the flyer's back's three photos, left to right. Print-only positions: they are in no mock-up and not in
+ * mockups/photos.json (its nine are the mock-ups'); each is staged, as the manifest's are, under its own name (`<position>.jpg`).
+ */
+export const BACK_POSITIONS = ["flyer-back-1", "flyer-back-2", "flyer-back-3"];
+/**
  * The positions printed from a square (§ 7 item 2 the two tiles, SPEC-photo-slots.md § 2's `square`; § 10 item 3 the
- * large photo too, its window square since § 10).
+ * large photo too, its window square since § 10). § 12 item 6 put the back's three here too; § 15 item 8 (2026-10-21)
+ * makes their windows the glam photos' own 3:2 under the names band, so they print as composed, as the flyer's does.
  */
 export const SQUARE_POSITIONS = [...TENT_POSITIONS];
 const PHOTO_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
@@ -146,4 +153,27 @@ export function fourFlyerPhotos(doc, tentIds, pool = POOL) {
   const why = index === -1 ? "every array holds one of the tent's photos" : "the first without the tent's photos";
   const chosen = index === -1 ? 0 : index;
   return { ids: [...four.arrays[chosen]], from: `rung ${FOUR}, array ${chosen + 1} (${why})` };
+}
+
+/**
+ * § 12 item 6: the back's three photos, flyer-back-1 to flyer-back-3, left to right: the first array of rung 3 that holds
+ * none of `placedIds` (the photos the build places elsewhere: the flyer's, the four flyers', the tent's three), in its
+ * order. A missing rung 3, an empty one, or an array that is not three photo IDs is refused, naming it; and so is a rung
+ * 3 whose every array holds a photo placed elsewhere. Returns { ids, from }.
+ */
+export function backPhotoIds(doc, placedIds, pool = POOL) {
+  const rungs = doc?.pools?.[pool]?.rungs;
+  if (!rungs || typeof rungs !== "object") throw new Error(`the rungs file has no pool "${pool}" (pools.${pool}.rungs)`);
+  const three = rungs["3"];
+  if (!three || !Array.isArray(three.arrays)) throw new Error(`pool "${pool}" has no rung 3 (its "arrays")`);
+  if (three.arrays.length === 0) throw new Error(`pool "${pool}", rung 3 has no array`);
+  three.arrays.forEach((array, i) => {
+    const where = `pool "${pool}", rung 3, array ${i + 1}`;
+    if (!Array.isArray(array) || array.length !== BACK_POSITIONS.length) throw new Error(`${where}: not ${BACK_POSITIONS.length} photo IDs`);
+    array.forEach((id, j) => checkId(id, `${where}, photo ${j + 1}`));
+  });
+  const placed = new Set(placedIds);
+  const index = three.arrays.findIndex((array) => !array.some((id) => placed.has(id)));
+  if (index === -1) throw new Error(`pool "${pool}", rung 3: every array holds a photo placed elsewhere (the flyer's, the four flyers' or the tent's)`);
+  return { ids: [...three.arrays[index]], from: `rung 3, array ${index + 1} (the first holding no photo placed elsewhere)` };
 }

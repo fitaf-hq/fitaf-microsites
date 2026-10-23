@@ -29,7 +29,13 @@ const PHOTO_SHEETS = [
   ...sheetsOf(await loadPhotos(), "src/assets/photo-sheets"),
   ...sheetsOf(await loadPhotos(join(ROOT, "test", "fixtures", "photo-sheets", "photo-sheets.json")), "test/fixtures/photo-sheets"),
 ];
-const ALLOWED_IMAGES = [`${PACKAGE}/src/assets/fitaf-logo.png`, ...FLOW_DIAGRAMS, ...PHOTO_SHEETS];
+/**
+ * SPEC-print-pieces.md § 15 item 1 (2026-10-21): the logo drawn for a dark ground, print-only, two files named one by one.
+ * Neither is a photograph: each is the brand's own logo, rendered from the vector the Owner's label files carry and
+ * recoloured for the band (print/assets/README.md).
+ */
+const REVERSED_LOGOS = [`${PACKAGE}/print/assets/fitaf-logo-reversed.png`, `${PACKAGE}/print/assets/fitaf-logo-reversed-white.png`];
+const ALLOWED_IMAGES = [`${PACKAGE}/src/assets/fitaf-logo.png`, ...REVERSED_LOGOS, ...FLOW_DIAGRAMS, ...PHOTO_SHEETS];
 
 const git = (...args) => spawnSync("git", ["-C", REPO, ...args], { encoding: "utf8" });
 

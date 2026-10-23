@@ -1,27 +1,31 @@
 // The printed pieces' measuring pass (print/build-print.mjs), run in headless Chrome over a COPY of a print page, never
 // the page printed. Once the fonts are in, it records, in inches from the page's top-left corner: the page, and for each
 // face (a .print-face's .board, its trim) every photo window ([data-slot]), every run of text outside an annotation (its
-// glyphs' box, from a Range), every QR code, every logo, every painted field (a photo, or an element whose background is
-// not the page's own), and the blocks a layout is judged by (the rule, the headline, the offer, the scan block, and the
-// body with its content box, SPEC-print-pieces.md §§ 9–10). It writes them as JSON into a script element, which
-// `--dump-dom` returns. It writes no text.
+// glyphs' box, from a Range, its type's size in layout px and its lines), every QR code, every logo, every painted field
+// (a photo, or an element whose background is not the page's own), and the blocks a layout is judged by (the rule, the
+// headline, the offer, the scan block, and the body with its content box, SPEC-print-pieces.md §§ 9–10; the flyer's
+// back's photos, words, bottom row and body, § 12). A page of several sheets (the flyer's front and back, § 12) is
+// measured a sheet at a time, each as `sheets[i]`; `page` and `faces` are the first's. It writes them as JSON into a
+// script element, which `--dump-dom` returns. It writes no text.
 (() => {
   const CSS_PX_PER_INCH = 96;
-  const page = document.querySelector(".print-page");
   const inches = (r) => ({ x: r.left / CSS_PX_PER_INCH, y: r.top / CSS_PX_PER_INCH, w: r.width / CSS_PX_PER_INCH, h: r.height / CSS_PX_PER_INCH });
   const unpainted = (colour, pageColour) => colour === pageColour || /^rgba\(.*,\s*0\)$/.test(colour) || colour === "transparent";
   const annotation = (el) => el.closest("[data-annotation]") !== null;
   const nameOf = (el) => (el.dataset.slot ? `the photo ${el.dataset.slot}` : `the ${el.tagName.toLowerCase()} .${[...el.classList].join(".")}`);
+  /** How many lines a range's text is set on: its line boxes' distinct tops (a run split by a tag shares its lines). */
+  const linesOf = (range) => new Set([...range.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top))).size;
+  /** The layout px of an element's type: its computed font size (the page is drawn scaled, not zoomed, so this is the layout's). */
+  const sizeOf = (el) => parseFloat(getComputedStyle(el).fontSize);
 
-  function face(board) {
-    const pageColour = getComputedStyle(page).backgroundColor;
+  function face(board, pageColour) {
     const texts = [];
     const walker = document.createTreeWalker(board, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       if (!node.data.trim() || annotation(node.parentElement)) continue;
       const range = document.createRange();
       range.selectNodeContents(node);
-      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()) });
+      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range) });
     }
     const fields = [...board.querySelectorAll("*")]
       .filter((el) => !annotation(el))
@@ -44,9 +48,14 @@
       const top = r.top + side(t);
       return inches({ left, top, width: r.right - side(rt) - left, height: r.bottom - side(b) - top });
     };
-    const blocks = [...board.querySelectorAll(".rule, .headline, .offer, .scan, .flyer-body, .tent-body")]
+    const linesIn = (el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return linesOf(range);
+    };
+    const blocks = [...board.querySelectorAll(".rule, .headline, .offer, .scan, .flyer-body, .tent-body, .flyer-back-photos, .flyer-back-words, .flyer-back-foot, .flyer-back-body")]
       .filter((el) => !annotation(el))
-      .map((el) => ({ what: [...el.classList].join("."), ...inches(el.getBoundingClientRect()), content: contentOf(el) }));
+      .map((el) => ({ what: [...el.classList].join("."), ...inches(el.getBoundingClientRect()), content: contentOf(el), lines: linesIn(el) }));
     return {
       trim: inches(board.getBoundingClientRect()),
       photos: [...board.querySelectorAll("[data-slot]")].map((el) => ({ slot: el.dataset.slot, ...inches(el.getBoundingClientRect()) })),
@@ -58,8 +67,15 @@
     };
   }
 
+  function sheet(el) {
+    const page = el.querySelector(".print-page");
+    const pageColour = getComputedStyle(page).backgroundColor;
+    return { page: inches(page.getBoundingClientRect()), faces: [...el.querySelectorAll(".print-face > .board")].map((board) => face(board, pageColour)) };
+  }
+
   function measure() {
-    const out = { page: inches(page.getBoundingClientRect()), faces: [...document.querySelectorAll(".print-face > .board")].map(face) };
+    const sheets = [...document.querySelectorAll(".print-sheet")].map(sheet);
+    const out = { ...sheets[0], sheets };
     const json = document.createElement("script");
     json.type = "application/json";
     json.id = "print-measure";

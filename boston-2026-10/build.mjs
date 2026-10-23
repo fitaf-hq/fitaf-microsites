@@ -61,7 +61,7 @@ export const STATIC_DIRS = [
 export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 const CENTS_PER_DOLLAR = 100;
-const QR_OPTIONS = {
+export const QR_OPTIONS = {
   errorCorrectionLevel: "M",
   margin: 2,
   color: { dark: "#1b2360", light: "#ffffff" },
@@ -605,6 +605,24 @@ export async function writeQrCodes(events, outDir) {
     await QRCode.toFile(png, event.url, { ...QR_OPTIONS, type: "png", width: QR_PNG_WIDTH_PX });
     await writeFile(svg, await QRCode.toString(event.url, { ...QR_OPTIONS, type: "svg" }));
     written.push(png, svg);
+  }
+  return written;
+}
+
+/**
+ * The print build's QR codes at error correction H (SPEC-print-pieces.md § 13 item 11): qr/<event>-h.svg, the same URL,
+ * library and QR_OPTIONS but the level, so front B's logo can sit at the code's centre. Only the print build writes them
+ * (the site's outputs are unchanged); this file stays the one place a QR code is made (Q7).
+ */
+export async function writeQrCodesH(events, outDir) {
+  const qrDir = join(outDir, "qr");
+  await mkdir(qrDir, { recursive: true });
+  const written = [];
+  for (const event of events) {
+    if (!/^[a-z0-9-]+$/.test(event.id)) throw new Error(`bad event id: ${event.id}`);
+    const svg = join(qrDir, `${event.id}-h.svg`);
+    await writeFile(svg, await QRCode.toString(event.url, { ...QR_OPTIONS, errorCorrectionLevel: "H", type: "svg" }));
+    written.push(svg);
   }
   return written;
 }

@@ -73,6 +73,13 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   and **`seminar`** (`?e=seminar`, for the organizers' slide) after `demo`, which **stays first**: the mock-ups'
   default, the development page at `/` and the save step's built-in id read the first event. The printed pieces carry
   `boston` by default (`print/build-print.mjs` `PRINT_EVENT`). Both URLs serve the production page as `/` does.
+- **`flyer-back.md`** (`SPEC-print-pieces.md` § 12): the words on the back of the printed flyer, "Why Fit AF?", and
+  the only source of them; read by `npm run build:print` alone (`print/back.mjs`), never by the page. A strict
+  Markdown subset: line 1 `# <heading>`, then paragraphs separated by one blank line, the first the lede, each later
+  one may open with `**<lead-in>**` and a space; a list, a link, a second heading, emphasis elsewhere or HTML is
+  refused, naming the line. ⚠ **A proof until approved**: `<!-- approved -->` as its last line (the only HTML comment
+  allowed) marks the Advisor's approval; without it every flyer is a `-PROOF`. Words that do not fit the back are
+  refused, never shrunk: the build names how many layout px over they are, and the remedy is fewer words.
 - **`delivery-zips.json`**: ⭐ since `SPEC-save-offer-production.md` § 10 (2026-10-22) **the store's official Boston
   delivery zone** (`"status": "official"`, `"match": "exact"`): its 316 five-digit codes, read 2026-10-22, sorted, each
   `{ "zip" }` in `prefixes` (the key `src/worker/zip-class.js` reads). A snapshot: re-read it from the store when the

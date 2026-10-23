@@ -1,7 +1,8 @@
 /* The printed pieces (print/, SPEC-print-pieces.md): each mock-up's face on a page of the sheet plus the bleed. This sheet
    comes after the template's tokens and fonts and mockups.css, and before the sizes (pages.mjs sizeRules, from sizes.mjs,
-   which set the boxes and --bleed, --safe, --face-w and --photo-ratio). It draws no colour of its own (the one it names
-   is the template's: the page's white) and nothing translucent. One layout prints and screenshots: no @media print, so
+   which set the boxes and --bleed, --safe, --face-w and --photo-ratio). It draws no colour of its own (the ones it names
+   are the template's: the page's white, and since § 12 the navy of a lead-in on the flyer's back, as the mock-ups' own
+   headings) and nothing translucent. One layout prints and screenshots: no @media print, so
    the PNG proof is the PDF's page.
    § 7 (the Advisor, 2026-10-17): the faces were the approved mock-ups' layouts, and no rule here moved a part; a part
    that meets a cut edge of the trim only grows outward, into the bleed. The Advisor has since laid each face out anew,
@@ -12,6 +13,12 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 /* The sheet is the page's printed size and clips; the page inside it is laid out in the mock-ups' pixels and scaled
    (pages.mjs sizeRules), from its top left corner, out of the flow so that its layout size makes no second page */
 .print-sheet { position: relative; overflow: hidden; background: var(--white); }
+/* § 12.1 item 5 (2026-10-20): each sheet is contained, so that printing (paged media) never fragments it. Its page is laid
+   out at the mock-ups' size and drawn scaled, so its unscaled layout is taller than the sheet; with a second sheet after
+   it, Chrome's print layout carried every part that crossed the page's height into the next fragment, and the flyer's
+   PDF front printed without its QR code, address and logo while the screen (the PNG proof, every measured case) showed
+   them. Q27 reads the PDF itself */
+.print-sheet { contain: strict; }
 .print-page { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; background: var(--white); }
 .print-face { position: absolute; left: 0; top: 0; overflow: hidden; }
 /* The tent's upper face: the lower face turned, so that folded on the centre line both read upright */
@@ -31,6 +38,42 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-flyer .flyer-body { position: relative; gap: 0; justify-content: space-evenly; } /* its 10px gap would unequal them */
 .print-flyer .flyer-scan { margin-top: 0; }
 .print-flyer .logo-corner { position: absolute; right: 24px; bottom: 20px; width: 84px; }
+/* § 12 (the Advisor, 2026-10-20): the front a strong call to action, by scale, nothing added: the offer at the headline's
+   size, in its own field across the body's width (the body's column stretches it), and the QR code 1.25 in square (§ 12.1); both
+   sizes.mjs's (--offer-size, --qr-side). The space left is still shared evenly, as § 9 has it */
+.print-flyer .flyer-body > .offer { font-size: var(--offer-size); text-wrap: balance; } /* two lines of even length, not one long and one short */
+.print-flyer .flyer-scan .qr { width: var(--qr-side); height: var(--qr-side); }
+
+/* ---------- § 12: a flyer's two sides, each a sheet and a page of its PDF: the front, then the back, upright (a flip on
+   the long edge) ---------- */
+.print-sheet + .print-sheet { break-before: page; }
+/* The back: three square photos across the face's width at its top (the tent's tile arithmetic, § 10: three equal squares
+   and two 4px gaps, a tile the face's width less the gaps, over three), the row running into the bleed on the top and the
+   outer two on the left and right, each from its own cell; then the words from data/flyer-back.md, their blocks the
+   mock-up flyer body's gap apart (--back-gap), the heading the mock-ups' .headline, the lede their .tagline, each
+   paragraph at --back-text with its lead-in in the heading font; and the bottom row at the body's own padding (24px at the
+   sides, 20px below), eatfitaf.com at the left and the logo at the right, the front's 84px in the front's corner. The
+   words run from the top of the body down; what they must not reach is the bottom row (checks.mjs backFindings) */
+.print-flyer .flyer-back-photos {
+  --gap: 4px; /* mockups.css .tent-photos' own */
+  --tile: calc((var(--face-w) - 2 * var(--gap)) / 3);
+  flex: none;
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: calc(var(--tile) + var(--bleed)) var(--tile) calc(var(--tile) + var(--bleed));
+  grid-template-rows: calc(var(--tile) + var(--bleed));
+  margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0;
+}
+.print-flyer .flyer-back-body { position: relative; flex: 1; min-height: 0; padding: 16px 24px 20px; }
+.print-flyer .flyer-back-words { display: flex; flex-direction: column; align-items: flex-start; gap: var(--back-gap); }
+.print-flyer .flyer-back-para { margin: 0; font-size: var(--back-text); line-height: var(--back-line); }
+.print-flyer .flyer-back-lead { font-family: var(--head); font-weight: 700; color: var(--navy); }
+.print-flyer .flyer-back-foot {
+  position: absolute; left: 24px; right: 24px; bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.print-flyer .flyer-back-foot .address { margin: 0; }
+.print-flyer .flyer-back-logo { width: 84px; }
 
 /* ---------- The tent card's face, as § 10 has it (the Advisor, 2026-10-18; portrait, 4 × 6 in): no bar; its top is the
    fold. Its photos are three SQUARE windows across the face's width, at its top (--photo-ratio, sizes.mjs, the shape of
@@ -65,3 +108,166 @@ html, body { margin: 0; padding: 0; background: var(--white); }
    take them). The address under the QR code, centred on it: the scan block a column as wide as the code (its place is
    §§ 9–10's, above); the address keeps its own 4px margin ---------- */
 .scan-under { flex-direction: column; align-items: center; gap: 0; align-self: flex-start; }
+
+/* ---------- § 13 (2026-10-20): front B, the Owner's energy on the brief's order. A dark band (the template's ink) with
+   the headline, its accent line in the brand's green, and the lede, running into the bleed on the top, left and right;
+   the photo across the face, into the bleed on the left and right, taking the height the band and the foot leave; the
+   band's torn lower edge drawn over the photo's top; the one callout, a green disc over the photo's lower right corner (level:
+   Q2 lets nothing but the tent's face turn);
+   then the foot: the offer and the logo at the left, the QR code with the address under it at the right, inside the safe
+   margin. Its sizes are sizes.mjs's (--fb-*); its colours the template's ---------- */
+.print-flyer .board-flyer-b { display: flex; flex-direction: column; }
+.print-flyer .fb-band {
+  flex: none; margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0;
+  padding: calc(var(--bleed) + 26px) calc(var(--bleed) + 24px) 14px;
+  background: var(--ink); color: var(--white);
+}
+.print-flyer .fb-head { margin: 0; color: var(--white); font: 700 var(--fb-head)/1.02 var(--head); letter-spacing: -.01em; text-transform: uppercase; }
+.print-flyer .fb-line { display: block; white-space: nowrap; }
+.print-flyer .fb-accent { color: var(--signature); }
+.print-flyer .fb-lede { margin: 9px 0 0; color: var(--white); font: 600 var(--fb-lede)/1.3 var(--body); text-wrap: balance; }
+.print-flyer .fb-hero { position: relative; flex: 1; min-height: 0; margin: 0 calc(-1 * var(--bleed)); }
+.print-flyer .fb-edge { position: absolute; left: 0; top: -1px; width: 100%; height: 13px; fill: var(--ink); }
+.print-flyer .fb-callout {
+  position: absolute; right: calc(var(--bleed) + 18px); bottom: 14px; margin: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: var(--fb-callout); height: var(--fb-callout); border-radius: 50%;
+  background: var(--signature); color: var(--ink); font: 700 14px/1.05 var(--head); text-align: center; text-transform: uppercase;
+}
+.print-flyer .fb-callout span { display: block; }
+.print-flyer .fb-callout span:first-child { font-size: 30px; line-height: 1; }
+/* Pass 2 (the Advisor, 2026-10-20): the logo at the top right, on a white plate, the headline kept clear of it; the foot one
+   orange section (the offer's own --cta) into the bleed under a torn edge, the offer large in white with no box of its
+   own; the QR code at error correction H on a white tile with a green rule, the logo at its centre */
+.print-flyer .fb-band { position: relative; }
+.print-flyer .fb-logo-top {
+  position: absolute; top: calc(var(--bleed) + 18px); right: calc(var(--bleed) + 20px); width: 92px;
+  padding: 6px 8px; border-radius: 6px; background: var(--white);
+}
+.print-flyer .fb-head { padding-right: 120px; }
+.print-flyer .fb-foot {
+  position: relative; flex: none; display: flex; align-items: center; gap: 18px;
+  margin: 0 calc(-1 * var(--bleed)) calc(-1 * var(--bleed));
+  padding: 16px calc(var(--bleed) + 24px) calc(var(--bleed) + 16px); background: var(--cta);
+}
+.print-flyer .fb-foot-edge { position: absolute; left: 0; top: -12px; width: 100%; height: 13px; fill: var(--cta); }
+.print-flyer .fb-cta { flex: 1; min-width: 0; }
+.print-flyer .fb-cta > .offer { margin: 0; padding: 0; background: none; color: var(--white); font-size: var(--fb-offer); line-height: 1.12; text-wrap: balance; }
+.print-flyer .fb-scan { flex: none; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.print-flyer .fb-qr { position: relative; padding: 6px; border: 3px solid var(--signature); border-radius: 10px; background: var(--white); line-height: 0; }
+.print-flyer .fb-qr .qr { width: var(--fb-qr); height: var(--fb-qr); }
+/* the logo at the code's centre (about a quarter of its width, under the 30% error correction H recovers); centred by
+   its own size, not a transform (Q2) */
+.print-flyer .fb-qr-logo {
+  position: absolute; left: calc(50% - 22px); top: calc(50% - 16px); width: 32px;
+  padding: 3px 4px; border-radius: 4px; background: var(--white);
+}
+.print-flyer .fb-scan .address { margin: 0; color: var(--white); }
+/* § 13 item 8 (2026-10-20): the meal's name on its photo, a solid chip of the band's ink with white type (nothing
+   translucent): on front B at the photo's lower left, inside the safe margin; on the back, in each square's own grid
+   cell at its foot, the outer two kept the safe margin inside the trim */
+.print-flyer .photo-name {
+  margin: 0; padding: 4px 8px 3px; border-radius: 4px; background: var(--ink); color: var(--white);
+  font: 600 14px/1.25 var(--head);
+}
+.print-flyer .fb-name { position: absolute; left: calc(var(--bleed) + 24px); bottom: 12px; max-width: calc(100% - 2 * var(--bleed) - 48px); }
+/* the back's names are out of the grid's flow (absolute, in their square's grid area), so the photos keep their cells */
+.print-flyer .flyer-back-photos { position: relative; }
+.print-flyer .flyer-back-photos .flyer-back-name { position: absolute; grid-row: 1; bottom: 8px; max-width: calc(var(--tile) - 16px); }
+.print-flyer .flyer-back-name-1 { grid-column: 1; left: calc(var(--bleed) + var(--safe)); max-width: calc(var(--tile) - var(--safe) - 8px); }
+.print-flyer .flyer-back-name-2 { grid-column: 2; left: 8px; }
+.print-flyer .flyer-back-name-3 { grid-column: 3; left: 8px; max-width: calc(var(--tile) - var(--safe) - 8px); }
+/* § 14 (2026-10-20, late): the lede's accent colour, by the words file's ledeAccent; the band's halftone, the template's
+   muted grey in opaque dots that shrink away from its lower right corner, behind every word (nothing turned, nothing
+   translucent: pieces.mjs HALFTONE); the meal's name wraps in its chip;
+   the back's bar (each icon over its label, on the template's ice) and steps (columns in order: the icon on a blue
+   disc, the title in the heading font, the detail under it), each block's lead-in centred over it, at the back's own
+   type size or more */
+.print-flyer .fb-lede-line { display: block; }
+.print-flyer .fb-lede[data-lede-accent="orange"] .fb-lede-accent { color: var(--orange); }
+.print-flyer .fb-lede[data-lede-accent="blue"] .fb-lede-accent { color: var(--lean); }
+.print-flyer .fb-lede[data-lede-accent="green"] .fb-lede-accent { color: var(--signature); }
+.print-flyer .fb-band { overflow: hidden; }
+.print-flyer .fb-dots { position: absolute; right: 0; bottom: 0; width: 300px; height: 200px; color: var(--muted); }
+.print-flyer .fb-head, .print-flyer .fb-lede { position: relative; z-index: 1; }
+.print-flyer .fb-logo-top { z-index: 1; }
+.print-flyer .photo-name { text-wrap: balance; }
+.print-flyer .fbk-bar, .print-flyer .fbk-steps { width: 100%; }
+.print-flyer .fbk-bar > .flyer-back-lead, .print-flyer .fbk-steps > .flyer-back-lead { display: block; text-align: center; }
+.print-flyer .fbk-bar ul {
+  display: flex; justify-content: space-around; gap: 6px; margin: 4px 0 0; padding: 6px 6px 5px; list-style: none;
+  border-radius: 8px; background: var(--ice);
+}
+.print-flyer .fbk-bar li {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center;
+  font: 600 var(--back-text)/1.15 var(--head); color: var(--ink);
+}
+.print-flyer .fbk-bar .fbk-icon { width: 24px; height: 24px; color: var(--cta); }
+.print-flyer .fbk-steps ol {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; margin: 3px 0 0; padding: 0; list-style: none;
+}
+.print-flyer .fbk-steps li { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.print-flyer .fbk-mark {
+  display: grid; place-items: center; width: 36px; height: 36px; margin: 0 0 2px;
+  border-radius: 50%; background: var(--lean); color: var(--white);
+}
+.print-flyer .fbk-mark .fbk-icon { width: 21px; height: 21px; }
+.print-flyer .fbk-title { font: 700 var(--back-text)/1.15 var(--head); color: var(--navy); }
+.print-flyer .fbk-detail { font-size: var(--back-text); line-height: 1.2; }
+/* § 15 (2026-10-21): pass 5. The band's logo drawn for the dark ground, on no plate (its own white field gone); the offer's
+   banner, a level ribbon of the band's ink with notched ends above the offer (nothing turned); the back's plans, cards
+   in a row, each its plan's colour as a top bar and never behind text, its name and its line in ink; and a statement, a
+   lead-in standing alone, centred as a block's */
+/* the logo on the band's own ink, so the halftone does not show through its field */
+.print-flyer .fb-logo-rev { width: 112px; padding: 0; border-radius: 0; background: var(--ink); }
+.print-flyer .fb-band:has(.fb-logo-rev) .fb-head { padding-right: 132px; }
+.print-flyer .fb-banner { margin: 0 0 7px; line-height: 0; }
+.print-flyer .fb-banner span {
+  display: inline-block; padding: 6px 18px 5px; background: var(--ink); color: var(--white);
+  font: 700 15px/1 var(--head); letter-spacing: .06em; text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
+}
+.print-flyer .fbk-plans { width: 100%; }
+.print-flyer .fbk-plans > .flyer-back-lead { display: block; text-align: center; }
+.print-flyer .fbk-plans ul {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none;
+}
+.print-flyer .fbk-plans li {
+  display: flex; flex-direction: column; gap: 2px; padding: 5px 6px 6px; border-top: 5px solid var(--lean);
+  border-radius: 0 0 6px 6px; background: var(--ice); color: var(--ink);
+}
+.print-flyer .fbk-plans li[data-accent="signature"] { border-top-color: var(--signature); }
+.print-flyer .fbk-plans li[data-accent="performance"] { border-top-color: var(--performance); }
+.print-flyer .fbk-plans li[data-accent="family"] { border-top-color: var(--family); }
+.print-flyer .fbk-plan-name { font: 700 var(--back-text)/1.15 var(--head); text-transform: uppercase; }
+.print-flyer .fbk-plan-line { font-size: var(--back-text); line-height: 1.2; }
+/* § 15 item 2b: the foot's texture, the template's lighter orange in opaque dots on its flat areas only, behind every
+   word and the code's tile (pieces.mjs FOOT_DOTS), anchored at the foot's lower left */
+.print-flyer .fb-foot-dots { position: absolute; left: 0; bottom: 0; width: 540px; height: 213px; color: var(--orange); }
+.print-flyer .fb-cta, .print-flyer .fb-scan { position: relative; z-index: 1; }
+/* § 15 item 8 (the Advisor's notes on pass 5): the back's photos 3:2 and their meal names in one band of ink under them
+   (the grid's second row, running into the bleed at both sides and across the gaps; the photos keep their cells); the body's
+   margins smaller (8 px top, 18 px sides, the safe margin 15); the plan cards and the steps' discs tighter; the bar on
+   the page's white; a statement set as the front's banner, centred */
+.print-flyer .flyer-back-photos { grid-template-rows: calc(var(--tile) * 2 / 3 + var(--bleed)) auto; row-gap: 0; }
+.print-flyer .flyer-back-photos .flyer-back-name {
+  position: static; grid-row: 2; align-self: stretch; max-width: none; margin: 0; border-radius: 0;
+  padding: 4px 8px 5px; background: var(--ink);
+}
+.print-flyer .flyer-back-photos .flyer-back-name-1 { padding-left: calc(var(--bleed) + var(--safe)); }
+/* the middle name covers both gaps, a pixel over each neighbour (ink on ink), so no seam shows */
+.print-flyer .flyer-back-photos .flyer-back-name-2 { margin: 0 calc(-1 * var(--gap) - 1px); padding-left: calc(9px + var(--gap)); padding-right: calc(9px + var(--gap)); }
+.print-flyer .flyer-back-photos .flyer-back-name-3 { padding-right: calc(var(--bleed) + var(--safe)); }
+.print-flyer .flyer-back-body { padding: 8px 18px 14px; }
+.print-flyer .flyer-back-foot { left: 18px; right: 18px; bottom: 14px; }
+.print-flyer .fbk-plans ul { gap: 4px; }
+.print-flyer .fbk-plans li { padding: 4px 4px 5px; }
+.print-flyer .fbk-mark { width: 30px; height: 30px; }
+.print-flyer .fbk-mark .fbk-icon { width: 18px; height: 18px; }
+.print-flyer .fbk-bar ul { padding: 2px 0 0; background: none; }
+.print-flyer .fbk-statement { align-self: center; margin: 0; line-height: 0; }
+.print-flyer .fbk-statement span {
+  display: inline-block; padding: 6px 18px 5px; background: var(--ink); color: var(--white);
+  font: 700 15px/1 var(--head); letter-spacing: .06em; text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
+}

@@ -4,16 +4,49 @@
 // for, every coefficient zero), written to a temporary folder and removed after. Its photo IDs are made at random each
 // run, so no committed file can name one (Q5 checks that none does).
 import { randomBytes } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { BACK_PATH } from "../print/back.mjs";
 import { buildPrint } from "../print/build-print.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT } from "../mockups/png.mjs";
 
 export const CHROME = process.env.CHROME || CHROME_DEFAULT;
+
+/** § 12 item 4: the one HTML comment the words file may hold, as its last line (the spec's own words, not back.mjs's). */
+export const MARK = "<!-- approved -->";
+
+/**
+ * The words file without its approval mark (the mark's line and the blank line before it), the same words otherwise: a
+ * copy of an approved back that is a proof (§ 12 item 4). A file with no mark is returned as it is, its blank lines at the
+ * end trimmed to one newline.
+ */
+export function unmarked(text) {
+  const lines = text.replace(/\n+$/, "").split("\n");
+  if (lines.at(-1) === MARK) {
+    lines.pop();
+    while (lines.length && lines.at(-1).trim() === "") lines.pop();
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/**
+ * SPEC-print-pieces.md § 12 item 5: a back whose words do not fit is REFUSED, and the whole build with it. The words are
+ * the Advisor's to edit (data/flyer-back.md), so the cases about anything else build with words that fit: the committed
+ * file without its approval mark (so a proof: a case that wants the back approved marks its own copy, Q26), less its last
+ * paragraph (read from it at run time, so every other word is the committed one), written to a temporary file once per
+ * test process. Whether the committed file itself fits is a case of its own (Q23), the only one. ⚠ Since 2026-10-21 the
+ * committed file ends with the mark (§ 15 item 8, approved for print): until the mark was taken off here first, "less its
+ * last paragraph" took the mark and nothing else. It takes the last block of words again (on 2026-10-21, the statement).
+ */
+export const fittingBackText = (text) => `${unmarked(text).replace(/\n+$/, "").split("\n\n").slice(0, -1).join("\n\n")}\n`;
+const FIT_DIR = mkdtempSync(join(tmpdir(), "boston-print-back-"));
+export const FITTING_BACK_PATH = join(FIT_DIR, "flyer-back.md");
+writeFileSync(FITTING_BACK_PATH, fittingBackText(readFileSync(BACK_PATH, "utf8")));
+process.on("exit", () => rmSync(FIT_DIR, { recursive: true, force: true }));
 /** Why a Chrome case skips, or false when it runs (the cases say so in the run's output). */
 export const NO_CHROME = existsSync(CHROME) ? false : `no Chrome found at ${CHROME} (set CHROME=<path to the Chrome binary>)`;
 
@@ -47,10 +80,13 @@ async function oneAtATime(work) {
 /** One Chrome user at a time across the suite: the builds, and any case that runs Chrome itself. */
 export { oneAtATime };
 
-/** buildPrint with the cases' Chrome, one build at a time; any Chrome run it had to retry is printed into the suite's output. */
+/**
+ * buildPrint with the cases' Chrome and, unless a case names its own, the back's words that fit (FITTING_BACK_PATH), one
+ * build at a time; any Chrome run it had to retry is printed into the suite's output.
+ */
 export const lockedBuild = (options) =>
   oneAtATime(async () => {
-    const built = await buildPrint({ chrome: CHROME, ...options });
+    const built = await buildPrint({ chrome: CHROME, backPath: FITTING_BACK_PATH, ...options });
     for (const note of built.retries) console.log(`print build: ${note}`);
     return built;
   });
@@ -155,11 +191,14 @@ export const deliverableDoc = (ids, keys = SQUARE_KEYS, none = []) => ({
  * as each square (`<id>-sq-<key>.jpg`, 1200 × 1200, or `squareSizes[role]`), but for the roles in `noSquare`, which have
  * no square file and which the deliverable lists with none. Rung 1 is the flyer's photo then another;
  * rung 3's first array holds the flyer's photo (so the rule must skip it), its second does not; rung 4's first array
- * holds one of the tent's photos (so § 8's rule must skip it), its second (`one` to `four`) does not.
+ * holds one of the tent's photos (so § 8's rule must skip it), its second (`one` to `four`) does not. Since § 12 (the
+ * flyer's back) rung 3 has two more arrays: the third holds one of the four flyers' photos (`two`), so the back's rule
+ * must skip it, as it skips the first two (the flyer's photo, the tent's three); the fourth (`back1` to `back3`) is the
+ * back's.
  */
 export async function photoSet({ sizes = {}, squareSizes = {}, noSquare = [], rung1 = ["flyer", "other"] } = {}) {
   const dir = await mkdtemp(join(tmpdir(), "boston-print-photos-"));
-  const roles = ["flyer", "other", "large", "top", "bottom", "spare", "portrait", "one", "two", "three", "four"];
+  const roles = ["flyer", "other", "large", "top", "bottom", "spare", "portrait", "one", "two", "three", "four", "back1", "back2", "back3"];
   const ids = Object.fromEntries(roles.map((role) => [role, randomId()]));
   for (const [role, id] of Object.entries(ids)) {
     await writeFile(join(dir, `${id}.jpg`), fixtureJpeg(...(sizes[role] ?? (role === "portrait" ? [2000, 3000] : [3000, 2000]))));
@@ -170,7 +209,7 @@ export async function photoSet({ sizes = {}, squareSizes = {}, noSquare = [], ru
     strongest: [],
     alsoGood: rung1.map((role) => ids[role]),
     arrays: {
-      3: [[ids.spare, ids.flyer, ids.other], [ids.large, ids.top, ids.bottom]],
+      3: [[ids.spare, ids.flyer, ids.other], [ids.large, ids.top, ids.bottom], [ids.spare, ids.two, ids.other], [ids.back1, ids.back2, ids.back3]],
       4: [[ids.spare, ids.top, ids.other, ids.flyer], [ids.one, ids.two, ids.three, ids.four]],
     },
   });

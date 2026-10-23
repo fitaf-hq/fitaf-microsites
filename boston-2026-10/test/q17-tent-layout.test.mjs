@@ -86,7 +86,8 @@ const windowOf = (r, t) => {
 test("Q17: built, both faces: three square windows across the top, into the bleed; the parts in order, evenly; the logo in the corner", { skip: NO_CHROME }, async () => {
   const built = await lockedBuild({ outDir: join(set.dir, "dist-print"), ...set.photos, today: "2026-10-20", fourFlyers: false });
   const pages = built.planned.filter((p) => p.piece.id === "tent-card");
-  assert.deepEqual(pages.map((p) => p.stem), ["tent-card-PROOF"], "one tent card (control)");
+  // One tent card; a proof or final as the offer stands (since SPEC-print-pieces.md § 12.2 the committed offer is approved)
+  assert.deepEqual(pages.map((p) => p.stem.replace(/-PROOF$/, "")), ["tent-card"], "one tent card (control)");
   const [p] = pages;
   const page = p.measured.page;
   assert.equal(p.measured.faces.length, 2, "two faces (control)");
