@@ -661,3 +661,13 @@ in a comment and read no file of it (`git grep s20-production-golden`). Nothing 
   and the watch's links, not this one) is **left**: Storybook's suite needs it in this worktree.
 - **Not run here**, as § 9.2 item 6 says: the whole site suite, Storybook and the watch (the orchestrator's, after); nor
   the updating shape (S20 and SP3 read no picks file, and the sheets are the same in both shapes).
+
+**Found at the merge into the development line (the orchestrator, 2026-10-23)**: `boston/merge-after-1023`'s PV5
+(SPEC-preview-sites § 3, § 4) is a fourth reader of the same kind: it compares every file of both builds with
+`544e496`'s (`pv-05-golden.json`), and red 2 of 2 on the merge (`6b6be5d`) for 2026-11-01's sheet alone. Fixed by this
+section's rule at `14a402b` (the sheets as byte copies through `production-sheets.mjs`, every other file against
+`544e496`'s; its golden left as the recorder wrote it, the sheet entries unread, since it is never edited by hand).
+Both mutants of item 6 caught by it (each control 2 of 2, each mutant 0 of 2, `mutant-in-mirror.mjs` in the
+orchestrator's scratch). Gates at `14a402b`: the site 1107 of 1107 (13:08–13:16 PDT), Storybook 67 of 67 (13:16–13:18);
+at `6b6be5d` the watch 213 of 213 and contrast 90 of 90. Storybook's SM-5, SM-8, SM-10 and SM-11 timed out twice that
+afternoon under load averages of 410–466 (another job's) and passed alone each time.
