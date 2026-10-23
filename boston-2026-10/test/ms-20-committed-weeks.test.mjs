@@ -5,74 +5,40 @@
 // files, its report and its message; BASE's package extracted by `git archive` into a temporary directory (read only),
 // this package's node_modules linked in, W4's way. (No build embeds a week, SPEC-week-content § 7: the content is where
 // a week's snack lists are read.)
+// ⚠ AMENDED for SPEC-week-content § 9 item 1 (2026-10-23): "every week" is every week the two trees were GIVEN ALIKE,
+// those whose data/picks/ file here is byte-identical to the same path at BASE. A week committed since (no file there)
+// or changed since has no *before*: it is outside the claim, and the control names each one so, with why. The weeks and
+// the comparison are test/ms-checks.mjs's, which MS-10's mirror mutant runs too.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readdir, readFile, realpath, rm, symlink } from "node:fs/promises";
+import { mkdtemp, readFile, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import { ROOT } from "../build.mjs";
-
-const BASE = "1c10839";
-const WEEKS = (await readdir(join(ROOT, "data", "picks"))).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).map((f) => f.slice(0, -".json".length)).sort();
-const TARGETS = [[], ["--env", "dev"]];
-
-function run(cmd, args, { input } = {}) {
-  const r = spawnSync(cmd, args, { input, maxBuffer: 256 * 1024 * 1024 });
-  if (r.status !== 0) throw new Error(`${cmd} ${args.join(" ")}: exit ${r.status}: ${r.stderr}`);
-  return r.stdout;
-}
-
-async function filesUnder(dir, top = dir) {
-  if (!existsSync(dir)) return {};
-  const files = {};
-  for (const entry of (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) Object.assign(files, await filesUnder(path, top));
-    else files[relative(top, path)] = await readFile(path);
-  }
-  return files;
-}
-
-async function contentAt(pkg, week, args, scratch) {
-  const out = join(await mkdtemp(join(scratch, "out-")), "out");
-  const r = spawnSync(process.execPath, [join(pkg, "scripts", "week-content.mjs"), "--week", week, "--out", out, ...args], { cwd: pkg, maxBuffer: 256 * 1024 * 1024 });
-  const named = (text) => text.toString("utf8").replaceAll(out, "<out>").replaceAll(pkg, "<package>");
-  return { status: r.status, files: await filesUnder(out), stdout: named(r.stdout), stderr: named(r.stderr) };
-}
+import { baseTree, contentProblems, MS20_BASE as BASE, MS20_TARGETS as TARGETS, weeksAlike, weeksAlikeLine } from "./ms-checks.mjs";
 
 const scratch = await realpath(await mkdtemp(join(tmpdir(), "boston-ms-20-")));
-const top = run("git", ["-C", ROOT, "rev-parse", "--show-toplevel"]).toString("utf8").trim();
-const prefix = relative(top, ROOT);
-const basePackage = join(scratch, "base", prefix);
-await mkdir(join(scratch, "base"), { recursive: true });
-run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", BASE, prefix]) });
-await symlink(join(ROOT, "node_modules"), join(basePackage, "node_modules"));
+const basePackage = await baseTree(BASE, scratch);
 test.after(() => rm(scratch, { recursive: true, force: true }));
+const alike = await weeksAlike(ROOT, basePackage);
+const WEEKS = alike.compared;
 
-test("MS-20 (control): data/picks/ holds the committed weeks, and a week of them carries snack lists", async () => {
-  assert.ok(WEEKS.length >= 3, `the committed weeks: ${WEEKS}`);
+test("MS-20 (control): data/picks/ holds the committed weeks, and a week of them carries snack lists", async (t) => {
+  t.diagnostic(weeksAlikeLine(alike));
+  assert.ok(WEEKS.length >= 3, `the committed weeks: ${weeksAlikeLine(alike)}`);
   const withSnacks = [];
   for (const week of WEEKS) {
     const json = JSON.parse(await readFile(join(ROOT, "data", "picks", `${week}.json`), "utf8"));
     if (Object.keys(json.lists?.["chefs-choice"]?.snacks ?? {}).length) withSnacks.push(week);
   }
-  assert.ok(withSnacks.length > 0, "a committed week with snack lists");
+  assert.ok(withSnacks.length > 0, `a committed week with snack lists, of those compared: ${WEEKS}`);
 });
 
 for (const week of WEEKS) {
   for (const args of TARGETS) {
     const target = args.length ? "dev" : "prod";
     test(`MS-20 (${week}, ${target}): npm run content byte-identical to ${BASE}'s`, async () => {
-      const before = await contentAt(basePackage, week, args, scratch);
-      const after = await contentAt(ROOT, week, args, scratch);
-      assert.equal(after.status, before.status, `the exit code (${BASE}: ${before.status}; ${before.stderr.trim()})`);
-      assert.deepEqual(Object.keys(after.files), Object.keys(before.files), "the same files");
-      for (const [path, bytes] of Object.entries(before.files)) assert.ok(after.files[path].equals(bytes), `${path} byte for byte`);
-      assert.equal(after.stdout, before.stdout, "the same report (each file's path, size and SHA-256)");
-      assert.equal(after.stderr, before.stderr, "the same message");
-      assert.equal(before.status, 0, `control: ${BASE} makes the week (${before.stderr.trim()})`);
+      assert.deepEqual(await contentProblems(ROOT, basePackage, week, args, scratch), []);
     });
   }
 }

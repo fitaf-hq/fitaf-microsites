@@ -2,6 +2,13 @@
 // returning one line per thing the page gets wrong ([] when it is right), so the cases run them on the real build and
 // MS-10's mutants run THE SAME checks on a mirror's build (test/ms-10-mutants.test.mjs). Not a test file itself.
 // Every expectation is the contract's (ms-harness TABLE, the fixtures' own carts), never data/plans.json's.
+// Since SPEC-week-content § 9 also MS-20's (§ 13 item 3): the weeks it compares and the comparison, over a PACKAGE
+// (`root`: this one, or MS-10's mirror) against MS20_BASE's own tree.
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { mkdir, mkdtemp, readdir, readFile, symlink } from "node:fs/promises";
+import { join, relative } from "node:path";
+import { ROOT } from "../build.mjs";
 import { expectedFragment, FIXTURE as V1, mealLine, MESSAGES, readWithFillB } from "./cc-harness.mjs";
 import { assertCheckedOut, LOG_PREFIX } from "./r2-harness.mjs";
 import { cardOf, centsOf, dollars, fragmentOf, GOALS, mpidOf, open, resultOf, TABLE, V2_CARTS } from "./ms-harness.mjs";
@@ -103,5 +110,92 @@ export function threeCartsProblems(html) {
       if (s.checkout !== want) problems.push(`${hash}: ${s.checkout}, not its cart's ${want}`);
     }
   }
+  return problems;
+}
+
+/** MS-20's base: the tree before § 13's code (section 11 built, § 13's contract merged). Its two targets. */
+export const MS20_BASE = "1c10839";
+export const MS20_TARGETS = [[], ["--env", "dev"]];
+
+function run(cmd, args, { input } = {}) {
+  const r = spawnSync(cmd, args, { input, maxBuffer: 256 * 1024 * 1024 });
+  if (r.status !== 0) throw new Error(`${cmd} ${args.join(" ")}: exit ${r.status}: ${r.stderr}`);
+  return r.stdout;
+}
+
+async function filesUnder(dir, top = dir) {
+  if (!existsSync(dir)) return {};
+  const files = {};
+  for (const entry of (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) Object.assign(files, await filesUnder(path, top));
+    else files[relative(top, path)] = await readFile(path);
+  }
+  return files;
+}
+
+/** The content command of the package at `pkg`, run in it for `week` (and `args`): its exit, its files, and its stdout
+ *  and stderr with the package's and the output's own paths named alike. */
+async function contentAt(pkg, week, args, scratch) {
+  const out = join(await mkdtemp(join(scratch, "out-")), "out");
+  const r = spawnSync(process.execPath, [join(pkg, "scripts", "week-content.mjs"), "--week", week, "--out", out, ...args], { cwd: pkg, maxBuffer: 256 * 1024 * 1024 });
+  const named = (text) => text.toString("utf8").replaceAll(out, "<out>").replaceAll(pkg, "<package>");
+  return { status: r.status, files: await filesUnder(out), stdout: named(r.stdout), stderr: named(r.stderr) };
+}
+
+/** `commit`'s package (`git archive` of THIS repository, the package's directory alone) extracted under `scratch` (a real
+ *  path: a script runs as a program only when its own URL is its argv[1]), read only, this package's node_modules linked
+ *  in, W4's way. Returns its path. */
+export async function baseTree(commit, scratch) {
+  const top = run("git", ["-C", ROOT, "rev-parse", "--show-toplevel"]).toString("utf8").trim();
+  const prefix = relative(top, ROOT);
+  await mkdir(join(scratch, "base"), { recursive: true });
+  run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", commit, prefix]) });
+  const basePackage = join(scratch, "base", prefix);
+  await symlink(join(ROOT, "node_modules"), join(basePackage, "node_modules"));
+  return basePackage;
+}
+
+/**
+ * SPEC-week-content § 9 item 1: the weeks MS-20 compares, those of `root`'s data/picks/ whose file is byte-identical to
+ * the same path in `basePackage` (the weeks the two trees were given alike), and every other week, outside the claim
+ * because it has no *before*, with why: { compared: [week…], left: [[week, why]…] }, `why` "added after <base>" (no file
+ * there) or "changed since <base>".
+ */
+export async function weeksAlike(root, basePackage, base = MS20_BASE) {
+  const weeks = (await readdir(join(root, "data", "picks"))).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).map((f) => f.slice(0, -".json".length)).sort();
+  const compared = [];
+  const left = [];
+  for (const week of weeks) {
+    const there = join(basePackage, "data", "picks", `${week}.json`);
+    if (!existsSync(there)) left.push([week, `added after ${base}`]);
+    else if (!(await readFile(join(root, "data", "picks", `${week}.json`))).equals(await readFile(there))) left.push([week, `changed since ${base}`]);
+    else compared.push(week);
+  }
+  return { compared, left };
+}
+
+/** The population line MS-20's control prints: what it compared and what it left out, and why. */
+export const weeksAlikeLine = ({ compared, left }) =>
+  `compared (byte-identical to ${MS20_BASE}'s): ${compared.join(", ") || "none"}; outside the claim: ${left.map(([w, why]) => `${w} (${why})`).join(", ") || "none"}`;
+
+/**
+ * MS-20 for one week and target (`args`): `root`'s content command against `basePackage`'s, its exit code, its files,
+ * each byte for byte, its report (each file's path, size and SHA-256) and its message; and as a control, the base makes
+ * the week. One line per difference ([] when the two agree).
+ */
+export async function contentProblems(root, basePackage, week, args, scratch, base = MS20_BASE) {
+  const before = await contentAt(basePackage, week, args, scratch);
+  const after = await contentAt(root, week, args, scratch);
+  const problems = [];
+  if (before.status !== 0) problems.push(`control: ${base} does not make the week (${before.stderr.trim()})`);
+  if (after.status !== before.status) problems.push(`the exit code ${after.status}, not ${base}'s ${before.status} (${after.stderr.trim()})`);
+  const [paths, basePaths] = [Object.keys(after.files), Object.keys(before.files)];
+  if (JSON.stringify(paths) !== JSON.stringify(basePaths)) problems.push(`the files ${JSON.stringify(paths)}, not ${JSON.stringify(basePaths)}`);
+  for (const [path, bytes] of Object.entries(before.files)) {
+    if (!after.files[path]?.equals(bytes)) problems.push(`${path} not byte for byte (${after.files[path]?.length} bytes, ${base}'s ${bytes.length})`);
+  }
+  if (after.stdout !== before.stdout) problems.push(`the report ${JSON.stringify(after.stdout)}, not ${JSON.stringify(before.stdout)}`);
+  if (after.stderr !== before.stderr) problems.push(`the message ${JSON.stringify(after.stderr)}, not ${JSON.stringify(before.stderr)}`);
   return problems;
 }

@@ -3,6 +3,9 @@
 // refusals: it exits non-zero and writes NOTHING for a week with no picks file, for a --week that is not a Sunday or not
 // given (never inferred), and for any refusal the build would make (a broken picks file, a sheet the manifest names and
 // the directory lacks). Run as `npm run content` runs it: the program, from a mirror where a case changes an input.
+// ⚠ AMENDED for SPEC-week-content § 9 item 4 (2026-10-23): the week with no picks file is derived, never a literal (it
+// was 2026-11-01, which now has one): the Sunday seven days after the latest committed week (wc-checks weekWithNoFile,
+// the same refusal check WC-11's mirror mutant runs), the case saying which.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -10,8 +13,9 @@ import { existsSync } from "node:fs";
 import { mkdtemp, readdir, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ROOT } from "../build.mjs";
+import { PICKS_DIR, ROOT } from "../build.mjs";
 import { mirror } from "./cc-harness.mjs";
+import { noFileProblems, weekWithNoFile } from "./wc-checks.mjs";
 import { sha256, WEEK_1018 } from "./wc-harness.mjs";
 
 /** `npm run content -- …` as the program: node scripts/week-content.mjs …, in `root`, with `env` added. */
@@ -68,12 +72,15 @@ function assertRefused(run, out, reason, files) {
   assert.deepEqual(Object.keys(files), [], `nothing written under ${out}`);
 }
 
-test("WC-10b: refusals write nothing: no picks file for the week, not a Sunday, no --week, no --out, an unknown argument", async () => {
+test("WC-10b: refusals write nothing: no picks file for the week, not a Sunday, no --week, no --out, an unknown argument", async (t) => {
+  const { latest, week } = await weekWithNoFile();
+  t.diagnostic(`the week with no picks file: ${week}, seven days after the latest committed week, ${latest}`);
+  assert.ok(!existsSync(join(PICKS_DIR, `${week}.json`)), `control: data/picks/ has no file for ${week}`);
+  assert.deepEqual(await noFileProblems(), [], `no picks file for ${week}: refused, the week named, nothing written`);
   const parent = await mkdtemp(join(tmpdir(), "boston-wc10-refuse-"));
   try {
     const out = join(parent, "out");
     const cases = [
-      [["--week", "2026-11-01", "--out", out], /2026-11-01/],
       [["--week", "2026-10-17", "--out", out], /Sunday/],
       [["--week", "2026-02-30", "--out", out], /Sunday|date/],
       [["--out", out], /--week/],

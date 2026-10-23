@@ -30,13 +30,30 @@ export async function photoPage(target = "prod") {
 export const PHOTO_URL = /[^\s"'()<>\\]*(?:carousel|chefs-choice-\d{4}-\d{2}-\d{2})\.jpg/g;
 export const photoUrls = (html) => html.match(PHOTO_URL) ?? [];
 
-/** The latest committed week (data/picks/), never a literal. */
-export async function latestCommittedWeek() {
-  return (await readdir(PICKS_DIR))
+/** The committed weeks (data/picks/), oldest first. */
+const committedWeeks = async () =>
+  (await readdir(PICKS_DIR))
     .map((f) => /^(\d{4}-\d{2}-\d{2})\.json$/.exec(f)?.[1])
     .filter(Boolean)
-    .sort()
-    .at(-1);
+    .sort();
+
+/** The latest committed week (data/picks/), never a literal: of any kind (bothPages, PR-1). */
+export async function latestCommittedWeek() {
+  return (await committedWeeks()).at(-1);
+}
+
+/**
+ * SPEC-week-content § 9 item 3: the latest committed week (data/picks/) that is NOT an updating week (§ 8 item 1's
+ * shape, `"updating": true` and no list: no carts, no photo sheet; U1 is that page's case), never a literal, and the
+ * later ones passed over for being updating: { delivery, passedOver: [week…] }, delivery undefined when every one is.
+ */
+export async function latestWeekNotUpdating() {
+  const passedOver = [];
+  for (const week of (await committedWeeks()).reverse()) {
+    if (JSON.parse(await readFile(join(PICKS_DIR, `${week}.json`), "utf8")).updating !== true) return { delivery: week, passedOver };
+    passedOver.push(week);
+  }
+  return { delivery: undefined, passedOver };
 }
 
 /** Both builds' pages with the latest committed week (data/picks/) in them as content. */

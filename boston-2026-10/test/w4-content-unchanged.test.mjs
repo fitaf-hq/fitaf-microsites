@@ -6,8 +6,10 @@
 // node_modules linked in, and its own command run there. A week that tree refuses (no picks file) must be refused here
 // the same way: the same exit code, the same message once each tree's own paths are named alike, nothing written.
 // ⚠ Pinned to 6e0f6bd's inputs: a week's picks file committed later (2026-11-01's, at the store's switch) changes what
-// this tree makes for that week by design and turns its half of W4 red; it is then retired, as the contract's
-// comparison was a release check of this change.
+// this tree makes for that week by design; that half of W4 is then retired, as the contract's comparison was a release
+// check of this change. ⚠ AMENDED for SPEC-week-content § 9 item 2 (2026-10-23): the retiring is the case's own. Each
+// week (the two literals stay) is compared while its picks file is byte-identical at both trees, or absent from both
+// (the refusal half, as written); otherwise it is RETIRED, and the control names it with why. At least one is compared.
 // ⚠ AMENDED for SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): the heading, a phrase the content fills, is the
 // menu's name alone, so the base's week/picks-data.json is compared as § 11 makes it, each cart's heading's " (<range>)"
 // removed (cc-harness rangeless: every other byte the base's), and the report's line for it names those bytes.
@@ -64,12 +66,31 @@ run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, 
 await symlink(join(ROOT, "node_modules"), join(basePackage, "node_modules"));
 test.after(() => rm(scratch, { recursive: true, force: true }));
 
-test(`W4 (control): ${BASE}'s package was extracted, its content command present`, () => {
+/** SPEC-week-content § 9 item 2: why `week` is retired (its picks file not alike at the two trees), or null while it is
+ *  compared: byte-identical at both, or absent from both (the refusal half). */
+async function retired(week) {
+  const [here, there] = [ROOT, basePackage].map((pkg) => join(pkg, "data", "picks", `${week}.json`));
+  if (!existsSync(here) && !existsSync(there)) return null;
+  if (!existsSync(there)) return `committed after ${BASE}; retired`;
+  if (!existsSync(here)) return `removed since ${BASE}; retired`;
+  return (await readFile(here)).equals(await readFile(there)) ? null : `changed since ${BASE}; retired`;
+}
+const RETIRED = [];
+for (const week of WEEKS) {
+  const why = await retired(week);
+  if (why) RETIRED.push(`${week}: ${why}`);
+}
+const COMPARED = WEEKS.filter((week) => !RETIRED.some((line) => line.startsWith(`${week}:`)));
+const POPULATION = `compared: ${COMPARED.join(", ") || "none"}; ${RETIRED.join("; ") || "none retired"}`;
+
+test(`W4 (control): ${BASE}'s package was extracted, its content command present`, (t) => {
+  t.diagnostic(POPULATION);
   assert.ok(existsSync(join(basePackage, "scripts", "week-content.mjs")), "the base tree's content command");
   assert.ok(existsSync(join(basePackage, "data", "picks", `${WEEKS[0]}.json`)), `the base tree holds ${WEEKS[0]}'s picks file`);
+  assert.ok(COMPARED.length >= 1, `a week compared (${POPULATION})`);
 });
 
-for (const week of WEEKS) {
+for (const week of COMPARED) {
   for (const args of TARGETS) {
     const target = args.length ? "dev" : "prod";
     test(`W4 (${week}, ${target}): npm run content byte-identical to ${BASE}'s`, async () => {

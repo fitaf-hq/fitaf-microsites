@@ -7,7 +7,9 @@
 // base's tiles are then at /week/<file>, where the Workers serve the bucket's sheet). With no data/photo-sheets.json at
 // all (a mirror without it or the directory): the same page as base null. And the tree as committed, which since the
 // KMS-side emitter's sheets landed carries the five carousel windows and a photo tile for each meal of the committed
-// week the manifest has a cell for (the count read from the manifest, never a literal).
+// week the manifest has a cell for (the count read from the manifest, never a literal). ⚠ AMENDED for SPEC-week-content
+// § 9 item 3 (2026-10-23): that week is the latest that is NOT an updating week (§ 8: no list, no photo sheet; U1 is that
+// page's case), and the case says which week it took and which it passed over.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -16,7 +18,7 @@ import { parseHTML } from "linkedom";
 import { loadPhotos, PICKS_DIR, ROOT } from "../build.mjs";
 import { addDays } from "../src/worker/zoned-time.js";
 import { card, DAYS, midday, mirror, openPlanPage, pageWithPicks, withFixtureInData } from "./cc-harness.mjs";
-import { FIXTURE_PHOTOS_PATH, FIXTURE_SHEETS_DIR, latestCommittedWeek, photoUrls, programBuild } from "./pr-harness.mjs";
+import { FIXTURE_PHOTOS_PATH, FIXTURE_SHEETS_DIR, latestWeekNotUpdating, photoUrls, programBuild } from "./pr-harness.mjs";
 
 const CDN = "https://cdn.example/x/";
 const SHEETS = ["carousel.jpg", "chefs-choice-2026-10-04.jpg"];
@@ -94,12 +96,15 @@ test("PR-3: no data/photo-sheets.json and no directory (a mirror) builds the pag
   }
 });
 
-test("PR-3: the tree as committed carries the five carousel windows and a photo tile for each meal the manifest has a cell for", async () => {
+test("PR-3: the tree as committed carries the five carousel windows and a photo tile for each meal the manifest has a cell for", async (t) => {
   const photos = await loadPhotos();
-  // The committed week (the latest data/picks/ file, never a literal: SPEC-chefs-choice § 7.3 removed week B's), its
-  // content put in the built page as the Workers put the bucket's (SPEC-week-content § 7's ruling), seen on its S − 3.
-  const delivery = await latestCommittedWeek();
-  assert.ok(delivery, "control: a committed week in data/picks/");
+  // The committed week (the latest data/picks/ file that is not updating, never a literal: SPEC-chefs-choice § 7.3
+  // removed week B's; SPEC-week-content § 9 item 3), its content put in the built page as the Workers put the bucket's
+  // (SPEC-week-content § 7's ruling), seen on its S − 3.
+  const { delivery, passedOver } = await latestWeekNotUpdating();
+  const passed = passedOver.length ? `; passed over: ${passedOver.join(", ")} (updating: no list, no photo sheet; U1 is that page's case)` : "; none passed over";
+  t.diagnostic(`the committed week: ${delivery}${passed}`);
+  assert.ok(delivery, `control: a committed week in data/picks/ that is not updating${passed}`);
   const { html } = await pageWithPicks({ picks: PICKS_DIR, week: delivery });
   const windows = [...parseHTML(html).document.querySelectorAll("#carousel .slide img")];
   assert.deepEqual(windows.map((img) => img.getAttribute("src")), Array(5).fill(photos.base + photos.carousel.file), "five windows onto the carousel sheet");

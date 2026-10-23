@@ -1,15 +1,17 @@
-// The checks of WC-1, WC-3, WC-5, WC-7 and WC-12 (SPEC-week-content.md § 5, § 7) as functions over a PACKAGE (`root`: this one, or
+// The checks of WC-1, WC-3, WC-5, WC-7 and WC-12 (SPEC-week-content.md § 5, § 7), and since § 9 item 4 WC-10b's first
+// refusal, as functions over a PACKAGE (`root`: this one, or
 // a mirror of it), each returning one line per thing the package gets wrong ([] when it is right). The cases run them on
 // this package; WC-11's mutants run THE SAME checks on a mirror carrying one mutation (test/wc-11-mutants.test.mjs).
 // Not a test file itself. Every expectation is the contract's, written here, never read back from the code under test.
-import { execFile } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { ROOT } from "../build.mjs";
+import { addDays } from "../src/worker/zoned-time.js";
 import { card, openPlanPage } from "./cc-harness.mjs";
 import { pageOf, V2_DIR } from "./ms-harness.mjs";
 import {
@@ -244,4 +246,41 @@ export async function buildWeekProblems(root = ROOT) {
     }
   }
   return problems;
+}
+
+/**
+ * SPEC-week-content § 9 item 4: the week WC-10b's first refusal asks for, the one with no picks file, derived and never a
+ * literal: the Sunday seven days after the latest week of `root`'s data/picks/, of any kind (one menu, five, updating).
+ * { latest, week }.
+ */
+export async function weekWithNoFile(root = ROOT) {
+  const latest = (await readdir(join(root, "data", "picks")))
+    .map((f) => /^(\d{4}-\d{2}-\d{2})\.json$/.exec(f)?.[1])
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  return { latest, week: addDays(latest, 7) };
+}
+
+/**
+ * WC-10b's first refusal (§ 3): for weekWithNoFile(root), the package's content command (the program, as `npm run
+ * content` runs it) exits non-zero, its message names the week, and it writes NOTHING; and, as a control, the package has
+ * no picks file for that week. One line per thing it gets wrong.
+ */
+export async function noFileProblems(root = ROOT) {
+  const { week } = await weekWithNoFile(root);
+  if (existsSync(join(root, "data", "picks", `${week}.json`))) return [`control: data/picks/ has a file for ${week}`];
+  const parent = await mkdtemp(join(tmpdir(), "boston-wc10-nofile-"));
+  try {
+    const out = join(parent, "out");
+    const r = spawnSync(process.execPath, [join(root, "scripts", "week-content.mjs"), "--week", week, "--out", out], { encoding: "utf8" });
+    const problems = [];
+    if (r.status === 0) problems.push(`${week}: exit 0, not refused`);
+    if (!r.stderr.includes(week)) problems.push(`${week}: the message does not name the week: ${JSON.stringify(r.stderr.trim())}`);
+    const written = (await readdir(parent, { recursive: true, withFileTypes: true })).filter((e) => e.isFile()).map((e) => join(e.parentPath, e.name).slice(out.length + 1));
+    if (written.length) problems.push(`${week}: wrote ${written.join(", ")}`);
+    return problems;
+  } finally {
+    await rm(parent, { recursive: true, force: true });
+  }
 }
