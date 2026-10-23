@@ -299,23 +299,24 @@ html, body { margin: 0; padding: 0; background: var(--white); }
   color: var(--white); font: 700 var(--tout-scan)/1.15 var(--head);
 }
 
-/* ---------- § 17 item 3, as § 17.2 has it: the giveaway entry card, a quarter of a US Letter sheet (4.25 × 5.5 in,
-   portrait), two sides, plain for a pen: the page's white, the template's ink and one accent (the headings, --cta), no
-   photo, nothing into the bleed, and every word --entry-inset (0.5 in) inside its edge, which is a cut. The front: the
-   heading, then each field a label over a writing line, the lines --entry-pitch apart (sizes.mjs: never under 0.3 in), the
-   email's its own taller line (--entry-email-pitch), its blanks writing lines as long as their runs with the @ and the .
-   large between them; then the draw, consent and rules lines at the foot, kept clear of the logo. The back: the heading,
-   the rules at the type floor, then a row for the logo. The logo --entry-logo wide at the bottom right of each side ---------- */
+/* ---------- § 17 item 3, as §§ 17.2–17.3 have it: the giveaway entry card, one side, landscape, plain for a pen: the
+   page's white, the template's ink and one accent (the heading, --cta), no photo, nothing into the bleed, and every word
+   --entry-inset (0.25 in) inside its edge, which is a cut. Its heading with the logo small beside it at the top right;
+   then each field a label over a writing line, the email's its own line (--entry-email-pitch), its blanks writing lines
+   as long as their runs with the @ and the . large between them; then the fine print, the rules, at the floor, its bold
+   runs in the body font's bolder weight ---------- */
 .print-entry-card .entry-body {
   position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column;
   padding: var(--entry-inset); color: var(--ink); font: 400 var(--entry-text)/1.3 var(--body);
-  padding-top: calc(var(--entry-inset) + 6px); /* a heading's glyphs stand above its tight line: kept inside the inset */
+  /* a line's glyphs stand above and below its tight line box (the heading's, the fine print's last): kept inside the inset */
+  padding-top: calc(var(--entry-inset) + 4px); padding-bottom: calc(var(--entry-inset) + 4px);
 }
-.print-entry-card .entry-head { margin: 0 0 8px; color: var(--cta); font: 700 var(--entry-head)/1.15 var(--head); }
+.print-entry-card .entry-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.print-entry-card .entry-head { margin: 0; color: var(--cta); font: 700 var(--entry-head)/1.15 var(--head); }
+.print-entry-card .entry-logo { flex: none; width: var(--entry-logo); }
 .print-entry-card .entry-fields { flex: none; display: flex; flex-direction: column; }
 .print-entry-card .entry-field { display: flex; flex-direction: column; height: var(--entry-pitch); }
 .print-entry-card .entry-label { margin: 0; font: 600 var(--entry-text)/1.3 var(--head); }
-.print-entry-card .entry-field + .entry-field .entry-label { margin-top: 14px; } /* clear of the line above it */
 .print-entry-card .entry-line { display: block; flex: none; height: 2px; margin-top: auto; background: var(--ink); }
 /* § 17.2 item 2: the email, its own line: its words and its blanks in a row on one baseline, the blanks writing lines
    sharing the width by their runs' lengths (their flex-grow, from the words file) */
@@ -323,26 +324,14 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-entry-card .entry-email .entry-line { flex: 1 1 0; min-width: 0; margin-top: 0; margin-bottom: 4px; }
 .print-entry-card .entry-email-word { flex: none; font: 700 var(--entry-email)/1 var(--head); }
 .print-entry-card .entry-email-word:first-child { font: 600 var(--entry-text)/1.3 var(--head); }
-.print-entry-card .entry-notes { margin-top: auto; padding-right: calc(var(--entry-logo) + 14px); }
-.print-entry-card .entry-note { margin: 6px 0 0; font-size: var(--entry-rules); line-height: 1.28; }
-.print-entry-card .entry-foot { position: absolute; right: var(--entry-inset); bottom: var(--entry-inset); }
-.print-entry-card .entry-logo { width: var(--entry-logo); }
-.print-entry-card .entry-body-back .entry-head { font-size: 20px; }
-.print-entry-card .entry-body-back .entry-rules { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
-.print-entry-card .entry-rule { margin: 0; font-size: var(--entry-rules); line-height: 1.24; }
-.print-entry-card .entry-lead { font-family: var(--head); font-weight: 700; }
-.print-entry-card .entry-body-back .entry-foot { position: static; flex: none; display: flex; justify-content: flex-end; margin-top: 4px; }
-/* § 17.2 item 1: the rules sign, a letter page's own face (less its margin): the back's heading and rules at a size to read
-   from a step away, the logo small at its foot */
-.print-entry-card .entry-body-sign { padding: 30px; }
-.print-entry-card .entry-body-sign .entry-head { margin-bottom: 18px; font-size: var(--sign-head); }
-.print-entry-card .entry-body-sign .entry-rules { gap: 14px; }
-.print-entry-card .entry-body-sign .entry-rule { font-size: var(--sign-text); line-height: 1.32; }
-.print-entry-card .entry-body-sign .entry-logo { width: calc(2 * var(--entry-logo)); }
+.print-entry-card .entry-notes { margin-top: auto; padding-top: 4px; }
+.print-entry-card .entry-fine { margin: 0; font-size: var(--entry-rules); line-height: 1.15; }
+.print-entry-card .entry-fine + .entry-fine { margin-top: 4px; }
+.print-entry-card .entry-fine b { font-weight: 600; }
 
 /* ---------- § 17.2 item 1: the letter sheets: each copy of a piece in its cell (pages.mjs letterDocument places it), its
-   trim with no bleed (the cell, .print-face, clips what front B's rules run past it); and on the cards' fronts a light
-   dashed cut guide through each centre line, stopping short of the paper's margin (pages.mjs letterRules) ---------- */
+   trim with no bleed (the cell, .print-face, clips what front B's rules run past it); and between the cards a light dashed
+   cut guide along each inner cut, stopping short of the grid's outer edges (pages.mjs guidesOf places each) ---------- */
 .print-letter .letter-guide { position: absolute; display: block; border: 0 dashed var(--line); }
 .print-letter .letter-guide-v { width: 0; border-left-width: 1px; }
 .print-letter .letter-guide-h { height: 0; border-top-width: 1px; }

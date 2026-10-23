@@ -22,7 +22,7 @@ import {
   ENTRY_HEAD_PX,
   ENTRY_LINE_PITCH_IN,
   ENTRY_LOGO_PX,
-  CARD_INSET_IN,
+  CARD_CUT_IN,
   ENTRY_RULES_PX,
   ENTRY_TEXT_PX,
   FRONT_B_CALLOUT_PX,
@@ -35,13 +35,11 @@ import {
   GIVEAWAY_PIECES,
   LAYOUT_PX_PER_INCH,
   LETTER,
-  LETTER_MARGIN_IN,
+  GUIDE_SHORT_IN,
   LETTER_SHEETS,
   pageOf,
   PRINT_PIECES,
   SAFE_IN,
-  SIGN_HEAD_PX,
-  SIGN_TEXT_PX,
   TOUT_FINE_PX,
   TOUT_HEAD_PX,
   TOUT_LEDE_PX,
@@ -76,11 +74,11 @@ const flyerPiece = () => PRINT_PIECES.find((p) => p.id === "flyer");
 export function pagesToPrint({ fourFlyers = true, tout = false, entry = false } = {}) {
   const [tent, flyer] = ["tent-card", "flyer"].map((id) => PRINT_PIECES.find((p) => p.id === id));
   const four = fourFlyers ? Array.from({ length: FOUR_FLYERS }, (_, i) => ({ piece: flyer, number: i + 1, base: `flyer-${i + 1}` })) : [];
-  // § 17: the giveaway's tout and entry card, last, each only when its words are given; § 17.2 item 1: each followed by
-  // its letter sheets (`letter`: the sheet, sizes.mjs LETTER_SHEETS)
+  // § 17: the giveaway's tout and entry card, last, each only when its words are given; § 17.2 item 1: each with its
+  // letter sheet (`letter`: sizes.mjs LETTER_SHEETS), the sheet first, so that the card's own PDF takes the layout it uses
   const giveaway = GIVEAWAY_PIECES.filter((p) => (p.words === "tout" && tout) || (p.words === "entry" && entry)).flatMap((piece) => [
-    { piece, number: null, base: piece.stem },
     ...LETTER_SHEETS.filter((sheet) => sheet.piece === piece.id).map((sheet) => ({ piece, number: null, base: sheet.base, letter: sheet })),
+    { piece, number: null, base: piece.stem },
   ]);
   return [{ piece: tent, number: null, base: "tent-card" }, { piece: flyer, number: null, base: "flyer" }, ...four, ...giveaway];
 }
@@ -135,7 +133,7 @@ function giveawayRules(piece) {
   if (piece.id === "entry-card") {
     return [
       `.print-face > .board { --entry-text: ${ENTRY_TEXT_PX}px; --entry-head: ${ENTRY_HEAD_PX}px; --entry-rules: ${ENTRY_RULES_PX}px; --entry-pitch: ${px(ENTRY_LINE_PITCH_IN)}px; --entry-logo: ${ENTRY_LOGO_PX}px; }`,
-      `.print-face > .board { --entry-inset: ${px(CARD_INSET_IN)}px; --entry-email: ${ENTRY_EMAIL_PX}px; --entry-email-pitch: ${px(ENTRY_EMAIL_PITCH_IN)}px; --sign-text: ${SIGN_TEXT_PX}px; --sign-head: ${SIGN_HEAD_PX}px; }`,
+      `.print-face > .board { --entry-inset: ${px(CARD_CUT_IN)}px; --entry-email: ${ENTRY_EMAIL_PX}px; --entry-email-pitch: ${px(ENTRY_EMAIL_PITCH_IN)}px; }`,
     ];
   }
   return [];
@@ -202,7 +200,7 @@ export function printDocument(piece, inputs, printCss, back, front) {
  */
 function giveawayFace(piece, inputs, words, side) {
   const c = campaign(inputs);
-  const face = (piece.id === "tout" ? toutFace(c, makeParts(inputs), words) : entryFace(c, makeParts(inputs), words, side)).trim();
+  const face = (piece.id === "tout" ? toutFace(c, makeParts(inputs), words) : entryFace(c, makeParts(inputs), words)).trim();
   return `<div class="board board-${piece.id} board-${piece.id}-${side}">\n${face}\n</div>`;
 }
 
@@ -231,12 +229,11 @@ export function giveawayDocument(piece, inputs, printCss, words) {
 }
 
 /**
- * § 17.2 item 1: a letter sheet's sizes as CSS: the US Letter page, no bleed; each cell the piece's trim (or the sheet's
- * own face), placed by its own style, its board the cell; the centre lines' cut guides, LETTER_MARGIN_IN in from the
- * paper's edge; and the piece's own sizes (sizeRules', as each face needs them).
+ * § 17.2 item 1: a letter sheet's sizes as CSS, for one of its layouts: the US Letter page, no bleed; each cell the layout's
+ * face, placed by its own style, its board the cell; and the piece's own sizes (sizeRules', as each face needs them).
  */
-export function letterRules(sheet, piece) {
-  const face = sheet.face ?? piece.face;
+export function letterRules(layout, piece) {
+  const { face } = layout;
   const board = sizeRules({ ...piece, face }).split("\n").filter((rule) => rule.startsWith(".print-face > .board { --"));
   return [
     `@page { size: ${LETTER.w}in ${LETTER.h}in; margin: 0; }`,
@@ -244,25 +241,33 @@ export function letterRules(sheet, piece) {
     `.print-page { --bleed: ${px(BLEED_IN)}px; --safe: ${px(SAFE_IN)}px; width: ${px(LETTER.w)}px; height: ${px(LETTER.h)}px; transform: scale(${CSS_PX_PER_INCH / LAYOUT_PX_PER_INCH}); }`,
     `.print-face { width: ${px(face.w)}px; height: ${px(face.h)}px; }`,
     `.print-face > .board { left: 0; top: 0; width: ${px(face.w)}px; height: ${px(face.h)}px; }`,
-    `.letter-guide-v { left: ${px(LETTER.w / 2)}px; top: ${px(LETTER_MARGIN_IN)}px; height: ${px(LETTER.h - 2 * LETTER_MARGIN_IN)}px; }`,
-    `.letter-guide-h { top: ${px(LETTER.h / 2)}px; left: ${px(LETTER_MARGIN_IN)}px; width: ${px(LETTER.w - 2 * LETTER_MARGIN_IN)}px; }`,
     ...board,
   ].join("\n");
 }
 
 /**
- * § 17.2 item 1: the document a letter sheet's PDF is printed from, a page per side (`sheet.sides`): each a US Letter
- * page holding a copy of the piece's face in each cell, drawn at its trim without bleed (the cell clips what front B's
- * rules run into a bleed), and, on the sides `sheet.guides` names, a light dashed cut guide through each centre line.
+ * § 17.3 item 1: the light dashed cut guides of a grid of copies: one along each cut between two columns and between two
+ * rows, spanning the grid, GUIDE_SHORT_IN short of its outer edges (which are at the paper's margin), each placed by its
+ * own style (layout px).
  */
-export function letterDocument(sheet, piece, inputs, printCss, words) {
+function guidesOf(layout) {
+  const [x0, y0] = [layout.cells[0].x, layout.cells[0].y];
+  const [w, h] = [layout.cols * layout.face.w, layout.rows * layout.face.h];
+  const v = Array.from({ length: layout.cols - 1 }, (_, i) => `<span class="letter-guide letter-guide-v" style="left: ${px(x0 + (i + 1) * layout.face.w)}px; top: ${px(y0 + GUIDE_SHORT_IN)}px; height: ${px(h - 2 * GUIDE_SHORT_IN)}px"></span>`);
+  const hz = Array.from({ length: layout.rows - 1 }, (_, i) => `<span class="letter-guide letter-guide-h" style="top: ${px(y0 + (i + 1) * layout.face.h)}px; left: ${px(x0 + GUIDE_SHORT_IN)}px; width: ${px(w - 2 * GUIDE_SHORT_IN)}px"></span>`);
+  return [...v, ...hz].join("");
+}
+
+/**
+ * § 17.2 item 1: the document a letter sheet's PDF is printed from, in one of its layouts: a US Letter page holding a copy
+ * of the piece's face in each cell, drawn at its trim without bleed (the cell clips what front B's rules run into a
+ * bleed), and, when the sheet has them, the light dashed cut guides between its copies (§ 17.3 item 1: one page).
+ */
+export function letterDocument(sheet, layout, piece, inputs, printCss, words) {
   const own = withToutPhoto(inputs);
-  const guides = `<span class="letter-guide letter-guide-v"></span><span class="letter-guide letter-guide-h"></span>`;
-  const page = (side) => {
-    const cells = sheet.cells.map((cell) => `<div class="print-face" style="left: ${px(cell.x)}px; top: ${px(cell.y)}px">${giveawayFace(piece, own, words, side)}</div>`);
-    return `<div class="print-sheet print-sheet-letter${side === "back" ? " print-sheet-back" : ""}"><div class="print-page">\n${cells.join("\n")}${sheet.guides.includes(side) ? `\n${guides}` : ""}\n</div></div>`;
-  };
-  return pageHtml(piece, own, printCss, sheet.sides.map(page), { rules: letterRules(sheet, piece), letter: true });
+  const cells = layout.cells.map((cell) => `<div class="print-face" style="left: ${px(cell.x)}px; top: ${px(cell.y)}px">${giveawayFace({ ...piece, face: layout.face }, own, words, "front")}</div>`);
+  const page = `<div class="print-sheet print-sheet-letter"><div class="print-page">\n${cells.join("\n")}${sheet.guides ? `\n${guidesOf(layout)}` : ""}\n</div></div>`;
+  return pageHtml(piece, own, printCss, [page], { rules: letterRules(layout, piece), letter: true });
 }
 
 /** The page around a piece's sheets: the mock-ups' style, print.css and the sizes; no legend, caption or script. */

@@ -194,17 +194,17 @@ export function giveawayFindings(piece, sheet, { inset = SAFE_IN, everySide = fa
 }
 
 /**
- * § 17.2 item 1, over one page of a letter sheet as measured: the page is US Letter; it holds a copy of the piece in each
- * of the sheet's cells, each its trim's size; each copy's words fit and sit `sheet.inset` inside its own edge, a cut
+ * § 17.2 item 1, over one page of a letter sheet as measured, in one of its layouts: the page is US Letter; it holds a copy
+ * of the piece in each of the layout's cells, each the layout's face; each copy's words fit and sit `sheet.inset` inside its own edge, a cut
  * (giveawayFindings, every side); and nothing is drawn within LETTER_MARGIN_IN of the paper's edge: no run of text, QR
  * code, logo, writing line or cut guide, and no painted field as drawn (a field is drawn inside its copy's cell, which
  * clips what runs past it). REFUSED, each naming it. Returns { refusals, smallestPx, spacePx }.
  */
-export function letterFindings(sheet, piece, measured) {
+export function letterFindings(sheet, layout, piece, measured) {
   const refusals = [];
-  const face = sheet.face ?? piece.face;
+  const { face } = layout;
   if (!near(measured.page.w, LETTER.w) || !near(measured.page.h, LETTER.h)) refusals.push(`the page is ${inches(measured.page.w)} × ${inches(measured.page.h)} in, not US Letter`);
-  if (measured.faces.length !== sheet.cells.length) refusals.push(`${measured.faces.length} copies drawn, not ${sheet.cells.length}`);
+  if (measured.faces.length !== layout.cells.length) refusals.push(`${measured.faces.length} copies drawn, not ${layout.cells.length}`);
   measured.faces.forEach((f, i) => {
     if (!near(f.trim.w, face.w) || !near(f.trim.h, face.h)) refusals.push(`copy ${i + 1}: its trim is ${inches(f.trim.w)} × ${inches(f.trim.h)} in, not ${face.w} × ${face.h}`);
   });

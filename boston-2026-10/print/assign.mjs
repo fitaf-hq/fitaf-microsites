@@ -16,7 +16,10 @@ export const TENT_POSITIONS = ["tent-large", "tent-top", "tent-bottom"];
  * mockups/photos.json (its nine are the mock-ups'); each is staged, as the manifest's are, under its own name (`<position>.jpg`).
  */
 export const BACK_POSITIONS = ["flyer-back-1", "flyer-back-2", "flyer-back-3"];
-/** § 17.2 item 3: the giveaway tout's one photo, a print-only position as the back's are (staged as `tout.jpg`). */
+/**
+ * § 17: the giveaway tout's one photo, a print-only position as the back's are (staged as `tout.jpg`): since § 17.3 item 2
+ * the flyer's photo (print/build-print.mjs stagePhotos), at the tout's own window.
+ */
 export const TOUT_POSITION = "tout";
 /**
  * The positions printed from a square (§ 7 item 2 the two tiles, SPEC-photo-slots.md § 2's `square`; § 10 item 3 the
@@ -178,42 +181,4 @@ export function backPhotoIds(doc, placedIds, pool = POOL) {
   const index = three.arrays.findIndex((array) => !array.some((id) => placed.has(id)));
   if (index === -1) throw new Error(`pool "${pool}", rung 3: every array holds a photo placed elsewhere (the flyer's, the four flyers' or the tent's)`);
   return { ids: [...three.arrays[index]], from: `rung 3, array ${index + 1} (the first holding no photo placed elsewhere)` };
-}
-
-/**
- * § 17.2 item 3 (2026-10-23): the tout's photo, one the printed set does not use. Its candidates in the assigner's own
- * order: rung 1's photos (`strongest`, then `also_good`), then each higher rung's arrays in the rungs' order, each array's
- * photos in order, each photo once. The first that is not `ruledOut` (the ids the print set places: this build's flyer,
- * four flyers, tent and back, and any the build is told to avoid) and is landscape and at least `minPpi` at the tout's
- * window (`window`, inches) is the tout's. None such: the first landscape candidate at that resolution, ruled out or not,
- * with `best: true` (the Advisor: "the best that we can"). `sizeOf(id)` as assignPhotos'. Returns { id, from, best }.
- */
-export function toutPhoto(doc, { sizeOf, ruledOut, window, minPpi, pool = POOL }) {
-  const rungs = doc?.pools?.[pool]?.rungs;
-  if (!rungs || typeof rungs !== "object") throw new Error(`the rungs file has no pool "${pool}" (pools.${pool}.rungs)`);
-  const seen = new Set();
-  const candidates = [];
-  const add = (id, from) => {
-    checkId(id, `pool "${pool}", ${from}`);
-    if (seen.has(id)) return;
-    seen.add(id);
-    candidates.push({ id, from });
-  };
-  rungOnePhotos(rungs["1"] ?? {}, `pool "${pool}", rung 1`).forEach((id, i) => add(id, `rung 1, photo ${i + 1}`));
-  for (const k of Object.keys(rungs).filter((key) => key !== "1").sort((a, b) => Number(a) - Number(b))) {
-    (rungs[k].arrays ?? []).forEach((array, i) => array.forEach((id, j) => add(id, `rung ${k}, array ${i + 1}, photo ${j + 1}`)));
-  }
-  // in order, each photo read for its size only until the first that is free (and the first that fits, for "the best")
-  const fits = ({ id }) => {
-    const size = sizeOf(id);
-    return size.width > size.height && Math.min(size.width / window.w, size.height / window.h) >= minPpi;
-  };
-  let first = null;
-  for (const candidate of candidates) {
-    if (!fits(candidate)) continue;
-    if (!ruledOut.includes(candidate.id)) return { ...candidate, best: false };
-    first ??= candidate;
-  }
-  if (!first) throw new Error(`pool "${pool}": no photo is landscape and ${minPpi} ppi at the tout's window`);
-  return { ...first, best: true };
 }
