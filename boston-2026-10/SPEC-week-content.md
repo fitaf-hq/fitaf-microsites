@@ -450,3 +450,119 @@ the case's own message (or its control's) names what it compared and what it lef
 (green); then item 7; then § 9.1 (*Built — found at the build, not ruled*: commits, counts with commands and wall
 times, the populations each control printed, anything the rule did not settle). **Not in this contract**: merging into
 the development line, `merge-after-1023`, any deploy (the orchestrator's).
+
+### 9.1 Built — found at the build, not ruled
+
+**Commits** (on `boston/guards-committed-weeks`, from `3d95e0c`): `95c78f0` the five cases (items 1–5); `49d68f6`
+WC-11's WC-12 mutant, a reader found red by item 7(i), fixed by this section's rule; `fe9b7b2` the two committed mutants
+(item 8); `8db9511` Storybook's readers, found red by item 7, fixed by the rule; this section and the README's rows at
+the commit that carries them. § 9 is unchanged. Nothing under `src/`, `scripts/`, `data/`, `build.mjs`, `consent/`; no
+golden.
+
+**Red before, green after** (`node --test` over the five files; times PDT, 2026-10-23, read from `date`)
+
+| Shape | Before (`3d95e0c`) | After |
+|---|---|---|
+| this branch's tip (2026-11-01 the five-menu week) | 10:41:09–10:41:16: 6 of 23 failing (MS-20 ×2, W4 ×2, WC-10b, S22), as § 9 measured | per file, on the tree committed as `95c78f0`: MS-20 7 of 7, W4 3 of 3, PR-3 4 of 4, WC-10 4 of 4, S22 1 of 1 |
+| the updating week (83b2133's `2026-11-01.json`, a scratch copy) | 10:42:04–10:42:17: 7 of 23 (and PR-3's committed-tree case, *"Cannot read properties of undefined (reading 'carts')"*) | at `fe9b7b2` + the file, 11:05:11–11:05:19, the five and `ms-10-mutants`, `wc-11-mutants`: 34 of 34 |
+
+**Item 7: the three suites, each run alone, `nice -n 15`** (the updating shape: a worktree on a scratch branch holding
+this branch plus one commit replacing `data/picks/2026-11-01.json` by `git show 83b2133:…`; never pushed, removed after)
+
+| Gate | Shape | Before | After |
+|---|---|---|---|
+| `npm --prefix boston-2026-10 test` | tip | `3d95e0c`, 10:47:05–10:58:05: 1037 tests, 1028 pass, 9 fail: the six, S20, SP3, WC-11's WC-12 mutant | `8db9511`, 11:43:15–11:46:16: 1035, 1033 pass, **2 fail: S20, SP3** |
+| the same | updating | `3d95e0c` + the file, 10:59:59–11:03:22: 1037, 1028 pass, 9 fail: the seven, S20, SP3 | `8db9511` + the file, 11:38:33–11:43:06: 1035, 1033 pass, **2 fail: S20, SP3** |
+| `npm --prefix boston-2026-10/tools/storybook test` | tip | `fe9b7b2`, 11:09:29–11:11:43: 67, 66 pass, 1 fail: SM-5 | `8db9511`, 11:35:53–11:38:05: 67 of 67 |
+| the same | updating | `fe9b7b2` + the file, 11:13:30–11:14:47: 67, 61 pass, 6 fail: SM-5, SM-8, SM-10, SM-11, SM-8's and SM-5's mutants | `8db9511` + the file, 11:30:53–11:33:05: 67 of 67 |
+| `npm --prefix boston-2026-10/tools/storefront-watch test` | tip / updating | `fe9b7b2`, 11:15:38–11:19:29: 213 of 213 / `fe9b7b2` + the file, 11:19:29–11:23:14: 213 of 213 | the same (`8db9511` changes `tools/storybook/` alone) |
+
+The site's count moves 1037 → 1035: MS-20's two 2026-11-01 cases and W4's two leave (outside the claim; retired), the
+two committed mutants come. Storybook's "before" is at `fe9b7b2`: it imports no file `95c78f0`–`fe9b7b2` changed (of the
+site's `test/`, only `em-harness.mjs` and `ms-harness.mjs`, unchanged). A first Storybook run at `8db9511`
+(11:24:32–11:30:53; load averages 116, 180 and 270 at its end) had SP15 at 390 time out at its 120 s;
+`wp-chrome.test.mjs` alone then passed 3 of 3, and the whole suite after, 67 of 67.
+
+**The populations each control printed** (a `t.diagnostic` line, on every run)
+
+| Case | Tip | Updating |
+|---|---|---|
+| MS-20 (and MS-10's mutant, its control) | compared (byte-identical to 1c10839's): 2026-10-11, 2026-10-18, 2026-10-25; outside the claim: 2026-11-01 (added after 1c10839) | the same |
+| W4 | compared: 2026-10-25; 2026-11-01: committed after 6e0f6bd; retired | the same |
+| PR-3 | the committed week: 2026-11-01; none passed over | the committed week: 2026-10-25; passed over: 2026-11-01 (updating: no list, no photo sheet; U1 is that page's case) |
+| WC-10b (and WC-11's mutant) | the week with no picks file: 2026-11-08, seven days after the latest committed week, 2026-11-01 | the same |
+| S22 | the template's pages, each with the box: boston/index.html, demo/index.html, index.html, seminar/index.html; byte-unchanged: the 13 other files, privacy/index.html, why/index.html among them | the same |
+| SM-6 (Storybook) | a week with picks: 2026-11-01; passed over (updating): none | a week with picks: 2026-10-25; passed over (updating): 2026-11-01 |
+
+**The mutants (item 8), each in a mirror, each case passing on the unchanged mirror first**
+
+| Case | Mutant | Where | Caught |
+|---|---|---|---|
+| MS-20 | a byte moved in a compared week's content: `scripts/chefs-choice.mjs` `CLOSES_DAYS_BEFORE = 3` → `2` (every week's `valid_to` a day later) | committed, `ms-10-mutants.test.mjs` | at every compared week, both targets, *"week/picks-data.json not byte for byte"* |
+| WC-10b | a file written on the derived no-file week: `scripts/week-content.mjs`'s *no picks file* refusal line removed | committed, `wc-11-mutants.test.mjs` | *"2026-11-08: wrote week/picks-data.json"*, *"exit 0, not refused"* |
+| W4 | the same mutation as MS-20's | recorded | W4 (2026-10-25, prod and dev): *week/picks-data.json byte for byte*; 1 of 3 passing |
+| PR-3 | a meal's photo tile dropped: `scripts/chefs-choice.mjs` `const thumbs = (meals) => meals.map((m) => thumbStyle(url, sheet, m.name));` → `meals.map((m, i) => (i ? thumbStyle(url, sheet, m.name) : null))` (each list's first meal plain) | recorded | the committed-tree case: *the 14 meals with a cell show their photo*; 3 of 4 passing |
+| S22 | the label left unchanged on one template page: `build.mjs` `writeDevPages`, the last event's page built with the committed `data/offers.json` (`offers: i === events.length - 1 ? await loadJson(OFFERS_PATH) : offers`) | recorded | *seminar/index.html: the box shows the new label* |
+| SM-6 (the Storybook fix) | the old reader: `microsite/dates.mjs` `const listed = latest;` | recorded | tip: the synthetic case (1 of 6 failing); updating: that and the committed one (2 of 6) |
+
+Committed: `node --test test/ms-10-mutants.test.mjs test/wc-11-mutants.test.mjs` on the tree committed as `fe9b7b2`,
+11:03:55–11:04:03, 15 of 15 (the updating shape: in the 34 of 34 above). Recorded: run at `fe9b7b2` (W4, PR-3, S22;
+11:05:40–11:06:05) and `8db9511` (SM-6; 11:38:18), and again at each with the updating file; caught in both shapes,
+every control 0 failing. The command, a script outside this repository (not committed): `node mutant-in-mirror.mjs
+--repo <this repository> --commit <commit> --edit <path in the package> --from <anchor file> --to <replacement file>
+<case file>`. It builds its mirror as `test/suite-in-mirror.mjs` does (`git archive` of the commit into a temporary
+directory, the package's `node_modules` linked, one commit, older commits through `GIT_ALTERNATE_OBJECT_DIRECTORIES`),
+runs the case on it, makes the one edit (its anchor present exactly once), runs the case again, prints both counts and
+removes the mirror. This branch's `git status` was unchanged across every run, and no mirror was left behind.
+
+**The choices, where § 9 left one open**
+
+1. **"Never silent"** is a `t.diagnostic` line from each control (a `#` line in every run's output, passing or not), and
+   the same population in the control's assertion messages. No test's name changed.
+2. **MS-20** reads its population from 1c10839's package as `git archive` extracts it: compared, *added after*, or
+   *changed since*. Its per-week assertions are now one `deepEqual` over `contentProblems` (the same six checks: the
+   exit code, the files, each byte for byte, the report, the message, and the base making the week), moved with the
+   population into `ms-checks.mjs` because the MS family has a mutants file and a mirror mutant runs THE SAME function.
+3. **W4**: a retired week has no test (not a skip), so the suite counts two fewer. Four classes: absent from both or
+   byte-identical (compared), *committed after*, *removed since* (a class § 9 did not name), *changed since*.
+4. **PR-3**: an updating week is a file whose `updating` is `true`, read from the file (`checkPicks`' `updatingWeek` is
+   not exported; the content command already accepts the file). Every later updating week is passed over and named; none
+   left gives `undefined` and the control fails naming them. `latestCommittedWeek()` returns what it did (its listing
+   shared with the new function).
+5. **WC-10b**: the derivation (`addDays`, `src/worker/zoned-time.js`) and the refusal check live in `wc-checks.mjs`
+   (`weekWithNoFile`, `noFileProblems`), so WC-11's mutant runs the same check. *"Names that week"* is the message
+   containing it, as the literal's `/2026-11-01/` did. The control is asserted in the case and is the check's first
+   line.
+6. **S22**: the build's own list is `build()`'s returned `pages` (relative to the output), equal for both builds; not
+   cross-checked against `data/events.json`. The control (at least two pages) stays.
+7. **Item 7's other readers** (*"if it is the same defect, fixed by this section's rule and listed"*), read as covering
+   (i) too, since (i) must be green: WC-11's WC-12 mutant (its injected lines read the picks with the menus' words, as
+   the content command does, so the five-menu week is read); Storybook's `test/walk.mjs` (a meal's line is its
+   `.cc-name`, as a meal with nutrition also holds its panel), `microsite/dates.mjs` (*a week with picks* is the latest
+   committed week that is not updating; *no picks* stays the day after the last committed window, of any kind) and SM-6
+   (the same, worked out from the files, with a synthetic directory whose latest week is updating). All unchanged while
+   the latest week has lists and no nutrition.
+
+**Found**
+
+- ⚠ **Item 7(i) is not green: S20 and SP3 fail on both shapes, before and after.** The production build copies
+  `assets/photo-sheets/chefs-choice-2026-11-01.jpg` (SHA-256 `725b363d…`, committed with the week at `d5cf76d`,
+  re-written at `9da353c`), and S20's golden, which SP3 reads, does not hold it; that file is the whole difference,
+  `index.html` and every other file equal. `b8f041f` met the same for 2026-10-25's sheet and re-recorded the golden with
+  exactly that file (*"Production was meant to change"*). A golden is outside this contract (item 6): **not re-recorded
+  here; the orchestrator's.**
+- ⚠ **WC-11's WC-12 mutant was red on this tip**, a reader of the committed weeks that § 9's measurement (over the five
+  files) did not reach: its expected weeks were made data-driven at `b8f041f`, its injected reader was not. Fixed at
+  `49d68f6`.
+- ⚠ **Storybook was red on both shapes, from two readers**: on the tip SM-5 (`test/walk.mjs` read each row whole, so a
+  meal with nutrition read as its name and its panel's words), on the updating week SM-5, SM-8, SM-10, SM-11 and two
+  mutants (`microsite/dates.mjs`'s *week with picks* was the updating week, and SM-5's expectations read its lists).
+  Fixed at `8db9511`. `SPEC-storybook-microsite.md` § 2 item 4 still says *a
+  week with picks* is *the latest committed week's Thursday*: right while the latest week has lists, stale for an
+  updating one; not this contract's file.
+- MS-20's claim is now fixed at three weeks: every week committed after 1c10839 is outside it by construction, so it no
+  longer grows with the committed weeks (W4's, likewise, is one week). `SPEC-meal-selection.md`'s and
+  `SPEC-why-fit-af.md`'s tables still give MS-20 7 of 7 (still so) and W4 5 of 5 (now 3).
+- On the updating week Storybook's *today* date names the committed week open today, 2026-11-01, so its stories carry
+  the updating week (read from `microsite/dates.mjs`, not looked at); no case reads them.
+- **Not run here**: the page in a browser beyond Storybook's own cases; nothing merged, deployed or written to a bucket.
