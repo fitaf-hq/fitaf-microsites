@@ -12,7 +12,8 @@ export const LUNCH_DINNER = ["or", "and"];
 /** Meals a day for Q1's answer, and the one breakfast adds (§ 2's table; § 8 item 7). */
 export const MEALS_A_DAY = { or: 1, and: 2 };
 export const BREAKFAST_MEALS_A_DAY = 1;
-/** Days a week for Q2's answer: every day (weekends included), or weekdays. Snacks are one a day (§ 2: 7 or 5). */
+/** Days a week for Q2's answer: every day (weekends included), or weekdays. A week's snack list for those days holds its
+ *  own total, at least 1 and at most one a day (§ 13; it was exactly one a day, § 2). */
 export const DAYS_EVERY_DAY = 7;
 export const DAYS_WEEKDAYS = 5;
 export const daysOf = (weekends) => (weekends ? DAYS_EVERY_DAY : DAYS_WEEKDAYS);

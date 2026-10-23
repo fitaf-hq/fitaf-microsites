@@ -31,6 +31,8 @@ export function campaign(inputs) {
   const message = (key) => ({ value: data.messages[key], src: [at(SOURCES.messages, `/${key}`)] });
   const offers = data.offers.offers;
   const offer = offerForSave(today, offers);
+  // SPEC-save-offer-production § 10.7: after the last offer's valid_to no offer is offered; the mock-ups show one.
+  if (!offer) throw new Error(`no offer is live on ${today} (data/offers.json): the mock-ups show the offer, so give a day of one`);
   const event = data.events[eventIndex];
   const eventUrl = [at(SOURCES.events, `/${eventIndex}/url`)];
   const plan = (p, base) => ({

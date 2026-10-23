@@ -17,8 +17,17 @@ import { devPage } from "./dev-page.mjs";
 import { TABLE } from "./ms-harness.mjs";
 import { picksText, sha256, visible } from "./wc-harness.mjs";
 
-/** index.html of the production build with no week, at 45549a9 (test/s20-production-golden.json there). */
-const TODAY_NO_PICKS_SHA256 = "03fcc0c145b4e4bc310c23f5d721241e5a461bb9b08a7a451fbd2b40e7b757c6";
+/** index.html of the production build with no week, at 45549a9 (test/s20-production-golden.json there), re-recorded once
+ *  at 5f55cbc for SPEC-meal-selection § 12 (the page MEANT to change: each pair's default first, *Weekdays only* the
+ *  default, the snack block inside the card's list; § 12.1 lists the lines). It was 03fcc0c1… until then. Re-recorded
+ *  once more at f02807e for SPEC-why-fit-af § 2 (the footer's "Why Fit AF?" button, its dialog and its no-script link;
+ *  its § 4 lists the lines). It was bb17e256… until then. Re-recorded once more at e2284f1 for SPEC-why-fit-af § 6 (the
+ *  /why/ page's link back to the plan page closes the dialog: app.js's seven added lines, its § 6.1 lists them). It was
+ *  1c68a68b… until then. Re-recorded once more at 5231265 for SPEC-every-menu-and-nutrition § 11 (2026-10-22: Why Fit
+ *  AF? above the tabs, the card's rings and circled i; its § 11.1 says which lines): renderPage at ce91cba's own tree
+ *  reproduces 21abbe56…, at 5231265's gives 321da0a6…. Re-recorded once more at 773e597 for § 11.2 (Why Fit AF? an
+ *  outline button in the unselected chip's look): 5231265's tree reproduces 321da0a6…, 773e597's gives this. */
+const TODAY_NO_PICKS_SHA256 = "01270dcad503c74efbf099de31267d0b8ea70a44ca1b1d7e9eddb1d7fb2ae3c1";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the

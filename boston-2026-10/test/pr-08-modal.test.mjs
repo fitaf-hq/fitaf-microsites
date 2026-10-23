@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { parseHTML } from "linkedom";
 import { renderPage } from "../build.mjs";
-import { hrefs } from "./helpers.mjs";
+import { hrefs, whyHref } from "./helpers.mjs";
 import { PLANS } from "./cc-harness.mjs";
 
 test("PR-8: the link names a dialog holding the grid and a close button; the seven order links unchanged", async () => {
@@ -19,5 +19,5 @@ test("PR-8: the link names a dialog holding the grid and a close button; the sev
   assert.equal(dialog?.tagName.toLowerCase(), "dialog", "the grid is in a dialog");
   assert.equal(dialog.querySelectorAll("a.cell").length, 6, "the 3 × 2 grid");
   assert.ok(dialog.querySelector("button#all-close"), "a close button");
-  assert.equal(hrefs(html).length, 7, "seven order links (T2)");
+  assert.equal(hrefs(html).filter((h) => h !== whyHref()).length, 7, "seven order links (T2; the no-script link to /why/ apart)");
 });

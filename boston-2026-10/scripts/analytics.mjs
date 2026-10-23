@@ -1,5 +1,5 @@
-// `npm run analytics -- --from YYYY-MM-DD --to YYYY-MM-DD [--env dev]` (SPEC-analytics.md § 5): the page's analytics,
-// per day of America/New_York (§ 2's day, the salt's: ruled 2026-10-13), read from Workers Analytics Engine's SQL API.
+// `npm run analytics -- --from YYYY-MM-DD --to YYYY-MM-DD [--env dev] [--json]` (SPEC-analytics.md § 5, § 11): the
+// page's analytics, per day of America/New_York (§ 2's day, the salt's: ruled 2026-10-13), read from Workers Analytics Engine's SQL API.
 // The dates are New York dates; the SQL reads them in that zone (formatDateTime's and toDateTime's time-zone argument,
 // the engine's own zone arithmetic, so a day across a DST change is 23 or 25 hours). Aggregates only, never a row per visit: every query groups
 // by day, and a visit's id (`s`, blob2) and a visitor's (`v`, index1) are read only inside count(DISTINCT …).
@@ -10,8 +10,10 @@
 // Per day: unique visitors and visits; the funnel (open → each answer → result → click), each step's visits and the
 // change from the step before; the click-through by link; the visit's length (median and quartiles, from `leave`) and
 // the load time (from `open`); the device, viewport band and country splits (from `open`); the visits with an error.
-// A day with nothing recorded says so. Exit 0; 1 when the SQL API refuses or answers what this cannot read; 2 for a
-// refused command line or a missing variable, before any request.
+// A day with nothing recorded says so. `--json` (§ 11) prints the same figures as one JSON document instead of the text:
+// reportData computes them, once, and the text (reportText) is a formatting of that document, so the two cannot
+// disagree. Exit 0; 1 when the SQL API refuses or answers what this cannot read; 2 for a refused command line or a
+// missing variable, before any request; nothing on stdout but the report.
 // ⛔ Read-only: it sends SELECTs and nothing else, and never prints the token.
 import { fileURLToPath } from "node:url";
 import { ANALYTICS_ZONE, BLOBS, DOUBLES, LINKS, QUESTIONS, VIEWPORTS } from "../src/worker/beacon.js";
@@ -67,11 +69,15 @@ export function queries({ dataset, from, to }) {
   };
 }
 
-/** The command line: { from, to, env } or an error message. */
+/** The command line: { from, to, env, json } or an error message. `--json` takes no value. */
 export function parseArgs(args) {
-  const out = { env: "prod" };
+  const out = { env: "prod", json: false };
   for (let i = 0; i < args.length; i++) {
     const name = args[i];
+    if (name === "--json") {
+      out.json = true;
+      continue;
+    }
     if (!["--from", "--to", "--env"].includes(name)) return { error: `unknown argument: ${name}` };
     const value = args[++i];
     if (value === undefined) return { error: `${name} needs a value` };
@@ -111,56 +117,100 @@ function change(now, before) {
   return `${d} (${Math.round((-d / before) * 100)}%)`;
 }
 
-/** "a 3 · b 1": the values with visits, by `order` (a list) or most visits first. */
-function splitLine(rows, order, label = (v) => v) {
-  const counts = new Map();
-  for (const r of rows) counts.set(r.value ?? r.link, (counts.get(r.value ?? r.link) ?? 0) + num(r.visits));
-  const entries = [...counts].filter(([, n]) => n > 0);
-  if (order) entries.sort(([a], [b]) => order.indexOf(a) - order.indexOf(b));
-  else entries.sort(([a, x], [b, y]) => y - x || String(a).localeCompare(String(b)));
-  return entries.map(([v, n]) => `${label(v)} ${n}`).join(" · ");
+/** A split's [value, visits] entries in the report's order: by `order` (a list), or most visits first. */
+function ordered(entries, order) {
+  if (order) return [...entries].sort(([a], [b]) => order.indexOf(a) - order.indexOf(b));
+  return [...entries].sort(([a, x], [b, y]) => y - x || String(a).localeCompare(String(b)));
 }
 
-/** The report's text, from each query's rows. */
-export function reportText({ dataset, from, to }, rows) {
+/** A split's counts, { value: visits }, from its rows (`field` the value's column): the values with visits, summed, in
+ *  the report's order. A row without the column counts as "". */
+function splitCounts(rows, field, order = null) {
+  const counts = new Map();
+  for (const r of rows ?? []) counts.set(r[field] ?? "", (counts.get(r[field] ?? "") ?? 0) + num(r.visits));
+  return Object.fromEntries(ordered([...counts].filter(([, n]) => n > 0), order));
+}
+
+/** A length's or load's quartiles, { q1, median, q3, n }; null with no visits. */
+function quartilesOf(row) {
+  return row && num(row.n) ? { q1: num(row.q1), median: num(row.median), q3: num(row.q3), n: num(row.n) } : null;
+}
+
+/**
+ * The report's figures (SPEC-analytics.md § 5), from each query's rows: § 11's document, the one computation both
+ * outputs read. Every New York day from `from` to `to`, in order; a day with nothing recorded is { day, data: false }.
+ * Aggregates only (§ 11 item 2): nothing per visit, no visit or visitor id.
+ */
+export function reportData({ dataset, from, to }, rows) {
   const days = Object.fromEntries(Object.entries(rows).map(([name, list]) => [name, byDay(list)]));
-  const lines = [`Fit AF microsite analytics: ${dataset}, ${from} to ${to} (days in ${ANALYTICS_ZONE}; aggregates only)`, ""];
+  const doc = { dataset, from, to, zone: ANALYTICS_ZONE, days: [] };
   for (let day = from; day <= to; day = nextDay(day)) {
-    lines.push(day);
     const visitors = days.visitors.get(day)?.[0];
     if (!visitors) {
-      lines.push("  no data", "");
+      doc.days.push({ day, data: false });
       continue;
     }
-    lines.push(`  unique visitors ${num(visitors.visitors)} · visits ${num(visitors.visits)}`);
     const steps = days.steps.get(day) ?? [];
     const visitsOf = (event, question = "") =>
       num(steps.find((r) => r.event === event && (r.question ?? "") === question)?.visits);
-    const funnel = [
-      ["open", visitsOf("open")],
-      ...Object.keys(QUESTIONS).map((q) => [`answer: ${q}`, visitsOf("answer", q)]),
-      ["result", visitsOf("result")],
-      ["click", visitsOf("click")],
-    ];
-    lines.push("  funnel (visits)");
-    funnel.forEach(([label, n], i) => {
-      const tail = i ? `   ${change(n, funnel[i - 1][1])}` : "";
-      lines.push(`    ${label.padEnd(22)}${String(n).padStart(5)}${tail}`);
+    doc.days.push({
+      day,
+      data: true,
+      visitors: num(visitors.visitors),
+      visits: num(visitors.visits),
+      funnel: [
+        { step: "open", visits: visitsOf("open") },
+        ...Object.keys(QUESTIONS).map((q) => ({ step: `answer: ${q}`, visits: visitsOf("answer", q) })),
+        { step: "result", visits: visitsOf("result") },
+        { step: "click", visits: visitsOf("click") },
+      ],
+      clicks: splitCounts(days.clicks.get(day), "link", LINKS),
+      visit_length_ms: quartilesOf(days.length.get(day)?.[0]),
+      load_ms: quartilesOf(days.load.get(day)?.[0]),
+      device: splitCounts(days.devices.get(day), "value"),
+      viewport: splitCounts(days.viewports.get(day), "value", VIEWPORTS),
+      country: splitCounts(days.countries.get(day), "value"),
+      errors: visitsOf("error"),
     });
-    const clicks = splitLine(days.clicks.get(day) ?? [], LINKS);
+  }
+  return doc;
+}
+
+/** "a 3 · b 1": a split's counts in the report's order, each value by its label. */
+function splitLine(counts, order, label = (v) => v) {
+  return ordered(Object.entries(counts), order)
+    .map(([v, n]) => `${label(v)} ${n}`)
+    .join(" · ");
+}
+
+/** The report's text: a formatting of reportData's document. */
+export function reportText(doc) {
+  const lines = [`Fit AF microsite analytics: ${doc.dataset}, ${doc.from} to ${doc.to} (days in ${doc.zone}; aggregates only)`, ""];
+  for (const d of doc.days) {
+    lines.push(d.day);
+    if (!d.data) {
+      lines.push("  no data", "");
+      continue;
+    }
+    lines.push(`  unique visitors ${d.visitors} · visits ${d.visits}`);
+    lines.push("  funnel (visits)");
+    d.funnel.forEach(({ step, visits }, i) => {
+      const tail = i ? `   ${change(visits, d.funnel[i - 1].visits)}` : "";
+      lines.push(`    ${step.padEnd(22)}${String(visits).padStart(5)}${tail}`);
+    });
+    const clicks = splitLine(d.clicks, LINKS);
     if (clicks) lines.push(`    click by link: ${clicks}`);
-    for (const [name, label, what] of [["length", "visit length", "leave"], ["load", "load time", "open"]]) {
-      const r = days[name].get(day)?.[0];
+    for (const [q, label, what] of [[d.visit_length_ms, "visit length", "leave"], [d.load_ms, "load time", "open"]]) {
       lines.push(
-        r && num(r.n)
-          ? `  ${label}: median ${duration(r.median)} · quartiles ${duration(r.q1)} to ${duration(r.q3)} (${num(r.n)} visits)`
+        q
+          ? `  ${label}: median ${duration(q.median)} · quartiles ${duration(q.q1)} to ${duration(q.q3)} (${q.n} visits)`
           : `  ${label}: no ${what} recorded`,
       );
     }
-    lines.push(`  device: ${splitLine(days.devices.get(day) ?? []) || "none"}`);
-    lines.push(`  viewport: ${splitLine(days.viewports.get(day) ?? [], VIEWPORTS) || "none"}`);
-    lines.push(`  country: ${splitLine(days.countries.get(day) ?? [], null, (v) => v || "(none)") || "none"}`);
-    lines.push(`  visits with a script error: ${visitsOf("error")}`, "");
+    lines.push(`  device: ${splitLine(d.device) || "none"}`);
+    lines.push(`  viewport: ${splitLine(d.viewport, VIEWPORTS) || "none"}`);
+    lines.push(`  country: ${splitLine(d.country, null, (v) => v || "(none)") || "none"}`);
+    lines.push(`  visits with a script error: ${d.errors}`, "");
   }
   return lines.join("\n");
 }
@@ -172,7 +222,7 @@ export function reportText({ dataset, from, to }, rows) {
 export async function report({ args, env, fetch, out, err }) {
   const parsed = parseArgs(args);
   if (parsed.error) {
-    err.write(`analytics: ${parsed.error}\nusage: npm run analytics -- --from YYYY-MM-DD --to YYYY-MM-DD [--env dev]\n`);
+    err.write(`analytics: ${parsed.error}\nusage: npm run analytics -- --from YYYY-MM-DD --to YYYY-MM-DD [--env dev] [--json]\n`);
     return 2;
   }
   const token = env[TOKEN_VAR];
@@ -208,7 +258,8 @@ export async function report({ args, env, fetch, out, err }) {
     }
     rows[name] = body.data;
   }
-  out.write(reportText(scope, rows));
+  const doc = reportData(scope, rows);
+  out.write(parsed.json ? `${JSON.stringify(doc, null, 2)}\n` : reportText(doc));
   return 0;
 }
 

@@ -9,7 +9,10 @@ import vm from "node:vm";
 import { loadInputs, MOCKUPS_DIR, renderMockups } from "../mockups/build-mockups.mjs";
 import { elements, hasClass, pieceRuns } from "./mockup-html.mjs";
 
-const html = renderMockups(await loadInputs({ photosDir: join(MOCKUPS_DIR, "no-such-folder") })).slideshow;
+// A day of the offer (SPEC-save-offer-production § 10.7: the one offer ends 2026-10-29, and the mock-ups show it).
+const MOCKUP_DAY = "2026-10-20";
+
+const html = renderMockups(await loadInputs({ today: MOCKUP_DAY, photosDir: join(MOCKUPS_DIR, "no-such-folder") })).slideshow;
 const script = await readFile(join(MOCKUPS_DIR, "slideshow.js"), "utf8");
 const SLIDE_OPEN = /<section\b[^>]*\bclass="slide\b[^"]*"[^>]*>/g;
 

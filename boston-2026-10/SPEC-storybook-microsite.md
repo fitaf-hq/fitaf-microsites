@@ -42,9 +42,11 @@ site's own build writes it.
    (`SPEC-chefs-choice.md` § 2), so from Friday 10-02 week B's card is gone from the real page. A story that shows the
    card **fixes the frame's clock** to a date inside a committed week's window, by **one script placed before the
    page's own**, the page's bytes otherwise exactly the build's; the story's caption names the date. The **Date**
-   control offers: *today* (the real clock), *a week with picks* (the latest committed week's Thursday, `S − 3`, noon in
-   `data/save.json`'s `send_time_zone`), and *no picks* (the day after the last committed window). The build's `--on`
-   is the same date, so the page carries that week.
+   control offers: *today* (the real clock), *a week with picks* (the latest committed week that is not updating, its
+   Thursday, `S − 3`, noon in `data/save.json`'s `send_time_zone`; since the site's SPEC-week-content § 9 a later
+   updating week, its § 8 item 1's `"updating": true` with no list, is passed over, as `microsite/dates.mjs` reads it),
+   and *no picks* (the day after the last committed window, of any kind). The build's `--on` is the same date, so the
+   page carries that week.
 5. ⛔ **No request leaves the machine**: the page makes none (`SPEC.md` § 1), and Storybook's own are off.
 
 ## 3. The stories
@@ -138,8 +140,8 @@ Turnstile there.
 - **Where**: `tools/storybook/node_modules/.cache/fitaf-microsite/<build>/<date>/`, git-ignored with the install and
   outside `dist/` and `dist-dev/`; SM-4 does not read it (the site's output, not a file of the tool's).
   `MICROSITE_PAGES_DIR` moves it (the cases do, so no two builds share one). Served under `/microsite/`. The development
-  page asks for `/fonts/…` and `/assets/fitaf-logo.png` at the site's root, so its build's `fonts/` and `assets/` are also
-  served at Storybook's root (in the static build, beside Storybook's own `assets/`, with distinct names).
+  page asks for `/fonts/…`, `/assets/fitaf-logo.png` and (since `SPEC-why-fit-af.md` § 6) its `/why/` frame at the site's
+  root, so its build's `fonts/`, `assets/` and `why/` are also served at Storybook's root (in the static build, beside Storybook's own `assets/`, with distinct names).
 - **A change** shows after a restart, or after `npm run pages` (the pages rebuilt in place while the server runs) and a
   reload of the story. No watch: a new picks file changes the dates, read at the start.
 - **The clock** starts at the instant and runs on (`Date.now()`, `new Date()`; a `Date` given a value, and the rest of

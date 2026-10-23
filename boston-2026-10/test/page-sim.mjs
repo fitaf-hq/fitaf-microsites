@@ -23,8 +23,14 @@ function clockAt(now) {
   };
 }
 
-/** `now`: the browser's clock, fixed at that instant (ms); omitted, the real clock. */
-export function simulatePage(html, { hash = "", turnstile = "pass", fetchReply = { ok: true, json: { ok: true } }, now } = {}) {
+/** SPEC-save-offer-production § 10.7: the page's save step is drawn only while an offer is live (the Boston offer ends
+ *  2026-10-29, and none follows it), so a page case's clock is fixed: omitted, noon in New York on 2026-10-24, a day of the
+ *  offer (worker-harness.mjs TEST_NOW_MS, the Worker's). */
+export const PAGE_NOW_MS = Date.parse("2026-10-24T16:00:00.000Z");
+
+/** `now`: the browser's clock, fixed at that instant (ms); omitted, PAGE_NOW_MS. `search`: the URL's query, as
+ *  `location.search` gives it ("?e=boston"; SPEC-save-offer-production § 9 item 2). */
+export function simulatePage(html, { hash = "", search = "", turnstile = "pass", fetchReply = { ok: true, json: { ok: true } }, now = PAGE_NOW_MS } = {}) {
   const record = { fetches: [], xhr: 0, beacons: [], hashWrites: [], history: [], storage: [], cookies: [], lookups: new Set() };
   const elements = new Map();
   const windowListeners = {};
@@ -64,9 +70,9 @@ export function simulatePage(html, { hash = "", turnstile = "pass", fetchReply =
   }
 
   const location = {
-    href: `https://dev.example.invalid/${hash}`,
+    href: `https://dev.example.invalid/${search}${hash}`,
     pathname: "/",
-    search: "",
+    search,
     get hash() { return this._hash; },
     set hash(v) {
       const h = v.startsWith("#") ? v : `#${v}`;

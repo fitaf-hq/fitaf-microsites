@@ -1,6 +1,7 @@
 // S29 (SPEC-rung4-save-offer.md § 2b item 1): the page's markup has no dialog, [aria-modal] or overlay element for
-// Flow 1 ("We do not need to enable the initial modal/overlay we were planning"). The page's one dialog is Flow 2's See
-// all plans grid, which is not Flow 1's. Two mutants on copies, in memory, show the assertion can fire.
+// Flow 1 ("We do not need to enable the initial modal/overlay we were planning"). The page's dialogs are Flow 2's See
+// all plans grid and, since SPEC-why-fit-af.md § 2 item 2, the footer's /why/ page (#why); neither is Flow 1's. Two
+// mutants on copies, in memory, show the assertion can fire.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { devPage } from "./dev-page.mjs";

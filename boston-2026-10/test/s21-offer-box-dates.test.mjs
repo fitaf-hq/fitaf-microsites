@@ -37,7 +37,7 @@ test("S21 (§ 2a): when no offer can be chosen, the box shows nothing and the pa
   // Two general offers current on one date: the file breaks its own one-general rule, and currentGeneral throws.
   const broken = structuredClone(FIXTURE_OFFERS);
   broken.offers.find((o) => o.id === "general-b-fixture").valid_from = "2026-09-01";
-  assert.throws(() => offers.offerForSave(S21_DATES.before, broken.offers), /expected one current general offer/, "control");
+  assert.throws(() => offers.offerForSave(S21_DATES.before, broken.offers), /at most one current general offer/, "control");
   const page = simulatePage(await devPage({ offers: broken }), { now: midday(S21_DATES.before) });
   assert.equal(page.el("save-offer-label").textContent, "", "nothing in place of a label");
   page.type("save-email", "dummy-s21@example.com");

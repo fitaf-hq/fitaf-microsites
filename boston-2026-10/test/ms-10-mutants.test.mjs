@@ -7,12 +7,14 @@
 //   a cart's link built on meals, not plan     fails MS-2 (5 and 15 meals are no plan the store sells: no page at all)
 //   a version-1 14 mapped to or                fails MS-5
 //   a card choosing its cart by mpid           fails MS-11
+//   a byte moved in a compared week's content  fails MS-20 at every week it compares (SPEC-week-content § 9 item 8)
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { mirror, picksDir } from "./cc-harness.mjs";
-import { linkProblems, rowProblems, threeCartsProblems, v1Problems } from "./ms-checks.mjs";
+import { baseTree, contentProblems, linkProblems, MS20_BASE, MS20_TARGETS, rowProblems, threeCartsProblems, v1Problems, weeksAlike, weeksAlikeLine } from "./ms-checks.mjs";
 import { pageOf, V1_DIR, V2, V2_DIR } from "./ms-harness.mjs";
 
 /** Replace `from` (present exactly once) with `to` in the mirror's file `rel`. */
@@ -119,16 +121,20 @@ test("MS-10: a version-1 14 mapped to or fails MS-5", async () => {
 });
 
 // The card choosing its cart by the mpid in Choose your meals' link (the card before § 8 item 2), not by the answer set.
-const CHOSEN = `  function chosen(sel) {
+// SPEC-every-menu-and-nutrition § 2: chosen() takes the chosen menu, whose carts are Chef's Choice's (the week's own) or
+// another list's; the mutant chooses within them by mpid, as it chose within the week's before.
+const CHOSEN = `  function chosen(sel, menu) {
     var key = sel.replace(/-s$/, "");
-    var cart = has(week.carts, key) ? week.carts[key] : null;
+    var carts = cartsOf(menu);
+    var cart = has(carts, key) ? carts[key] : null;
     var m = cart && /[?&]mpid=(\\d+)$/.exec(choose.getAttribute("href") || "");
     var links = cart && ((/-s$/.test(sel) && cart.snack_links) || cart.links);
     return m && has(links, m[1]) ? { menu: cart, link: links[m[1]] } : null;
   }`;
-const CHOSEN_BY_MPID = `  function chosen(sel) {
+const CHOSEN_BY_MPID = `  function chosen(sel, menu) {
+    var carts = cartsOf(menu);
     var m = sel && /[?&]mpid=(\\d+)$/.exec(choose.getAttribute("href") || "");
-    for (var key in week.carts) if (m && has(week.carts[key].links, m[1])) return { menu: week.carts[key], link: week.carts[key].links[m[1]] };
+    for (var key in carts) if (m && has(carts[key].links, m[1])) return { menu: carts[key], link: carts[key].links[m[1]] };
     return null;
   }`;
 
@@ -171,4 +177,48 @@ test("MS-10 (SPEC-snacks-in-the-cart): a card that ignores the snack links fails
       assert.ok(problems.length > 0 && problems.every((p) => / 0 snack items$/.test(p)), problems.join("\n"));
     },
   );
+});
+
+// SPEC-week-content § 9 item 8 (MS-20 narrowed to the weeks the two trees were given alike, § 9 item 1): a byte moved in
+// a compared week's content, the window's last day one later (CLOSES_DAYS_BEFORE 3 -> 2, so every week's valid_to), read
+// by MS-20's own weeks and comparison over the mirror against 1c10839's tree; the unchanged mirror first, its control.
+const CLOSES = "export const CLOSES_DAYS_BEFORE = 3;";
+const CLOSES_LATER = "export const CLOSES_DAYS_BEFORE = 2;";
+
+/** MS-20 over the package at `dir`: the weeks it compares and one line per difference, "<week> <target>: …". */
+async function committedWeeksProblems(dir, basePackage, scratch) {
+  const alike = await weeksAlike(dir, basePackage);
+  const problems = [];
+  for (const week of alike.compared) {
+    for (const args of MS20_TARGETS) {
+      for (const p of await contentProblems(dir, basePackage, week, args, scratch)) problems.push(`${week} ${args.length ? "dev" : "prod"}: ${p}`);
+    }
+  }
+  return { alike, problems };
+}
+
+test("MS-10 (SPEC-week-content § 9): a byte moved in a compared week's content fails MS-20 at every week it compares", async (t) => {
+  const scratch = await realpath(await mkdtemp(join(tmpdir(), "boston-ms-10-ms-20-")));
+  try {
+    const basePackage = await baseTree(MS20_BASE, scratch);
+    await withMirror(async () => {}, async (dir) => {
+      const { alike, problems } = await committedWeeksProblems(dir, basePackage, scratch);
+      t.diagnostic(`control: ${weeksAlikeLine(alike)}`);
+      assert.ok(alike.compared.length >= 3, `control: the weeks compared: ${weeksAlikeLine(alike)}`);
+      assert.deepEqual(problems, [], "control: the unchanged mirror passes MS-20");
+    });
+    await withMirror(
+      (dir) => edit(dir, "scripts/chefs-choice.mjs", CLOSES, CLOSES_LATER),
+      async (dir) => {
+        const { alike, problems } = await committedWeeksProblems(dir, basePackage, scratch);
+        for (const week of alike.compared) {
+          for (const target of ["prod", "dev"]) {
+            assert.ok(problems.some((p) => p.startsWith(`${week} ${target}: week/picks-data.json not byte for byte`)), `MS-20 fails it at ${week}, ${target}:\n${problems.join("\n")}`);
+          }
+        }
+      },
+    );
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
 });

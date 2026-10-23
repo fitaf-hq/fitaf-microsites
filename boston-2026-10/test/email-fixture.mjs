@@ -11,17 +11,23 @@ export const SAMPLE = {
   code: "SAMPLE23",
   token: "SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPL",
   offer: { valid_to: "2026-11-30" },
+  // SPEC-save-offer-production § 10: an offer without a code, whose E1 says the date its pricing is held until.
+  heldOffer: { valid_to: "2026-10-29", code_mode: "none" },
   event: { name: "the sample event" },
   zip: "01602",
   unconfirmedDays: 7,
 };
 
-/** E1 with the box ticked, E1 without it, and E-X, as messages.js renders them. */
+/** E1 with the box ticked, E1 without it, the same two for an offer without a code (SPEC-save-offer-production § 10), and
+ *  E-X, as messages.js renders them. */
 export function sampleMessages(s = SAMPLE) {
   const offerInputs = { to: s.to, code: s.code, offer: s.offer, event: s.event, siteUrl: s.siteUrl };
+  const heldInputs = { ...offerInputs, offer: s.heldOffer };
   return {
     e1_ticked: e1({ ...offerInputs, token: s.token }),
     e1_unticked: e1({ ...offerInputs, token: null }),
+    e1_held_ticked: e1({ ...heldInputs, token: s.token }),
+    e1_held_unticked: e1({ ...heldInputs, token: null }),
     ex: ex({ to: s.to, zip: s.zip, siteUrl: s.siteUrl, token: s.token, unconfirmedDays: s.unconfirmedDays }),
   };
 }

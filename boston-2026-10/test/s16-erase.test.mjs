@@ -6,13 +6,14 @@ import { ROOT } from "../build.mjs";
 import { erase } from "../src/worker/erase.js";
 import { validateSave } from "../src/worker/validate-save.js";
 import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
-import { d1Adapter, dumpAllTables, NEAR_ZIP, rows, startWorker, validSave } from "./worker-harness.mjs";
+import { d1Adapter, dumpAllTables, NEAR_ZIP, rows, startWorker, TEST_NOW_MS, validSave } from "./worker-harness.mjs";
 
 const { mf, db } = await startWorker();
 after(() => mf.dispose());
 
 test("S16: erase — a dry run gives counts only; --apply deletes the contact, cancels the unsent message, sets `erased`", async () => {
-  const mk = (body, opts) => saveRows(validateSave(validSave(body)), opts);
+  // At the harness's clock, a day of the offer (SPEC-save-offer-production § 10.7: after the last one, no offer save).
+  const mk = (body, opts) => saveRows(validateSave(validSave(body)), { nowMs: TEST_NOW_MS, ...opts });
   const target = [
     mk({ email: "dummy-e1@example.com" }), // unsent: its message is cancelled
     mk({ email: "Dummy-E1@example.com", kind: "expansion", zip: NEAR_ZIP }, { state: "messaged", saveOverrides: { message_state: "sent" } }),

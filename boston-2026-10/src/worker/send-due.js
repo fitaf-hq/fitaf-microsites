@@ -12,14 +12,17 @@
 // attempts + 1, still `scheduled`, and at MAX_SEND_ATTEMPTS -> `failed` · held (not on the allowlist) and
 // deferred (NullSender) -> untouched, still `scheduled`. ⛔ A `failed` or `sent` message is never selected
 // again, so it can never be re-sent (to any address). Returns counts only.
+import saveConfig from "../../data/save.json" with { type: "json" };
 import { e1, ex } from "./messages.js";
+import { heldUntilOfSave } from "./offers.js";
 import { tokenHash } from "./token.js";
+import { zonedDate } from "./zoned-time.js";
 
 export const MAX_SEND_ATTEMPTS = 5;
 export const SEND_LEASE_MS = 15 * 60 * 1000; // longer than a cron interval (5 min) and a request's timeout
 
 export const DUE_SQL =
-  "SELECT s.save_id, s.kind, s.event_id, s.offer_code, s.offer_id, c.email, c.zip, c.consent_marketing " +
+  "SELECT s.save_id, s.kind, s.event_id, s.offer_code, s.offer_id, s.send_at, c.email, c.zip, c.consent_marketing " +
   "FROM saves s JOIN save_contacts c ON c.save_id = s.save_id " +
   "WHERE s.message_state = 'scheduled' AND s.send_at <= ? ORDER BY s.send_at, s.save_id";
 
@@ -42,11 +45,14 @@ const SET_RETRY_SQL =
   "WHERE save_id = ?1 AND message_state = 'scheduled' RETURNING message_state";
 const SET_TOKEN_SQL = "UPDATE save_contacts SET confirm_token_hash = ?1 WHERE save_id = ?2";
 
-function messageFor(row, token, { offers, events, siteUrl, unconfirmedDays }) {
+/** `today`: the send date in the send time zone. § 10.9: E1 says the save's held date (the later of its offer's last
+ *  day and the day E1 is due); § 10.7: one that goes after that date says the offer has ended. */
+function messageFor(row, token, { offers, events, siteUrl, unconfirmedDays }, today) {
   if (row.kind === "expansion") return ex({ to: row.email, zip: row.zip, siteUrl, token, unconfirmedDays });
   const offer = offers.find((o) => o.id === row.offer_id);
   const event = events.find((e) => e.id === row.event_id);
-  return e1({ to: row.email, code: row.offer_code, offer, event, siteUrl, token });
+  const held = heldUntilOfSave(offer, row.send_at, saveConfig.send_time_zone);
+  return e1({ to: row.email, code: row.offer_code, offer, event, siteUrl, token, held, ended: today > held });
 }
 
 /** A Sender's answer as { outcome, providerMessageId }: rung 4's senders answer a bare string. */
@@ -62,7 +68,7 @@ async function claim(db, row, now, nowMs) {
 }
 
 /** Send one claimed message; returns the name of the count it adds to. */
-async function sendOne(db, row, { now, sender, context }) {
+async function sendOne(db, row, { now, sender, context, today }) {
   if (sender.sendsNothing) {
     await db.prepare(RELEASE_SQL).bind(row.save_id).run(); // rung 4's NullSender: nothing changes
     return "deferred";
@@ -71,7 +77,7 @@ async function sendOne(db, row, { now, sender, context }) {
   if (needsToken && !context.mintToken) throw new Error("a message needs a /confirm token and no key is set");
   const token = needsToken ? await context.mintToken(row.save_id) : null;
   const { outcome, providerMessageId } = normalise(
-    await sender.send({ ...messageFor(row, token, context), saveId: row.save_id }),
+    await sender.send({ ...messageFor(row, token, context, today), saveId: row.save_id }),
   );
   if (outcome === "sent") {
     const stmts = [setOutcome(db, "sent", now, row, 1, providerMessageId ?? null)];
@@ -98,6 +104,7 @@ async function sendOne(db, row, { now, sender, context }) {
  */
 export async function sendDue(db, { now, sender, redemptions, context }) {
   const nowMs = Date.parse(now);
+  const today = zonedDate(nowMs, saveConfig.send_time_zone);
   const due = (await db.prepare(DUE_SQL).bind(now).all()).results;
   const codes = due.filter((r) => r.kind === "offer").map((r) => r.offer_code);
   const redeemed = new Set(codes.length ? await redemptions.redeemed(codes) : []);
@@ -113,7 +120,7 @@ export async function sendDue(db, { now, sender, redemptions, context }) {
       counts.suppressed++;
       continue;
     }
-    counts[await sendOne(db, row, { now, sender, context })]++;
+    counts[await sendOne(db, row, { now, sender, context, today })]++;
   }
   return counts;
 }

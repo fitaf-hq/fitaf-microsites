@@ -1,6 +1,3295 @@
 {
   "delivery": "2026-11-01",
   "version": 2,
-  "updating": true,
-  "lists": {}
+  "lists": {
+    "chefs-choice": {
+      "carts": [
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 4,
+          "items": [
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 7,
+          "items": [
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "display": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 3
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 3
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 21,
+          "items": [
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "display": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 3
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 3
+            }
+          ]
+        }
+      ],
+      "snacks": {
+        "7": [
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Cheesecake Brownie Bites",
+            "display": "Cheesecake Brownie Bites",
+            "qty": 1
+          },
+          {
+            "name": "Golden Oreo Protein Sand",
+            "display": "Golden Oreo Protein Sand",
+            "qty": 1
+          }
+        ],
+        "5": [
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          }
+        ]
+      }
+    },
+    "poultry-and-fish": {
+      "carts": [
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 4,
+          "items": [
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 7,
+          "items": [
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Pretzel Chicken with Fit-fil-A Sauce",
+              "display": "Pretzel Chicken with Fit-fil-A Sauce",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Pretzel Chicken with Fit-fil-A Sauce",
+              "display": "Pretzel Chicken with Fit-fil-A Sauce",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+              "display": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Spiralized Noodles",
+              "display": "Free-Range Chicken Parm Over Spiralized Noodles",
+              "qty": 1
+            },
+            {
+              "name": "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw",
+              "display": "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 4
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 6
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Pretzel Chicken with Fit-fil-A Sauce",
+              "display": "Pretzel Chicken with Fit-fil-A Sauce",
+              "qty": 1
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 4
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 21,
+          "items": [
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Pretzel Chicken with Fit-fil-A Sauce",
+              "display": "Pretzel Chicken with Fit-fil-A Sauce",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+              "display": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Spiralized Noodles",
+              "display": "Free-Range Chicken Parm Over Spiralized Noodles",
+              "qty": 1
+            },
+            {
+              "name": "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw",
+              "display": "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw",
+              "qty": 1
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 6
+            }
+          ]
+        }
+      ],
+      "snacks": {
+        "7": [
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Cheesecake Brownie Bites",
+            "display": "Cheesecake Brownie Bites",
+            "qty": 1
+          },
+          {
+            "name": "Golden Oreo Protein Sand",
+            "display": "Golden Oreo Protein Sand",
+            "qty": 1
+          }
+        ],
+        "5": [
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          }
+        ]
+      }
+    },
+    "gluten-free": {
+      "carts": [
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 4,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 7,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "🟠NEW: Thai Basil Beef (Pad Kra Pao) with Coconut Rice",
+              "display": "Thai Basil Beef (Pad Kra Pao) with Coconut Rice",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 3
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 3
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 21,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Shrimp",
+              "display": "Thai Peanut Noodle Salad with Shrimp",
+              "qty": 1
+            },
+            {
+              "name": "🟠NEW: Thai Basil Beef (Pad Kra Pao) with Coconut Rice",
+              "display": "Thai Basil Beef (Pad Kra Pao) with Coconut Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 3
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 3
+            }
+          ]
+        }
+      ]
+    },
+    "comfort-classics": {
+      "carts": [
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 4,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 7,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "display": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "display": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "qty": 1
+            },
+            {
+              "name": "Pretzel Chicken with Fit-fil-A Sauce",
+              "display": "Pretzel Chicken with Fit-fil-A Sauce",
+              "qty": 1
+            },
+            {
+              "name": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+              "display": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Spiralized Noodles",
+              "display": "Free-Range Chicken Parm Over Spiralized Noodles",
+              "qty": 1
+            },
+            {
+              "name": "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw",
+              "display": "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 3
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 3
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "display": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 21,
+          "items": [
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Protein Penne",
+              "display": "Free-Range Chicken Parm Over Protein Penne",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Carnitas Bowl",
+              "display": "Chipotle Chicken Carnitas Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "display": "Smokehouse BBQ Gouda Grass-Fed Burger",
+              "qty": 1
+            },
+            {
+              "name": "Pretzel Chicken with Fit-fil-A Sauce",
+              "display": "Pretzel Chicken with Fit-fil-A Sauce",
+              "qty": 1
+            },
+            {
+              "name": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+              "display": "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range Chicken Parm Over Spiralized Noodles",
+              "display": "Free-Range Chicken Parm Over Spiralized Noodles",
+              "qty": 1
+            },
+            {
+              "name": "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw",
+              "display": "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 3
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 3
+            }
+          ]
+        }
+      ],
+      "snacks": {
+        "7": [
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Cheesecake Brownie Bites",
+            "display": "Cheesecake Brownie Bites",
+            "qty": 1
+          },
+          {
+            "name": "Golden Oreo Protein Sand",
+            "display": "Golden Oreo Protein Sand",
+            "qty": 1
+          }
+        ],
+        "5": [
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          }
+        ]
+      }
+    },
+    "global-explorers": {
+      "carts": [
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 4,
+          "items": [
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 7,
+          "items": [
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 3
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 3
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 2
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 21,
+          "items": [
+            {
+              "name": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "display": "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies",
+              "qty": 1
+            },
+            {
+              "name": "Thai Peanut Noodle Salad with Chicken",
+              "display": "Thai Peanut Noodle Salad with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Sesame Chicken Teriyaki with Fried Rice",
+              "display": "Sesame Chicken Teriyaki with Fried Rice",
+              "qty": 1
+            },
+            {
+              "name": "Sardinian Pesto Penne with Chicken",
+              "display": "Sardinian Pesto Penne with Chicken",
+              "qty": 1
+            },
+            {
+              "name": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "display": "Coffee-Crusted Brisket & Smoked Gouda Mash",
+              "qty": 1
+            },
+            {
+              "name": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "display": "Vodka Chicken Parm Zucchini Noodle Lasagna",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "display": "Grass-Fed Steak & Parmesan Yukon Wedges",
+              "qty": 1
+            },
+            {
+              "name": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "display": "BBQ Pulled Pork Cauliflower Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Free-Range BBQ Turkey Bowl",
+              "display": "Free-Range BBQ Turkey Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Blackened Chicken Caesar Salad",
+              "display": "Blackened Chicken Caesar Salad",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Chicken Mac & Cheese",
+              "display": "Chipotle Chicken Mac & Cheese",
+              "qty": 1
+            },
+            {
+              "name": "Bison Chili",
+              "display": "Bison Chili",
+              "qty": 1
+            },
+            {
+              "name": "Grass-fed Steak Carnitas Burrito Bowl",
+              "display": "Grass-fed Steak Carnitas Burrito Bowl",
+              "qty": 1
+            },
+            {
+              "name": "Grass-Fed Beef Taco Salad",
+              "display": "Grass-Fed Beef Taco Salad",
+              "qty": 1
+            },
+            {
+              "name": "Sizzling Chorizo & Organic Egg Scramble",
+              "display": "Sizzling Chorizo & Organic Egg Scramble",
+              "qty": 3
+            },
+            {
+              "name": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "display": "Superberry Greek Yogurt Parfait with Matcha Granola",
+              "qty": 1
+            },
+            {
+              "name": "Cinnamon Swirl Protein Waffles",
+              "display": "Cinnamon Swirl Protein Waffles",
+              "qty": 3
+            }
+          ]
+        }
+      ],
+      "snacks": {
+        "7": [
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Cheesecake Brownie Bites",
+            "display": "Cheesecake Brownie Bites",
+            "qty": 1
+          },
+          {
+            "name": "Golden Oreo Protein Sand",
+            "display": "Golden Oreo Protein Sand",
+            "qty": 1
+          }
+        ],
+        "5": [
+          {
+            "name": "Cookies & Cream Protein Dirt",
+            "display": "Cookies & Cream Protein Dirt",
+            "qty": 1
+          },
+          {
+            "name": "🟠NEW: Caramel Apple ProNuts",
+            "display": "Caramel Apple ProNuts",
+            "qty": 1
+          },
+          {
+            "name": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "display": "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha",
+            "qty": 1
+          }
+        ]
+      }
+    }
+  },
+  "meals": {
+    "Vodka Chicken Parm Zucchini Noodle Lasagna": {
+      "nutrition": {
+        "lean": {
+          "cal": 410,
+          "protein": 30,
+          "carbs": 17,
+          "fat": 26,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 500,
+          "protein": 38,
+          "carbs": 20,
+          "fat": 32,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 610,
+          "protein": 45,
+          "carbs": 24,
+          "fat": 39,
+          "fiber": 6
+        }
+      },
+      "ingredients": "Zucchini, Green Beans, Antibiotic & Hormone-Free Ground Chicken, Ricotta Cheese (Milk), Vodka Sauce  (tomatoes, onion, garlic, cream, olive oil, vodka, parmesan cheese, organic grass-fed butter, oregano, basil, carrot, red pepper flakes, sea salt), Mozzarella Cheese, Eggs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Sesame Chicken Teriyaki with Fried Rice": {
+      "nutrition": {
+        "lean": {
+          "cal": 400,
+          "protein": 33,
+          "carbs": 39,
+          "fat": 13,
+          "fiber": 5
+        },
+        "signature": {
+          "cal": 600,
+          "protein": 53,
+          "carbs": 54,
+          "fat": 19,
+          "fiber": 6
+        },
+        "performance": {
+          "cal": 770,
+          "protein": 64,
+          "carbs": 70,
+          "fat": 26,
+          "fiber": 7
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Vegetable Fried Rice (White Rice, Eggs, Carrots, Peas, Onions, Tamari (Water, Soybeans, Salt), Sesame Oil), Broccoli, Grilled Pineapple, Carrots, Scallions, House-Made Teriyaki Sauce (Wildflower Honey, Brown Sugar, Fresh Lime Juice, Fresh Ginger, Fresh Garlic), Sesame Seeds, Olive Oil.",
+      "contains": "Soy, Egg, Sesame."
+    },
+    "Grass-Fed Steak & Parmesan Yukon Wedges": {
+      "nutrition": {
+        "lean": {
+          "cal": 400,
+          "protein": 30,
+          "carbs": 28,
+          "fat": 20,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 550,
+          "protein": 44,
+          "carbs": 38,
+          "fat": 26,
+          "fiber": 5
+        },
+        "performance": {
+          "cal": 730,
+          "protein": 54,
+          "carbs": 59,
+          "fat": 34,
+          "fiber": 7
+        }
+      },
+      "ingredients": "Grass-Fed Beef Sirloin Flap, Yukon Gold Potatoes, Green Beans, Olive Oil, Fresh Garlic, Parmesan Cheese (Milk), Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion, Thyme, Rosemary, Smoked Paprika, Parsley, Coffee, Mustard Powder, Coriander.",
+      "contains": "Milk."
+    },
+    "BBQ Pulled Pork Cauliflower Mac & Cheese": {
+      "nutrition": {
+        "lean": {
+          "cal": 379,
+          "protein": 31,
+          "carbs": 12,
+          "fat": 22,
+          "fiber": 3
+        },
+        "signature": {
+          "cal": 497,
+          "protein": 45,
+          "carbs": 14,
+          "fat": 29,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 616,
+          "protein": 61,
+          "carbs": 16,
+          "fat": 34,
+          "fiber": 5
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Pork Shoulder, Cauliflower, Milk, Organic Grass-fed Butter (Milk), Cheddar Cheese, Parmesan Cheese, Fit AF Root Veggie BBQ Sauce (Tomato Sauce, Maple Syrup, Brown Sugar, Carrots, Beets, Onion, Worcestershire Sauce, Apple Cider Vinegar), Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Onion, Granulated Garlic"
+    },
+    "Coffee-Crusted Brisket & Smoked Gouda Mash": {
+      "nutrition": {
+        "lean": {
+          "cal": 420,
+          "protein": 29,
+          "carbs": 26,
+          "fat": 23,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 600,
+          "protein": 43,
+          "carbs": 35,
+          "fat": 32,
+          "fiber": 5
+        },
+        "performance": {
+          "cal": 740,
+          "protein": 52,
+          "carbs": 43,
+          "fat": 39,
+          "fiber": 5
+        }
+      },
+      "ingredients": "Beef Brisket, Smoked Gouda Mashed Potatoes (Yukon Gold Potatoes, Smoked Gouda Cheese [Milk], Milk, Organic Grass-Fed Butter [Milk], Sea Salt, Black Pepper), Brussels Sprouts, Beef Bone Broth (Organic Beef Bones, Water, Carrots, Onions, Apple Cider Vinegar), Balsamic Glaze, Olive Oil, Brown Sugar, Coffee, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion, Paprika, Coriander, Chili Powder, Cayenne Pepper.",
+      "contains": "Milk."
+    },
+    "Free-Range BBQ Turkey Bowl": {
+      "nutrition": {
+        "lean": {
+          "cal": 400,
+          "protein": 30,
+          "carbs": 36,
+          "fat": 16,
+          "fiber": 6
+        },
+        "signature": {
+          "cal": 580,
+          "protein": 43,
+          "carbs": 50,
+          "fat": 24,
+          "fiber": 8
+        },
+        "performance": {
+          "cal": 740,
+          "protein": 53,
+          "carbs": 67,
+          "fat": 31,
+          "fiber": 10
+        }
+      },
+      "ingredients": "Free-Range ABF 90% Lean Ground Turkey, Sweet Potatoes, Yukon Gold Potatoes, Brussels Sprouts, Fit AF Root Veggie BBQ Sauce (Tomato Sauce, Vermont Maple Syrup, Brown Sugar, Carrot, Beets, Onion, Apple Cider Vinegar, Cumin, Smoked Paprika, Chili Powder, Liquid Smoke), Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Blackened Chicken Caesar Salad": {
+      "nutrition": {
+        "lean": {
+          "cal": 440,
+          "protein": 34,
+          "carbs": 13,
+          "fat": 27,
+          "fiber": 3
+        },
+        "signature": {
+          "cal": 550,
+          "protein": 44,
+          "carbs": 19,
+          "fat": 32,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 680,
+          "protein": 54,
+          "carbs": 26,
+          "fat": 38,
+          "fiber": 4
+        }
+      },
+      "ingredients": "Free-Range ABF Chicken, Romaine Lettuce, Olive Oil Caesar Dressing (Olive Oil, Parmesan Cheese (Milk), White Vinegar, Dijon Mustard, Pasteurized Egg (Egg), Garlic, Lemon Juice, Worcestershire Sauce (Fish), Black Pepper, Sea Salt), Croutons (Wheat Flour (Wheat), Canola and/or Sunflower Oil, Salt, Yeast, Sugar, Garlic Powder, Onion Powder, Spices), Grape Tomatoes, Bacon, Parmesan Cheese (Milk), Olive Oil, Blackening Seasoning (Paprika, Garlic Powder, Onion Powder, Dried Thyme, Dried Oregano, Cayenne Pepper, Black Pepper, Salt).",
+      "contains": "Milk, Egg, Wheat, Fish."
+    },
+    "Chipotle Chicken Mac & Cheese": {
+      "nutrition": {
+        "lean": {
+          "cal": 470,
+          "protein": 41,
+          "carbs": 35,
+          "fat": 20,
+          "fiber": 6
+        },
+        "signature": {
+          "cal": 600,
+          "protein": 51,
+          "carbs": 45,
+          "fat": 26,
+          "fiber": 8
+        },
+        "performance": {
+          "cal": 720,
+          "protein": 61,
+          "carbs": 57,
+          "fat": 29,
+          "fiber": 10
+        }
+      },
+      "ingredients": "Protein Rotini Pasta (Chickpeas, Pea Starch, Tapioca, Xanthan Gum), Antibiotic & Hormone-Free Chicken Breast, Cheese Sauce (Milk) (Milk, Organic Grass-fed Butter, White Cheddar Cheese, Tapioca Flour, White Rice Flour), Honey-Chipotle Sauce (Wild Flower Honey, Chipotle Peppers in Adobo, Olive Oil, Garlic, Lime Juice, White Vinegar, Smoked Paprika), Sea Salt, Black Pepper"
+    },
+    "Bison Chili": {
+      "nutrition": {
+        "lean": {
+          "cal": 370,
+          "protein": 25,
+          "carbs": 42,
+          "fat": 11,
+          "fiber": 6
+        },
+        "signature": {
+          "cal": 510,
+          "protein": 35,
+          "carbs": 60,
+          "fat": 14,
+          "fiber": 8
+        },
+        "performance": {
+          "cal": 670,
+          "protein": 45,
+          "carbs": 79,
+          "fat": 19,
+          "fiber": 11
+        }
+      },
+      "ingredients": "Grass-fed Ground Bison, Jasmine Rice, Broccoli, Black Beans, Diced Tomatoes, Red Bell Peppers, Cacao Powder, Chipotle Peppers in Adobo, Fresh Garlic, Onions, Cumin, Cinnamon, Oregano, Coconut Oil (Tree Nut), Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Grass-fed Steak Carnitas Burrito Bowl": {
+      "nutrition": {
+        "lean": {
+          "cal": 470,
+          "protein": 29,
+          "carbs": 40,
+          "fat": 23,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 650,
+          "protein": 42,
+          "carbs": 55,
+          "fat": 30,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 880,
+          "protein": 54,
+          "carbs": 69,
+          "fat": 44,
+          "fiber": 4
+        }
+      },
+      "ingredients": "Grass-fed Chuck Steak, Jasmine Rice, Red Bell Peppers, Onions, Corn, Guacamole (Avocado, Lime Juice, Cilantro, Jalapeno Pepper, Onion, Salt, Garlic, Ascorbic Acid), Cheddar Cheese (Milk), Lime Juice, Red Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion, Cumin, Chipotle Powder, Smoked Paprika, Ancho Chile Powder"
+    },
+    "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies": {
+      "nutrition": {
+        "lean": {
+          "cal": 410,
+          "protein": 41,
+          "carbs": 35,
+          "fat": 12,
+          "fiber": 5
+        },
+        "signature": {
+          "cal": 540,
+          "protein": 55,
+          "carbs": 44,
+          "fat": 15,
+          "fiber": 5
+        },
+        "performance": {
+          "cal": 680,
+          "protein": 69,
+          "carbs": 60,
+          "fat": 18,
+          "fiber": 8
+        }
+      },
+      "ingredients": "Free-Range ABF Chicken Breast, Couscous (Wheat), Carrots, Parsnips, Rutabaga, Turnip, Butternut Squash, Red Onion, Nonfat Plain Greek Yogurt (Milk), Harissa Sauce (Roasted Red Bell Pepper, Water, Vegetable Oil, Garlic, Tomato Paste, Spices), Fresh Mint, Olive Oil, Lemon Juice, Lemon Zest, Fresh Rosemary, Fresh Garlic, Parsley, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Grass-Fed Beef Taco Salad": {
+      "nutrition": {
+        "lean": {
+          "cal": 500,
+          "protein": 29,
+          "carbs": 31,
+          "fat": 28,
+          "fiber": 6
+        },
+        "signature": {
+          "cal": 620,
+          "protein": 40,
+          "carbs": 37,
+          "fat": 34,
+          "fiber": 8
+        },
+        "performance": {
+          "cal": 790,
+          "protein": 50,
+          "carbs": 46,
+          "fat": 43,
+          "fiber": 8
+        }
+      },
+      "ingredients": "Romaine Lettuce, 90% Lean Grass-fed Ground Beef, Catalina Dressing (Olive Oil, Red Wine Vinegar, Wild Flower Honey, Ketchup, Worcestershire Sauce (Fish), Smoked Paprika, Onion Powder, Italian Seasoning), Tri-Colored Tortilla Strips (whole grain corn masa flour, sunflower oil, salt, beet juice, black carrot juice, annatto extract), Corn, Black Beans, Grape Tomatoes, Cheddar Jack Cheese (Milk), Olive Oil, Sea Salt, Black Pepper, Cumin, Chili Powder, Cayenne Pepper, Granulated Onion, Granualted Garlic, Oregano",
+      "contains": "Milk, Fish"
+    },
+    "Smokehouse BBQ Gouda Grass-Fed Burger": {
+      "nutrition": {
+        "lean": {
+          "cal": 480,
+          "protein": 34,
+          "carbs": 38,
+          "fat": 23,
+          "fiber": 7
+        },
+        "signature": {
+          "cal": 710,
+          "protein": 51,
+          "carbs": 53,
+          "fat": 31,
+          "fiber": 9
+        },
+        "performance": {
+          "cal": 810,
+          "protein": 58,
+          "carbs": 60,
+          "fat": 36,
+          "fiber": 9
+        }
+      },
+      "ingredients": "85% Lean Grass-fed Ground Beef, Sandwich Thin (Lean) or Whole Grain Bun (Wheat), Green Beans, Carrots, Red Bell Peppers, Gouda Cheese (Milk), Fit AF Root Veggie BBQ Sauce, Romaine Lettuce, Red Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Thai Peanut Noodle Salad with Shrimp": {
+      "nutrition": {
+        "lean": {
+          "cal": 390,
+          "protein": 25,
+          "carbs": 42,
+          "fat": 15,
+          "fiber": 3
+        },
+        "signature": {
+          "cal": 560,
+          "protein": 37,
+          "carbs": 57,
+          "fat": 21,
+          "fiber": 3
+        },
+        "performance": {
+          "cal": 670,
+          "protein": 45,
+          "carbs": 65,
+          "fat": 27,
+          "fiber": 4
+        }
+      },
+      "ingredients": "Sustainably Caught White Shrimp, Rice Noodles, Red Cabbage, Green Cabbage, Red Bell Peppers, Carrots, Thai Peanut Sauce (Peanut Butter (Peanuts), Sweet Thai Chili Sauce, Tamari Soy Sauce (Soy), Coconut Milk (Tree Nut), Lime Juice, Fresh Ginger, Fresh Garlic, Wildflower Honey, Sesame Oil), Peanuts, Scallions, Cilantro, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Sizzling Chorizo & Organic Egg Scramble": {
+      "nutrition": {
+        "lean": {
+          "cal": 380,
+          "protein": 28,
+          "carbs": 27,
+          "fat": 19,
+          "fiber": 5
+        },
+        "signature": {
+          "cal": 530,
+          "protein": 40,
+          "carbs": 40,
+          "fat": 25,
+          "fiber": 7
+        },
+        "performance": {
+          "cal": 690,
+          "protein": 50,
+          "carbs": 54,
+          "fat": 33,
+          "fiber": 9
+        }
+      },
+      "ingredients": "Organic Free-Range Eggs, Antibiotic & Hormone-Free 90% Lean Ground Turkey, Sweet Potatoes, Salsa (Tomatoes, Water, Jalapeno Peppers, Tomato Paste, Onions, Garlic, Salt), Onions, Tomatoes, Chorizo Blend (Chipotle Peppers in Adobo, Ancho Chili Powder, Cumin, Paprika, Oregano, Garlic, Coriander, Cinnamon, Brown Sugar, White Vinegar, Sea Salt), Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Superberry Greek Yogurt Parfait with Matcha Granola": {
+      "nutrition": {
+        "lean": {
+          "cal": 360,
+          "protein": 25,
+          "carbs": 54,
+          "fat": 7,
+          "fiber": 11
+        },
+        "signature": {
+          "cal": 500,
+          "protein": 35,
+          "carbs": 70,
+          "fat": 11,
+          "fiber": 16
+        },
+        "performance": {
+          "cal": 590,
+          "protein": 47,
+          "carbs": 80,
+          "fat": 12,
+          "fiber": 17
+        }
+      },
+      "ingredients": "Elderberry & Blueberry Greek Yogurt (Milk)  (Nonfat Plain Greek Yogurt, Elderberries, Blueberries, Allulose, Stevia, Vanilla Extract), Strawberries, Matcha Granola (Tree Nut)  (oatmeal, flaked coconut, pepitas, coconut oil, Vermont maple syrup, organic matcha green tea powder, vanilla extract, sea salt), Dried Goji Berries, Chia Seeds"
+    },
+    "Cinnamon Swirl Protein Waffles": {
+      "nutrition": {
+        "lean": {
+          "cal": 420,
+          "protein": 36,
+          "carbs": 47,
+          "fat": 10,
+          "fiber": 3
+        },
+        "signature": {
+          "cal": 620,
+          "protein": 54,
+          "carbs": 70,
+          "fat": 14,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 840,
+          "protein": 73,
+          "carbs": 97,
+          "fat": 18,
+          "fiber": 6
+        }
+      },
+      "ingredients": "Whole Oat Flour, Whey Protein Isolate, Nonfat Plain Greek Yogurt (Milk), White Rice Flour, Brown Rice Flour, 2% Milk, Eggs, Cream Cheese, Potato Starch, Whole Sorghum Flour, Tapioca Flour, Cinnamon, Organic Grass-fed Butter, Allulose, Wild Flower Honey, Xanthan Gum, Buttermilk Powder, Olive Oil, Vanilla Extract, Stevia, Mint, Sea Salt"
+    },
+    "Thai Peanut Noodle Salad with Chicken": {
+      "nutrition": {
+        "lean": {
+          "cal": 430,
+          "protein": 31,
+          "carbs": 42,
+          "fat": 15,
+          "fiber": 3
+        },
+        "signature": {
+          "cal": 610,
+          "protein": 46,
+          "carbs": 57,
+          "fat": 21,
+          "fiber": 3
+        },
+        "performance": {
+          "cal": 720,
+          "protein": 56,
+          "carbs": 65,
+          "fat": 25,
+          "fiber": 4
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Rice Noodles, Red Cabbage, Green Cabbage, Red Bell Peppers, Carrots, Thai Peanut Sauce (Peanut Butter (Peanuts), Sweet Thai Chili Sauce, Tamari Soy Sauce (Soy), Coconut Milk (Tree Nut), Lime Juice, Fresh Ginger, Fresh Garlic, Wildflower Honey, Sesame Oil), Peanuts, Scallions, Cilantro, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Free-Range Chicken Parm Over Protein Penne": {
+      "nutrition": {
+        "lean": {
+          "cal": 460,
+          "protein": 43,
+          "carbs": 40,
+          "fat": 16,
+          "fiber": 9
+        },
+        "signature": {
+          "cal": 610,
+          "protein": 60,
+          "carbs": 51,
+          "fat": 20,
+          "fiber": 11
+        },
+        "performance": {
+          "cal": 780,
+          "protein": 75,
+          "carbs": 68,
+          "fat": 27,
+          "fiber": 15
+        }
+      },
+      "ingredients": "Free-Range ABF Chicken Breast, Protein Pasta (Chickpea,Tapioca, Xanthan Gum), Broccoli, Marinara Sauce (Tomato, Onion, Garlic, Olive Oil, Oregano, Basil, Carrot, Red Pepper Flakes, Sea Salt), Mozzarella Cheese (Milk), Parmesan Cheese, Eggs, Gluten Free Breadcrumbs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Chipotle Chicken Carnitas Bowl": {
+      "nutrition": {
+        "lean": {
+          "cal": 450,
+          "protein": 34,
+          "carbs": 40,
+          "fat": 18,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 570,
+          "protein": 49,
+          "carbs": 53,
+          "fat": 19,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 840,
+          "protein": 62,
+          "carbs": 69,
+          "fat": 35,
+          "fiber": 4
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Jasmine Rice, Red Bell Peppers, Onions, Cherry Tomatoes, Corn, Guacamole (Avocado, Lime Juice, Cilantro, Jalapeno Pepper, Onion, Salt, Garlic, Ascorbic Acid), Cheddar Cheese (Milk), Red Onion, Lime, Olive Oil, Wild Flower Honey, Chipotle Peppers in Adobo, Cumin, Chipotle Powder, Smoked Paprika, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Pretzel Chicken with Fit-fil-A Sauce": {
+      "nutrition": {
+        "lean": {
+          "cal": 460,
+          "protein": 30,
+          "carbs": 48,
+          "fat": 17,
+          "fiber": 5
+        },
+        "signature": {
+          "cal": 630,
+          "protein": 41,
+          "carbs": 73,
+          "fat": 20,
+          "fiber": 6
+        },
+        "performance": {
+          "cal": 800,
+          "protein": 53,
+          "carbs": 89,
+          "fat": 27,
+          "fiber": 9
+        }
+      },
+      "ingredients": "Free-Range ABF Chicken Breast, Tri-Color Potatoes, Broccoli, Gluten Free Pretzels, Fit AF Root Veggie BBQ Sauce (Tomato Paste, Vermont Maple Syrup, Brown Sugar, Carrot, Beets, Onion, Apple Cider Vinegar, Cumin, Smoked Paprika, Chili Powder, Liquid Smoke), Olive Oil Mayo, Wild Flower Honey, Stone Ground Mustard, Worcestershire Sauce (Shellfish), Eggs, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Sardinian Pesto Penne with Chicken": {
+      "nutrition": {
+        "lean": {
+          "cal": 440,
+          "protein": 41,
+          "carbs": 30,
+          "fat": 20,
+          "fiber": 9
+        },
+        "signature": {
+          "cal": 650,
+          "protein": 58,
+          "carbs": 47,
+          "fat": 30,
+          "fiber": 13
+        },
+        "performance": {
+          "cal": 780,
+          "protein": 72,
+          "carbs": 57,
+          "fat": 35,
+          "fiber": 16
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Protein Penne Pasta (Chickpeas, Pea Starch, Tapioca, Xanthan Gum), Cauliflower, Sardinian Pesto (Basil, Spinach, Cashews, Olive Oil, Fresh Garlic, Parmesan Cheese (Milk), Lemon, Sea Salt, Black Pepper), Artichoke Hearts, Cherry Tomatoes, Parmesan Cheese, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash": {
+      "nutrition": {
+        "lean": {
+          "cal": 410,
+          "protein": 35,
+          "carbs": 31,
+          "fat": 16,
+          "fiber": 5
+        },
+        "signature": {
+          "cal": 530,
+          "protein": 49,
+          "carbs": 40,
+          "fat": 19,
+          "fiber": 5
+        },
+        "performance": {
+          "cal": 680,
+          "protein": 60,
+          "carbs": 52,
+          "fat": 26,
+          "fiber": 7
+        }
+      },
+      "ingredients": "Free-Range ABF Chicken Breast, Yukon Gold Potatoes, Broccoli, Vermont Maple Syrup, Stone Ground Mustard, Dijon Mustard, BBQ Seasoning (brown sugar, smoked paprika, chili powder, cumin, granulated garlic, granulated onion, sea salt, black pepper), Olive Oil, Half & Half ((Milk)), Parmesan Cheese, Fresh Garlic"
+    },
+    "Free-Range Chicken Parm Over Spiralized Noodles": {
+      "nutrition": {
+        "lean": {
+          "cal": 360,
+          "protein": 38,
+          "carbs": 19,
+          "fat": 15,
+          "fiber": 4
+        },
+        "signature": {
+          "cal": 470,
+          "protein": 53,
+          "carbs": 23,
+          "fat": 18,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 590,
+          "protein": 63,
+          "carbs": 31,
+          "fat": 23,
+          "fiber": 6
+        }
+      },
+      "ingredients": "Free-Range ABF Chicken Breast, Zucchini, Broccoli, Marinara Sauce (Tomato, Onion, Garlic, Olive Oil, Oregano, Basil, Carrot, Red Pepper Flakes, Sea Salt), Mozzarella Cheese (Milk), Parmesan Cheese, Eggs, Gluten Free Breadcrumbs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+    },
+    "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw": {
+      "nutrition": {
+        "lean": {
+          "cal": 490,
+          "protein": 31,
+          "carbs": 60,
+          "fat": 14,
+          "fiber": 5
+        },
+        "signature": {
+          "cal": 690,
+          "protein": 45,
+          "carbs": 81,
+          "fat": 20,
+          "fiber": 6
+        },
+        "performance": {
+          "cal": 770,
+          "protein": 54,
+          "carbs": 88,
+          "fat": 22,
+          "fiber": 6
+        }
+      },
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Brioche Slider Buns (Enriched Wheat Flour, Water, Eggs, Butter, Sugar, Yeast, Salt, Milk, Whey, Natural Flavors, Monoglycerides, Ascorbic Acid, Enzymes, Calcium Propionate), Chipotle Lime Slaw (Green Cabbage, Red Cabbage, Carrot, Greek Yogurt (Milk), Olive Oil Mayo (Eggs), Chipotle Peppers in Adobo, Lime Juice, Cilantro, Scallions, Jalapeño, Wildflower Honey), Carrots, Fit AF Blueberry BBQ Sauce (Tomatoes, Vinegar, Wild Blueberries, Brown Sugar, Maple Syrup, Carrots, Beets, Red Onion, Worcestershire Sauce, Apple Cider Vinegar, Cinnamon, Cumin, Chili Powder), Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion.",
+      "contains": "Wheat, Milk, Eggs."
+    },
+    "🟠NEW: Thai Basil Beef (Pad Kra Pao) with Coconut Rice": {
+      "nutrition": {
+        "lean": {
+          "cal": 440,
+          "protein": 29,
+          "carbs": 42,
+          "fat": 18,
+          "fiber": 3
+        },
+        "signature": {
+          "cal": 680,
+          "protein": 44,
+          "carbs": 61,
+          "fat": 29,
+          "fiber": 4
+        },
+        "performance": {
+          "cal": 840,
+          "protein": 53,
+          "carbs": 79,
+          "fat": 34,
+          "fiber": 5
+        }
+      },
+      "ingredients": "Flank Steak, Coconut Rice (White Rice, Coconut Milk, Sugar), Broccoli Rabe, Red Bell Peppers, Onions, Carrots, Scallions, Thai Basil Sauce (Gluten-Free Oyster Sauce [Shellfish], Tamari [Soy], Fish Sauce [Fish], Thai Basil, Garlic, Cilantro, Tapioca Starch), Olive Oil, Sea Salt, Black Pepper.",
+      "contains": "Fish, Soy, Shellfish (Oyster)"
+    }
+  }
 }

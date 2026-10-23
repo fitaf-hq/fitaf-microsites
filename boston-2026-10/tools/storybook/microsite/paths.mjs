@@ -18,7 +18,10 @@ export const siteFile = (...parts) => join(SITE, ...parts);
 export const PICKS_DIR = siteFile("data", "picks");
 /** SPEC-meal-selection § 9: the fixture week of the Date control's `fixture` (microsite/layout.js FIXTURE_PICKS). */
 export const FIXTURE_PICKS_DIR = siteFile("test", "fixtures", "picks-v2");
+/** SPEC-every-menu-and-nutrition: the two-menu fixture week (microsite/layout.js FIXTURE_MENUS). */
+export const FIXTURE_MENUS_DIR = siteFile("test", "fixtures", "picks-menus");
 export const SAVE_PATH = siteFile("data", "save.json");
+export const MESSAGES_PATH = siteFile("data", "messages.json");
 export const PLANS_PATH = siteFile("data", "plans.json");
 export const BUILD_SCRIPT = siteFile("build.mjs");
 /** The site's content command (SPEC-week-content § 3): a page's week, since no build embeds one. */

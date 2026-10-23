@@ -28,7 +28,9 @@ test("A3: every answer the built page offers, every answer set and every QR even
   const html = await builtPage();
   const offered = pageAnswers(html);
   assert.deepEqual(offered.goal, plans.individual.map((p) => p.id), "control: the page's goals are data/plans.json's");
-  for (const [q, answers] of Object.entries(QUESTIONS)) assert.deepEqual(offered[q], answers, `control: the page's ${q} answers are build.mjs's`);
+  // The answers as a set: their order on the page is SPEC-meal-selection § 12's (each pair's default first), MS-17's subject.
+  const asSet = (list) => [...list].sort();
+  for (const [q, answers] of Object.entries(QUESTIONS)) assert.deepEqual(asSet(offered[q]), asSet(answers), `control: the page's ${q} answers are build.mjs's`);
   const site = await startBeacon();
   try {
     await site.log();

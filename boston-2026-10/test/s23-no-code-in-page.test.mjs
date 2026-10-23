@@ -19,7 +19,10 @@ for (const [name, file] of [
   test(`S23: save-data in the built page (${name}) — the five fields per offer, no code of any kind`, async () => {
     assert.ok(file.offers.every((o) => "code_mode" in o), `control: ${name} has a code_mode on every offer`);
     const shared = file.offers.filter((o) => o.shared_code).map((o) => o.shared_code);
-    assert.ok(shared.length > 0, `control: ${name} has a shared code to leak`);
+    // Since SPEC-save-offer-production § 10.7 the committed file carries no code at all (its one offer has code_mode
+    // none); the fixture still has a shared code to leak, the control that the check can see one.
+    if (file === offersFile) assert.equal(shared.length, 0, `${name} carries no code (§ 10.7)`);
+    else assert.ok(shared.length > 0, `control: ${name} has a shared code to leak`);
 
     const html = await devPage({ offers: file });
     const data = saveData(html);

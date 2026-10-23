@@ -521,6 +521,199 @@
           "h": 176
         }
       }
+    },
+    "2026-11-01": {
+      "file": "chefs-choice-2026-11-01.jpg",
+      "width": 208,
+      "height": 6448,
+      "cells": {
+        "Vodka Chicken Parm Zucchini Noodle Lasagna": {
+          "x": 16,
+          "y": 16,
+          "w": 176,
+          "h": 176
+        },
+        "Sesame Chicken Teriyaki with Fried Rice": {
+          "x": 16,
+          "y": 224,
+          "w": 176,
+          "h": 176
+        },
+        "Grass-Fed Steak & Parmesan Yukon Wedges": {
+          "x": 16,
+          "y": 432,
+          "w": 176,
+          "h": 176
+        },
+        "BBQ Pulled Pork Cauliflower Mac & Cheese": {
+          "x": 16,
+          "y": 640,
+          "w": 176,
+          "h": 176
+        },
+        "Coffee-Crusted Brisket & Smoked Gouda Mash": {
+          "x": 16,
+          "y": 848,
+          "w": 176,
+          "h": 176
+        },
+        "Free-Range BBQ Turkey Bowl": {
+          "x": 16,
+          "y": 1056,
+          "w": 176,
+          "h": 176
+        },
+        "Blackened Chicken Caesar Salad": {
+          "x": 16,
+          "y": 1264,
+          "w": 176,
+          "h": 176
+        },
+        "Chipotle Chicken Mac & Cheese": {
+          "x": 16,
+          "y": 1472,
+          "w": 176,
+          "h": 176
+        },
+        "Bison Chili": {
+          "x": 16,
+          "y": 1680,
+          "w": 176,
+          "h": 176
+        },
+        "Grass-fed Steak Carnitas Burrito Bowl": {
+          "x": 16,
+          "y": 1888,
+          "w": 176,
+          "h": 176
+        },
+        "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies": {
+          "x": 16,
+          "y": 2096,
+          "w": 176,
+          "h": 176
+        },
+        "Grass-Fed Beef Taco Salad": {
+          "x": 16,
+          "y": 2304,
+          "w": 176,
+          "h": 176
+        },
+        "Smokehouse BBQ Gouda Grass-Fed Burger": {
+          "x": 16,
+          "y": 2512,
+          "w": 176,
+          "h": 176
+        },
+        "Thai Peanut Noodle Salad with Shrimp": {
+          "x": 16,
+          "y": 2720,
+          "w": 176,
+          "h": 176
+        },
+        "Sizzling Chorizo & Organic Egg Scramble": {
+          "x": 16,
+          "y": 2928,
+          "w": 176,
+          "h": 176
+        },
+        "Superberry Greek Yogurt Parfait with Matcha Granola": {
+          "x": 16,
+          "y": 3136,
+          "w": 176,
+          "h": 176
+        },
+        "Cinnamon Swirl Protein Waffles": {
+          "x": 16,
+          "y": 3344,
+          "w": 176,
+          "h": 176
+        },
+        "Thai Peanut Noodle Salad with Chicken": {
+          "x": 16,
+          "y": 3552,
+          "w": 176,
+          "h": 176
+        },
+        "Free-Range Chicken Parm Over Protein Penne": {
+          "x": 16,
+          "y": 3760,
+          "w": 176,
+          "h": 176
+        },
+        "Chipotle Chicken Carnitas Bowl": {
+          "x": 16,
+          "y": 3968,
+          "w": 176,
+          "h": 176
+        },
+        "Pretzel Chicken with Fit-fil-A Sauce": {
+          "x": 16,
+          "y": 4176,
+          "w": 176,
+          "h": 176
+        },
+        "Sardinian Pesto Penne with Chicken": {
+          "x": 16,
+          "y": 4384,
+          "w": 176,
+          "h": 176
+        },
+        "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash": {
+          "x": 16,
+          "y": 4592,
+          "w": 176,
+          "h": 176
+        },
+        "Free-Range Chicken Parm Over Spiralized Noodles": {
+          "x": 16,
+          "y": 4800,
+          "w": 176,
+          "h": 176
+        },
+        "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw": {
+          "x": 16,
+          "y": 5008,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Thai Basil Beef (Pad Kra Pao) with Coconut Rice": {
+          "x": 16,
+          "y": 5216,
+          "w": 176,
+          "h": 176
+        },
+        "Cookies & Cream Protein Dirt": {
+          "x": 16,
+          "y": 5424,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Caramel Apple ProNuts": {
+          "x": 16,
+          "y": 5632,
+          "w": 176,
+          "h": 176
+        },
+        "De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha": {
+          "x": 16,
+          "y": 5840,
+          "w": 176,
+          "h": 176
+        },
+        "🟠NEW: Cheesecake Brownie Bites": {
+          "x": 16,
+          "y": 6048,
+          "w": 176,
+          "h": 176
+        },
+        "Golden Oreo Protein Sand": {
+          "x": 16,
+          "y": 6256,
+          "w": 176,
+          "h": 176
+        }
+      }
     }
   }
 }

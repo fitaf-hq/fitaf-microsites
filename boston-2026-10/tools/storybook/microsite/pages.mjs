@@ -19,7 +19,7 @@ import { promisify } from "node:util";
 import { withClock } from "./clock.mjs";
 import { clockDates } from "./dates.mjs";
 import { BUILDS, DATES, MANIFEST, pagePath } from "./layout.js";
-import { BUILD_SCRIPT, CONTENT_SCRIPT, PAGES_DIR, PLANS_PATH, SAVE_PATH, SITE } from "./paths.mjs";
+import { BUILD_SCRIPT, CONTENT_SCRIPT, MESSAGES_PATH, PAGES_DIR, PLANS_PATH, SAVE_PATH, SITE, siteFile } from "./paths.mjs";
 
 const run = promisify(execFile);
 const OUTPUT_LIMIT_BYTES = 16 * 1024 * 1024;
@@ -27,9 +27,19 @@ const OUTPUT_LIMIT_BYTES = 16 * 1024 * 1024;
 /** The pages' directory of the weeks' sheets, served at /week/ (the content's own URLs). */
 export const WEEK_SHEETS = "week";
 
+/** A date's words (SPEC-every-menu-and-nutrition § 4: a week of an invented second list is made with its own fixture
+ *  words): the site's module at `words` lays them over data/messages.json; written to `dir` for the content's
+ *  --messages. Returns the file's path. */
+export async function wordsFile(words, dir) {
+  const { menusMessages } = await import(pathToFileURL(siteFile(...words.split("/"))).href);
+  const path = join(dir, "messages.json");
+  await writeFile(path, JSON.stringify(menusMessages(JSON.parse(await readFile(MESSAGES_PATH, "utf8"))), null, 2));
+  return path;
+}
+
 /** One build of the site into `out`: `node build.mjs [--env dev] --out <out>`, run in the site. Then, with a `week` (a
  *  delivery Sunday), that week's content (siteContent) put into the page's #picks-data. Returns the content's sheets. */
-export async function siteBuild({ build, out, week = null, picks = null }) {
+export async function siteBuild({ build, out, week = null, picks = null, words = null }) {
   const { env } = BUILDS.find((b) => b.id === build);
   try {
     await run(process.execPath, [BUILD_SCRIPT, ...(env ? ["--env", env] : []), "--out", out], { cwd: SITE, maxBuffer: OUTPUT_LIMIT_BYTES });
@@ -37,7 +47,7 @@ export async function siteBuild({ build, out, week = null, picks = null }) {
     throw new Error(`the site's build failed (${build}):\n${err.stderr || err.message}`);
   }
   if (!week) return [];
-  const { data, sheets } = await siteContent({ build, week, picks });
+  const { data, sheets } = await siteContent({ build, week, picks, words });
   const { pageWithWeek } = await import(pathToFileURL(CONTENT_SCRIPT).href);
   const page = join(out, "index.html");
   await writeFile(page, pageWithWeek(await readFile(page, "utf8"), data));
@@ -45,12 +55,13 @@ export async function siteBuild({ build, out, week = null, picks = null }) {
 }
 
 /** The site's content for `week`, as the job makes it: `node scripts/week-content.mjs --week <week> --out <tmp> [--env
- *  dev] [--picks <picks>]`, run in the site: its data, and its sheets ({ file, bytes }). */
-export async function siteContent({ build, week, picks = null }) {
+ *  dev] [--picks <picks>] [--messages <the date's words>]`, run in the site: its data, and its sheets ({ file, bytes }). */
+export async function siteContent({ build, week, picks = null, words = null }) {
   const { env } = BUILDS.find((b) => b.id === build);
   const out = join(await mkdtemp(join(tmpdir(), "fitaf-storybook-content-")), "out");
   try {
-    const args = [CONTENT_SCRIPT, "--week", week, "--out", out, ...(env ? ["--env", env] : []), ...(picks ? ["--picks", picks] : [])];
+    const messages = words ? ["--messages", await wordsFile(words, join(out, ".."))] : [];
+    const args = [CONTENT_SCRIPT, "--week", week, "--out", out, ...(env ? ["--env", env] : []), ...(picks ? ["--picks", picks] : []), ...messages];
     try {
       await run(process.execPath, args, { cwd: SITE, maxBuffer: OUTPUT_LIMIT_BYTES });
     } catch (err) {
@@ -71,7 +82,7 @@ export async function siteContent({ build, week, picks = null }) {
  *  date) the clock script before the page's own. */
 async function onePage(outDir, build, date) {
   const out = join(outDir, build, date.id);
-  const sheets = await siteBuild({ build, out, week: date.delivery ?? null, picks: date.picks });
+  const sheets = await siteBuild({ build, out, week: date.delivery ?? null, picks: date.picks, words: date.words ?? null });
   for (const { file, bytes } of sheets) await writeFile(join(outDir, WEEK_SHEETS, file), bytes);
   if (!date.instant) return;
   const page = join(outDir, pagePath(build, date.id));

@@ -23,7 +23,7 @@ import {
   card,
   DAYS,
   FIXTURE,
-  headingFor,
+  mealLine,
   midday,
   openedCard,
   openPlanPage,
@@ -35,7 +35,9 @@ import {
 
 const NEXT = "2026-10-11"; // the week after S: its window S − 2 through S + 4
 
-/** Which week the plan page offers at `now` (the heading's week), or null when the card is today's. */
+/** Which week the plan page offers at `now` (its first meal's week: the other week's names carry otherWeek's suffix), or
+ *  null when the card is today's. ⚠ Amended for SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): the heading is
+ *  the menu's name alone, the same for every week, so the week is read from the list it shows, no longer its heading. */
 function offeredAt(html, now) {
   const { state } = openedCard(html, { hash: "#lean-7", now });
   if (!state.list) {
@@ -44,8 +46,8 @@ function offeredAt(html, now) {
     return null;
   }
   assert.equal(state.choose, false, "picks: the single Choose your meals gives way to two");
-  for (const week of [S, NEXT]) if (state.heading === headingFor("7", week)) return week;
-  assert.fail(`an unknown heading: ${state.heading}`);
+  for (const [week, picks] of [[S, FIXTURE], [NEXT, otherWeek(NEXT)]]) if (state.meals[0] === mealLine(picks.menus["7"][0])) return week;
+  assert.fail(`an unknown list: ${state.meals[0]}`);
 }
 
 async function pageWith(files) {

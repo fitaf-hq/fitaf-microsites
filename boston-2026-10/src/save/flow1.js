@@ -18,15 +18,27 @@
   };
 
   // The offer box: the label of the offer a save made now would get — the Worker's own choice, on the date in
-  // the Worker's send time zone. If none can be chosen (offers.json breaks its one-general rule), it stays empty.
-  function offerLabel() {
+  // the Worker's send time zone. SPEC-save-offer-production § 10.7: when no offer is live (after the last one's
+  // valid_to), no offer is offered: neither the box nor this flow is drawn. If the file breaks its at-most-one rule
+  // (offerForSave throws), the box stays empty and the flow is drawn, as before.
+  // § 10.9: the step says the date the pricing is held until, as the Worker will for a save made now: the later of the
+  // offer's last day and tomorrow (the day its E1 is due).
+  function chooseOffer() {
     try {
-      return offerForSave(zonedDate(Date.now(), cfg.send_time_zone), cfg.offers).label;
+      var today = zonedDate(Date.now(), cfg.send_time_zone);
+      var chosen = offerForSave(today, cfg.offers);
+      return chosen
+        ? { live: true, label: chosen.label, held: longDate(heldUntil(chosen, addDays(today, 1))) }
+        : { live: false, label: "", held: "" };
     } catch (e) {
-      return "";
+      return { live: true, label: "", held: "" };
     }
   }
-  var offer = offerLabel();
+  var offer = chooseOffer();
+
+  // The event a save names (SPEC-save-offer-production § 9 item 2): the `?e=` code the page was opened with, read as the
+  // analytics beacon reads it (qrEvent over QR_IDS, the page's analytics script's), else the page's own event.
+  var eventId = qrEvent(location.search, QR_IDS) || cfg.event_id;
 
   // Where this flow sits (SPEC-rung4 § 2b, save the offer at the END): directly after the button that leaves for the
   // store — the result card's once a plan is chosen, the Family card's on Family — and nowhere before a plan is chosen.
@@ -46,13 +58,16 @@
 
   function render(s) {
     var section = el("save");
-    section.hidden = !s.place;
+    section.hidden = !s.place || !offer.live;
+    el("offer-box").hidden = !offer.live;
     if (s.place && section.parentNode !== el(ANCHORS[s.place])) el(ANCHORS[s.place]).appendChild(section);
     var collapsed = s.name === "PLAN" || s.name === "MENU";
     var busy = s.name === "CHECKING" || s.name === "VERIFYING" || s.name === "SENDING";
     var outOfArea = s.name === "OUT_OF_AREA" || s.name === "EXPANSION_SAVED" ||
       (s.kind === "expansion" && (busy || s.name === "ERROR"));
-    el("save-offer-label").textContent = offer;
+    el("save-offer-label").textContent = offer.label;
+    el("save-step-offer-label").textContent = offer.label; // the step names its offer where it asks (SPEC-save-offer-production § 1)
+    el("save-held-date").textContent = offer.held;
     el("save-open").hidden = collapsed;
     el("save-collapsed").hidden = !collapsed;
     el("save-form").hidden = s.name === "SAVED" || s.name === "EXPANSION_SAVED";
@@ -136,7 +151,7 @@
       email: state.email,
       zip: state.zip,
       consent_marketing: state.kind === "offer" && el("save-marketing").checked === true,
-      event_id: cfg.event_id,
+      event_id: eventId,
       wording_version: cfg.wording_version,
       turnstile_token: token
     };

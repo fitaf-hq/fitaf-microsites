@@ -14,8 +14,8 @@ const CONFIRM_URL = `${SAMPLE.siteUrl}/confirm/${SAMPLE.token}`;
 const BODY_WEIGHT = 400;
 
 test("M21: E1 has exactly one button-styled link, See my offer, ticked or not", () => {
-  const { e1_ticked, e1_unticked } = sampleMessages();
-  for (const [name, message] of Object.entries({ e1_ticked, e1_unticked })) {
+  const { e1_ticked, e1_unticked, e1_held_ticked, e1_held_unticked } = sampleMessages();
+  for (const [name, message] of Object.entries({ e1_ticked, e1_unticked, e1_held_ticked, e1_held_unticked })) {
     const buttons = linksOf(message.html).filter((l) => l.buttonStyled);
     assert.equal(buttons.length, 1, `${name}: one button`);
     assert.equal(buttons[0].a.attrs.href, OFFER_URL, `${name}: the button is See my offer`);

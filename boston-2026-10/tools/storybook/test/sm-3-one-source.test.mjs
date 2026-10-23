@@ -7,6 +7,12 @@
 //
 // ⭐ Mutant (in the suite, in a mirror): a copy of the served pages with one CSS rule changed fails the check.
 // STORYBOOK_STATIC=<dir> runs the case against another static build (a copy), to watch it fail there.
+//
+// The site's SPEC-why-fit-af § 6 item 3 (2026-10-21), by the same rule: the frame a story's page carries (the /why/
+// page, read from the page's own <iframe src> and resolved against the page's URL) answers 200 with the site's own
+// build of /why/ (`npm run build` / `npm run build:dev`, its why/index.html), byte for byte. The development page
+// addresses it from the root (/why/), so it is served there with fonts/ and assets/ (microsite/layout.js ROOT_STATIC);
+// the production page's is beside it, under /microsite/.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
@@ -19,6 +25,7 @@ import { CLOCK_ATTRIBUTE } from "../microsite/clock.mjs";
 import { BUILDS, PAGES_ROUTE, pageUrl } from "../microsite/layout.js";
 import { SITE } from "./paths.mjs";
 import { CONTENT_SCRIPT } from "../microsite/paths.mjs";
+import { wordsFile } from "../microsite/pages.mjs";
 import { serveStatic } from "./serve-static.mjs";
 import { readManifest, removeStorybookStatic, storybookStatic } from "./storybook-static.mjs";
 
@@ -36,14 +43,16 @@ after(removeStorybookStatic);
 /** The site's own build of `build`, into a fresh directory: its index.html, with the week `week` (a delivery Sunday)
  *  put in when there is one: `npm run content -- --week <week> --out <dir> [--env dev] [--picks <picks>]` (`picks`, the
  *  fixture week's directory, SPEC-meal-selection § 9), its week/picks-data.json by the site's pageWithWeek. */
-async function freshPage(build, work, dateId, week = null, picks = null) {
+async function freshPage(build, work, dateId, week = null, picks = null, words = null) {
   const out = join(work, `${build}-${dateId}`);
   await run("npm", ["--prefix", SITE, "run", SITE_SCRIPT[build], "--", "--out", out], { maxBuffer: 16 * 1024 * 1024 });
   const html = await readFile(join(out, "index.html"), "utf8");
   if (!week) return html;
   const content = join(out, "content");
   const env = build === "development" ? ["--env", "dev"] : [];
-  await run("npm", ["--prefix", SITE, "run", "content", "--", "--week", week, "--out", content, ...env, ...(picks ? ["--picks", picks] : [])], { maxBuffer: 16 * 1024 * 1024 });
+  // SPEC-every-menu-and-nutrition: a date with its own words (the two-menu fixture week) gives them as --messages.
+  const messages = words ? ["--messages", await wordsFile(words, out)] : [];
+  await run("npm", ["--prefix", SITE, "run", "content", "--", "--week", week, "--out", content, ...env, ...(picks ? ["--picks", picks] : []), ...messages], { maxBuffer: 16 * 1024 * 1024 });
   const { pageWithWeek } = await import(pathToFileURL(CONTENT_SCRIPT).href);
   return pageWithWeek(html, JSON.parse(await readFile(join(content, "week", "picks-data.json"), "utf8")));
 }
@@ -61,7 +70,7 @@ async function oneSource(staticDir) {
         const served = await (await fetch(`${server.base}/${pageUrl(build, date.id)}`)).text();
         const clocks = [...served.matchAll(CLOCK)];
         const own = served.replace(CLOCK, "");
-        const fresh = await freshPage(build, work, date.id, date.delivery ?? null, date.picks);
+        const fresh = await freshPage(build, work, date.id, date.delivery ?? null, date.picks, date.words ?? null);
         checked++;
         const where = `${build}/${date.id} (${date.delivery ? `the week delivered ${date.delivery}` : "no week"})`;
         if (clocks.length !== (date.instant ? 1 : 0)) problems.push(`${where}: ${clocks.length} clock scripts`);
@@ -83,6 +92,44 @@ async function oneSource(staticDir) {
 test("SM-3: each page a story loads is the site's own build for its build and date, but the one clock script", { timeout: BUILD_TIMEOUT_MS }, async () => {
   const { dir } = await storybookStatic();
   assert.deepEqual(await oneSource(dir), []);
+});
+
+/** The page's one frame's src (T5: the page carries exactly one <iframe>, the /why/ frame); null when it has none. */
+function frameSrc(html) {
+  const frames = [...html.matchAll(/<iframe\b[^>]*>/g)];
+  return frames.length === 1 ? (/\bsrc="([^"]+)"/.exec(frames[0][0])?.[1] ?? null) : null;
+}
+
+test("SM-3 (SPEC-why-fit-af § 6 item 3): each story's page's /why/ frame answers 200 with the site's own build of /why/, the development page's (at the root) and the production page's (beside it)", { timeout: BUILD_TIMEOUT_MS }, async () => {
+  const { dir } = await storybookStatic();
+  const manifest = await readManifest(dir);
+  const server = await serveStatic(dir);
+  const work = await mkdtemp(join(tmpdir(), "fitaf-storybook-sm-3-why-"));
+  const answers = [];
+  try {
+    for (const build of BUILDS.map((b) => b.id)) {
+      const out = join(work, build);
+      await run("npm", ["--prefix", SITE, "run", SITE_SCRIPT[build], "--", "--out", out], { maxBuffer: 16 * 1024 * 1024 });
+      const why = await readFile(join(out, "why", "index.html"), "utf8");
+      for (const date of manifest.dates.filter((d) => d.on)) {
+        const at = new URL(`${server.base}/${pageUrl(build, date.id)}`);
+        const src = frameSrc(await (await fetch(at)).text());
+        const frame = src && new URL(src, at);
+        const res = frame ? await fetch(frame) : null;
+        const body = res ? await res.text() : null;
+        answers.push({ page: `${build}/${date.id}`, src, status: res?.status ?? null, built: body === why });
+      }
+    }
+  } finally {
+    await server.close();
+    await rm(work, { recursive: true, force: true });
+  }
+  assert.ok(answers.filter((a) => a.page.startsWith("development/")).length >= 1, `fixture control: a development page was read (${answers.length})`);
+  assert.deepEqual(
+    answers.filter((a) => a.status !== 200 || !a.built),
+    [],
+    "every story's frame answers 200 with the site's built /why/ page",
+  );
 });
 
 test("SM-3 (mutant): a page served from a copy with one CSS rule changed fails", { timeout: BUILD_TIMEOUT_MS }, async (t) => {

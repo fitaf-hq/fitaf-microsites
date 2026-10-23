@@ -1,0 +1,11 @@
+/* The privacy notice's page, /privacy/ (SPEC-save-offer-production § 9 item 1): consent/DRAFT.md § 6, in the template's
+   fonts and colours (build.mjs privacyPage puts the template's :root tokens and @font-face rules before these). Tokens
+   only: npm run contrast reads this file, and every pair it draws is in src/contrast-pairs.json ("build": "privacy"). */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--white); color: var(--ink); font: 400 16px/1.6 var(--body); }
+.privacy { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; }
+.logo { display: block; width: 88px; height: 56px; margin: 0 0 20px; }
+h1 { margin: 0 0 16px; font: 700 30px/1.2 var(--head); color: var(--navy); }
+p { margin: 0 0 14px; }
+strong { font-weight: 600; color: var(--navy); }
+.draft-tag { margin: 0 0 12px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--draft); }

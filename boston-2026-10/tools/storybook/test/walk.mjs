@@ -45,7 +45,9 @@ function inspect() {
     pageHeight: doc?.documentElement.scrollHeight ?? null,
     path: frame?.contentWindow?.location.pathname ?? null,
     ccList: shown("#cc-list"),
-    meals: all("#cc-meals li").map((li) => li.textContent),
+    // A meal's line is its name's (.cc-name): a meal with nutrition also holds its panel (the site's
+    // SPEC-every-menu-and-nutrition § 3), whose words are not the line; the site's SPEC-week-content § 9.
+    meals: all("#cc-meals li").map((li) => li.querySelector(".cc-name")?.textContent ?? null),
     tiles: all("#cc-meals li .cc-thumb").length,
     chooseYourMeals: shown("#result-cta"),
     gridLinks: shown("#all") ? all("#all a").length : 0,

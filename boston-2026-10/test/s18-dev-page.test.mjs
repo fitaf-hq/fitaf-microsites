@@ -7,13 +7,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import events from "../data/events.json" with { type: "json" };
 import saveConfig from "../data/save.json" with { type: "json" };
-import { build, renderPage, ROOT, TURNSTILE_SCRIPT_URL } from "../build.mjs";
+import { build, DEV_ASSET_PREFIX, renderPage, ROOT, TURNSTILE_SCRIPT_URL } from "../build.mjs";
 import { offerForSave } from "../src/worker/offers.js";
 import { zonedDate } from "../src/worker/zoned-time.js";
-import { isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
+import { assertOneWhyFrame, isSameOrigin, loadedUrls, loadPlans } from "./helpers.mjs";
 import { devPage } from "./dev-page.mjs";
 import { assertPageBudget } from "./page-budget.mjs";
-import { simulatePage } from "./page-sim.mjs";
+import { PAGE_NOW_MS, simulatePage } from "./page-sim.mjs";
 
 const devHtml = await devPage();
 const prodHtml = await renderPage(await loadPlans());
@@ -59,7 +59,13 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   const all = [...one, ...two].flatMap(pieces);
   assert.equal(all.length, 13, "9 paragraphs -> 2 + 1 + 4 + 1 + 1 + 1 + 3 = 13 pieces");
   assert.deepEqual(all.map(isOfferLine), [false, true, ...Array(11).fill(false)], "one piece is the offer line: the second, under the heading");
-  for (const piece of all.filter((p) => !isOfferLine(p))) assert.ok(text.includes(piece), `missing from the page: ${piece}`);
+  // SPEC-save-offer-production § 9 item 1: DRAFT § 1's "[Privacy notice]" is the form's link to /privacy/ (data/save.json
+  // privacy_notice_url), so the page shows its words without the brackets, as a link.
+  // SPEC-save-offer-production § 10.9: the step's "[date]" is a slot the page's script fills with the date held (SP17
+  // reads it filled); in the markup it is empty.
+  const linked = (piece) => piece.replace("[Privacy notice]", "Privacy notice").replace("[date]", "");
+  for (const piece of all.filter((p) => !isOfferLine(p))) assert.ok(text.includes(linked(piece)), `missing from the page: ${piece}`);
+  assert.match(devHtml, /<a class="save-privacy" href="\/privacy\/">Privacy notice<\/a>/, "the notice linked (§ 9 item 1)");
   // SPEC-rung4 § 2b item 3: DRAFT § 1's last line (below the form, "Build my plan →") no longer applies at the end, where
   // the visitor has built the plan; the skip link is not on the page. (Its paragraphs above are checked as before.)
   assert.ok(!text.includes("Build my plan →"), "no skip link (§ 2b item 3)");
@@ -67,9 +73,9 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   // The offer line (§ 2a): a slot under the heading, filled in the browser with offers.json's own label.
   assert.ok(!text.includes(all[1]), "the draft's literal offer line is not on the page");
   assert.match(devHtml, /<h2 id="save-title">Your Boston offer<\/h2>\s*<p class="save-offer"><strong id="save-offer-label"><\/strong><\/p>/);
-  const now = Date.now();
+  const now = PAGE_NOW_MS; // a day of the offer (SPEC-save-offer-production § 10.7: after the last one, no step is drawn)
   const label = offerForSave(zonedDate(now, saveConfig.send_time_zone)).label;
-  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, label, "offers.json's own label (`[The offer]` today)");
+  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, label, "offers.json's own label");
 });
 
 test("S18: marked `DRAFT — not for use · wording v0.3-draft`; the production page carries none of it", () => {
@@ -102,7 +108,9 @@ test("S18 (dev T5): the only external script is Turnstile; the only fetch is the
   const fetches = [...devHtml.matchAll(/\bfetch\s*\(([^,]+),/g)].map((m) => m[1]);
   assert.deepEqual(fetches, ["cfg.api"]);
   assert.match(devHtml, /"api":"\/api\/save"/);
-  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|@import|<iframe\b|localStorage|sessionStorage|document\.cookie/i);
+  assert.doesNotMatch(devHtml, /<link\b|XMLHttpRequest|@import|localStorage|sessionStorage|document\.cookie/i);
+  // T5 amended by SPEC-why-fit-af.md § 2 item 2: one <iframe>, the /why/ page's frame, same-origin (loadedUrls reads it).
+  assertOneWhyFrame(devHtml, "S18", DEV_ASSET_PREFIX);
   // T5 amended by SPEC-analytics.md § 4, here as on the production page: exactly one sendBeacon, to /a.
   assert.equal([...devHtml.matchAll(/sendBeacon/g)].length, 1, "exactly one sendBeacon");
   assert.match(devHtml, /\bnavigator\.sendBeacon\(\s*(["'])\/a\1\s*,/, "its URL is /a");
