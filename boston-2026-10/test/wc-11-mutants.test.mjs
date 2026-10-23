@@ -115,9 +115,15 @@ test("WC-11: the '..' refusal alone removed fails WC-5", async () => {
 });
 
 // The build embedding the week open on the case's date: the page's slots made from data/picks/ again, its window read
-// against 2026-10-11 (WC-12's --on), as the build did before § 7's ruling.
-const NO_WEEK_LINE = "  const weeks = []; // ⛔ SPEC-week-content § 7's ruling: no build embeds a week; the bucket is the only source of one.\n";
-const OPEN_WEEK = '  const weeks = (await readPicks(join(ROOT, "data", "picks"), plans)).filter((w) => windowOf(w.delivery).valid_to >= "2026-10-11");\n';
+// against 2026-10-11 (WC-12's --on), as the build did before § 7's ruling. SPEC-week-content § 9 (a guard over the
+// committed weeks holds whatever is committed): the picks read with the menus' words, as the content command reads them,
+// so a five-menu week is read and embedded (read with Chef's Choice alone, it refused 2026-11-01's "poultry-and-fish").
+const NO_WEEK_LINE =
+  "  const weeks = []; // ⛔ SPEC-week-content § 7's ruling: no build embeds a week; the bucket is the only source of one.\n" +
+  "  const words = chefsChoiceWords(messages);\n";
+const OPEN_WEEK =
+  "  const words = { ...chefsChoiceWords(messages), ...menuWords(messages) };\n" +
+  '  const weeks = (await readPicks(join(ROOT, "data", "picks"), plans, null, words)).filter((w) => windowOf(w.delivery).valid_to >= "2026-10-11");\n';
 
 // The weeks that mutant embeds: every committed week whose window has not ended by WC-12's date (2026-10-11), computed
 // from data/picks/ as the mutant reads it (once 2026-10-25.json was committed, two: a literal ["2026-10-18"] went stale).
