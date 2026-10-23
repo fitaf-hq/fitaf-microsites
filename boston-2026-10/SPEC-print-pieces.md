@@ -547,3 +547,69 @@ Owner leaves for Boston on Saturday 2026-10-24: **a proof tonight comes first**;
 6. **Then** (the orchestrator's, after the Advisor's look at the proofs): Fit AF's `scripts/print-delivery/` makes the
    print-ready sheet for the Owner's printer (two up on letter with crop marks, the tout and the card), every PDF read as
    on 2026-10-21.
+
+### 17.1 Built, 2026-10-23 — found at the build, not ruled
+
+1. **The cases are QG31–QG34**, not Q31–Q34: § 16.1 already holds Q31 (`test/q31-owners-five.test.mjs`), so, as § 11's
+   Q12–Q15 became QE12–QE15, these are `test/qg31-tout.test.mjs`, `qg32-entry-card`, `qg33-proof`, `qg34-unchanged`,
+   their shared checks `test/qg-checks.mjs` and the two mutants `test/qg-mutants.test.mjs`, "G" for the giveaway.
+2. ⚠ **The two pieces are not in `PRINT_PIECES`** (item 1 says they are): they are `GIVEAWAY_PIECES`, beside it in
+   `print/sizes.mjs`. `PRINT_PIECES`' own contract is that each `id` is a mock-up's (`mockups/pieces.mjs` `PIECES`), and
+   Q6, Q7 and Q8 iterate it as the mock-ups' printed faces (Q7 compares each piece's text with its mock-up's, Q8 its legend
+   with its mock-up's): neither piece has a mock-up, so in that list Q7 and Q8 would have gone red, or been amended, where
+   item 1 asks Q1–Q30 green. Moving them is one line, and Q7 and Q8 then need a filter.
+3. ⚠ **A proof while the words are unapproved, as well as while a bracket remains.** Item 4 names the brackets; § 13 item
+   3, which this section cites for the words, makes a piece of unapproved words a proof. Both are built: the tout's words
+   become final with `"approved": true`, as front B's; the entry card's with `<!-- approved -->` as its last line, as the
+   flyer's back's. So today's tout, whose words hold no bracket, is **`tout-PROOF`**, its last line naming the words
+   unapproved; QG33's "none does not" is read with the words approved and the photo present. One rule to drop if the
+   orchestrator rules brackets alone.
+4. **Where the parts sit (the first proposal, for the Advisor to redirect).** The tout, 720 × 480 layout px: across the
+   top, 2.1 in tall (`TOUT_TOP_IN`), the dark band (into the bleed on the top and the left) and the flyer's photo beside it,
+   2.5 in wide (`TOUT_PHOTO_W_IN`; into the bleed on the top and the right; its caption at its lower left, as front B's);
+   under both, the orange foot (into the bleed on the left, right and bottom), front B's torn edge over them: at its left
+   the banner and under it the fine print (14 layout px, white), then `scan` (18 px, right-aligned) beside the QR code (1
+   in, front B's level-H code with the logo at its centre on its white tile), `eatfitaf.com` under it. Why: the headline is
+   read first and largest (42 px; at 44 px its first line ran against the logo); the photo stays near its own 3:2 (its window
+   1.19:1, 75% of its width shows; a full-height photo at the side would have shown under half); the foot is the one
+   orange field front B has, wide enough for the fine print in four lines beside the code. The foot's dot texture (§ 15
+   item 2b) is left off: its patches are drawn for the flyer's foot and would have fallen behind the fine print. The
+   entry card: white, ink, `--cta` its one accent (the two headings); the front, its heading, four fields each a label over
+   a 2 px ink line, the lines 0.55 in apart (`ENTRY_LINE_PITCH_IN`; at 0.5 the labels sat flush under the line above),
+   the draw and consent lines at its foot, kept clear of the logo (72 px, bottom right); the back, its heading, the rules at
+   14 px, and a row for the logo under them.
+5. **The tout takes front B's look by its rules, not a copy**: its piece's `look: "flyer"` puts `print-flyer` beside
+   `print-tout` on its page's body, so print.css's `.print-flyer .fb-*` draw its band, logo, banner, code and caption, and
+   `.print-tout` rules after them lay it out landscape. Front B's markup and rules are unchanged.
+6. **Fit, measured, not guessed** (`data-fit` boxes, `measure.js` `fits`, `checks.mjs` `giveawayFindings`): the band, each
+   headline line (the first one clear of the logo), the foot, the entry card's front and its rules. Across, a box's words
+   are their glyphs (a Range); down, their lines (each run's nearest block), because a glyph's box is its font's whole
+   height and overhangs a tight line: the first build read the set headline as 9.0 layout px over its own lines. The
+   first build also refused the headline's first line as 0.11 in from the top trim (its band's padding 22 px, front B's 26: now 26),
+   and drew the logo against the headline's first line (front B's logo sits a bleed further in, its band running into the right bleed):
+   the logo now sits in the band's padding, 104 px wide, the first line 14 px clear of it.
+7. **The proofs** (the glam set, `data/flyer-front.json`, the KMS's names, `tout-words.json` and `entry-card-words.md`),
+   into the ignored `dist-print/tout-2026-10-23/`: `tout-PROOF.pdf` (one page, 450 × 306 pt) and `.png`;
+   `entry-card-PROOF.pdf` (two pages) and `entry-card-PROOF.png`, `entry-card-back-PROOF.png`. Read from the PDF: every
+   word present (pdftotext); the tout's code decodes to `https://eatfitaf.com/?e=boston` drawn at 300 and 150 dpi and in
+   the 1× PNG (jsQR); the smallest type 14 layout px; the report's fit lines: the tout 19.5 layout px to spare (below
+   or to the right of its closest box's words), the card's front 0 (its draw and consent lines are set at its foot, so their
+   room is the space above them), its back 1.6 (its longest line, to the right). The card's last line names its four brackets. Not committed:
+   the tout carries a photo.
+8. **The cases, before and after.** Written after a first proof (the orchestrator's order: the proof tonight first) and
+   run on the base, `7974573`, exported by `git archive` into a scratch folder: `node --test` over the four files there
+   (15:42), 0 of 4 files pass (QG31, QG32 and QG33 at import: no `print/tout.mjs`, `print/entry.mjs`, `bracketsOf`; QG34 skips
+   there, no git); and each check function over the base (15:42–15:46): QG31 "no tout was built", and "headline line 1
+   too long was not refused", "the foot too long was not refused"; QG32 "no entry card was built"; QG33 throws (no
+   `print/entry.mjs`); QG34 "with the flags the build adds  , not …" (the five). On this tree: QG31–QG34 and the mutants,
+   13 of 13 (in the print set, item 9). **The mutants**: the fit refusal off (`checks.mjs`), QG31 red ("headline line 1 too long was not refused";
+   the foot's overflow is still refused, by the safe margin, as § 12's overflow mutant found); the bracket rule off
+   (`pages.mjs` `BRACKET`), QG33 red (3 problems); each after its unchanged mirror's control, green. **QG34's own control**
+   (a one-off, not a case): this tree with the flyer's logo 2 px wider against the base: 11 files differ (every flyer's
+   PDF and PNG and the four-up), so its byte comparison can fail.
+9. **The print set**, every `test/q*.test.mjs` and `test/p*.test.mjs` (`nice -n 15 node --test`), on `7974573` and this
+   section's code uncommitted (`7e728e9` less one report string: the "to spare" figure printed `-0.0`), 15:43:52–15:58:35:
+   **228 of 228**, none skipped. Commits: the cases `b0d850a`, the code `7e728e9`; the gates at this section's commit
+   below.
+10. ⚠ **Not done here**: item 6 (the print-ready sheet, the orchestrator's after the Advisor's look). `print/README.md`'s
+    table still has no rows for Q27–Q31 (§ 16.1 item 6); QG31–QG34 have theirs.
