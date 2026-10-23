@@ -506,3 +506,44 @@ record § 7o item 2); this is his list.
    (`pdftocairo`), the five icons and labels legible and none clipped. Not committed: the back carries the photos.
    Item 5 (the print-ready pages and the 4-up) waits for his look.
 6. ⚠ `print/README.md`'s table of cases stops at Q26 (and the QB mutants): Q27–Q31 have no row. Not changed here.
+
+## 17. Amendment, 2026-10-23: the giveaway tout and its entry card, 4 × 6 in. CONTRACT, before any code
+
+**Why.** The Advisor (2026-10-23, afternoon): *"a 4" x 6" "Drop your business card to win" (plus maybe blank entry cards
+…) … The Owner just got 2 acrylic raffle containers that each have a slot for a 4x6" flyer (landscape orientation). The
+idea is to do very passive contact gathering."* One winner across the week of Boston events (2026-10-26 to 10-29); every
+entrant may be emailed. ⚠ **It is a drawing, never called a raffle** (in Massachusetts a raffle is a licensed
+nonprofit's): no purchase, and rules on the entry card. The words are **not approved** and stay outside this repository
+(§ 13 item 3): Fit AF's `docs/design-analysis/2026-10-23-giveaway-tout/` holds them, given to the build by flag. The
+Owner leaves for Boston on Saturday 2026-10-24: **a proof tonight comes first**; the release is the Advisor's.
+
+1. **Two new pieces** in `print/sizes.mjs` `PRINT_PIECES`, each one face with § 2's bleed and safe margin:
+   **`tout`**, 6 × 4 in **landscape**, one side (it stands in the box's slot), and **`entry-card`**, 6 × 4 in landscape,
+   **two sides** (the front the fields, the back the rules, upright for a flip on the long edge, as § 12's flyer).
+   Built by `npm run build:print` beside the others only when their words are given: `--tout-words FILE` (JSON) and
+   `--entry-words FILE` (Markdown, its `# Front` and `# Back`). Without them the build writes what it writes today
+   (Q1–Q30 green and every existing file byte-identical: the case says so).
+2. **The tout is front B's look, laid out landscape** (§§ 13–15, the face `mockups/pieces.mjs` draws for the flyer,
+   not a new style): the dark band with the headline (its `*…*` accent green, as front B's), the lede, and the **reversed
+   logo** (§ 15 item 1) at the band's top right; **one photo** of the glam set (the flyer's first, its caption as the
+   flyer prints it) running into the bleed on its side; the **orange foot** with § 15's **banner** ribbon (`banner`), then
+   a **QR code** of § 11's `boston` code (at least 0.75 in square; `scan` beside it and `eatfitaf.com` under it), and
+   **the fine print** (`fine`) at the type floor or larger (§ 12 item 3's 14 layout px), never shrunk below it. Where the
+   parts sit is the builder's first proposal, measured and drawn as a PNG proof; the Advisor redirects. Anything that
+   does not fit is refused, naming by how much (§ 12 item 5), never shrunk.
+3. **The entry card is plain, for a pen**: the front its heading, the four fields as **writing lines** (a label above
+   each, at least 0.3 in between lines; the optional ones say so), the draw line and the consent line; the back the rules
+   at the type floor, the logo small at the bottom right on both sides. White ground, the template's ink and one accent
+   (no photo), so it prints on any card stock and a pen writes on it.
+4. **`-PROOF` while a placeholder remains** (§ 1's rule): a `[bracket]` in either words file names the file
+   `…-PROOF.pdf`/`.png`, and the report lists each bracket. The words today carry four (the prize, its value, where it is
+   delivered, the sponsor's legal name and address).
+5. **Cases first, run red**: Q31 the tout (its page 6.25 × 4.25 in with bleed, landscape, one page; the parts present
+   from the PDF's own text: the headline's lines, the banner, `eatfitaf.com`, the fine print whole; the QR code decodes to
+   the `boston` URL, § 11's reading; no text outside the safe margin; nothing under the type floor), Q32 the entry card
+   (two pages, the same size; the front's four field labels and the consent line, the back's rules whole, both read from
+   the PDF; the writing lines present and their spacing), Q33 the `-PROOF` rule (a bracket proofs, none does not), Q34
+   the build without the flags unchanged. A mutant each for Q31's fit check and Q33's bracket rule.
+6. **Then** (the orchestrator's, after the Advisor's look at the proofs): Fit AF's `scripts/print-delivery/` makes the
+   print-ready sheet for the Owner's printer (two up on letter with crop marks, the tout and the card), every PDF read as
+   on 2026-10-21.
