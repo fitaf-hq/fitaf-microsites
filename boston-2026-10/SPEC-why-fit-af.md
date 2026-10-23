@@ -53,7 +53,7 @@ re-gated by the orchestrator.** §§ 1–3 and 5 are unchanged.
 | W2: in Chrome, the button opens the dialog modally, focus in, the frame loaded at `/why/` (its title the source's), inside the viewport and at least 3/4 of its height, the page scrolling inside it; Esc, the close button and the backdrop each close it, focus back on the button; production at 390 (`#lean-7`) and 1280 (`#family`), development `/demo/` at 390 | `tools/storybook/test/w-why-chrome.test.mjs` | 0 of 3 (no button to press) | 3 of 3 |
 | W3: in Chrome with JavaScript off: neither the button nor the dialog nor its frame shown; the footer's one link, the button's label, to `/why/`, which opens it; the plans dialog still shown (control); the same three pages | the same | 0 of 3 | 3 of 3 |
 | W2's mutant: a copy of the production build without the one script line naming `#why-link` (the button wired to nothing) fails W2 (*the button did not open the dialog*); the copy as built passes (its control) | the same | 0 of 1 (no such line) | 1 of 1 |
-| W4: `npm run content` at this tree byte-identical to `6e0f6bd`'s own tree (`git archive`), 2026-10-25 and 2026-11-01, prod and `--env dev`: the files, the report, the message, the exit | `test/w4-content-unchanged.test.mjs` | 5 of 5 (an invariance case: nothing had changed) | 5 of 5 |
+| W4: `npm run content` at this tree byte-identical to `6e0f6bd`'s own tree (`git archive`), 2026-10-25 and 2026-11-01, prod and `--env dev`: the files, the report, the message, the exit | `test/w4-content-unchanged.test.mjs` | 5 of 5 (an invariance case: nothing had changed) | 5 of 5; ⚠ 3 since SPEC-week-content § 9 (the control and 2026-10-25's two: 2026-11-01's half retired, item 13) |
 
 **Where § 2 was silent, or another contract's case stood in its way, and what was done** (found at the build, not ruled)
 
@@ -89,7 +89,10 @@ re-gated by the orchestrator.** §§ 1–3 and 5 are unchanged.
     `[data-goal],[data-q],[href],#all-link`, and `#why-link` is none of them).
 13. **W4's second week**: there is no `data/picks/2026-11-01.json` at either tree, so `npm run content` refuses that
     week at both (*no picks file*), the same message, nothing written; W4 compares that refusal. ⚠ W4 pins `6e0f6bd`'s
-    inputs: the week's picks file, when it is committed, turns its 2026-11-01 half red by design.
+    inputs: the week's picks file, when it is committed, turns its 2026-11-01 half red by design. ⚠ Since
+    SPEC-week-content § 9 item 2 (2026-10-23) that half is retired by the case itself instead (a week is compared only
+    while its picks file is alike at both trees, or absent from both), and W4 is 3 cases: the control and 2026-10-25's
+    two.
 14. ⬜ **The /why/ page's one link** (its button back to `/`), pressed inside the dialog, opens the plan page inside
     the frame: the page nested in its own dialog. /why/ is unchanged by § 2 item 5, so nothing was changed for it; for
     the Advisor: the dialog closing on it, a `target="_top"` on the /why/ page, or as it is.

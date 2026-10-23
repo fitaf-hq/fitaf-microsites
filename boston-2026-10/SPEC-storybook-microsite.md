@@ -42,9 +42,11 @@ site's own build writes it.
    (`SPEC-chefs-choice.md` § 2), so from Friday 10-02 week B's card is gone from the real page. A story that shows the
    card **fixes the frame's clock** to a date inside a committed week's window, by **one script placed before the
    page's own**, the page's bytes otherwise exactly the build's; the story's caption names the date. The **Date**
-   control offers: *today* (the real clock), *a week with picks* (the latest committed week's Thursday, `S − 3`, noon in
-   `data/save.json`'s `send_time_zone`), and *no picks* (the day after the last committed window). The build's `--on`
-   is the same date, so the page carries that week.
+   control offers: *today* (the real clock), *a week with picks* (the latest committed week that is not updating, its
+   Thursday, `S − 3`, noon in `data/save.json`'s `send_time_zone`; since the site's SPEC-week-content § 9 a later
+   updating week, its § 8 item 1's `"updating": true` with no list, is passed over, as `microsite/dates.mjs` reads it),
+   and *no picks* (the day after the last committed window, of any kind). The build's `--on` is the same date, so the
+   page carries that week.
 5. ⛔ **No request leaves the machine**: the page makes none (`SPEC.md` § 1), and Storybook's own are off.
 
 ## 3. The stories
