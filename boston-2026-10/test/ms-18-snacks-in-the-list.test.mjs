@@ -30,7 +30,9 @@ function cardReading(page) {
   const nodes = readingOrder(page.el("result"));
   const from = nodes.findIndex((n) => inside(n, start));
   assert.ok(from >= 0, "control: the list is shown");
-  return nodes.slice(from).map((n) => [n.id || n.localName, n.textContent.replace(/\s+/g, " ").trim()]);
+  // SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23): a meal's count is a badge on its tile, the rest of its line visually
+  // hidden inside its name's span, so it is read with the name (the span's words are the line, as before), not apart.
+  return nodes.slice(from).filter((n) => !n.classList.contains("visually-hidden")).map((n) => [n.id || n.localName, n.textContent.replace(/\s+/g, " ").trim()]);
 }
 
 /** The reading § 12 item 3 gives: the heading, the meals, [the snacks' heading and lines], [the not-carted line], the two

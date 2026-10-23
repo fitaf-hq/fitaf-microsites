@@ -59,8 +59,11 @@ const PLAN_PATH = "/";
 const SETTLE_MS = 750;
 /** SPEC-every-menu-and-nutrition § 11 item 5: "at least 64 CSS px tall" (the card's touch target, § 10). */
 const TARGET_PX = 64;
-/** § 11.2: the chip's look, as drawn (computed), compared property by property with an unselected chip's. */
-const LOOK = ["color", "backgroundColor", "borderTopWidth", "borderTopStyle", "borderTopColor", "borderBottomColor", "borderTopLeftRadius", "fontFamily", "fontSize", "fontWeight", "lineHeight", "paddingLeft", "paddingRight", "textDecorationLine", "cursor"];
+/** § 11.2: the chip's look, as drawn (computed), compared property by property with an unselected chip's. ⚠ AMENDED by
+ *  the site's SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23): the chips are sized by their grid (three or two to a row,
+ *  their words wrapping inside them), so their side padding is the grid's fit, not their look; the button keeps its own,
+ *  sized to its words (SIDE_ALLOWANCE_PX holds that), and every other property of the look is compared as before. */
+const LOOK = ["color", "backgroundColor", "borderTopWidth", "borderTopStyle", "borderTopColor", "borderBottomColor", "borderTopLeftRadius", "fontFamily", "fontSize", "fontWeight", "lineHeight", "textDecorationLine", "cursor"];
 /** § 11.2: its focus ring, as the chips have it (read with the focus from the keyboard). */
 const RING = ["outlineStyle", "outlineWidth", "outlineColor", "outlineOffset"];
 /** "Sized to its text with horizontal padding": the button no wider than its words and this much on each side. */

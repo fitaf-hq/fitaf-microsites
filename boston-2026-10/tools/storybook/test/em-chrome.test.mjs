@@ -237,19 +237,38 @@ async function baseSite() {
   await weekSite(baseOut, { picks: ms.V2_DIR, week: em.MENUS_WEEK, messages: JSON.parse(await readFile(join(pkg, "data", "messages.json"), "utf8")), weekData: base.weekData, pageWithWeek: base.pageWithWeek });
 }
 
+/** ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23): a meal chosen more than once is drawn anew (its
+ *  count a badge on its tile, the rest of its line visually hidden in its name), so EM2 holds those rows' name, badge and
+ *  hidden words apart and every other box to the base's; such a row is known by its line matching the words' meal_qty
+ *  (read from the site, never written here: SM-4), on either page. */
+const COUNTED = (() => {
+  const [before, after] = WORDS.chefs_choice.meal_qty.split("{meal}");
+  const side = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{n\\}", "\\d+");
+  return `^${side(before)}[\\s\\S]+?${side(after)}$`;
+})();
+
 /** Runs in the page: the result card's drawn text, and each drawn box in it (its tag, id or class, and rectangle, from
  *  the card's own top left: since § 11 item 5 the Why Fit AF? button above the tabs moves the whole card down the page,
- *  and the card itself is what EM2 holds to the base's). */
-function readResult() {
+ *  and the card itself is what EM2 holds to the base's). Since SPEC-ui-and-copy-pass § 1 item 8 the text reads each meal's
+ *  line whole (its visually hidden words, on their own line in innerText, joined back), and a counted meal's name, badge
+ *  and hidden words are left out of the boxes (`counted`, COUNTED's source). */
+function readResult(counted) {
   const result = document.getElementById("result");
   const at = result.getBoundingClientRect();
+  const twice = new RegExp(counted);
+  const isCounted = (el) => {
+    const name = el.closest("li")?.querySelector(".cc-name");
+    return Boolean(name) && twice.test(name.textContent.replace(/\s+/g, " ").trim()) && el.matches(".cc-name, .cc-qty, .visually-hidden");
+  };
+  let text = result.innerText;
+  for (const hidden of result.querySelectorAll(".cc-name .visually-hidden")) text = text.replace(`\n${hidden.textContent.trim()}\n`, ` ${hidden.textContent.trim()}\n`);
   const boxes = [...result.querySelectorAll("*")]
-    .filter((el) => el.checkVisibility())
+    .filter((el) => el.checkVisibility() && !isCounted(el))
     .map((el) => {
       const r = el.getBoundingClientRect();
       return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${el.className} ${[r.x - at.x, r.y - at.y, r.width, r.height].map((n) => Math.round(n * 10) / 10).join(",")}`;
     });
-  return { text: result.innerText, boxes, group: Boolean(document.getElementById("cc-menus")?.checkVisibility()) };
+  return { text, boxes, group: Boolean(document.getElementById("cc-menus")?.checkVisibility()) };
 }
 
 test("EM2: a week of one list shows no chooser, and the card as the base's, its text (the heading by § 11 item 1) and every box (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
@@ -258,8 +277,8 @@ test("EM2: a week of one list shows no chooser, and the card as the base's, its 
   await baseSite();
   for (const { width } of Object.values(VIEWPORTS)) {
     for (const hash of ONE_HASHES) {
-      const after_ = await withPage({ dir: oneOut, hash, width }, (page) => page.evaluate(readResult));
-      const before = await withPage({ dir: baseOut, hash, width }, (page) => page.evaluate(readResult));
+      const after_ = await withPage({ dir: oneOut, hash, width }, (page) => page.evaluate(readResult, COUNTED));
+      const before = await withPage({ dir: baseOut, hash, width }, (page) => page.evaluate(readResult, COUNTED));
       const first = ms.V2_CARTS[hash.replace(/^#[a-z]+-/, "").replace(/-s$/, "")].items[0].display;
       assert.ok(before.text.includes(first), `control: ${BASE}'s card at ${width} ${hash} shows the week (${first})`);
       assert.equal(after_.group, false, `${width} ${hash}: no chooser`);

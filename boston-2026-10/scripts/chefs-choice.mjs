@@ -568,6 +568,8 @@ function cardHtml(template, words, file = "card.html", markup = {}) {
     SNACKS_NOT_CARTED: words.snacks_not_carted,
     UPDATING: words.updating, // SPEC-week-content § 8 item 3: the updating card, hidden until a week says `updating`
     MENUS_LABEL: words.menus_label, // SPEC-every-menu-and-nutrition § 2: the chooser's own name
+    // SPEC-ui-and-copy-pass § 1 item 8: the phrase the content writes a meal's count with, which the card reads it back by
+    MEAL_QTY: words.meal_qty,
   };
   const html = template.replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
     if (key in markup) return markup[key];

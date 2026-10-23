@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import offersFile from "../data/offers.json" with { type: "json" };
 import plans from "../data/plans.json" with { type: "json" };
 import { renderPage } from "../build.mjs";
-import { hiddenInTree, openPlanPage } from "./cc-harness.mjs";
+import { openPlanPage } from "./cc-harness.mjs";
 import { devPage } from "./dev-page.mjs";
 import { loadPlans } from "./helpers.mjs";
 import { FIXTURE_OFFERS } from "./offer-box-fixture.mjs";
@@ -50,7 +50,7 @@ function gridAt(html, now) {
       label: cell.getAttribute("aria-label"),
     };
   }
-  assert.equal(hiddenInTree(page.el("all")), true, "control: the dialog is closed (its cells are drawn when opened)");
+  assert.equal(page.el("all").hasAttribute("open"), false, "control: the dialog is closed (its cells are drawn when opened)");
   return out;
 }
 

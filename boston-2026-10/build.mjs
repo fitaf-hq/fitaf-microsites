@@ -388,9 +388,25 @@ export const DEV_PHOTO_HOST = 1;
 const MENU_LINK =
   '\n            <p class="skips"><button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button></p>';
 
+/** SPEC-ui-and-copy-pass § 1 item 7: an offer's `savings_percent`, a whole number of percent the build takes off each
+ *  weekly total in See all plans (refused otherwise, naming the offer). */
+const SAVINGS_PERCENT = { least: 1, most: 99 };
+const PERCENT = 100;
+
+/** § 1 item 7 (See all plans as discounts): for an offer with `savings_percent`, each grid cell's weekly total after it, as
+ *  the cell writes its total (`$65.63/wk`), by the cell's data-cell; rounded to the cent. Money is the build's (money()). */
+function pricesAfter(plans, offer) {
+  const p = offer.savings_percent;
+  if (!Number.isInteger(p) || p < SAVINGS_PERCENT.least || p > SAVINGS_PERCENT.most) {
+    throw new Error(`data/offers.json: offer ${offer.id}'s savings_percent must be a whole number from ${SAVINGS_PERCENT.least} to ${SAVINGS_PERCENT.most}, got ${JSON.stringify(p)}`);
+  }
+  return Object.fromEntries(gridCells(plans).map((c) => [`${c.plan}-${c.count}`, `${money(Math.round((c.total_cents * (PERCENT - p)) / PERCENT))}/wk`]));
+}
+
 /** What the development page's scripts read: the save endpoint, the ZIP list (official; its near ring a mock), the sizes,
  *  and (§ 2a) what the offer box needs to choose as the Worker does; since SPEC-ui-and-copy-pass § 1 item 1 an offer's
- *  `headline`, the words the box prints, when it has one. ⛔ Never a code: no shared_code, no code_mode. */
+ *  `headline`, the words the box prints, when it has one, and since its item 7 `after`, See all plans' weekly totals
+ *  after the offer (pricesAfter), when it has a `savings_percent`. ⛔ Never a code: no shared_code, no code_mode. */
 export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) {
   const prefixesOnly = (list) => (list ?? []).map((z) => (z.zip ? { zip: z.zip } : { prefix: z.prefix }));
   return {
@@ -409,6 +425,7 @@ export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) 
       applies_to: o.applies_to,
       valid_from: o.valid_from,
       valid_to: o.valid_to,
+      ...(o.savings_percent !== undefined ? { after: pricesAfter(plans, o) } : {}),
     })),
   };
 }
@@ -466,6 +483,7 @@ export async function saveSlots(plans, { save, zips, siteKey, eventId, offers, m
       `\n<script type="application/json" id="save-data">${scriptJson(client)}</script>` +
       `\n<script>\n${shared}\n</script>` +
       `\n<script>\n${(await read("flow1.js")).trim()}\n</script>` +
+      `\n<script>\n${(await read("plan-prices.js")).trim()}\n</script>` +
       (share ? `\n<script>\n${(await read("share.js")).trim()}\n</script>` : "") +
       `\n<script src="${TURNSTILE_SCRIPT_URL}" async defer></script>`,
   };

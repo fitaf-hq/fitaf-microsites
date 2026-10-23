@@ -66,12 +66,15 @@ function rowProblems(html) {
         if (text(row) !== names[i]) problems.push(`${where} [${i}]: the row reads ${JSON.stringify(text(row))}, not its name ${JSON.stringify(names[i])}`);
         if (!row.querySelector(".cc-thumb")) problems.push(`${where} [${i}]: no tile in the row`);
         if (!button) return;
-        const marks = [...button.querySelectorAll('[aria-hidden="true"]')];
+        // SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23): a meal chosen more than once also carries its count's badge on its
+        // tile (.cc-qty), hidden from assistive technology as the mark is; it is not the mark.
+        const markOf = (b) => [...b.querySelectorAll('[aria-hidden="true"]')].filter((n) => !n.classList.contains("cc-qty"));
+        const marks = markOf(button);
         if (marks.length !== 1) return problems.push(`${where} ${names[i]}: ${marks.length} marks hidden from assistive technology, not 1`);
         problems.push(...markProblems(marks[0], `${where} ${names[i]}`));
         const closed = marks[0].outerHTML;
         button.dispatchEvent(new page.document.defaultView.Event("click", { bubbles: true }));
-        const after = button.querySelector('[aria-hidden="true"]');
+        const [after] = markOf(button);
         if (button.getAttribute("aria-expanded") !== "true") problems.push(`${where} ${names[i]}: a press did not open it`);
         else if (after?.outerHTML !== closed) problems.push(`${where} ${names[i]}: the mark changed when the meal opened`);
         button.dispatchEvent(new page.document.defaultView.Event("click", { bubbles: true }));

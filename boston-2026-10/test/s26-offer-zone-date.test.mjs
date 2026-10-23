@@ -31,7 +31,9 @@ test("S26 (control): a COPY of the page taking the browser's own date shows the 
   const event = FIXTURE_OFFERS.offers.find((o) => o.id === "event-fixture");
   const html = await devPage({ offers: FIXTURE_OFFERS });
   const site = "zonedDate(Date.now(), cfg.send_time_zone)";
-  assert.equal(html.split(site).length - 1, 1, "the page's date is the Worker's zonedDate in the send zone");
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 item 7 (2026-10-23): See all plans' prices after the offer choose it the same way
+  // (src/save/plan-prices.js), so the page takes its date twice, by the same call; the copy replaces both.
+  assert.equal(html.split(site).length - 1, 2, "the page's date is the Worker's zonedDate in the send zone (Flow 1's and the plans' prices')");
   const browsersDate = html.split(site).join("new Date().toISOString().slice(0, 10)");
   assert.equal(offerBoxAt(browsersDate, INSTANT), event.label, "so S26's instant separates the two dates");
 });
