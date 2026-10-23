@@ -41,9 +41,10 @@ test("SM-4: the page's rules and phrases were read (fixture control)", async () 
   const { rule, token } = await sourceExamples();
   assert.ok(rules.includes(squeeze(rule)), `a rule of src/chefs-choice/style.css (${rules.length} rules)`);
   assert.ok(rules.includes(squeeze(token)), "a :root token of src/template.html");
-  const words = (await readJson(join(SITE, "data", "messages.json"))).chefs_choice;
-  assert.ok(phrases.includes(words.checkout), `a phrase of data/messages.json (${phrases.length} phrases)`);
-  assert.ok(phrases.includes(words.heading.split("{")[0].trim()), "a phrase's piece before a {placeholder}");
+  const messages = await readJson(join(SITE, "data", "messages.json"));
+  assert.ok(phrases.includes(messages.chefs_choice.checkout), `a phrase of data/messages.json (${phrases.length} phrases)`);
+  // The footnote's piece: since SPEC-every-menu-and-nutrition the card's heading begins with its {menu}.
+  assert.ok(phrases.includes(messages.plan_page.prices_as_of.split("{")[0].trim()), "a phrase's piece before a {placeholder}");
 });
 
 test("SM-4: no rule or phrase of the page under tools/storybook", async () => {

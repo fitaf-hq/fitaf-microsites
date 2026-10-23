@@ -17,6 +17,9 @@ import { rawColours } from "../scripts/contrast.mjs";
 import { loadPlans } from "./helpers.mjs";
 import { dataSources, elements, hasClass, pieceRuns, textRuns } from "./mockup-html.mjs";
 
+// A day of the offer (SPEC-save-offer-production § 10.7: the one offer ends 2026-10-29, and the mock-ups show it).
+const MOCKUP_DAY = "2026-10-20";
+
 const TEMPLATE = join(ROOT, "src", "template.html");
 const template = await readFile(TEMPLATE, "utf8");
 const tmp = await mkdtemp(join(tmpdir(), "boston-p5-"));
@@ -27,7 +30,7 @@ after(async () => {
 const noPhotos = join(tmp, "no-such-folder");
 const legend = JSON.parse(await readFile(LEGEND_PATH, "utf8"));
 const inFiles = (run) => run.path.some((el) => hasClass(el, "legend-files"));
-const pages = renderMockups(await loadInputs({ photosDir: noPhotos }));
+const pages = renderMockups(await loadInputs({ today: MOCKUP_DAY, photosDir: noPhotos }));
 
 // The reference is the PRODUCTION PAGE as build.mjs renders it (its font prefix resolved by the build, not
 // by this test), so a mistake in how the mock-ups read the template cannot be repeated here and pass.
@@ -65,7 +68,7 @@ test("P5: each piece's stylesheet is well formed: its braces balance and no temp
 test("P5: every file a piece loads (fonts, logo, QR, photos) is written beside it", async () => {
   const { buildMockups } = await import("../mockups/build-mockups.mjs");
   const out = join(tmp, "built");
-  const built = await buildMockups({ outDir: out, png: false, photosDir: noPhotos });
+  const built = await buildMockups({ today: MOCKUP_DAY, outDir: out, png: false, photosDir: noPhotos });
   for (const page of built.pages) {
     const html = await readFile(page, "utf8");
     // <img src> by attribute (helpers.mjs's loadedUrls would also read data-src), and every CSS url().
@@ -85,7 +88,7 @@ test("P5: a colour token changed in the template reaches all four pieces", async
   const path = join(tmp, "template.html");
   assert.ok(template.includes("--navy: #1b2360;"), "mutation anchor present");
   await writeFile(path, template.replace("--navy: #1b2360;", "--navy: #123456;"));
-  const changed = renderMockups(await loadInputs({ templatePath: path, photosDir: noPhotos }));
+  const changed = renderMockups(await loadInputs({ today: MOCKUP_DAY, templatePath: path, photosDir: noPhotos }));
   for (const [id, html] of Object.entries(changed)) {
     assert.ok(html.includes("--navy: #123456;") && !html.includes("#1b2360"), id);
   }
@@ -185,7 +188,7 @@ test("P5: a plain label changed in mockups/legend.json shows on all four pieces"
   changed.sources["data/offers.json"] = { what: "P5 OFFER LABEL", from: "P5 FROM" };
   changed.note = "P5 NOTE";
   await writeFile(path, JSON.stringify(changed));
-  for (const [id, html] of Object.entries(renderMockups(await loadInputs({ legendPath: path, photosDir: noPhotos })))) {
+  for (const [id, html] of Object.entries(renderMockups(await loadInputs({ today: MOCKUP_DAY, legendPath: path, photosDir: noPhotos })))) {
     const text = textRuns(html).map((r) => r.text).join(" ");
     assert.ok(text.includes("P5 OFFER LABEL:") && text.includes("P5 FROM") && text.includes("P5 NOTE"), id);
   }
@@ -196,5 +199,5 @@ test("P5: a legend file without a plain label for a source is refused", async ()
   const missing = structuredClone(legend);
   delete missing.sources["data/plans.json"];
   await writeFile(path, JSON.stringify(missing));
-  await assert.rejects(loadInputs({ legendPath: path, photosDir: noPhotos }), /data\/plans\.json/);
+  await assert.rejects(loadInputs({ today: MOCKUP_DAY, legendPath: path, photosDir: noPhotos }), /data\/plans\.json/);
 });

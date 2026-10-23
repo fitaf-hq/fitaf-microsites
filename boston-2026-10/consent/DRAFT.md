@@ -16,21 +16,24 @@ on the development page.
 > ### Your Boston offer
 > **[The offer, e.g. "N free meals on your first order of $X or more"]**
 >
-> Not ready today? Save it — we'll email your code tomorrow morning, with a link back here. We'll send it once.
+> Not ready today? Save it — tomorrow morning we'll email you a link back here, with today's pricing held until [date]. We'll send it once.
 >
-> **Email** — *we'll send your code here tomorrow*
+> **Email** — *we'll send your link here tomorrow*
 > **Delivery ZIP code** — *so we can check we deliver to you*
 >
-> ☐ **Also email me** Fit AF menus and offers. About once a week; unsubscribe anytime. We'll ask you to confirm.
+> ☐ **Also email me** Fit AF menus and offers. Weekly; unsubscribe anytime. We'll ask you to confirm.
 >
 > **[ Save my offer ]**
 >
-> We'll use your email to send this code once, tomorrow. Only if you tick the box and then confirm it will we
+> We'll use your email to send this once, tomorrow. Only if you tick the box and then confirm it will we
 > send you anything else. We delete your details 30 days after the offer ends unless you've confirmed. We
 > don't sell your information. [Privacy notice]
 
 Below the form, without saving anything: **Build my plan →** (and **See this week's menu →** once a menu is
 published). The box starts **unticked** and is not required.
+
+*[date]* in the lead is the date the pricing is held until, as the page knows it (`SPEC-save-offer-production.md` § 10.9:
+the offer's last day, or the next day on that day); the page fills it.
 
 ⚠ **Layout note, not wording** (`SPEC-rung4-save-offer.md` § 2b, 2026-10-18): on the page, the heading and the offer line are the offer box at the top; the lines from *"Not ready today?"* to the privacy line, the form and § 2 sit at the end, directly after *Choose your meals*, once a plan is chosen; **Build my plan →** is not shown there.
 
@@ -50,11 +53,17 @@ No offer code is issued for an out-of-area ZIP. ⬜ The 12 months is proposed.
 **E1 — the next morning, to a saved offer.** Subject: *Your Fit AF offer, as promised*
 
 > You saved this offer at **[event]** yesterday — here it is.
-> **Your code: XXXX-XXXX** · good until **[date]**
+> *(an offer without a code)* Your pricing is held until **[date]**
+> *(an offer with a code)* **Your code: XXXX-XXXX** · good until **[date]**
+> *(sent after the offer's last day)* This offer has ended
 > **[ See my offer ]**
 > *(only if the box was ticked)* You asked to hear about Fit AF menus and offers. **[ Yes, keep me posted ]**
 > Already ordered? Enjoy your meals!
 > You're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.
+
+Since `SPEC-save-offer-production.md` § 10 (2026-10-22) the Boston offer is a price promise with no code
+(`code_mode: "none"`): its E1 has the first of the marked lines, *[date]* the offer's last day. The second is for an
+offer that carries a code. Since § 10.7 an E1 that goes after its offer's last day (a save made on that day) has the third.
 
 **E-X — at once, to an out-of-area request.** Subject: *Confirm: we'll tell you when Fit AF delivers near you*
 
@@ -65,7 +74,7 @@ No offer code is issued for an out-of-area ZIP. ⬜ The 12 months is proposed.
 ## 4. The confirmation page (`/confirm/…`)
 
 > **Keep hearing from Fit AF?**
-> Menus and offers by email, about once a week. Unsubscribe from any email, anytime.
+> Menus and offers by email, weekly. Unsubscribe from any email, anytime.
 > **[ Yes, keep me posted ]**   **[ No thanks ]**
 
 For an out-of-area request: *"We'll email you when Fit AF delivers near [ZIP] — nothing else. **[ Yes, tell
@@ -76,7 +85,7 @@ hear from us again."*
 
 | field | why |
 |---|---|
-| email | to send the code, or the expansion news, they asked for |
+| email | to send the saved offer, or the expansion news, they asked for |
 | delivery ZIP | to check delivery; for an out-of-area request, the whole purpose |
 | the event (e.g. `boston-2026-10`) | which event the offer belongs to; how the trip's results are counted |
 | for each consent: whether given, **when confirmed**, and **the exact wording version** | proof of consent |
@@ -86,18 +95,18 @@ A daily protein or calorie target typed into the plan calculator **never leaves 
 
 **Kept for**: 30 days after the offer ends, unless marketing was confirmed; an out-of-area request 7 days if
 unconfirmed, up to 12 months if confirmed. After export to the email service, deleted from our records. The
-offer code and its event are kept without any contact details. Deleted on request at any time.
+saved offer and its event are kept without any contact details. Deleted on request at any time.
 
 ## 6. The privacy notice (linked from the form)
 
-> **Who we are.** Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407. Contact: [email].
+> **Who we are.** Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407. Contact: privacy@eatfitaf.com.
 > **What we collect and why.** Your email and ZIP code, to send the offer you saved (once) and to check we
 > deliver to you — or, if we don't yet, to tell you when we do. Only if you tick the box and confirm, your
 > permission to send menus and offers by email.
 > **What we don't do.** We don't sell or share your information for others' advertising. We don't collect
 > health information.
 > **Your choices.** Unsubscribe from any email at any time — it's as easy as signing up. Ask us to see,
-> correct or delete what we hold by emailing [email]; we'll answer within [30] days.
+> correct or delete what we hold by emailing privacy@eatfitaf.com; we'll answer within 30 days.
 > **How long we keep it.** As in § 5.
 > **Where it's kept.** In Fit AF's own records; our email providers (Resend, to send; [Mailchimp], for those
 > who confirmed) receive only what they need, on our behalf.
@@ -107,7 +116,8 @@ offer code and its event are kept without any contact details. Deleted on reques
 - **The 12-month limit** for an out-of-area request.
 - **E1 as a service message**: it is the one email the person asked for, with one optional confirmation link
   inside it. Legal to confirm that is not a marketing email.
-- **F5**: the stated email frequency must match what is sent (the Owner).
+- **F5**: the stated email frequency must match what is sent (the Owner). ✅ Answered 2026-10-22 (the Advisor): the menus
+  email is **weekly**, as §§ 1 and 4 now say (`SPEC-save-offer-production.md` § 10.9).
 - The texting forks of v0.2 (F3) are parked with texting.
 
 ## 8. Where these lines come from

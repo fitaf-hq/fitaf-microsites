@@ -8,11 +8,14 @@
 // - no picks: the day after the last committed window, S − 2 (the store's Friday switch), noon; no week.
 // - the fixture week (SPEC-meal-selection § 9): the latest week of test/fixtures/picks-v2/, its Thursday, S − 3, noon, its
 //   content made from that directory (the content command's --picks; `picks`, the path from the site).
+// - the two-menu fixture week (SPEC-every-menu-and-nutrition): the latest week of test/fixtures/picks-menus/, its Thursday,
+//   S − 3, noon, its content made from that directory with the fixture's words (`words`, the site's module laying them
+//   over data/messages.json; the content command's --messages).
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
-import { FIXTURE_PICKS } from "./layout.js";
-import { FIXTURE_PICKS_DIR, PICKS_DIR, SAVE_PATH, ZONED_TIME } from "./paths.mjs";
+import { FIXTURE_MENUS, FIXTURE_MENUS_WORDS, FIXTURE_PICKS } from "./layout.js";
+import { FIXTURE_MENUS_DIR, FIXTURE_PICKS_DIR, PICKS_DIR, SAVE_PATH, ZONED_TIME } from "./paths.mjs";
 
 /** A delivery Sunday S is open from S − 9 (a Friday) through S − 3 (a Thursday): SPEC-chefs-choice § 2. */
 const WINDOW_START_DAYS = -9;
@@ -38,7 +41,7 @@ async function sundays(dir) {
  * The three dates, in the Date control's order: { id, on, instant } each, `on` the build's --on (null when there is no
  * committed week), `instant` the fixed clock as an ISO string (null for today); `week` also names its `delivery`.
  */
-export async function clockDates({ picksDir = PICKS_DIR, fixtureDir = FIXTURE_PICKS_DIR, zone, now = Date.now() } = {}) {
+export async function clockDates({ picksDir = PICKS_DIR, fixtureDir = FIXTURE_PICKS_DIR, menusDir = FIXTURE_MENUS_DIR, zone, now = Date.now() } = {}) {
   zone ??= JSON.parse(await readFile(SAVE_PATH, "utf8")).send_time_zone;
   const committed = await sundays(picksDir);
   const latest = committed.at(-1) ?? null;
@@ -48,11 +51,14 @@ export async function clockDates({ picksDir = PICKS_DIR, fixtureDir = FIXTURE_PI
   const noneOn = weekOn && addDays(weekOn, DAY_AFTER);
   const fixture = (await sundays(fixtureDir)).at(-1) ?? null;
   const fixtureOn = fixture && addDays(fixture, WINDOW_END_DAYS);
+  const menus = (await sundays(menusDir)).at(-1) ?? null;
+  const menusOn = menus && addDays(menus, WINDOW_END_DAYS);
   const noon = (on) => (on ? new Date(zonedTimeToInstant(on, NOON_HOUR, zone)).toISOString() : null);
   return [
     { id: "today", on: today, instant: null, ...(open ? { delivery: open } : {}) },
     { id: "week", on: weekOn, instant: noon(weekOn), delivery: latest },
     { id: "none", on: noneOn, instant: noon(noneOn) },
     { id: "fixture", on: fixtureOn, instant: noon(fixtureOn), delivery: fixture, picks: fixture ? FIXTURE_PICKS : null },
+    { id: "menus", on: menusOn, instant: noon(menusOn), delivery: menus, picks: menus ? FIXTURE_MENUS : null, words: menus ? FIXTURE_MENUS_WORDS : null },
   ];
 }

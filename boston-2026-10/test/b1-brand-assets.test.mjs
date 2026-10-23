@@ -19,7 +19,9 @@ test("B1: every file the page loads is copied beside it, and nothing else is", a
     const written = (await copyStatic(out)).map((f) => f.slice(out.length + 1)).sort();
     const photos = await loadPhotos();
     const weekSheets = Object.values(photos.chefs_choice ?? {}).map((s) => photos.base + s.file);
-    const referenced = [...new Set([...loadedUrls(html).filter((u) => !u.startsWith("data:")), ...weekSheets])].sort();
+    // Since SPEC-why-fit-af.md § 2 item 2 the page loads the /why/ page in a frame: a directory's URL is its index.html.
+    const files = loadedUrls(html).filter((u) => !u.startsWith("data:")).map((u) => (u.endsWith("/") ? `${u}index.html` : u));
+    const referenced = [...new Set([...files, ...weekSheets])].sort();
     assert.deepEqual(written, referenced);
   } finally {
     await rm(out, { recursive: true, force: true });

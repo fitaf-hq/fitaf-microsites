@@ -1,4 +1,8 @@
 /* This week's Chef's Choice on the result card (SPEC-chefs-choice § 3). Tokens only: npm run contrast reads this file. */
+/* SPEC-every-menu-and-nutrition § 11 item 4.1: the meal's rings, the store's own colours (Fit AF's theme,
+   snippets/fitaf-ring.liquid): the track, and each number's arc. Tokens of the card's own, here and not in the
+   template's :root, which the other pages built from it (privacy/) carry too */
+:root { --ring-track: #eceef0; --ring-cal: #888888; --ring-protein: #ffad0d; --ring-carbs: #3ed3a3; --ring-fat: #ff5d5d; --ring-fiber: #303030; }
 .result .cta[hidden], .cc-list[hidden], .cc-own[hidden] { display: none; }
 button.cta { width: 100%; border: 0; cursor: pointer; }
 .cc-list { margin: 12px 0 0; padding: 16px 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
@@ -8,8 +12,49 @@ button.cta { width: 100%; border: 0; cursor: pointer; }
 /* A meal's tile (SPEC-plan-page-refinement § 2 item 5): its photo, a cell of the week's sheet, or the page's own colour */
 .cc-thumb { flex: none; width: 56px; height: 56px; border-radius: 4px; background-color: var(--ice); background-repeat: no-repeat; }
 .cc-own { display: block; margin-top: 12px; padding: 10px 0; text-align: center; font: 600 16px/1.3 var(--head); color: var(--navy); }
-/* The week's snacks (SPEC-meal-selection § 9 item 3): shown with Add snacks, below the card's links; never in a link */
-.cc-snacks { margin: 16px 0 0; padding: 16px 16px 4px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
-.cc-note { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+/* The week's snacks (SPEC-meal-selection § 9 item 3; § 12 item 3): with Add snacks, inside the card's one list, after the
+   meals and before the list's checkout link, under a small heading; no box of their own */
+.cc-snacks { margin: 0 0 16px; }
+.cc-snacks .cc-meals { margin-bottom: 0; }
+.cc-snacks-heading { margin: 0 0 4px; font: 600 15px/1.3 var(--head); color: var(--navy); }
+.cc-note { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
 /* An updating week (SPEC-week-content § 8): its card in the list's place, the list's box and the heading's type */
 .cc-updating { margin: 12px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); font: 600 17px/1.3 var(--head); color: var(--navy); }
+/* SPEC-every-menu-and-nutrition § 10 (the Advisor, 2026-10-21): every target this card adds is at least the standard
+   target of OurFans' design philosophy (docs/arch/design-philosophy.md, "Real-world device ergonomics": 10 mm), at the
+   densest logical density it uses (163 CSS px per inch: 10 mm is 64.2 CSS px), in its smaller dimension */
+.cc-list { --touch-target: 64px; }
+/* Every picked menu (§ 2): above the list, a native radio group, each radio a chip; the chosen one navy, as the selected
+   tab; the radio itself kept for the keyboard and assistive technology, not drawn */
+.cc-menus { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; margin: 0 0 14px; padding: 0; border: 0; }
+.cc-menus[hidden] { display: none; }
+.cc-menu { position: relative; }
+.cc-menu input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; opacity: 0; }
+.cc-menu span { display: flex; align-items: center; justify-content: center; min-width: var(--touch-target); min-height: var(--touch-target); padding: 0 20px; border: 1px solid var(--line); border-radius: 32px; background: var(--white); color: var(--navy); font: 600 15px/1.3 var(--head); cursor: pointer; }
+.cc-menu span:hover { border-color: var(--field); }
+.cc-menu input:checked + span { border-color: var(--navy); background: var(--navy); color: var(--white); }
+.cc-menu input:focus-visible + span { outline: 3px solid var(--navy); outline-offset: 3px; }
+/* Each meal's nutrition (§ 3, § 11: the Advisor's review of 2026-10-22). A meal with numbers for the chosen size or
+   ingredients: its whole row, its tile and its name, is the button (§ 10 item 1), at least the touch target tall, its
+   mark a circled "i" (§ 11 item 3: "more", never the + of adding a meal; the same open or closed), the panel beneath it.
+   A meal with neither keeps the row it always had */
+.cc-meals li.cc-control { display: block; }
+.cc-meal { display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--touch-target); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.cc-meal .cc-name { flex: 1; min-width: 0; }
+.cc-mark { flex: none; display: block; width: 24px; height: 24px; margin-right: 4px; color: var(--navy); }
+.cc-more { margin: 4px 0 2px 68px; color: var(--ink); font-size: 14px; }
+.cc-more p { margin: 0 0 4px; }
+/* § 11 item 4: the panel's rings first, the store's own (Fit AF's theme, fitaf.css .fam-macros and fitaf-ring.liquid):
+   one row of five that wraps on a phone, each a circle of about 56 px, its value in the middle and its label beneath, in
+   the page's text colour; the arcs and the track are graphics beside the printed numbers, each colour a token */
+.cc-rings { display: flex; flex-wrap: wrap; gap: 10px 12px; margin: 6px 0 12px; }
+.cc-ring { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px; color: var(--ink); }
+.cc-ring svg { display: block; width: 56px; height: 56px; }
+.cc-ring-value { position: absolute; top: 0; left: 0; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font: 700 14px/1 var(--body); }
+.cc-ring-label { font: 600 12px/1.2 var(--body); text-align: center; white-space: nowrap; }
+.cc-track { stroke: var(--ring-track); }
+.cc-ring-cal .cc-arc { stroke: var(--ring-cal); }
+.cc-ring-protein .cc-arc { stroke: var(--ring-protein); }
+.cc-ring-carbs .cc-arc { stroke: var(--ring-carbs); }
+.cc-ring-fat .cc-arc { stroke: var(--ring-fat); }
+.cc-ring-fiber .cc-arc { stroke: var(--ring-fiber); }

@@ -64,6 +64,16 @@ test("SM-6 (SPEC-meal-selection § 9): the fixture week is the version-2 fixture
   assert.deepEqual([fixture.delivery, fixture.picks], [sundays.at(-1), "test/fixtures/picks-v2"]);
 });
 
+test("SM-6 (the site's SPEC-every-menu-and-nutrition): the two-menu fixture week is its Thursday at noon, built from its directory with its words", async () => {
+  const sundays = (await readdir(join(SITE, "test", "fixtures", "picks-menus"))).map((f) => SUNDAY_FILE.exec(f)?.[1]).filter(Boolean).sort();
+  assert.ok(sundays.length > 0, "fixture control: the two-menu fixture week");
+  const z = await zone();
+  const { menus } = byId(await clockDates({ now: A_DATE_INSIDE_NO_WINDOW }));
+  assert.equal(menus.on, plusDays(sundays.at(-1), -3));
+  assert.equal(wallClock(Date.parse(menus.instant), z), `${plusDays(sundays.at(-1), -3)} ${NOON}`);
+  assert.deepEqual([menus.delivery, menus.picks, menus.words], [sundays.at(-1), "test/fixtures/picks-menus", "test/fixtures/menus-words.mjs"]);
+});
+
 test("SM-6: the latest of several weeks; without a picks file, no dated choice", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "fitaf-storybook-sm-6-"));
   t.after(() => rm(dir, { recursive: true, force: true }));

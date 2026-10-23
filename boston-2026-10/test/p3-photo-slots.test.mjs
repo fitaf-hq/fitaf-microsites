@@ -16,6 +16,9 @@ import { ROOT } from "../build.mjs";
 import { buildMockups, loadInputs, MANIFEST_PATH, renderMockups } from "../mockups/build-mockups.mjs";
 import { elements, getPointer, hasClass, placedElements, textRuns } from "./mockup-html.mjs";
 
+// A day of the offer (SPEC-save-offer-production § 10.7: the one offer ends 2026-10-29, and the mock-ups show it).
+const MOCKUP_DAY = "2026-10-20";
+
 /**
  * § 1: the nine positions, each with the one piece it is in and its place there. The tent card's photos are a
  * grid whose first child spans both rows on the left (mockups.css `.tent-photos > :first-child`), so the large
@@ -85,15 +88,15 @@ test("P3-1: the manifest names exactly the nine positions, each a plain file nam
 });
 
 test("P3-1: a manifest naming a path, a folder or another extension is refused, as before", async () => {
-  await loadInputs({ photosDir: empty }); // control: the committed manifest loads
+  await loadInputs({ today: MOCKUP_DAY, photosDir: empty }); // control: the committed manifest loads
   for (const bad of ["../../secret.jpg", "photos/banner.jpg", "/banner.jpg", "banner.gif", "banner.heic"]) {
-    await assert.rejects(loadInputs({ manifestPath: await mirror({ banner: bad }), photosDir: empty }), /not a plain file name/, bad);
+    await assert.rejects(loadInputs({ today: MOCKUP_DAY, manifestPath: await mirror({ banner: bad }), photosDir: empty }), /not a plain file name/, bad);
   }
 });
 
 test("P3-2: across the four pieces, each position is on exactly one element, in the piece and place § 1 gives it", async () => {
   for (const dir of [empty, full]) {
-    const pages = renderMockups(await loadInputs({ photosDir: dir }));
+    const pages = renderMockups(await loadInputs({ today: MOCKUP_DAY, photosDir: dir }));
     const found = {};
     for (const [id, html] of Object.entries(pages)) {
       const all = placedElements(html);
@@ -126,13 +129,13 @@ test("P3-2: across the four pieces, each position is on exactly one element, in 
 
 test("P3-2: a piece using a position the manifest lacks is refused", async () => {
   for (const position of POSITIONS) {
-    const inputs = await loadInputs({ manifestPath: await mirror({ [position]: undefined }), photosDir: empty });
+    const inputs = await loadInputs({ today: MOCKUP_DAY, manifestPath: await mirror({ [position]: undefined }), photosDir: empty });
     assert.throws(() => renderMockups(inputs), new RegExp(`"${position}" is not in mockups/photos\\.json`), position);
   }
 });
 
 test("P3-3: with no photos present, all nine show a labelled placeholder naming the position and its file; no image is referenced", async () => {
-  const pages = renderMockups(await loadInputs({ photosDir: empty }));
+  const pages = renderMockups(await loadInputs({ today: MOCKUP_DAY, photosDir: empty }));
   const shown = [];
   for (const [id, html] of Object.entries(pages)) {
     const els = elements(html);
@@ -154,7 +157,7 @@ test("P3-3: with no photos present, all nine show a labelled placeholder naming 
 });
 
 test("P3-4: with all nine present, each shows its file and no placeholder is left", async () => {
-  const inputs = await loadInputs({ photosDir: full });
+  const inputs = await loadInputs({ today: MOCKUP_DAY, photosDir: full });
   const shown = [];
   for (const [id, html] of Object.entries(renderMockups(inputs))) {
     const els = elements(html);
@@ -175,10 +178,10 @@ test("P3-4: with all nine present, each shows its file and no placeholder is lef
 // only the place it was chosen for. Every position is changed in turn, so a position two places share is caught
 // whichever it is.
 test("P3-5: one position's file changed (in a mirror) changes exactly one element; every other photo is byte-for-byte as before", async () => {
-  const before = photosOf(renderMockups(await loadInputs({ photosDir: full })));
+  const before = photosOf(renderMockups(await loadInputs({ today: MOCKUP_DAY, photosDir: full })));
   assert.equal(before.size, POSITIONS.length, "control: nine photos before");
   for (const position of POSITIONS) {
-    const inputs = await loadInputs({ manifestPath: await mirror({ [position]: OTHER }), photosDir: full });
+    const inputs = await loadInputs({ today: MOCKUP_DAY, manifestPath: await mirror({ [position]: OTHER }), photosDir: full });
     const now = photosOf(renderMockups(inputs));
     assert.deepEqual([...now.keys()], [...before.keys()], `${position}: the same photo elements`);
     const changed = [...before.keys()].filter((k) => now.get(k).markup !== before.get(k).markup);
@@ -194,7 +197,7 @@ test("P3-6: two positions naming one file both show it, and the build copies it 
   const shared = ["tent-top", "slide-3"];
   const manifestPath = await mirror(Object.fromEntries(shared.map((p) => [p, SHARED])));
   const out = join(scratch, "built");
-  const built = await buildMockups({ outDir: out, png: false, manifestPath, photosDir: full });
+  const built = await buildMockups({ today: MOCKUP_DAY, outDir: out, png: false, manifestPath, photosDir: full });
   const pages = {};
   for (const page of built.pages) pages[page] = await readFile(page, "utf8");
   for (const position of shared) {

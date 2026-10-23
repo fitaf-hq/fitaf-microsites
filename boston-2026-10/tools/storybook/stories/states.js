@@ -55,6 +55,28 @@ export const STATES = {
     scrollTo: "#cc-snacks",
     whileCarted: { needs: "#cc-list", lacks: "#q-snacks", scrollTo: "#q-lunch_dinner" },
   }),
+  // SPEC-every-menu-and-nutrition §§ 2–3, on the two-menu fixture week (invented names), at or · every day, where both
+  // menus have a cart: the chooser with Chef's Choice selected; the other menu chosen (the group's last radio pressed,
+  // as a visitor presses its name); and a meal's nutrition opened (the list's first meal button pressed).
+  menus: { name: "Two menus", fragment: answers("or-7d"), date: "menus", waits: RESULT, needs: "#cc-menus", scrollTo: "#cc-list" },
+  menusOther: {
+    name: "Two menus · the other chosen",
+    fragment: answers("or-7d"),
+    date: "menus",
+    waits: RESULT,
+    needs: "#cc-menus",
+    press: "#cc-menus label:last-child input",
+    opens: "#cc-menus label:last-child input:checked",
+  },
+  nutrition: {
+    name: "Nutrition · a meal opened",
+    fragment: answers("or-7d"),
+    date: "menus",
+    waits: RESULT,
+    needs: "#cc-meals button",
+    press: "#cc-meals button",
+    opens: '#cc-meals button[aria-expanded="true"]',
+  },
 };
 
 /** Why each state cannot be shown, in the tool's words, for its caption. */

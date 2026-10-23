@@ -1,6 +1,7 @@
 // Dummy saves for the DEVELOPMENT database only. Obviously fake by construction:
 //   emails  dummy-NNNN@example.com   (RFC 2606 reserved domain)
-//   ZIPs    02118 (in area) · 01602 (near ring) · 10001 (far) — public ZIPs, no person's address
+//   ZIPs    02118 (in area) · 03101 (near ring) · 10001 (far) — public ZIPs, no person's address. 01602 was the near
+//           ring's until the official list (SPEC-save-offer-production § 10), which holds it.
 // Every body passes through the Worker's own validateSave, so a seeded row has the shape a real save has.
 import events from "../data/events.json" with { type: "json" };
 import saveConfig from "../data/save.json" with { type: "json" };
@@ -24,7 +25,7 @@ export function dummyBody(i) {
   return {
     kind: expansion ? "expansion" : "offer",
     email: `dummy-${n}@example.com`,
-    zip: expansion ? (i % 8 === 3 ? "01602" : "10001") : "02118",
+    zip: expansion ? (i % 8 === 3 ? "03101" : "10001") : "02118",
     consent_marketing: !expansion && i % 2 === 0,
     event_id: events[0].id,
     wording_version: saveConfig.wording_version,
@@ -36,6 +37,8 @@ export function saveRows(save, { nowMs = Date.now(), state = "saved", saveOverri
   const now = new Date(nowMs).toISOString();
   const zone = saveConfig.send_time_zone;
   const offer = save.kind === "offer" ? offerForSave(zonedDate(nowMs, zone)) : null;
+  // SPEC-save-offer-production § 10.7: after the last offer's valid_to an offer save is refused (offer_ended), as the Worker does.
+  if (save.kind === "offer" && !offer) throw new Error(`no offer is live on ${zonedDate(nowMs, zone)}: an offer save is refused (offer_ended)`);
   const saveRow = {
     save_id: crypto.randomUUID(),
     event_id: save.event_id,

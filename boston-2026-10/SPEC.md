@@ -93,7 +93,7 @@ ladder (*"buy more, save more"*) is a later rung. Money is integer cents; totals
 | T2 | the built page | exactly 6 individual grid links + 1 family link, each `…/order?mpid=N`, and the set of N equals the table's |
 | T3 | ⭐ Signature 14 | links to `mpid=29`, not 28 (the out-of-order pair) |
 | T4 | weekly total | computed = meals × price for every cell (e.g. Lean 7 = $87.50) |
-| T5 | no external requests | the built HTML has no `<script src>`, no `<link rel=stylesheet>` to another host, no `fetch(` |
+| T5 | no external requests | the built HTML has no `<script src>`, no `<link rel=stylesheet>` to another host, no `fetch(` *(2026-10-21: amended for production, once and by name, by [`SPEC-save-offer-production.md`](SPEC-save-offer-production.md) § 3 item 3: with `data/save.json`'s `production` true, exactly one third-party script, Turnstile's, and Flow 1's POST to `/api/save`; SP5)* |
 | T6 | QR | each PNG decodes (or: the encoder's own round-trip) to exactly its event URL |
 | T7 | ⭐ mutant | swap Signature 14/21 mpids in a copy of the data → T3 fails |
 

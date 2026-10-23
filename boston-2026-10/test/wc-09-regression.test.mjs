@@ -5,6 +5,26 @@
 // own tree by test/wc-09-record.mjs (re-run it and diff to check the golden). Also the PAGE a visitor
 // gets from production's Worker (the no-week build, the content in the bucket) is, visibly, the page of 409b805 at noon
 // on 2026-10-11 in New York, at every fragment of REGRESSION_HASHES (§ 2.3: everything else on the page is unchanged).
+// ⚠ RE-RECORDED for SPEC-meal-selection.md § 12 (2026-10-20: each pair's default on the left, *Weekdays only* the
+// default, the snacks in the card's list; the page MEANT to change visibly, the content not): `visible` only, by
+// `node test/wc-09-record.mjs --visible-at 5f55cbc`, is now the page production's Worker serves from 5f55cbc's own tree
+// with the same content (`visible_at`); picks_data, page_sha256 and the sheet are still 409b805's, so WC-9a is unchanged.
+// Against 409b805's, "" and #family were byte-identical and the 18 answered fragments moved (§ 12.1).
+// ⚠ RE-RECORDED for SPEC-why-fit-af.md § 2 (2026-10-21: the footer's "Why Fit AF?" button, its dialog and its no-script
+// link; the page MEANT to change visibly, the content not): `visible` only, by `node test/wc-09-record.mjs --visible-at
+// f02807e`. Against 5f55cbc's, all 20 fragments moved ("" and #family too: the footer is on every one), each 6e0f6bd's
+// byte for byte once those three additions are removed (SPEC-why-fit-af § 4); picks_data, page_sha256 and the sheet
+// still 409b805's.
+// ⚠ RE-RECORDED for SPEC-why-fit-af.md § 6 (2026-10-21: the /why/ page's link back to the plan page closes the dialog, in
+// app.js, inlined in the page) by `node test/wc-09-record.mjs --visible-at e2284f1`, as § 6 item 4 asks: only
+// `visible_at` moved. All 20 visible pages are f02807e's byte for byte (visible() reads the page without its scripts,
+// and the change is script alone); picks_data, page_sha256 and the sheet still 409b805's.
+// ⚠ RE-RECORDED for SPEC-every-menu-and-nutrition.md § 11 (2026-10-22, with SPEC-meal-selection § 13, which moves no
+// page) by `node test/wc-09-record.mjs --visible-at 5231265`: `visible` at all 20 fragments (the heading the menu's name
+// alone, Why Fit AF? and its no-script link above the tabs), each the page production's Worker serves from 5231265's tree
+// with its content, which is 409b805's with the headings' range removed (WC-9a, amended); picks_data, page_sha256 and the
+// sheet still 409b805's. Re-recorded once more by `--visible-at 773e597` for § 11.2 (the button an outline button in the
+// unselected chip's look: its class): `visible` at all 20 fragments, nothing else.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -12,6 +32,7 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
+import { rangeless } from "./cc-harness.mjs";
 import { scriptJsonRef } from "./wc-checks.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW, sheetUrlCount, WEEK_SHEET_URL } from "./wc-regression.mjs";
 import { contentOf, noWeekPage, pageAsset, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
@@ -24,6 +45,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
+  assert.equal(golden.visible_at, "773e597", "the visible pages: 773e597's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {
@@ -34,13 +56,18 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
     assert.deepEqual(written, ["chefs-choice-2026-10-18.jpg", "picks-data.json"], "the week's data and its one sheet");
     const text = await readFile(join(out, WEEK_DATA_KEY), "utf8");
     const before = JSON.stringify(golden.picks_data);
-    const after = asWeekUrls(before);
+    // ⚠ Amended for SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): each heading is the menu's name alone, a
+    // phrase the content fills, so 409b805's is read with each heading's " (<range>)" removed (cc-harness rangeless),
+    // every other byte its own.
+    const read = rangeless(Buffer.from(asWeekUrls(before), "utf8"), WEEK_1018);
+    assert.ok(read.headings > 0, "control: 409b805's headings name the week's range");
+    const after = read.bytes.toString("utf8");
     assert.ok(sheetUrlCount(before) > 0 && sheetUrlCount(after) === 0, "control: the URLs were rewritten");
     assert.equal(sheetUrlCount(text), 0, "no URL of the build's sheet path is left");
     assert.ok(text.includes(WEEK_SHEET_URL), `the sheet at ${WEEK_SHEET_URL}`);
     assert.deepEqual(JSON.parse(text), JSON.parse(after), "the JSON value, the sheet's URL apart");
     assert.equal(text, scriptJsonRef(JSON.parse(after)), "the bytes: the element's text as the build writes it, the URL apart");
-    assert.notDeepEqual(JSON.parse(text), golden.picks_data, "control: the URL is the one difference");
+    assert.notDeepEqual(JSON.parse(text), golden.picks_data, "control: the URL and the headings' range are the differences");
     const sheet = await readFile(join(out, sheetKeyOf(SHEET_1018)));
     assert.ok(sheet.equals(SHEET), "the sheet byte-identical to src/assets/photo-sheets/");
     assert.equal(sha256(sheet), golden.sheet.sha256, "and to 409b805's");
@@ -49,7 +76,7 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
   }
 });
 
-test("WC-9c: the page production's Worker serves with that content is, visibly, 409b805's page at every fragment", async () => {
+test("WC-9c: the page production's Worker serves with that content is, visibly, visible_at's page at every fragment", async () => {
   const asset = await noWeekPage();
   const { text, files } = await contentOf({ week: WEEK_1018 });
   const site = await startSite({ assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheetKeyOf(SHEET_1018)]: files[sheetKeyOf(SHEET_1018)] } });

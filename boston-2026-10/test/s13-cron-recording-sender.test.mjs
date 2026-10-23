@@ -8,19 +8,23 @@ import { longDate, offerById } from "../src/worker/offers.js";
 import { displayCode } from "../src/worker/messages.js";
 import { tokenHash, TOKEN_RE } from "../src/worker/token.js";
 import { FixedRedemptions, linkIn, NEAR_ZIP, postSave, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
+import { dropForm, keepForm } from "./rung5-fixture.mjs";
 
 const { mf, db, vars } = await startWorker();
 after(() => mf.dispose());
 
-/** DRAFT § 3's message as lines of plain text: emphasis, the "(only if…)" note and button brackets removed. */
-async function draftMessage(heading) {
+/** DRAFT § 3's message as lines of plain text: emphasis, the "(only if…)" note and button brackets removed; for E1, the
+ *  form of its second line for `codeMode` (SPEC-save-offer-production § 10: an offer without a code says the date held). */
+async function draftMessage(heading, { codeMode } = {}) {
   const md = await readFile(join(ROOT, "consent", "DRAFT.md"), "utf8");
   const part = md.split("## 3. The emails")[1].split("## 4.")[0].split(heading)[1].split(/\n\*\*E|\n## /)[0];
   const subject = /Subject: \*([^*]+)\*/.exec(part)[1];
   const lines = part
     .split("\n")
     .filter((l) => l.startsWith("> "))
-    .map((l) => l.slice(2).replace(/\*\(only if the box was ticked\)\*\s*/, "").replace(/\[ ([^\]]+) \]/g, "$1").replace(/\*+/g, "").trim());
+    .map((l) => l.slice(2))
+    .filter(keepForm(codeMode))
+    .map((l) => dropForm(l).replace(/\*\(only if the box was ticked\)\*\s*/, "").replace(/\[ ([^\]]+) \]/g, "$1").replace(/\*+/g, "").trim());
   return { subject, lines };
 }
 
@@ -54,12 +58,13 @@ test("S13: the cron with RecordingSender and one redeemed code -> that one suppr
   assert.ok(!sender.messages.some((m) => m.to === people.redeemed), "the redeemed one is not sent");
   assert.deepEqual(sender.messages.map((m) => m.to).sort(), ["dummy-r1@example.com", "dummy-r2@example.com", "dummy-r4@example.com"]);
 
-  const E1 = await draftMessage("**E1 — the next morning, to a saved offer.**");
   const EX = await draftMessage("**E-X — at once, to an out-of-area request.**");
+  let E1;
   for (const who of ["ticked", "unticked"]) {
     const row = await byEmail(people[who]);
     const m = sender.messages.find((x) => x.to === people[who]);
     const offer = offerById(row.offer_id);
+    E1 = await draftMessage("**E1 — the next morning, to a saved offer.**", { codeMode: offer.code_mode });
     assert.equal(m.template, "E1");
     assert.equal(m.subject, E1.subject);
     const expected = E1.lines

@@ -17,8 +17,10 @@ import {
   midday,
   DAYS,
   openPlanPage,
+  pageWithPicks,
   picksData,
   picksDir,
+  PLANS,
   S,
   weekOf,
 } from "./cc-harness.mjs";
@@ -28,6 +30,10 @@ const SENTINEL = /⟦\d+⟧/g;
 /** The phrases of § 3 in data/messages.json the card shows, and the placeholders each must keep. Since
  *  SPEC-plan-page-refinement §§ 1–2 the list is always open: `open` (its button) and `note` are no longer shown. */
 const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] }; // heading: § 8 item 6
+/** Since SPEC-meal-selection § 12 item 3 the snack block is INSIDE the list (`cc-list`), so its two phrases are the card's
+ *  words too: CC-7b marks them. CC-7a's source check keeps PHRASES alone ("Snacks" is also part of the script's own
+ *  function name, renderSnacks, not a phrase typed into it). */
+const SNACK_PHRASES = { snacks_heading: [], snacks_not_carted: [] };
 /** The card's parts a visitor reads (always open). */
 const PARTS = ["cc-list", "cc-own"];
 
@@ -38,13 +44,18 @@ function cardText(html, hash) {
   return PARTS.map((id) => page.el(id).textContent).join(" ");
 }
 
+/** The page with `messages` and `picks` in copies. Its data/plans.json is a copy too, with snacks shown and not carted
+ *  (SPEC-meal-selection § 11: a case asserting about snacks sets its own flags), so both of the snack block's phrases are
+ *  in the card's list (§ 12 item 3), whatever the committed flags. */
 async function withCopies(messages, picks, fn) {
   const dir = await mkdtemp(join(tmpdir(), "boston-cc-07-"));
   const picksPath = await picksDir({ [`${S}.json`]: picks });
   try {
     const messagesPath = join(dir, "messages.json");
     await writeFile(messagesPath, JSON.stringify(messages, null, 2));
-    return await fn((await builtPage({ picks: picksPath, messagesPath })).html);
+    const plansPath = join(dir, "plans.json");
+    await writeFile(plansPath, JSON.stringify({ ...PLANS, snacks: { shown: true, carted: false } }, null, 2));
+    return await fn((await pageWithPicks({ picks: picksPath, messagesPath, plansPath })).html);
   } finally {
     await rm(dir, { recursive: true, force: true });
     await rm(picksPath, { recursive: true, force: true });
@@ -54,10 +65,13 @@ async function withCopies(messages, picks, fn) {
 test("CC-7a: data/messages.json has each phrase of § 3, each with its placeholders; none is in the source", async () => {
   const words = MESSAGES.chefs_choice;
   assert.ok(words, "data/messages.json has a chefs_choice key");
-  for (const [key, placeholders] of Object.entries(PHRASES)) {
+  // SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): the committed heading is the menu's name alone, `{menu}`;
+  // `{week}` is a placeholder the build still accepts (CC-7b and CC-7c use it) and these words no longer carry.
+  for (const [key, placeholders] of Object.entries({ ...PHRASES, heading: ["{menu}"] })) {
     assert.equal(typeof words[key], "string", `chefs_choice.${key}`);
     for (const p of placeholders) assert.ok(words[key].includes(p), `chefs_choice.${key} has ${p}`);
   }
+  assert.ok(!words.heading.includes("{week}"), "chefs_choice.heading shows no range (§ 11 item 1)");
   const sources = [
     "src/template.html",
     "src/app.js",
@@ -86,7 +100,7 @@ test("CC-7b: with every phrase and every meal name a letterless marker, the open
     return [m, ...keep].join(" ");
   };
   const messages = structuredClone(MESSAGES);
-  for (const [key, placeholders] of Object.entries(PHRASES)) messages.chefs_choice[key] = mark(...placeholders);
+  for (const [key, placeholders] of Object.entries({ ...PHRASES, ...SNACK_PHRASES })) messages.chefs_choice[key] = mark(...placeholders);
   // § 7.2: the list shows each meal's `display`, so the marker goes there; `name` (the key, the store's spelling) keeps
   // its letters, so a line showing `name` would be caught here too.
   const picks = structuredClone(FIXTURE);

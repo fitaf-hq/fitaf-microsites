@@ -1,13 +1,14 @@
 // /confirm/<token> (flows/03 § 5; wording consent/DRAFT.md § 4). GET renders LANDING or GONE and changes
 // nothing; POST action=yes|no gives CONFIRMED or DECLINED. GONE is one fixed page for every cause.
-import { isLive, offerById } from "./offers.js";
+import saveConfig from "../../data/save.json" with { type: "json" };
+import { heldUntilOfSave, offerById } from "./offers.js";
 import { esc, htmlResponse, page } from "./pages.js";
 import { TOKEN_RE, tokenHash } from "./token.js";
 
 export const GONE = page("Link no longer active", "<h1>This link is no longer active.</h1>");
 
 const FIND_SQL =
-  "SELECT s.save_id, s.kind, s.offer_id, s.offer_code, s.state, c.zip FROM save_contacts c " +
+  "SELECT s.save_id, s.kind, s.offer_id, s.offer_code, s.state, s.send_at, c.zip FROM save_contacts c " +
   "JOIN saves s ON s.save_id = c.save_id WHERE c.confirm_token_hash = ?";
 // `exported` keeps its contact until the purge (flows/06 § 2), so its link still works until then.
 const LIVE_STATES = new Set(["saved", "messaged", "confirmed", "exported"]);
@@ -26,7 +27,9 @@ async function findLive(db, token, today) {
   if (!row || !LIVE_STATES.has(row.state)) return null;
   if (row.kind === "offer") {
     const offer = offerById(row.offer_id);
-    if (!offer || !isLive(offer, today)) return null; // the token expires with the offer
+    // The token expires with the save's held date (SPEC-save-offer-production § 10.9: its offer's last day, or the day
+    // its E1 was due if later).
+    if (!offer || today < offer.valid_from || today > heldUntilOfSave(offer, row.send_at, saveConfig.send_time_zone)) return null;
   }
   return row;
 }
@@ -45,7 +48,7 @@ function landing(row) {
   return page(
     "Keep hearing from Fit AF?",
     "<h1>Keep hearing from Fit AF?</h1>\n" +
-      "<p>Menus and offers by email, about once a week. Unsubscribe from any email, anytime.</p>\n" +
+      "<p>Menus and offers by email, weekly. Unsubscribe from any email, anytime.</p>\n" +
       buttons("Yes, keep me posted"),
   );
 }

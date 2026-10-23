@@ -13,6 +13,8 @@
 .offer-box h2 { margin: 0; font: 700 24px/1.2 var(--head); color: var(--navy); }
 .save-offer { margin: 6px 0 0; color: var(--navy); }
 .save { margin: 20px 0 24px; }
+/* SPEC-save-offer-production § 1 item 1: the step names its offer where it asks, the box's label directly above the lead */
+.save-step-offer { margin: 0 0 6px; color: var(--navy); }
 .save-lead { margin: 0 0 14px; color: var(--ink); }
 .field { display: block; margin: 0 0 14px; }
 .field-name { display: block; font-weight: 600; color: var(--navy); }
@@ -24,6 +26,8 @@
 .field input:focus { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
 .tick { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 16px; font-size: 14px; }
 .tick input { flex: none; width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--navy); }
+/* § 1 item 2: Save my offer and Tell me when you deliver here are the page's quieter button (.skip, See all plans' style),
+   full width; the store's button above stays the page's one orange (--cta) button */
 .save-submit { width: 100%; border: 0; cursor: pointer; }
 .save-submit[disabled] { opacity: .6; cursor: progress; }
 .save-notice { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
