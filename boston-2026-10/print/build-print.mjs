@@ -10,10 +10,15 @@
 //
 //   node print/build-print.mjs [--photos-dir DIR --rungs FILE --deliverable FILE] [--on YYYY-MM-DD] [--event ID]
 //                             [--front-words FILE] [--back-words FILE] [--out-dir DIR]
+//                             [--tout-words FILE] [--entry-words FILE]
 //
 // § 13: --front-words names front B's words (print/front.mjs; without it every flyer is front A); --back-words a back's
 // words other than data/flyer-back.md's (a draft kept outside this repository, read and checked as the committed one);
 // --out-dir writes the pieces there instead of dist-print/ (emptied first, as dist-print/ is).
+// § 17 (2026-10-23): --tout-words FILE (JSON, print/tout.mjs) adds the giveaway tout, tout(-PROOF).pdf and .png, and
+// --entry-words FILE (Markdown, print/entry.mjs) its entry card, entry-card(-PROOF).pdf (two pages) with a PNG proof of
+// each side (entry-card(-PROOF).png, entry-card-back(-PROOF).png); without them the build writes what it wrote before.
+// Their words are not approved and are kept outside this repository; a [bracket] in either is a placeholder, named.
 //
 // --photos-dir: the glam set's files, `<id>.jpg` as composed and `<id>-sq-<key>.jpg` each square; --rungs: Image Gauge's
 // image-rungs.json for it (§ 3's rule, as § 7 amends it, picks the photos); --deliverable: Image Gauge's deliverable.json
@@ -42,11 +47,13 @@ import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
 import { assignPhotos, BACK_POSITIONS, backPhotoIds, fourFlyerPhotos, photoFiles, skippedLines, SQUARE_POSITIONS, TENT_POSITIONS } from "./assign.mjs";
 import { BACK_PATH, BACK_SOURCE, readBack } from "./back.mjs";
+import { readEntry } from "./entry.mjs";
 import { readFront } from "./front.mjs";
-import { backFindings, frontFindings, layoutFindings, resolution, showing } from "./checks.mjs";
+import { backFindings, frontFindings, giveawayFindings, layoutFindings, resolution, showing } from "./checks.mjs";
 import { jpegSize } from "./jpeg.mjs";
-import { backPlaceholders, pagesToPrint, placeholdersOf, printDocument } from "./pages.mjs";
-import { BACK_MIN_TEXT_PX, CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
+import { backPlaceholders, giveawayDocument, giveawayPlaceholders, pagesToPrint, placeholdersOf, printDocument } from "./pages.mjs";
+import { readTout } from "./tout.mjs";
+import { BACK_MIN_TEXT_PX, CSS_PX_PER_INCH, pageOf, PRINT_PIECES, TYPE_FLOOR_PX } from "./sizes.mjs";
 
 export const PRINT_DIR = dirname(fileURLToPath(import.meta.url));
 /** § 15 item 1: the print-only images (the logo drawn for a dark ground), never the page's (copyStatic copies src/assets). */
@@ -162,6 +169,12 @@ function inputsFor(page, inputs, chosen, photoNames) {
   const own = page.number ? chosen?.four[page.number - 1] : null;
   const flyer = page.number ? (own ? { file: own.staged, present: true } : inputs.photos.flyer) : inputs.photos.flyer;
   const withHero = { ...inputs, photos: { ...inputs.photos, flyer } };
+  // § 17 item 2: the tout's one photo is the flyer's, its caption the flyer's name for it
+  if (photoNames && chosen && page.piece.id === "tout") {
+    const id = chosen.assignment.positions.flyer;
+    if (!photoNames[id]) throw new Error(`--photo-names names no meal for the tout's photo (the flyer's) (§ 17 item 2)`);
+    return { ...withHero, captions: { flyer: photoNames[id] } };
+  }
   if (!photoNames || page.piece.id !== "flyer" || !chosen) return withHero;
   const ids = { flyer: own ? own.id : chosen.assignment.positions.flyer, ...Object.fromEntries(BACK_POSITIONS.map((p) => [p, chosen.assignment.positions[p]])) };
   const missing = Object.entries(ids).filter(([, id]) => !photoNames[id]).map(([position]) => position);
@@ -238,13 +251,41 @@ async function printPdf(run, html, pdf) {
   return pdf;
 }
 
+/**
+ * § 17: a giveaway piece's page, measured and checked: each side's page and trim, its fields' bleed (layoutFindings), its
+ * photo's resolution (the tout's), and whether its words fit, inside the safe margin and at the floor or above
+ * (giveawayFindings: refused, never shrunk). What stands in on it: its photo, its words until approved, each bracket.
+ */
+async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs, chosen, giveaway }) {
+  const words = giveaway[page.piece.words];
+  const html = join(stage, `${page.base}.html`);
+  await writeFile(html, giveawayDocument(page.piece, pageInputs, printCss, words));
+  const measured = await measure(run, html, measureJs);
+  const pixels = pixelsFor(page, chosen);
+  const photos = resolution(measured.faces.flatMap((f) => f.photos), pixels);
+  const sides = measured.sheets.map((sheet, i) => ({ side: i ? "the back" : "the front", sheet, ...giveawayFindings(page.piece, sheet) }));
+  const named = (s, r) => (measured.sheets.length > 1 ? `${s.side}: ${r}` : r);
+  const refusals = [
+    ...(measured.sheets.length === sidesOf(page.piece) ? [] : [`${measured.sheets.length} side(s) drawn, not ${sidesOf(page.piece)}`]),
+    ...sides.flatMap((s) => [...layoutFindings(page.piece, s.sheet).refusals, ...s.refusals].map((r) => named(s, r))),
+    ...photos.refusals,
+  ];
+  const placeholders = giveawayPlaceholders(page.piece, pageInputs, words);
+  const shows = showsOf(measured.faces[0], pixels);
+  return { page, piece: page.piece, html, measured, photos: photos.rows, shows, refusals, warnings: [], placeholders, stem: stemOf(page, placeholders), giveaway: { words, sides } };
+}
+
 /** The pages, each measured and checked; nothing printed. Throws the refusals, every page's, when there are any. */
-async function planPages({ run, stage, inputs, pages, chosen, words, front, photoNames }) {
+async function planPages({ run, stage, inputs, pages, chosen, words, front, photoNames, giveaway }) {
   const printCss = await readFile(join(PRINT_DIR, "print.css"), "utf8");
   const measureJs = await readFile(join(PRINT_DIR, "measure.js"), "utf8");
   const planned = [];
   for (const page of pages) {
     const pageInputs = inputsFor(page, inputs, chosen, photoNames);
+    if (page.piece.words) {
+      planned.push(await planGiveaway({ run, stage, page, pageInputs, printCss, measureJs, chosen, giveaway }));
+      continue;
+    }
     const html = join(stage, `${page.base}.html`);
     await writeFile(html, printDocument(page.piece, pageInputs, printCss, words, front));
     const measured = await measure(run, html, measureJs);
@@ -311,6 +352,16 @@ async function writeBackProof({ outDir, planned }) {
   return [png];
 }
 
+/**
+ * § 17 item 1: the entry card's back, its own PNG proof (<base>-back, or <base>-back-PROOF: the card's placeholders are
+ * its words', both sides alike), from the card's document as drawn.
+ */
+async function writeGiveawayBack(outDir, p, back) {
+  const png = join(outDir, `${p.page.base}-back${p.placeholders.length ? PROOF_SUFFIX : ""}.png`);
+  await writeFile(png, back.png);
+  return png;
+}
+
 /** The back proof's name: a proof while anything on the back stands in (its photos, its words until approved). */
 const backStem = (p) => BACK_BASE + (p.back.placeholders.length ? PROOF_SUFFIX : "");
 
@@ -354,7 +405,7 @@ function fileKind(chosen, slot) {
 const photoRecord = (r) => ({ pixels: [r.width, r.height], window_in: [r.w, r.h].map((n) => Number(n.toFixed(3))), ppi: Math.floor(r.ppi) });
 
 function assignmentRecord(chosen, planned) {
-  const pieces = planned.filter((p) => !p.page.number); // the tent card and the flyer
+  const pieces = planned.filter((p) => !p.page.number && !p.giveaway); // the tent card and the flyer
   const sides = pieces.flatMap((p) => [p, ...(p.back ? [p.back] : [])]); // and the flyer's back (§ 12)
   const rows = Object.fromEntries(sides.flatMap((p) => p.photos.map((r) => [r.slot, { row: r, shows: p.shows[r.slot] }])));
   const back = pieces.find((p) => p.back);
@@ -377,7 +428,18 @@ function assignmentRecord(chosen, planned) {
     four_flyers: four,
     pages: Object.fromEntries(planned.map((p) => [p.page.base, { pdf: `${p.stem}.pdf`, png: `${p.stem}.png`, placeholders: p.placeholders }])),
     back: back ? { png: `${backStem(back)}.png`, placeholders: back.back.placeholders, space_px: Number(back.back.spacePx.toFixed(1)), smallest_px: back.back.smallestPx } : null,
+    // § 17: the tout's one photo, the flyer's, at the tout's window (only when the tout is built)
+    ...toutRecord(chosen, planned),
   };
+}
+
+/** § 17: the tout's photo for assignment.json, as the flyer's is recorded; nothing when no tout is built. */
+function toutRecord(chosen, planned) {
+  const tout = planned.find((p) => p.piece.id === "tout");
+  if (!tout) return {};
+  const [row] = tout.photos;
+  if (!chosen || !row) return { tout: null };
+  return { tout: { id: chosen.assignment.positions.flyer, from: `the flyer's photo (${chosen.assignment.from.flyer})`, file: chosen.files.flyer, ...photoRecord(row), shows: tout.shows.flyer } };
 }
 
 /** Lines of the same text joined, each naming the pages it is on (the pages in the build's order). */
@@ -385,6 +447,21 @@ function grouped(items) {
   const groups = new Map();
   for (const { text, name } of items) groups.set(text, [...(groups.get(text) ?? []), name]);
   return [...groups].map(([text, names]) => ({ text, names }));
+}
+
+/**
+ * § 17: the giveaway pieces' lines: the words each was made from, the tout's photo, and how each side's words fit (the
+ * least room any of its boxes leaves) and its smallest type.
+ */
+function giveawayLines(planned, chosen, at, shown) {
+  const lines = [];
+  for (const p of planned.filter((q) => q.giveaway)) {
+    const { words, sides } = p.giveaway;
+    lines.push(`${p.page.base}: the words of ${words.source} (§ 17)${words.approved ? "" : ", not approved: a proof"}`);
+    for (const r of p.photos) lines.push(`photo ${p.page.base}: the flyer's (${chosen.assignment.from[r.slot]}), as composed; ${at(r)}${shown(p, r.slot)}`);
+    for (const s of sides) lines.push(`${p.page.base}, ${s.side}: the words fit, ${Number(s.spacePx.toFixed(1))} layout px to spare at the closest; the smallest type ${s.smallestPx} layout px (the floor ${TYPE_FLOOR_PX})`);
+  }
+  return lines;
 }
 
 /** The report: a line per file, the photos, the offer, the QR code, the findings, and LAST what placeholders remain. */
@@ -395,7 +472,7 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries, backS
   if (!chosen) lines.push("photos: none given (--photos-dir, --rungs and --deliverable): every position shows its placeholder");
   const at = (r) => `${r.width} × ${r.height} px over ${r.w.toFixed(2)} × ${r.h.toFixed(2)} in = ${Math.floor(r.ppi)} ppi`;
   const shown = (p, slot) => (p.shows[slot] ? showsLine(p.shows[slot]) : "");
-  for (const p of planned.filter((q) => !q.page.number)) {
+  for (const p of planned.filter((q) => !q.page.number && !q.giveaway)) {
     for (const r of p.photos) lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${fileKind(chosen, r.slot)}; ${at(r)}${shown(p, r.slot)}`);
   }
   if (chosen) lines.push(...skippedLines(chosen.assignment));
@@ -411,6 +488,7 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries, backS
       `back: ${backSource}'s words fit, ${back.spacePx.toFixed(1)} layout px to spare above the bottom row; the smallest type ${back.smallestPx} layout px (the floor ${BACK_MIN_TEXT_PX}); the same page 2 on ${flyers === 1 ? "the flyer" : `all ${flyers} flyers`}`,
     );
   }
+  lines.push(...giveawayLines(planned, chosen, at, shown));
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
   const which = eventId === undefined ? "the default, PRINT_EVENT" : "--event";
   lines.push(`QR: event "${event.id}" (${which}) carries ${event.url} (qr/${event.id}.svg, written by build.mjs writeQrCodes)`);
@@ -440,10 +518,13 @@ export async function buildPrint({
   frontPath,
   photoNamesPath,
   backSource = BACK_SOURCE,
+  toutPath,
+  entryPath,
   ...paths
 } = {}) {
-  const pages = pagesToPrint({ fourFlyers });
-  const withBack = pages.some((p) => sidesOf(p.piece) === 2);
+  const pages = pagesToPrint({ fourFlyers, tout: Boolean(toutPath), entry: Boolean(entryPath) });
+  // the flyer's back (§ 12); the entry card's two sides (§ 17) are its own words'
+  const withBack = pages.some((p) => p.piece.back && sidesOf(p.piece) === 2);
   const given = [photosDir, rungsPath, deliverablePath].filter(Boolean).length;
   if (given !== 0 && given !== 3) throw new Error("--photos-dir, --rungs and --deliverable go together: give all three, or none for placeholders");
   // dist-print/ is wholly this build's output: emptied first, so a refused run leaves nothing to mistake for a piece.
@@ -460,6 +541,8 @@ export async function buildPrint({
     // § 13: front B, when --front-words names its words (checked first, as the back's are); without it every flyer is front A
     const front = frontPath ? await readFront(frontPath) : null;
     const photoNames = photoNamesPath ? await readPhotoNames(photoNamesPath) : null;
+    // § 17: the giveaway's words, each read and checked first (refused outside its keys or its subset, naming them)
+    const giveaway = { tout: toutPath ? await readTout(toutPath) : null, entry: entryPath ? await readEntry(entryPath) : null };
     const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers, withBack }) : null;
     const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId: eventId ?? PRINT_EVENT });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
@@ -467,13 +550,14 @@ export async function buildPrint({
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
     // § 13 item 11: front B's code, the same URL by the same library and options at error correction H, for its logo
     await writeQrCodesH(inputs.data.events, stage);
-    const planned = await planPages({ run, stage, inputs, pages, chosen, words, front, photoNames });
+    const planned = await planPages({ run, stage, inputs, pages, chosen, words, front, photoNames, giveaway });
     const written = [];
     for (const p of planned) {
       written.push(await printPdf(run, p.html, join(outDir, `${p.stem}.pdf`)));
       const proof = await writeProof({ run, stage, outDir, p });
       written.push(proof.png);
       if (p.back) Object.assign(p.back, proof.back);
+      if (p.giveaway && proof.back) written.push(await writeGiveawayBack(outDir, p, proof.back));
     }
     written.push(...(await writeBackProof({ outDir, planned })));
     written.push(...(await writePreviews({ run, stage, outDir, planned, inputs })));
@@ -511,6 +595,8 @@ function argsOf(argv) {
     }
     else if (argv[i] === "--out-dir") out.outDir = value(i);
     else if (argv[i] === "--photo-names") out.photoNamesPath = value(i);
+    else if (argv[i] === "--tout-words") out.toutPath = value(i);
+    else if (argv[i] === "--entry-words") out.entryPath = value(i);
     else throw new Error(`unknown option ${argv[i]}`);
   }
   return out;

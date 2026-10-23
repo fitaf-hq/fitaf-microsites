@@ -172,6 +172,71 @@ function flyerFrontB(c, parts, words) {
 </div>`;
 }
 
+/**
+ * The giveaway tout (SPEC-print-pieces.md § 17), print-only: front B's look laid out landscape. Across the top, the dark
+ * band (the headline, its accent words green, the lede; the reversed logo at its top right) and beside it the flyer's
+ * photo with its caption, running into the bleed on the top and the right; under both the orange foot, its torn upper
+ * edge drawn over them: the banner's ribbon and the fine print, then `scan` beside the QR code with the address under it.
+ * Its words are the tout's words file's (`words`, print/tout.mjs), cited by key; no legend lists it. A box whose words
+ * must not overflow it carries `data-fit` (print/checks.mjs giveawayFindings): the band, each headline line, the foot.
+ */
+export function toutFace(c, parts, words) {
+  const cite = (key) => `data-src="${esc(`${words.source}#${key}`)}"`;
+  const accented = (t, cls) => t.split("*").map((part, j) => (j % 2 ? `<span class="${cls}">${esc(part)}</span>` : esc(part))).join("");
+  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}" data-fit="headline line ${i + 1}">${accented(t, "fb-accent")}</span>`).join("");
+  const size = words.size ? ` style="font-size: ${words.size}px"` : "";
+  const lede = words.lede.map((line) => `<span class="fb-lede-line">${accented(line, "fb-lede-accent")}</span>`).join("");
+  // front B's code, at error correction H with the logo at its centre (print/build-print.mjs writes it)
+  const qrH = { ...c, qr: { ...c.qr, path: c.qr.path.replace(/\.svg$/, "-h.svg") } };
+  return `
+<div class="tout-top">
+<div class="fb-band tout-band" data-fit="the band">${HALFTONE}
+  ${bandLogo(parts, words.logo)}
+  <h1 class="fb-head tout-head" ${cite("headline")}${size}>${lines}</h1>
+  <p class="fb-lede tout-lede" data-lede-accent="${esc(words.ledeAccent)}" ${cite("lede")}>${lede}</p>
+</div>
+<div class="tout-hero">${parts.photo("flyer")}${parts.caption("flyer", "fb-name tout-name")}</div>
+</div>
+<div class="fb-foot tout-foot" data-fit="the foot"><svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>
+  <div class="fb-cta tout-cta"><p class="fb-banner" ${cite("banner")}><span>${esc(words.banner)}</span></p><p class="tout-fine" ${cite("fine")}>${esc(words.fine)}</p></div>
+  <p class="tout-scan" ${cite("scan")}>${esc(words.scan)}</p>
+  <div class="scan scan-under fb-scan"><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
+</div>`;
+}
+
+/**
+ * The giveaway's entry card (SPEC-print-pieces.md § 17 item 3), print-only and plain, for a pen: on white, the template's
+ * ink and one accent (its headings), no photo. Its front (`side`) is the heading, each field a label over a writing line,
+ * and the draw and consent lines; its back the heading and the rules. The logo small at the bottom right of each side.
+ * Its words are the entry words file's (`words`, print/entry.mjs), each cited by its line; no legend lists it. The boxes
+ * its words must not overflow carry `data-fit` (print/checks.mjs giveawayFindings).
+ */
+export function entryFace(c, parts, words, side) {
+  const cite = (line) => `data-src="${esc(`${words.source}#L${line}`)}"`;
+  const own = words[side];
+  const head = `<h1 class="entry-head" ${cite(own.heading.line)}>${esc(own.heading.text)}</h1>`;
+  const foot = `<div class="entry-foot">${parts.logo("entry-logo")}</div>`;
+  if (side === "back") {
+    const rule = (p) => `<p class="entry-rule" ${cite(p.line)}>${p.lead === null ? "" : `<b class="entry-lead">${esc(p.lead)}</b>${p.space ? " " : ""}`}${esc(p.text)}</p>`;
+    return `
+<div class="entry-body entry-body-back">
+  ${head}
+  <div class="entry-rules" data-fit="the rules">
+  ${own.paragraphs.map(rule).join("\n  ")}
+  </div>
+  ${foot}
+</div>`;
+  }
+  const field = (f) => `<div class="entry-field" ${cite(f.line)}><p class="entry-label">${esc(f.label)}</p><span class="entry-line"></span></div>`;
+  return `
+<div class="entry-body" data-fit="the front">
+  ${head}
+  <div class="entry-fields">${own.fields.map(field).join("")}</div>
+  <div class="entry-notes">${own.paragraphs.map((p) => `<p class="entry-note" ${cite(p.line)}>${esc(p.text)}</p>`).join("")}</div>
+  ${foot}
+</div>`;
+}
+
 /** § 15 item 1: the band's logo by the words file's `logo`: drawn for the dark ground (its own white field gone, the
  * tagline white; or, `reversed-white`, the second word's letters white too), or pass 2's on its white plate. */
 const REVERSED_LOGO_FILES = { reversed: "fitaf-logo-reversed.png", "reversed-white": "fitaf-logo-reversed-white.png" };

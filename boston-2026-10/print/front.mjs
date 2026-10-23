@@ -34,11 +34,18 @@ const lineList = (v) => Array.isArray(v) && v.length >= 1 && v.length <= MAX_LIN
 
 /** Front B's words from `path`, checked; `source` is the file's name, which each word on the front cites. */
 export async function readFront(path) {
-  const raw = JSON.parse(await readFile(path, "utf8"));
+  return checkFront(JSON.parse(await readFile(path, "utf8")), path);
+}
+
+/**
+ * Front B's words checked, as readFront reads them. § 17 (the giveaway tout, front B's look) checks its words by the
+ * same rules: `keys` are the keys its file may hold and `section` is cited in a refusal.
+ */
+export function checkFront(raw, path, { keys = KEYS, section = "§ 13" } = {}) {
   const refuse = (why) => {
-    throw new Error(`${path}: ${why} (SPEC-print-pieces.md § 13)`);
+    throw new Error(`${path}: ${why} (SPEC-print-pieces.md ${section})`);
   };
-  for (const key of Object.keys(raw)) if (!KEYS.includes(key)) refuse(`"${key}" is not one of ${KEYS.join(", ")}`);
+  for (const key of Object.keys(raw)) if (!keys.includes(key)) refuse(`"${key}" is not one of ${keys.join(", ")}`);
   if (!lineList(raw.headline)) refuse(`"headline" must be one to ${MAX_LINES} lines of text`);
   if (raw.accent !== undefined && !(Number.isInteger(raw.accent) && raw.accent >= 0 && raw.accent < raw.headline.length)) {
     refuse(`"accent" must be the index of one of the headline's ${raw.headline.length} lines`);

@@ -1,7 +1,20 @@
 // The checks a printed piece must pass before it is printed (SPEC-print-pieces.md §§ 2–3, 12), over what the measuring pass
 // (measure.js, in headless Chrome) found on the page: inches from the page's top-left corner. Each returns the refusals,
 // one sentence each; none means the piece passes.
-import { BACK_GAP_PX, BACK_MIN_TEXT_PX, BLEED_IN, CSS_PX_PER_INCH, FRONT_OFFER_MAX_LINES, LAYOUT_PX_PER_INCH, MIN_PPI, pageOf, SAFE_IN } from "./sizes.mjs";
+import {
+  BACK_GAP_PX,
+  BACK_MIN_TEXT_PX,
+  BLEED_IN,
+  CSS_PX_PER_INCH,
+  ENTRY_LINE_PITCH_MIN_IN,
+  FRONT_OFFER_MAX_LINES,
+  LAYOUT_PX_PER_INCH,
+  MIN_PPI,
+  pageOf,
+  SAFE_IN,
+  TOUT_QR_MIN_IN,
+  TYPE_FLOOR_PX,
+} from "./sizes.mjs";
 
 /** Half a CSS pixel: a measured edge this close to another is on it. */
 const TOLERANCE_IN = 0.5 / CSS_PX_PER_INCH;
@@ -123,6 +136,52 @@ export function backFindings(piece, sheet) {
   }
   const smallestPx = Math.min(...face.texts.map((t) => t.size));
   return { refusals, spacePx, smallestPx };
+}
+
+/**
+ * The room a box of words leaves inside its content box on each side, in layout px (below zero, it runs over); across
+ * only, for words measured across alone (measure.js: a headline line).
+ */
+function roomOf(fit) {
+  const [w, c] = [edgesOf(fit.words), edgesOf(fit.content)];
+  const sides = fit.words.y === null ? ["left", "right"] : SIDES;
+  return Object.fromEntries(sides.map((side) => [side, (w[side] - c[side]) * INWARD[side] * LAYOUT_PX_PER_INCH]));
+}
+
+/**
+ * § 17 items 2–3, over one side of a giveaway piece as measured (its sheet: { page, faces }): it must FIT, not shrink.
+ * REFUSED, each naming by how much: words that run past the box they must stay in (each [data-fit]: the tout's band, its
+ * headline's lines and its foot; the entry card's fields and rules), in layout px; any run of text, or the QR code, less
+ * than SAFE_IN inside a cut edge (refused, as on the flyer's back: no approved layout here forbids moving a part); any
+ * type below TYPE_FLOOR_PX; a QR code under TOUT_QR_MIN_IN square; the entry card's writing lines closer than
+ * ENTRY_LINE_PITCH_MIN_IN. Returns { refusals, smallestPx, spacePx } (spacePx: the least room any fit box leaves below
+ * its words or to their right, in layout px; below zero, over).
+ */
+export function giveawayFindings(piece, sheet) {
+  const refusals = [];
+  const [face] = sheet.faces;
+  const trim = edgesOf(face.trim);
+  const cuts = cutsOf(trim, edgesOf(sheet.page));
+  const fits = face.fits.filter((f) => f.words);
+  for (const fit of fits) {
+    const over = Object.fromEntries(Object.entries(roomOf(fit)).filter(([, px]) => px < -FIT_TOLERANCE_PX).map(([side, px]) => [side, -px]));
+    const worst = Math.max(0, ...Object.values(over));
+    if (worst > 0) refusals.push(`${fit.what} does not fit: its words run ${worst.toFixed(1)} layout px over (${Object.keys(over).join(", ")}) (§ 17 item 2: fewer words; nothing is shrunk)`);
+  }
+  for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
+    const short = shortOf(edgesOf(item), trim, cuts);
+    if (short.length) refusals.push(`${item.what} is less than ${SAFE_IN} in inside the trim (${short.join(", ")})`);
+    if (item.size !== undefined && item.size < TYPE_FLOOR_PX) refusals.push(`"${item.text}" is ${item.size} layout px, below the floor of ${TYPE_FLOOR_PX}`);
+  }
+  for (const qr of face.qrs) if (Math.min(qr.w, qr.h) < TOUT_QR_MIN_IN - TOLERANCE_IN) refusals.push(`the QR code is ${inches(Math.min(qr.w, qr.h))} in, under ${TOUT_QR_MIN_IN} in square`);
+  face.lines.slice(1).forEach((line, i) => {
+    const pitch = line.y - face.lines[i].y;
+    if (pitch < ENTRY_LINE_PITCH_MIN_IN - TOLERANCE_IN) refusals.push(`writing lines ${i + 1} and ${i + 2} are ${inches(pitch)} in apart, under ${ENTRY_LINE_PITCH_MIN_IN} in`);
+  });
+  const smallestPx = Math.min(...face.texts.map((t) => t.size));
+  // the room said is below and to the right: words are set from their box's top left, so its other two sides hold none
+  const said = fits.flatMap((f) => Object.entries(roomOf(f)).filter(([side]) => side === "right" || side === "bottom").map(([, px]) => px));
+  return { refusals, smallestPx, spacePx: said.length ? Math.min(...said) : null };
 }
 
 /**

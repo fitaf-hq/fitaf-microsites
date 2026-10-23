@@ -271,3 +271,54 @@ html, body { margin: 0; padding: 0; background: var(--white); }
   font: 700 15px/1 var(--head); letter-spacing: .06em; text-transform: uppercase;
   clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
 }
+
+/* ---------- § 17 (2026-10-23): the giveaway tout, 6 × 4 in landscape, front B's look (the page's body carries
+   .print-flyer too, sizes.mjs `look`, so front B's .fb-* rules above draw its band, its logo, its banner and its code):
+   across the top the band, into the bleed on the top and the left, and beside it the flyer's photo, into the bleed on the
+   top and the right, both --tout-top tall; under them the orange foot, into the bleed on the left, right and bottom, its
+   torn upper edge over both: the banner and the fine print at the left, `scan` beside the code, the code with the address
+   under it at the right. The headline's first line alone keeps clear of the logo (the band is narrower than front B's).
+   Its sizes are sizes.mjs's (--tout-*, and front B's --fb-* as the tout sets them); its colours the template's ---------- */
+.print-tout .tout-top {
+  flex: none; display: flex; height: calc(var(--tout-top) + var(--bleed));
+  margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0;
+}
+.print-tout .tout-band { flex: 1; min-width: 0; margin: 0; padding: calc(var(--bleed) + 26px) 18px 20px calc(var(--bleed) + 24px); }
+.print-tout .tout-band:has(.fb-logo-rev) .tout-head { padding-right: 0; }
+/* the logo inside the band's own padding (front B's sits a bleed further in, its band running into the right bleed),
+   and the headline's first line clear of it by 14px; a line that runs into that is refused (data-fit), never shrunk */
+.print-tout .tout-band .fb-logo-top { right: 18px; width: var(--tout-logo); }
+.print-tout .tout-head .fb-line:first-child { padding-right: calc(var(--tout-logo) + 14px); }
+.print-tout .tout-hero { position: relative; flex: none; width: calc(var(--tout-photo-w) + var(--bleed)); }
+.print-tout .tout-name { left: 12px; bottom: 22px; max-width: calc(100% - var(--bleed) - var(--safe) - 12px); }
+.print-tout .tout-foot { flex: 1; min-height: 0; padding: 16px calc(var(--bleed) + 24px) calc(var(--bleed) + 14px); }
+.print-tout .tout-cta { align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+.print-tout .tout-fine { margin: 0; color: var(--white); font: 400 var(--tout-fine)/1.3 var(--body); }
+.print-tout .tout-scan {
+  position: relative; z-index: 1; flex: none; max-width: 130px; margin: 0; text-align: right;
+  color: var(--white); font: 700 var(--tout-scan)/1.15 var(--head);
+}
+
+/* ---------- § 17 item 3: the giveaway entry card, 6 × 4 in landscape, two sides, plain for a pen: the page's white, the
+   template's ink and one accent (the headings, --cta), no photo, nothing into the bleed. The front: the heading, then each
+   field a label over a writing line, the lines --entry-pitch apart (sizes.mjs: never under 0.3 in), then the draw and
+   consent lines at the foot, kept clear of the logo; the back: the heading, the rules at the type floor, then a row for
+   the logo. The logo --entry-logo wide at the bottom right of each side, inside the safe margin ---------- */
+.print-entry-card .entry-body {
+  position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column;
+  padding: 26px 36px 24px; color: var(--ink); font: 400 var(--entry-text)/1.3 var(--body);
+}
+.print-entry-card .entry-head { margin: 0 0 6px; color: var(--cta); font: 700 var(--entry-head)/1.15 var(--head); }
+.print-entry-card .entry-fields { flex: none; display: flex; flex-direction: column; }
+.print-entry-card .entry-field { display: flex; flex-direction: column; height: var(--entry-pitch); }
+.print-entry-card .entry-label { margin: 0; font: 600 var(--entry-text)/1.3 var(--head); }
+.print-entry-card .entry-field + .entry-field .entry-label { margin-top: 6px; } /* clear of the line above it */
+.print-entry-card .entry-line { display: block; flex: none; height: 2px; margin-top: auto; background: var(--ink); }
+.print-entry-card .entry-notes { margin-top: auto; padding-right: calc(var(--entry-logo) + 20px); }
+.print-entry-card .entry-note { margin: 6px 0 0; }
+.print-entry-card .entry-foot { position: absolute; right: 36px; bottom: 24px; }
+.print-entry-card .entry-logo { width: var(--entry-logo); }
+.print-entry-card .entry-body-back .entry-rules { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; }
+.print-entry-card .entry-rule { margin: 0; font-size: var(--entry-rules); line-height: 1.32; }
+.print-entry-card .entry-lead { font-family: var(--head); font-weight: 700; }
+.print-entry-card .entry-body-back .entry-foot { position: static; flex: none; display: flex; justify-content: flex-end; margin-top: 6px; }
