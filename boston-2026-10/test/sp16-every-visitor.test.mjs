@@ -9,6 +9,9 @@
 //     plans, nothing reissued), an unknown code's page too; E1 that goes after it says the offer has ended; the Worker
 //     refuses an offer save (offer_ended), writing nothing.
 // The Worker's clock is the harness's (TEST_NOW_MS, 2026-10-24) or a case's own; nothing depends on the day a case runs.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 (2026-10-23): item 2 shows the step only beside a week's Continue to checkout,
+// so the page cases open the pages with the fixture week (#lean-or-7d its cart) as a browser runs them (openPlanPage);
+// item 1 prints the headline in the box, so the label read is the step's line.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -21,10 +24,12 @@ import { offerForSave } from "../src/worker/offers.js";
 import { validateSave } from "../src/worker/validate-save.js";
 import { zonedTimeToInstant } from "../src/worker/zoned-time.js";
 import saveConfig from "../data/save.json" with { type: "json" };
+import { hiddenInTree, openPlanPage } from "./cc-harness.mjs";
 import { devPage } from "./dev-page.mjs";
 import { simulatePage } from "./page-sim.mjs";
+import { approvedWeekPage, weekPage } from "./uc-harness.mjs";
 import { lineTexts } from "./email-html.mjs";
-import { approvedPage, pageText, productionInputs, saveData } from "./sp-production.mjs";
+import { pageText, productionInputs, saveData } from "./sp-production.mjs";
 import { assertNoCodeText, BOSTON_OFFER_ID, HELD_LINE, HELD_UNTIL } from "./sp-promise.mjs";
 import { count, FixedRedemptions, IN_ZIP, NEAR_ZIP, postSave, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
 
@@ -84,14 +89,15 @@ test("SP16: a plain visit's save on 2026-10-24 (no ?e=) holds the pricing until 
   }
 });
 
-/** The page opened at `instant` with a plan chosen: whether the save step and the offer box are drawn. */
+/** The page opened at `instant` with a plan chosen (the fixture week's cart): whether the save step and the offer box are
+ *  drawn, and the offer's label the step shows. */
 function stepAt(html, instant) {
-  const page = simulatePage(html, { now: instant, hash: "#lean-or-7d" });
-  return { step: !page.el("save").hidden, box: !page.el("offer-box").hidden, label: page.el("save-offer-label").textContent };
+  const page = openPlanPage(html, { now: instant, hash: "#lean-or-7d" });
+  return { step: !hiddenInTree(page.el("save")), box: !hiddenInTree(page.el("offer-box")), label: page.el("save-step-offer-label").textContent };
 }
 
 test("SP16: the page opened on 2026-10-30 renders no save step and no offer box; on 2026-10-24 and on 2026-10-29, both", async () => {
-  for (const [name, html] of [["the development page", await devPage()], ["the production page (production true)", (await approvedPage()).html]]) {
+  for (const [name, html] of [["the development page", await weekPage()], ["the production page (production true)", (await approvedWeekPage()).html]]) {
     for (const day of [SAVE_DAY, HELD_UNTIL]) {
       const on = stepAt(html, at(day, 12));
       assert.ok(on.step && on.box, `${name} on ${day}: the step and the box`);

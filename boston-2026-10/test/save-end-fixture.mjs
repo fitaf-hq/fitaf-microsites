@@ -59,7 +59,9 @@ export function storeButton(page) {
 
 /**
  * S27: the page in document order. In the markup: the offer box's heading is the page's first heading and Flow 2's
- * question 1 its second, the label under the heading, and Flow 1 after the store button. As run, at `hash` and again
+ * question 1 its second, the label under the heading, and Flow 1 after the store button. ⚠ AMENDED by
+ * SPEC-ui-and-copy-pass § 1 item 1 (2026-10-23): the box's heading IS its line (#save-offer-label, the offer's headline,
+ * else its label), and "Your Boston offer" (#save-title, before it) is the box's accessible name, not drawn. As run, at `hash` and again
  * with a plan chosen and on Family: the offer box is read first, then Flow 2 (question 1 first, for an individual
  * visit), and nothing of Flow 1 is read before the store button.
  */
@@ -72,7 +74,7 @@ export function assertOfferBoxThenFlowTwo(html, { hash = "", now = NOW } = {}) {
     return i;
   };
   const headings = all.filter((n) => /^h[1-6]$/.test(n.localName)).map((h) => h.id);
-  assert.deepEqual(headings.slice(0, 2), ["save-title", "q-goal"], "in the markup: the offer box's heading first, Flow 2's question 1 next");
+  assert.deepEqual(headings.slice(0, 2), ["save-offer-label", "q-goal"], "in the markup: the offer box's heading first, Flow 2's question 1 next");
   assert.ok(at(OFFER_BOX) < at("save-title") && at("save-title") < at("save-offer-label"), "in the markup: the offer box holds the heading, then the label");
   assert.ok(at("save-offer-label") < at("q-goal"), "in the markup: the offer box, then question 1");
   assert.ok(at(FLOW_ONE) > at("result-cta"), "in the markup: no Flow 1 above the store button");
@@ -83,7 +85,7 @@ export function assertOfferBoxThenFlowTwo(html, { hash = "", now = NOW } = {}) {
     const box = page.el(OFFER_BOX);
     const flowOne = page.el(FLOW_ONE);
     const firstAfterBox = read.findIndex((n) => !inside(n, box));
-    assert.ok(firstAfterBox > 0 && read[0].id === "save-title", `${h || "(no fragment)"}: the offer box is read first, its heading first (got ${label(read[0])})`);
+    assert.ok(firstAfterBox > 0 && read[0].id === "save-offer-label", `${h || "(no fragment)"}: the offer box is read first, its heading first (got ${label(read[0])})`);
     assert.ok(inside(read[firstAfterBox], page.document.querySelector("main")), `${h || "(no fragment)"}: then Flow 2 (got ${label(read[firstAfterBox])})`);
     if (hiddenInTree(page.el("panel-individual")) === false) {
       const q = read.find((n) => n.classList.contains("step-label"));
@@ -99,8 +101,10 @@ export function assertOfferBoxThenFlowTwo(html, { hash = "", now = NOW } = {}) {
 /**
  * S28 (and S30): with a plan chosen, or on Family, Flow 1 is read directly after the store button: all of it, and
  * nothing between. `form`: whether its form is shown (OFFER), or only the one-line Save my offer link (PLAN, S30).
+ * `done` (SPEC-ui-and-copy-pass § 1 item 2, UC2): after a save, only its done line (the development page's DRAFT tag
+ * apart), the form not shown. Since that item, "a plan chosen" means the card's Continue to checkout is shown.
  */
-export function assertFlowOneDirectlyAfterStoreButton(page, { form = true } = {}) {
+export function assertFlowOneDirectlyAfterStoreButton(page, { form = true, done = false } = {}) {
   const read = readingOrder(page.document.body);
   const button = storeButton(page);
   assert.ok(button, "a plan is chosen: the store button is shown");
@@ -108,7 +112,10 @@ export function assertFlowOneDirectlyAfterStoreButton(page, { form = true } = {}
   assert.ok(flowOne.length > 0, "Flow 1 is shown");
   const i = read.indexOf(button);
   assert.deepEqual(read.slice(i + 1, i + 1 + flowOne.length).map(label), flowOne.map(label), `directly after "${ownText(button)}": Flow 1, whole, nothing between`);
-  if (form) {
+  if (done) {
+    assert.deepEqual(flowOne.filter((n) => !n.classList.contains("draft-tag")).map((n) => n.id), ["save-done", "save-done-email"], "only the done line");
+    assert.equal(hiddenInTree(page.el("save-form")), true, "the form is not shown");
+  } else if (form) {
     assert.equal(hiddenInTree(page.el("save-form")), false, "its form is shown");
     const lines = flowOne.map(ownText);
     const first = lines.findIndex((t) => t.startsWith("Not ready today? Save it"));

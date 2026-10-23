@@ -67,6 +67,17 @@ export const UNFIXED = {
 
 const json = (v) => JSON.stringify(v, null, 2) + "\n";
 
+/** The part "a bracket left in DRAFT § 6", as the draft is now: SPEC-ui-and-copy-pass § 1 item 5 (2026-10-23) left the
+ *  committed § 6 no placeholder (its "[Mailchimp]" went), so the part puts that one back beside the email provider § 6
+ *  names, and the gate must refuse it as before. */
+export const SECTION_6_BRACKET = "[Mailchimp]";
+export function withBracketInSection6(draft) {
+  const [head, six] = draft.split(/^(?=## 6\. )/m);
+  const [section, ...rest] = six.split(/^(?=## 7\. )/m);
+  assert.ok(section.includes("Resend"), "DRAFT § 6 names Resend, where the part puts its bracket");
+  return head + section.replace("Resend", `Resend; ${SECTION_6_BRACKET}`) + rest.join("");
+}
+
 /**
  * The inputs of a production build in a new temporary directory: the approved set, with `unfixed` (a key of UNFIXED)
  * left as committed. Returns the build's options (paths and vars) and `dir`.
@@ -85,10 +96,8 @@ export async function productionInputs({ unfixed = null, production = true } = {
 
   let draft = await readFile(DRAFT_FILE, "utf8");
   if (!leave("the status line still a draft")) draft = draft.replace(/^\*\*Status\*\*:.*$/m, APPROVED_STATUS);
-  for (const [placeholder, value] of Object.entries(DRAFT_FILLS)) {
-    if (leave("a bracket left in DRAFT § 6") && placeholder === "[Mailchimp]") continue;
-    draft = draft.replaceAll(placeholder, value);
-  }
+  for (const [placeholder, value] of Object.entries(DRAFT_FILLS)) draft = draft.replaceAll(placeholder, value);
+  if (leave("a bracket left in DRAFT § 6")) draft = withBracketInSection6(draft);
 
   const offers = JSON.parse(await readFile(OFFERS_FILE, "utf8"));
   if (!leave("offers a placeholder")) offers.status = "approved";

@@ -3,6 +3,8 @@
 // ⚠ AMENDED for SPEC-week-content § 9 item 5 (2026-10-23): the pages that carry the offer box are the pages the build
 // makes from the template, its own list (/ and one per event of data/events.json); every other built file, /why/'s and
 // /privacy/'s pages among them (they have no box), is byte-unchanged by the label, and the case names both sets.
+// ⚠ AMENDED for SPEC-ui-and-copy-pass § 1 item 1 (2026-10-23): the box prints the offer's headline, else its label, so
+// the word changed is the one the box prints (the Boston offer's headline); one place still changes it.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -20,8 +22,10 @@ test("S22: a copy of offers.json with one label changed, built — the new label
   const committed = await readFile(OFFERS_FILE, "utf8");
   const real = JSON.parse(committed);
   const chosen = offerForSave(DATE, real.offers); // the offer the box shows on DATE
+  const field = "headline" in chosen ? "headline" : "label"; // the words the box prints
+  const shownBefore = chosen[field];
   const copy = structuredClone(real);
-  copy.offers.find((o) => o.id === chosen.id).label = NEW_LABEL;
+  copy.offers.find((o) => o.id === chosen.id)[field] = NEW_LABEL;
 
   const dir = await mkdtemp(join(tmpdir(), "boston-s22-"));
   try {
@@ -42,12 +46,12 @@ test("S22: a copy of offers.json with one label changed, built — the new label
     for (const page of pages) {
       const before = await readFile(join(dir, "committed", page), "utf8");
       const after = await readFile(join(dir, "changed", page), "utf8");
-      assert.equal(offerBoxAt(before, midday(DATE)), chosen.label, `control: ${page} shows the committed label on ${DATE}`);
+      assert.equal(offerBoxAt(before, midday(DATE)), shownBefore, `control: ${page} shows the committed ${field} on ${DATE}`);
       assert.equal(offerBoxAt(after, midday(DATE)), NEW_LABEL, `${page}: the box shows the new label`);
       assert.equal(after.split(NEW_LABEL).length - 1, 1, `${page} carries the new label once`);
       const savedOffer = (html) => JSON.parse(/id="save-data">([\s\S]*?)<\/script>/.exec(html)[1]).offers.find((o) => o.id === chosen.id);
-      assert.equal(savedOffer(after).label, NEW_LABEL, `${page}: that offer's old label is gone`);
-      assert.equal(after.replace(JSON.stringify(NEW_LABEL), JSON.stringify(chosen.label)), before, `${page}: the label is the only difference`);
+      assert.equal(savedOffer(after)[field], NEW_LABEL, `${page}: that offer's old ${field} is gone`);
+      assert.equal(after.replace(JSON.stringify(NEW_LABEL), JSON.stringify(shownBefore)), before, `${page}: the ${field} is the only difference`);
     }
     for (const f of others) {
       assert.equal(changedTree[f], committedTree[f], `${f} unchanged`);

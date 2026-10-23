@@ -53,9 +53,9 @@ test("SP9: the development build carries /privacy/, marked as the step is; every
     const html = await readFile(join(out, "privacy", "index.html"), "utf8");
     await assertPrivacyPage(html, await readFile(DRAFT_FILE, "utf8"), "dev /privacy/");
     assert.match(pageText(html), new RegExp(`DRAFT — not for use · wording ${saveConfig.wording_version}`), "the step's DRAFT marking");
-    // Since SPEC-save-offer-production § 10 item 5 the draft's contact and response days are filled; its export provider is
-    // still the Owner's placeholder.
-    assert.ok(pageText(html).includes("[Mailchimp]"), "control: the draft's own placeholder, shown on the development page");
+    // Since SPEC-save-offer-production § 10 item 5 the draft's contact and response days are filled; since
+    // SPEC-ui-and-copy-pass § 1 item 5 (2026-10-23) § 6 names Resend alone, so no placeholder is left on the page (UC5).
+    assert.doesNotMatch(pageText(html), /\[[^\]]*\]/, "no placeholder left, shown on the development page");
     assert.ok(pageText(html).includes("Contact: privacy@eatfitaf.com."), "§ 10 item 5: the decided contact");
     assert.ok(pageText(html).includes("we'll answer within 30 days"), "§ 10 item 5: the decided response days");
     assertLinkResolves(await readFile(join(out, "index.html"), "utf8"), "/", out);

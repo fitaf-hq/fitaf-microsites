@@ -171,9 +171,10 @@ function clockAt(now) {
  * document, a location whose hash fires `hashchange` as a browser's does, and (with `now`) a clock fixed at that instant.
  * `go(hash)` is a visitor choosing; `el(id)` an element, which must exist. Since SPEC-plan-page-refinement § 2 item 1 the
  * page's script starts the carousel's timer: `timers` records each setInterval (none fires by itself; `tick()` fires
- * them) and `reducedMotion` is what matchMedia answers for prefers-reduced-motion.
+ * them) and `reducedMotion` is what matchMedia answers for prefers-reduced-motion. `globals` (SPEC-ui-and-copy-pass § 1,
+ * the save step's states) adds the browser's own objects a case stands in for, as page-sim.mjs does: `turnstile`, `fetch`.
  */
-export function openPlanPage(html, { hash = "", now, reducedMotion = false } = {}) {
+export function openPlanPage(html, { hash = "", now, reducedMotion = false, globals = {} } = {}) {
   const { document } = parseHTML(html);
   const listeners = {};
   let current = hash;
@@ -205,6 +206,7 @@ export function openPlanPage(html, { hash = "", now, reducedMotion = false } = {
       if (timers[id - 1]) timers[id - 1].cleared = true;
     },
   };
+  Object.assign(g, globals);
   g.window = g;
   if (now !== undefined) g.Date = clockAt(now);
   const context = vm.createContext(g);

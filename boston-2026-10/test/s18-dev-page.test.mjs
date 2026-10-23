@@ -70,12 +70,14 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   // the visitor has built the plan; the skip link is not on the page. (Its paragraphs above are checked as before.)
   assert.ok(!text.includes("Build my plan →"), "no skip link (§ 2b item 3)");
 
-  // The offer line (§ 2a): a slot under the heading, filled in the browser with offers.json's own label.
+  // The offer line (§ 2a): a slot, filled in the browser from offers.json. ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 item 1
+  // (2026-10-23): the heading is no longer drawn: its words are the box's accessible name (an element the box names it
+  // by, hidden), and the offer's line is the box's heading, printing the offer's headline, else its label.
   assert.ok(!text.includes(all[1]), "the draft's literal offer line is not on the page");
-  assert.match(devHtml, /<h2 id="save-title">Your Boston offer<\/h2>\s*<p class="save-offer"><strong id="save-offer-label"><\/strong><\/p>/);
+  assert.match(devHtml, /<section class="offer-box js-only" id="offer-box" aria-labelledby="save-title">\s*<span id="save-title" hidden>Your Boston offer<\/span>\s*<h2 class="offer-line" id="save-offer-label"><\/h2>/);
   const now = PAGE_NOW_MS; // a day of the offer (SPEC-save-offer-production § 10.7: after the last one, no step is drawn)
-  const label = offerForSave(zonedDate(now, saveConfig.send_time_zone)).label;
-  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, label, "offers.json's own label");
+  const offer = offerForSave(zonedDate(now, saveConfig.send_time_zone));
+  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, offer.headline ?? offer.label, "offers.json's own words");
 });
 
 test("S18: marked `DRAFT — not for use · wording v0.3-draft`; the production page carries none of it", () => {
@@ -128,13 +130,14 @@ test("S18: Flow 1's states in the page — OFFER, ERROR keeps what was typed, SA
   page.type("save-email", "dummy-s18@example.com");
   page.type("save-zip", "0211");
   page.el("save-form").dispatch("submit");
-  assert.equal(page.el("save-error").hidden, false, "ERROR(zip_invalid)");
-  assert.equal(page.el("save-error").textContent, "Enter a five-digit ZIP code.");
+  // SPEC-ui-and-copy-pass § 1 item 3: a field's error is shown under that field (UC3 holds where).
+  assert.equal(page.el("save-zip-error").hidden, false, "ERROR(zip_invalid)");
+  assert.equal(page.el("save-zip-error").textContent, "Enter a five-digit ZIP code.");
   assert.equal(page.el("save-email").value, "dummy-s18@example.com", "what was typed is kept");
   assert.equal(page.record.fetches.length, 0);
 
   page.type("save-zip", "02118");
-  assert.equal(page.el("save-error").hidden, true, "editing leaves ERROR");
+  assert.equal(page.el("save-zip-error").hidden, true, "editing leaves ERROR");
   page.el("save-form").dispatch("submit");
   await page.settle();
   assert.equal(page.record.fetches.length, 1);
