@@ -52,7 +52,8 @@ test("S28: as a visitor goes — absent, then after the plan's button, then Fami
 
 test("S28: with a week's Chef's Choice, Flow 1 directly after the card's last link to the store (Choose my own meals)", async () => {
   const { html: withWeek } = await pageWithPicks({ target: "dev", picks: FIXTURE_DIR });
-  const page = openPlanPage(withWeek, { hash: "#lean-7", now: midday(DAYS["S-5"]) });
+  // A day of the week's window and of the offer (SPEC-save-offer-production § 10.7: it runs from 2026-10-01).
+  const page = openPlanPage(withWeek, { hash: "#lean-7", now: midday(DAYS["S-3"]) });
   assert.equal(page.el("cc-list").hasAttribute("hidden"), false, "control: the week's list is shown");
   const { button } = assertFlowOneDirectlyAfterStoreButton(page);
   assert.equal(button.id, "cc-own");

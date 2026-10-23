@@ -21,14 +21,16 @@ test("M8: E1 and E-X bodies, HTML and text -> DRAFT § 3 as written, placeholder
   assert.equal(counts.sent, 3);
   const bodyFor = (to) => stub.calls.find((c) => c.body.to[0] === to).body;
 
-  const E1 = await draftMessage("**E1 — the next morning, to a saved offer.**");
   const EX = await draftMessage("**E-X — at once, to an out-of-area request.**");
-  assert.ok(E1.lines.length === 6 && EX.lines.length === 3, "control: the draft's messages were read");
+  assert.ok(EX.lines.length === 3, "control: the draft's E-X was read");
 
   for (const who of ["ticked", "unticked"]) {
     const row = await saveRow(db, people[who]);
     const body = bodyFor(people[who]);
     const offer = offerById(row.offer_id);
+    // SPEC-save-offer-production § 10: the form of E1's second line for this offer (the date held, or the code).
+    const E1 = await draftMessage("**E1 — the next morning, to a saved offer.**", { codeMode: offer.code_mode });
+    assert.ok(E1.lines.length === 6, "control: the draft's E1 was read, one form of its second line");
     const expected = E1.lines
       .map((l) => l.replace("[event]", events[0].name).replace("XXXX-XXXX", displayCode(row.offer_code)).replace("[date]", longDate(offer.valid_to)))
       .filter((l) => who === "ticked" || !l.startsWith("You asked to hear about"));

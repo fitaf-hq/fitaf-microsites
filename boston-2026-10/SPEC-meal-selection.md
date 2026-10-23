@@ -55,7 +55,8 @@ The file gains a **`selection`** table, one row per answer set, and a **`snacks`
 - `meals` is what the answers come to; **`plan` is the store's plan the cart goes through**, the largest count the store
   sells at or below `meals`. The build refuses a `plan` that is not among each individual plan's `counts`, and a row
   whose `plan` is above its `meals`.
-- **Snacks**: 7 with *every day*, 5 with *weekdays*, **beside** the plan, never in its count (the store sells snacks as
+- **Snacks**: the week's snack list for the chosen days, as Fit AF's picks hold it (⚠ **amended by § 13**, 2026-10-20:
+  it read *"7 with every day, 5 with weekdays"*), **beside** the plan, never in its count (the store sells snacks as
   add-ons, not as plan meals).
 - **The result card shows the plan**: its meals a week (⚠ **new**: today the count is on the button, not the card;
   § 8 item 4), its price per meal and its weekly total. When `plan` is below `meals`, one line says so (`plan_page.rounded`, a placeholder: *"{meals} meals go through as our {plan}-meal plan
@@ -99,7 +100,8 @@ unknown fragment opens the page at its start, as today. The partial states keep 
   rule, `checkDistinct`, 1 to `MAX_QTY`), `name` the store's name and the only key, `display` the KMS's name, shown
   (`SPEC-chefs-choice.md` § 7). A cart's `(lunch_dinner, weekends, breakfast)` must be a row of `selection` and its
   `plan` that row's; two carts for one row are refused; a missing row is allowed (§ 4's fallback).
-- Snack lists: the same item checks, their `qty` summing to 7 or 5; no `mpid`.
+- Snack lists: the same item checks, their `qty` summing to 7 or 5; no `mpid`. ⚠ **Amended by § 13** (2026-10-20): at
+  least 1 and at most 7 or 5, the list's own total.
 - **A version-1 file** (`menus` with `"7"` and `"14"`) still builds: its `7` is the cart for *or*, every day, no
   breakfast, and its `14` for *and*, every day, no breakfast, in `chefs-choice`. So the week delivered 10-18, written
   before this lands, shows under the new questions without a re-emit.
@@ -368,3 +370,257 @@ it moves with the flag too. `carted: true` is still refused by the build (§ 10 
 link's snack items, the block's press and CHECKOUT by width, the page's links, the live proof, and the release order (no
 link carrying a snack before the Advisor's paste). Two choices open with defaults: the snack price (none on the page) and
 who chooses the week's snacks.
+
+## 12. Amendment, 2026-10-20: every default on the left, *Weekdays only* the default, and the snacks in the card's list. CONTRACT, before any code
+
+**The Advisor's words** (2026-10-20, Fit AF's session 250): *"Please flip the semantics of these questions: "Weekdays
+only" and "Every day"; "No breakfast" and "Add breakfast". That will mean that all of the defaults ("OR", "Weekdays", "No
+breakfast") line up along the left side"*; asked whether *Weekdays only* also becomes the default and whether snacks flip
+the same way: *"Yes – please also do snacks as well so the default of "no snacks" (or however we wrote it) is on the
+left. Please unify snacks into the bottom of the meal list. That will clean up the bottom of the page ("Continue to
+checkout", "Choose my own meals", "See all plans")."* Amends § 1's table and § 2's defaults; nothing else of §§ 1–11.
+
+1. **The answers, each pair's default first (on the left)**:
+
+   | | question | answers, left · right | default |
+   |---|---|---|---|
+   | Q1 | lunch or dinner, or both | *Lunch **or** dinner* · *Lunch **and** dinner* | none (unchanged: the card waits for Q1) |
+   | Q2 | weekends | ***Weekdays only*** · *Every day* | ⚠ **weekdays** (was *every day*) |
+   | Q3 | breakfast | *No breakfast* · *Add breakfast* | no breakfast |
+   | Q4 | snacks | *No snacks* · *Add snacks* | no snacks |
+
+   The words stay phrases in `data/messages.json` (Q2's *no* answer reads *"Weekdays only"*); the default is data
+   (`data/plans.json` `selection_defaults.weekends: false`), and the order is the build's (each pair's default first,
+   so a future default change keeps the default on the left: the order follows the default, it is not a second list).
+2. ⚠ **What the default now means**: answering Q1 alone gives *or, weekdays* (5 a week, which the store fills as its
+   4-meal plan, § 2's table) and *and, weekdays* (10), not 7 and 14. **§ 6's MS-3 inverts**: the default links are
+   `or-5d` and `and-5d`. **Today's fragments keep their meaning** (§ 3): `#<size>-7` still opens *or, every day* and
+   `#<size>-14` *and, every day*, and a fragment naming its days (`-7d`, `-5d`) is read as written.
+3. **The snacks join the card's list**: with *Add snacks*, the one list holds the week's meals, then the snacks under a
+   small *"Snacks"* heading inside the same list (the phrase `snacks_heading`, or a shorter one the build names), then
+   *Continue to checkout* and *Choose my own meals*; no second box below the buttons. *"Snacks aren't added to your
+   cart yet."* stays with the snacks, where § 11 shows it. With *No snacks* the card is as today.
+4. **What changes, and what must not**: the development and production pages change, by design (the questions' order
+   and the default, the card's layout): S20's production golden and the development goldens are re-recorded **once**,
+   with every changed line listed in the build's notes. ⛔ **The week's content is byte-identical** (`npm run content`
+   for 2026-10-18 and 2026-10-25, production and `--env dev`, against `cff49c0`), and the cart links and the store's
+   Footer hand-off for every answer set are unchanged: the same answer set gives the same link. Storybook's stories that
+   show the questions or the card are re-recorded.
+5. **Cases, written first and run red**: each pair's default on the left; the default state (*weekdays*, no breakfast,
+   no snacks) after Q1 alone, with its links `or-5d` / `and-5d`; the legacy fragments' meaning unchanged; with snacks, one
+   list whose last lines are the snacks and the two buttons after it, no separate snacks box; without snacks the list as
+   today; and **the switch's smokes** (`unattended-switch.spec.md` S7/S9, Fit AF): whether any of them selects an answer
+   by position or by the old default. The build says which, and changes none of Fit AF's programs.
+6. **Release**: the dev line, then a dev pin (`fitaf-infra`) and the Advisor's look on dev; ⛔ **production only on his
+   word**, and not between Fit AF's rehearsal and Friday 2026-10-23's switch unless he says so (the switch's live smokes
+   run against eatfitaf.com's page).
+
+### 12.1 Built — found at the build, not ruled
+
+Built on `boston/defaults-left` from `d15b48c` (this contract, on the dev line `cff49c0`), in three commits: `68ec5f9`
+(the cases, red), `5f55cbc` (items 1–4), and this note's (the goldens, re-recorded once, and § 12.1). **To be re-gated by
+the orchestrator**: the cases below were run one file at a time, never the whole suite, Storybook or `npm run contrast`.
+§§ 0–12 are unchanged.
+
+**The cases (item 5), and what they did before the code** (`node --test <file>`, alone, on `68ec5f9`):
+
+| case | file | before | after (`5f55cbc` and this commit) |
+|---|---|---|---|
+| MS-17 (new): each pair's default on the left in this table's words, prod and dev; `selection_defaults` weekdays, no breakfast, no snacks; the left answers pressed after Q1; the order follows other defaults in a copy of the data | `ms-17-defaults-left.test.mjs` | 1 of 7 (the all-true defaults happen to be today's order) | 7 of 7 |
+| MS-3, inverted (item 2): Q1 alone gives `or-5d` (the 4-meal plan, the rounded line) and `and-5d`, their fragments and figures, and with a week those carts' own links; `#<size>-7` / `#<size>-14` keep their meaning, byte-identical to `ms-golden.json`; `-7d` / `-5d` read as written | `ms-03-defaults.test.mjs` | 1 of 3 (the legacy fragments, a control) | 3 of 3 |
+| MS-18 (new, item 3): with *Add snacks* the snacks inside `#cc-list` after the meals, under an `h4` reading *Snacks*, before *Continue to checkout*, *Choose my own meals* the card's last thing (not carted: the line after the snacks; carted: no line); *No snacks* reads as today; `.cc-snacks` draws no box, its heading smaller than the list's | `ms-18-snacks-in-the-list.test.mjs` | 1 of 4 (*No snacks*, a control) | 4 of 4 |
+| MS-16: Q4's answers `no`, `yes` | `ms-16-snacks-shown.test.mjs` | 2 of 3 | 3 of 3 |
+| A3's control: the page's answers compared as a set (their order is MS-17's subject) | `a03-refusals.test.mjs` | 4 of 4 | 4 of 4 |
+
+**Where § 12 was silent, and what was done**
+
+1. **Q1's order.** Q1 has no default (the card waits for it), so it keeps `QUESTIONS`' order, *or* then *and*: the
+   Advisor's *"OR"* is on the left as he listed it.
+2. **Where the order lives**: `build.mjs`'s `answerOrder(q, defaults)`, Q2–Q4's default answer first, read from
+   `selection_defaults` (`true` → `yes`). Not `scripts/selection.mjs`, which the Worker reaches, so the Worker's files move
+   by `data/plans.json` alone. `QUESTIONS` stays the vocabulary (A3's, and `src/worker/beacon.js` keeps its own copy
+   unchanged); only the markup's order follows the default. `src/app.js` is unchanged: the new default reaches it as
+   `#plan-data`'s `defaults`, and every answer is read by its `data-a`, never by position.
+3. **The heading**: `chefs_choice.snacks_heading` itself shortened to *"Snacks"* (one phrase, not a second); an `h4`
+   (`.cc-snacks-heading`, 600 15px, navy) under the list's `h3` (17px). Navy on white is a pair `npm run contrast`
+   already measures, so `src/contrast-pairs.json` is unchanged (not run here).
+4. **"Inside the same list"** is read as inside the list's box, `#cc-list`: the snack block keeps its own `ul`
+   (`#cc-snack-list`, the meals' style) under its heading, between `#cc-meals` and `#cc-checkout` (`card.html`'s new
+   `{{SNACKS}}` slot), rather than `li`s appended to `#cc-meals`, so the heading is not a list item and the card's script
+   (`chefs-choice.js`) is unchanged, its ids all kept.
+5. **The not-carted line** (*"stays with the snacks"*): committed, `snacks.carted` is true, so the line is not on the
+   page (SPEC-snacks-in-the-cart § 4.3) and nothing shows it; with a copy's flags not carted, it sits inside the list
+   after the snacks and before *Continue to checkout* (MS-18).
+6. ⬜ **A fallback card shows no snacks now.** § 10 item 12 put the snack box on the card whether or not the answers had a
+   cart; inside the list, it is hidden with the list. While carted no link could carry them anyway, and both committed
+   weeks (10-18, 10-25) have a cart for all eight answer sets, so nothing a visitor sees today changes. For the Advisor,
+   if a fallback card should show them.
+7. **CC-7b** reads the card's words from `#cc-list`'s text, which now holds the snack block: it marks `snacks_heading`
+   and `snacks_not_carted` too and builds from its own snack flags (shown, not carted: § 11's rule). CC-7a's source check
+   keeps its four phrases (*"Snacks"* is also inside the script's own name `renderSnacks`); two comments were reworded so
+   no card phrase is written in a source.
+8. **WC-9's visible pages cannot be re-recorded by its recorder as it was** (it builds a commit `--on` a date, and no
+   build embeds a week since SPEC-week-content § 7). `test/wc-09-record.mjs` gains `--visible-at <commit>`: `visible` is
+   the page production's Worker serves from that commit's own tree with the week's content in its bucket, as WC-9c makes
+   it; `picks_data`, `page_sha256` and the sheet stay 409b805's, so WC-9a's content comparison is unchanged.
+9. **The build commit, `5f55cbc`, is red by design** on exactly the cases that pin the pages' bytes (S20, CC-4 prod,
+   WC-8's control, WC-9c, U4) and the Worker's files (CC-8b, CC-8c, MS-9 ×2, PR-10: `data/plans.json`), because U4's and
+   WC-9's recorders record from a commit's own tree: this commit records them from `5f55cbc`.
+10. **Storybook** keeps no recorded image or golden: its stories build from the tree, so the stories that show the
+    questions or the card show the new order and layout with no change to them; its walk reads answers by `data-a` and
+    the snack block by its ids. Not run here.
+11. **Not changed, stale**: `data/messages.json`'s `about` still says snacks are not carted.
+
+**The switch's smokes (item 5)**: none selects an answer by position or relies on the old default. Fit AF's
+`scripts/switch/unattended-switch.spec.md` S7 and S9 take each smoke's link from a page's own `#picks-data` (the page
+fetched, never pressed) by the answer set's KEY, the cart's `links` or `snack_links` (its `smoke-link.ts`, with the job
+config naming `or-5d`, `and-7d-b`, `and-7d` and `or-5d` for S7 and `and-7d` for S9); its one positional choice is the
+size, the first of the cart's mpids sorted, over the content, which § 12 does not move. The watch's smoke opens the link
+it is given on the store (`tools/storefront-watch/lib/smoke.mjs`), and nothing in the watch's `bin/` or `lib/` reads a
+`data-q` or `data-a`. None of Fit AF's programs was changed.
+
+**What did not change, shown** (the dev line's worktree at `cff49c0`, read only, against this branch):
+
+- `npm run content -- --week 2026-10-18` and `2026-10-25`, each also `--env dev`, compared with `diff -r`: byte-identical
+  (`week/picks-data.json` 3a7b7b5d… and 931a963b… for 10-18 prod and dev, 31,134 bytes; b0787e5b… and fe445c38… for
+  10-25, 31,411 bytes; the sheets byte for byte).
+- Every answer set's links: both committed weeks, prod and dev, three sizes, `#<size>-7`, `#<size>-14` and the eight
+  answer sets with and without `-s` (216 states), each page made by its own tree's build and content and opened by the
+  same reader: *Continue to checkout*, *Choose my own meals*, *Choose your meals*, the meals and the figures
+  byte-identical (96 of the 216 links carry snacks). The same answer set gives the same link; only Q1 alone now lands on
+  `or-5d` / `and-5d`.
+- The visible page (wc-harness `visible()`) at 60 fragments per week and target: 6 byte-identical (no answer chosen,
+  `#family`, `#individual`, each size alone), 54 byte-identical once § 12's three changes are undone (each pair's buttons
+  swapped back, *Weekdays only* read as *Weekdays*, the snack block moved back after *Choose my own meals* with its old
+  heading), 0 different otherwise.
+- Every built file but the pages byte-identical (fonts, logo, photo sheets, QR codes).
+
+**The goldens, re-recorded once (this commit)**
+
+| golden | moved |
+|---|---|
+| S20 `test/s20-production-golden.json` | `index.html` alone, `ac981505…` → `03e39dbc…` |
+| WC-8's `TODAY_NO_PICKS_SHA256` | `03fcc0c1…` → `bb17e256…` |
+| U4 `test/u-04-golden.json` (`node test/u-04-record.mjs --commit 5f55cbc`) | the six served pages, and their visible page at the five answered fragments; all six contents and `(no fragment)` and `#family` byte-identical |
+| WC-9 `test/wc-09-golden.json` (`node test/wc-09-record.mjs --visible-at 5f55cbc`) | `visible` at the 18 answered fragments; `""`, `#family`, `picks_data`, `page_sha256` and the sheet as before |
+| CC-8 `test/cc-08-unchanged-golden.json` (CC-8b, CC-8c, MS-9, PR-10) | `worker["data/plans.json"]`, `4213f7b5…` → `46542b6f…`; the Footer block's text (`efcbc570…`) and the watch's expected Footer unchanged |
+
+**Every changed line.** Production's `index.html` (no week, as every build writes it), 25 lines; each development page
+(`/`, `demo/`, `boston/`, `seminar/`) changes by the same 25 lines at other line numbers (compared line for line), and
+each served page (U4, WC-9) by the same lines, its `#picks-data` the unchanged content. Sizes, raw / gzip: production
+40,195 / 11,878 → 40,324 / 11,947; development `/` 63,825 / 18,780 → 63,954 / 18,840 (`seminar/` 63,957 / 18,842), under
+SPEC.md § 1's 61,440 gzip. (`diff`'s own output; the `#plan-data` line is one line of JSON, shown here by its
+`defaults` alone, the only part that moved.)
+
+```text
+198,200c198,203
+< /* The week's snacks (SPEC-meal-selection § 9 item 3): shown with Add snacks, below the card's links; never in a link */
+< .cc-snacks { margin: 16px 0 0; padding: 16px 16px 4px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+< .cc-note { margin: 0 0 12px; color: var(--muted); font-size: 15px; }
+---
+> /* The week's snacks (SPEC-meal-selection § 9 item 3; § 12 item 3): with Add snacks, inside the card's one list, after the
+>    meals and before the list's checkout link, under a small heading; no box of their own */
+> .cc-snacks { margin: 0 0 16px; }
+> .cc-snacks .cc-meals { margin-bottom: 0; }
+> .cc-snacks-heading { margin: 0 0 4px; font: 600 15px/1.3 var(--head); color: var(--navy); }
+> .cc-note { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+257a261
+>           <button type="button" class="choice" data-q="weekends" data-a="no" aria-pressed="false"><span class="choice-name">Weekdays only</span></button>
+259d262
+<           <button type="button" class="choice" data-q="weekends" data-a="no" aria-pressed="false"><span class="choice-name">Weekdays</span></button>
+265d267
+<           <button type="button" class="choice" data-q="breakfast" data-a="yes" aria-pressed="false"><span class="choice-name">Add breakfast</span></button>
+266a269
+>           <button type="button" class="choice" data-q="breakfast" data-a="yes" aria-pressed="false"><span class="choice-name">Add breakfast</span></button>
+272d274
+<           <button type="button" class="choice" data-q="snacks" data-a="yes" aria-pressed="false"><span class="choice-name">Add snacks</span></button>
+273a276
+>           <button type="button" class="choice" data-q="snacks" data-a="yes" aria-pressed="false"><span class="choice-name">Add snacks</span></button>
+290a294,297
+>             <div class="cc-snacks" id="cc-snacks" hidden>
+>               <h4 class="cc-snacks-heading" id="cc-snacks-heading" hidden>Snacks</h4>
+>               <ul class="cc-meals" id="cc-snack-list" hidden></ul>
+>             </div>
+294,297d300
+<           <div class="cc-snacks" id="cc-snacks" hidden>
+<             <h3 class="cc-heading" id="cc-snacks-heading" hidden>Snacks this week</h3>
+<             <ul class="cc-meals" id="cc-snack-list" hidden></ul>
+<           </div>
+400c403
+< <script type="application/json" id="plan-data">… "defaults":{"weekends":true,"breakfast":false,"snacks":false} …
+---
+> <script type="application/json" id="plan-data">… "defaults":{"weekends":false,"breakfast":false,"snacks":false} …
+```
+
+### 12.2 Gated, 2026-10-20 (the orchestrator, on `235ae87`, each set announced, nice 15)
+
+- `npm test` **872 of 872**; `npm run contrast` **70 pairs, 70 pass**; `tools/storybook` **41 of 41**;
+  `tools/storefront-watch` **213 of 213**.
+- ⚠ **The owed mirror gate, `suite-in-mirror.mjs --set snacks.shown=false`, is stale**: since `SPEC-snacks-in-the-cart.md`
+  § 4.1 made `snacks.carted` `true`, the build refuses snacks carted while not shown (`selection.mjs`: *"snacks.carted is
+  true while snacks are not shown"*), so that set alone fails every case that builds a page (228 of 842). The reachable
+  state is **`--set snacks.shown=false --set snacks.carted=false`**: **854 of 872**, and **the same 18 cases fail on the
+  dev line `cff49c0` under the same two sets** (842 of 860; the two that read differently are U4 and WC-9c, the same
+  cases naming a golden this branch re-recorded). **None of the 18 is this branch's.**
+- ⚠ **Found, not this branch's**: on the dev line, hiding snacks breaks 18 cases. Most pin goldens recorded with snacks
+  shown (S20, CC-4, CC-8b/c, MS-9 ×2, PR-10, U1b–e, U4, WC-9a/c, § 8's control), but **A3 fails with a `TypeError`**
+  (*"list is not iterable"*): a path that assumes the snack list exists. A flip of `snacks.shown` to `false` would need
+  them re-recorded and A3's path fixed in its own commit, as § 11 says of S20.
+
+## 13. Amendment, 2026-10-20: a week's snack list holds at most one a day, not exactly one. CONTRACT, before any code
+
+(§ 12 is `boston/defaults-left`'s, the questions' defaults on the left, whose cases are MS-17 and MS-18; this section does
+not depend on it, and its cases are numbered after them.)
+
+**Why.** The Owner's rule to try, from the Advisor's live notes of the 2026-10-20 meeting (Fit AF's decision record
+`2026-10-17-the-picks-from-our-plans-and-the-breakfast-slate.md` § 7k item 1): *"Snacks are big, multi-portion items
+… Weekdays get 3 snacks: dirt, pronut, superfood. Plus weekends get 2 snacks: brownie + sand or superfood"*. The picks
+are Fit AF's (`scripts/menus/propose_picks.spec.md` § 14), and a week's file then carries **5** snacks for every day
+and **3** for weekdays, still keyed by the days. This page decides nothing about which snacks or how many: it shows the
+week's lists.
+
+1. **The check** (`scripts/chefs-choice.mjs` `snackLists`): a list's total `qty` must be **at least 1 and at most its
+   days** (7 or 5), in place of exactly its days; the message names both bounds. The keys (`"7"`, `"5"`) and the page's
+   data (`7d`, `5d`) are unchanged, and so is every other check of a snack item.
+2. **The words**: § 2's *"Snacks: 7 with every day, 5 with weekdays"* now reads *the week's snack list for the chosen
+   days, as Fit AF's picks hold it*; any comment or phrase that counts snacks by the days (`selection.mjs`'s *"Snacks are
+   one a day"*, `messages.json`'s `recap_snacks` `{s}`) takes the list's own total. Grep for every reader of the snack
+   lists; each is in scope.
+3. **Cases** (written first, run red): **MS-19** a fixture week with snack lists of 5 (every day) and 3 (weekdays)
+   builds, and the card and its recap show 5 and 3; a list of 8 for 7 days and an empty list are refused, each named;
+   **MS-20** the committed weeks in `data/picks/` build byte for byte as before (their lists are one a day).
+   **Mutant**: the old exact check, which turns MS-19 red.
+4. ⛔ **Order of release**: in production **before** Fit AF commits its first file made by the new rule (the switch of
+   Friday 2026-10-30 for the week delivered 8 November, at the earliest), and **not before** Friday 2026-10-23's switch
+   has released (Fit AF's `scripts/switch/unattended-switch.spec.md` § 12: nothing merges into
+   `boston/rung-4-save-offer` until then). A dev pin first, as every release.
+5. ⛔ **Not here**: carting snacks (`SPEC-snacks-in-the-cart.md`), a snack price, which snacks.
+
+### 13.1 Built (found at the build, not ruled)
+
+Built on `boston/review-1022` with `SPEC-every-menu-and-nutrition.md` § 11 (whose § 11.1 carries the shared goldens and
+gates), from `1c10839` (the merge of this contract, `c269ab7`), in two commits: `0c2e3e3` (the cases, red) and
+`dfca126` (items 1–2); the goldens once, after both sections, at `c61548b`. The Advisor lifted item 4's order
+(2026-10-22, through the orchestrator: *"the snack rules were not implemented – we should not be doing 1 snack per
+day"*): it ships with § 11. §§ 0–13 are unchanged.
+
+| case | file | before (`0c2e3e3`, on `1c10839`'s code) | after (`dfca126`) |
+|---|---|---|---|
+| MS-19: the v2 fixture with a snack list of 5 for every day (2 + 2 + 1) and of 3 for weekdays (1 + 1 + 1), snacks shown and carted, builds and makes its content; at `#lean-or-7d-s` and `#lean-or-5d-s` the card's snack lines are each list's, and its checkout link carries 5 and 3 snack units; a list of 8 for 7 days refused (*"lists.chefs-choice.snacks.7: the snacks for 7 days are at least 1 and at most 7; the list has 8"*) and an empty list refused (*"lists.chefs-choice.snacks.5 must be a list of meals"*), each naming the file | `test/ms-19-snack-counts.test.mjs` | 1 of 4 (the empty list, refused before as after; the fixture refused, *"the snacks for 5 days are 5; the list has 3"*) | 4 of 4 |
+| MS-19's mutant: the old exact check put back in a mirror of the package (`cc-harness` `mirror`) | the same | red on its anchor (absent) | red as required (*"… the snacks for 5 days are 5; the list has 3"*), its control (the unchanged mirror) green |
+| MS-20: `npm run content` for every committed week of `data/picks/` (2026-10-11, -18, -25), production and `--env dev`, byte-identical to `1c10839`'s tree, files, report and message | `test/ms-20-committed-weeks.test.mjs` | 7 of 7 (an invariance case) | 7 of 7 |
+| Readers of the lists amended: MS-6's refusal of a list over its days (the message names both bounds); MS-7's sum of a link's snack units, the list's own total | `ms-06-refusals`, `ms-07-snacks-off` | 36 of 37; 5 of 5 | 37 of 37; 5 of 5 |
+
+**Where § 13 was silent, and what was done**
+
+1. **"The recap shows 5 and 3"** is read on the card's link: the checkout's recap prints `recap_snacks` with `{s}` the
+   link's snack units (`src/storefront/fitaf-handoff.js`: `V = p.units - p.total`; SN-2f), so MS-19 holds the link's
+   units to the list's total and does not run the store's checkout. `data/messages.json`'s `recap_snacks` needed no
+   change: its `{s}` was already the list's own total.
+2. **The lower bound** is the list's own: an empty list was already refused (*"must be a list of meals"*) and an item's
+   `qty` is at least 1 (the link tool), so *"at least 1"* in the new message is never what refuses a list.
+3. **The words that counted by the days**: § 2's *Snacks* and § 5's snack lists are amended in place, each marked;
+   `SPEC-snacks-in-the-cart.md` § 4 item 4 and the README's rows too; `scripts/selection.mjs`'s comment. ⚠ That file is
+   one the development Worker reaches, so CC-8b's golden moved by the comment alone (§ 11.1's table), and SP3's base
+   carries it.
+4. **No page moves** for this section, and no content of a committed week (MS-20).

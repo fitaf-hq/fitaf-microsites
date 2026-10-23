@@ -4,7 +4,8 @@ import { join } from "node:path";
 import { lapseInputs } from "../src/worker/scheduled.js";
 import { validateSave } from "../src/worker/validate-save.js";
 import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
-import { d1Adapter, count, FAR_ZIP, NEAR_ZIP, PAST_OFFER_ID, rows, validSave, WORKER_DIR } from "./worker-harness.mjs";
+import { OFFERS } from "../src/worker/offers.js";
+import { d1Adapter, count, FAR_ZIP, NEAR_ZIP, PAST_OFFER, PAST_OFFER_ID, rows, TEST_NOW_MS, validSave, WORKER_DIR } from "./worker-harness.mjs";
 
 export const LAPSE_PATH = join(WORKER_DIR, "lapse.js");
 export const PURGE_PATH = join(WORKER_DIR, "purge.js");
@@ -12,7 +13,11 @@ export const PURGE_PATH = join(WORKER_DIR, "purge.js");
 export const lapseModulePath = () => process.env.LAPSE_MODULE || LAPSE_PATH;
 export const purgeModulePath = () => process.env.PURGE_MODULE || PURGE_PATH;
 
-export const NOW_MS = Date.parse("2026-09-27T16:00:00.000Z"); // fixed: the case does not drift with the clock
+// Fixed: the case does not drift with the clock. Since SPEC-save-offer-production § 10.7 (the committed file's one offer
+// runs 2026-10-01 to 2026-10-29) the harness's clock, a day of that offer, and the ended offers are the harness's past
+// fixture offer, which the lapse's inputs are given beside the committed ones (LAPSE_OFFERS).
+export const NOW_MS = TEST_NOW_MS;
+export const LAPSE_OFFERS = [PAST_OFFER, ...OFFERS];
 const DAY = 86_400_000;
 const iso = (ms) => new Date(ms).toISOString();
 
@@ -64,7 +69,7 @@ export async function assertLapseIsCorrect(lapseModule, db) {
   const before = new Map();
   for (const f of fixture) before.set(f.name, { save: await one(db, "saves", f.saveRow.save_id), contact: await one(db, "save_contacts", f.saveRow.save_id) });
 
-  const inputs = lapseInputs(NOW_MS);
+  const inputs = lapseInputs(NOW_MS, LAPSE_OFFERS);
   const result = await lapseModule.lapse(d1Adapter(db), inputs, { dryRun: false });
   assert.deepEqual(result, { dry_run: false, offer: 3, expansion_unconfirmed: 1, expansion_retention: 1 });
 

@@ -1,7 +1,7 @@
 // The week as content (SPEC-week-content.md § 3): one week's objects for the Workers' WEEK bucket, made from the commit
 // it runs in.
 //
-//   npm run content -- --week YYYY-MM-DD --out DIR [--env dev] [--picks DIR]
+//   npm run content -- --week YYYY-MM-DD --out DIR [--env dev] [--picks DIR] [--messages FILE]
 //
 // writes DIR/week/picks-data.json (the page's #picks-data for that ONE week: pageData(), the data the card's script reads,
 // every photo-sheet URL at /week/<file>.jpg, the tiles' and the checkout links' photo part alike: § 1) and DIR/week/<file>.jpg
@@ -12,6 +12,10 @@
 //   links name the test address's photo host, as `build:dev`'s did; the default is production's). `--picks DIR` reads
 //   that picks directory instead of data/picks/ (relative to the working directory): Storybook's fixture week and the
 //   cases, NEVER the bucket's job (the build's own --picks, moved here with the ruling that the build reads no week).
+//   `--messages FILE` reads that words file instead of data/messages.json, for the same two and never the bucket's job
+//   (SPEC-every-menu-and-nutrition § 4: a week of an invented second list is made only with its own fixture words).
+// - SPEC-every-menu-and-nutrition: the lists a week may carry are those data/messages.json's `menus` names (another is
+//   refused, naming it), and the menus' names and the nutrition phrases are filled here, as every word of the week is.
 // - Deterministic: no clock, no network; two runs over one commit are byte-identical (WC-10). The file is the element's
 //   text as the build writes it (scriptJson: compact JSON, every "<" as the six characters \u003c), with no trailing newline.
 // - ⛔ The build embeds no week (SPEC-week-content § 7's ruling), so data/picks/ is read HERE alone, and its refusals
@@ -39,7 +43,7 @@ import {
   scriptJson,
   sheetsToCopy,
 } from "../build.mjs";
-import { chefsChoiceWords, isSunday, pageData, readPicks } from "./chefs-choice.mjs";
+import { chefsChoiceWords, isSunday, menuWords, pageData, readPicks } from "./chefs-choice.mjs";
 import { checkSelection } from "./selection.mjs";
 
 /** § 1: the objects' keys (the interface with fitaf-infra). */
@@ -81,7 +85,7 @@ export async function weekData({
   const plans = await loadJson(plansPath);
   checkSelection(plans);
   const messages = await loadJson(messagesPath);
-  const words = chefsChoiceWords(messages);
+  const words = { ...chefsChoiceWords(messages), ...menuWords(messages) };
   const zone = (await loadJson(savePath)).send_time_zone;
   const built = await loadPhotos(photosPath);
   // The build's refusal (copyStatic): a sheet the manifest names and the directory lacks.
@@ -92,7 +96,7 @@ export async function weekData({
   }
   const { photos, prefix } = contentPhotos(built);
   // Every picks file, read and checked (a broken one refuses, naming it); then the one week, or all of them.
-  const all = existsSync(picksDir) ? await readPicks(picksDir, plans, { photos, host: TARGETS[target] }) : [];
+  const all = existsSync(picksDir) ? await readPicks(picksDir, plans, { photos, host: TARGETS[target] }, { menus: words.menus, heading: words.heading }) : [];
   const weeks = week === undefined ? all : all.filter((w) => w.delivery === week);
   if (week !== undefined && !weeks.length) throw new Error(`no picks file for ${week}: data/picks/${week}.json`);
   const { shown: snacks, carted } = checkSelection(plans).snacks;
@@ -147,13 +151,13 @@ export async function writeContent(files, outDir) {
   return written;
 }
 
-/** The command line: exactly --week and --out, and --env dev and --picks DIR. Anything else is refused. */
+/** The command line: exactly --week and --out, and --env dev, --picks DIR and --messages FILE. Anything else is refused. */
 export function parseArgs(argv) {
-  const known = { "--week": "week", "--out": "out", "--env": "env", "--picks": "picks" };
+  const known = { "--week": "week", "--out": "out", "--env": "env", "--picks": "picks", "--messages": "messages" };
   const args = {};
   for (let i = 0; argv.length > i; i += 2) {
     const name = known[argv[i]];
-    if (!name) throw new Error(`unknown argument ${JSON.stringify(argv[i])} (npm run content -- --week YYYY-MM-DD --out DIR [--env dev] [--picks DIR])`);
+    if (!name) throw new Error(`unknown argument ${JSON.stringify(argv[i])} (npm run content -- --week YYYY-MM-DD --out DIR [--env dev] [--picks DIR] [--messages FILE])`);
     if (name in args) throw new Error(`${argv[i]} given twice`);
     if (argv[i + 1] === undefined || argv[i + 1].startsWith("--")) throw new Error(`${argv[i]} needs a value`);
     args[name] = argv[i + 1];
@@ -161,14 +165,20 @@ export function parseArgs(argv) {
   if (!args.week) throw new Error("--week YYYY-MM-DD is required: the delivery Sunday (never inferred)");
   if (!args.out) throw new Error("--out DIR is required");
   if (args.env !== undefined && args.env !== "dev") throw new Error(`--env must be dev; got ${args.env}`);
-  return { week: args.week, out: args.out, target: args.env ?? "prod", ...(args.picks ? { picksDir: resolve(args.picks) } : {}) };
+  return {
+    week: args.week,
+    out: args.out,
+    target: args.env ?? "prod",
+    ...(args.picks ? { picksDir: resolve(args.picks) } : {}),
+    ...(args.messages ? { messagesPath: resolve(args.messages) } : {}),
+  };
 }
 
 // Run as a program (not a top-level await: chefs-choice.mjs imports build.mjs, which must finish evaluating first).
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   (async () => {
-    const { week, out, target, picksDir } = parseArgs(process.argv.slice(2));
-    const { files } = await weekContent({ week, target, ...(picksDir ? { picksDir } : {}) });
+    const { week, out, ...inputs } = parseArgs(process.argv.slice(2));
+    const { files } = await weekContent({ week, ...inputs });
     for (const f of await writeContent(files, out)) console.log(`wrote ${f.path} (${f.bytes} bytes) sha256:${f.sha256}`);
   })().catch((err) => {
     console.error(`week-content: ${err.message}`);

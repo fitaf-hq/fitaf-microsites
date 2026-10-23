@@ -1,8 +1,9 @@
 // Q6 (SPEC-print-pieces.md § 4, § 5): proofs. A piece carrying any placeholder (a photo position without a photo, or the
 // offer while it is a placeholder) is a proof: its files end "-PROOF", and the build's last line says which placeholders
 // remain. Only a piece with none is named flyer.pdf / tent-card.pdf (§ 8 named a tent card by its logo variant's letter;
-// §§ 9–10 withdrew the variants). The offers are as committed (every one "[The offer]",
-// status placeholder) unless a mirror of data/offers.json names a real one.
+// §§ 9–10 withdrew the variants). The offers are as committed (status placeholder) unless a mirror of data/offers.json
+// names a real one. Since SPEC-save-offer-production § 10.2 (2026-10-22) the Boston event offer's label is approved; this
+// line's print build still lists the offer while the file's status is placeholder, so what remains is that label.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -19,6 +20,8 @@ const [flyer, tent] = ["flyer", "tent-card"].map((id) => PRINT_PIECES.find((p) =
 /** Since §§ 9–10 no page carries a variant's letter (Q14). -PROOF after its name. */
 const page = (base) => pagesToPrint().find((p) => p.base === base);
 const committedOffers = JSON.parse(await readFile(OFFERS_PATH, "utf8"));
+/** The offer on the pieces' date (2026-10-20, the Boston event's), as the build lists it while it remains. */
+const REMAINS = `the offer "${committedOffers.offers.find((o) => o.id === "event-boston-2026-10-placeholder").label}"`;
 /** A mirror of data/offers.json whose offers are named (no bracketed stand-in) and whose status is not placeholder. */
 const namedOffersPath = join(set.dir, "offers-named.json");
 await writeFile(
@@ -39,14 +42,14 @@ test("Q6: the committed offer is a placeholder; a named one is not", async () =>
   await writeFile(statusOnly, JSON.stringify({ ...committedOffers, offers: committedOffers.offers.map((o) => ({ ...o, label: "Named" })) }));
   assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: statusOnly })), true, "status placeholder");
   const labelOnly = join(set.dir, "offers-label.json");
-  await writeFile(labelOnly, JSON.stringify({ ...committedOffers, status: "approved" }));
+  await writeFile(labelOnly, JSON.stringify({ ...committedOffers, status: "approved", offers: committedOffers.offers.map((o) => ({ ...o, label: "[The offer]" })) }));
   assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: labelOnly })), true, "label [The offer]");
 });
 
 test("Q6: no photos: every position and the offer remain, and both pieces are proofs", async () => {
   const inputs = await loadInputs({ photosDir: noPhotos, today: "2026-10-20" });
-  assert.deepEqual(placeholdersOf(flyer, inputs), ["photo flyer", 'the offer "[The offer]"']);
-  assert.deepEqual(placeholdersOf(tent, inputs), ["photo tent-large", "photo tent-top", "photo tent-bottom", 'the offer "[The offer]"']);
+  assert.deepEqual(placeholdersOf(flyer, inputs), ["photo flyer", REMAINS]);
+  assert.deepEqual(placeholdersOf(tent, inputs), ["photo tent-large", "photo tent-top", "photo tent-bottom", REMAINS]);
   assert.equal(stemOf(page("flyer"), placeholdersOf(flyer, inputs)), "flyer-PROOF");
   assert.equal(stemOf(page("flyer-3"), placeholdersOf(flyer, inputs)), "flyer-3-PROOF");
   assert.equal(stemOf(page("tent-card"), placeholdersOf(tent, inputs)), "tent-card-PROOF");
@@ -54,7 +57,7 @@ test("Q6: no photos: every position and the offer remain, and both pieces are pr
 
 test("Q6: photos but the offer a placeholder: still proofs, the offer alone remaining", async () => {
   const inputs = await loadInputs({ photosDir: allPhotos, today: "2026-10-20" });
-  assert.deepEqual(placeholdersOf(flyer, inputs), ['the offer "[The offer]"']);
+  assert.deepEqual(placeholdersOf(flyer, inputs), [REMAINS]);
   assert.equal(stemOf(page("tent-card"), placeholdersOf(tent, inputs)), "tent-card-PROOF");
 });
 
@@ -74,8 +77,8 @@ test("Q6: built with no photos, the files end -PROOF and the last line lists wha
   // The pages grouped by what remains on them, in the build's order
   assert.equal(
     built.lines.at(-1),
-    'placeholders remain: tent-card-PROOF.pdf (photo tent-large, photo tent-top, photo tent-bottom, the offer "[The offer]"); ' +
-      'flyer-PROOF.pdf, flyer-1-PROOF.pdf, flyer-2-PROOF.pdf, flyer-3-PROOF.pdf, flyer-4-PROOF.pdf (photo flyer, the offer "[The offer]")',
+    `placeholders remain: tent-card-PROOF.pdf (photo tent-large, photo tent-top, photo tent-bottom, ${REMAINS}); ` +
+      `flyer-PROOF.pdf, flyer-1-PROOF.pdf, flyer-2-PROOF.pdf, flyer-3-PROOF.pdf, flyer-4-PROOF.pdf (photo flyer, ${REMAINS})`,
   );
 });
 

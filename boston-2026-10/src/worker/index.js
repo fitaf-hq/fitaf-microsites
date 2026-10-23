@@ -59,10 +59,14 @@ async function handleSave(request, env) {
   }
   const nowMs = Date.now();
   const now = new Date(nowMs).toISOString();
+  // SPEC-save-offer-production § 10.7: after the last offer's valid_to no offer is offered, so an offer save (from a page
+  // drawn before then) is refused, by name, and nothing is written. An expansion save needs no offer.
+  const offer = save.kind === "offer" ? offerForSave(zonedDate(nowMs, ZONE)) : null;
+  if (save.kind === "offer" && !offer) return refuse(400, "offer_ended");
   const sendAt =
     save.kind === "offer" ? new Date(nextDayAt(nowMs, { zone: ZONE, hour: saveConfig.send_hour })).toISOString() : now;
   try {
-    await upsertSave(env.DB, save, { offerId: offerForSave(zonedDate(nowMs, ZONE)).id, now, sendAt });
+    await upsertSave(env.DB, save, { offerId: offer?.id ?? null, now, sendAt });
   } catch {
     return refuse(500, "store_failed"); // the error text may carry values; it is not relayed
   }

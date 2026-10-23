@@ -15,12 +15,22 @@
 // 3. The page's analytics (SPEC-analytics.md § 4): POST /a, one event of a closed list, one Analytics Engine data
 //    point; a 204 in every case (beacon.js). No asset matches /a, so it reaches the script assets-first.
 //
+// 4. SPEC-save-offer-production.md § 4 item 2: with data/save.json's `production` TRUE, this Worker is the development
+//    Worker's handler, imported, not copied (index.js: rung 4's routes, POST /api/save, /confirm/<token>, /o/<code>, then
+//    the three behaviours above; and its scheduled handler, the cron's send, lapse and purge), with production's bindings
+//    and vars (wrangler.jsonc's top level, mirrored by fitaf-infra). With `production` FALSE it is the three behaviours
+//    above and nothing else, as before: `{ fetch: serveSite }`, no scheduled handler (SP3 compares it with the base's).
+//    index.js imports serveSite from here, and this module imports index.js's default: the two are read only when a
+//    request or the cron arrives, never while the modules load, so either can be the entry.
+//
 // Freshness (§ 4.4): a write to the bucket is what the next request gets. The page is asked of the assets WITHOUT the
 // visitor's conditional headers (so the assets never answer 304 for a page whose week may have changed under the same
 // asset), and goes out with `Cache-Control: no-cache` and no ETag or Last-Modified (the asset's would name the asset, not
 // this page): a browser keeps it but asks again every time, and gets the page whole. A sheet goes out with
 // `Cache-Control: no-cache` and the object's own ETag, so a browser revalidates every time and gets a 304 while the
 // object is unchanged; a sheet re-written under the same name is seen at the next request.
+import saveConfig from "../../data/save.json" with { type: "json" };
+import development from "./index.js";
 import { BEACON_PATH, serveBeacon } from "./beacon.js";
 import { scriptJson } from "./script-json.js";
 
@@ -143,4 +153,10 @@ export async function serveSite(request, env) {
   return env.ASSETS.fetch(request);
 }
 
-export default { fetch: serveSite };
+/** § 4 item 2: production with the save step, the development Worker's own handler (rung 4's routes and the cron). */
+const withSaveStep = {
+  fetch: (request, env, ctx) => development.fetch(request, env, ctx),
+  scheduled: (controller, env, ctx) => development.scheduled(controller, env, ctx),
+};
+
+export default saveConfig.production === true ? withSaveStep : { fetch: serveSite };

@@ -12,6 +12,9 @@ import { EVENTS_PATH, loadJson, writeQrCodes } from "../build.mjs";
 import { buildMockups, MOCKUPS_DIR, PIECES } from "../mockups/build-mockups.mjs";
 import { elements, hasClass } from "./mockup-html.mjs";
 
+// A day of the offer (SPEC-save-offer-production § 10.7: the one offer ends 2026-10-29, and the mock-ups show it).
+const MOCKUP_DAY = "2026-10-20";
+
 const events = await loadJson(EVENTS_PATH);
 const out = await mkdtemp(join(tmpdir(), "boston-mockups-"));
 const ref = await mkdtemp(join(tmpdir(), "boston-qr-ref-"));
@@ -20,7 +23,7 @@ after(async () => {
   await rm(out, { recursive: true, force: true });
   await rm(ref, { recursive: true, force: true });
 });
-const built = await buildMockups({ outDir: join(out, "dist"), png: false, photosDir: noPhotos });
+const built = await buildMockups({ today: MOCKUP_DAY, outDir: join(out, "dist"), png: false, photosDir: noPhotos });
 await writeQrCodes(events, ref);
 
 test("P4: the mock-ups' QR files are byte-identical to the build's", async () => {
