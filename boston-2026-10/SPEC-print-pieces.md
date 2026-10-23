@@ -654,3 +654,22 @@ just try to do the best that we can."* The words are revised in Fit AF's folder 
    *Name*, the `@` and `.` of the email line, *ZIP code (optional)*, no *Phone*, no *Company*; the one-sided page's rules
    line; the sign's rules whole), a case for item 3 (the tout's photo id not in the final set's assignment), and the
    mutants as before. The 6 × 4 proofs still build.
+
+### 17.3 Amendment, 2026-10-23 (evening): a simpler card, and the tout's first photo back. CONTRACT, before any code
+
+**Why.** The Advisor on the letter proofs (Fit AF's decision record § 7t item 7): *"For the entry cards let's keep it
+simple: horizontal, email only, fine print with rules on the front. I think we might be able to get 6 or 8 on a page
+that way"*; and of the tout's new photo, *"this looks slightly worse"*.
+
+1. **The entry card, one side, landscape**: its heading, the **email-shaped line** (§ 17.2 item 2) as its one field, and
+   the rules as **fine print** (the words file's `# Front`, which now holds them all) at the type floor or larger, the
+   logo small. **No back, no rules sign, no duplex page, no one-sided variant**: `letter-entry-cards.pdf` is **one page**
+   of cards, **eight a page** (2 × 4, each 3.75 × 2.5 in) if every card's words fit at the floor with 0.25 in clear of each
+   cut, else **six** (2 × 3), the report saying which and by how much; § 17.2 item 1's page rules stand (Letter, no marks,
+   no bleed, nothing within 0.5 in of the paper's edge; the light cut guides the builder's). § 17.2's two-sided card, the
+   one-sided page and the sign are removed with their cases.
+2. **The tout's photo is the flyer's again** (`pfd061e`, its caption): § 17.2 item 3 is withdrawn. Nothing names a
+   unique photo with a caption: the eight the KMS names are all placed in the printed set, and the rest have no name.
+   The tout's fine print now ends *"Rules on the entry cards."* (the words file).
+3. **Cases**: QG32 for the one-page card (its field's `@` and `.`, the fine print whole from the PDF, the count a page,
+   no word within 0.25 in of a cut), QG31 for the tout's photo id; the mutants as before.
