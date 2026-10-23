@@ -594,10 +594,10 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
 /** Copy the fonts, the logo and (a relative `base`) the photo sheets next to the page. Only files the page may reference
  *  are copied. A sheet the manifest names that is not in `sheetsDir` (src/assets/photo-sheets/) refuses the build: a
  *  broken image never ships (to remove the photos, `base` is null). */
-export async function copyStatic(outDir, photos = undefined, sheetsDir = PHOTO_SHEETS_DIR) {
+export async function copyStatic(outDir, photos = undefined, sheetsDir = PHOTO_SHEETS_DIR, staticDirs = STATIC_DIRS) {
   photos ??= await loadPhotos();
   const written = [];
-  for (const { dir, match } of STATIC_DIRS) {
+  for (const { dir, match } of staticDirs) {
     await mkdir(join(outDir, dir), { recursive: true });
     for (const name of (await readdir(join(ROOT, "src", dir))).filter((n) => match.test(n)).sort()) {
       await copyFile(join(ROOT, "src", dir, name), join(outDir, dir, name));
@@ -809,6 +809,37 @@ export function previewWords(messages) {
 const PREVIEW_DATE = '<span id="preview-date"></span>';
 
 /**
+ * SPEC-preview-sites § 8 (the orchestrator's ruling, 2026-10-22): a preview leaves out "Why Fit AF?", as it leaves out the
+ * save step and /privacy/ (§ 7 item 3: no link holds an address; item 8: the preview Worker serves /fonts/ and /assets/
+ * only). Each piece is cut from the preview page as rendered, by its own text: the button, its no-script link and its
+ * dialog (src/template.html, SPEC-every-menu-and-nutrition § 11 item 5); their style (the template's block and its 720 px
+ * rule); the lines of app.js that open the dialog and listen in its frame (SPEC-why-fit-af §§ 2 and 6), and the words
+ * naming it in the comment over the shared modal(). A piece not found exactly once refuses the preview build, as does
+ * any "/why/" left, so the page and this list cannot drift apart unseen. The production and development pages are
+ * rendered without it and do not change (PV5); the preview build also writes no why/ (PREVIEW_STATIC_DIRS).
+ */
+const PREVIEW_WITHOUT_WHY = [
+  ["the Why style", /\/\* Why Fit AF\? \(SPEC-why-fit-af § 2\)[\s\S]*?\n\.why-frame \{[^}\n]*\}\n\n/g, ""],
+  ["the Why rule at 720 px", /\n  \.why-link \{[^}\n]*\}/g, ""],
+  ["the Why button, its no-script link and its dialog", /\n  <button type="button" class="why-link[\s\S]*?\n  <\/dialog>/g, ""],
+  ["the script's Why lines", /\n  modal\(\$\("#why"\), \$\("#why-link"\), \$\("#why-close"\)\);[\s\S]*?\n  whyFrame\.addEventListener\("load", function \(\) \{[\s\S]*?\n  \}\);/g, ""],
+  ["the Why words over modal()", / and Why Fit AF\? \(the \/why\/ page in a frame, SPEC-why-fit-af § 2 item 3\)/g, ""],
+];
+export const PREVIEW_STATIC_DIRS = STATIC_DIRS.filter(({ dir }) => dir !== "why");
+
+/** The preview page without "Why Fit AF?" (PREVIEW_WITHOUT_WHY), or a refusal naming the piece not found once. */
+export function withoutWhy(html) {
+  let page = html;
+  for (const [what, pattern, by] of PREVIEW_WITHOUT_WHY) {
+    const found = page.match(pattern)?.length ?? 0;
+    if (found !== 1) throw new Error(`the preview build: ${what} found ${found} times in the page, not once (SPEC-preview-sites § 8)`);
+    page = page.replace(pattern, by);
+  }
+  if (page.includes("/why/") || /\bid="why/.test(page)) throw new Error("the preview build: the page still names /why/ or a Why element (SPEC-preview-sites § 8)");
+  return page;
+}
+
+/**
  * The preview build's slots (SPEC-preview-sites § 3): the production page's (PROD_SLOTS), served one directory down
  * (/<delivery>/), so its own files are addressed from the root as the development pages' are; no analytics beacon; and
  * the banner (src/preview/banner.html, its words data/messages.json's), its style and the script that keeps ordering off
@@ -889,12 +920,13 @@ export async function build({
     pages = await writeDevPages(plans, events, outDir, offersPath, messages, card, photos);
   } else {
     // A preview's page (SPEC-preview-sites § 3), or the production page as save-offer-production's § 3 made it above.
-    const html = preview ? await renderPage(plans, preview, messages, card, photos, events, { orderLinks: false }) : prod.html;
+    // SPEC-preview-sites § 8: the preview page without "Why Fit AF?".
+    const html = preview ? withoutWhy(await renderPage(plans, preview, messages, card, photos, events, { orderLinks: false })) : prod.html;
     const path = join(outDir, "index.html");
     await writeFile(path, html);
     pages = [{ path, bytes: Buffer.byteLength(html) }];
   }
-  const files = await copyStatic(outDir, photos, sheetsDir);
+  const files = await copyStatic(outDir, photos, sheetsDir, preview ? PREVIEW_STATIC_DIRS : STATIC_DIRS); // § 8: a preview, no why/
   // § 9 item 1: /privacy/, a static page beside the plan pages (as /why/): the development build always, marked as the
   // step is; the production build only with `production` true; the preview build never (it has no save step).
   const privacy = target === "dev" ? await privacyPage({ draftText, save, draft: true }) : target === "prod" ? prod.privacy : null;
