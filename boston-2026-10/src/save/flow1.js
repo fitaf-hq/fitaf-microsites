@@ -16,22 +16,26 @@
     network: "Couldn't reach us. Check your connection and try again.",
     other: "Something went wrong. Please try again."
   };
+  // SPEC-ui-and-copy-pass § 1 item 3 (the Advisor's note f-save-errors): an error about a field is shown under that field
+  // and marks it; every other error is about the whole save, shown above the button that made it.
+  var FIELD_ERRORS = { email_invalid: "email", zip_invalid: "zip" };
 
   // The offer box: the label of the offer a save made now would get — the Worker's own choice, on the date in
   // the Worker's send time zone. SPEC-save-offer-production § 10.7: when no offer is live (after the last one's
   // valid_to), no offer is offered: neither the box nor this flow is drawn. If the file breaks its at-most-one rule
   // (offerForSave throws), the box stays empty and the flow is drawn, as before.
   // § 10.9: the step says the date the pricing is held until, as the Worker will for a save made now: the later of the
-  // offer's last day and tomorrow (the day its E1 is due).
+  // offer's last day and tomorrow (the day its E1 is due). SPEC-ui-and-copy-pass § 1 item 1: the box prints the offer's
+  // headline (its label when it has none); the step's line keeps the label, as /o and the email do.
   function chooseOffer() {
     try {
       var today = zonedDate(Date.now(), cfg.send_time_zone);
       var chosen = offerForSave(today, cfg.offers);
       return chosen
-        ? { live: true, label: chosen.label, held: longDate(heldUntil(chosen, addDays(today, 1))) }
-        : { live: false, label: "", held: "" };
+        ? { live: true, label: chosen.label, line: chosen.headline || chosen.label, held: longDate(heldUntil(chosen, addDays(today, 1))) }
+        : { live: false, label: "", line: "", held: "" };
     } catch (e) {
-      return { live: true, label: "", held: "" };
+      return { live: true, label: "", line: "", held: "" };
     }
   }
   var offer = chooseOffer();
@@ -40,41 +44,70 @@
   // analytics beacon reads it (qrEvent over QR_IDS, the page's analytics script's), else the page's own event.
   var eventId = qrEvent(location.search, QR_IDS) || cfg.event_id;
 
-  // Where this flow sits (SPEC-rung4 § 2b, save the offer at the END): directly after the button that leaves for the
-  // store — the result card's once a plan is chosen, the Family card's on Family — and nowhere before a plan is chosen.
-  // Read off Flow 2's own panels, which app.js renders (as the share panel reads its card); never written here.
-  // There is one Flow 1, moved between the two places: what was typed goes with it.
-  var ANCHORS = { individual: "save-end", family: "save-end-family" };
-  function placeOf() {
-    if (!el("panel-family").hidden) return "family";
-    if (!el("result").hidden) return "individual";
-    return null;
+  // Where this flow sits (SPEC-rung4 § 2b, save the offer at the END): directly after the result card, whose last thing
+  // leaves for the store. SPEC-ui-and-copy-pass § 1 item 2 (the Advisor, 2026-10-23: "a UX evolution from the initial
+  // brief"): shown only while the card's checkout button is shown (#cc-checkout, a week's cart for the answers),
+  // never beside Choose your meals alone, never on Family. Read off what app.js and the card's script drew (both run
+  // before this script, on the page and on each hashchange, so this reads them after they have drawn); never written here.
+  var ANCHOR = "save-end";
+  function besideCheckout() {
+    var checkout = el("cc-checkout");
+    return !!checkout && !el("panel-individual").hidden && !el("result").hidden && !el("cc-list").hidden && !checkout.hidden;
   }
 
   // name: OFFER · EDITING · CHECKING · OUT_OF_AREA · EXPANSION_SAVED · VERIFYING · SENDING · ERROR · SAVED
   //       · PLAN · MENU.  kind: what is being saved ("offer" | "expansion"); error: ERROR's kind.
-  //       place: Flow 2's, where this flow is shown ("individual" | "family" | null: not shown).
-  var state = { name: "OFFER", kind: "offer", error: null, zip: "", email: "", place: null };
+  //       beside: whether the card's checkout button is shown, so this flow with it.
+  var state = { name: "OFFER", kind: "offer", error: null, zip: "", email: "", beside: false };
+
+  // § 1 item 3: a field's error under the field, the field marked (aria-invalid, and aria-describedby naming the error).
+  function fieldError(field, words) {
+    var input = el("save-" + field);
+    var message = el("save-" + field + "-error");
+    message.hidden = !words;
+    message.textContent = words;
+    if (words) {
+      input.setAttribute("aria-invalid", "true");
+      input.setAttribute("aria-describedby", message.id);
+    } else {
+      input.removeAttribute("aria-invalid");
+      input.removeAttribute("aria-describedby");
+    }
+  }
 
   function render(s) {
     var section = el("save");
-    section.hidden = !s.place || !offer.live;
+    section.hidden = !s.beside || !offer.live;
     el("offer-box").hidden = !offer.live;
-    if (s.place && section.parentNode !== el(ANCHORS[s.place])) el(ANCHORS[s.place]).appendChild(section);
+    if (s.beside && section.parentNode !== el(ANCHOR)) el(ANCHOR).appendChild(section);
     var collapsed = s.name === "PLAN" || s.name === "MENU";
     var busy = s.name === "CHECKING" || s.name === "VERIFYING" || s.name === "SENDING";
+    var saved = s.name === "SAVED" || s.name === "EXPANSION_SAVED";
     var outOfArea = s.name === "OUT_OF_AREA" || s.name === "EXPANSION_SAVED" ||
       (s.kind === "expansion" && (busy || s.name === "ERROR"));
-    el("save-offer-label").textContent = offer.label;
+    var error = s.name === "ERROR" ? MESSAGES[s.error] || MESSAGES.other : "";
+    var field = s.name === "ERROR" ? FIELD_ERRORS[s.error] || null : null;
+    el("save-offer-label").textContent = offer.line;
     el("save-step-offer-label").textContent = offer.label; // the step names its offer where it asks (SPEC-save-offer-production § 1)
     el("save-held-date").textContent = offer.held;
     el("save-open").hidden = collapsed;
     el("save-collapsed").hidden = !collapsed;
-    el("save-form").hidden = s.name === "SAVED" || s.name === "EXPANSION_SAVED";
+    // § 1 item 2: after a save the step goes away (its offer line, the lead, the form and its fine print); the done line
+    // stays where the step was.
+    el("save-step-offer").hidden = saved;
+    el("save-lead").hidden = saved;
+    el("save-form").hidden = saved;
+    // § 1 item 3: out of area, its line and button take the place of the offer's own (the tick, Save my offer and the fine
+    // print), directly after the fields, which stay for the ZIP code to be corrected.
+    el("save-offer-part").hidden = outOfArea;
     el("save-out-of-area").hidden = !outOfArea || s.name === "EXPANSION_SAVED";
     el("save-ooa-zip").textContent = s.zip || "[ZIP]";
-    el("save-error").hidden = s.name !== "ERROR";
-    el("save-error").textContent = s.name === "ERROR" ? MESSAGES[s.error] || MESSAGES.other : "";
+    fieldError("email", field === "email" ? error : "");
+    fieldError("zip", field === "zip" ? error : "");
+    el("save-error").hidden = !error || !!field || s.kind !== "offer";
+    el("save-error").textContent = el("save-error").hidden ? "" : error;
+    el("save-expansion-error").hidden = !error || !!field || s.kind !== "expansion";
+    el("save-expansion-error").textContent = el("save-expansion-error").hidden ? "" : error;
     el("save-submit").disabled = busy;
     el("save-expansion").disabled = busy;
     el("save-done").hidden = s.name !== "SAVED";
@@ -86,7 +119,7 @@
     render(state);
   }
   function withName(name, extra) {
-    var next = { name: name, kind: state.kind, error: null, zip: state.zip, email: state.email, place: state.place };
+    var next = { name: name, kind: state.kind, error: null, zip: state.zip, email: state.email, beside: state.beside };
     for (var k in extra || {}) next[k] = extra[k];
     return next;
   }
@@ -104,7 +137,7 @@
   function choiceChanged() {
     var next = {};
     for (var k in state) next[k] = state[k];
-    next.place = placeOf();
+    next.beside = besideCheckout();
     go(next);
   }
 
@@ -176,5 +209,5 @@
   window.addEventListener("hashchange", choiceChanged);
 
   // Every visit opens at Flow 2 (§ 2b item 1); a visit from the email's link has this flow collapsed to one line.
-  go(withName(location.hash === "#from-email" ? "PLAN" : "OFFER", { place: placeOf() }));
+  go(withName(location.hash === "#from-email" ? "PLAN" : "OFFER", { beside: besideCheckout() }));
 })();

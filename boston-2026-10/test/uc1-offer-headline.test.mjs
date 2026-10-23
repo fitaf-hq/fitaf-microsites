@@ -65,11 +65,14 @@ test("UC1: in the markup, the box's one heading is the offer's line, empty until
 test("UC1: as run, the box's heading is the headline and the step's line the label, each written as text", async () => {
   assert.equal(offerForSave(today).id, offersFile.offers[0].id, "control: the Boston offer is the one live on the page's clock");
   for (const [name, html] of await pages()) {
+    const [offer] = saveData(html).offers; // the page's own (the production fixtures relabel the offer: sp-production.mjs)
+    assert.equal(offer.headline, HEADLINE, `${name}: control: the page's offer carries the headline`);
     const page = openStep(html, { hash: CHECKOUT });
     const heading = page.el("save-offer-label");
     assert.equal(heading.textContent, HEADLINE, `${name}: the box prints the headline`);
     assert.equal(heading.children.length, 0, `${name}: as text, never as markup`);
-    assert.equal(page.el("save-step-offer-label").textContent, LABEL, `${name}: the step's line keeps the label`);
+    assert.notEqual(offer.label, HEADLINE, `${name}: control: its label is other words`);
+    assert.equal(page.el("save-step-offer-label").textContent, offer.label, `${name}: the step's line keeps the label`);
     const box = readingOrder(page.el("offer-box"));
     assert.deepEqual(box.map((n) => n.id), ["save-offer-label"], `${name}: a visitor reads one thing in the box, its heading (no "${BOX_NAME}")`);
   }

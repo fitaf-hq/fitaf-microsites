@@ -43,8 +43,9 @@ export const APPROVED_STATUS = "**Status**: ✅ **Approved — v1, 2026-10-24** 
 export const PRIVACY_URL = "/privacy/";
 export const FIXTURE_CODE = "SPFIXTURE25"; // invented: no store has it
 /** DRAFT § 6's Owner placeholders and what the fixture fills them with. Since § 10 item 5 the committed draft fills [email]
- *  and [30] itself (privacy@eatfitaf.com, 30), so only [Mailchimp] is left for the fixture to fill. */
-export const DRAFT_FILLS = { "[Mailchimp]": "Mailchimp" };
+ *  and [30] itself (privacy@eatfitaf.com, 30), and since SPEC-ui-and-copy-pass § 1 item 5 (2026-10-23) § 6 names Resend
+ *  alone, so its [Mailchimp] went: none is left for the fixture to fill. */
+export const DRAFT_FILLS = {};
 
 /** The parts a refusal case may leave unfixed, each with the words its refusal must name. */
 export const UNFIXED = {

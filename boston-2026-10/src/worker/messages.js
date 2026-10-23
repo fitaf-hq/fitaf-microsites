@@ -95,11 +95,12 @@ const message = (template, to, subject, siteUrl, lines, footer) => ({
  * E1's second line, what the save holds (DRAFT § 3, its two marked forms). SPEC-save-offer-production § 10: an offer with
  * `code_mode: "none"` is a price promise, so it says the date its pricing is held until (the offer's valid_to) and no
  * code; an offer that carries a code says the code. Either way `code` is the save's /o token, in See my offer's path only.
+ * SPEC-ui-and-copy-pass § 1 item 4 (2026-10-23): the code's line reads "held until", as every other line does.
  */
 const savedLine = (offer, code, held) =>
   offer.code_mode === "none"
     ? ["Your pricing is held until ", strong(longDate(held))]
-    : [strong(`Your code: ${displayCode(code)}`), " · good until ", strong(longDate(offer.valid_to))];
+    : [strong(`Your code: ${displayCode(code)}`), " · held until ", strong(longDate(offer.valid_to))];
 /** § 10.7: an E1 that goes after its offer's last day (a save on that day) says the offer has ended (DRAFT § 3's form). */
 const ENDED_LINE = ["This offer has ended"];
 

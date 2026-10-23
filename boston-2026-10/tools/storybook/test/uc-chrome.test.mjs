@@ -103,7 +103,8 @@ function readBox(clearance) {
     cta: token("--cta"),
     onCta: token("--on-cta"),
     inside: words.left >= b.left + clearance && words.right <= b.right - clearance && words.top >= b.top && words.bottom <= b.bottom,
-    cut: heading.scrollWidth > heading.clientWidth + 1 || heading.scrollHeight > heading.clientHeight + 1,
+    // A word wider than the line is cut at the ribbon's clip (the words' own box is held inside it by `inside`).
+    cut: heading.scrollWidth > heading.clientWidth + 1,
     sideways: document.documentElement.scrollWidth > window.innerWidth,
     nameDrawn: document.getElementById("save-title").checkVisibility(),
     headingBox: { width: Math.round(h.width), height: Math.round(h.height) },

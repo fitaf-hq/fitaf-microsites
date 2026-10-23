@@ -1,11 +1,12 @@
 {
   "status": "placeholder",
-  "status_note": "ONE offer, every visitor's (SPEC-save-offer-production.md section 10.7, the Advisor 2026-10-22): the Boston offer, a price promise (code_mode none: no code is issued, shown or needed at the store), its label approved 2026-10-21, applying to any save from any page (applies_to general) and held until its valid_to, 2026-10-29. After that day no offer is offered: the page draws no save step, an offer save is refused (offer_ended), and /o and E1 say the offer has ended. The date is provisional: an extension is this valid_to, released as the page is. Its id keeps its name so saves already made still find it. Dates are calendar dates in America/New_York, inclusive at both ends. At most one general offer is current on any date (test S11b). The status stays placeholder until the switch-on approves the file (section 6 item 3); nothing in it is a placeholder an approved file would refuse.",
+  "status_note": "ONE offer, every visitor's (SPEC-save-offer-production.md section 10.7, the Advisor 2026-10-22): the Boston offer, a price promise (code_mode none: no code is issued, shown or needed at the store), its label approved 2026-10-21, applying to any save from any page (applies_to general) and held until its valid_to, 2026-10-29. After that day no offer is offered: the page draws no save step, an offer save is refused (offer_ended), and /o and E1 say the offer has ended. The date is provisional: an extension is this valid_to, released as the page is. Its id keeps its name so saves already made still find it. Dates are calendar dates in America/New_York, inclusive at both ends. At most one general offer is current on any date (test S11b). The status stays placeholder until the switch-on approves the file (section 6 item 3); nothing in it is a placeholder an approved file would refuse. headline (SPEC-ui-and-copy-pass.md section 1 item 1, the Advisor 2026-10-23: 'I'm OK with iterating on it') is the words the offer box at the top of the page prints; label stays what the save step's line and /o print, since 'Today only' would be false in a next-morning email; an offer without headline prints its label in the box.",
   "offers": [
     {
       "id": "event-boston-2026-10-placeholder",
       "label": "Sign up today to save 25%",
       "label_approved": "2026-10-21",
+      "headline": "Today only: sign up to save 25%",
       "applies_to": "general",
       "valid_from": "2026-10-01",
       "valid_to": "2026-10-29",

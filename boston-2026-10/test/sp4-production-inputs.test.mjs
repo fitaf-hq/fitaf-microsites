@@ -15,6 +15,7 @@ import { simulatePage } from "./page-sim.mjs";
 import { assertPageBudget } from "./page-budget.mjs";
 import { assertFlowOneAbsent, assertFlowOneDirectlyAfterStoreButton, assertNoModalForFlowOne, NOW } from "./save-end-fixture.mjs";
 import { APPROVED_VARS, APPROVED_VERSION, approvedPage, assertEachRefusal, assertNoDraftMarking, PRIVACY_URL, saveData, UNFIXED } from "./sp-production.mjs";
+import { approvedWeekPage } from "./uc-harness.mjs";
 
 test("SP4: each input unapproved in turn — the build refuses, naming it, and writes nothing", async () => {
   await assertEachRefusal();
@@ -31,28 +32,32 @@ test("SP4: the committed inputs with production true — refused, every unapprov
     assert.ok(err, "refused");
     for (const name of [
       /wording_version v0\.3-draft is a draft/,
-      /DRAFT\.md § 6 holds a placeholder: \[Mailchimp\]/,
-      // Since § 9 item 1 the page links /privacy/ (data/save.json), which prints § 6 and its placeholders.
-      /the privacy page prints a placeholder: \[Mailchimp\]/,
       /data\/offers\.json: status is placeholder, not approved/,
       /TURNSTILE_SITE_KEY is not set/,
     ]) assert.match(err.message, name);
     // § 10 item 5: the inputs as decided, committed — the contact address and the response days in DRAFT § 6, the official
-    // ZIP list; and § 10 item 4: the decided sender is not a placeholder. None of them is refused.
-    for (const name of [/\[email\]/, /\[30\]/, /delivery-zips/, /MAIL_FROM/]) assert.doesNotMatch(err.message, name);
+    // ZIP list; and § 10 item 4: the decided sender is not a placeholder. None of them is refused. Since
+    // SPEC-ui-and-copy-pass § 1 item 5 (2026-10-23) § 6 names Resend alone, so its [Mailchimp] is not refused either: the
+    // page links /privacy/ (§ 9 item 1), which prints § 6 with no placeholder left.
+    for (const name of [/\[email\]/, /\[30\]/, /delivery-zips/, /MAIL_FROM/, /§ 6 holds a placeholder/, /the privacy page prints a placeholder/]) {
+      assert.doesNotMatch(err.message, name);
+    }
     assert.deepEqual(await readdir(dir), ["save.json"], "nothing written");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
 });
 
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 item 2 (2026-10-23): the step is shown only beside a week's Continue to checkout,
+// so the page carries the fixture week (its carts: lunch or dinner every day, and lunch and dinner every day); with no
+// cart for the answers, and on Family, no step.
 test("SP4: all approved — Flow 1 at the end, as the development build has it; no draft tag", async () => {
-  const { html } = await approvedPage();
+  const { html } = await approvedWeekPage();
   assertNoDraftMarking(html, "the production page");
-  for (const hash of ["#lean-or-7d", "#signature-and-5d-b", "#family"]) {
+  for (const hash of ["#lean-or-7d", "#signature-and-7d"]) {
     assertFlowOneDirectlyAfterStoreButton(openPlanPage(html, { hash, now: NOW }));
   }
-  for (const hash of ["", "#lean", "#individual"]) assertFlowOneAbsent(openPlanPage(html, { hash, now: NOW }));
+  for (const hash of ["", "#lean", "#individual", "#signature-and-5d-b", "#family"]) assertFlowOneAbsent(openPlanPage(html, { hash, now: NOW }));
   const fromEmail = openPlanPage(html, { hash: "#from-email", now: NOW });
   fromEmail.go("#lean-or-7d");
   assertFlowOneDirectlyAfterStoreButton(fromEmail, { form: false });

@@ -123,7 +123,8 @@ test("S18 (dev T5): the only external script is Turnstile; the only fetch is the
 
 test("S18: Flow 1's states in the page — OFFER, ERROR keeps what was typed, SAVED; #from-email opens at Flow 2", async () => {
   const page = simulatePage(devHtml);
-  assert.deepEqual(page.missing(["save-skip-menu"]), [], "every id the scripts use exists in the page");
+  // SPEC-ui-and-copy-pass § 1 item 2: the step reads the card's Continue to checkout, which a page without the card lacks.
+  assert.deepEqual(page.missing(["save-skip-menu", "cc-checkout"]), [], "every id the scripts use exists in the page");
   assert.equal(page.el("save-open").hidden, false, "OFFER: the offer and the form");
   assert.equal(page.el("save-collapsed").hidden, true);
 

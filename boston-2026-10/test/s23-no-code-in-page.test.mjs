@@ -1,12 +1,13 @@
 // S23 (SPEC-rung4 § 2a): save-data carries each offer's id, label, applies_to, valid_from and valid_to, and
-// no code of any kind — never shared_code, never code_mode.
+// no code of any kind — never shared_code, never code_mode. ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 item 1 (2026-10-23):
+// and an offer's headline, the words the box prints, when it has one.
 import test from "node:test";
 import assert from "node:assert/strict";
 import offersFile from "../data/offers.json" with { type: "json" };
 import { devPage } from "./dev-page.mjs";
 import { FIXTURE_OFFERS } from "./offer-box-fixture.mjs";
 
-const OFFER_FIELDS = ["id", "label", "applies_to", "valid_from", "valid_to"];
+const OFFER_FIELDS = ["id", "label", "headline", "applies_to", "valid_from", "valid_to"];
 const saveData = (html) => JSON.parse(/<script type="application\/json" id="save-data">([\s\S]*?)<\/script>/.exec(html)[1]);
 /** Every key at every depth of a JSON value. */
 const keysDeep = (v) =>
@@ -28,8 +29,8 @@ for (const [name, file] of [
     const data = saveData(html);
     assert.deepEqual(
       data.offers,
-      file.offers.map((o) => Object.fromEntries(OFFER_FIELDS.map((k) => [k, o[k]]))),
-      "each offer's id, label, applies_to, valid_from, valid_to — nothing more, in the file's order",
+      file.offers.map((o) => Object.fromEntries(OFFER_FIELDS.filter((k) => k in o).map((k) => [k, o[k]]))),
+      "each offer's id, label, headline (when it has one), applies_to, valid_from, valid_to — nothing more, in the file's order",
     );
     assert.deepEqual(keysDeep(data).filter((k) => /code/i.test(k)), [], "no key naming a code, anywhere in save-data");
     assert.doesNotMatch(html, /shared_code|code_mode/, "neither field name is anywhere in the page");

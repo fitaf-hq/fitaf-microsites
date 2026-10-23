@@ -359,7 +359,6 @@ export const PROD_SLOTS = {
   DRAFT_BANNER: "",
   OFFER_BOX: "",
   SAVE_SECTION: "",
-  SAVE_FAMILY: "",
   SHARE_PANEL: "",
   DEV_SCRIPT: "",
 };
@@ -390,7 +389,8 @@ const MENU_LINK =
   '\n            <p class="skips"><button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button></p>';
 
 /** What the development page's scripts read: the save endpoint, the ZIP list (official; its near ring a mock), the sizes,
- *  and (§ 2a) what the offer box needs to choose as the Worker does. ⛔ Never a code: no shared_code, no code_mode. */
+ *  and (§ 2a) what the offer box needs to choose as the Worker does; since SPEC-ui-and-copy-pass § 1 item 1 an offer's
+ *  `headline`, the words the box prints, when it has one. ⛔ Never a code: no shared_code, no code_mode. */
 export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) {
   const prefixesOnly = (list) => (list ?? []).map((z) => (z.zip ? { zip: z.zip } : { prefix: z.prefix }));
   return {
@@ -405,6 +405,7 @@ export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) 
     offers: offers.offers.map((o) => ({
       id: o.id,
       label: o.label,
+      ...(o.headline !== undefined ? { headline: o.headline } : {}),
       applies_to: o.applies_to,
       valid_from: o.valid_from,
       valid_to: o.valid_to,
@@ -429,11 +430,12 @@ const DRAFT_TAG = '\n            <p class="draft-tag">DRAFT — not for use · w
 
 /**
  * Flow 1's slots, the save step, as both builds carry it (SPEC-rung4 § 2b; SPEC-save-offer-production §§ 1, 3): the
- * offer box at the top (§ 2a's heading and label) and Flow 1 after the button that leaves for the store: in the result
- * card's place (SAVE_SECTION, directly after the result card) and, on Family, the place src/save/flow1.js moves it to
- * (SAVE_FAMILY, directly after the Family panel, whose last thing is the Family card's button: outside it, so the panel's
- * bytes are unchanged, MS-13); its style and its scripts, Turnstile's last. `draft`: the step's DRAFT tag (the
- * development build's alone). `share`: the share panel's arithmetic and script (the development build's Flow 2).
+ * offer box at the top (§ 2a's label; since SPEC-ui-and-copy-pass § 1 item 1 the offer's headline as its heading) and
+ * Flow 1 after the button that leaves for the store, in the result card's place (SAVE_SECTION, directly after the result
+ * card); its style and its scripts, Turnstile's last. Since SPEC-ui-and-copy-pass § 1 item 2 the step is shown only
+ * beside the card's checkout button (#cc-checkout), so it has no place on Family (the template's SAVE_FAMILY went), and its
+ * scripts (DEV_SCRIPT) come after the card's (PICKS_SCRIPT), so it reads what the card drew. `draft`: the step's DRAFT
+ * tag (the development build's alone). `share`: the share panel's arithmetic and script (the development build's Flow 2).
  * `siteKey` is the environment's TURNSTILE_SITE_KEY. Also returns `read` and `fill` for the development build's extras.
  */
 export async function saveSlots(plans, { save, zips, siteKey, eventId, offers, menu = existsSync(MENU_PATH) }, { draft, share = false }) {
@@ -460,7 +462,6 @@ export async function saveSlots(plans, { save, zips, siteKey, eventId, offers, m
     DEV_STYLE: (await read("style.css")).trimEnd(),
     OFFER_BOX: "\n" + (await read("offer-box.html")).trimEnd(),
     SAVE_SECTION: "\n" + fill(await read("section.html")).trimEnd(),
-    SAVE_FAMILY: '\n  <div id="save-end-family"></div>',
     DEV_SCRIPT:
       `\n<script type="application/json" id="save-data">${scriptJson(client)}</script>` +
       `\n<script>\n${shared}\n</script>` +

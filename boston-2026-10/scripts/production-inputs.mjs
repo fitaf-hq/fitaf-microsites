@@ -11,8 +11,9 @@
 //   - and nothing printed with a bracket: the production page as built (the ZIP slot apart), and E1 and E-X as the
 //     Worker would render them from these inputs;
 //   - ⛔ the draft tag ("DRAFT — not for use") never in the production page;
-//   - data/offers.json "status": "approved", no placeholder label, and each offer's code as its code_mode says (SPEC § 10
-//     item 4): "none" (a price promise: no code is issued, shown or needed) with no code field, "shared" with a real code,
+//   - data/offers.json "status": "approved", no placeholder label (nor headline, the words the page's offer box prints since
+//     SPEC-ui-and-copy-pass § 1 item 1: the page fills the box in the browser, so its printed text cannot show it), and
+//     each offer's code as its code_mode says (SPEC § 10 item 4): "none" (a price promise: no code is issued, shown or needed) with no code field, "shared" with a real code,
 //     "unique" (the Worker draws them); any other code_mode refused;
 //   - data/delivery-zips.json "status": "official" (data/README.md's rule);
 //   - the sender (vars.MAIL_FROM) set and an address at eatfitaf.com (SPEC § 10 item 4: Fit AF <offers@eatfitaf.com> is the
@@ -81,6 +82,7 @@ function offerRefusals(offers) {
   if (offers.status !== "approved") out.push(`data/offers.json: status is ${offers.status}, not approved`);
   for (const o of offers.offers ?? []) {
     if (/\[|placeholder/i.test(o.label ?? "[]")) out.push(`data/offers.json: offer ${o.id}'s label is a placeholder: ${o.label}`);
+    if ("headline" in o && /\[|placeholder/i.test(o.headline)) out.push(`data/offers.json: offer ${o.id}'s headline is a placeholder: ${o.headline}`);
     if (!CODE_MODES.includes(o.code_mode)) {
       out.push(`data/offers.json: offer ${o.id}'s code_mode ${o.code_mode} is not one of ${CODE_MODES.join(", ")}`);
     } else if (o.code_mode === "none" && "shared_code" in o) {
