@@ -1,0 +1,375 @@
+{
+  "delivery": "2026-10-25",
+  "version": 2,
+  "lists": {
+    "chefs-choice": {
+      "carts": [
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 7,
+          "items": [
+            {
+              "name": "Smoked Paprika Chicken Bowl (week two)",
+              "display": "Smoked Paprika Chicken Bowl (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Lemon Herb Salmon with Greens (week two)",
+              "display": "Lemon Herb Salmon with Greens (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Turkey Chili Verde (week two)",
+              "display": "Turkey Chili Verde (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Maple Dijon Pork Tenderloin (week two)",
+              "display": "Maple Dijon Pork Tenderloin (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "display": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 4,
+          "items": [
+            {
+              "name": "Smoked Paprika Chicken Bowl (week two)",
+              "display": "Smoked Paprika Chicken Bowl (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Lemon Herb Salmon with Greens (week two)",
+              "display": "Lemon Herb Salmon with Greens (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Turkey Chili Verde (week two)",
+              "display": "Turkey Chili Verde (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "display": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": false,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Smoked Paprika Chicken Bowl (week two)",
+              "display": "Smoked Paprika Chicken Bowl (week two)",
+              "qty": 3
+            },
+            {
+              "name": "Lemon Herb Salmon with Greens (week two)",
+              "display": "Lemon Herb Salmon with Greens (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Turkey Chili Verde (week two)",
+              "display": "Turkey Chili Verde (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Maple Dijon Pork Tenderloin (week two)",
+              "display": "Maple Dijon Pork Tenderloin (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "display": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Shrimp Tacos (week two)",
+              "display": "Chipotle Shrimp Tacos (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Garden Pesto Penne (week two)",
+              "display": "Garden Pesto Penne (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Jerk Chicken with Coconut Rice (week two)",
+              "display": "Jerk Chicken with Coconut Rice (week two)",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": false,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Smoked Paprika Chicken Bowl (week two)",
+              "display": "Smoked Paprika Chicken Bowl (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Lemon Herb Salmon with Greens (week two)",
+              "display": "Lemon Herb Salmon with Greens (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Turkey Chili Verde (week two)",
+              "display": "Turkey Chili Verde (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Maple Dijon Pork Tenderloin (week two)",
+              "display": "Maple Dijon Pork Tenderloin (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Shrimp Tacos (week two)",
+              "display": "Chipotle Shrimp Tacos (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Jerk Chicken with Coconut Rice (week two)",
+              "display": "Jerk Chicken with Coconut Rice (week two)",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Sunrise Egg White Scramble (week two)",
+              "display": "Sunrise Egg White Scramble (week two)",
+              "qty": 3
+            },
+            {
+              "name": "Blueberry Protein Oat Bake (week two)",
+              "display": "Blueberry Protein Oat Bake (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Turkey Sausage Breakfast Burrito (week two)",
+              "display": "Turkey Sausage Breakfast Burrito (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Smoked Paprika Chicken Bowl (week two)",
+              "display": "Smoked Paprika Chicken Bowl (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Lemon Herb Salmon with Greens (week two)",
+              "display": "Lemon Herb Salmon with Greens (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Turkey Chili Verde (week two)",
+              "display": "Turkey Chili Verde (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Maple Dijon Pork Tenderloin (week two)",
+              "display": "Maple Dijon Pork Tenderloin (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "display": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "or",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 10,
+          "items": [
+            {
+              "name": "Sunrise Egg White Scramble (week two)",
+              "display": "Sunrise Egg White Scramble (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Blueberry Protein Oat Bake (week two)",
+              "display": "Blueberry Protein Oat Bake (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Turkey Sausage Breakfast Burrito (week two)",
+              "display": "Turkey Sausage Breakfast Burrito (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Smoked Paprika Chicken Bowl (week two)",
+              "display": "Smoked Paprika Chicken Bowl (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Lemon Herb Salmon with Greens (week two)",
+              "display": "Lemon Herb Salmon with Greens (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Chipotle Shrimp Tacos (week two)",
+              "display": "Chipotle Shrimp Tacos (week two)",
+              "qty": 2
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": true,
+          "breakfast": true,
+          "plan": 21,
+          "items": [
+            {
+              "name": "Sunrise Egg White Scramble (week two)",
+              "display": "Sunrise Egg White Scramble (week two)",
+              "qty": 3
+            },
+            {
+              "name": "Blueberry Protein Oat Bake (week two)",
+              "display": "Blueberry Protein Oat Bake (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Turkey Sausage Breakfast Burrito (week two)",
+              "display": "Turkey Sausage Breakfast Burrito (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Smoked Paprika Chicken Bowl (week two)",
+              "display": "Smoked Paprika Chicken Bowl (week two)",
+              "qty": 3
+            },
+            {
+              "name": "Lemon Herb Salmon with Greens (week two)",
+              "display": "Lemon Herb Salmon with Greens (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Turkey Chili Verde (week two)",
+              "display": "Turkey Chili Verde (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Maple Dijon Pork Tenderloin (week two)",
+              "display": "Maple Dijon Pork Tenderloin (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "display": "Ginger Beef Bowl with Jasmine Rice (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Chipotle Shrimp Tacos (week two)",
+              "display": "Chipotle Shrimp Tacos (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Garden Pesto Penne (week two)",
+              "display": "Garden Pesto Penne (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Jerk Chicken with Coconut Rice (week two)",
+              "display": "Jerk Chicken with Coconut Rice (week two)",
+              "qty": 1
+            }
+          ]
+        },
+        {
+          "lunch_dinner": "and",
+          "weekends": false,
+          "breakfast": true,
+          "plan": 14,
+          "items": [
+            {
+              "name": "Sunrise Egg White Scramble (week two)",
+              "display": "Sunrise Egg White Scramble (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Blueberry Protein Oat Bake (week two)",
+              "display": "Blueberry Protein Oat Bake (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Turkey Sausage Breakfast Burrito (week two)",
+              "display": "Turkey Sausage Breakfast Burrito (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Smoked Paprika Chicken Bowl (week two)",
+              "display": "Smoked Paprika Chicken Bowl (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Lemon Herb Salmon with Greens (week two)",
+              "display": "Lemon Herb Salmon with Greens (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Chipotle Shrimp Tacos (week two)",
+              "display": "Chipotle Shrimp Tacos (week two)",
+              "qty": 2
+            },
+            {
+              "name": "Garden Pesto Penne (week two)",
+              "display": "Garden Pesto Penne (week two)",
+              "qty": 1
+            },
+            {
+              "name": "Jerk Chicken with Coconut Rice (week two)",
+              "display": "Jerk Chicken with Coconut Rice (week two)",
+              "qty": 2
+            }
+          ]
+        }
+      ],
+      "snacks": {
+        "7": [
+          {
+            "name": "Dark Chocolate Protein Bites (week two)",
+            "display": "Dark Chocolate Protein Bites (week two)",
+            "qty": 3
+          },
+          {
+            "name": "Almond Butter Energy Balls (week two)",
+            "display": "Almond Butter Energy Balls (week two)",
+            "qty": 2
+          },
+          {
+            "name": "Sea Salt Edamame Crunch (week two)",
+            "display": "Sea Salt Edamame Crunch (week two)",
+            "qty": 2
+          }
+        ]
+      }
+    }
+  },
+  "preview": true,
+  "approved": true
+}

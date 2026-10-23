@@ -2,6 +2,8 @@
 node_modules/
 dist/
 dist-dev/
+# The preview build (npm run build -- --env preview, SPEC-preview-sites.md § 3): the page a preview Worker serves
+dist-preview/
 # The storefront hand-off (npm run build:storefront): its own directory, so dist/ stays byte-identical (S20)
 dist-storefront/
 
