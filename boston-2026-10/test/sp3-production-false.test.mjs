@@ -19,6 +19,9 @@
 // boston/every-menu's lines from that tree, and this contract's § 9 item 2 reading alone on top of them.
 // ⚠ Since SPEC-every-menu-and-nutrition § 11 (2026-10-22) changes the production page, "the base" is 768ca36 with that
 // section's own diff applied (sp-production.mjs LATER): the page is still the base's with § 9 item 2's reading alone.
+// ⚠ Since SPEC-week-content § 9.2 (2026-10-23): the build's photo sheets (every file under assets/photo-sheets/, the
+// emitter's weekly inputs) are compared as byte copies of the tree's own src/assets/photo-sheets/
+// (test/production-sheets.mjs); every other file against S20's golden and the base tree's build as before.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -30,6 +33,7 @@ import saveConfig from "../data/save.json" with { type: "json" };
 import { build, renderPage, ROOT } from "../build.mjs";
 import { workerFiles } from "./cc-harness.mjs";
 import { loadPlans } from "./helpers.mjs";
+import { committedSheets, sheetsLine, splitSheets } from "./production-sheets.mjs";
 import { assertProductionT5, basePackage, BASE } from "./sp-production.mjs";
 import { pageAsset, startSite, WEEK_DATA_KEY } from "./wc-harness.mjs";
 
@@ -100,15 +104,17 @@ test("SP3: data/save.json's production is false (control)", () => {
   assert.equal(saveConfig.production, false);
 });
 
-test("SP3 (S20): npm run build with production false is S20's golden, and the base tree's build (§ 9 item 2's reading apart), byte for byte", async () => {
+test("SP3 (S20): npm run build with production false is S20's golden, and the base tree's build (§ 9 item 2's reading apart), byte for byte", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "boston-sp3-"));
   try {
     const { build: baseBuild } = await import(pathToFileURL(join(base.pkg, "build.mjs")).href);
     await build({ target: "prod", outDir: join(dir, "now") });
     await baseBuild({ target: "prod", outDir: join(dir, "base") });
-    const [now, before] = [await hashesOf(join(dir, "now")), await hashesOf(join(dir, "base"))];
-    assert.deepEqual(now, s20.files, "S20's golden");
-    assert.deepEqual(Object.keys(now), Object.keys(before), `${BASE}'s files`);
+    const [{ sheets, rest: now }, { rest: before }] = [splitSheets(await hashesOf(join(dir, "now"))), splitSheets(await hashesOf(join(dir, "base")))];
+    t.diagnostic(sheetsLine(sheets));
+    assert.deepEqual(now, s20.files, "S20's golden (every file but the sheets)");
+    assert.deepEqual(sheets, await committedSheets(), `the sheets: ${sheetsLine(sheets)}`);
+    assert.deepEqual(Object.keys(now), Object.keys(before), `${BASE}'s files (but the sheets)`);
     for (const f of Object.keys(now).filter((f) => f !== "index.html")) assert.equal(now[f], before[f], `${f}: ${BASE}'s, byte for byte`);
     const [page, basePage] = [await readFile(join(dir, "now", "index.html"), "utf8"), await readFile(join(dir, "base", "index.html"), "utf8")];
     assert.notEqual(page, basePage, "control: the page moved");
