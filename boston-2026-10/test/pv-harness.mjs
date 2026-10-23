@@ -58,7 +58,7 @@ export async function previewFrom() {
   return t;
 }
 
-/** A NESTED mirror of the package at `from` (build.mjs, package.json, wrangler.jsonc, data/, scripts/, src/; the
+/** A NESTED mirror of the package at `from` (build.mjs, package.json, wrangler.jsonc, data/, scripts/, src/, consent/; the
  *  development build reads wrangler.jsonc), this package's node_modules linked; `edit(pkg)` changes it before use.
  *  `{ pkg, done }`. */
 export async function pvMirror(edit = async () => {}, from = ROOT) {
@@ -66,7 +66,9 @@ export async function pvMirror(edit = async () => {}, from = ROOT) {
   const pkg = join(t.dir, "boston-2026-10");
   await mkdir(pkg);
   for (const name of ["build.mjs", "package.json", "wrangler.jsonc"]) await copyFile(join(from, name), join(pkg, name));
-  for (const name of ["data", "scripts", "src"]) await cp(join(from, name), join(pkg, name), { recursive: true });
+  // consent/: since SPEC-save-offer-production § 9 item 1 the build reads consent/DRAFT.md (the privacy notice's page, and
+  // the production gate's wording), as cc-harness's mirror copies it.
+  for (const name of ["data", "scripts", "src", "consent"]) await cp(join(from, name), join(pkg, name), { recursive: true });
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
   await edit(pkg);
   return { pkg, done: t.done };
