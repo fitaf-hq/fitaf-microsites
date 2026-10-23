@@ -613,3 +613,44 @@ Owner leaves for Boston on Saturday 2026-10-24: **a proof tonight comes first**;
    below.
 10. ⚠ **Not done here**: item 6 (the print-ready sheet, the orchestrator's after the Advisor's look). `print/README.md`'s
     table still has no rows for Q27–Q31 (§ 16.1 item 6); QG31–QG34 have theirs.
+
+### 17.2 Amendment, 2026-10-23 (evening): office paper, a card for an email, and a one-sided backup. CONTRACT, before any code
+
+**Why.** The Advisor on the first proofs (Fit AF's decision record § 7t item 6): *"This is all going to probably be done
+on 8.5x11" office paper – and I'm uncertain what tools are available (e.g., paper cutters). So let's try to make this very
+easy to (possibly?) cut by hand: no printers marks and wide margins. I also think we should come up with a backup option
+to put everything on one side"*; the card *"Drop the phone and company line … All we really care about it their email"*,
+with *"a big "________ @ __________ . ___" on the entry form – in part to get people to slow down and space out their
+handwriting"*; and the photo: *"Is the photo on the tout unique across the set of flyer images and table tents? … let's
+just try to do the best that we can."* The words are revised in Fit AF's folder (the same flags).
+
+1. **Letter sheets, the pieces drawn without bleed**: every printed file of § 17 is a **US Letter page** (8.5 × 11 in,
+   612 × 792 pt), portrait, with **no crop, registration or colour marks**, nothing printed within **0.5 in** of the
+   paper's edge (an office printer's margin with room to spare), each piece drawn at its trim size with **no bleed** (its
+   own edge is the cut: the tout's band and foot stop at the tout's edge).
+   - **`letter-touts.pdf`**: one page, **two touts** (6 × 4 in, landscape), centred, one above the other, at least 1 in
+     apart.
+   - **`letter-entry-cards.pdf`**: two pages, **four entry cards a page**, each a quarter of the sheet (4.25 × 5.5 in,
+     portrait), so the sheet is cut (or folded and cut) once each way through its centre; the card's own words inset at
+     least 0.5 in from every cut. Page 1 the fronts, page 2 the backs (the rules): the four backs are identical and the
+     quarters symmetric about both centre lines, so either flip edge lands each back on its front. One light dashed line
+     through each centre line (a cut guide on the white card, not a printer's mark) is the builder's to propose.
+   - **`letter-entry-cards-one-sided.pdf`**: one page, the four fronts, their rules line the one-sided one (*"Rules beside
+     the box."*, the words file's `# Front, one-sided`).
+   - **`letter-rules-sign.pdf`**: one page, one side, the rules (the card's `# Back`) at a size to read from a step away,
+     to stand beside each box; the logo small.
+   The 6 × 4 tout PDF and the card's own PDF stay (the proofs and a shop's run).
+2. **The card is for an email**: its fields are **Name**, a large **email-shaped line**, `________ @ __________ . ___`
+   (the underscores drawn as writing lines with the `@` and the `.` printed between them, spread across the card's width,
+   the line itself the field's label), and **ZIP code (optional)**; no phone, no company. The draw line, the consent line
+   and the rules line follow as the words file gives them.
+3. **The tout's photo is not one the printed set used**: no photo id that the final print run placed (the flyer, the
+   four flyers, the tent card's three and the back's three) prints on the tout; the next by the assigner's own order
+   (`print/assign.mjs`, the glam pool) that is not among them, landscape and of the print resolution (§ 3), its caption
+   its KMS name as the flyer's is. The report names the ids ruled out and the one chosen. If none qualifies, the build
+   says so and uses the best by the same order, named in the report (*"the best that we can"*).
+4. **Cases**: QG31–QG34 amended for the letter sheets (each page 612 × 792 pt; no drawing within 36 pt of the paper's
+   edge; no mark outside a piece; two touts, four cards a page; the backs identical; the fronts' fields read from the PDF:
+   *Name*, the `@` and `.` of the email line, *ZIP code (optional)*, no *Phone*, no *Company*; the one-sided page's rules
+   line; the sign's rules whole), a case for item 3 (the tout's photo id not in the final set's assignment), and the
+   mutants as before. The 6 × 4 proofs still build.
