@@ -43,51 +43,34 @@ export const TOUT_FIXTURE = {
 };
 
 /**
- * QG32: the entry card's words, a fixture's, in § 17.2's shape: three fields, the second email-shaped (its blanks writing
- * lines, its @ and . printed) and the third optional; the draw, consent and rules lines; the one-sided rules line; the
- * rules, with lead-ins.
+ * QG32: the entry card's words, a fixture's, in § 17.3's shape: one side, its heading, its one field email-shaped (its
+ * blanks writing lines, its @ and . printed), and its fine print, with **bold** runs. Short enough for eight a page.
  */
 export const ENTRY_FIXTURE = `# Front
 
 ## Fixture heading words
 
-- Field one
 - Mail: ______ @ ________ . ___
-- Field three (optional)
 
-The fixture draw line, a sentence of words.
+**Fixture rule one.** Its words after the bold. **A second bold run**: then plain words to the end of the paragraph.
 
-The fixture consent line, its words.
-
-The fixture rules line, two-sided.
-
-# Front, one-sided
-
-The fixture rules line, one-sided.
-
-# Back
-
-## Fixture rules heading
-
-**Rule one.** Its words after the lead-in.
-
-**Rule two**: words after a colon, and enough of them to run over the line at the card's type size, set as any is.
-
-A rule with no lead-in, its words.
+A second paragraph of fine print, its words plain.
 `;
 
-/**
- * The runs of the entry fixture each side carries, in its order: the front's (the email line's words, its @ and its ., and
- * the rules line last), the one-sided front's rules line in its place, the back's (whole).
- */
-export const ENTRY_FRONT_RUNS = ["Fixture heading words", "Field one", "Mail:", "@", ".", "Field three (optional)", "The fixture draw line, a sentence of words.", "The fixture consent line, its words.", "The fixture rules line, two-sided."];
-export const ENTRY_ONE_SIDED_RUNS = [...ENTRY_FRONT_RUNS.slice(0, -1), "The fixture rules line, one-sided."];
-export const ENTRY_BACK_RUNS = [
-  "Fixture rules heading",
-  "Rule one. Its words after the lead-in.",
-  "Rule two: words after a colon, and enough of them to run over the line at the card's type size, set as any is.",
-  "A rule with no lead-in, its words.",
+/** The fixture's fine print as a reader sees it (its ** marks not printed), paragraph by paragraph. */
+export const ENTRY_FINE = [
+  "Fixture rule one. Its words after the bold. A second bold run: then plain words to the end of the paragraph.",
+  "A second paragraph of fine print, its words plain.",
 ];
+/** The runs the fixture's card carries, in its order: the heading, the email line's words, its @ and its ., the fine print. */
+export const ENTRY_RUNS = ["Fixture heading words", "Mail:", "@", ".", ...ENTRY_FINE];
+
+/**
+ * § 17.3 item 1: the fixture with its fine print said `times` times over (as one paragraph each), to fit six a page but
+ * not eight (`times` 4), or neither (12). Measured 2026-10-23 on this tree's first build; the case reports the layout
+ * the build chose and checks it against what the report says, so a change of spacing that moves the line is its own.
+ */
+export const longEntry = (times) => `${ENTRY_FIXTURE.replace(/\n+$/, "")}${`\n\n${ENTRY_FINE[0]} More fixture words to fill the card.`.repeat(times)}\n`;
 
 /** Write `text` (a string, or an object as JSON) to a new temporary folder as `name`; returns { dir, path }. */
 export async function wordsFile(text, name) {
@@ -208,10 +191,10 @@ function qrReads(pdf, n, qrs, dpi = 300) {
 const timesOn = (pdf, n, run) => flat(pdfText(pdf, n)).split(flat(run)).length - 1;
 
 /**
- * QG31 (§ 17 items 1–2, 5; § 17.2 items 1 and 3): the tout, built with the fixture's words (the file at `toutPath`, holding
- * `words`), the fixture photos and a name for each of them: tout(-PROOF).pdf is one page of 450 × 306 pt, landscape; its
- * text carries the headline's lines, the lede, the banner, the scan line, `eatfitaf.com`, the fine print whole and its
- * photo's caption; its QR code, drawn from the PDF at 300 dpi, decodes to the `boston` URL (jsQR) and is at least 0.75 in
+ * QG31 (§ 17 items 1–2, 5; § 17.2 item 1; § 17.3 items 2–3): the tout, built with the fixture's words (the file at
+ * `toutPath`, holding `words`), the fixture photos and a name for each of them: its photo is the flyer's (assignment.json's
+ * tout id the flyer's); tout(-PROOF).pdf is one page of 450 × 306 pt, landscape; its text carries the headline's lines,
+ * the lede, the banner, the scan line, `eatfitaf.com`, the fine print whole and its photo's caption (the flyer's name); its QR code, drawn from the PDF at 300 dpi, decodes to the `boston` URL (jsQR) and is at least 0.75 in
  * square; no run of text or the code less than the safe margin inside the trim; no type under the floor. And
  * letter-touts(-PROOF).pdf is one US Letter page holding two touts, each its trim, at least 1 in apart, each code
  * decoding, each word twice; nothing drawn within 36 pt of the paper's edge or outside the two. The problems.
@@ -232,6 +215,8 @@ export async function toutProblems(root, toutPath, words) {
       const record = JSON.parse(await readFile(join(out, "assignment.json"), "utf8"));
       const caption = mealNames(set.ids)[record.tout?.id];
       if (!caption) problems.push(`assignment.json names the tout's photo as ${JSON.stringify(record.tout?.id)}, not a fixture photo`);
+      // § 17.3 item 2: the tout's photo is the flyer's
+      if (record.tout?.id !== record.positions.flyer?.id) problems.push(`the tout's photo is ${record.tout?.id}, not the flyer's, ${record.positions.flyer?.id}`);
       const runs = [...words.headline, words.lede, words.banner, words.scan, "eatfitaf.com", words.fine, caption ?? ""].map((r) => r.replaceAll("*", ""));
       for (const run of runs) if (!carries(pdf, 1, run)) problems.push(`${tout.stem}.pdf lacks "${run}"`);
       const qrs = tout.measured.faces.flatMap((f) => f.qrs);
@@ -248,7 +233,7 @@ export async function toutProblems(root, toutPath, words) {
       if (faces.length === 2 && faces[1].trim.y - (faces[0].trim.y + faces[0].trim.h) < 1 - TOLERANCE_IN) problems.push("the two touts are less than 1 in apart");
       const reads = qrReads(sheet, 1, faces.flatMap((f) => f.qrs));
       if (reads.length !== 2 || reads.some((r) => r !== BOSTON_URL)) problems.push(`the sheet's QR codes decode to ${JSON.stringify(reads)}`);
-      for (const run of [words.headline[0], words.banner, words.fine]) if (timesOn(sheet, 1, run) !== 2) problems.push(`${letter.stem}.pdf carries "${run}" ${timesOn(sheet, 1, run)} times, not 2`);
+      for (const run of [words.headline[1].replaceAll("*", ""), words.banner, words.fine]) if (timesOn(sheet, 1, run) !== 2) problems.push(`${letter.stem}.pdf carries "${run}" ${timesOn(sheet, 1, run)} times, not 2`);
       problems.push(...paperProblems(`${letter.stem}.pdf`, sheet, 1, faces.map((f) => f.trim)));
       return problems;
     });
@@ -329,85 +314,82 @@ function missingInOrder(pdf, n, runs) {
   return missing;
 }
 
-/** Whether the four quarters of page `n` of a PDF, drawn at 72 dpi, are the same pixels (§ 17.2 item 1's backs). */
-function quartersDiffer(pdf, n) {
-  const page = drawn(pdf, n, 72);
-  const [w, h] = [Math.floor(page.width / 2), Math.floor(page.height / 2)];
-  const quarter = (qx, qy) => {
-    const rows = [];
-    for (let y = 0; y < h; y += 1) rows.push(page.data.subarray(((qy * h + y) * page.width + qx * w) * 4, ((qy * h + y) * page.width + qx * w + w) * 4).toString("latin1"));
-    return rows.join("");
-  };
-  const first = quarter(0, 0);
-  return [[1, 0], [0, 1], [1, 1]].filter(([qx, qy]) => quarter(qx, qy) !== first).map(([qx, qy]) => `the quarter at ${qx ? "right" : "left"} ${qy ? "bottom" : "top"}`);
-}
+/** § 17.3 item 1: the card's copy count a page, its cut inset, and its two layouts (eight, else six), each its trim. */
+export const CARD_CUT_IN = 0.25;
+export const CARD_LAYOUTS = { 8: { w: 3.75, h: 2.5 }, 6: { w: 3.75, h: 10 / 3 } };
 
 /**
- * QG32 (§ 17 items 1, 3, 5; § 17.2 items 1, 2 and 4): the entry card, built with the fixture's words (the file at
- * `entryPath`). Its own PDF, entry-card(-PROOF).pdf: two pages of 324 × 414 pt (4.25 × 5.5 in and the bleed), portrait.
- * letter-entry-cards(-PROOF).pdf: two US Letter pages, four cards on each, each a quarter (4.25 × 5.5 in); on every front
- * the fixture's fields, read from the PDF in order (the email line's words, its @ and its .), and nothing the file does not
- * give (each field label four times a page, once a card); a writing line per field, the email's several, each at least
- * 0.3 in below the field before, each drawn; the four backs the same pixels, the rules whole on each; nothing drawn within
- * 36 pt of the paper's edge; no word of a card within 0.5 in of its cut. letter-entry-cards-one-sided(-PROOF).pdf: one
- * page, four fronts whose rules line is the one-sided one (and not the two-sided one). letter-rules-sign(-PROOF).pdf: one
- * page, the rules whole. Nothing under the type floor. The problems.
+ * QG32 (§ 17 items 1, 3, 5; § 17.2 items 1–2; § 17.3 items 1 and 3): the entry card, built with the words at `entryPath`.
+ * letter-entry-cards(-PROOF).pdf: one US Letter page of `count` cards (8, or 6: what the build chose, which must be
+ * `count`), each its layout's trim; on every card, read from the PDF in order, the heading, the email line's words, its
+ * @ and its ., and the fine print whole (each run `count` times a page); each card's email line its writing lines,
+ * drawn; no word of a card within 0.25 in of its cut; nothing drawn within 36 pt of the paper's edge or outside the
+ * cards; no type under the floor. The card's own PDF, entry-card(-PROOF).pdf: one page, the chosen card's trim and the
+ * bleed, carrying the same runs. The report names the layout, and the one before it that did not fit with the layout px it
+ * was over. The problems.
  */
-export async function entryProblems(root, entryPath) {
+export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_RUNS } = {}) {
   return withTmp(async (dir) => {
     const out = join(dir, "dist-print");
     const built = await build(root, { outDir: out, fourFlyers: false, entryPath });
     const find = (base) => built.planned.find((p) => p.page.base === base);
-    const [card, cards, oneSided, sign] = ["entry-card", "letter-entry-cards", "letter-entry-cards-one-sided", "letter-rules-sign"].map(find);
-    if (!card || !cards || !oneSided || !sign) return [`the build made ${built.planned.map((p) => p.page.base).join(", ")}`];
+    const [card, cards] = ["entry-card", "letter-entry-cards"].map(find);
+    if (!card || !cards) return [`the build made ${built.planned.map((p) => p.page.base).join(", ")}`];
     const pdfOf = (p) => join(out, `${p.stem}.pdf`);
-    const problems = [
-      ...pageProblems(`${card.stem}.pdf`, await readFile(pdfOf(card)), 2, CARD_BOX, false),
-      ...pageProblems(`${cards.stem}.pdf`, await readFile(pdfOf(cards)), 2, LETTER_BOX, false),
-      ...pageProblems(`${oneSided.stem}.pdf`, await readFile(pdfOf(oneSided)), 1, LETTER_BOX, false),
-      ...pageProblems(`${sign.stem}.pdf`, await readFile(pdfOf(sign)), 1, LETTER_BOX, false),
-    ];
-    const missing = (p, n, runs) => {
+    const face = CARD_LAYOUTS[count];
+    const ownBox = [0, 0, (face.w + 0.25) * 72, (face.h + 0.25) * 72].map((n) => Number(n.toFixed(2)));
+    const problems = [...pageProblems(`${cards.stem}.pdf`, await readFile(pdfOf(cards)), 1, LETTER_BOX, false), ...pageProblems(`${card.stem}.pdf`, await readFile(pdfOf(card)), 1, ownBox, true)];
+    const sheet = cards.measured.sheets[0];
+    if (sheet.faces.length !== count) problems.push(`${cards.stem}.pdf measures ${sheet.faces.length} cards, not ${count}`);
+    const said = built.lines.find((l) => l.startsWith(`letter-entry-cards: the words of`)) ?? "";
+    if (!said.includes(`${count} a page`)) problems.push(`the report does not say ${count} a page: ${said}`);
+    const over = built.lines.find((l) => l.startsWith("letter-entry-cards: 8 a page did not fit"));
+    if (count === 6 && !/did not fit, \d+(\.\d+)? layout px over/.test(over ?? "")) problems.push(`the report does not say by how much eight did not fit: ${over}`);
+    if (count === 8 && over) problems.push(`eight fit, yet the report says: ${over}`);
+    for (const [p, n] of [[cards, 1], [card, 1]]) {
       const run = missingInOrder(pdfOf(p), n, runs);
-      if (run !== null) problems.push(`${p.stem}.pdf page ${n} lacks "${run}" in order`);
-    };
-    missing(card, 1, ENTRY_FRONT_RUNS);
-    missing(card, 2, ENTRY_BACK_RUNS);
-    missing(cards, 1, ENTRY_FRONT_RUNS);
-    missing(cards, 2, ENTRY_BACK_RUNS);
-    missing(oneSided, 1, ENTRY_ONE_SIDED_RUNS);
-    missing(sign, 1, ENTRY_BACK_RUNS);
-    for (const label of ["Field one", "Mail:", "Field three (optional)"]) if (timesOn(pdfOf(cards), 1, label) !== 4) problems.push(`${cards.stem}.pdf page 1 carries "${label}" ${timesOn(pdfOf(cards), 1, label)} times, not 4`);
-    if (timesOn(pdfOf(oneSided), 1, "two-sided") !== 0) problems.push(`${oneSided.stem}.pdf carries the two-sided rules line`);
-    if (timesOn(pdfOf(oneSided), 1, ENTRY_ONE_SIDED_RUNS.at(-1)) !== 4) problems.push(`${oneSided.stem}.pdf carries its rules line ${timesOn(pdfOf(oneSided), 1, ENTRY_ONE_SIDED_RUNS.at(-1))} times, not 4`);
-    // the fronts' writing lines, per card: one a field, the email's three, each field at least 0.3 in below the one before
+      if (run !== null) problems.push(`${p.stem}.pdf lacks "${run}" in order`);
+    }
+    for (const run of [runs[0], "Mail:", runs.at(-1)]) if (timesOn(pdfOf(cards), 1, run) !== count) problems.push(`${cards.stem}.pdf carries "${run}" ${timesOn(pdfOf(cards), 1, run)} times, not ${count}`);
     const dpi = 300;
-    const fronts = drawn(pdfOf(cards), 1, dpi);
-    const sheetOne = cards.measured.sheets[0];
-    if (sheetOne.faces.length !== 4 || cards.measured.sheets[1]?.faces.length !== 4) problems.push(`${cards.stem}.pdf measures ${sheetOne.faces.length} fronts and ${cards.measured.sheets[1]?.faces.length} backs, not 4 and 4`);
-    sheetOne.faces.forEach((face, c) => {
-      if (Math.abs(face.trim.w - 4.25) > TOLERANCE_IN || Math.abs(face.trim.h - 5.5) > TOLERANCE_IN) problems.push(`card ${c + 1} is ${face.trim.w.toFixed(2)} × ${face.trim.h.toFixed(2)} in, not 4.25 × 5.5`);
-      const counts = face.entryFields.map((field) => field.lines.length);
-      if (JSON.stringify(counts) !== "[1,3,1]") problems.push(`card ${c + 1}'s fields have ${JSON.stringify(counts)} writing lines, not [1,3,1]`);
-      face.lines.slice(1).forEach((line, i) => {
-        if (line.y - face.lines[i].y < PITCH_MIN_IN - TOLERANCE_IN) problems.push(`card ${c + 1}: fields ${i + 1} and ${i + 2}'s lines are ${(line.y - face.lines[i].y).toFixed(3)} in apart`);
-      });
-      for (const line of face.entryFields.flatMap((field) => field.lines)) if (darkShare(fronts, line, dpi) < 0.5) problems.push(`card ${c + 1}: a writing line is not drawn in the PDF`);
-      for (const t of face.texts) {
-        const inset = Math.min(t.x - face.trim.x, t.y - face.trim.y, face.trim.x + face.trim.w - t.x - t.w, face.trim.y + face.trim.h - t.y - t.h);
-        if (inset < 0.5 - TOLERANCE_IN) problems.push(`card ${c + 1}: "${t.text}" is ${inset.toFixed(3)} in from its cut, under 0.5`);
+    const page = drawn(pdfOf(cards), 1, dpi);
+    sheet.faces.forEach((f, c) => {
+      if (Math.abs(f.trim.w - face.w) > TOLERANCE_IN || Math.abs(f.trim.h - face.h) > TOLERANCE_IN) problems.push(`card ${c + 1} is ${f.trim.w.toFixed(2)} × ${f.trim.h.toFixed(2)} in, not ${face.w} × ${face.h.toFixed(2)}`);
+      const counts = f.entryFields.map((field) => field.lines.length);
+      if (JSON.stringify(counts) !== "[3]") problems.push(`card ${c + 1}'s field has ${JSON.stringify(counts)} writing lines, not the email's [3]`);
+      for (const line of f.entryFields.flatMap((field) => field.lines)) if (darkShare(page, line, dpi) < 0.5) problems.push(`card ${c + 1}: a writing line is not drawn in the PDF`);
+      for (const t of f.texts) {
+        const inset = Math.min(t.x - f.trim.x, t.y - f.trim.y, f.trim.x + f.trim.w - t.x - t.w, f.trim.y + f.trim.h - t.y - t.h);
+        if (inset < CARD_CUT_IN - TOLERANCE_IN) problems.push(`card ${c + 1}: "${t.text.slice(0, 40)}" is ${inset.toFixed(3)} in from its cut, under ${CARD_CUT_IN}`);
+        if (!(t.size >= FLOOR_PX)) problems.push(`card ${c + 1}: "${t.text.slice(0, 40)}" is ${t.size} layout px, under ${FLOOR_PX}`);
       }
     });
-    const differ = quartersDiffer(pdfOf(cards), 2);
-    if (differ.length) problems.push(`${cards.stem}.pdf page 2: ${differ.join(", ")} differs from the top left's`);
-    for (const [p, n] of [[cards, 1], [cards, 2], [oneSided, 1], [sign, 1]]) problems.push(...paperProblems(`${p.stem}.pdf`, pdfOf(p), n, p.measured.sheets[n - 1].faces.map((f) => f.trim)));
-    for (const png of [`${card.stem}.png`, `entry-card-back${card.stem.endsWith("-PROOF") ? "-PROOF" : ""}.png`, `${cards.stem}.png`, `letter-entry-cards-back${cards.stem.endsWith("-PROOF") ? "-PROOF" : ""}.png`, `${oneSided.stem}.png`, `${sign.stem}.png`]) {
+    problems.push(...paperProblems(`${cards.stem}.pdf`, pdfOf(cards), 1, sheet.faces.map((f) => f.trim)));
+    for (const png of [`${card.stem}.png`, `${cards.stem}.png`]) {
       const ok = await readFile(join(out, png)).then(() => true, () => false);
       if (!ok) problems.push(`no ${png}`);
     }
-    for (const [i, sheet] of card.measured.sheets.entries()) problems.push(...marginAndFloorProblems(`the card's ${i ? "back" : "front"}`, sheet));
-    for (const p of [cards, oneSided, sign]) for (const sheet of p.measured.sheets) for (const t of sheet.faces.flatMap((f) => f.texts)) if (!(t.size >= FLOOR_PX)) problems.push(`${p.stem}: "${t.text}" is ${t.size} layout px, under ${FLOOR_PX}`);
     return problems;
+  });
+}
+
+/**
+ * QG32 (§ 17.3 item 1): words too long for six a page either are refused, nothing printed, the refusal naming each
+ * layout and the layout px it was over. The problems.
+ */
+export async function entryTooLongProblems(root, entryPath) {
+  return withTmp(async (dir) => {
+    const out = join(dir, "dist-print");
+    try {
+      await build(root, { outDir: out, fourFlyers: false, entryPath });
+      return ["words too long for six a page were not refused"];
+    } catch (err) {
+      const problems = [];
+      for (const n of [8, 6]) if (!new RegExp(`letter-entry-cards: ${n} a page: copy 1: the card does not fit: its words run \\d+(\\.\\d+)? layout px over`).test(err.message)) problems.push(`the refusal does not name ${n} a page's overflow: ${err.message.slice(0, 300)}`);
+      const left = await readdir(out).catch(() => []);
+      if (left.length) problems.push(`refused, yet the out folder holds ${left.join(", ")}`);
+      return problems;
+    }
   });
 }
 
@@ -453,7 +435,7 @@ export async function proofRuleProblems(root) {
     const marked = (text) => `${text.replace(/\n+$/, "")}\n\n<!-- approved -->\n`;
     const card = say(entry, parseEntry(marked(ENTRY_FIXTURE), "entry-words.md"));
     if (card.placeholders.length || card.stem !== "entry-card") problems.push(`the approved card without a bracket: ${card.stem}, ${JSON.stringify(card.placeholders)}`);
-    const withBracket = ENTRY_FIXTURE.replace("A rule with no lead-in, its words.", "A rule with no lead-in, worth $[value], [value] again and [the prize].");
+    const withBracket = ENTRY_FIXTURE.replace("A second paragraph of fine print, its words plain.", "A second paragraph, worth $[value], [value] again and [the prize].");
     const card2 = say(entry, parseEntry(marked(withBracket), "entry-words.md"));
     if (card2.stem !== "entry-card-PROOF" || JSON.stringify(card2.placeholders) !== JSON.stringify(["[value] in entry-words.md", "[the prize] in entry-words.md"])) problems.push(`the card with brackets: ${card2.stem}, ${JSON.stringify(card2.placeholders)}`);
     const card3 = say(entry, parseEntry(ENTRY_FIXTURE, "entry-words.md"));
@@ -515,22 +497,15 @@ export async function unchangedProblems(root, before, { toutPath, entryPath }) {
     if (names(was) !== names(now)) problems.push(`without the flags the build writes ${names(now)}, where it wrote ${names(was)}`);
     for (const name of Object.keys(was)) if (now[name] !== undefined && now[name] !== was[name]) problems.push(`${name} differs from the one built before § 17`);
     const added = Object.keys(flags).filter((name) => now[name] === undefined);
-    // § 17.2 item 1: and their letter sheets, each PDF with a PNG preview of each of its pages
-    const expected = [
-      "entry-card-PROOF.pdf", "entry-card-PROOF.png", "entry-card-back-PROOF.png",
-      "letter-entry-cards-PROOF.pdf", "letter-entry-cards-PROOF.png", "letter-entry-cards-back-PROOF.png",
-      "letter-entry-cards-one-sided-PROOF.pdf", "letter-entry-cards-one-sided-PROOF.png",
-      "letter-rules-sign-PROOF.pdf", "letter-rules-sign-PROOF.png",
-      "letter-touts-PROOF.pdf", "letter-touts-PROOF.png",
-      "tout-PROOF.pdf", "tout-PROOF.png",
-    ];
+    // § 17.2 item 1 and § 17.3 item 1: and their letter sheets, each PDF with its PNG preview
+    const expected = ["entry-card-PROOF.pdf", "entry-card-PROOF.png", "letter-entry-cards-PROOF.pdf", "letter-entry-cards-PROOF.png", "letter-touts-PROOF.pdf", "letter-touts-PROOF.png", "tout-PROOF.pdf", "tout-PROOF.png"];
     if (added.join(", ") !== expected.join(", ")) problems.push(`with the flags the build adds ${added.join(", ")}, not ${expected.join(", ")}`);
     for (const name of Object.keys(now)) {
       if (name === "assignment.json") continue;
       if (flags[name] !== now[name]) problems.push(`${name} differs when the giveaway is built beside it`);
     }
     const [a, b] = [JSON.parse(now["assignment.json"]), JSON.parse(flags["assignment.json"])];
-    const giveawayPages = ["tout", "letter-touts", "entry-card", "letter-entry-cards", "letter-entry-cards-one-sided", "letter-rules-sign"];
+    const giveawayPages = ["tout", "letter-touts", "entry-card", "letter-entry-cards"];
     const pagesOnly = { ...b, pages: Object.fromEntries(Object.entries(b.pages).filter(([page]) => !giveawayPages.includes(page))) };
     delete pagesOnly.tout;
     if (JSON.stringify(pagesOnly) !== JSON.stringify(a)) problems.push("assignment.json differs, with the giveaway, by more than its two pages and the tout's photo");
@@ -538,69 +513,3 @@ export async function unchangedProblems(root, before, { toutPath, entryPath }) {
   });
 }
 
-/**
- * QG35 (§ 17.2 items 3–4), no Chrome: the tout's photo by print/assign.mjs toutPhoto, over fixture rungs and sizes: the
- * first candidate in the assigner's order (rung 1, then the higher rungs' arrays) that is not ruled out, landscape and at
- * least 300 ppi at the tout's window; a portrait and a photo too small skipped; none free, the best (the first that fits)
- * with `best`; none fits, refused. The problems.
- */
-export async function toutPhotoRuleProblems(root) {
-  const { toutPhoto } = await load(root, "print/assign.mjs");
-  const { rungsDoc } = await import("./print-fixtures.mjs");
-  const [a, b, c, d, e, f, g] = ["a", "b", "c", "d", "e", "f", "g"].map((x) => `p00000${x}`);
-  const sizes = { [b]: [2000, 3000], [c]: [600, 400] };
-  const sizeOf = (id) => ({ width: (sizes[id] ?? [3000, 2000])[0], height: (sizes[id] ?? [3000, 2000])[1] });
-  const doc = rungsDoc({ strongest: [a], alsoGood: [b, c, d], arrays: { 3: [[e, a, f]], 4: [[g, e, a, d]] } });
-  const pick = (ruledOut) => toutPhoto(doc, { sizeOf, ruledOut, window: { w: 2.625, h: 2.225 }, minPpi: 300 });
-  const problems = [];
-  const expect = (what, got, id, from, best) => {
-    if (got.id !== id || got.from !== from || got.best !== best) problems.push(`${what}: ${JSON.stringify(got)}, not ${JSON.stringify({ id, from, best })}`);
-  };
-  expect("nothing ruled out", pick([]), a, "rung 1, photo 1", false);
-  expect("the first ruled out (the portrait and the small one skipped)", pick([a]), d, "rung 1, photo 4", false);
-  expect("rung 1 used up", pick([a, d]), e, "rung 3, array 1, photo 1", false);
-  expect("a photo twice in the order is a candidate once", pick([a, d, e]), f, "rung 3, array 1, photo 3", false);
-  expect("every one ruled out", pick([a, d, e, f, g]), a, "rung 1, photo 1", true);
-  try {
-    toutPhoto(rungsDoc({ alsoGood: [b, c] }), { sizeOf, ruledOut: [], window: { w: 2.625, h: 2.225 }, minPpi: 300 });
-    problems.push("no photo landscape and 300 ppi, and one was chosen");
-  } catch (err) {
-    if (!/no photo is landscape and 300 ppi at the tout's window/.test(err.message)) problems.push(`none fits, refused as: ${err.message}`);
-  }
-  return problems;
-}
-
-/**
- * QG35, built: with the fixture photos, the tout's photo is none the build places (the flyer, the tent's three, the
- * back's three) and none the --tout-avoid file names (an assignment.json, its positions' ids): assignment.json's tout id,
- * the report's line naming it and every id ruled out. The problems.
- */
-export async function toutPhotoBuildProblems(root) {
-  const set = await photoSet();
-  try {
-    return await withTmp(async (dir) => {
-      const avoid = join(dir, "assignment.json");
-      await writeFile(avoid, JSON.stringify({ positions: { elsewhere: { id: set.ids.other } }, four_flyers: [] }));
-      const file = await wordsFile(TOUT_FIXTURE, "tout-words.json");
-      try {
-        const out = join(dir, "dist-print");
-        const built = await build(root, { outDir: out, fourFlyers: false, toutPath: file.path, toutAvoidPath: avoid, ...set.photos });
-        const record = JSON.parse(await readFile(join(out, "assignment.json"), "utf8"));
-        const placed = Object.values(record.positions).map((p) => p.id);
-        const problems = [];
-        if (!record.tout?.id) return ["assignment.json records no tout photo"];
-        if (placed.includes(record.tout.id)) problems.push(`the tout's photo ${record.tout.id} is placed elsewhere in the set`);
-        if (record.tout.id === set.ids.other) problems.push("the tout's photo is the one --tout-avoid names");
-        if (record.tout.id !== set.ids.spare) problems.push(`the tout's photo is ${record.tout.id}, not the assigner's next (rung 3, array 1, photo 1)`);
-        const line = built.lines.find((l) => l.startsWith("photo tout: ") && l.includes("ruled out"));
-        if (!line) problems.push("the report has no line for the tout's photo");
-        else for (const id of [record.tout.id, ...placed, set.ids.other]) if (!line.includes(id)) problems.push(`the report's tout line does not name ${id}`);
-        return problems;
-      } finally {
-        await rm(file.dir, { recursive: true, force: true });
-      }
-    });
-  } finally {
-    await rm(set.dir, { recursive: true, force: true });
-  }
-}

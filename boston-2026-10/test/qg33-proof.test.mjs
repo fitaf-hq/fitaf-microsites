@@ -18,12 +18,13 @@ test("QG33: a bracket proofs, none does not; each bracket named once", async () 
 });
 
 test("QG33: built, the entry card with brackets is a proof and the report's last line names each", { skip: NO_CHROME }, async () => {
-  const text = ENTRY_FIXTURE.replace("A rule with no lead-in, its words.", "A rule, about $[value], from [the sponsor].");
+  const text = ENTRY_FIXTURE.replace("A second paragraph of fine print, its words plain.", "A second paragraph, about $[value], from [the sponsor].");
+  assert.notEqual(text, ENTRY_FIXTURE, "the fixture holds the sentence the case puts its brackets in");
   const file = await wordsFile(text, "entry-words.md");
   const dir = await mkdtemp(join(tmpdir(), "boston-qg33-"));
   try {
     const built = await lockedBuild({ outDir: join(dir, "out"), fourFlyers: false, entryPath: file.path });
-    const card = built.planned.find((p) => p.piece.id === "entry-card");
+    const card = built.planned.find((p) => p.page.base === "entry-card");
     assert.equal(card.stem, "entry-card-PROOF");
     const last = built.lines.at(-1);
     assert.match(last, /^placeholders remain: /);
