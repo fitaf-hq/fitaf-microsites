@@ -103,7 +103,14 @@
 // byte-identical (U4 reads them on 2026-09-29, where no step is drawn); the three development pages +997 bytes each: the
 // step's four reworded lines (section.html), heldUntil, longDate and addDays inlined with MS_PER_DAY, and flow1.js's lines
 // filling the date held. build:dev of both trees differs in index.html, demo/, boston/ and seminar/ by those lines alone.
-// From here the reference is a3897d8's tree.
+// ⚠ RE-RECORDED at ede2e07 (`node test/u-04-record.mjs --commit ede2e07`): SPEC-ui-and-copy-pass § 1 (2026-10-23).
+// Against a3897d8's record, all six contents byte-identical; the three production pages +3,909 bytes each, item 8's card
+// alone (the chips' grid, the count badge's rules, #cc-list's data-meal-qty and the script reading a line's count back),
+// their visible page at the answered fragments (the card's attribute, a counted meal's badge and hidden words); the three
+// development pages +9,720 bytes each (item 8's lines, items 1–3's box, step and messages, item 7's prices after the offer
+// and plan-prices.js), their visible page at every fragment (the Family anchor, SAVE_FAMILY, is gone). Both trees' builds
+// differ in index.html, demo/, boston/, seminar/ and privacy/ alone (§ 1 item 5's two paragraphs on the last).
+// From here the reference is ede2e07's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -112,7 +119,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to a3897d8's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "a3897d8");
+test("U4: a normal week, the content and the page as served, byte-identical to ede2e07's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "ede2e07");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

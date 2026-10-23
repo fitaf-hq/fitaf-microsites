@@ -230,8 +230,12 @@ export const BASE = "768ca36";
  *  the Advisor's review of the live page), and SPEC-meal-selection § 13 (2026-10-20, built 2026-10-22: one comment of
  *  scripts/selection.mjs, a file the development Worker reaches, and no page), built together on boston/review-1022:
  *  ce91cba (§ 11's contract) to 773e597 (the last of their code, § 11.2's button; between them only tests, goldens and
- *  contract text outside LATER_PATHS). */
-export const LATER = [["ce91cba", "773e597"]];
+ *  contract text outside LATER_PATHS). A third element names the paths of an entry whose diff over LATER_PATHS would not
+ *  apply to the base: SPEC-ui-and-copy-pass § 1 (2026-10-23) moves the production page by item 8's card alone (the chips
+ *  and the count badge: src/chefs-choice/ and scripts/chefs-choice.mjs's one slot), from e875280 (its contract) to
+ *  ede2e07 (its last code); its other items change only the pages with an offer, which the production page with
+ *  `production` false is not (shown: both trees' production pages differ by the card's lines alone). */
+export const LATER = [["ce91cba", "773e597"], ["e875280", "ede2e07", ["src/chefs-choice", "scripts/chefs-choice.mjs"]]];
 const LATER_PATHS = ["build.mjs", "data", "scripts", "src"];
 
 function run(cmd, args, { input } = {}) {
@@ -251,8 +255,8 @@ export async function basePackage() {
   run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", BASE, prefix]) });
   const pkg = join(scratch, "base", prefix);
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
-  for (const [from, to] of LATER) {
-    const diff = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...LATER_PATHS.map((p) => `${prefix}/${p}`)]);
+  for (const [from, to, paths = LATER_PATHS] of LATER) {
+    const diff = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...paths.map((p) => `${prefix}/${p}`)]);
     if (diff.length) run("patch", ["-p1", "--forward", "--silent", "-d", join(scratch, "base")], { input: diff });
   }
   return { pkg, dispose: () => rm(scratch, { recursive: true, force: true }) };
