@@ -48,7 +48,9 @@ test("Q2: the tent's page holds two faces, one face's markup twice, the first (t
 
 test("Q2: the turned face is turned 180°, and nothing else is", () => {
   const rules = [...printCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1].trim().split("\n").at(-1).trim(), body: m[2] }));
-  const turned = rules.filter((r) => /\btransform\s*:/.test(r.body));
+  // the transform property itself, at a declaration's start: not text-transform (§ 13's front B sets its headline in
+  // capitals), whose hyphen \b would count as a word boundary
+  const turned = rules.filter((r) => /(^|[\s;{])transform\s*:/.test(r.body));
   assert.deepEqual(turned.map((r) => [r.selector, r.body.trim()]), [[".print-face-turned", "transform: rotate(180deg);"]]);
 });
 

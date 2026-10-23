@@ -1,7 +1,11 @@
 // Build the boston-2026-10 front door: dist/index.html and dist/qr/<event>.{png,svg}.
 // Plain Node 22 ESM. The page is an OUTPUT of data/plans.json + src/; never hand-edit dist/.
 //
-//   node build.mjs [--env dev] [--out DIR]
+//   node build.mjs [--env dev|preview] [--out DIR]
+//
+// `--env preview` (SPEC-preview-sites.md § 3) writes dist-preview/: the production page with a preview site's changes
+// built in (the banner's slot, every order link without an address and shown disabled, no analytics beacon, no rung 4),
+// holding no week either: the preview Worker (src/worker/preview.js) puts a planned week in its #picks-data.
 //
 // ⛔ THE BUILD EMBEDS NO WEEK (SPEC-week-content § 7, the orchestrator's ruling of 2026-10-11 on § 7's first open
 // question): the page always carries the Chef's Choice card with a #picks-data holding `weeks: []`, hidden, and reads
@@ -32,6 +36,9 @@ export const PLANS_PATH = join(ROOT, "data", "plans.json");
 export const EVENTS_PATH = join(ROOT, "data", "events.json");
 export const DIST = join(ROOT, "dist");
 export const DIST_DEV = join(ROOT, "dist-dev");
+/** SPEC-preview-sites § 3: the preview build's directory, and its page's own sources (the banner, its style, its script). */
+export const DIST_PREVIEW = join(ROOT, "dist-preview");
+export const PREVIEW_SRC = join(ROOT, "src", "preview");
 export const SAVE_PATH = join(ROOT, "data", "save.json");
 /** The campaign's phrases, shared by the page and the mock-ups (mockups/): one place to change a phrase. */
 export const MESSAGES_PATH = join(ROOT, "data", "messages.json");
@@ -61,7 +68,7 @@ export const STATIC_DIRS = [
 export const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 const CENTS_PER_DOLLAR = 100;
-const QR_OPTIONS = {
+export const QR_OPTIONS = {
   errorCorrectionLevel: "M",
   margin: 2,
   color: { dark: "#1b2360", light: "#ffffff" },
@@ -87,6 +94,14 @@ export function weeklyTotalCents(cell) {
 export function orderUrl(plans, mpid) {
   return `${plans.order_base_url}?mpid=${mpid}`;
 }
+
+/** SPEC-preview-sites § 1 item 2: on a preview, a plan's link has no address and is shown disabled. */
+const NO_ORDER_LINK = 'role="link" aria-disabled="true"';
+/** A plan's link's attribute: its order page (`href`), or with `orderLinks` false (a preview) none, disabled. */
+const orderLink = (plans, mpid, orderLinks) => (orderLinks ? `href="${esc(orderUrl(plans, mpid))}"` : NO_ORDER_LINK);
+/** SPEC-preview-sites § 1 item 2: a preview's plan-data has no store address. app.js still writes `?mpid=N` on Choose your
+ *  meals (the card's script reads the size from it), and the preview's script then takes every link's href away. */
+const PREVIEW_ORDER_BASE = "";
 
 export function shownCounts(plans) {
   return plans.shown_counts.map((c) => c.meals_per_week);
@@ -250,7 +265,7 @@ ${slides.join("\n")}
   </div>`;
 }
 
-function gridRows(plans) {
+function gridRows(plans, orderLinks = true) {
   const cells = gridCells(plans);
   return plans.individual
     .map((plan) => {
@@ -258,7 +273,7 @@ function gridRows(plans) {
         .filter((c) => c.plan === plan.id)
         .map(
           (c) =>
-            `<td><a class="cell" href="${esc(orderUrl(plans, c.mpid))}" data-cell="${c.plan}-${c.count}" ` +
+            `<td><a class="cell" ${orderLink(plans, c.mpid, orderLinks)} data-cell="${c.plan}-${c.count}" ` +
             `aria-label="${esc(plan.name)}, ${c.count} meals a week: ${money(c.price_per_meal_cents)} per meal, ${money(c.total_cents)} a week">` +
             `<b>${money(c.price_per_meal_cents)}<span class="visually-hidden"> per meal</span></b>` +
             `<small>${money(c.total_cents)}/wk</small></a></td>`,
@@ -275,7 +290,7 @@ function gridHead(plans) {
     .join("");
 }
 
-function familySection(plans) {
+function familySection(plans, orderLinks = true) {
   const f = plans.family;
   const cell = f.counts[0];
   const n = cell.meals_per_week;
@@ -286,7 +301,7 @@ function familySection(plans) {
         <div><dt>Per family meal</dt><dd>${money(cell.price_per_meal_cents)}</dd></div>
         <div><dt>Weekly total (${n} meal${n === 1 ? "" : "s"})</dt><dd>${money(weeklyTotalCents(cell))}</dd></div>
       </dl>
-      <a class="cta" href="${esc(orderUrl(plans, cell.mpid))}" data-plan="${esc(f.id)}">Choose your meals</a>
+      <a class="cta" ${orderLink(plans, cell.mpid, orderLinks)} data-plan="${esc(f.id)}">Choose your meals</a>
     </div>`;
 }
 
@@ -294,14 +309,14 @@ function familySection(plans) {
  * What the inline script needs: display strings computed here from cents, so money math lives once. Since
  * SPEC-meal-selection: per answer set (`or-5d`, § 8 item 2) the plan it goes through and the rounded line, or "" (§ 2);
  * each size's cells for every plan an answer set goes through; the defaults; today's two counts as answer sets (§ 3:
- * `#lean-7`, `#meals-14`); and whether Q4 is on the page.
+ * `#lean-7`, `#meals-14`); and whether Q4 is on the page. With `orderLinks` false (a preview) the order page's base is empty.
  */
-function clientData(plans, words, offer = plans.snacks.shown) {
+function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true) {
   const { rows, defaults } = checkSelection(plans);
   const counts = [...new Set([...rows.values()].map((r) => r.plan))].sort((a, b) => a - b);
   const legacy = shownCounts(plans).map((n) => [n, legacyKey(rows, n)]).filter(([, key]) => key);
   return {
-    base: plans.order_base_url,
+    base: orderLinks ? plans.order_base_url : PREVIEW_ORDER_BASE,
     answers: Object.fromEntries(
       [...rows].map(([key, r]) => [key, { plan: r.plan, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
     ),
@@ -528,8 +543,10 @@ export async function analyticsSlot(events) {
 }
 
 /** `picks`: this week's Chef's Choice slots (scripts/chefs-choice.mjs), or none. `photos`: the photo sheets' manifest
- *  (data/photo-sheets.json when not given). `events`: data/events.json when not given (the analytics' QR ids). */
-export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS, photos = undefined, events = undefined) {
+ *  (data/photo-sheets.json when not given). `events`: data/events.json when not given (the analytics' QR ids).
+ *  `orderLinks` false (a preview, SPEC-preview-sites § 1 item 2): the grid's and Family's links, and plan-data's base,
+ *  carry no store address. */
+export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks = NO_PICKS, photos = undefined, events = undefined, { orderLinks = true } = {}) {
   const template = await readFile(join(ROOT, "src", "template.html"), "utf8");
   const script = await readFile(join(ROOT, "src", "app.js"), "utf8");
   messages ??= await loadJson(MESSAGES_PATH);
@@ -550,13 +567,17 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
     GOALS: plans.individual.map(goalButton).join("\n"),
     MEAL_QUESTIONS: mealQuestions(plans, words, offer),
     GRID_HEAD: gridHead(plans),
-    GRID_ROWS: gridRows(plans),
-    FAMILY: familySection(plans),
+    GRID_ROWS: gridRows(plans, orderLinks),
+    FAMILY: familySection(plans, orderLinks),
     READ_FROM_TEXT: esc(plans.read_from.replace(/^https?:\/\//, "")),
     READ_ON: esc(plans.read_on),
-    DATA: scriptJson(clientData(plans, words, offer)),
+    DATA: scriptJson(clientData(plans, words, offer, orderLinks)),
     ANALYTICS: await analyticsSlot(events),
     SCRIPT: script.trim(),
+    // SPEC-preview-sites § 3: a preview's banner, its style and its script, empty on every other page (PV5).
+    PREVIEW_STYLE: "",
+    PREVIEW_BANNER: "",
+    PREVIEW_SCRIPT: "",
     ...dev,
     ...picks,
   };
@@ -573,10 +594,10 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
 /** Copy the fonts, the logo and (a relative `base`) the photo sheets next to the page. Only files the page may reference
  *  are copied. A sheet the manifest names that is not in `sheetsDir` (src/assets/photo-sheets/) refuses the build: a
  *  broken image never ships (to remove the photos, `base` is null). */
-export async function copyStatic(outDir, photos = undefined, sheetsDir = PHOTO_SHEETS_DIR) {
+export async function copyStatic(outDir, photos = undefined, sheetsDir = PHOTO_SHEETS_DIR, staticDirs = STATIC_DIRS) {
   photos ??= await loadPhotos();
   const written = [];
-  for (const { dir, match } of STATIC_DIRS) {
+  for (const { dir, match } of staticDirs) {
     await mkdir(join(outDir, dir), { recursive: true });
     for (const name of (await readdir(join(ROOT, "src", dir))).filter((n) => match.test(n)).sort()) {
       await copyFile(join(ROOT, "src", dir, name), join(outDir, dir, name));
@@ -605,6 +626,24 @@ export async function writeQrCodes(events, outDir) {
     await QRCode.toFile(png, event.url, { ...QR_OPTIONS, type: "png", width: QR_PNG_WIDTH_PX });
     await writeFile(svg, await QRCode.toString(event.url, { ...QR_OPTIONS, type: "svg" }));
     written.push(png, svg);
+  }
+  return written;
+}
+
+/**
+ * The print build's QR codes at error correction H (SPEC-print-pieces.md § 13 item 11): qr/<event>-h.svg, the same URL,
+ * library and QR_OPTIONS but the level, so front B's logo can sit at the code's centre. Only the print build writes them
+ * (the site's outputs are unchanged); this file stays the one place a QR code is made (Q7).
+ */
+export async function writeQrCodesH(events, outDir) {
+  const qrDir = join(outDir, "qr");
+  await mkdir(qrDir, { recursive: true });
+  const written = [];
+  for (const event of events) {
+    if (!/^[a-z0-9-]+$/.test(event.id)) throw new Error(`bad event id: ${event.id}`);
+    const svg = join(qrDir, `${event.id}-h.svg`);
+    await writeFile(svg, await QRCode.toString(event.url, { ...QR_OPTIONS, errorCorrectionLevel: "H", type: "svg" }));
+    written.push(svg);
   }
   return written;
 }
@@ -752,6 +791,80 @@ async function productionPage({ plans, events, messages, card, photos, save, off
   return { html, privacy };
 }
 
+/** SPEC-preview-sites § 1 item 2: the banner's words (data/messages.json's `preview`) and the placeholders each must
+ *  carry once. A missing phrase or placeholder refuses the preview build. */
+const PREVIEW_PHRASES = { banner: ["{date}"], not_approved: [] };
+export function previewWords(messages) {
+  const words = messages.preview ?? {};
+  for (const [key, placeholders] of Object.entries(PREVIEW_PHRASES)) {
+    if (typeof words[key] !== "string" || !words[key].trim()) throw new Error(`data/messages.json: preview.${key} is missing`);
+    for (const p of placeholders) {
+      if (words[key].split(p).length !== 2) throw new Error(`data/messages.json: preview.${key} must hold ${p} once`);
+    }
+  }
+  return words;
+}
+
+/** The banner's date: the preview's script writes the week's delivery into it. */
+const PREVIEW_DATE = '<span id="preview-date"></span>';
+
+/**
+ * SPEC-preview-sites § 8 (the orchestrator's ruling, 2026-10-22): a preview leaves out "Why Fit AF?", as it leaves out the
+ * save step and /privacy/ (§ 7 item 3: no link holds an address; item 8: the preview Worker serves /fonts/ and /assets/
+ * only). Each piece is cut from the preview page as rendered, by its own text: the button, its no-script link and its
+ * dialog (src/template.html, SPEC-every-menu-and-nutrition § 11 item 5); their style (the template's block and its 720 px
+ * rule); the lines of app.js that open the dialog and listen in its frame (SPEC-why-fit-af §§ 2 and 6), and the words
+ * naming it in the comment over the shared modal(). A piece not found exactly once refuses the preview build, as does
+ * any "/why/" left, so the page and this list cannot drift apart unseen. The production and development pages are
+ * rendered without it and do not change (PV5); the preview build also writes no why/ (PREVIEW_STATIC_DIRS).
+ */
+const PREVIEW_WITHOUT_WHY = [
+  ["the Why style", /\/\* Why Fit AF\? \(SPEC-why-fit-af § 2\)[\s\S]*?\n\.why-frame \{[^}\n]*\}\n\n/g, ""],
+  ["the Why rule at 720 px", /\n  \.why-link \{[^}\n]*\}/g, ""],
+  ["the Why button, its no-script link and its dialog", /\n  <button type="button" class="why-link[\s\S]*?\n  <\/dialog>/g, ""],
+  ["the script's Why lines", /\n  modal\(\$\("#why"\), \$\("#why-link"\), \$\("#why-close"\)\);[\s\S]*?\n  whyFrame\.addEventListener\("load", function \(\) \{[\s\S]*?\n  \}\);/g, ""],
+  ["the Why words over modal()", / and Why Fit AF\? \(the \/why\/ page in a frame, SPEC-why-fit-af § 2 item 3\)/g, ""],
+];
+export const PREVIEW_STATIC_DIRS = STATIC_DIRS.filter(({ dir }) => dir !== "why");
+
+/** The preview page without "Why Fit AF?" (PREVIEW_WITHOUT_WHY), or a refusal naming the piece not found once. */
+export function withoutWhy(html) {
+  let page = html;
+  for (const [what, pattern, by] of PREVIEW_WITHOUT_WHY) {
+    const found = page.match(pattern)?.length ?? 0;
+    if (found !== 1) throw new Error(`the preview build: ${what} found ${found} times in the page, not once (SPEC-preview-sites § 8)`);
+    page = page.replace(pattern, by);
+  }
+  if (page.includes("/why/") || /\bid="why/.test(page)) throw new Error("the preview build: the page still names /why/ or a Why element (SPEC-preview-sites § 8)");
+  return page;
+}
+
+/**
+ * The preview build's slots (SPEC-preview-sites § 3): the production page's (PROD_SLOTS), served one directory down
+ * (/<delivery>/), so its own files are addressed from the root as the development pages' are; no analytics beacon; and
+ * the banner (src/preview/banner.html, its words data/messages.json's), its style and the script that keeps ordering off
+ * (src/preview/preview.js, run last, in one function scope). Its links are written without an address by renderPage's
+ * `orderLinks` false. No rung 4: PROD_SLOTS carries none (since SPEC-save-offer-production § 3 the production page carries
+ * Flow 1 only through productionSlots, with data/save.json's `production` true, which a preview never takes).
+ */
+export async function previewSlots(messages) {
+  const words = previewWords(messages);
+  const read = (name) => readFile(join(PREVIEW_SRC, name), "utf8");
+  const values = { BANNER: esc(words.banner).replace("{date}", PREVIEW_DATE), NOT_APPROVED: esc(words.not_approved) };
+  const banner = (await read("banner.html")).trimEnd().replace(/\{\{([A-Z_]+)\}\}/g, (whole, key) => {
+    if (!(key in values)) throw new Error(`src/preview/banner.html: ${whole} has no value`);
+    return values[key];
+  });
+  return {
+    ...PROD_SLOTS,
+    ASSET_PREFIX: DEV_ASSET_PREFIX,
+    ANALYTICS: "",
+    PREVIEW_STYLE: "\n" + (await read("style.css")).trim(),
+    PREVIEW_BANNER: "\n" + banner,
+    PREVIEW_SCRIPT: `\n<script>\n(function () {\n"use strict";\n${(await read("preview.js")).trim()}\n})();\n</script>`,
+  };
+}
+
 /** The Chef's Choice card for the page (SPEC-chefs-choice; SPEC-week-content § 2.1): always carried, holding NO week
  *  (§ 7's ruling: the bucket is the only source of a served week). Its words are checked here, so a missing phrase
  *  refuses the build. */
@@ -775,8 +888,9 @@ export async function build({
   target = "prod",
   outDir,
 } = {}) {
-  if (target !== "prod" && target !== "dev") throw new Error(`unknown build target: ${target}`);
-  outDir ??= target === "dev" ? DIST_DEV : DIST;
+  const dirs = { prod: DIST, dev: DIST_DEV, preview: DIST_PREVIEW };
+  if (!Object.hasOwn(dirs, target)) throw new Error(`unknown build target: ${target}`);
+  outDir ??= dirs[target];
   const plans = await loadJson(plansPath);
   // SPEC-meal-selection § 2: a broken meal selection stops the build here, before anything is written.
   checkSelection(plans);
@@ -795,21 +909,27 @@ export async function build({
       : save.production === true
         ? await productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftText, productionVars })
         : { html: await renderPage(plans, PROD_SLOTS, messages, card, photos, events), privacy: null };
-  // The dev directory is wholly this build's output, so it starts empty (nothing stale gets deployed).
-  if (target === "dev") await rm(outDir, { recursive: true, force: true });
+  // SPEC-preview-sites § 3: the preview page is the production page's slots (PROD_SLOTS) with a preview's changes, never
+  // productionPage's: a preview carries no save step (rung 4) whatever data/save.json's `production` says.
+  const preview = target === "preview" ? await previewSlots(messages) : null; // the banner's words checked, too
+  // The dev and preview directories are wholly this build's output, so each starts empty (nothing stale gets deployed).
+  if (target !== "prod") await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
   let pages;
   if (target === "dev") {
     pages = await writeDevPages(plans, events, outDir, offersPath, messages, card, photos);
   } else {
+    // A preview's page (SPEC-preview-sites § 3), or the production page as save-offer-production's § 3 made it above.
+    // SPEC-preview-sites § 8: the preview page without "Why Fit AF?".
+    const html = preview ? withoutWhy(await renderPage(plans, preview, messages, card, photos, events, { orderLinks: false })) : prod.html;
     const path = join(outDir, "index.html");
-    await writeFile(path, prod.html);
-    pages = [{ path, bytes: Buffer.byteLength(prod.html) }];
+    await writeFile(path, html);
+    pages = [{ path, bytes: Buffer.byteLength(html) }];
   }
-  const files = await copyStatic(outDir, photos, sheetsDir);
+  const files = await copyStatic(outDir, photos, sheetsDir, preview ? PREVIEW_STATIC_DIRS : STATIC_DIRS); // § 8: a preview, no why/
   // § 9 item 1: /privacy/, a static page beside the plan pages (as /why/): the development build always, marked as the
-  // step is; the production build only with `production` true.
-  const privacy = target === "dev" ? await privacyPage({ draftText, save, draft: true }) : prod.privacy;
+  // step is; the production build only with `production` true; the preview build never (it has no save step).
+  const privacy = target === "dev" ? await privacyPage({ draftText, save, draft: true }) : target === "prod" ? prod.privacy : null;
   if (privacy) files.push((await writePrivacy(outDir, privacy)).path);
   // QR codes point at the production URL, so only the production build writes them.
   const qr = target === "prod" ? await writeQrCodes(events, outDir) : [];

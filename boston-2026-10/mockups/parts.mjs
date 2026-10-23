@@ -76,6 +76,15 @@ export function makeParts(inputs) {
   note([TOKENS_SOURCE], "colours and fonts (:root)");
 
   return {
+    /**
+     * The meal's name on a photo (SPEC-print-pieces.md § 13 item 8, print-only): the name the print build was given for
+     * the photo at `slot` (`inputs.captions`, from --photo-names, kept outside this repository), or nothing. No legend
+     * lists it: the mock-ups never pass captions.
+     */
+    caption(slot, cls = "") {
+      const name = inputs.captions?.[slot];
+      return name ? `<p class="photo-name ${cls}" data-src="photo-names#${esc(slot)}">${esc(name)}</p>` : "";
+    },
     /** An element whose whole text is one value. */
     text(tag, cls, value, label) {
       note(value.src, label);
@@ -96,17 +105,29 @@ export function makeParts(inputs) {
       note([LOGO_SOURCE], "logo");
       return `<img class="logo ${cls}" src="${LOGO_PATH}" alt="Fit AF" width="330" height="210" data-src="${LOGO_SOURCE}">`;
     },
+    /**
+     * SPEC-print-pieces.md § 15 item 1: the logo drawn for a dark ground (print-only: print/assets/, copied by the print
+     * build). Front B is on no mock-up's sheet, so, as its words, this source is cited and in no legend.
+     */
+    logoReversed(file, cls = "") {
+      const source = `print/assets/${file}`;
+      return `<img class="logo ${cls}" src="assets/${esc(file)}" alt="Fit AF" width="1600" height="690" data-src="${esc(source)}">`;
+    },
     /** The event's QR code: the file build.mjs writeQrCodes writes, never a second generator (test P4). */
     qr(c, cls = "") {
       note(c.qr.src, "QR code (written by build.mjs)");
       return `<img class="qr ${cls}" src="${esc(c.qr.path)}" alt="QR code: ${esc(c.qr.url)}" ${cite(c.qr.src)}>`;
     },
-    /** A photo slot: the manifest's file when it is in the photos folder, else a labelled placeholder. */
+    /**
+     * A photo slot: the manifest's file when it is in the photos folder, else a labelled placeholder. A print-only
+     * position (SPEC-print-pieces.md § 12: the flyer's back, on no mock-up and so in no legend) is not the manifest's: it
+     * names its own `source`, which is cited and not noted for the legend.
+     */
     photo(slot, cls = "") {
       const photo = inputs.photos[slot];
       if (!photo) throw new Error(`photo slot "${slot}" is not in ${MANIFEST_SOURCE}`);
-      const sources = [at(MANIFEST_SOURCE, `/slots/${slot}`)];
-      note(sources, `photo: ${slot}`);
+      const sources = [photo.source ?? at(MANIFEST_SOURCE, `/slots/${slot}`)];
+      if (!photo.source) note(sources, `photo: ${slot}`);
       const attrs = `data-slot="${esc(slot)}" ${cite(sources)}`;
       if (photo.present) return `<img class="photo ${cls}" src="photos/${esc(encodeURIComponent(photo.file))}" alt="" ${attrs}>`;
       return (

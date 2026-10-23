@@ -1,6 +1,7 @@
 // Q1 (SPEC-print-pieces.md §§ 2, 5 and 7): the sizes. Each PDF is one page whose media box is the sheet plus twice the
 // bleed, in points: the flyer 324 × 414; the tent card, since § 7 two of the mock-up's portrait 4 × 6 in faces on a 4 × 12
-// in sheet, 306 × 882. The build's measuring pass finds each face's trim at its size, and refuses a page or trim of
+// in sheet, 306 × 882. Since § 12 (2026-10-20) each flyer PDF has two pages, the front and the back, each its page (Q18
+// holds the back; here the count is per piece). The build's measuring pass finds each face's trim at its size, and refuses a page or trim of
 // another size, or a photo or colour field that meets a cut edge without running into the bleed. Text or the QR code
 // less than 0.125 in inside a cut edge is REPORTED, not refused (§ 7 forbids moving a part; the fold is not a cut); since
 // § 9 took the flyer's bar away, and § 10 the tent's, the build reports none. Controls over made-up measurements, no Chrome.
@@ -25,14 +26,15 @@ test("Q1: the sizes, in points: the flyer 324 × 414, the tent card 306 × 882 (
   assert.deepEqual(pageOf(piece("tent-card")), { w: 4.25, h: 12.25 });
 });
 
-test("Q1: each PDF is one page, its media box the sheet plus twice the bleed; each face's trim measured at its size", { skip: NO_CHROME }, async () => {
+test("Q1: each PDF's pages (the tent's one, since § 12 the flyer's two) are the sheet plus twice the bleed; each face's trim measured at its size", { skip: NO_CHROME }, async () => {
   const out = join(tmp, "dist-print");
   // The tent and the flyer; Q15 holds the four flyers' sizes
   const built = await lockedBuild({ outDir: out, today: "2026-10-20", fourFlyers: false });
   for (const p of built.planned) {
     const { pages, boxes } = pdfPages(await readFile(join(out, `${p.stem}.pdf`)));
     const { w, h } = pagePoints(p.piece);
-    assert.equal(pages, 1, `${p.stem}.pdf has one page`);
+    const sides = p.piece.id === "flyer" ? 2 : 1; // § 12 item 1: the flyer's front and back
+    assert.equal(pages, sides, `${p.stem}.pdf has ${sides} page(s)`);
     assert.ok(boxes.length >= 1, `${p.stem}.pdf has a media box`);
     for (const box of boxes) assert.deepEqual(box, [0, 0, w, h], `${p.stem}.pdf: ${box}`);
     const page = pageOf(p.piece);

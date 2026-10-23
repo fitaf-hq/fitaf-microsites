@@ -4,7 +4,8 @@
 // tent-bottom). The flyer's hero takes the photo as composed, `<id>.jpg`. A photo with no square in the deliverable (not
 // listed, or listed with none) takes its composed photo, covered to the square window, and the report names it and how
 // much of its width and height show; a key that is not a plain name, or a deliverable with no "photos", is refused.
-// Fixtures only: synthetic JPEGs and IDs made at random (print-fixtures.mjs).
+// Fixtures only: synthetic JPEGs and IDs made at random (print-fixtures.mjs). Since § 12 (item 6) the flyer's back prints
+// squares too (its three positions, Q22's); this case keeps to the tent's and the hero.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, rm } from "node:fs/promises";
@@ -19,6 +20,7 @@ const set = await photoSet({ squareSizes: { large: [1300, 1300], top: [1000, 100
 after(() => rm(set.dir, { recursive: true, force: true }));
 
 test("Q10: every tent window is a square file, the large photo's too (§ 10); the hero the photo as composed", () => {
+  // § 15 item 8 (2026-10-21) amends this on purpose: the back's three windows are 3:2 and print the photo as composed
   assert.deepEqual(SQUARE_POSITIONS, ["tent-large", "tent-top", "tent-bottom"]);
   assert.deepEqual(photoFiles(assignment, deliverableDoc([f, l, t, b])), {
     flyer: `${f}.jpg`,
@@ -66,7 +68,7 @@ test("Q10: built, each window prints its square at the square's own resolution; 
   const { positions } = JSON.parse(await readFile(join(out, "assignment.json"), "utf8"));
   const { ids } = set;
   assert.deepEqual(
-    Object.fromEntries(Object.entries(positions).map(([p, r]) => [p, [r.file, r.pixels]])),
+    Object.fromEntries(Object.entries(positions).filter(([p]) => !p.startsWith("flyer-back-")).map(([p, r]) => [p, [r.file, r.pixels]])),
     {
       flyer: [`${ids.flyer}.jpg`, [3000, 2000]],
       "tent-large": [`${ids.large}-sq-${SQUARE_KEYS[0]}.jpg`, [1300, 1300]],

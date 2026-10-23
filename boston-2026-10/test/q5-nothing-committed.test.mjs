@@ -2,7 +2,8 @@
 // fixture photos, `git status` shows no change: the build writes into its output folder and a temporary one only, and
 // every file it writes, under its own name in boston-2026-10/dist-print/, is ignored by git. No committed file (HEAD, and
 // the tracked files as they are) contains a fixture photo's ID, while the build's own assignment.json, ignored, does.
-// The IDs are made at random each run (print-fixtures.mjs), so no test file can carry one either.
+// The IDs are made at random each run (print-fixtures.mjs), so no test file can carry one either. Since § 12 (item 8) the
+// same holds for the flyer's back: its three photos' IDs, and its one PNG proof among the files written.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -43,11 +44,13 @@ test("Q5: after a build with fixture photos, git status shows no change, every f
   assert.equal(status(), before, "git status is unchanged by the build");
 
   const names = built.written.map((f) => basename(f)).sort();
+  // The tent card is final or a proof as the committed offer stands (SPEC-print-pieces.md § 12.2: approved since 2026-10-20)
+  const tentStem = built.planned.find((p) => p.piece.id === "tent-card").stem;
   const four = [1, 2, 3, 4].flatMap((k) => [`flyer-${k}-PROOF.pdf`, `flyer-${k}-PROOF.png`]);
-  assert.deepEqual(names, ["assignment.json", ...four, "flyer-1-4-PROOF.png", "flyer-PROOF.pdf", "flyer-PROOF.png", "tent-card-PROOF.pdf", "tent-card-PROOF.png"].sort());
+  assert.deepEqual(names, ["assignment.json", ...four, "flyer-1-4-PROOF.png", "flyer-PROOF.pdf", "flyer-PROOF.png", "flyer-back-PROOF.png", `${tentStem}.pdf`, `${tentStem}.png`].sort());
   for (const name of names) assert.equal(git("check-ignore", "-q", "--no-index", inDistPrint(name)).status, 0, `${name}, in dist-print/, is ignored`);
 
-  const ids = ["flyer", "large", "top", "bottom", "one", "two", "three", "four"].map((role) => set.ids[role]);
+  const ids = ["flyer", "large", "top", "bottom", "one", "two", "three", "four", "back1", "back2", "back3"].map((role) => set.ids[role]);
   const record = await readFile(join(out, "assignment.json"), "utf8");
   for (const id of ids) assert.ok(record.includes(id), `control: the ignored assignment.json names ${id}`);
   for (const id of ids) {

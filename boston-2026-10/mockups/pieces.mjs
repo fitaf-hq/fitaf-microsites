@@ -1,6 +1,7 @@
 // The four mock-ups: a tabletop tent card, a quarter-page flyer, a retractable banner and a slideshow.
 // Mock-ups for a screen share: nothing here is print-ready. Each is laid out at a fixed size in CSS pixels
 // that keeps the real piece's proportions; the sheet scales it to the window.
+import { icon } from "../print/icons.mjs";
 import { campaign, esc, makeParts } from "./parts.mjs";
 
 /** The mock-ups' layout unit: CSS pixels per inch of the real piece (the print build zooms it to the CSS inch). */
@@ -110,8 +111,13 @@ export function tentCard(inputs) {
  * sheet and the printed flyer (print/). The printed flyer's options (SPEC-print-pieces.md §§ 8–9), which the mock-up never
  * passes: `short` keeps the photo, the offer and the QR code with the address; `header: false` drops the navy bar and its
  * words; `logo: "corner"` puts the one logo at the bottom right of the face, after the QR code, instead of on the photo.
+ * `side: "back"` (SPEC-print-pieces.md § 12) makes the printed flyer's BACK instead, which the mock-up does not have:
+ * `back.positions`' photos across its top, then `back.words` (print/back.mjs, data/flyer-back.md read), and at the bottom
+ * the address and the logo; no QR code and no offer.
  */
-export function flyerFace(c, parts, { short = false, header = true, logo } = {}) {
+export function flyerFace(c, parts, { short = false, header = true, logo, side = "front", back, front } = {}) {
+  if (side === "back") return flyerBack(c, parts, back);
+  if (front) return flyerFrontB(c, parts, front);
   const bar = header ? parts.line("p", "event-bar", c.eventLine, "event line") : "";
   const photo = parts.photo("flyer");
   const plate = logo === undefined ? `<div class="logo-plate">${parts.logo()}</div>` : "";
@@ -132,6 +138,140 @@ ${bar}
 <div class="flyer-body">${headlineBlock}
   ${offer}
   ${scan}${corner}
+</div>`;
+}
+
+/**
+ * The printed flyer's front B (SPEC-print-pieces.md § 13), print-only: a dark band with the headline (its accent line in
+ * the brand's green) and the lede; the photo, a torn edge where the band meets it, and the one callout over its corner;
+ * then the offer and the logo beside the QR code with the address under it. Its words are the front words file's
+ * (`words`, print/front.mjs), cited by key, which no legend lists: front B is on no mock-up's sheet.
+ */
+function flyerFrontB(c, parts, words) {
+  const cite = (key) => `data-src="${esc(`${words.source}#${key}`)}"`;
+  // a line in the accent colour (`accent`), and within any line the words between asterisks
+  const spans = (t) => t.split("*").map((part, j) => (j % 2 ? `<span class="fb-accent">${esc(part)}</span>` : esc(part))).join("");
+  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}">${spans(t)}</span>`).join("");
+  const size = words.size ? ` style="font-size: ${words.size}px"` : "";
+  // the QR code at error correction H (print/build-print.mjs writes it), so the logo can sit in its centre
+  const qrH = { ...c, qr: { ...c.qr, path: c.qr.path.replace(/\.svg$/, "-h.svg") } };
+  // § 15 item 2: the offer's banner, a level ribbon of the band's ink above the offer
+  const banner = words.banner ? `<p class="fb-banner" ${cite("banner")}><span>${esc(words.banner)}</span></p>` : "";
+  const offer = parts.text("p", "offer", c.offer, "the offer");
+  const callout = words.callout ? `<p class="fb-callout" ${cite("callout")}>${words.callout.map((t) => `<span>${esc(t)}</span>`).join("")}</p>` : "";
+  return `
+<div class="fb-band">${HALFTONE}
+  ${bandLogo(parts, words.logo)}
+  <h1 class="fb-head" ${cite("headline")}${size}>${lines}</h1>
+  <p class="fb-lede" data-lede-accent="${esc(words.ledeAccent ?? "orange")}" ${cite("lede")}>${words.lede.map((line) => `<span class="fb-lede-line">${line.split("*").map((part, j) => (j % 2 ? `<span class="fb-lede-accent">${esc(part)}</span>` : esc(part))).join("")}</span>`).join("")}</p>
+</div>
+<div class="fb-hero">${parts.photo("flyer")}${parts.caption("flyer", "fb-name")}<svg class="fb-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE}"/></svg>${callout}</div>
+<div class="fb-foot">${FOOT_DOTS}<svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>
+  <div class="fb-cta">${banner}${offer}</div>
+  <div class="scan scan-under fb-scan"><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
+</div>`;
+}
+
+/** § 15 item 1: the band's logo by the words file's `logo`: drawn for the dark ground (its own white field gone, the
+ * tagline white; or, `reversed-white`, the second word's letters white too), or pass 2's on its white plate. */
+const REVERSED_LOGO_FILES = { reversed: "fitaf-logo-reversed.png", "reversed-white": "fitaf-logo-reversed-white.png" };
+function bandLogo(parts, treatment) {
+  return treatment === "plate" ? parts.logo("fb-logo-top") : parts.logoReversed(REVERSED_LOGO_FILES[treatment], "fb-logo-top fb-logo-rev");
+}
+
+/** § 14 item 2: the band's halftone (the grid's size, its pitch, the largest dot's radius and how far the dots reach). */
+const HALFTONE_W = 300;
+const HALFTONE_H = 200;
+const HALFTONE_PITCH = 9;
+const HALFTONE_R_MAX = 2.4;
+const HALFTONE_REACH = 320;
+const HALFTONE_R_MIN = 0.4;
+/**
+ * The Owner's own texture: opaque dots on a fixed grid, largest at the band's lower right corner and smaller with the
+ * distance from it, so the tone fades by the dots' size and nothing is translucent (Q7); drawn in the colour around them
+ * (print.css: the template's muted grey), a fixed drawing so every build is the same.
+ */
+const HALFTONE = (() => {
+  const dots = [];
+  for (let y = HALFTONE_H - HALFTONE_PITCH / 2; y > 0; y -= HALFTONE_PITCH) {
+    for (let x = HALFTONE_W - HALFTONE_PITCH / 2; x > 0; x -= HALFTONE_PITCH) {
+      const r = HALFTONE_R_MAX * Math.max(0, 1 - Math.hypot(HALFTONE_W - x, HALFTONE_H - y) / HALFTONE_REACH) ** 1.3;
+      if (r >= HALFTONE_R_MIN) dots.push(`<circle cx="${x}" cy="${y}" r="${r.toFixed(2)}"/>`);
+    }
+  }
+  return `<svg class="fb-dots" viewBox="0 0 ${HALFTONE_W} ${HALFTONE_H}" fill="currentColor" aria-hidden="true">${dots.join("")}</svg>`;
+})();
+
+/**
+ * § 15 item 2b: the foot's texture, the same kind of halftone on the orange, in patches over its flat areas only: each
+ * patch's dots largest at its origin and gone before they reach a word (the offer at the left, the code's white tile,
+ * which covers any dot behind it, and the address under it). The grid is the foot's own (layout px, its width the face
+ * and both bleeds; anchored at its lower left), a fixed drawing so every build is the same.
+ */
+const FOOT_DOTS_W = 540;
+const FOOT_DOTS_H = 213;
+const FOOT_DOTS_PITCH = 10;
+const FOOT_DOTS_R_MAX = 3.4;
+const FOOT_DOTS_R_MIN = 0.45;
+/** Each patch: its origin (x, y from the grid's top left) and how far its dots reach. */
+const FOOT_PATCHES = [
+  { x: FOOT_DOTS_W, y: 0, reach: 185 }, // the top right, around the code's tile
+  { x: 0, y: 0, reach: 56 }, // the top left, under the torn edge and above the banner
+  { x: 0, y: FOOT_DOTS_H, reach: 90 }, // the lower left corner, under the offer
+  { x: 322, y: FOOT_DOTS_H, reach: 86 }, // the foot of the gap between the offer and the code
+];
+const FOOT_DOTS = (() => {
+  const dots = [];
+  for (let y = FOOT_DOTS_PITCH / 2; y < FOOT_DOTS_H; y += FOOT_DOTS_PITCH) {
+    for (let x = FOOT_DOTS_PITCH / 2; x < FOOT_DOTS_W; x += FOOT_DOTS_PITCH) {
+      const r = Math.max(...FOOT_PATCHES.map((p) => FOOT_DOTS_R_MAX * Math.max(0, 1 - Math.hypot(p.x - x, p.y - y) / p.reach) ** 1.3));
+      if (r >= FOOT_DOTS_R_MIN) dots.push(`<circle cx="${x}" cy="${y}" r="${r.toFixed(2)}"/>`);
+    }
+  }
+  return `<svg class="fb-foot-dots" viewBox="0 0 ${FOOT_DOTS_W} ${FOOT_DOTS_H}" fill="currentColor" aria-hidden="true">${dots.join("")}</svg>`;
+})();
+
+/** Front B's torn edge (§ 13): the band's lower edge, drawn over the photo's top, a fixed path so every build is the same. */
+const TORN_EDGE =
+  "M0 0H510V7L497 11L486 6L471 12L458 8L441 13L430 7L414 12L399 9L386 14L370 8L357 12L341 7L327 13L311 9L296 14L283 8" +
+  "L268 12L252 6L238 13L223 9L207 14L194 8L179 12L163 7L150 13L134 9L119 14L106 8L91 12L75 7L62 13L46 9L31 14L18 8L0 12Z";
+/** The same edge mirrored top to bottom (the foot's upper edge), by its numbers: print.css may turn nothing (Q2). */
+const TORN_EDGE_UP = TORN_EDGE.replace("M0 0H510V7", "M0 18H510V11").replace(/L(\d+) (\d+)/g, (_, x, y) => `L${x} ${18 - Number(y)}`);
+
+/**
+ * The printed flyer's back (SPEC-print-pieces.md § 12 item 3), print-only: three square photos across the top; the
+ * words, the heading at the headline's size, the first paragraph (the lede) at the tagline's, then each paragraph, its
+ * lead-in apart; and the bottom row, the address at the left and the logo at the right. Each word is cited by its line in
+ * the words file (`words.source`), which no legend lists: the back is on no mock-up's sheet.
+ */
+function flyerBack(c, parts, { positions, words }) {
+  const cite = (line) => `data-src="${esc(`${words.source}#L${line}`)}"`;
+  const paragraph = (p, cls) => `<p class="${cls}" ${cite(p.line)}>${p.lead === null ? "" : `<b class="flyer-back-lead">${esc(p.lead)}</b> `}${esc(p.text)}</p>`;
+  // § 14 item 3: a bar (each icon over its label) and steps (columns in order: the icon, the title, the detail)
+  const bar = (p) =>
+    `<div class="fbk-bar" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ul>${p.items.map((it) => `<li ${cite(it.line)}>${icon(it.icon, "fbk-icon")}<span>${esc(it.label)}</span></li>`).join("")}</ul></div>`;
+  const steps = (p) =>
+    `<div class="fbk-steps" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ol>${p.items.map((it) => `<li ${cite(it.line)}><span class="fbk-mark">${icon(it.icon, "fbk-icon")}</span><b class="fbk-title">${esc(it.title)}</b><span class="fbk-detail">${esc(it.detail)}</span></li>`).join("")}</ol></div>`;
+  // § 15 items 3–4: plans (cards in a row, each its plan's colour as a top bar, its name, its line), and a statement (a
+  // lead-in standing alone, centred as a block's)
+  const plans = (p) =>
+    `<div class="fbk-plans" ${cite(p.line)}><b class="flyer-back-lead">${esc(p.lead)}</b><ul>${p.items.map((it) => `<li data-accent="${esc(it.plan)}" ${cite(it.line)}><b class="fbk-plan-name">${esc(it.name)}</b><span class="fbk-plan-line">${esc(it.text)}</span></li>`).join("")}</ul></div>`;
+  // § 15 item 8: a statement set as the front's banner, a level ink ribbon
+  const statement = (p) => `<p class="fbk-statement" ${cite(p.line)}><span>${esc(p.lead)}</span></p>`;
+  const BLOCKS = { bar, steps, plans, statement };
+  const block = (p) => (BLOCKS[p.kind] ?? ((q) => paragraph(q, "flyer-back-para")))(p);
+  // § 15 item 8: the lede only when the first paragraph is words
+  const [first, ...others] = words.paragraphs;
+  const lede = first.kind === "text" ? paragraph(first, "tagline flyer-back-lede") : null;
+  const rest = lede === null ? words.paragraphs : others;
+  return `
+<div class="flyer-back-photos">${positions.map((position) => parts.photo(position)).join("")}${positions.map((position, i) => parts.caption(position, `flyer-back-name flyer-back-name-${i + 1}`)).join("")}</div>
+<div class="flyer-back-body">
+  <div class="flyer-back-words">
+  <h1 class="headline" ${cite(words.heading.line)}>${esc(words.heading.text)}</h1>
+  ${[...(lede === null ? [] : [lede]), ...rest.map(block)].join("\n  ")}
+  </div>
+  <div class="flyer-back-foot">${parts.text("p", "address", c.address, "web address")}${parts.logo("flyer-back-logo")}</div>
 </div>`;
 }
 

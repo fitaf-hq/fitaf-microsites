@@ -49,6 +49,30 @@ mock-up's 11px to its headline); the one logo (the mock-up's 112px) at the botto
 inside the safe margin. The report gives each photo's shape against its window's and how much of the photo shows (a
 square loses only the bleed: 96% of each side in the large window, 91% in a tile). The flyers are unchanged by § 10.
 
+⭐ **§ 12 (the Advisor, 2026-10-20, mid-meeting with the Owner): a two-sided flyer, the front a strong call to action, the
+back "Why Fit AF?".** Every flyer PDF, `flyer.pdf` and `flyer-1.pdf` to `flyer-4.pdf`, has **two pages** (sizes.mjs
+`sides: 2`), each the flyer's page (324 × 414 pt): the front, then the back, upright for a flip on the long edge. The
+**back is the same on every flyer**, so the vendor can impose four fronts on one side and four backs on the other: each
+flyer's document draws it, and the build checks the five are the same pixels before it writes the one back proof,
+`flyer-back(-PROOF).png` (each flyer's own PNG proof is its front). **The front** keeps § 9's parts in § 9's order and
+adds nothing: the strength is in scale, the offer at the headline's size (34px, from 24px) in its own field across the
+body (its two lines balanced), and the QR code **1.25 in** square (150 layout px, from 112; § 12.1: 1.4 in put eatfitaf.com inside the safe margin under a two-line offer), both named values in sizes.mjs, the space left still
+shared evenly; an offer on more than two lines is refused. **The back** (`mockups/pieces.mjs` `flyerFace`'s `side:
+"back"`, which the mock-ups never pass) is three square photos across the top, into the bleed on the top and the outer
+edges (the tent's tile arithmetic: a tile the face's width less two 4px gaps, over three, 1.39 in), then the words of
+[`data/flyer-back.md`](../data/README.md), the only source (`back.mjs`, a strict Markdown subset, refused outside it,
+naming the line): the heading at the headline's size, the lede at the tagline's, each paragraph at 14 layout px with its
+bold lead-in in the heading font; and at the bottom `eatfitaf.com` at the left and the logo (the front's 84px, in the
+front's corner) at the right. ⛔ **No QR code and no offer on the back.** No type on it below **14 layout px** (8.4 pt).
+**It must fit, not shrink**: words that do not end at least the body's 10px gap above the bottom row are refused, with
+the whole build, naming how many layout px over they are (`checks.mjs` `backFindings`); the remedy is fewer words. Until
+the Advisor marks the words approved (`<!-- approved -->` as the file's last line) the back, and so every flyer, is a
+`-PROOF`. **The back's photos** (`assign.mjs` `backPhotoIds`): the first array of rung 3 holding none of the photos the
+build places elsewhere (the flyer's, the four flyers', the tent's three), left to right, each its first square (or as
+composed, named in the report), positions `flyer-back-1` to `flyer-back-3` in `assignment.json`. They are print-only
+positions, in no mock-up and not in `mockups/photos.json`; each is staged under its own name, as the manifest's are. The
+tent card is unchanged by § 12.
+
 ## Build
 
 ```sh
@@ -57,25 +81,47 @@ npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --d
 npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --deliverable FILE --on 2026-10-23 --event demo
 ```
 
+**Front B, the meals' names, a draft back, another folder** (`SPEC-print-pieces.md` § 13): `--front-words FILE` prints
+front B with that file's words (`print/front.mjs`; until approved the file lives outside this repository and every
+flyer is a proof; approved words are committed as `data/flyer-front-<take>.json`); `--photo-names FILE` prints each
+meal's name on its photo (`{ "<photo id>": "<name>" }`, always outside this repository, since it names photos by ID); 
+`--back-words FILE` builds with a back other than `data/flyer-back.md`; `--out-dir DIR` writes there instead of
+`dist-print/` (emptied first; keep it under `dist-print/`, which git ignores, e.g. `dist-print/take-h4/`).
+
+**Pass 3** (`SPEC-print-pieces.md` § 14): front B's `lede` may set words between asterisks in the colour its words
+file's `ledeAccent` names (`orange`, the default; `blue`; `green`), and the band carries a halftone. The back's words
+file may hold **a bar** (a lead-in on a line of its own, then `- {<icon>} <label>` items) and **steps** (the same, with
+`1. {<icon>} <title>: <detail>` items), the icons `print/icons.mjs`'s (drawn here; an unknown one refused). A meal's
+name may run to 60 characters and wraps in its chip; the names file comes from Fit AF's KMS, never typed.
+
+```sh
+npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --deliverable FILE \
+  --front-words data/flyer-front-h4.json --photo-names NAMES.json --out-dir dist-print/take-h4   # paths from the package
+```
+
 `dist-print/` (**git-ignored, emptied at every run, never hand-edited**): `tent-card.pdf`, `flyer.pdf` and `flyer-1.pdf`
-to `flyer-4.pdf`, a PNG proof of each at 1× (one pixel per CSS pixel, 96 per inch: the PDF's
-page as Chrome draws it), `flyer-1-4.png` (the four side by side); and `assignment.json` (which photo went where, by ID,
+to `flyer-4.pdf` (each flyer two pages since § 12, its front and its back), a PNG proof of each at 1× (one pixel per CSS
+pixel, 96 per inch: the PDF's page as Chrome draws it; a flyer's, its front), `flyer-back.png` (the one back, § 12),
+`flyer-1-4.png` (the four side by side); and `assignment.json` (which photo went where, by ID,
 with its pixels, its window, its ppi and how it shows; the four flyers' photos; the rung-1 photos skipped). **A piece
 carrying any placeholder** (a photo position
 without a photo, or the offer while `data/offers.json` says `"status": "placeholder"` or its label is a bracketed
-stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the report's last line names what remains.
+stand-in such as `[The offer]`, or a flyer's back while a photo of its is missing or `data/flyer-back.md` is not marked
+approved) **is a proof**: its files end `-PROOF`, and the report's last line names what remains.
 
 - **`--photos-dir`**: the glam set's files, `<id>.jpg` as composed and `<id>-sq-<key>.jpg` each square, full size.
   **`--rungs`**: Image Gauge's `image-rungs.json` for the glam set (`pools.glam.rungs`). **`--deliverable`**: Image
-  Gauge's `deliverable.json` for it, of which only `photos.<id>.squares[0].key` of the tent's three photos is read. The
+  Gauge's `deliverable.json` for it, of which only `photos.<id>.squares[0].key` of the tent's three photos and the flyer's
+back's three is read. The
   three go together. ⛔ Neither the folder nor the file is ever in this
   repository. The report names positions and rungs, not photo IDs (only a refusal over a missing or unreadable file
   names its `<id>.jpg`); `dist-print/assignment.json` (ignored) names them.
 - **The rule** (`assign.mjs`): the flyer takes rung 1's first **landscape** photo (`strongest`, then `also_good`, in the
   file's order; its width as composed above its height, since the flyer's window is landscape), and the report names
   each skipped by its place in the rung (`assignment.json` by ID); the tent card's `tent-large`, `tent-top` and
-  `tent-bottom` take, in order, the first array of rung 3 without the flyer's photo. A pool, rung or array missing is
-  refused, naming it.
+  `tent-bottom` take, in order, the first array of rung 3 without the flyer's photo; the flyer's back's `flyer-back-1` to
+  `flyer-back-3` (§ 12) the first array of rung 3 holding none of the photos placed elsewhere (the flyer's, the four
+  flyers', the tent's three), or the build refuses, naming the rung. A pool, rung or array missing is refused, naming it.
 - **The files** (§ 7 item 2, § 10 item 3): the tent's three windows, square since § 10, print the photo's **first good
   square**, `<id>-sq-<key>.jpg` for the first key the deliverable lists for it (SPEC-photo-slots.md § 2's `square`); a
   photo the deliverable lists no square for (not listed, or listed with none) prints **as composed**, covered to the
@@ -119,7 +165,7 @@ stand-in such as `[The offer]`) **is a proof**: its files end `-PROOF`, and the 
 
 | piece | trim | PDF page (trim + 0.125 in bleed on every edge) | layout |
 |---|---|---|---|
-| flyer | 4.25 × 5.5 in, portrait | 4.5 × 5.75 in = **324 × 414 pt** | § 9: no header; the photo 3:2 across the top, into the bleed; the offer, the QR code with the address; the logo bottom right |
+| flyer | 4.25 × 5.5 in, portrait, **two sides** (§ 12) | 4.5 × 5.75 in = **324 × 414 pt**, a page per side | the front, § 9 and § 12: no header; the photo 3:2 across the top, into the bleed; the offer at 34px on at most two balanced lines, the QR code 1.25 in with the address; the logo bottom right. The back, § 12: three 1.39 in squares across the top, into the bleed; the words of `data/flyer-back.md`, 14 layout px and up; `eatfitaf.com` and the logo at the bottom; the same back on every flyer |
 | tent card | two of the mock-up's own faces, each **4 × 6 in, portrait**, on one 4 × 12 in sheet (§ 7) | 4.25 × 12.25 in = **306 × 882 pt** | § 10: no bar; three square photo windows across the top, at the fold, into the bleed at the sides; the rule and the headline, the offer, the QR code with the address; the logo bottom right; **the upper face is the lower face turned 180°** (one face's markup twice, the first `rotate(180deg)`), the fold on the centre line, so folded into an A-frame both read upright (Q2) |
 
 No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (§ 2 ⚠). The QR code is `build.mjs`
@@ -151,9 +197,23 @@ No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (�
 | QE14 | § 11's Q14: `npm run build` writes `qr/boston` and `qr/seminar`, PNG and SVG, beside `demo`'s, each decoded (the SVG drawn from its path, then jsQR) to its URL |
 | QE15 | § 11's Q15: production, development and the mock-ups each built from `data/events.json` and from its first event alone: every file byte-identical; added exactly the four codes (production, mock-ups) and `/boston/` and `/seminar/` (development, each `demo`'s page but for its own event id) |
 | QC | a Chrome run silent 30 s is run again (up to 3), each retry reported; a stall on every attempt still fails (a stand-in Chrome) |
+| Q18 | § 12's two sides: every flyer PDF two pages, each 324 × 414 pt; the tent card's one (`test/qb-checks.mjs` `twoSidesProblems`) |
+| Q19 | the five flyers' backs the same page: their page 2 identical pixels, the one back proof those pixels, measured alike; a front, and a back without photos, differ (the controls) |
+| Q20 | the back's text is `data/flyer-back.md`'s words in its order, then the address, in the markup and as Chrome lays it out; a word changed in a mirror of the file changes the back, not the front |
+| Q21 | the words file's subset: a list, a link, a second heading, stray HTML, emphasis elsewhere, another comment, a first line not the heading, a doubled blank line, code, a quote: each refused, naming the line; the committed file and the approval mark read |
+| Q22 | the back's photos: the first rung-3 array holding no photo placed elsewhere, in order, none left refused (`backRuleProblems`); built, three windows 1:1 within half a layout px, two 4px gaps, across the top, into the bleed; each its `-sq-` file, one without a square as composed and named |
+| Q23 | too many words refused, naming the layout px over, nothing printed (`fitProblems`); the check over made-up measurements; no type on the back below 14 layout px; and **`data/flyer-back.md` as committed fits** (`committedFitProblems`) |
+| Q24 | no QR code and no offer on the back, in its markup and as Chrome lays it out; the front has both (the control) |
+| Q25 | the front: the offer at 34 layout px (the mock-ups' headline) across the body, on two lines (a neutral two-line offer, § 12.1), the QR code 150 layout px, § 9's order, the logo in the corner and no text inside the safe margin |
+| Q26 | without `<!-- approved -->` the flyer and its back are `-PROOF` and the last line names the words; with it, plain names and none (`approvalProblems`) |
+| QB mutants | `test/qb-mutants.test.mjs`, each in a mirror after the unchanged mirror's control: the back's rule allowing a photo used elsewhere fails Q22; the overflow check off, Q23; the flyer one-sided (the back's page dropped), Q18; the approval mark ignored, Q26 |
 
 The cases that render (Q1, Q2, Q13, and parts of Q4–Q6, Q10, Q11, Q14–Q17) need Chrome (`CHROME=<path>`, else the macOS default) and **skip,
 saying so, when none is found**. Their photos are synthetic JPEGs made at test time (`test/print-fixtures.mjs`) with IDs
 made at random, and they build into a temporary folder, so `npm test` never empties a real `dist-print/`. They build
 one at a time across the suite's parallel processes (a lock directory in the system's temporary folder): several builds
-at once, beside the rest of the suite, starved Chrome past its 90 s timeout on a loaded machine.
+at once, beside the rest of the suite, starved Chrome past its 90 s timeout on a loaded machine. ⚠ **Since § 12 the cases
+build the flyer's back from words that fit** (`test/print-fixtures.mjs` `FITTING_BACK_PATH`: the committed
+`data/flyer-back.md` less its last paragraph, read at run time), because words that do not fit refuse the whole build and
+the back's length is not their subject; **Q23 alone builds the words as committed**, and fails, naming the overflow,
+until they fit.

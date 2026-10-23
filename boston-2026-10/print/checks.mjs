@@ -1,7 +1,7 @@
-// The checks a printed piece must pass before it is printed (SPEC-print-pieces.md §§ 2–3), over what the measuring pass
+// The checks a printed piece must pass before it is printed (SPEC-print-pieces.md §§ 2–3, 12), over what the measuring pass
 // (measure.js, in headless Chrome) found on the page: inches from the page's top-left corner. Each returns the refusals,
 // one sentence each; none means the piece passes.
-import { BLEED_IN, CSS_PX_PER_INCH, MIN_PPI, pageOf, SAFE_IN } from "./sizes.mjs";
+import { BACK_GAP_PX, BACK_MIN_TEXT_PX, BLEED_IN, CSS_PX_PER_INCH, FRONT_OFFER_MAX_LINES, LAYOUT_PX_PER_INCH, MIN_PPI, pageOf, SAFE_IN } from "./sizes.mjs";
 
 /** Half a CSS pixel: a measured edge this close to another is on it. */
 const TOLERANCE_IN = 0.5 / CSS_PX_PER_INCH;
@@ -61,10 +61,9 @@ export function layoutFindings(piece, measure) {
     if (!near(face.trim.w, piece.face.w) || !near(face.trim.h, piece.face.h)) {
       refusals.push(`${name}: its trim is ${inches(face.trim.w)} × ${inches(face.trim.h)} in, not ${piece.face.w} × ${piece.face.h}`);
     }
-    const cuts = SIDES.filter((side) => near((trim[side] - pageEdges[side]) * INWARD[side], BLEED_IN));
+    const cuts = cutsOf(trim, pageEdges);
     for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
-      const r = edgesOf(item);
-      const short = cuts.filter((side) => (r[side] - trim[side]) * INWARD[side] < SAFE_IN - TOLERANCE_IN);
+      const short = shortOf(edgesOf(item), trim, cuts);
       if (short.length) warnings.push(`${name}: ${item.what} is less than ${SAFE_IN} in inside the trim (${short.join(", ")})`);
     }
     for (const field of face.fields) {
@@ -77,6 +76,53 @@ export function layoutFindings(piece, measure) {
     }
   });
   return { refusals, warnings };
+}
+
+/** The cut edges of a face: its trim's sides that are BLEED_IN inside the page's (the tent's fold is not one). */
+const cutsOf = (trim, pageEdges) => SIDES.filter((side) => near((trim[side] - pageEdges[side]) * INWARD[side], BLEED_IN));
+/** How far inside the trim a box must sit at each cut edge, and the sides where it does not. */
+const shortOf = (r, trim, cuts) => cuts.filter((side) => (r[side] - trim[side]) * INWARD[side] < SAFE_IN - TOLERANCE_IN);
+/** Words that end this close above the gap are on it: a hundredth of a layout px. */
+const FIT_TOLERANCE_PX = 0.01;
+const blockOf = (face, what) => face.blocks.find((b) => b.what.split(".").includes(what));
+
+/**
+ * § 12 item 2, over the flyer's front as measured: the offer, at the headline's size, wraps to at most
+ * FRONT_OFFER_MAX_LINES lines. More is REFUSED, naming the count (its words are the Owner's: fewer of them, nothing
+ * shrunk). Returns { refusals }.
+ */
+export function frontFindings(measure) {
+  const refusals = [];
+  for (const face of measure.faces) {
+    const offer = blockOf(face, "offer");
+    if (offer && offer.lines > FRONT_OFFER_MAX_LINES) refusals.push(`the offer runs to ${offer.lines} lines, more than ${FRONT_OFFER_MAX_LINES} (§ 12 item 2: fewer words; nothing is shrunk)`);
+  }
+  return { refusals };
+}
+
+/**
+ * § 12 items 3 and 5, over the flyer's back as measured (its sheet: { page, faces }): it must FIT, not shrink. REFUSED:
+ * words that do not end at least BACK_GAP_PX above the bottom row's top (eatfitaf.com and the logo), naming how many
+ * layout px over they are; any run of text less than SAFE_IN inside a cut edge (on the back that is refused: nothing here
+ * is an approved layout that may not move); any type below BACK_MIN_TEXT_PX. Returns { refusals, spacePx, smallestPx }:
+ * the layout px to spare above the bottom row (below zero, over), and the smallest type on the back.
+ */
+export function backFindings(piece, sheet) {
+  const refusals = [];
+  const [face] = sheet.faces;
+  const trim = edgesOf(face.trim);
+  const cuts = cutsOf(trim, edgesOf(sheet.page));
+  const words = blockOf(face, "flyer-back-words");
+  const foot = blockOf(face, "flyer-back-foot");
+  const spacePx = (foot.y - (words.y + words.h)) * LAYOUT_PX_PER_INCH - BACK_GAP_PX;
+  if (spacePx < -FIT_TOLERANCE_PX) refusals.push(`the back's words do not fit between the photos and the bottom row: ${(-spacePx).toFixed(1)} layout px over (§ 12 item 5: fewer words; nothing is shrunk)`);
+  for (const t of face.texts) {
+    const short = shortOf(edgesOf(t), trim, cuts);
+    if (short.length) refusals.push(`the back: the text "${t.text}" is less than ${SAFE_IN} in inside the trim (${short.join(", ")})`);
+    if (t.size < BACK_MIN_TEXT_PX) refusals.push(`the back: "${t.text}" is ${t.size} layout px, below the floor of ${BACK_MIN_TEXT_PX}`);
+  }
+  const smallestPx = Math.min(...face.texts.map((t) => t.size));
+  return { refusals, spacePx, smallestPx };
 }
 
 /**
