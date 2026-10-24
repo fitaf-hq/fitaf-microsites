@@ -22,8 +22,10 @@
 
   // The offer box: the label of the offer a save made now would get — the Worker's own choice, on the date in
   // the Worker's send time zone. SPEC-save-offer-production § 10.7: when no offer is live (after the last one's
-  // valid_to), no offer is offered: neither the box nor this flow is drawn. If the file breaks its at-most-one rule
-  // (offerForSave throws), the box stays empty and the flow is drawn, as before.
+  // valid_to), no offer is offered: the box is not drawn. SPEC-ui-and-copy-pass § 1.2 item 3 (the Advisor, 2026-10-23: "We
+  // should still save"): this flow is, with no offer: its own lead, button, fine print and done line (DRAFT § 1, "After
+  // the offer ends"), no offer line and no date held; the Worker keeps the save with nothing due. If the file breaks its
+  // at-most-one rule (offerForSave throws), the box stays empty and the flow is drawn, as before.
   // § 10.9: the step says the date the pricing is held until, as the Worker will for a save made now: the later of the
   // offer's last day and tomorrow (the day its E1 is due). SPEC-ui-and-copy-pass § 1 item 1: the box prints the offer's
   // headline (its label when it has none); the step's line keeps the label, as /o and the email do.
@@ -77,7 +79,8 @@
 
   function render(s) {
     var section = el("save");
-    section.hidden = !s.beside || !offer.live;
+    var later = !offer.live; // § 1.2 item 3: after the last offer's end, the step with no offer
+    section.hidden = !s.beside;
     el("offer-box").hidden = !offer.live;
     if (s.beside && section.parentNode !== el(ANCHOR)) el(ANCHOR).appendChild(section);
     var collapsed = s.name === "PLAN" || s.name === "MENU";
@@ -94,9 +97,14 @@
     el("save-collapsed").hidden = !collapsed;
     // § 1 item 2: after a save the step goes away (its offer line, the lead, the form and its fine print); the done line
     // stays where the step was.
-    el("save-step-offer").hidden = saved;
-    el("save-lead").hidden = saved;
+    el("save-step-offer").hidden = saved || later;
+    el("save-lead").hidden = saved || later;
+    el("save-lead-later").hidden = saved || !later;
     el("save-form").hidden = saved;
+    el("save-submit").hidden = later;
+    el("save-submit-later").hidden = !later;
+    el("save-notice").hidden = later;
+    el("save-notice-later").hidden = !later;
     // § 1 item 3: out of area, its line and button take the place of the offer's own (the tick, Save my offer and the fine
     // print), directly after the fields, which stay for the ZIP code to be corrected.
     el("save-offer-part").hidden = outOfArea;
@@ -109,9 +117,12 @@
     el("save-expansion-error").hidden = !error || !!field || s.kind !== "expansion";
     el("save-expansion-error").textContent = el("save-expansion-error").hidden ? "" : error;
     el("save-submit").disabled = busy;
+    el("save-submit-later").disabled = busy;
     el("save-expansion").disabled = busy;
-    el("save-done").hidden = s.name !== "SAVED";
-    el("save-done-email").textContent = s.name === "SAVED" ? s.email : "";
+    el("save-done").hidden = s.name !== "SAVED" || later;
+    el("save-done-email").textContent = s.name === "SAVED" && !later ? s.email : "";
+    el("save-done-later").hidden = s.name !== "SAVED" || !later;
+    el("save-done-later-email").textContent = s.name === "SAVED" && later ? s.email : "";
     el("save-expansion-done").hidden = s.name !== "EXPANSION_SAVED";
   }
   function go(next) {

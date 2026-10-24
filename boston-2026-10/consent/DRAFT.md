@@ -39,6 +39,22 @@ the offer's last day, or the next day on that day); the page fills it.
 
 ⚠ **Layout note, not wording** (`SPEC-ui-and-copy-pass.md` § 1 items 1–3, 2026-10-23): the box at the top draws no heading: *"Your Boston offer"* is its accessible name, and its one line is the offer's headline (`data/offers.json` `headline`, else its label); the step's own line above *"Not ready today?"* keeps the label. The step is shown only while the plan card's *Continue to checkout* is; after a save, only its *"Saved — …"* line stays. An error about the email or the ZIP code shows under that field; any other, directly above the button that was pressed; out of area, § 2 takes the place of the box, the button and this fine print, under the two fields.
 
+### After the offer ends
+
+`SPEC-ui-and-copy-pass.md` § 1.2 item 3 (2026-10-23): after the last offer's last day the step still saves, with no offer
+and nothing sent: no offer line, no date held; the fields and the box as above. The lead and the button are the Advisor's
+words; the fine print and the saved line are proposed. A draft, as all of this file.
+
+> Not ready today? Save your plan, and we'll email you when our next offer opens.
+>
+> **[ Save my plan ]**
+>
+> We'll keep your email and ZIP code for 30 days, or until we email you about our next offer, whichever comes first,
+> and then delete them unless you've confirmed. Only if you tick the box and then confirm it will we send you anything
+> else. We don't sell your information. [Privacy notice]
+>
+> Saved — we'll email you at *(their email)* when our next offer opens.
+
 ## 2. Out of area
 
 > We don't deliver to **[ZIP]** yet.
@@ -95,9 +111,11 @@ hear from us again."*
 **Not collected**: name, phone, plan choice, date of birth, address beyond ZIP, anything about health or diet.
 A daily protein or calorie target typed into the plan calculator **never leaves the browser**.
 
-**Kept for**: 30 days after the offer ends, unless marketing was confirmed; an out-of-area request 7 days if
-unconfirmed, up to 12 months if confirmed. After export to the email service, deleted from our records. The
-saved offer and its event are kept without any contact details. Deleted on request at any time.
+**Kept for**: 30 days after the offer ends, unless marketing was confirmed; a plan saved after an offer has ended,
+30 days from the save or until we email about our next offer, whichever comes first, unless marketing was confirmed;
+an out-of-area request 7 days if unconfirmed, up to 12 months if confirmed. After export to the email service,
+deleted from our records. The saved offer and its event are kept without any contact details. Deleted on request at
+any time.
 
 ## 6. The privacy notice (linked from the form)
 
@@ -109,9 +127,11 @@ saved offer and its event are kept without any contact details. Deleted on reque
 > health information.
 > **Your choices.** Unsubscribe from any email at any time — it's as easy as signing up. Ask us to see,
 > correct or delete what we hold by emailing privacy@eatfitaf.com; we'll answer within 30 days.
-> **How long we keep it.** 30 days after the offer ends, unless marketing was confirmed; an out-of-area request 7
-> days if unconfirmed, up to 12 months if confirmed. After export to the email service, deleted from our records.
-> The saved offer and its event are kept without any contact details. Deleted on request at any time.
+> **How long we keep it.** 30 days after the offer ends, unless marketing was confirmed; a plan saved after an offer
+> has ended, 30 days from the save or until we email about our next offer, whichever comes first, unless marketing was
+> confirmed; an out-of-area request 7 days if unconfirmed, up to 12 months if confirmed. After export to the email
+> service, deleted from our records. The saved offer and its event are kept without any contact details. Deleted on
+> request at any time.
 > **Where it's kept.** In Fit AF's own records; our email provider (Resend, to send) receives only what it needs, on
 > our behalf.
 

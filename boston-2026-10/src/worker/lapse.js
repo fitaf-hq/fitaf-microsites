@@ -2,7 +2,9 @@
 // deleting the CONTACT and setting the save `lapsed` (an unsent message is cancelled with it):
 //   A. an offer save without confirmed marketing, 30 days after its offer's valid_to;
 //   B. an expansion save unconfirmed after 7 days;
-//   C. a confirmed expansion save after expansion_retention_days (365, proposed).
+//   C. a confirmed expansion save after expansion_retention_days (365, proposed);
+//   D. an offer save with no offer (made after the last offer's end: SPEC-ui-and-copy-pass § 1.2 item 3) without confirmed
+//      marketing, no_offer_save_days (30) after it was made.
 // The save row stays: it is how we count, not who.
 //
 // Self-contained on purpose (no imports), so the S15 mutant can be a COPY of this file. The caller does
@@ -15,7 +17,7 @@ const list = (xs) => xs.map(q).join(", ");
 // A save is "unconfirmed" if nobody confirmed from the inbox, or they said No thanks afterwards.
 const UNCONFIRMED = "(c.confirmed_at IS NULL OR c.withdrawn_at IS NOT NULL)";
 
-export function ruleSql({ lapsedOfferIds, expansionCreatedBefore, expansionConfirmedBefore }) {
+export function ruleSql({ lapsedOfferIds, expansionCreatedBefore, expansionConfirmedBefore, noOfferCreatedBefore }) {
   const from = "SELECT s.save_id FROM saves s JOIN save_contacts c ON c.save_id = s.save_id WHERE ";
   return {
     offer:
@@ -30,6 +32,10 @@ export function ruleSql({ lapsedOfferIds, expansionCreatedBefore, expansionConfi
       from +
       "s.kind = 'expansion' AND s.state = 'confirmed' AND c.withdrawn_at IS NULL " +
       `AND c.confirmed_at <= ${q(expansionConfirmedBefore)}`,
+    no_offer:
+      from +
+      `s.kind = 'offer' AND s.offer_id IS NULL AND s.state IN ('saved', 'messaged', 'confirmed') AND ${UNCONFIRMED} ` +
+      `AND s.created_at <= ${q(noOfferCreatedBefore)}`,
   };
 }
 

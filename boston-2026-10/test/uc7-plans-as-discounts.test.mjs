@@ -10,13 +10,13 @@
 // × 0.75: § 1.1's build of the old default): UC7 fails, by its own assertion; the unchanged mirror is its control.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import offersFile from "../data/offers.json" with { type: "json" };
 import plans from "../data/plans.json" with { type: "json" };
-import { renderPage } from "../build.mjs";
+import { renderPage, ROOT } from "../build.mjs";
 import { mirror, openPlanPage } from "./cc-harness.mjs";
 import { devPage } from "./dev-page.mjs";
 import { loadPlans } from "./helpers.mjs";
@@ -150,8 +150,11 @@ test("UC7: mutant — the struck price from the wrong side (the list × 0.75) ->
       await rm(out, { recursive: true, force: true });
     }
   };
-  const control = await mirror();
+  // The development build reads its site key from wrangler.jsonc (devConfig), which cc-harness's mirror does not carry.
+  const withConfig = (dir) => copyFile(join(ROOT, "wrangler.jsonc"), join(dir, "wrangler.jsonc"));
+  const control = await mirror(withConfig);
   const mutant = await mirror(async (dir) => {
+    await withConfig(dir);
     const path = join(dir, "build.mjs");
     const source = await readFile(path, "utf8");
     assert.equal(source.split(STRUCK_SITE).length - 1, 1, "the mutation site occurs exactly once in the mirror's build.mjs");

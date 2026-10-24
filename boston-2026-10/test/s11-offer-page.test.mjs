@@ -96,8 +96,8 @@ test("S11b: data/offers.json — approved labels only, and at most one general o
   assert.equal(new Set(ids).size, ids.length, "ids unique");
   for (const o of offers) {
     // SPEC-ui-and-copy-pass § 1 item 1 (2026-10-23): an offer may carry `headline`, the words the page's offer box prints;
-    // its item 7, `savings_percent`, the percentage See all plans takes off each weekly price while the offer is current.
-    assert.deepEqual(Object.keys(o).filter((k) => !["id", "label", "label_approved", "headline", "savings_percent", "applies_to", "valid_from", "valid_to", "code_mode", "shared_code"].includes(k)), []);
+    // its § 1.2 item 2, `percent_off`, the offer's share, by which See all plans strikes the higher price beside the store's.
+    assert.deepEqual(Object.keys(o).filter((k) => !["id", "label", "label_approved", "headline", "percent_off", "applies_to", "valid_from", "valid_to", "code_mode", "shared_code"].includes(k)), []);
     assert.deepEqual({ label: o.label, label_approved: o.label_approved }, APPROVED_LABELS[o.id], `${o.id}: its approved label (no placeholder)`);
     assert.ok(["event", "general"].includes(o.applies_to));
     assert.ok(["unique", "shared", "none"].includes(o.code_mode));

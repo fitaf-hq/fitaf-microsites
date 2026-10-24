@@ -37,19 +37,20 @@ export function saveRows(save, { nowMs = Date.now(), state = "saved", saveOverri
   const now = new Date(nowMs).toISOString();
   const zone = saveConfig.send_time_zone;
   const offer = save.kind === "offer" ? offerForSave(zonedDate(nowMs, zone)) : null;
-  // SPEC-save-offer-production § 10.7: after the last offer's valid_to an offer save is refused (offer_ended), as the Worker does.
-  if (save.kind === "offer" && !offer) throw new Error(`no offer is live on ${zonedDate(nowMs, zone)}: an offer save is refused (offer_ended)`);
+  // SPEC-ui-and-copy-pass § 1.2 item 3, as the Worker does: after the last offer's valid_to an offer save is kept with no
+  // offer and nothing due (no send_at, no message state); it still draws its link's token.
+  const sendAt = save.kind === "expansion" ? now : offer ? new Date(nextDayAt(nowMs, { zone, hour: saveConfig.send_hour })).toISOString() : null;
   const saveRow = {
     save_id: crypto.randomUUID(),
     event_id: save.event_id,
     kind: save.kind,
-    offer_code: offer ? newOfferCode() : null,
+    offer_code: save.kind === "offer" ? newOfferCode() : null,
     offer_id: offer ? offer.id : null,
     ring: save.ring,
     reissued_from: null,
     created_at: now,
-    send_at: offer ? new Date(nextDayAt(nowMs, { zone, hour: saveConfig.send_hour })).toISOString() : now,
-    message_state: "scheduled",
+    send_at: sendAt,
+    message_state: sendAt === null ? null : "scheduled",
     state,
     state_at: now,
     ...saveOverrides,

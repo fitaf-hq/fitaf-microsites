@@ -59,12 +59,14 @@ async function handleSave(request, env) {
   }
   const nowMs = Date.now();
   const now = new Date(nowMs).toISOString();
-  // SPEC-save-offer-production § 10.7: after the last offer's valid_to no offer is offered, so an offer save (from a page
-  // drawn before then) is refused, by name, and nothing is written. An expansion save needs no offer.
+  // SPEC-save-offer-production § 10.7: after the last offer's valid_to no offer is offered. SPEC-ui-and-copy-pass § 1.2
+  // item 3 (the Advisor, 2026-10-23: "We should still save"): an offer save then is still kept, with no offer, and nothing
+  // is due for it (no E1 until the second chance's email exists): its send_at null, so the store writes no message state;
+  // it lapses 30 days after the save unless its tick is confirmed (lapse.js). An expansion save goes at once, an offer
+  // save with its offer the next morning at the send hour.
   const offer = save.kind === "offer" ? offerForSave(zonedDate(nowMs, ZONE)) : null;
-  if (save.kind === "offer" && !offer) return refuse(400, "offer_ended");
-  const sendAt =
-    save.kind === "offer" ? new Date(nextDayAt(nowMs, { zone: ZONE, hour: saveConfig.send_hour })).toISOString() : now;
+  const nextMorning = new Date(nextDayAt(nowMs, { zone: ZONE, hour: saveConfig.send_hour })).toISOString();
+  const sendAt = save.kind === "expansion" ? now : offer ? nextMorning : null;
   try {
     await upsertSave(env.DB, save, { offerId: offer?.id ?? null, now, sendAt });
   } catch {

@@ -1,7 +1,7 @@
 // S23 (SPEC-rung4 § 2a): save-data carries each offer's id, label, applies_to, valid_from and valid_to, and
 // no code of any kind — never shared_code, never code_mode. ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 item 1 (2026-10-23):
 // and an offer's headline, the words the box prints, when it has one; and since its item 7, for an offer with a
-// savings_percent, `after`, See all plans' weekly prices after it, which the build computes (UC7 holds them).
+// share (`percent_off`, § 1.2 item 2), `struck`, See all plans' struck prices, which the build computes (UC7 holds them).
 import test from "node:test";
 import assert from "node:assert/strict";
 import offersFile from "../data/offers.json" with { type: "json" };
@@ -29,7 +29,7 @@ for (const [name, file] of [
     const html = await devPage({ offers: file });
     const data = saveData(html);
     assert.deepEqual(
-      data.offers.map(({ after, ...o }) => o),
+      data.offers.map(({ struck, ...o }) => o),
       file.offers.map((o) => Object.fromEntries(OFFER_FIELDS.filter((k) => k in o).map((k) => [k, o[k]]))),
       "each offer's id, label, headline (when it has one), applies_to, valid_from, valid_to — nothing more, in the file's order",
     );

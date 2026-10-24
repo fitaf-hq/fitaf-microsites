@@ -51,7 +51,10 @@ test.after(() => base.dispose());
 // Since § 10.7 (no offer after the last one's valid_to): src/worker/index.js (offer_ended), src/worker/offers.js (at most
 // one current general offer, null after the last), src/worker/send-due.js (E1 after the end), and messages.js, redeem.js
 // and data/offers.json again. Since § 10.9 (a save held through its E1's day; the wording): src/worker/confirm.js (its
-// token held as long, "weekly"), and offers.js, send-due.js, messages.js and redeem.js again.
+// token held as long, "weekly"), and offers.js, send-due.js, messages.js and redeem.js again. Since SPEC-ui-and-copy-pass
+// § 1.2 item 3 (a save after the last offer's end kept with no offer, nothing due, 30 days): src/worker/lapse.js (its rule),
+// src/worker/save-store.js (no message state when nothing is due), src/worker/scheduled.js (its cut-off), and index.js
+// and data/save.json again.
 const MOVED_WORKER_FILES = [
   "data/delivery-zips.json",
   "data/events.json",
@@ -60,11 +63,14 @@ const MOVED_WORKER_FILES = [
   "src/worker/choose-sender.js",
   "src/worker/confirm.js",
   "src/worker/index.js",
+  "src/worker/lapse.js",
   "src/worker/messages.js",
   "src/worker/offers.js",
   "src/worker/page-style.json",
   "src/worker/pages.js",
   "src/worker/redeem.js",
+  "src/worker/save-store.js",
+  "src/worker/scheduled.js",
   "src/worker/send-due.js",
   "src/worker/site.js",
   "src/worker/zip-class.js",

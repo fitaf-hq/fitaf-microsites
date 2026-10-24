@@ -394,25 +394,32 @@ export const DEV_PHOTO_HOST = 1;
 const MENU_LINK =
   '\n            <p class="skips"><button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button></p>';
 
-/** SPEC-ui-and-copy-pass § 1 item 7: an offer's `savings_percent`, a whole number of percent the build takes off each
- *  weekly total in See all plans (refused otherwise, naming the offer). */
-const SAVINGS_PERCENT = { least: 1, most: 99 };
+/** SPEC-ui-and-copy-pass § 1.2 item 2: an offer's `percent_off`, its share, a whole number of percent (refused otherwise,
+ *  naming the offer), and the percentage its words may name ("save 25%"), which must be it. */
+const PERCENT_OFF = { least: 1, most: 99 };
 const PERCENT = 100;
+const NAMED_PERCENT = /(\d+)\s*%/;
 
-/** § 1 item 7 (See all plans as discounts): for an offer with `savings_percent`, each grid cell's weekly total after it, as
- *  the cell writes its total (`$65.63/wk`), by the cell's data-cell; rounded to the cent. Money is the build's (money()). */
-function pricesAfter(plans, offer) {
-  const p = offer.savings_percent;
-  if (!Number.isInteger(p) || p < SAVINGS_PERCENT.least || p > SAVINGS_PERCENT.most) {
-    throw new Error(`data/offers.json: offer ${offer.id}'s savings_percent must be a whole number from ${SAVINGS_PERCENT.least} to ${SAVINGS_PERCENT.most}, got ${JSON.stringify(p)}`);
+/** § 1 item 7, as § 1.2 item 2 corrects it (the Advisor, 2026-10-23: "The HMP storefront *effectively* has the discount
+ *  applied. The microsite shows the un-discounted price struck through"): for an offer with `percent_off`, each grid
+ *  cell's struck price, its weekly total as the store charges it ÷ (1 − the share), as the cell writes its total
+ *  (`$116.67/wk` for $87.50), by the cell's data-cell; rounded to the cent, never below the list. Money is the build's. */
+function pricesStruck(plans, offer) {
+  const p = offer.percent_off;
+  if (!Number.isInteger(p) || p < PERCENT_OFF.least || p > PERCENT_OFF.most) {
+    throw new Error(`data/offers.json: offer ${offer.id}'s percent_off must be a whole number from ${PERCENT_OFF.least} to ${PERCENT_OFF.most}, got ${JSON.stringify(p)}`);
   }
-  return Object.fromEntries(gridCells(plans).map((c) => [`${c.plan}-${c.count}`, `${money(Math.round((c.total_cents * (PERCENT - p)) / PERCENT))}/wk`]));
+  for (const field of ["label", "headline"]) {
+    const named = NAMED_PERCENT.exec(offer[field] ?? "");
+    if (named && Number(named[1]) !== p) throw new Error(`data/offers.json: offer ${offer.id}'s ${field} names ${named[1]}%, its percent_off is ${p}`);
+  }
+  return Object.fromEntries(gridCells(plans).map((c) => [`${c.plan}-${c.count}`, `${money(Math.round((c.total_cents * PERCENT) / (PERCENT - p)))}/wk`]));
 }
 
 /** What the development page's scripts read: the save endpoint, the ZIP list (official; its near ring a mock), the sizes,
  *  and (§ 2a) what the offer box needs to choose as the Worker does; since SPEC-ui-and-copy-pass § 1 item 1 an offer's
- *  `headline`, the words the box prints, when it has one, and since its item 7 `after`, See all plans' weekly totals
- *  after the offer (pricesAfter), when it has a `savings_percent`. ⛔ Never a code: no shared_code, no code_mode. */
+ *  `headline`, the words the box prints, when it has one, and since its item 7 (as § 1.2 item 2 corrects it) `struck`,
+ *  See all plans' struck prices (pricesStruck), when it has a `percent_off`. ⛔ Never a code: no shared_code, no code_mode. */
 export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) {
   const prefixesOnly = (list) => (list ?? []).map((z) => (z.zip ? { zip: z.zip } : { prefix: z.prefix }));
   return {
@@ -431,7 +438,7 @@ export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) 
       applies_to: o.applies_to,
       valid_from: o.valid_from,
       valid_to: o.valid_to,
-      ...(o.savings_percent !== undefined ? { after: pricesAfter(plans, o) } : {}),
+      ...(o.percent_off !== undefined ? { struck: pricesStruck(plans, o) } : {}),
     })),
   };
 }
