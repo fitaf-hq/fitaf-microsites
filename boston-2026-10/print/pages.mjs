@@ -264,12 +264,13 @@ function guidesOf(layout) {
 /**
  * § 17.2 item 1: the document a letter sheet's PDF is printed from, in one of its layouts: a US Letter page holding a copy
  * of the piece's face in each cell, drawn at its trim without bleed (the cell clips what front B's rules run into a
- * bleed), and, when the sheet has them, the light dashed cut guides between its copies (§ 17.3 item 1: one page).
+ * bleed), and, when the sheet has them and it is a `proof` (§ 17.8 item 4: the final files carry none), the light dashed
+ * cut guides between its copies (§ 17.3 item 1: one page).
  */
-export function letterDocument(sheet, layout, piece, inputs, printCss, words) {
+export function letterDocument(sheet, layout, piece, inputs, printCss, words, { proof = true } = {}) {
   const own = withToutPhoto(inputs);
   const cells = layout.cells.map((cell) => `<div class="print-face" style="left: ${px(cell.x)}px; top: ${px(cell.y)}px">${giveawayFace({ ...piece, face: layout.face }, own, words, "front")}</div>`);
-  const page = `<div class="print-sheet print-sheet-letter"><div class="print-page">\n${cells.join("\n")}${sheet.guides ? `\n${guidesOf(layout)}` : ""}\n</div></div>`;
+  const page = `<div class="print-sheet print-sheet-letter"><div class="print-page">\n${cells.join("\n")}${sheet.guides && proof ? `\n${guidesOf(layout)}` : ""}\n</div></div>`;
   return pageHtml(piece, own, printCss, [page], { rules: letterRules(layout, piece), letter: true });
 }
 

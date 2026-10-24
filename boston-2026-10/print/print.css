@@ -311,7 +311,14 @@ html, body { margin: 0; padding: 0; background: var(--white); }
    the scan unit at its right, the scan line, the code and the address stacked, or, when stacked no longer fits the foot,
    side by side: the scan line and the address beside the code, at its left, right-aligned (data-arrange, the build's) */
 .print-tout .tout-foot { flex: 1; min-height: 0; gap: 16px; padding: 12px calc(var(--bleed) + 18px) calc(var(--bleed) + 12px); }
-.print-tout .tout-cta { align-self: center; display: flex; flex-direction: column; align-items: stretch; }
+/* § 17.8 item 1: the column's measure stops at the x of the photo's left edge less the band's own inset (its 18px right
+   padding), from the foot's 18px left padding inside the trim: the ribbon's notch tip and the fine print never cross the
+   line the photo makes down the tout */
+.print-tout .tout-cta {
+  align-self: center; display: flex; flex-direction: column; align-items: stretch;
+  flex: none; width: calc(var(--face-w) - var(--tout-photo-w) - 2 * 18px);
+}
+.print-tout .tout-foot { justify-content: space-between; }
 .print-tout .tout-banner { margin: 0 0 5px; }
 .print-tout .tout-banner .tout-ribbon { display: block; text-align: center; }
 .print-tout .tout-fine { margin: 0; color: var(--white); font: 400 var(--tout-fine)/1.25 var(--body); }
@@ -359,11 +366,11 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 /* § 17.2 item 2: the email, its own line: its words and its blanks in a row on one baseline, the blanks writing lines
    sharing the width by their runs' lengths (their flex-grow, from the words file) */
 .print-entry-card .entry-email { flex-direction: row; align-items: flex-end; gap: 6px; height: var(--entry-email-pitch); }
-/* § 17.6 item 4: the fields take the room between the heading block and the fine print, the email's line on its lower
-   part; the fine print on the card's bottom inset */
-.print-entry-card .entry-fields { flex: 1 0 auto; } /* it grows into the room and never shrinks under the email line's least height:
-   words that leave less run past the card's inset and are refused, never set over the line */
-.print-entry-card .entry-fields .entry-email { flex: 1; height: auto; min-height: var(--entry-email-pitch); }
+/* § 17.8 item 3 (from § 17.6 item 4's): the email line right under the heading, its own height (--entry-email-pitch), and
+   the room between it and the fine print, on the card's bottom inset, kept as whitespace (at least --entry-rule-gap: the
+   fine print's padding). Neither the fields nor the line grow or shrink: words that leave too little run past the
+   card's inset and are refused, never set over the line */
+.print-entry-card .entry-fields { flex: none; }
 .print-entry-card .entry-fine[data-weight="regular"] b { font-weight: 400; }
 .print-entry-card .entry-email .entry-line { flex: 1 1 0; min-width: 0; margin-top: 0; margin-bottom: 4px; }
 .print-entry-card .entry-email-word { flex: none; font: 700 var(--entry-email)/1 var(--head); }

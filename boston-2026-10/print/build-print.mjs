@@ -308,11 +308,13 @@ async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs,
   const piece = !letter && page.piece.id === "entry-card" && giveaway.cardFace ? { ...page.piece, face: giveaway.cardFace } : page.piece;
   const html = join(stage, `${page.base}.html`);
   const pixels = pixelsFor(page, chosen);
+  // what stands in on it: known before it is drawn, since § 17.8 item 4 draws the cut guides on a proof alone
+  const placeholders = giveawayPlaceholders(piece, pageInputs, words);
   const tried = [];
   let measured;
   let sides;
   for (const layout of letter ? letter.layouts : [null]) {
-    await writeFile(html, layout ? letterDocument(letter, layout, piece, pageInputs, printCss, words) : giveawayDocument(piece, pageInputs, printCss, words));
+    await writeFile(html, layout ? letterDocument(letter, layout, piece, pageInputs, printCss, words, { proof: placeholders.length > 0 }) : giveawayDocument(piece, pageInputs, printCss, words));
     measured = await measure(run, html, measureJs);
     sides = measured.sheets.map((sheet, k) => ({ side: k ? "the back" : "the front", sheet, layout, ...(layout ? letterFindings(letter, layout, piece, sheet) : ownFindings(piece, sheet)) }));
     const failed = sides.flatMap((s) => s.refusals);
@@ -333,7 +335,6 @@ async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs,
   ];
   // a refused tout names the sizes it settled on, so the refusal can be read against them
   if (refusals.length && page.piece.id === "tout") refusals.push(`(settled: the headline ${settled.headPx} layout px, the code ${Number(settled.qrIn.toFixed(2))} in ${settled.arrange}, the fine print ${settled.finePt} pt on ${settled.fineLines} lines)`);
-  const placeholders = giveawayPlaceholders(piece, pageInputs, words);
   const shows = showsOf(measured.faces[0], pixels);
   return { page, piece, html, measured, photos: photos.rows, shows, refusals, warnings: [], placeholders, stem: stemOf(page, placeholders), giveaway: { words, sides, used, tried, settled } };
 }
