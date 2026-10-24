@@ -668,7 +668,7 @@ that way"*; and of the tout's new photo, *"this looks slightly worse"*.
    cut, else **six** (2 × 3), the report saying which and by how much; § 17.2 item 1's page rules stand (Letter, no marks,
    no bleed, nothing within 0.5 in of the paper's edge; the light cut guides the builder's). § 17.2's two-sided card, the
    one-sided page and the sign are removed with their cases.
-2. **The tout's photo is the flyer's again** (`pfd061e`, its caption): § 17.2 item 3 is withdrawn. Nothing names a
+2. **The tout's photo is the flyer's again** (the photo § 9 placed on the flyer, with its caption): § 17.2 item 3 is withdrawn. Nothing names a
    unique photo with a caption: the eight the KMS names are all placed in the printed set, and the rest have no name.
    The tout's fine print now ends *"Rules on the entry cards."* (the words file).
 3. **Cases**: QG32 for the one-page card (its field's `@` and `.`, the fine print whole from the PDF, the count a page,
