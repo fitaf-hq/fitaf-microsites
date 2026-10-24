@@ -116,7 +116,11 @@
 // bytes each (item 1, item 2's struck prices, item 3's step with no offer), their visible page where a cart shows the step
 // (U4 reads it on 2026-09-29, when no offer is live, so the step shows with no offer). Both trees' builds differ in
 // index.html, demo/, boston/, seminar/ and privacy/ alone (DRAFT § 6's retention on the last).
-// From here the reference is dbfcb62's tree.
+// ⚠ RE-RECORDED at e8fd524 (`node test/u-04-record.mjs --commit e8fd524`): § 1.2 item 3's email help line after the
+// offer's end (found in Chrome at the build). Against dbfcb62's record: contents and the production pages unchanged; the
+// three development pages +310 bytes each (the field's second help line and the two lines showing one), their visible
+// page where the step shows (on 2026-09-29, no offer live: the step's own help line).
+// From here the reference is e8fd524's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -125,7 +129,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to dbfcb62's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "dbfcb62");
+test("U4: a normal week, the content and the page as served, byte-identical to e8fd524's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "e8fd524");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

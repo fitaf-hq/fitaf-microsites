@@ -1,6 +1,6 @@
 {
   "about": "PV5's before (SPEC-preview-sites § 4): the SHA-256 of every file the production and the development build write (build() with target prod, then dev, each into an empty directory), over recorded_at's own tree, the contract's commit before any of the preview build's code (test/pv-05-record.mjs, which wrote this file). Re-record only by running the recorder; never by hand.",
-  "recorded_at": "b1e29d7",
+  "recorded_at": "e8fd524",
   "files": {
     "prod": {
       "assets/fitaf-logo.png": "e51500f85fee09c3a5762e82cd3812ac824fa81378478035a94ab91e5de94ef0",
@@ -31,15 +31,15 @@
       "assets/photo-sheets/chefs-choice-2026-10-18.jpg": "57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4",
       "assets/photo-sheets/chefs-choice-2026-10-25.jpg": "efa540346447fdb8e1ef534be780a3beb6f4b618282f117d185c345328fc3d39",
       "assets/photo-sheets/chefs-choice-2026-11-01.jpg": "725b363dc93eae74d959e29ca7546d4f8fe15120a88505feeba33c83677204b4",
-      "boston/index.html": "d1a2632bc2bcd754168dbc293351b89db794f23c39c89880a606904e201e8857",
-      "demo/index.html": "09848a70a482702693a1b7affe4386db66023038bac7162198fb71b5215218da",
+      "boston/index.html": "349c3c233131a312046ec29d0831591a6f1c97cee05650034edc6dc396f27042",
+      "demo/index.html": "476eeb0461812bf8dd77451823b39ead20fc278de60e9ff8487c46a4635f1547",
       "fonts/open-sans-latin-400-normal.woff2": "0e44026ad31376af1b56593cd4acb4f353f8e8789c51759e18f64578e4ef296a",
       "fonts/open-sans-latin-600-normal.woff2": "a97a6ed7ef9f75c495e9224f5c59b2271d826e4a4345b738b390b0c76cc9f412",
       "fonts/poppins-latin-600-normal.woff2": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
       "fonts/poppins-latin-700-normal.woff2": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
-      "index.html": "09848a70a482702693a1b7affe4386db66023038bac7162198fb71b5215218da",
+      "index.html": "476eeb0461812bf8dd77451823b39ead20fc278de60e9ff8487c46a4635f1547",
       "privacy/index.html": "4708034f3a7646d1471ecd33c42d747ca3af9c16dc859aec4871b5ecddac9080",
-      "seminar/index.html": "854c7fd6178d61123180e7efebf8cca126dc7935720fb47175d1a73777a432e7",
+      "seminar/index.html": "e7de204ac781cdbc6052570fd896808af7dada2a316aa5194a4579ef79f3cbd3",
       "why/index.html": "43afc5edee8b86386249f2eef0d862ec8f50e0b88b4343d8e01ecb9a4dd78f7f"
     }
   }
