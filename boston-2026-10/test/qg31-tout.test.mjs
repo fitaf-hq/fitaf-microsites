@@ -5,7 +5,10 @@
 // print whole and its photo's caption; its QR code, drawn from the PDF, decodes to the `boston` URL; nothing less than the
 // safe margin inside the trim; nothing under the type floor. § 17.2: letter-touts, one US Letter page of two, each code
 // decoding, nothing within 36 pt of the paper's edge or outside the two. And it must fit, not shrink: a headline line
-// that runs into the logo, and fine print that overflows the foot, are each refused, naming the layout px over.
+// that runs into the logo is refused, naming the layout px over. § 17.4: the headline the largest that sets each line, at
+// least 46 layout px, its accent in the words file's colour; the band's edge straight; the fine print regular, on two
+// lines from 7 pt to its 6.5 pt floor, else three, said, else refused; the ribbon and it one column; the scan line
+// stacked above the code.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { rm } from "node:fs/promises";
@@ -13,7 +16,7 @@ import { readTout } from "../print/tout.mjs";
 import { GIVEAWAY_PIECES, pagePoints } from "../print/sizes.mjs";
 import { ROOT } from "../build.mjs";
 import { NO_CHROME } from "./print-fixtures.mjs";
-import { NO_POPPLER, TOUT_FIXTURE, toutFitProblems, toutProblems, wordsFile } from "./qg-checks.mjs";
+import { NO_POPPLER, TOUT_FIXTURE, toutFitProblems, toutLookProblems, toutProblems, wordsFile } from "./qg-checks.mjs";
 
 const tout = GIVEAWAY_PIECES.find((p) => p.id === "tout");
 
@@ -33,6 +36,7 @@ test("QG31: a tout words file outside its keys is refused, naming the key", asyn
     [{ ...TOUT_FIXTURE, fine: "" }, /"fine" must be the fine print/],
     [{ ...TOUT_FIXTURE, headline: ["a", "b", "c", "d"] }, /"headline" must be one to 3 lines/],
     [{ ...TOUT_FIXTURE, banner: "x".repeat(33) }, /"banner" must be one line of at most 32/],
+    [{ ...TOUT_FIXTURE, headlineAccent: "red" }, /"headlineAccent" must be one of green, blue, orange/],
   ];
   for (const [words, why] of cases) {
     const file = await wordsFile(words, "tout-words.json");
@@ -45,7 +49,7 @@ test("QG31: a tout words file outside its keys is refused, naming the key", asyn
   const file = await wordsFile(TOUT_FIXTURE, "tout-words.json");
   try {
     const read = await readTout(file.path);
-    assert.deepEqual([read.headline, read.banner, read.scan, read.fine, read.approved, read.source], [TOUT_FIXTURE.headline, TOUT_FIXTURE.banner, TOUT_FIXTURE.scan, TOUT_FIXTURE.fine, false, "tout-words.json"]);
+    assert.deepEqual([read.headline, read.banner, read.scan, read.fine, read.approved, read.source, read.headlineAccent], [TOUT_FIXTURE.headline, TOUT_FIXTURE.banner, TOUT_FIXTURE.scan, TOUT_FIXTURE.fine, false, "tout-words.json", "blue"]);
   } finally {
     await rm(file.dir, { recursive: true, force: true });
   }
@@ -60,6 +64,15 @@ test("QG31: built, the tout's PDF and its letter sheet carry its words, their QR
   }
 });
 
-test("QG31: what does not fit is refused, naming the layout px over, never shrunk", { skip: NO_CHROME }, async () => {
+test("QG31: what does not fit is refused, naming the layout px over, never shrunk; the fine print on two lines, else three, said", { skip: NO_CHROME }, async () => {
   assert.deepEqual(await toutFitProblems(ROOT), []);
+});
+
+test("QG31 (§ 17.4 items 1–4): the headline the largest at 46 or more, its accent blue; the edge straight; the fine print regular on two lines under its ribbon; the scan line above the code", { skip: NO_CHROME || NO_POPPLER }, async () => {
+  const file = await wordsFile(TOUT_FIXTURE, "tout-words.json");
+  try {
+    assert.deepEqual(await toutLookProblems(ROOT, file.path), []);
+  } finally {
+    await rm(file.dir, { recursive: true, force: true });
+  }
 });

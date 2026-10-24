@@ -2,7 +2,9 @@
 // approved and stay outside this repository (a public one: § 13 item 3), and a tout made from them is a proof until they
 // are. The tout is front B's look, so its words are front B's keys (print/front.mjs, checked by its rules) less the
 // callout, which it does not carry, and three of its own; anything else is refused, naming the key:
-//   headline, accent, size, lede, ledeAccent, logo   as front B's (the headline set as given, never rewrapped)
+//   headline, accent, size, lede, ledeAccent, logo   as front B's (the headline set as given, never rewrapped; without
+//                                                    `size`, the largest that sets each line on one line, § 17.4 item 1)
+//   headlineAccent  green, blue or orange: the colour of the headline's words between asterisks (optional; green otherwise)
 //   banner    the line on § 15's ribbon in the foot (required here; at most BANNER_MAX_CHARS)
 //   scan      one short line beside the QR code (required)
 //   fine      the fine print, one paragraph, set at the type floor (required)
@@ -10,7 +12,9 @@
 import { readFile } from "node:fs/promises";
 import { checkFront } from "./front.mjs";
 
-const KEYS = ["headline", "accent", "size", "lede", "ledeAccent", "logo", "banner", "scan", "fine", "approved"];
+const KEYS = ["headline", "accent", "headlineAccent", "size", "lede", "ledeAccent", "logo", "banner", "scan", "fine", "approved"];
+/** § 17.4 item 1: the headline's accent colours (the words between asterisks), by the template's own tokens; the first the default. */
+export const HEADLINE_ACCENTS = ["green", "blue", "orange"];
 const SECTION = "§ 17";
 /** The scan line's longest: it sits beside the code, in the foot. */
 export const SCAN_MAX_CHARS = 40;
@@ -27,8 +31,9 @@ export async function readTout(path) {
   if (raw.banner === undefined) refuse(`"banner" is required: the line on the foot's ribbon`);
   if (!oneLine(raw.scan, SCAN_MAX_CHARS)) refuse(`"scan" must be one line of at most ${SCAN_MAX_CHARS} characters`);
   if (!oneLine(raw.fine)) refuse(`"fine" must be the fine print, one paragraph of text`);
+  if (raw.headlineAccent !== undefined && !HEADLINE_ACCENTS.includes(raw.headlineAccent)) refuse(`"headlineAccent" must be one of ${HEADLINE_ACCENTS.join(", ")}`);
   const [scan, fine] = [raw.scan.trim(), raw.fine.trim()];
   // every line the tout prints, for § 17 item 4's brackets (print/pages.mjs giveawayPlaceholders)
   const texts = [...words.headline, ...words.lede, words.banner, scan, fine];
-  return { ...words, scan, fine, texts };
+  return { ...words, headlineAccent: raw.headlineAccent ?? HEADLINE_ACCENTS[0], scan, fine, texts };
 }

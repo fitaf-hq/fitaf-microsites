@@ -54,7 +54,24 @@ import { backFindings, frontFindings, giveawayFindings, layoutFindings, letterFi
 import { jpegSize } from "./jpeg.mjs";
 import { backPlaceholders, giveawayDocument, giveawayPlaceholders, letterDocument, pagesToPrint, placeholdersOf, printDocument } from "./pages.mjs";
 import { readTout } from "./tout.mjs";
-import { BACK_MIN_TEXT_PX, CSS_PX_PER_INCH, LETTER, LETTER_MARGIN_IN, pageOf, PRINT_PIECES, TYPE_FLOOR_PX } from "./sizes.mjs";
+import {
+  BACK_MIN_TEXT_PX,
+  CSS_PX_PER_INCH,
+  FINE_FLOOR_PT,
+  FINE_PT,
+  FINE_STEP_PT,
+  LAYOUT_PX_PER_INCH,
+  LETTER,
+  LETTER_MARGIN_IN,
+  pageOf,
+  POINTS_PER_INCH,
+  PRINT_PIECES,
+  ptPx,
+  TOUT_FINE_LINES,
+  TOUT_HEAD_MAX_PX,
+  TOUT_HEAD_MIN_PX,
+  TYPE_FLOOR_PX,
+} from "./sizes.mjs";
 
 export const PRINT_DIR = dirname(fileURLToPath(import.meta.url));
 /** § 15 item 1: the print-only images (the logo drawn for a dark ground), never the page's (copyStatic copies src/assets). */
@@ -269,7 +286,10 @@ async function printPdf(run, html, pdf) {
  * words until approved, each bracket.
  */
 async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs, chosen, giveaway }) {
-  const words = giveaway[page.piece.words];
+  // § 17.4 items 1 and 3: the tout's headline and fine print sizes, settled once, for its own PDF and its sheet alike
+  if (page.piece.id === "tout" && !giveaway.toutSettled) giveaway.toutSettled = await settleTout({ run, stage, piece: page.piece, pageInputs, printCss, measureJs, words: giveaway.tout });
+  const settled = page.piece.id === "tout" ? giveaway.toutSettled : null;
+  const words = settled ? { ...giveaway.tout, size: settled.headPx, finePx: ptPx(settled.finePt) } : giveaway[page.piece.words];
   const letter = page.letter;
   const piece = !letter && page.piece.id === "entry-card" && giveaway.cardFace ? { ...page.piece, face: giveaway.cardFace } : page.piece;
   const html = join(stage, `${page.base}.html`);
@@ -291,6 +311,7 @@ async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs,
   if (used && piece.id === "entry-card") giveaway.cardFace = used.face;
   const photos = resolution(measured.sheets.flatMap((sheet) => sheet.faces.flatMap((f) => f.photos)), pixels);
   const refusals = [
+    ...(settled?.refusal ? [settled.refusal] : []),
     ...(letter && !used ? tried.flatMap((t) => t.refusals.map((r) => `${t.layout.count} a page: ${r}`)) : []),
     ...(letter ? [] : measured.sheets.length === sidesOf(piece) ? [] : [`${measured.sheets.length} side(s) drawn, not ${sidesOf(piece)}`]),
     ...(letter ? [] : sides.flatMap((s) => s.refusals)),
@@ -298,8 +319,60 @@ async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs,
   ];
   const placeholders = giveawayPlaceholders(piece, pageInputs, words);
   const shows = showsOf(measured.faces[0], pixels);
-  return { page, piece, html, measured, photos: photos.rows, shows, refusals, warnings: [], placeholders, stem: stemOf(page, placeholders), giveaway: { words, sides, used, tried } };
+  return { page, piece, html, measured, photos: photos.rows, shows, refusals, warnings: [], placeholders, stem: stemOf(page, placeholders), giveaway: { words, sides, used, tried, settled } };
 }
+
+/** A hundredth of a layout px: words this close to their box's edge are on it (checks.mjs's own tolerance). */
+const ROOM_TOLERANCE_PX = 0.01;
+
+/**
+ * § 17.4 items 1 and 3: the tout's two sizes, settled by measuring its own page (a measuring pass a try, its html a copy).
+ * The headline (unless the words file sets `size`): measured at TOUT_HEAD_MIN_PX, scaled to the largest whole size at
+ * which each line's glyphs fill its box (the shortest line's beside the logo) and no further than TOUT_HEAD_MAX_PX, then down
+ * a px at a time while a line or the band runs over. The fine print: the largest size from FINE_PT down to FINE_FLOOR_PT,
+ * by FINE_STEP_PT, that sets it on TOUT_FINE_LINES lines, else on one more; neither, at the floor: `refusal`. Returns
+ * { headPx, finePt, fineLines, most, refusal }.
+ */
+async function settleTout({ run, stage, piece, pageInputs, printCss, measureJs, words }) {
+  const html = join(stage, "tout.settle.html");
+  const at = async (headPx, finePt) => {
+    await writeFile(html, giveawayDocument(piece, pageInputs, printCss, { ...words, size: headPx, finePx: ptPx(finePt) }));
+    return (await measure(run, html, measureJs)).faces[0];
+  };
+  const over = (face) => face.fits.some((fit) => (/^headline line /.test(fit.what) || fit.what === "the band") && fit.words && roomOfFit(fit) < -ROOM_TOLERANCE_PX);
+  let headPx = words.size ?? TOUT_HEAD_MIN_PX;
+  let face = await at(headPx, FINE_PT);
+  if (!words.size) {
+    const lines = face.fits.filter((fit) => /^headline line /.test(fit.what) && fit.words);
+    const scale = Math.min(...lines.map((fit) => fit.content.w / fit.words.w));
+    headPx = Math.max(TOUT_HEAD_MIN_PX, Math.min(TOUT_HEAD_MAX_PX, Math.floor(headPx * scale)));
+  }
+  let last = null;
+  for (const most of [TOUT_FINE_LINES, TOUT_FINE_LINES + 1]) {
+    for (let finePt = FINE_PT; finePt >= FINE_FLOOR_PT - 1e-9; finePt -= FINE_STEP_PT) {
+      face = await at(headPx, finePt);
+      while (!words.size && headPx > TOUT_HEAD_MIN_PX && over(face)) {
+        headPx -= 1;
+        face = await at(headPx, finePt);
+      }
+      last = { headPx, finePt, fineLines: face.fineLines };
+      if (face.fineLines <= most) return { ...last, most };
+    }
+  }
+  const refusal = `the fine print runs to ${last.fineLines} lines at the fine-print floor of ${FINE_FLOOR_PT} pt, more than ${TOUT_FINE_LINES + 1} (§ 17.4 item 3: fewer words; nothing is shrunk)`;
+  return { ...last, most: null, refusal };
+}
+
+/**
+ * The room a fit box's words leave inside it to their right, and below them when measured down, in layout px: the sides
+ * a larger headline grows into (its words are set from its box's top left, so a glyph standing a hair past the left
+ * edge is no sign the size is too large).
+ */
+const roomOfFit = (fit) => {
+  const sides = [fit.content.x + fit.content.w - (fit.words.x + fit.words.w)];
+  if (fit.words.y !== null) sides.push(fit.content.y + fit.content.h - (fit.words.y + fit.words.h));
+  return Math.min(...sides) * LAYOUT_PX_PER_INCH;
+};
 
 /** The layout px a fit refusal names over, or 0 (checks.mjs giveawayFindings: "… its words run N layout px over"). */
 const overOf = (refusal) => Number(/its words run (\d+(?:\.\d+)?) layout px over/.exec(refusal)?.[1] ?? 0);
@@ -482,6 +555,12 @@ function grouped(items) {
  */
 function giveawayLines(planned, chosen, at, shown) {
   const lines = [];
+  const settled = planned.find((q) => q.piece.id === "tout")?.giveaway.settled;
+  if (settled) {
+    // § 17.4 items 1 and 3: the sizes the tout settled on, and why
+    const why = settled.most === TOUT_FINE_LINES ? `on ${settled.fineLines} line(s), at most ${TOUT_FINE_LINES}` : `on ${settled.fineLines} lines: ${TOUT_FINE_LINES} did not fit at the floor of ${FINE_FLOOR_PT} pt`;
+    lines.push(`tout: the headline at ${settled.headPx} layout px (the largest that sets each line on one line, at least ${TOUT_HEAD_MIN_PX}); the fine print ${settled.finePt} pt, ${why}`);
+  }
   for (const p of planned.filter((q) => q.giveaway)) {
     const { words, sides, used, tried } = p.giveaway;
     const letter = p.page.letter;
@@ -490,7 +569,7 @@ function giveawayLines(planned, chosen, at, shown) {
     // § 17.3 item 1: which layout, and by how much each one before it did not fit
     for (const t of tried) lines.push(`${p.page.base}: ${t.layout.count} a page did not fit${t.overPx ? `, ${t.overPx.toFixed(1)} layout px over` : ""}: ${t.refusals[0]}${t.refusals.length > 1 ? ` (and ${t.refusals.length - 1} more)` : ""}`);
     for (const r of letter ? [] : p.photos) lines.push(`photo ${p.page.base}: ${p.piece.id === "tout" && chosen?.tout ? `${chosen.tout.from}, ` : ""}${at(r)}${shown(p, r.slot)}`);
-    for (const s of sides) lines.push(`${p.page.base}, ${s.side}: the words fit, ${Number(s.spacePx.toFixed(1))} layout px to spare at the closest; the smallest type ${s.smallestPx} layout px (the floor ${TYPE_FLOOR_PX})`);
+    for (const s of sides) lines.push(`${p.page.base}, ${s.side}: the words fit, ${Number(s.spacePx.toFixed(1))} layout px to spare at the closest; the smallest type ${s.smallestPx} layout px (the floor ${TYPE_FLOOR_PX})${s.finePx ? `; the fine print ${Number(((s.finePx * POINTS_PER_INCH) / LAYOUT_PX_PER_INCH).toFixed(2))} pt on ${s.fineLines} line(s) (its floor ${FINE_FLOOR_PT} pt)` : ""}`);
   }
   return lines;
 }

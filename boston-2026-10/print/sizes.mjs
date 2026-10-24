@@ -70,34 +70,50 @@ export const PRINT_PIECES = [
 /**
  * § 17 (2026-10-23): the giveaway tout's sizes, in layout px but the inches: front B's look laid out landscape. The band
  * and the photo beside it are TOUT_TOP_IN tall (inside the trim), the photo TOUT_PHOTO_W_IN wide; the foot takes the rest.
- * The headline at 42px (a words file's `size` wins), the band's logo 104px wide, the lede at 18px, `scan` at 18px beside the QR code, which is
- * TOUT_QR_IN square and never under TOUT_QR_MIN_IN; the fine print at the type floor, TYPE_FLOOR_PX (§ 12 item 3's 14
- * layout px, 8.4 pt), and no type on the tout or the entry card under it.
+ * The band's logo 104px wide, the lede at 18px, `scan` at 17px above the QR code (§ 17.4 item 4), which is TOUT_QR_IN
+ * square and never under TOUT_QR_MIN_IN; no type on the tout or the entry card under the type floor, TYPE_FLOOR_PX (§ 12
+ * item 3's 14 layout px, 8.4 pt), but the fine print, which has its own (below). Since § 17.4 the band and the photo are
+ * 1.95 in tall, from 2.1, so the foot holds the scan line, the code and the address stacked.
  */
 export const TYPE_FLOOR_PX = BACK_MIN_TEXT_PX;
-export const TOUT_TOP_IN = 2.1;
-export const TOUT_PHOTO_W_IN = 2.5;
-export const TOUT_HEAD_PX = 42;
+/**
+ * § 17.4 (2026-10-23, night): the fine print, the tout's and the entry card's alone, at FINE_PT (7 pt), never under the
+ * fine-print floor, FINE_FLOOR_PT (6.5 pt); the tout's steps down by FINE_STEP_PT to set on TOUT_FINE_LINES lines, else on
+ * one more. Points to the layout's px (LAYOUT_PX_PER_INCH an inch) by ptPx.
+ */
+export const ptPx = (pt) => (pt / POINTS_PER_INCH) * LAYOUT_PX_PER_INCH;
+export const FINE_PT = 7;
+export const FINE_FLOOR_PT = 6.5;
+export const FINE_FLOOR_PX = ptPx(FINE_FLOOR_PT);
+export const FINE_STEP_PT = 0.25;
+export const TOUT_FINE_LINES = 2;
+/**
+ * § 17.4 item 1: the tout's headline, the largest size that sets each given line on one line in the band beside the logo,
+ * from TOUT_HEAD_MIN_PX (at least) to TOUT_HEAD_MAX_PX; a words file's `size` sets it instead.
+ */
+export const TOUT_HEAD_MIN_PX = 46;
+export const TOUT_HEAD_MAX_PX = 72;
+export const TOUT_TOP_IN = 1.95;
+export const TOUT_PHOTO_W_IN = 2.2;
 export const TOUT_LOGO_PX = 104;
 export const TOUT_LEDE_PX = 18;
-export const TOUT_SCAN_PX = 18;
-export const TOUT_FINE_PX = TYPE_FLOOR_PX;
+export const TOUT_SCAN_PX = 17;
 export const TOUT_QR_IN = 1;
 export const TOUT_QR_MIN_IN = 0.75;
 /**
  * § 17 item 3, as §§ 17.2–17.3 have it: the entry card, plain for a pen, one side, landscape. Each field is a label above
  * a writing line, the lines ENTRY_LINE_PITCH_IN apart (never under ENTRY_LINE_PITCH_MIN_IN); the email field is its own
  * line, drawn as writing lines with its `@` and `.` between them at ENTRY_EMAIL_PX, ENTRY_EMAIL_PITCH_IN tall; the
- * heading at ENTRY_HEAD_PX with the logo ENTRY_LOGO_PX wide beside it; the fine print (the rules) at the floor; every word
+ * heading at ENTRY_HEAD_PX with the logo ENTRY_LOGO_PX wide beside it; the fine print (the rules) at FINE_PT (§ 17.4 item 5); every word
  * CARD_CUT_IN inside the card's edge, which is a cut (§ 17.3 item 1: 0.25 in).
  */
 export const ENTRY_LINE_PITCH_IN = 0.5;
 export const ENTRY_LINE_PITCH_MIN_IN = 0.3;
-export const ENTRY_EMAIL_PITCH_IN = 0.45;
+export const ENTRY_EMAIL_PITCH_IN = 0.4;
 export const ENTRY_EMAIL_PX = 24;
 export const ENTRY_TEXT_PX = 15;
 export const ENTRY_HEAD_PX = 18;
-export const ENTRY_RULES_PX = TYPE_FLOOR_PX;
+export const ENTRY_FINE_PX = ptPx(FINE_PT);
 export const ENTRY_LOGO_PX = 48;
 export const CARD_CUT_IN = 0.25;
 

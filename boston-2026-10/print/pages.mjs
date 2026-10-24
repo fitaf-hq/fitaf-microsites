@@ -23,7 +23,7 @@ import {
   ENTRY_LINE_PITCH_IN,
   ENTRY_LOGO_PX,
   CARD_CUT_IN,
-  ENTRY_RULES_PX,
+  ENTRY_FINE_PX,
   ENTRY_TEXT_PX,
   FRONT_B_CALLOUT_PX,
   FRONT_B_HEAD_PX,
@@ -31,6 +31,7 @@ import {
   FRONT_B_OFFER_PX,
   FRONT_B_QR_IN,
   FRONT_OFFER_PX,
+  FINE_PT,
   FRONT_QR_IN,
   GIVEAWAY_PIECES,
   LAYOUT_PX_PER_INCH,
@@ -39,9 +40,9 @@ import {
   LETTER_SHEETS,
   pageOf,
   PRINT_PIECES,
+  ptPx,
   SAFE_IN,
-  TOUT_FINE_PX,
-  TOUT_HEAD_PX,
+  TOUT_HEAD_MIN_PX,
   TOUT_LEDE_PX,
   TOUT_LOGO_PX,
   TOUT_PHOTO_W_IN,
@@ -126,13 +127,13 @@ export function sizeRules(piece) {
 function giveawayRules(piece) {
   if (piece.id === "tout") {
     return [
-      `.print-face > .board { --tout-top: ${px(TOUT_TOP_IN)}px; --tout-photo-w: ${px(TOUT_PHOTO_W_IN)}px; --tout-logo: ${TOUT_LOGO_PX}px; --tout-scan: ${TOUT_SCAN_PX}px; --tout-fine: ${TOUT_FINE_PX}px; }`,
-      `.print-face > .board { --fb-head: ${TOUT_HEAD_PX}px; --fb-lede: ${TOUT_LEDE_PX}px; --fb-qr: ${px(TOUT_QR_IN)}px; }`,
+      `.print-face > .board { --tout-top: ${px(TOUT_TOP_IN)}px; --tout-photo-w: ${px(TOUT_PHOTO_W_IN)}px; --tout-logo: ${TOUT_LOGO_PX}px; --tout-scan: ${TOUT_SCAN_PX}px; --tout-fine: ${ptPx(FINE_PT)}px; }`,
+      `.print-face > .board { --fb-head: ${TOUT_HEAD_MIN_PX}px; --fb-lede: ${TOUT_LEDE_PX}px; --fb-qr: ${px(TOUT_QR_IN)}px; }`,
     ];
   }
   if (piece.id === "entry-card") {
     return [
-      `.print-face > .board { --entry-text: ${ENTRY_TEXT_PX}px; --entry-head: ${ENTRY_HEAD_PX}px; --entry-rules: ${ENTRY_RULES_PX}px; --entry-pitch: ${px(ENTRY_LINE_PITCH_IN)}px; --entry-logo: ${ENTRY_LOGO_PX}px; }`,
+      `.print-face > .board { --entry-text: ${ENTRY_TEXT_PX}px; --entry-head: ${ENTRY_HEAD_PX}px; --entry-rules: ${ENTRY_FINE_PX}px; --entry-pitch: ${px(ENTRY_LINE_PITCH_IN)}px; --entry-logo: ${ENTRY_LOGO_PX}px; }`,
       `.print-face > .board { --entry-inset: ${px(CARD_CUT_IN)}px; --entry-email: ${ENTRY_EMAIL_PX}px; --entry-email-pitch: ${px(ENTRY_EMAIL_PITCH_IN)}px; }`,
     ];
   }

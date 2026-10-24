@@ -7,6 +7,7 @@ import {
   BLEED_IN,
   CSS_PX_PER_INCH,
   ENTRY_LINE_PITCH_MIN_IN,
+  FINE_FLOOR_PX,
   FRONT_OFFER_MAX_LINES,
   LAYOUT_PX_PER_INCH,
   LETTER,
@@ -181,7 +182,9 @@ export function giveawayFindings(piece, sheet, { inset = SAFE_IN, everySide = fa
     for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
       const short = cuts.filter((side) => (edgesOf(item)[side] - trim[side]) * INWARD[side] < inset - TOLERANCE_IN);
       if (short.length) refusals.push(name(`${item.what} is less than ${inset} in inside the trim (${short.join(", ")})`));
-      if (item.size !== undefined && item.size < TYPE_FLOOR_PX) refusals.push(name(`"${item.text}" is ${item.size} layout px, below the floor of ${TYPE_FLOOR_PX}`));
+      // § 17.4: the fine print's floor is its own (6.5 pt), every other run's the type floor
+      const floor = item.fine ? FINE_FLOOR_PX : TYPE_FLOOR_PX;
+      if (item.size !== undefined && item.size < floor - FIT_TOLERANCE_PX) refusals.push(name(`"${item.text}" is ${item.size} layout px, below the ${item.fine ? "fine print's " : ""}floor of ${Number(floor.toFixed(2))}`));
     }
     for (const qr of face.qrs) if (Math.min(qr.w, qr.h) < TOUT_QR_MIN_IN - TOLERANCE_IN) refusals.push(name(`the QR code is ${inches(Math.min(qr.w, qr.h))} in, under ${TOUT_QR_MIN_IN} in square`));
     face.lines.slice(1).forEach((line, i) => {
@@ -189,8 +192,13 @@ export function giveawayFindings(piece, sheet, { inset = SAFE_IN, everySide = fa
       if (pitch < ENTRY_LINE_PITCH_MIN_IN - TOLERANCE_IN) refusals.push(name(`writing lines ${i + 1} and ${i + 2} are ${inches(pitch)} in apart, under ${ENTRY_LINE_PITCH_MIN_IN} in`));
     });
   });
-  const smallestPx = Math.min(...sheet.faces.flatMap((face) => face.texts.map((t) => t.size)));
-  return { refusals, smallestPx, spacePx: said.length ? Math.min(...said) : null };
+  // the smallest type but the fine print's (which has its own floor), and the fine print's size and lines
+  const texts = sheet.faces.flatMap((face) => face.texts);
+  const smallestPx = Math.min(...texts.filter((t) => !t.fine).map((t) => t.size));
+  const fine = texts.filter((t) => t.fine);
+  const finePx = fine.length ? Math.min(...fine.map((t) => t.size)) : null;
+  const fineLines = fine.length ? Math.max(...sheet.faces.map((face) => face.fineLines)) : null;
+  return { refusals, smallestPx, spacePx: said.length ? Math.min(...said) : null, finePx, fineLines };
 }
 
 /**
@@ -225,7 +233,7 @@ export function letterFindings(sheet, layout, piece, measured) {
     const short = SIDES.filter((side) => (edgesOf(r)[side] - page[side]) * INWARD[side] < LETTER_MARGIN_IN - TOLERANCE_IN);
     if (short.length) refusals.push(`${what} is less than ${LETTER_MARGIN_IN} in from the paper's edge (${short.join(", ")})`);
   }
-  return { refusals: [...refusals, ...fit.refusals], smallestPx: fit.smallestPx, spacePx: fit.spacePx };
+  return { refusals: [...refusals, ...fit.refusals], smallestPx: fit.smallestPx, spacePx: fit.spacePx, finePx: fit.finePx, fineLines: fit.fineLines };
 }
 
 /**

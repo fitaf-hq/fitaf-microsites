@@ -20,12 +20,19 @@
 
   function face(board, pageColour) {
     const texts = [];
+    // § 17.4: the lines the fine print is set on, across its runs (a bold run and its neighbours share a line)
+    const fineTops = new Set();
     const walker = document.createTreeWalker(board, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       if (!node.data.trim() || annotation(node.parentElement)) continue;
       const range = document.createRange();
       range.selectNodeContents(node);
-      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range) });
+      // § 17.4: a run of the fine print ([data-fine]) is marked, for its own floor
+      const fine = node.parentElement.closest("[data-fine]") !== null;
+      if (fine) for (const r of range.getClientRects()) if (r.width > 0) fineTops.add(Math.round(r.top));
+      // its weight too, for the fine print's (§ 17.4 item 3: the body face's regular)
+      const weight = Number(getComputedStyle(node.parentElement).fontWeight);
+      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range), weight, ...(fine ? { fine } : {}) });
     }
     const fields = [...board.querySelectorAll("*")]
       .filter((el) => !annotation(el))
@@ -87,6 +94,7 @@
     const entryFields = [...board.querySelectorAll(".entry-field")].map((el) => ({ lines: [...el.querySelectorAll(".entry-line")].map((line) => inches(line.getBoundingClientRect())) }));
     const lines = entryFields.filter((field) => field.lines.length).map((field) => field.lines[0]);
     return {
+      fineLines: fineTops.size,
       fits,
       entryFields,
       lines,

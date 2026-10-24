@@ -174,33 +174,38 @@ function flyerFrontB(c, parts, words) {
 
 /**
  * The giveaway tout (SPEC-print-pieces.md § 17), print-only: front B's look laid out landscape. Across the top, the dark
- * band (the headline, its accent words green, the lede; the reversed logo at its top right) and beside it its photo
- * (§ 17.2 item 3: one the printed set does not use) with its caption, running into the bleed on the top and the right; under both the orange foot, its torn upper
- * edge drawn over them: the banner's ribbon and the fine print, then `scan` beside the QR code with the address under it.
+ * band (the headline, its accent words in `headlineAccent`'s colour, § 17.4 item 1; the lede; the reversed logo at its
+ * right, beside the headline's shortest line, which keeps clear of it) and beside it its photo, the flyer's (§ 17.3 item 2), with its caption, running into the bleed on the top and the
+ * right; under both, on a straight edge (§ 17.4 item 2), the orange foot: the banner's ribbon and the fine print one
+ * left-aligned column (item 3), then `scan` stacked above the QR code with the address under it, one block (item 4).
  * Its words are the tout's words file's (`words`, print/tout.mjs), cited by key; no legend lists it. A box whose words
  * must not overflow it carries `data-fit` (print/checks.mjs giveawayFindings): the band, each headline line, the foot.
  */
 export function toutFace(c, parts, words) {
   const cite = (key) => `data-src="${esc(`${words.source}#${key}`)}"`;
   const accented = (t, cls) => t.split("*").map((part, j) => (j % 2 ? `<span class="${cls}">${esc(part)}</span>` : esc(part))).join("");
-  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}" data-fit="headline line ${i + 1}">${accented(t, "fb-accent")}</span>`).join("");
-  const size = words.size ? ` style="font-size: ${words.size}px"` : "";
+  // § 17.4 item 1: the logo sits beside the headline's shortest line (its words, asterisks aside), which keeps clear of it
+  const lengths = words.headline.map((t) => t.replaceAll("*", "").length);
+  const beside = lengths.indexOf(Math.min(...lengths));
+  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}${i === beside ? " tout-line-logo" : ""}" data-fit="headline line ${i + 1}">${accented(t, "fb-accent")}</span>`).join("");
+  const band = ` style="${words.size ? `--tout-head: ${words.size}px; ` : ""}--tout-logo-line: ${beside}"`;
+  // § 17.4 item 3: the fine print's size, as the build settles it (print/build-print.mjs settleTout)
+  const fineSize = words.finePx ? ` style="font-size: ${words.finePx}px"` : "";
   const lede = words.lede.map((line) => `<span class="fb-lede-line">${accented(line, "fb-lede-accent")}</span>`).join("");
   // front B's code, at error correction H with the logo at its centre (print/build-print.mjs writes it)
   const qrH = { ...c, qr: { ...c.qr, path: c.qr.path.replace(/\.svg$/, "-h.svg") } };
   return `
 <div class="tout-top">
-<div class="fb-band tout-band" data-fit="the band">${HALFTONE}
+<div class="fb-band tout-band" data-fit="the band"${band}>${HALFTONE}
   ${bandLogo(parts, words.logo)}
-  <h1 class="fb-head tout-head" ${cite("headline")}${size}>${lines}</h1>
+  <h1 class="fb-head tout-head" data-head-accent="${esc(words.headlineAccent ?? "green")}" ${cite("headline")}>${lines}</h1>
   <p class="fb-lede tout-lede" data-lede-accent="${esc(words.ledeAccent)}" ${cite("lede")}>${lede}</p>
 </div>
 <div class="tout-hero">${parts.photo("tout")}${parts.caption("tout", "fb-name tout-name")}</div>
 </div>
-<div class="fb-foot tout-foot" data-fit="the foot"><svg class="fb-foot-edge" viewBox="0 0 510 18" preserveAspectRatio="none" aria-hidden="true"><path d="${TORN_EDGE_UP}"/></svg>
-  <div class="fb-cta tout-cta"><p class="fb-banner" ${cite("banner")}><span>${esc(words.banner)}</span></p><p class="tout-fine" ${cite("fine")}>${esc(words.fine)}</p></div>
-  <p class="tout-scan" ${cite("scan")}>${esc(words.scan)}</p>
-  <div class="scan scan-under fb-scan"><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
+<div class="fb-foot tout-foot" data-fit="the foot">
+  <div class="fb-cta tout-cta"><p class="fb-banner tout-banner" ${cite("banner")}><span class="tout-ribbon">${esc(words.banner)}</span></p><p class="tout-fine" data-fine ${cite("fine")}${fineSize}>${esc(words.fine)}</p></div>
+  <div class="scan scan-under fb-scan tout-scan-unit"><p class="tout-scan" ${cite("scan")}>${esc(words.scan)}</p><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
 </div>`;
 }
 
@@ -220,7 +225,7 @@ export function entryFace(c, parts, words) {
     f.parts
       ? `<div class="entry-field entry-email" ${cite(f.line)}>${f.parts.map((p) => (p.blank ? blank(p.blank) : `<span class="entry-email-word">${esc(p.text)}</span>`)).join("")}</div>`
       : `<div class="entry-field" ${cite(f.line)}><p class="entry-label">${esc(f.label)}</p><span class="entry-line"></span></div>`;
-  const fine = (p) => `<p class="entry-fine" ${cite(p.line)}>${p.runs.map((r) => (r.bold ? `<b>${esc(r.text)}</b>` : esc(r.text))).join("")}</p>`;
+  const fine = (p) => `<p class="entry-fine" data-fine ${cite(p.line)}>${p.runs.map((r) => (r.bold ? `<b>${esc(r.text)}</b>` : esc(r.text))).join("")}</p>`;
   return `
 <div class="entry-body" data-fit="the card">
   <div class="entry-top"><h1 class="entry-head" ${cite(own.heading.line)}>${esc(own.heading.text)}</h1>${parts.logo("entry-logo")}</div>

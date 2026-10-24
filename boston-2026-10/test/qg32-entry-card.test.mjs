@@ -75,6 +75,6 @@ test("QG32: built, eight cards a page when they fit; the field's @ and . and the
 
 test("QG32: built, six a page when eight do not fit, the report saying by how much; too long for six, refused", { skip: NO_CHROME || NO_POPPLER }, async () => {
   const runs = ["Fixture heading words", "Mail:", "@", ".", ...ENTRY_FINE];
-  assert.deepEqual(await withWords(longEntry(3), (path) => entryProblems(ROOT, path, { count: 6, runs })), []);
+  assert.deepEqual(await withWords(longEntry(5), (path) => entryProblems(ROOT, path, { count: 6, runs })), []);
   assert.deepEqual(await withWords(longEntry(12), (path) => entryTooLongProblems(ROOT, path)), []);
 });
