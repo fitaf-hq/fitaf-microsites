@@ -12,8 +12,10 @@
 //   card's 64 px target; a meal twice is a navy circle (the template's tokens, white figures) on its tile's top-right
 //   corner, its "× 2" not drawn but in the row's accessible name (the content's line); a meal once has no badge.
 //   The save step's states, in Chrome (§ 1 items 2–3, with the week's card): open beside the card's checkout button; an
-//   email refused, its message drawn directly under its field; saved, only the done line; after the offer's end, neither
-//   the box nor the step. And See all plans while the offer is current (item 7). Turnstile and /api/save are stood in for.
+//   email refused, its message drawn directly under its field; saved, only the done line; after the offer's end (§ 1.2
+//   item 3) no box, and the step with no offer, its own lead, beside the card. And See all plans while the offer is
+//   current (item 7, as § 1.2 item 2 corrects it: the store's price, the higher one struck through beside it), and the
+//   card of a 5-meal row (§ 1.2 item 1: its meals at the plan's price a meal). Turnstile and /api/save are stood in for.
 // The page is the site's own development build (`node build.mjs --env dev --out`, as the stories' pages are built), its
 // clock fixed at noon in New York on 2026-10-24 (a day of the offer: microsite/clock.mjs's fixClock, before the page's
 // own scripts), served on 127.0.0.1; nothing else is requested (Turnstile's script is refused, as SM-8 has it). The words
@@ -67,6 +69,7 @@ let devWeekReady = null;
 const devWeekSite = () => (devWeekReady ??= siteBuild({ build: "development", out: devWeekOut, week: WEEK }));
 const picks = JSON.parse(await readFile(siteFile("data", "picks", `${WEEK}.json`), "utf8"));
 const messages = JSON.parse(await readFile(siteFile("data", "messages.json"), "utf8"));
+const plansData = JSON.parse(await readFile(siteFile("data", "plans.json"), "utf8"));
 
 /** Turnstile, stood in for in the page (its own script is refused): it passes at once with the test token. */
 function standInTurnstile() {
@@ -338,15 +341,37 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
     await render(page, "#save", "uc2-step-saved-390");
     await page.click("#all-link");
     await page.waitForSelector("#all[open]");
-    const struck = await page.evaluate(() => [...document.querySelectorAll("#all .cell small s")].filter((n) => n.checkVisibility()).length);
-    assert.ok(struck > 0, "See all plans: the weekly prices struck through");
+    const prices = await page.evaluate(() => [...document.querySelectorAll("#all .cell small")].map((small) => ({
+      struck: small.querySelector("s")?.checkVisibility() ? small.querySelector("s").textContent : null,
+      now: small.querySelector(".cell-now")?.textContent ?? null,
+    })));
+    assert.ok(prices.length > 0 && prices.every((p) => p.struck && p.now), "See all plans: each weekly price beside its struck one");
+    const cents = (s) => Number(s.replace(/[^\d]/g, ""));
+    assert.ok(prices.every((p) => cents(p.struck) > cents(p.now)), "the struck price above the price paid, never below it");
     await render(page, "#all .all-box", "uc7-all-plans-390");
   });
   await withPage({ dir: devWeekOut, hash: plan, width, now: Date.parse("2026-10-30T16:00:00.000Z") }, async (page) => {
     await page.waitForSelector("#cc-list:not([hidden])");
     assert.equal(await drawn(page, "offer-box"), false, "after the offer's end: no box");
-    assert.equal(await drawn(page, "save"), false, "and no step (SPEC-save-offer-production § 10.7; § 1 item 9 not built)");
+    assert.equal(await drawn(page, "save"), true, "the step, with no offer (§ 1.2 item 3)");
+    assert.deepEqual(
+      await page.evaluate(() => ["save-step-offer", "save-lead", "save-lead-later", "save-submit-later"].map((id) => document.getElementById(id).checkVisibility())),
+      [false, false, true, true],
+      "no offer line, its own lead and button",
+    );
     await renderSpan(page, "#top", "main .tabs", 40, "uc9-after-the-offer-top-390");
-    await renderSpan(page, "#result", "#result", 160, "uc9-after-the-offer-end-390");
+    await renderSpan(page, "#result", "#save", 8, "uc9-step-after-the-offer-390");
+  });
+  await withPage({ dir: devWeekOut, hash: "#lean-or-5d", width }, async (page) => {
+    await page.waitForSelector("#cc-list:not([hidden])");
+    const card = await page.evaluate(() => ({
+      meals: document.querySelectorAll("#cc-meals > li").length,
+      figures: ["result-total", "result-per-meal", "result-meals"].map((id) => document.getElementById(id).textContent.trim()),
+    }));
+    assert.equal(card.meals, 5, "control: a row of five meals on the 4 plan");
+    const lean4 = plansData.individual.find((p) => p.id === "lean").counts.find((c) => c.meals_per_week === 4).price_per_meal_cents;
+    assert.deepEqual(card.figures.slice(1), [`$${(lean4 / 100).toFixed(2)}`, "5"], "the plan's price a meal; the five meals it lists");
+    assert.equal(card.figures[0], `$${((lean4 * 5) / 100).toFixed(2)}`, "its weekly price, five at the plan's price a meal (§ 1.2 item 1)");
+    await render(page, "#result", "uc6-card-5-meals-390");
   });
 });

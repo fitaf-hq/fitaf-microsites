@@ -52,7 +52,9 @@ const isOfferLine = (piece) => /^\[The offer\b/.test(piece);
 
 test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as written; the offer line is the slot", async () => {
   const text = visibleText(devHtml);
-  const one = await draftParagraphs("## 1. What the visitor sees", "## 2.");
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 3 (2026-10-23): § 1 ends with the step after the offer's end, its own
+  // block (UC9 holds it on the page), so § 1's paragraphs here stop there.
+  const one = await draftParagraphs("## 1. What the visitor sees", "### After the offer ends");
   const two = await draftParagraphs("## 2. Out of area", "## 3.");
   assert.equal(one.length, 6, "§ 1's blockquote has 6 paragraphs");
   assert.equal(two.length, 3, "§ 2's blockquote has 3 paragraphs");

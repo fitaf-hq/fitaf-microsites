@@ -90,22 +90,29 @@ test("SP16: a plain visit's save on 2026-10-24 (no ?e=) holds the pricing until 
 });
 
 /** The page opened at `instant` with a plan chosen (the fixture week's cart): whether the save step and the offer box are
- *  drawn, and the offer's label the step shows. */
+ *  drawn, the offer's label the step shows, and (SPEC-ui-and-copy-pass § 1.2 item 3) whether it is the step with no offer. */
 function stepAt(html, instant) {
   const page = openPlanPage(html, { now: instant, hash: "#lean-or-7d" });
-  return { step: !hiddenInTree(page.el("save")), box: !hiddenInTree(page.el("offer-box")), label: page.el("save-step-offer-label").textContent };
+  return {
+    step: !hiddenInTree(page.el("save")),
+    box: !hiddenInTree(page.el("offer-box")),
+    label: page.el("save-step-offer-label").textContent,
+    later: !hiddenInTree(page.el("save-lead-later")),
+  };
 }
 
-test("SP16: the page opened on 2026-10-30 renders no save step and no offer box; on 2026-10-24 and on 2026-10-29, both", async () => {
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 3 (2026-10-23, the Advisor: after the offer's end "We should still
+// save"): on 2026-10-30 no offer box, and the step with no offer (UC9 holds its words and its save).
+test("SP16: the page opened on 2026-10-30 renders no offer box and the step with no offer; on 2026-10-24 and on 2026-10-29, both with the offer", async () => {
   for (const [name, html] of [["the development page", await weekPage()], ["the production page (production true)", (await approvedWeekPage()).html]]) {
     for (const day of [SAVE_DAY, HELD_UNTIL]) {
       const on = stepAt(html, at(day, 12));
-      assert.ok(on.step && on.box, `${name} on ${day}: the step and the box`);
+      assert.ok(on.step && on.box && !on.later, `${name} on ${day}: the step and the box, with the offer`);
       assert.equal(on.label, offerForSave(day, saveData(html).offers).label, `${name} on ${day}: the offer's label (the page's own offers)`);
     }
     for (const instant of [at(AFTER, 0) + 60_000, at(AFTER, 12), at("2027-06-01", 12)]) {
       const off = stepAt(html, instant);
-      assert.ok(!off.step, `${name} at ${new Date(instant).toISOString()}: no save step`);
+      assert.ok(off.step && off.later, `${name} at ${new Date(instant).toISOString()}: the step with no offer`);
       assert.ok(!off.box, `${name} at ${new Date(instant).toISOString()}: no offer box`);
     }
   }
@@ -132,11 +139,12 @@ test("SP16: after the offer's end, the saved offer's page and an unknown code's 
   }
 });
 
-test("SP16: after the offer's end, the Worker refuses an offer save (offer_ended) and writes nothing; an expansion save is still taken", async () => {
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 3: an offer save after the end is kept with no offer, nothing due (UC9).
+test("SP16: after the offer's end, the Worker keeps an offer save with no offer and nothing due; an expansion save is still taken", async () => {
   const { mf, db } = await startWorker({ now: at(AFTER, 12) });
   try {
-    assert.deepEqual((await postSave(mf, validSave({ email: "dummy-sp16-late@example.com" }))).json, { ok: false, error: "offer_ended" });
-    assert.equal(await count(db, "saves"), 0, "nothing written");
+    assert.deepEqual((await postSave(mf, validSave({ email: "dummy-sp16-late@example.com" }))).json, { ok: true });
+    assert.deepEqual(await rows(db, "SELECT offer_id, message_state, send_at FROM saves"), [{ offer_id: null, message_state: null, send_at: null }], "no offer, nothing due");
     assert.equal((await postSave(mf, validSave({ kind: "expansion", email: "dummy-sp16-x@example.com", zip: NEAR_ZIP }))).status, 200);
   } finally {
     await mf.dispose();

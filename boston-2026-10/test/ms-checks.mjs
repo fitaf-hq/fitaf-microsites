@@ -16,7 +16,10 @@ import { cardOf, centsOf, dollars, fragmentOf, GOALS, mpidOf, open, resultOf, TA
 export const ORDER = "https://fitafnutrition.com/order";
 const fill = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (whole, k) => (k in values ? String(values[k]) : whole));
 
-/** MS-1: each answer set's card, at every size, shows its plan's meals, price and weekly total, and the rounded line. */
+/** MS-1: each answer set's card, at every size, shows its plan's meals, price and weekly total, and the rounded line.
+ *  ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 1 (the Advisor, 2026-10-23: "yes please fix this math"): the card's count
+ *  is the meals it lists (the row's `meals`) and its weekly total that count at the plan's price a meal, as the store
+ *  charges it (five on Lean 4 at $13.00, $65.00); the price a meal, the link and the rounded line its plan's, as before. */
 export function rowProblems(html) {
   const problems = [];
   for (const goal of GOALS) {
@@ -26,9 +29,9 @@ export function rowProblems(html) {
       const want = {
         shown: true,
         selection: row.key,
-        meals: String(row.plan),
+        meals: String(row.meals),
         perMeal: dollars(centsOf(goal, row.plan)),
-        total: dollars(row.plan * centsOf(goal, row.plan)),
+        total: dollars(row.meals * centsOf(goal, row.plan)),
         rounded: row.plan < row.meals ? fill(MESSAGES.plan_page.rounded, { meals: row.meals, plan: row.plan }) : null,
         cta: `${ORDER}?mpid=${mpidOf(goal, row.plan)}`,
       };

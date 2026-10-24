@@ -2,6 +2,8 @@
 // a week (§ 8 item 4, new), its price per meal and its weekly total, and Choose your meals is the plan's order page at
 // the chosen size; 5 -> 4 and 15 -> 14 carry the rounded line (`plan_page.rounded`), and no other row does. At every size.
 // The expectations are the contract's table (ms-harness TABLE), not data/plans.json's: a page rounding 5 up fails here.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 1 (2026-10-23): the meals a week are the row's meals (5, 15), and the weekly
+// total those meals at the plan's price a meal (ms-checks rowProblems).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MESSAGES } from "./cc-harness.mjs";
