@@ -99,16 +99,22 @@ npm --prefix boston-2026-10 run build:print -- --photos-dir DIR --rungs FILE --d
   --front-words data/flyer-front-h4.json --photo-names NAMES.json --out-dir dist-print/take-h4   # paths from the package
 ```
 
-**The giveaway** (`SPEC-print-pieces.md` § 17, 2026-10-23): `--tout-words FILE` adds the tout, 6 × 4 in landscape (front B's
-look: the band with the headline and the reversed logo, the flyer's photo and its caption, the orange foot with the banner,
-the fine print, `scan` beside the QR code and the address under it), `tout(-PROOF).pdf` and `.png`; its words
-`print/tout.mjs`'s keys (front B's, less the callout, and `banner`, `scan`, `fine`). `--entry-words FILE` adds the entry card,
-6 × 4 in, two sides (the fields as writing lines, the draw and consent lines; the rules), `entry-card(-PROOF).pdf` and a
-PNG of each side, `entry-card(-PROOF).png` and `entry-card-back(-PROOF).png`; its words `print/entry.mjs`'s Markdown subset
-(`# Front`, `## <heading>`, `- <field>` lines, paragraphs; `# Back`, `## <heading>`, paragraphs each opening with an optional
-`**<lead-in>**`). Both files stay **outside this repository** (their words are not approved), and each piece is a proof while
-its words are unapproved (`"approved": true`; `<!-- approved -->` as the last line), while its photo is missing, or while
-its file holds a `[bracket]`, each bracket named on the report's last line. Words that do not fit a box (`data-fit`) are
+**The giveaway** (`SPEC-print-pieces.md` §§ 17–17.3, 2026-10-23): `--tout-words FILE` adds the tout, 6 × 4 in landscape
+(front B's look: the band with the headline and the reversed logo, the flyer's photo and its caption, the orange foot with
+the banner, the fine print, `scan` beside the QR code and the address under it), `tout(-PROOF).pdf` and `.png`, and its
+office sheet, `letter-touts(-PROOF).pdf` and `.png`: one US Letter page, two touts, 1 in above, between and below them;
+its words `print/tout.mjs`'s keys (front B's, less the callout, and `banner`, `scan`, `fine`). `--entry-words FILE` adds
+the entry card, one side, landscape (§ 17.3: its heading with the logo small beside it, the email-shaped line, the fine
+print, the rules, at the floor), and its office sheet, `letter-entry-cards(-PROOF).pdf` and `.png`: one US Letter page of
+**eight** cards (2 × 4, 3.75 × 2.5 in) when every card's words fit 0.25 in inside each cut, else **six** (2 × 3, 3.75 ×
+3.33 in), the report saying which and by how much eight was over, and light dashed cut guides along the inner cuts; and
+the card's own PDF at the size its sheet used, `entry-card(-PROOF).pdf` and `.png`. Its words are `print/entry.mjs`'s
+Markdown subset: `# Front`, `## <heading>`, `- <field>` lines (runs of underscores are writing lines, the words between
+them printed), then paragraphs of fine print, `**bold**` in pairs. On the letter sheets nothing is drawn within 0.5 in of
+the paper's edge, there are no marks and no bleed, and every piece is its own trim (`checks.mjs` `letterFindings`). Both
+words files stay **outside this repository** (their words are not approved). Each piece is a proof while its words are
+unapproved (`"approved": true`, or `<!-- approved -->` as the last line), while its photo is missing, or while its file
+holds a `[bracket]`; each bracket is named on the report's last line. Words that do not fit a box (`data-fit`) are
 refused, naming the layout px over; nothing is shrunk. Without the two flags the build writes what it wrote before (QG34).
 
 `dist-print/` (**git-ignored, emptied at every run, never hand-edited**): `tent-card.pdf`, `flyer.pdf` and `flyer-1.pdf`
@@ -178,8 +184,8 @@ back's three is read. The
 | piece | trim | PDF page (trim + 0.125 in bleed on every edge) | layout |
 |---|---|---|---|
 | flyer | 4.25 × 5.5 in, portrait, **two sides** (§ 12) | 4.5 × 5.75 in = **324 × 414 pt**, a page per side | the front, § 9 and § 12: no header; the photo 3:2 across the top, into the bleed; the offer at 34px on at most two balanced lines, the QR code 1.25 in with the address; the logo bottom right. The back, § 12: three 1.39 in squares across the top, into the bleed; the words of `data/flyer-back.md`, 14 layout px and up; `eatfitaf.com` and the logo at the bottom; the same back on every flyer |
-| tout (§ 17) | **6 × 4 in, landscape**, one side | 6.25 × 4.25 in = **450 × 306 pt** | the band and the photo beside it 2.1 in tall, the photo 2.5 in wide; the foot below; the QR code 1 in (at least 0.75); the headline 42 layout px, the fine print at the floor (14) |
-| entry card (§ 17) | **6 × 4 in, landscape**, **two sides** | 450 × 306 pt, a page per side | white, ink and one accent (`--cta`); the writing lines 0.55 in apart (at least 0.3); the rules at the floor; the logo 72 layout px at the bottom right of each side |
+| tout (§ 17) | **6 × 4 in, landscape**, one side | 6.25 × 4.25 in = **450 × 306 pt**; on office paper (§ 17.2), two on a US Letter page, 612 × 792 pt, no bleed | the band and the photo beside it 2.1 in tall, the photo 2.5 in wide; the foot below; the QR code 1 in (at least 0.75); the headline 42 layout px, the fine print at the floor (14) |
+| entry card (§§ 17.2–17.3) | **3.75 × 2.5 in** (eight a Letter page) or **3.75 × 3.33 in** (six), landscape, **one side** | its trim and the bleed (six's: 288 × 258 pt); on office paper, one US Letter page, no bleed | white, ink and one accent (`--cta`); every word 0.25 in inside its cut; the heading 18 layout px, the logo 48 beside it; the email line 0.45 in tall; the fine print at the floor (14) |
 | tent card | two of the mock-up's own faces, each **4 × 6 in, portrait**, on one 4 × 12 in sheet (§ 7) | 4.25 × 12.25 in = **306 × 882 pt** | § 10: no bar; three square photo windows across the top, at the fold, into the bleed at the sides; the rule and the headline, the offer, the QR code with the address; the logo bottom right; **the upper face is the lower face turned 180°** (one face's markup twice, the first `rotate(180deg)`), the fold on the centre line, so folded into an A-frame both read upright (Q2) |
 
 No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (§ 2 ⚠). The QR code is `build.mjs`
@@ -220,10 +226,10 @@ No crop marks, and no CMYK conversion: colours are the page's own sRGB tokens (�
 | Q24 | no QR code and no offer on the back, in its markup and as Chrome lays it out; the front has both (the control) |
 | Q25 | the front: the offer at 34 layout px (the mock-ups' headline) across the body, on two lines (a neutral two-line offer, § 12.1), the QR code 150 layout px, § 9's order, the logo in the corner and no text inside the safe margin |
 | Q26 | without `<!-- approved -->` the flyer and its back are `-PROOF` and the last line names the words; with it, plain names and none (`approvalProblems`) |
-| QG31 | § 17's Q31 (renamed: § 16.1 holds Q31; `test/qg-checks.mjs`): the tout's words file refused outside its keys, naming the key; built with a fixture's words, one 450 × 306 pt landscape page whose text carries the headline's lines, the lede, the banner, the scan line, `eatfitaf.com`, the fine print whole and the flyer's caption; its QR code drawn from the PDF at 300 dpi decodes to the `boston` URL, at least 0.75 in; nothing less than the safe margin inside the trim, no type under the floor; a headline line into the logo and fine print over the foot each refused, naming the layout px over |
-| QG32 | § 17's Q32: the entry words' subset (each refusal names its line); built, two 450 × 306 pt pages, the front's heading, four labels, draw and consent lines and the back's rules read from the PDF in order; four writing lines, each at least 0.3 in below the one before, drawn in the PDF |
+| QG31 | § 17's Q31 (renamed: § 16.1 holds Q31; `test/qg-checks.mjs`), as § 17.2 amends it: the tout's words file refused outside its keys, naming the key; built with a fixture's words, its own PDF one 450 × 306 pt landscape page whose text carries the headline's lines, the lede, the banner, the scan line, `eatfitaf.com`, the fine print whole and its photo's caption, its photo the flyer's (§ 17.3 item 2); its QR code drawn from the PDF at 300 dpi decodes to the `boston` URL, at least 0.75 in; `letter-touts` one US Letter page of two, each code decoding, nothing drawn within 36 pt of the paper's edge or outside the two; no type under the floor; a headline line into the logo and fine print over the foot each refused, naming the layout px over |
+| QG32 | § 17's Q32, as §§ 17.2–17.3 amend it: the card's words' subset (each refusal names its line); built, `letter-entry-cards` one US Letter page of eight cards when they fit, else six (the report naming eight's overflow), refused when neither fits; the email line's @ and . and the fine print whole read from the PDF on every card; no card word within 0.25 in of its cut; nothing drawn within 36 pt of the paper's edge or outside the cards; the card's own PDF its trim and the bleed |
 | QG33 | § 17's Q33: a `[bracket]` proofs and is named, each once; none does not (words approved, photo present); unapproved words proof; built, the last line names each bracket |
-| QG34 | § 17's Q34: without the flags, every file the build writes is byte-identical (a PDF's two dates aside) to the build of the package at `7974573` (`git archive`); with the flags, the same files but `assignment.json` (the new pages' entries and the tout's photo), and exactly the giveaway's five |
+| QG34 | § 17's Q34: without the flags, every file the build writes is byte-identical (a PDF's two dates aside) to the build of the package at `7974573` (`git archive`); with the flags, the same files but `assignment.json` (the new pages' entries and the tout's photo), and exactly the giveaway's eight |
 | QG mutants | `test/qg-mutants.test.mjs`, each in a mirror after the unchanged mirror's control: the fit refusal off fails QG31; the bracket rule off, QG33 |
 | QB mutants | `test/qb-mutants.test.mjs`, each in a mirror after the unchanged mirror's control: the back's rule allowing a photo used elsewhere fails Q22; the overflow check off, Q23; the flyer one-sided (the back's page dropped), Q18; the approval mark ignored, Q26 |
 

@@ -673,3 +673,65 @@ that way"*; and of the tout's new photo, *"this looks slightly worse"*.
    The tout's fine print now ends *"Rules on the entry cards."* (the words file).
 3. **Cases**: QG32 for the one-page card (its field's `@` and `.`, the fine print whole from the PDF, the count a page,
    no word within 0.25 in of a cut), QG31 for the tout's photo id; the mutants as before.
+
+### 17.3.1 Built, 2026-10-23 (evening): §§ 17.2 and 17.3, found at the build, not ruled
+
+1. **The commits.** `e57d51a`: § 17.2 as built, a checkpoint kept because the letter proofs of 16:26 were made from it.
+   Its cases were amended at the same commit, and three were red there for defects of the checks, not the build: QG31
+   counted a word the fine print repeats; QG32 read the second page's boxes without that sheet's offset; QG35 expected a
+   photo the back itself places when the four flyers are not built. None was fixed, since § 17.3 removes or rewrites each.
+   `4790e49`: the cases for §§ 17.2–17.3, test/ only. `a24d1a0`: § 17.3's code.
+2. **The cases, before and after.** On `e57d51a`, exported by `git archive` into a scratch folder, `node --test` over
+   QG31–QG34 (16:57–16:58): **8 of 12 fail**, each for § 17.3's reason. The tout's photo is not the flyer's. The card is
+   still portrait and two-sided. The new words subset is refused there for having no `# Back`, and so is the brackets
+   case built on it. QG31's keys and fit cases pass there, since their rules did not change, and QG34 skips there (no
+   git). On this tree, every `test/qg*.test.mjs` (16:53–16:56), **13 of 14**. The one failure was QG33's built case, a
+   defect of its own: it put its brackets in a sentence the old fixture had, and it picked the card by piece, where the
+   letter sheet, planned first, is the same piece. Fixed, and **2 of 2** (16:57). **The mutants**, each in a mirror after
+   its unchanged mirror's control, which passed. The fit refusal off: QG31 red ("headline line 1 too long was not
+   refused"). The bracket rule off: QG33 red, 3 problems.
+3. **The letter sheets (§ 17.2 item 1), where the parts sit.** Each copy is its piece's face at its trim, in a cell that
+   clips what front B's rules run into a bleed, so the tout's band and foot stop at its edge.
+   - `letter-touts`: two touts, centred, with 1 in above, between and below them.
+   - `letter-entry-cards`: the cards fill the page inside its 0.5 in margin (7.5 × 10 in). With eight, the grid is
+     2 × 4 at 3.75 × 2.5 in; with six, 2 × 3 at 3.75 × 3.33 in, a size the contract leaves open. These are the shares
+     of the same area.
+   - **The cut guides** (the builder's to propose): one light dashed line in the template's `--line` along each inner
+     cut. Each stops 0.05 in short of the grid's outer edges, because those edges sit at the paper's 0.5 in margin, and a
+     line that ends exactly there anti-aliases into it.
+   - The build refuses anything drawn within 0.5 in of the paper's edge, and any word less than its inset inside its
+     own cut (`checks.mjs` `letterFindings`).
+4. **Eight, else six (§ 17.3 item 1), measured.** With the words given: **six a page**; at eight they are **81.8 layout
+   px over**, and the report says so. At my first spacing, six was over too, by 20.8. I tightened the spacing, never the
+   type: the email line from 0.55 to 0.45 in tall, the fine print's leading from 1.22 to 1.15, the gap above it from 8
+   to 4 px. The heading is 18 px with a 48 px logo so it stays on one line (the floor binds the fine print, not the
+   heading). Each card gets a 4 px allowance above and below inside its 0.25 in inset, because a line's glyph box stands
+   above and below a tight line box. The heading's and the fine print's last line were first refused as within 0.25 in
+   of the cut. The fixture's short words fit eight, and QG32 holds eight, six and too long for either.
+5. ⚠ **The card's logo is at the top right, beside its heading**, not at the bottom right (§ 17 item 3). The fine print
+   runs the card's full width at its foot; a logo there would have cost lines.
+6. **The card's own PDF takes the layout its sheet used**: today six's 3.75 × 3.33 in, plus the bleed, **288 × 258 pt**.
+   Its sheet is planned first. The piece's `face` in `sizes.mjs` is eight's, the first layout tried.
+7. **The tout's photo is the flyer's** (§ 17.3 item 2), staged under its own position (`tout`, whose window is its own),
+   its caption the flyer's name for it, and refused without one, as the flyer refuses. § 17.2 item 3's rule
+   (`toutPhoto`, `--tout-avoid`) was built, delivered at 16:26 and removed. It chose rung 1's third photo, which the KMS
+   names no meal for. It printed captionless, as a proof, rather than being refused: my call, never ruled.
+8. **The words file's subset (§ 17.3 item 1)**: `# Front` alone; the fields; the fine print, in which `**bold**` runs
+   in pairs may stand anywhere. Any other emphasis, a second heading or a `# Back` is refused, naming the line. The
+   `# Front, one-sided` section of § 17.2 is gone with its page.
+9. **The proofs**, into the ignored `dist-print/letter-2026-10-23b/` (the glam set, `data/flyer-front.json`, the KMS's
+   names and the two words files). Read from the PDFs with pdfinfo: `letter-touts-PROOF.pdf` and
+   `letter-entry-cards-PROOF.pdf` each one page of 612 × 792 pt; `tout-PROOF.pdf` 450 × 306; `entry-card-PROOF.pdf`
+   288 × 258. jsQR decodes both touts' codes to the `boston` URL, from a 300 dpi render of the PDF and from the PNG.
+   Each piece is `-PROOF` only for its words, which are not marked approved (17.1 item 3). Not committed: the tout
+   carries a photo.
+10. ⚠ **§ 17.3 item 2, as committed, names the flyer's photo by its ID**. This file's header forbids a photo ID in
+    this repository, and P1 and Q5 do not look for one (P1 reads images; Q5, the fixture IDs). Not changed here: the
+    contract's text is the orchestrator's.
+11. **The gates at `a24d1a0`**, the whole site suite (`nice -n 15 npm --prefix boston-2026-10 test`, the print set inside it),
+    16:59:03–17:22:37, at a load average near 500 from other work on the machine: **1120 of 1121**, none skipped. The one
+    red is QC, "a run that stalls on every attempt still fails" (expected 3 attempts, saw 1), a timing case of
+    `mockups/png.mjs`'s retry, which this branch does not change (`git diff 7974573 HEAD` is empty for both files). Run
+    alone after it, at 17:22:53: **4 of 4**. At `1809855` (§ 17.1) the whole suite was 1120 of 1120 (16:02–16:13).
+12. ⚠ **Not done here**: § 17 item 6, the print-ready sheet, which is the orchestrator's after the Advisor's look. 17.1
+    item 2 still stands: the two pieces are in `GIVEAWAY_PIECES`, not `PRINT_PIECES`.
