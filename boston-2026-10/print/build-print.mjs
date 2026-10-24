@@ -665,6 +665,11 @@ function giveawayLines(planned, chosen, at, shown) {
     const foot = face?.fields.find((field) => field.what.includes("tout-foot"));
     const ratio = address && foot ? contrastOf(address.color, foot.bg) : null;
     if (ratio !== null) lines.push(`tout: eatfitaf.com ${address.color} on the foot's ${foot.bg}, contrast ${ratio.toFixed(2)}:1${ratio >= ADDRESS_CONTRAST ? "" : `, under the ${ADDRESS_CONTRAST}:1 the orchestrator ruled for § 17.7 item 3`}`);
+    // § 17.9 item 2: the ribbon's words on its fill, their contrast measured and named (not a gate: compared by eye)
+    const ribbon = face?.fields.find((field) => field.what.includes("tout-ribbon"));
+    const banner = ribbon && face.texts.find((t) => t.x >= ribbon.x - 0.01 && t.x + t.w <= ribbon.x + ribbon.w + 0.01 && t.y >= ribbon.y - 0.05 && t.y + t.h <= ribbon.y + ribbon.h + 0.05);
+    const onRibbon = banner ? contrastOf(banner.color, ribbon.bg) : null;
+    if (onRibbon !== null) lines.push(`tout: the ribbon ${ribbon.bg} (${own.giveaway.words.bannerColor ?? "ink"}), its words ${banner.color}, contrast ${onRibbon.toFixed(2)}:1`);
     // §§ 17.4–17.5: the sizes the tout settled on
     lines.push(`tout: the headline at ${settled.headPx} layout px (the largest that sets each line on one line, at least ${TOUT_HEAD_MIN_PX}); the fine print ${settled.finePt} pt on ${settled.fineLines} line(s), at most ${TOUT_FINE_LINES}; the scan unit ${settled.arrange === "stacked" ? "stacked" : "side by side (stacked does not fit the foot)"}, the code ${Number(settled.qrIn.toFixed(2))} in`);
   }

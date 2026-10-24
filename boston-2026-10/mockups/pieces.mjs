@@ -212,7 +212,7 @@ export function toutFace(c, parts, words) {
 <div class="tout-hero">${parts.photo("tout")}${parts.caption("tout", "fb-name tout-name")}</div>
 </div>
 <div class="fb-foot tout-foot" data-fit="the foot"${foot}>
-  <div class="fb-cta tout-cta"><p class="fb-banner tout-banner" ${cite("banner")}><span class="tout-ribbon">${esc(words.banner)}</span></p><p class="tout-fine" data-fine ${cite("fine")}${fineSize}>${esc(words.fine)}</p></div>
+  <div class="fb-cta tout-cta"><p class="fb-banner tout-banner" ${cite("banner")}><span class="tout-ribbon" data-color="${esc(words.bannerColor ?? "ink")}">${esc(words.banner)}</span></p><p class="tout-fine" data-fine ${cite("fine")}${fineSize}>${esc(words.fine)}</p></div>
   <div class="scan tout-scan-unit" data-arrange="${esc(words.arrange ?? "stacked")}"><p class="tout-scan" ${cite("scan")}>${esc(words.scan)}</p><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
 </div>`;
 }

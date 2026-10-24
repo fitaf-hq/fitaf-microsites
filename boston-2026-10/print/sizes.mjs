@@ -117,7 +117,9 @@ export const TOUT_QR_STEP_IN = 0.05;
  */
 export const ENTRY_LINE_PITCH_IN = 0.5;
 export const ENTRY_LINE_PITCH_MIN_IN = 0.3;
-export const ENTRY_EMAIL_PITCH_IN = 0.4;
+/** § 17.9 item 1: the line where the Advisor drew it, 0.115 in lower than version 7's (its row 0.4 in, then). */
+export const ENTRY_EMAIL_DROP_IN = 0.115;
+export const ENTRY_EMAIL_PITCH_IN = 0.4 + ENTRY_EMAIL_DROP_IN;
 export const ENTRY_EMAIL_PX = 24;
 export const ENTRY_TEXT_PX = 15;
 export const ENTRY_HEAD_PX = 18;

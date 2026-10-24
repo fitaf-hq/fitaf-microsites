@@ -321,6 +321,8 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-tout .tout-foot { justify-content: space-between; }
 .print-tout .tout-banner { margin: 0 0 5px; }
 .print-tout .tout-banner .tout-ribbon { display: block; text-align: center; }
+/* § 17.9 item 2: the ribbon in the flyer's lede blue when the words file asks (bannerColor), its words white as on the ink */
+.print-tout .tout-banner .tout-ribbon[data-color="blue"] { background: var(--lean); }
 .print-tout .tout-fine { margin: 0; color: var(--white); font: 400 var(--tout-fine)/1.25 var(--body); }
 .print-tout .tout-scan-unit { position: relative; z-index: 1; flex: none; display: grid; align-items: center; justify-items: center; gap: 4px 10px; }
 .print-tout .tout-scan-unit[data-arrange="stacked"] { grid-template-areas: "scan" "qr" "addr"; }
