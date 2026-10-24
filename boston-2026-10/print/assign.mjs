@@ -17,6 +17,11 @@ export const TENT_POSITIONS = ["tent-large", "tent-top", "tent-bottom"];
  */
 export const BACK_POSITIONS = ["flyer-back-1", "flyer-back-2", "flyer-back-3"];
 /**
+ * § 17: the giveaway tout's one photo, a print-only position as the back's are (staged as `tout.jpg`): since § 17.3 item 2
+ * the flyer's photo (print/build-print.mjs stagePhotos), at the tout's own window.
+ */
+export const TOUT_POSITION = "tout";
+/**
  * The positions printed from a square (§ 7 item 2 the two tiles, SPEC-photo-slots.md § 2's `square`; § 10 item 3 the
  * large photo too, its window square since § 10). § 12 item 6 put the back's three here too; § 15 item 8 (2026-10-21)
  * makes their windows the glam photos' own 3:2 under the names band, so they print as composed, as the flyer's does.

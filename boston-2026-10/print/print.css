@@ -271,3 +271,121 @@ html, body { margin: 0; padding: 0; background: var(--white); }
   font: 700 15px/1 var(--head); letter-spacing: .06em; text-transform: uppercase;
   clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
 }
+
+/* ---------- § 17 (2026-10-23): the giveaway tout, 6 × 4 in landscape, front B's look (the page's body carries
+   .print-flyer too, sizes.mjs `look`, so front B's .fb-* rules above draw its band, its logo, its banner and its code):
+   across the top the band, into the bleed on the top and the left, and beside it the flyer's photo, into the bleed on the
+   top and the right, both --tout-top tall; under them, on a straight edge (§ 17.4 item 2: no torn edge), the orange foot,
+   into the bleed on the left, right and bottom: at the left the banner's ribbon and the fine print, one column, the ribbon
+   its full width and the fine print tight under it in the body face's regular weight (item 3); at the right `scan`, the
+   code and the address stacked and centred, one block, the foot's space shared evenly above and below it (item 4). The
+   headline's first line alone keeps clear of the logo (the band is narrower than front B's); its accent words in the
+   words file's headlineAccent (item 1).
+   Its sizes are sizes.mjs's (--tout-*, and front B's --fb-* as the tout sets them); its colours the template's ---------- */
+.print-tout .tout-top {
+  flex: none; display: flex; height: calc(var(--tout-top) + var(--bleed));
+  margin: calc(-1 * var(--bleed)) calc(-1 * var(--bleed)) 0;
+}
+.print-tout .tout-band { flex: 1; min-width: 0; margin: 0; padding: calc(var(--bleed) + 26px) 18px 20px calc(var(--bleed) + 24px); }
+.print-tout .tout-band:has(.fb-logo-rev) .tout-head { padding-right: 0; }
+/* § 17.7 item 2: the reversed logo at the band's top right, level with the headline's first line, which keeps clear of it
+   by 14px; the other lines take the band's whole measure; a line that runs past its box is refused (data-fit), never
+   shrunk. The headline's size, --tout-head, the build's (print/build-print.mjs settleTout). § 17.7 item 1: the colour
+   spans, the flyer's lede blue, the brand green, the CTA orange */
+.print-tout .tout-band { --tout-head: var(--fb-head); }
+/* the headline's glyphs stand above its tight line by about a fifth of its size: the band's top padding grows with it, so
+   the first line keeps the safe margin whatever size the build settles */
+.print-tout .tout-band { padding-top: calc(var(--bleed) + 18px + 0.2 * var(--tout-head)); }
+.print-tout .tout-band .tout-head { padding-right: 0; font-size: var(--tout-head); }
+.print-tout .tout-band .fb-logo-top { top: calc(var(--bleed) + 18px + 0.2 * var(--tout-head)); right: 18px; width: var(--tout-logo); }
+.print-tout .tout-head .tout-line-logo { padding-right: calc(var(--tout-logo) + 14px); }
+.print-tout .tout-c-blue { color: var(--lean); }
+.print-tout .tout-c-green { color: var(--signature); }
+.print-tout .tout-c-orange { color: var(--cta); }
+.print-tout .tout-hero { position: relative; flex: none; width: calc(var(--tout-photo-w) + var(--bleed)); }
+.print-tout .tout-name { left: 12px; bottom: 12px; max-width: calc(100% - var(--bleed) - var(--safe) - 12px); }
+.print-tout .tout-head[data-head-accent="blue"] .fb-accent { color: var(--lean); }
+.print-tout .tout-head[data-head-accent="orange"] .fb-accent { color: var(--orange); }
+/* § 17.5 items 2–4: the foot, 30 % of the tout's height (the band and photo above it --tout-top): at its left (§ 17.7 item
+   2: the logo back in the band) the ribbon, its words centred, and the fine print under it, one column;
+   the scan unit at its right, the scan line, the code and the address stacked, or, when stacked no longer fits the foot,
+   side by side: the scan line and the address beside the code, at its left, right-aligned (data-arrange, the build's) */
+.print-tout .tout-foot { flex: 1; min-height: 0; gap: 16px; padding: 12px calc(var(--bleed) + 18px) calc(var(--bleed) + 12px); }
+/* § 17.8 item 1: the column's measure stops at the x of the photo's left edge less the band's own inset (its 18px right
+   padding), from the foot's 18px left padding inside the trim: the ribbon's notch tip and the fine print never cross the
+   line the photo makes down the tout */
+.print-tout .tout-cta {
+  align-self: center; display: flex; flex-direction: column; align-items: stretch;
+  flex: none; width: calc(var(--face-w) - var(--tout-photo-w) - 2 * 18px);
+}
+.print-tout .tout-foot { justify-content: space-between; }
+.print-tout .tout-banner { margin: 0 0 5px; }
+.print-tout .tout-banner .tout-ribbon { display: block; text-align: center; }
+/* § 17.9 item 2: the ribbon in the flyer's lede blue when the words file asks (bannerColor), its words white as on the ink */
+.print-tout .tout-banner .tout-ribbon[data-color="blue"] { background: var(--lean); }
+.print-tout .tout-fine { margin: 0; color: var(--white); font: 400 var(--tout-fine)/1.25 var(--body); }
+.print-tout .tout-scan-unit { position: relative; z-index: 1; flex: none; display: grid; align-items: center; justify-items: center; gap: 4px 10px; }
+.print-tout .tout-scan-unit[data-arrange="stacked"] { grid-template-areas: "scan" "qr" "addr"; }
+.print-tout .tout-scan-unit[data-arrange="beside"] { grid-template-areas: "scan qr" "addr qr"; justify-items: end; }
+.print-tout .tout-scan-unit .tout-scan { grid-area: scan; }
+.print-tout .tout-scan-unit .fb-qr { grid-area: qr; }
+/* § 17.7 item 3: the address in the band's near-black on the orange (its contrast measured, the build's report); the scan
+   line stays white */
+.print-tout .tout-scan-unit .address { grid-area: addr; margin: 0; color: var(--ink); }
+.print-tout .tout-scan-unit[data-arrange="beside"] .tout-scan { align-self: end; max-width: 7em; white-space: normal; text-align: right; }
+.print-tout .tout-scan-unit[data-arrange="beside"] .address { align-self: start; }
+.print-tout .tout-scan {
+  margin: 0; text-align: center; white-space: nowrap;
+  color: var(--white); font: 700 var(--tout-scan)/1.15 var(--head);
+}
+
+/* ---------- § 17 item 3, as §§ 17.2–17.3 have it: the giveaway entry card, one side, landscape, plain for a pen: the
+   page's white, the template's ink and one accent (the heading, --cta), no photo, nothing into the bleed, and every word
+   --entry-inset (0.25 in) inside its edge, which is a cut. Its heading with the logo small beside it at the top right;
+   then each field a label over a writing line, the email's its own line (--entry-email-pitch), its blanks writing lines
+   as long as their runs with the @ and the . large between them; then the fine print, the rules, at the floor, its bold
+   runs in the body font's bolder weight ---------- */
+.print-entry-card .entry-body {
+  position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column;
+  padding: var(--entry-inset); color: var(--ink); font: 400 var(--entry-text)/1.3 var(--body);
+  /* the heading's glyphs stand above its tight line box: kept inside the inset; the fine print's last line on the inset
+     (§ 17.6 item 3; the checks read a run's lines down by its block, print/measure.js) */
+  padding-top: calc(var(--entry-inset) + 4px);
+}
+.print-entry-card .entry-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.print-entry-card .entry-head { margin: 0; color: var(--cta); font: 700 var(--entry-head)/1.15 var(--head); }
+/* § 17.7 item 4: the heading on one line, as large as fits beside the logo (the build settles its size): its column may
+   not grow past the logo, so a heading too large runs past its box and is refused (data-fit), never wrapped */
+.print-entry-card .entry-titles { flex: 1; min-width: 0; }
+.print-entry-card .entry-head { white-space: nowrap; }
+/* § 17.6 item 1: the subhead under the heading, smaller, in the ink */
+.print-entry-card .entry-sub { margin: 2px 0 0; color: var(--ink); font: 600 var(--entry-sub)/1.2 var(--head); }
+.print-entry-card .entry-logo { flex: none; width: var(--entry-logo); }
+.print-entry-card .entry-fields { flex: none; display: flex; flex-direction: column; }
+.print-entry-card .entry-field { display: flex; flex-direction: column; height: var(--entry-pitch); }
+.print-entry-card .entry-label { margin: 0; font: 600 var(--entry-text)/1.3 var(--head); }
+.print-entry-card .entry-line { display: block; flex: none; height: 2px; margin-top: auto; background: var(--ink); }
+/* § 17.2 item 2: the email, its own line: its words and its blanks in a row on one baseline, the blanks writing lines
+   sharing the width by their runs' lengths (their flex-grow, from the words file) */
+.print-entry-card .entry-email { flex-direction: row; align-items: flex-end; gap: 6px; height: var(--entry-email-pitch); }
+/* § 17.8 item 3 (from § 17.6 item 4's): the email line right under the heading, its own height (--entry-email-pitch), and
+   the room between it and the fine print, on the card's bottom inset, kept as whitespace (at least --entry-rule-gap: the
+   fine print's padding). Neither the fields nor the line grow or shrink: words that leave too little run past the
+   card's inset and are refused, never set over the line */
+.print-entry-card .entry-fields { flex: none; }
+.print-entry-card .entry-fine[data-weight="regular"] b { font-weight: 400; }
+.print-entry-card .entry-email .entry-line { flex: 1 1 0; min-width: 0; margin-top: 0; margin-bottom: 4px; }
+.print-entry-card .entry-email-word { flex: none; font: 700 var(--entry-email)/1 var(--head); }
+.print-entry-card .entry-email-word:first-child { font: 600 var(--entry-text)/1.3 var(--head); }
+/* § 17.7 item 5: at least --entry-rule-gap between the email line's rule (4px above its row's foot) and the fine print */
+.print-entry-card .entry-notes { flex: none; margin-top: auto; padding-top: calc(var(--entry-rule-gap) - 4px); }
+.print-entry-card .entry-fine { margin: 0; font-size: var(--entry-rules); line-height: 1.15; }
+.print-entry-card .entry-fine + .entry-fine { margin-top: 4px; }
+.print-entry-card .entry-fine b { font-weight: 600; }
+
+/* ---------- § 17.2 item 1: the letter sheets: each copy of a piece in its cell (pages.mjs letterDocument places it), its
+   trim with no bleed (the cell, .print-face, clips what front B's rules run past it); and between the cards a light dashed
+   cut guide along each inner cut, stopping short of the grid's outer edges (pages.mjs guidesOf places each) ---------- */
+.print-letter .letter-guide { position: absolute; display: block; border: 0 dashed var(--line); }
+.print-letter .letter-guide-v { width: 0; border-left-width: 1px; }
+.print-letter .letter-guide-h { height: 0; border-top-width: 1px; }

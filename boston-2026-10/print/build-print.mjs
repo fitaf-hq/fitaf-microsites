@@ -10,10 +10,16 @@
 //
 //   node print/build-print.mjs [--photos-dir DIR --rungs FILE --deliverable FILE] [--on YYYY-MM-DD] [--event ID]
 //                             [--front-words FILE] [--back-words FILE] [--out-dir DIR]
+//                             [--tout-words FILE] [--entry-words FILE]
 //
 // § 13: --front-words names front B's words (print/front.mjs; without it every flyer is front A); --back-words a back's
 // words other than data/flyer-back.md's (a draft kept outside this repository, read and checked as the committed one);
 // --out-dir writes the pieces there instead of dist-print/ (emptied first, as dist-print/ is).
+// § 17 (2026-10-23): --tout-words FILE (JSON, print/tout.mjs) adds the giveaway tout, tout(-PROOF).pdf and .png, and its
+// US Letter sheet of two, letter-touts(-PROOF).pdf and .png (§ 17.2 item 1); --entry-words FILE (Markdown, print/entry.mjs)
+// its entry card, one side (§ 17.3), entry-card(-PROOF).pdf and .png, and its US Letter sheet, letter-entry-cards(-PROOF)
+// .pdf and .png, eight cards a page if they fit, else six; without them the build writes what it wrote before. Their words
+// are not approved and are kept outside this repository; a [bracket] in either is a placeholder, named.
 //
 // --photos-dir: the glam set's files, `<id>.jpg` as composed and `<id>-sq-<key>.jpg` each square; --rungs: Image Gauge's
 // image-rungs.json for it (§ 3's rule, as § 7 amends it, picks the photos); --deliverable: Image Gauge's deliverable.json
@@ -40,13 +46,39 @@ import { copyStatic, loadJson, ROOT, writeQrCodes, writeQrCodesH } from "../buil
 import { loadInputs, MANIFEST_PATH, readManifest } from "../mockups/inputs.mjs";
 import { campaign } from "../mockups/parts.mjs";
 import { CHROME_DEFAULT, runChrome, screenshot, SETTLE_MS } from "../mockups/png.mjs";
-import { assignPhotos, BACK_POSITIONS, backPhotoIds, fourFlyerPhotos, photoFiles, skippedLines, SQUARE_POSITIONS, TENT_POSITIONS } from "./assign.mjs";
+import { assignPhotos, BACK_POSITIONS, backPhotoIds, FLYER_POSITION, fourFlyerPhotos, photoFiles, skippedLines, SQUARE_POSITIONS, TENT_POSITIONS, TOUT_POSITION } from "./assign.mjs";
 import { BACK_PATH, BACK_SOURCE, readBack } from "./back.mjs";
+import { readEntry } from "./entry.mjs";
 import { readFront } from "./front.mjs";
-import { backFindings, frontFindings, layoutFindings, resolution, showing } from "./checks.mjs";
+import { backFindings, contrastOf, frontFindings, giveawayFindings, layoutFindings, letterFindings, resolution, showing } from "./checks.mjs";
 import { jpegSize } from "./jpeg.mjs";
-import { backPlaceholders, pagesToPrint, placeholdersOf, printDocument } from "./pages.mjs";
-import { BACK_MIN_TEXT_PX, CSS_PX_PER_INCH, pageOf, PRINT_PIECES } from "./sizes.mjs";
+import { backPlaceholders, giveawayDocument, giveawayPlaceholders, letterDocument, pagesToPrint, placeholdersOf, printDocument } from "./pages.mjs";
+import { readTout } from "./tout.mjs";
+import {
+  BACK_MIN_TEXT_PX,
+  CSS_PX_PER_INCH,
+  FINE_FLOOR_PT,
+  FINE_PT,
+  FINE_STEP_PT,
+  LAYOUT_PX_PER_INCH,
+  LETTER,
+  LETTER_MARGIN_IN,
+  pageOf,
+  POINTS_PER_INCH,
+  PRINT_PIECES,
+  ptPx,
+  TOUT_FINE_LINES,
+  CARD_FINE_LINES,
+  ENTRY_HEAD_MAX_PX,
+  ENTRY_HEAD_MIN_PX,
+  LETTER_SHEETS,
+  TOUT_HEAD_MAX_PX,
+  TOUT_HEAD_MIN_PX,
+  TOUT_QR_IN,
+  TOUT_QR_MIN_IN,
+  TOUT_QR_STEP_IN,
+  TYPE_FLOOR_PX,
+} from "./sizes.mjs";
 
 export const PRINT_DIR = dirname(fileURLToPath(import.meta.url));
 /** § 15 item 1: the print-only images (the logo drawn for a dark ground), never the page's (copyStatic copies src/assets). */
@@ -105,7 +137,7 @@ function sizeOfFile(photosDir, file) {
  * position's name; with the four flyers, rung 4's four (as composed), copied as flyer-1.jpg to flyer-4.jpg; and with the
  * flyer's back (`withBack`), its three, rung 3's first array holding none of those (§ 12 item 6), each its square.
  */
-async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers, withBack }) {
+async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers, withBack, withTout }) {
   const rungs = await loadJson(rungsPath);
   const front = assignPhotos(rungs, { sizeOf: (id) => sizeOfFile(photosDir, `${id}.jpg`) });
   const chosenFour = fourFlyers ? fourFlyerPhotos(rungs, TENT_POSITIONS.map((p) => front.positions[p])) : null;
@@ -139,7 +171,14 @@ async function stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, st
       four.push({ number, id, from, file, staged: `flyer-${number}.jpg`, pixels: size });
     }
   }
-  return { assignment, files, pixels, four };
+  // § 17.3 item 2: the tout's photo is the flyer's, as composed, staged as the tout's own position (its window is its own)
+  const tout = withTout ? { id: assignment.positions[FLYER_POSITION], from: `the flyer's photo (${assignment.from[FLYER_POSITION]})`, file: files[FLYER_POSITION] } : null;
+  if (tout) {
+    await copyFile(join(photosDir, tout.file), join(stagedPhotos, `${TOUT_POSITION}.jpg`));
+    files[TOUT_POSITION] = tout.file;
+    pixels[TOUT_POSITION] = pixels[FLYER_POSITION];
+  }
+  return { assignment, files, pixels, four, tout };
 }
 
 /** § 12 item 6: the assignment with the back's three positions, left to right, from the back's rung-3 array. */
@@ -162,6 +201,12 @@ function inputsFor(page, inputs, chosen, photoNames) {
   const own = page.number ? chosen?.four[page.number - 1] : null;
   const flyer = page.number ? (own ? { file: own.staged, present: true } : inputs.photos.flyer) : inputs.photos.flyer;
   const withHero = { ...inputs, photos: { ...inputs.photos, flyer } };
+  // § 17.3 item 2: the tout's one photo, the flyer's, its caption the flyer's name for it (a flyer names all its meals)
+  if (photoNames && chosen?.tout && page.piece.id === "tout") {
+    const name = photoNames[chosen.tout.id];
+    if (!name) throw new Error(`--photo-names names no meal for the tout's photo, the flyer's (§ 17.3 item 2)`);
+    return { ...withHero, captions: { [TOUT_POSITION]: name } };
+  }
   if (!photoNames || page.piece.id !== "flyer" || !chosen) return withHero;
   const ids = { flyer: own ? own.id : chosen.assignment.positions.flyer, ...Object.fromEntries(BACK_POSITIONS.map((p) => [p, chosen.assignment.positions[p]])) };
   const missing = Object.entries(ids).filter(([, id]) => !photoNames[id]).map(([position]) => position);
@@ -238,13 +283,211 @@ async function printPdf(run, html, pdf) {
   return pdf;
 }
 
+/**
+ * § 17: a giveaway piece's page, measured and checked, and nothing printed. Its own PDF: each side's page, trim and bleed
+ * (layoutFindings), its photo's resolution (the tout's), and whether its words fit, inside the safe margin and at the floor
+ * or above (giveawayFindings: refused, never shrunk). A letter sheet (§ 17.2 item 1): each of its layouts in order, the
+ * first whose page passes letterFindings used (§ 17.3 item 1: eight cards a page, else six), what each one before it
+ * failed by kept for the report; none passes, refused with every layout's refusals. The entry card's own PDF takes the
+ * layout its sheet used (`giveaway.cardFace`, set by the sheet, planned first). What stands in on it: its photo, its
+ * words until approved, each bracket.
+ */
+async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs, chosen, giveaway }) {
+  // § 17.4 items 1 and 3: the tout's headline and fine print sizes, settled once, for its own PDF and its sheet alike
+  if (page.piece.id === "tout" && !giveaway.toutSettled) giveaway.toutSettled = await settleTout({ run, stage, piece: page.piece, pageInputs, printCss, measureJs, words: giveaway.tout });
+  // § 17.6 item 3: the card's fine print, settled once, at the first layout's card, for its sheet and its own PDF alike
+  if (page.piece.id === "entry-card" && !giveaway.cardSettled) giveaway.cardSettled = await settleCard({ run, stage, piece: page.piece, pageInputs, printCss, measureJs, words: giveaway.entry });
+  const settled = page.piece.id === "tout" ? giveaway.toutSettled : page.piece.id === "entry-card" ? giveaway.cardSettled : null;
+  const words =
+    page.piece.id === "tout"
+      ? { ...giveaway.tout, size: settled.headPx, finePx: ptPx(settled.finePt), qrPx: settled.qrIn * LAYOUT_PX_PER_INCH, arrange: settled.arrange }
+      : page.piece.id === "entry-card"
+        ? { ...giveaway.entry, headPx: settled.headPx, finePx: ptPx(settled.finePt), fineRegular: settled.regular }
+        : giveaway[page.piece.words];
+  const letter = page.letter;
+  const piece = !letter && page.piece.id === "entry-card" && giveaway.cardFace ? { ...page.piece, face: giveaway.cardFace } : page.piece;
+  const html = join(stage, `${page.base}.html`);
+  const pixels = pixelsFor(page, chosen);
+  // what stands in on it: known before it is drawn, since § 17.8 item 4 draws the cut guides on a proof alone
+  const placeholders = giveawayPlaceholders(piece, pageInputs, words);
+  const tried = [];
+  let measured;
+  let sides;
+  for (const layout of letter ? letter.layouts : [null]) {
+    await writeFile(html, layout ? letterDocument(letter, layout, piece, pageInputs, printCss, words, { proof: placeholders.length > 0 }) : giveawayDocument(piece, pageInputs, printCss, words));
+    measured = await measure(run, html, measureJs);
+    sides = measured.sheets.map((sheet, k) => ({ side: k ? "the back" : "the front", sheet, layout, ...(layout ? letterFindings(letter, layout, piece, sheet) : ownFindings(piece, sheet)) }));
+    const failed = sides.flatMap((s) => s.refusals);
+    if (!layout || !failed.length) break;
+    // the fit refusals first (what the report says a layout failed by), then the rest
+    const fit = failed.filter((r) => overOf(r) > 0);
+    tried.push({ layout, refusals: [...fit, ...failed.filter((r) => !fit.includes(r))], overPx: Math.max(0, ...failed.map(overOf)) });
+  }
+  const used = letter && tried.length === letter.layouts.length ? null : (sides[0].layout ?? null);
+  if (used && piece.id === "entry-card") giveaway.cardFace = used.face;
+  const photos = resolution(measured.sheets.flatMap((sheet) => sheet.faces.flatMap((f) => f.photos)), pixels);
+  const refusals = [
+    ...(settled?.refusals ?? []),
+    ...(letter && !used ? tried.flatMap((t) => t.refusals.map((r) => `${t.layout.count} a page: ${r}`)) : []),
+    ...(letter ? [] : measured.sheets.length === sidesOf(piece) ? [] : [`${measured.sheets.length} side(s) drawn, not ${sidesOf(piece)}`]),
+    ...(letter ? [] : sides.flatMap((s) => s.refusals)),
+    ...photos.refusals,
+  ];
+  // a refused tout names the sizes it settled on, so the refusal can be read against them
+  if (refusals.length && page.piece.id === "tout") refusals.push(`(settled: the headline ${settled.headPx} layout px, the code ${Number(settled.qrIn.toFixed(2))} in ${settled.arrange}, the fine print ${settled.finePt} pt on ${settled.fineLines} lines)`);
+  const shows = showsOf(measured.faces[0], pixels);
+  return { page, piece, html, measured, photos: photos.rows, shows, refusals, warnings: [], placeholders, stem: stemOf(page, placeholders), giveaway: { words, sides, used, tried, settled } };
+}
+
+/**
+ * § 17.7 item 3: the address's contrast on the orange (WCAG 2), measured and named in the report. The orchestrator's ruling
+ * (2026-10-23): --ink on --cta accepted at its measured 4.17:1 (the 4.5 was the orchestrator's own number, not the
+ * Advisor's); the report flags anything under ADDRESS_CONTRAST, so a lighter colour would show.
+ */
+const ADDRESS_CONTRAST = 4;
+/** The code's white tile around it, each side: print.css .fb-qr's padding (6px) and border (3px). */
+const QR_TILE_PX = 9;
+/** A tenth of a layout px: words this close to their box's edge are on it (checks.mjs GIVEAWAY_FIT_TOLERANCE_PX). */
+const ROOM_TOLERANCE_PX = 0.1;
+
+/**
+ * §§ 17.4–17.5: the tout's sizes, settled by measuring its own page (a measuring pass a try, its html a copy), in turn:
+ * 1. The scan unit (§ 17.5 item 3): stacked with the code TOUT_QR_IN square if the foot holds it, else stacked with the
+ *    code as large as the foot's height leaves (by TOUT_QR_STEP_IN), else side by side; never under TOUT_QR_MIN_IN.
+ * 2. The headline (§ 17.5 item 1; unless the words file sets `size`): measured at TOUT_HEAD_MIN_PX, scaled to the largest
+ *    whole size at which each line's glyphs fill the band's column, no further than TOUT_HEAD_MAX_PX, then down a px at a
+ *    time while a line or the band runs over.
+ * 3. The fine print (§ 17.5 item 6): the largest size from FINE_PT down to FINE_FLOOR_PT, by FINE_STEP_PT, that sets it
+ *    on TOUT_FINE_LINES lines or fewer.
+ * What cannot be settled (the foot overflows with the code at its least, the fine print over its lines at the floor) is
+ * `refusals`. Returns { headPx, finePt, fineLines, qrIn, arrange, refusals }.
+ */
+async function settleTout({ run, stage, piece, pageInputs, printCss, measureJs, words }) {
+  const html = join(stage, "tout.settle.html");
+  const settled = { headPx: words.size ?? TOUT_HEAD_MIN_PX, finePt: FINE_PT, qrIn: TOUT_QR_IN, arrange: "stacked" };
+  const measureAt = async () => {
+    const { headPx, finePt, qrIn, arrange } = settled;
+    await writeFile(html, giveawayDocument(piece, pageInputs, printCss, { ...words, size: headPx, finePx: ptPx(finePt), qrPx: qrIn * LAYOUT_PX_PER_INCH, arrange }));
+    return (await measure(run, html, measureJs)).faces[0];
+  };
+  const fitOf = (face, what) => face.fits.find((fit) => fit.what === what && fit.words);
+  // how far the foot's words, and the code's white tile (no words, but its unit's tallest part side by side), run past its
+  // box, at both ends together, in layout px (its parts are centred in it, so an excess shows at both ends)
+  const footOver = (face) => {
+    const foot = fitOf(face, "the foot");
+    if (!foot) return 0;
+    // the tile is white, the page's own colour, so no painted field: the code's box and the tile's padding and border
+    const [qr] = face.qrs;
+    const pad = QR_TILE_PX / LAYOUT_PX_PER_INCH;
+    const tile = qr ? { x: qr.x - pad, y: qr.y - pad, w: qr.w + 2 * pad, h: qr.h + 2 * pad } : null;
+    const past = (box) => Math.max(0, foot.content.y - box.y) + Math.max(0, box.y + box.h - (foot.content.y + foot.content.h));
+    return Math.max(...[foot.words, tile].filter(Boolean).map(past)) * LAYOUT_PX_PER_INCH;
+  };
+  const headOver = (face) => face.fits.some((fit) => (/^headline line /.test(fit.what) || fit.what === "the band") && fit.words && roomOfFit(fit) < -ROOM_TOLERANCE_PX);
+  const step = (inches) => Math.floor(inches / TOUT_QR_STEP_IN + 1e-9) * TOUT_QR_STEP_IN;
+  // 1. the scan unit
+  let face = await measureAt();
+  const over = footOver(face);
+  if (over > ROOM_TOLERANCE_PX) {
+    const stacked = step(TOUT_QR_IN - over / LAYOUT_PX_PER_INCH);
+    if (stacked >= TOUT_QR_MIN_IN - 1e-9) settled.qrIn = stacked;
+    else settled.arrange = "beside";
+    face = await measureAt();
+    while (footOver(face) > ROOM_TOLERANCE_PX && settled.qrIn > TOUT_QR_MIN_IN + 1e-9) {
+      settled.qrIn = Math.max(TOUT_QR_MIN_IN, step(settled.qrIn - Math.max(TOUT_QR_STEP_IN, footOver(face) / LAYOUT_PX_PER_INCH)));
+      face = await measureAt();
+    }
+  }
+  const refusals = footOver(face) > ROOM_TOLERANCE_PX ? [`the foot does not hold the scan unit with the code at ${TOUT_QR_MIN_IN} in: its words run ${footOver(face).toFixed(1)} layout px over (§ 17.5 item 3)`] : [];
+  // 2. the headline
+  if (!words.size) {
+    const lines = face.fits.filter((fit) => /^headline line /.test(fit.what) && fit.words);
+    const scale = Math.min(...lines.map((fit) => fit.content.w / fit.words.w));
+    settled.headPx = Math.max(TOUT_HEAD_MIN_PX, Math.min(TOUT_HEAD_MAX_PX, Math.floor(settled.headPx * scale)));
+    face = await measureAt();
+    while (settled.headPx > TOUT_HEAD_MIN_PX && headOver(face)) {
+      settled.headPx -= 1;
+      face = await measureAt();
+    }
+  }
+  // 3. the fine print
+  while (face.fineLines > TOUT_FINE_LINES && settled.finePt > FINE_FLOOR_PT + 1e-9) {
+    settled.finePt = Math.max(FINE_FLOOR_PT, settled.finePt - FINE_STEP_PT);
+    face = await measureAt();
+  }
+  if (face.fineLines > TOUT_FINE_LINES) refusals.push(`the fine print runs to ${face.fineLines} lines at the fine-print floor of ${FINE_FLOOR_PT} pt, more than ${TOUT_FINE_LINES} (§ 17.5 item 6: fewer words; nothing is shrunk)`);
+  return { ...settled, fineLines: face.fineLines, refusals };
+}
+
+/**
+ * §§ 17.6–17.7: the card, settled by measuring it at the first layout's size (LETTER_SHEETS' eight), in turn:
+ * 1. Its heading (§ 17.7 item 4): measured at ENTRY_HEAD_MIN_PX, scaled to the largest whole size at which it sets on one
+ *    line beside the logo, no further than ENTRY_HEAD_MAX_PX, then down a px at a time while it runs past its box.
+ * 2. Its fine print (§ 17.6 item 3): the largest size from FINE_PT down to FINE_FLOOR_PT, by FINE_STEP_PT, that sets it on
+ *    CARD_FINE_LINES lines or fewer; if none, its bold runs set regular and the search again; if still none, the floor's,
+ *    regular, and `over` (the report says so: the words are the Advisor's to cut).
+ * Returns { headPx, finePt, regular, fineLines, over }.
+ */
+async function settleCard({ run, stage, piece, pageInputs, printCss, measureJs, words }) {
+  const html = join(stage, "entry-card.settle.html");
+  const face = LETTER_SHEETS.find((sheet) => sheet.piece === piece.id).layouts[0].face;
+  const at = async (headPx, finePt, regular) => {
+    await writeFile(html, giveawayDocument({ ...piece, face }, pageInputs, printCss, { ...words, headPx, finePx: ptPx(finePt), fineRegular: regular }));
+    return (await measure(run, html, measureJs)).faces[0];
+  };
+  const headingOf = (measured) => measured.fits.find((fit) => fit.what === "the heading" && fit.words);
+  // 1. the heading
+  let headPx = ENTRY_HEAD_MIN_PX;
+  let measured = await at(headPx, FINE_PT, false);
+  const heading = headingOf(measured);
+  if (heading) headPx = Math.max(ENTRY_HEAD_MIN_PX, Math.min(ENTRY_HEAD_MAX_PX, Math.floor(headPx * (heading.content.w / heading.words.w))));
+  measured = await at(headPx, FINE_PT, false);
+  while (headPx > ENTRY_HEAD_MIN_PX && headingOf(measured) && roomOfFit(headingOf(measured)) < -ROOM_TOLERANCE_PX) {
+    headPx -= 1;
+    measured = await at(headPx, FINE_PT, false);
+  }
+  // 2. the fine print
+  let last = null;
+  for (const regular of [false, true]) {
+    for (let finePt = FINE_PT; finePt >= FINE_FLOOR_PT - 1e-9; finePt -= FINE_STEP_PT) {
+      last = { headPx, finePt, regular, fineLines: (finePt === FINE_PT && !regular ? measured : await at(headPx, finePt, regular)).fineLines };
+      if (last.fineLines <= CARD_FINE_LINES) return { ...last, over: false };
+    }
+  }
+  return { ...last, over: true };
+}
+
+/**
+ * The room a fit box's words leave inside it to their right, and below them when measured down, in layout px: the sides
+ * a larger headline grows into (its words are set from its box's top left, so a glyph standing a hair past the left
+ * edge is no sign the size is too large).
+ */
+const roomOfFit = (fit) => {
+  const sides = [fit.content.x + fit.content.w - (fit.words.x + fit.words.w)];
+  if (fit.words.y !== null) sides.push(fit.content.y + fit.content.h - (fit.words.y + fit.words.h));
+  return Math.min(...sides) * LAYOUT_PX_PER_INCH;
+};
+
+/** The layout px a fit refusal names over, or 0 (checks.mjs giveawayFindings: "… its words run N layout px over"). */
+const overOf = (refusal) => Number(/its words run (\d+(?:\.\d+)?) layout px over/.exec(refusal)?.[1] ?? 0);
+
+/** § 17: a giveaway piece's own PDF's side: its page, trim and bleed (layoutFindings) and its words (giveawayFindings). */
+function ownFindings(piece, sheet) {
+  const words = giveawayFindings(piece, sheet);
+  return { ...words, refusals: [...layoutFindings(piece, sheet).refusals, ...words.refusals] };
+}
+
 /** The pages, each measured and checked; nothing printed. Throws the refusals, every page's, when there are any. */
-async function planPages({ run, stage, inputs, pages, chosen, words, front, photoNames }) {
+async function planPages({ run, stage, inputs, pages, chosen, words, front, photoNames, giveaway }) {
   const printCss = await readFile(join(PRINT_DIR, "print.css"), "utf8");
   const measureJs = await readFile(join(PRINT_DIR, "measure.js"), "utf8");
   const planned = [];
   for (const page of pages) {
     const pageInputs = inputsFor(page, inputs, chosen, photoNames);
+    if (page.piece.words) {
+      planned.push(await planGiveaway({ run, stage, page, pageInputs, printCss, measureJs, chosen, giveaway }));
+      continue;
+    }
     const html = join(stage, `${page.base}.html`);
     await writeFile(html, printDocument(page.piece, pageInputs, printCss, words, front));
     const measured = await measure(run, html, measureJs);
@@ -273,9 +516,10 @@ async function planPages({ run, stage, inputs, pages, chosen, words, front, phot
  * every flyer's back is the same page (Q19).
  */
 async function writeProof({ run, stage, outDir, p }) {
-  const page = pageOf(p.piece);
+  // § 17.2 item 1: a letter sheet's proof is its US Letter pages
+  const page = p.page.letter ? LETTER : pageOf(p.piece);
   const [w, h] = [page.w, page.h].map((n) => Math.round(n * CSS_PX_PER_INCH));
-  const sides = sidesOf(p.piece);
+  const sides = p.page.letter ? 1 : sidesOf(p.piece);
   const png = join(outDir, `${p.stem}.png`);
   if (sides === 1) return { png: await screenshot({ ...run, html: p.html, png, width: w, height: h, scale: PROOF_SCALE }) };
   const whole = await screenshot({ ...run, html: p.html, png: join(stage, `${p.page.base}.sides.png`), width: w, height: h * sides, scale: PROOF_SCALE });
@@ -354,7 +598,7 @@ function fileKind(chosen, slot) {
 const photoRecord = (r) => ({ pixels: [r.width, r.height], window_in: [r.w, r.h].map((n) => Number(n.toFixed(3))), ppi: Math.floor(r.ppi) });
 
 function assignmentRecord(chosen, planned) {
-  const pieces = planned.filter((p) => !p.page.number); // the tent card and the flyer
+  const pieces = planned.filter((p) => !p.page.number && !p.giveaway); // the tent card and the flyer
   const sides = pieces.flatMap((p) => [p, ...(p.back ? [p.back] : [])]); // and the flyer's back (§ 12)
   const rows = Object.fromEntries(sides.flatMap((p) => p.photos.map((r) => [r.slot, { row: r, shows: p.shows[r.slot] }])));
   const back = pieces.find((p) => p.back);
@@ -377,7 +621,19 @@ function assignmentRecord(chosen, planned) {
     four_flyers: four,
     pages: Object.fromEntries(planned.map((p) => [p.page.base, { pdf: `${p.stem}.pdf`, png: `${p.stem}.png`, placeholders: p.placeholders }])),
     back: back ? { png: `${backStem(back)}.png`, placeholders: back.back.placeholders, space_px: Number(back.back.spacePx.toFixed(1)), smallest_px: back.back.smallestPx } : null,
+    // § 17: the tout's one photo, the flyer's, at the tout's window (only when the tout is built)
+    ...toutRecord(chosen, planned),
   };
+}
+
+/** § 17: the tout's photo for assignment.json, as the flyer's is recorded; nothing when no tout is built. */
+function toutRecord(chosen, planned) {
+  const tout = planned.find((p) => p.piece.id === "tout" && !p.page.letter);
+  if (!tout) return {};
+  const [row] = tout.photos;
+  if (!chosen || !row) return { tout: null };
+  const own = chosen.tout;
+  return { tout: { id: own.id, from: own.from, file: own.file, ...photoRecord(row), shows: tout.shows[TOUT_POSITION] } };
 }
 
 /** Lines of the same text joined, each naming the pages it is on (the pages in the build's order). */
@@ -385,6 +641,49 @@ function grouped(items) {
   const groups = new Map();
   for (const { text, name } of items) groups.set(text, [...(groups.get(text) ?? []), name]);
   return [...groups].map(([text, names]) => ({ text, names }));
+}
+
+/**
+ * § 17: the giveaway pieces' lines: the words each was made from, the tout's photo, and how each side's words fit (the
+ * least room any of its boxes leaves) and its smallest type.
+ */
+function giveawayLines(planned, chosen, at, shown) {
+  const lines = [];
+  const card = planned.find((q) => q.piece.id === "entry-card")?.giveaway.settled;
+  if (card) {
+    // § 17.6 item 3: the card's fine print as it settled
+    const weight = card.regular ? "its bold runs set regular (in the semibold, ten lines did not fit at the floor)" : "its bold runs semibold";
+    lines.push(`entry-card: the heading at ${card.headPx} layout px (the largest on one line beside the logo, at least ${ENTRY_HEAD_MIN_PX})`);
+    lines.push(`entry-card: the fine print ${card.finePt} pt on ${card.fineLines} lines${card.over ? `, more than ${CARD_FINE_LINES} even at the floor and regular: the words are the Advisor's to cut` : `, at most ${CARD_FINE_LINES}`}; ${weight}`);
+  }
+  const settled = planned.find((q) => q.piece.id === "tout")?.giveaway.settled;
+  if (settled) {
+    // § 17.7 item 3: the address on the orange, its contrast as drawn (WCAG 2, its colour and the foot's, measured)
+    const own = planned.find((q) => q.page.base === "tout");
+    const face = own?.measured.faces[0];
+    const address = face?.texts.find((t) => t.text === "eatfitaf.com");
+    const foot = face?.fields.find((field) => field.what.includes("tout-foot"));
+    const ratio = address && foot ? contrastOf(address.color, foot.bg) : null;
+    if (ratio !== null) lines.push(`tout: eatfitaf.com ${address.color} on the foot's ${foot.bg}, contrast ${ratio.toFixed(2)}:1${ratio >= ADDRESS_CONTRAST ? "" : `, under the ${ADDRESS_CONTRAST}:1 the orchestrator ruled for § 17.7 item 3`}`);
+    // § 17.9 item 2: the ribbon's words on its fill, their contrast measured and named (not a gate: compared by eye)
+    const ribbon = face?.fields.find((field) => field.what.includes("tout-ribbon"));
+    const banner = ribbon && face.texts.find((t) => t.x >= ribbon.x - 0.01 && t.x + t.w <= ribbon.x + ribbon.w + 0.01 && t.y >= ribbon.y - 0.05 && t.y + t.h <= ribbon.y + ribbon.h + 0.05);
+    const onRibbon = banner ? contrastOf(banner.color, ribbon.bg) : null;
+    if (onRibbon !== null) lines.push(`tout: the ribbon ${ribbon.bg} (${own.giveaway.words.bannerColor ?? "ink"}), its words ${banner.color}, contrast ${onRibbon.toFixed(2)}:1`);
+    // §§ 17.4–17.5: the sizes the tout settled on
+    lines.push(`tout: the headline at ${settled.headPx} layout px (the largest that sets each line on one line, at least ${TOUT_HEAD_MIN_PX}); the fine print ${settled.finePt} pt on ${settled.fineLines} line(s), at most ${TOUT_FINE_LINES}; the scan unit ${settled.arrange === "stacked" ? "stacked" : "side by side (stacked does not fit the foot)"}, the code ${Number(settled.qrIn.toFixed(2))} in`);
+  }
+  for (const p of planned.filter((q) => q.giveaway)) {
+    const { words, sides, used, tried } = p.giveaway;
+    const letter = p.page.letter;
+    const page = used ? `, US Letter, ${used.count} a page (${used.face.w.toFixed(2)} × ${used.face.h.toFixed(2)} in), no bleed, nothing within ${LETTER_MARGIN_IN} in of the paper's edge` : "";
+    lines.push(`${p.page.base}: the words of ${words.source} (§ 17)${page}${words.approved ? "" : ", not approved: a proof"}`);
+    // § 17.3 item 1: which layout, and by how much each one before it did not fit
+    for (const t of tried) lines.push(`${p.page.base}: ${t.layout.count} a page did not fit${t.overPx ? `, ${t.overPx.toFixed(1)} layout px over` : ""}: ${t.refusals[0]}${t.refusals.length > 1 ? ` (and ${t.refusals.length - 1} more)` : ""}`);
+    for (const r of letter ? [] : p.photos) lines.push(`photo ${p.page.base}: ${p.piece.id === "tout" && chosen?.tout ? `${chosen.tout.from}, ` : ""}${at(r)}${shown(p, r.slot)}`);
+    for (const s of sides) lines.push(`${p.page.base}, ${s.side}: the words fit, ${Number(s.spacePx.toFixed(1))} layout px to spare at the closest; the smallest type ${s.smallestPx} layout px (the floor ${TYPE_FLOOR_PX})${s.finePx ? `; the fine print ${Number(((s.finePx * POINTS_PER_INCH) / LAYOUT_PX_PER_INCH).toFixed(2))} pt on ${s.fineLines} line(s) (its floor ${FINE_FLOOR_PT} pt)` : ""}`);
+  }
+  return lines;
 }
 
 /** The report: a line per file, the photos, the offer, the QR code, the findings, and LAST what placeholders remain. */
@@ -395,7 +694,7 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries, backS
   if (!chosen) lines.push("photos: none given (--photos-dir, --rungs and --deliverable): every position shows its placeholder");
   const at = (r) => `${r.width} × ${r.height} px over ${r.w.toFixed(2)} × ${r.h.toFixed(2)} in = ${Math.floor(r.ppi)} ppi`;
   const shown = (p, slot) => (p.shows[slot] ? showsLine(p.shows[slot]) : "");
-  for (const p of planned.filter((q) => !q.page.number)) {
+  for (const p of planned.filter((q) => !q.page.number && !q.giveaway)) {
     for (const r of p.photos) lines.push(`photo ${r.slot}: ${chosen.assignment.from[r.slot]}, ${fileKind(chosen, r.slot)}; ${at(r)}${shown(p, r.slot)}`);
   }
   if (chosen) lines.push(...skippedLines(chosen.assignment));
@@ -411,6 +710,7 @@ function reportLines({ written, chosen, planned, inputs, eventId, retries, backS
       `back: ${backSource}'s words fit, ${back.spacePx.toFixed(1)} layout px to spare above the bottom row; the smallest type ${back.smallestPx} layout px (the floor ${BACK_MIN_TEXT_PX}); the same page 2 on ${flyers === 1 ? "the flyer" : `all ${flyers} flyers`}`,
     );
   }
+  lines.push(...giveawayLines(planned, chosen, at, shown));
   lines.push(`offer: ${offer.id} (offerForSave on ${inputs.today}): "${offer.value}"`);
   const which = eventId === undefined ? "the default, PRINT_EVENT" : "--event";
   lines.push(`QR: event "${event.id}" (${which}) carries ${event.url} (qr/${event.id}.svg, written by build.mjs writeQrCodes)`);
@@ -440,10 +740,13 @@ export async function buildPrint({
   frontPath,
   photoNamesPath,
   backSource = BACK_SOURCE,
+  toutPath,
+  entryPath,
   ...paths
 } = {}) {
-  const pages = pagesToPrint({ fourFlyers });
-  const withBack = pages.some((p) => sidesOf(p.piece) === 2);
+  const pages = pagesToPrint({ fourFlyers, tout: Boolean(toutPath), entry: Boolean(entryPath) });
+  // the flyer's back (§ 12); the entry card's two sides (§ 17) are its own words'
+  const withBack = pages.some((p) => p.piece.back && sidesOf(p.piece) === 2);
   const given = [photosDir, rungsPath, deliverablePath].filter(Boolean).length;
   if (given !== 0 && given !== 3) throw new Error("--photos-dir, --rungs and --deliverable go together: give all three, or none for placeholders");
   // dist-print/ is wholly this build's output: emptied first, so a refused run leaves nothing to mistake for a piece.
@@ -460,14 +763,16 @@ export async function buildPrint({
     // § 13: front B, when --front-words names its words (checked first, as the back's are); without it every flyer is front A
     const front = frontPath ? await readFront(frontPath) : null;
     const photoNames = photoNamesPath ? await readPhotoNames(photoNamesPath) : null;
-    const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers, withBack }) : null;
+    // § 17: the giveaway's words, each read and checked first (refused outside its keys or its subset, naming them)
+    const giveaway = { tout: toutPath ? await readTout(toutPath) : null, entry: entryPath ? await readEntry(entryPath) : null };
+    const chosen = photosDir ? await stagePhotos({ photosDir, rungsPath, deliverablePath, manifest, stagedPhotos, fourFlyers, withBack, withTout: Boolean(toutPath) }) : null;
     const inputs = await loadInputs({ ...paths, manifestPath, photosDir: stagedPhotos, today, eventId: eventId ?? PRINT_EVENT });
     await copyStatic(stage, { base: null }); // the page's fonts and logo; no photo sheet
     await copyPrintAssets(stage); // § 15 item 1: the print-only logo drawn for a dark ground
     await writeQrCodes(inputs.data.events, stage); // the build's own QR codes
     // § 13 item 11: front B's code, the same URL by the same library and options at error correction H, for its logo
     await writeQrCodesH(inputs.data.events, stage);
-    const planned = await planPages({ run, stage, inputs, pages, chosen, words, front, photoNames });
+    const planned = await planPages({ run, stage, inputs, pages, chosen, words, front, photoNames, giveaway });
     const written = [];
     for (const p of planned) {
       written.push(await printPdf(run, p.html, join(outDir, `${p.stem}.pdf`)));
@@ -511,6 +816,8 @@ function argsOf(argv) {
     }
     else if (argv[i] === "--out-dir") out.outDir = value(i);
     else if (argv[i] === "--photo-names") out.photoNamesPath = value(i);
+    else if (argv[i] === "--tout-words") out.toutPath = value(i);
+    else if (argv[i] === "--entry-words") out.entryPath = value(i);
     else throw new Error(`unknown option ${argv[i]}`);
   }
   return out;

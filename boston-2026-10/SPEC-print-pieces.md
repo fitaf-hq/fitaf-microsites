@@ -506,3 +506,478 @@ record § 7o item 2); this is his list.
    (`pdftocairo`), the five icons and labels legible and none clipped. Not committed: the back carries the photos.
    Item 5 (the print-ready pages and the 4-up) waits for his look.
 6. ⚠ `print/README.md`'s table of cases stops at Q26 (and the QB mutants): Q27–Q31 have no row. Not changed here.
+
+## 17. Amendment, 2026-10-23: the giveaway tout and its entry card, 4 × 6 in. CONTRACT, before any code
+
+**Why.** The Advisor (2026-10-23, afternoon): *"a 4" x 6" "Drop your business card to win" (plus maybe blank entry cards
+…) … The Owner just got 2 acrylic raffle containers that each have a slot for a 4x6" flyer (landscape orientation). The
+idea is to do very passive contact gathering."* One winner across the week of Boston events (2026-10-26 to 10-29); every
+entrant may be emailed. ⚠ **It is a drawing, never called a raffle** (in Massachusetts a raffle is a licensed
+nonprofit's): no purchase, and rules on the entry card. The words are **not approved** and stay outside this repository
+(§ 13 item 3): Fit AF's `docs/design-analysis/2026-10-23-giveaway-tout/` holds them, given to the build by flag. The
+Owner leaves for Boston on Saturday 2026-10-24: **a proof tonight comes first**; the release is the Advisor's.
+
+1. **Two new pieces** in `print/sizes.mjs` `PRINT_PIECES`, each one face with § 2's bleed and safe margin:
+   **`tout`**, 6 × 4 in **landscape**, one side (it stands in the box's slot), and **`entry-card`**, 6 × 4 in landscape,
+   **two sides** (the front the fields, the back the rules, upright for a flip on the long edge, as § 12's flyer).
+   Built by `npm run build:print` beside the others only when their words are given: `--tout-words FILE` (JSON) and
+   `--entry-words FILE` (Markdown, its `# Front` and `# Back`). Without them the build writes what it writes today
+   (Q1–Q30 green and every existing file byte-identical: the case says so).
+2. **The tout is front B's look, laid out landscape** (§§ 13–15, the face `mockups/pieces.mjs` draws for the flyer,
+   not a new style): the dark band with the headline (its `*…*` accent green, as front B's), the lede, and the **reversed
+   logo** (§ 15 item 1) at the band's top right; **one photo** of the glam set (the flyer's first, its caption as the
+   flyer prints it) running into the bleed on its side; the **orange foot** with § 15's **banner** ribbon (`banner`), then
+   a **QR code** of § 11's `boston` code (at least 0.75 in square; `scan` beside it and `eatfitaf.com` under it), and
+   **the fine print** (`fine`) at the type floor or larger (§ 12 item 3's 14 layout px), never shrunk below it. Where the
+   parts sit is the builder's first proposal, measured and drawn as a PNG proof; the Advisor redirects. Anything that
+   does not fit is refused, naming by how much (§ 12 item 5), never shrunk.
+3. **The entry card is plain, for a pen**: the front its heading, the four fields as **writing lines** (a label above
+   each, at least 0.3 in between lines; the optional ones say so), the draw line and the consent line; the back the rules
+   at the type floor, the logo small at the bottom right on both sides. White ground, the template's ink and one accent
+   (no photo), so it prints on any card stock and a pen writes on it.
+4. **`-PROOF` while a placeholder remains** (§ 1's rule): a `[bracket]` in either words file names the file
+   `…-PROOF.pdf`/`.png`, and the report lists each bracket. The words today carry four (the prize, its value, where it is
+   delivered, the sponsor's legal name and address).
+5. **Cases first, run red**: Q31 the tout (its page 6.25 × 4.25 in with bleed, landscape, one page; the parts present
+   from the PDF's own text: the headline's lines, the banner, `eatfitaf.com`, the fine print whole; the QR code decodes to
+   the `boston` URL, § 11's reading; no text outside the safe margin; nothing under the type floor), Q32 the entry card
+   (two pages, the same size; the front's four field labels and the consent line, the back's rules whole, both read from
+   the PDF; the writing lines present and their spacing), Q33 the `-PROOF` rule (a bracket proofs, none does not), Q34
+   the build without the flags unchanged. A mutant each for Q31's fit check and Q33's bracket rule.
+6. **Then** (the orchestrator's, after the Advisor's look at the proofs): Fit AF's `scripts/print-delivery/` makes the
+   print-ready sheet for the Owner's printer (two up on letter with crop marks, the tout and the card), every PDF read as
+   on 2026-10-21.
+
+### 17.1 Built, 2026-10-23 — found at the build, not ruled
+
+1. **The cases are QG31–QG34**, not Q31–Q34: § 16.1 already holds Q31 (`test/q31-owners-five.test.mjs`), so, as § 11's
+   Q12–Q15 became QE12–QE15, these are `test/qg31-tout.test.mjs`, `qg32-entry-card`, `qg33-proof`, `qg34-unchanged`,
+   their shared checks `test/qg-checks.mjs` and the two mutants `test/qg-mutants.test.mjs`, "G" for the giveaway.
+2. ⚠ **The two pieces are not in `PRINT_PIECES`** (item 1 says they are): they are `GIVEAWAY_PIECES`, beside it in
+   `print/sizes.mjs`. `PRINT_PIECES`' own contract is that each `id` is a mock-up's (`mockups/pieces.mjs` `PIECES`), and
+   Q6, Q7 and Q8 iterate it as the mock-ups' printed faces (Q7 compares each piece's text with its mock-up's, Q8 its legend
+   with its mock-up's): neither piece has a mock-up, so in that list Q7 and Q8 would have gone red, or been amended, where
+   item 1 asks Q1–Q30 green. Moving them is one line, and Q7 and Q8 then need a filter.
+3. ⚠ **A proof while the words are unapproved, as well as while a bracket remains.** Item 4 names the brackets; § 13 item
+   3, which this section cites for the words, makes a piece of unapproved words a proof. Both are built: the tout's words
+   become final with `"approved": true`, as front B's; the entry card's with `<!-- approved -->` as its last line, as the
+   flyer's back's. So today's tout, whose words hold no bracket, is **`tout-PROOF`**, its last line naming the words
+   unapproved; QG33's "none does not" is read with the words approved and the photo present. One rule to drop if the
+   orchestrator rules brackets alone.
+4. **Where the parts sit (the first proposal, for the Advisor to redirect).** The tout, 720 × 480 layout px: across the
+   top, 2.1 in tall (`TOUT_TOP_IN`), the dark band (into the bleed on the top and the left) and the flyer's photo beside it,
+   2.5 in wide (`TOUT_PHOTO_W_IN`; into the bleed on the top and the right; its caption at its lower left, as front B's);
+   under both, the orange foot (into the bleed on the left, right and bottom), front B's torn edge over them: at its left
+   the banner and under it the fine print (14 layout px, white), then `scan` (18 px, right-aligned) beside the QR code (1
+   in, front B's level-H code with the logo at its centre on its white tile), `eatfitaf.com` under it. Why: the headline is
+   read first and largest (42 px; at 44 px its first line ran against the logo); the photo stays near its own 3:2 (its window
+   1.19:1, 75% of its width shows; a full-height photo at the side would have shown under half); the foot is the one
+   orange field front B has, wide enough for the fine print in four lines beside the code. The foot's dot texture (§ 15
+   item 2b) is left off: its patches are drawn for the flyer's foot and would have fallen behind the fine print. The
+   entry card: white, ink, `--cta` its one accent (the two headings); the front, its heading, four fields each a label over
+   a 2 px ink line, the lines 0.55 in apart (`ENTRY_LINE_PITCH_IN`; at 0.5 the labels sat flush under the line above),
+   the draw and consent lines at its foot, kept clear of the logo (72 px, bottom right); the back, its heading, the rules at
+   14 px, and a row for the logo under them.
+5. **The tout takes front B's look by its rules, not a copy**: its piece's `look: "flyer"` puts `print-flyer` beside
+   `print-tout` on its page's body, so print.css's `.print-flyer .fb-*` draw its band, logo, banner, code and caption, and
+   `.print-tout` rules after them lay it out landscape. Front B's markup and rules are unchanged.
+6. **Fit, measured, not guessed** (`data-fit` boxes, `measure.js` `fits`, `checks.mjs` `giveawayFindings`): the band, each
+   headline line (the first one clear of the logo), the foot, the entry card's front and its rules. Across, a box's words
+   are their glyphs (a Range); down, their lines (each run's nearest block), because a glyph's box is its font's whole
+   height and overhangs a tight line: the first build read the set headline as 9.0 layout px over its own lines. The
+   first build also refused the headline's first line as 0.11 in from the top trim (its band's padding 22 px, front B's 26: now 26),
+   and drew the logo against the headline's first line (front B's logo sits a bleed further in, its band running into the right bleed):
+   the logo now sits in the band's padding, 104 px wide, the first line 14 px clear of it.
+7. **The proofs** (the glam set, `data/flyer-front.json`, the KMS's names, `tout-words.json` and `entry-card-words.md`),
+   into the ignored `dist-print/tout-2026-10-23/`: `tout-PROOF.pdf` (one page, 450 × 306 pt) and `.png`;
+   `entry-card-PROOF.pdf` (two pages) and `entry-card-PROOF.png`, `entry-card-back-PROOF.png`. Read from the PDF: every
+   word present (pdftotext); the tout's code decodes to `https://eatfitaf.com/?e=boston` drawn at 300 and 150 dpi and in
+   the 1× PNG (jsQR); the smallest type 14 layout px; the report's fit lines: the tout 19.5 layout px to spare (below
+   or to the right of its closest box's words), the card's front 0 (its draw and consent lines are set at its foot, so their
+   room is the space above them), its back 1.6 (its longest line, to the right). The card's last line names its four brackets. Not committed:
+   the tout carries a photo.
+8. **The cases, before and after.** Written after a first proof (the orchestrator's order: the proof tonight first) and
+   run on the base, `7974573`, exported by `git archive` into a scratch folder: `node --test` over the four files there
+   (15:42), 0 of 4 files pass (QG31, QG32 and QG33 at import: no `print/tout.mjs`, `print/entry.mjs`, `bracketsOf`; QG34 skips
+   there, no git); and each check function over the base (15:42–15:46): QG31 "no tout was built", and "headline line 1
+   too long was not refused", "the foot too long was not refused"; QG32 "no entry card was built"; QG33 throws (no
+   `print/entry.mjs`); QG34 "with the flags the build adds  , not …" (the five). On this tree: QG31–QG34 and the mutants,
+   13 of 13 (in the print set, item 9). **The mutants**: the fit refusal off (`checks.mjs`), QG31 red ("headline line 1 too long was not refused";
+   the foot's overflow is still refused, by the safe margin, as § 12's overflow mutant found); the bracket rule off
+   (`pages.mjs` `BRACKET`), QG33 red (3 problems); each after its unchanged mirror's control, green. **QG34's own control**
+   (a one-off, not a case): this tree with the flyer's logo 2 px wider against the base: 11 files differ (every flyer's
+   PDF and PNG and the four-up), so its byte comparison can fail.
+9. **The print set**, every `test/q*.test.mjs` and `test/p*.test.mjs` (`nice -n 15 node --test`), on `7974573` and this
+   section's code uncommitted (`7e728e9` less one report string: the "to spare" figure printed `-0.0`), 15:43:52–15:58:35:
+   **228 of 228**, none skipped. Commits: the cases `b0d850a`, the code `7e728e9`; the gates at this section's commit
+   below.
+10. ⚠ **Not done here**: item 6 (the print-ready sheet, the orchestrator's after the Advisor's look). `print/README.md`'s
+    table still has no rows for Q27–Q31 (§ 16.1 item 6); QG31–QG34 have theirs.
+
+### 17.2 Amendment, 2026-10-23 (evening): office paper, a card for an email, and a one-sided backup. CONTRACT, before any code
+
+**Why.** The Advisor on the first proofs (Fit AF's decision record § 7t item 6): *"This is all going to probably be done
+on 8.5x11" office paper – and I'm uncertain what tools are available (e.g., paper cutters). So let's try to make this very
+easy to (possibly?) cut by hand: no printers marks and wide margins. I also think we should come up with a backup option
+to put everything on one side"*; the card *"Drop the phone and company line … All we really care about it their email"*,
+with *"a big "________ @ __________ . ___" on the entry form – in part to get people to slow down and space out their
+handwriting"*; and the photo: *"Is the photo on the tout unique across the set of flyer images and table tents? … let's
+just try to do the best that we can."* The words are revised in Fit AF's folder (the same flags).
+
+1. **Letter sheets, the pieces drawn without bleed**: every printed file of § 17 is a **US Letter page** (8.5 × 11 in,
+   612 × 792 pt), portrait, with **no crop, registration or colour marks**, nothing printed within **0.5 in** of the
+   paper's edge (an office printer's margin with room to spare), each piece drawn at its trim size with **no bleed** (its
+   own edge is the cut: the tout's band and foot stop at the tout's edge).
+   - **`letter-touts.pdf`**: one page, **two touts** (6 × 4 in, landscape), centred, one above the other, at least 1 in
+     apart.
+   - **`letter-entry-cards.pdf`**: two pages, **four entry cards a page**, each a quarter of the sheet (4.25 × 5.5 in,
+     portrait), so the sheet is cut (or folded and cut) once each way through its centre; the card's own words inset at
+     least 0.5 in from every cut. Page 1 the fronts, page 2 the backs (the rules): the four backs are identical and the
+     quarters symmetric about both centre lines, so either flip edge lands each back on its front. One light dashed line
+     through each centre line (a cut guide on the white card, not a printer's mark) is the builder's to propose.
+   - **`letter-entry-cards-one-sided.pdf`**: one page, the four fronts, their rules line the one-sided one (*"Rules beside
+     the box."*, the words file's `# Front, one-sided`).
+   - **`letter-rules-sign.pdf`**: one page, one side, the rules (the card's `# Back`) at a size to read from a step away,
+     to stand beside each box; the logo small.
+   The 6 × 4 tout PDF and the card's own PDF stay (the proofs and a shop's run).
+2. **The card is for an email**: its fields are **Name**, a large **email-shaped line**, `________ @ __________ . ___`
+   (the underscores drawn as writing lines with the `@` and the `.` printed between them, spread across the card's width,
+   the line itself the field's label), and **ZIP code (optional)**; no phone, no company. The draw line, the consent line
+   and the rules line follow as the words file gives them.
+3. **The tout's photo is not one the printed set used**: no photo id that the final print run placed (the flyer, the
+   four flyers, the tent card's three and the back's three) prints on the tout; the next by the assigner's own order
+   (`print/assign.mjs`, the glam pool) that is not among them, landscape and of the print resolution (§ 3), its caption
+   its KMS name as the flyer's is. The report names the ids ruled out and the one chosen. If none qualifies, the build
+   says so and uses the best by the same order, named in the report (*"the best that we can"*).
+4. **Cases**: QG31–QG34 amended for the letter sheets (each page 612 × 792 pt; no drawing within 36 pt of the paper's
+   edge; no mark outside a piece; two touts, four cards a page; the backs identical; the fronts' fields read from the PDF:
+   *Name*, the `@` and `.` of the email line, *ZIP code (optional)*, no *Phone*, no *Company*; the one-sided page's rules
+   line; the sign's rules whole), a case for item 3 (the tout's photo id not in the final set's assignment), and the
+   mutants as before. The 6 × 4 proofs still build.
+
+### 17.3 Amendment, 2026-10-23 (evening): a simpler card, and the tout's first photo back. CONTRACT, before any code
+
+**Why.** The Advisor on the letter proofs (Fit AF's decision record § 7t item 7): *"For the entry cards let's keep it
+simple: horizontal, email only, fine print with rules on the front. I think we might be able to get 6 or 8 on a page
+that way"*; and of the tout's new photo, *"this looks slightly worse"*.
+
+1. **The entry card, one side, landscape**: its heading, the **email-shaped line** (§ 17.2 item 2) as its one field, and
+   the rules as **fine print** (the words file's `# Front`, which now holds them all) at the type floor or larger, the
+   logo small. **No back, no rules sign, no duplex page, no one-sided variant**: `letter-entry-cards.pdf` is **one page**
+   of cards, **eight a page** (2 × 4, each 3.75 × 2.5 in) if every card's words fit at the floor with 0.25 in clear of each
+   cut, else **six** (2 × 3), the report saying which and by how much; § 17.2 item 1's page rules stand (Letter, no marks,
+   no bleed, nothing within 0.5 in of the paper's edge; the light cut guides the builder's). § 17.2's two-sided card, the
+   one-sided page and the sign are removed with their cases.
+2. **The tout's photo is the flyer's again** (the photo § 9 placed on the flyer, with its caption): § 17.2 item 3 is withdrawn. Nothing names a
+   unique photo with a caption: the eight the KMS names are all placed in the printed set, and the rest have no name.
+   The tout's fine print now ends *"Rules on the entry cards."* (the words file).
+3. **Cases**: QG32 for the one-page card (its field's `@` and `.`, the fine print whole from the PDF, the count a page,
+   no word within 0.25 in of a cut), QG31 for the tout's photo id; the mutants as before.
+
+### 17.3.1 Built, 2026-10-23 (evening): §§ 17.2 and 17.3, found at the build, not ruled
+
+1. **The commits.** `e57d51a`: § 17.2 as built, a checkpoint kept because the letter proofs of 16:26 were made from it.
+   Its cases were amended at the same commit, and three were red there for defects of the checks, not the build: QG31
+   counted a word the fine print repeats; QG32 read the second page's boxes without that sheet's offset; QG35 expected a
+   photo the back itself places when the four flyers are not built. None was fixed, since § 17.3 removes or rewrites each.
+   `4790e49`: the cases for §§ 17.2–17.3, test/ only. `a24d1a0`: § 17.3's code.
+2. **The cases, before and after.** On `e57d51a`, exported by `git archive` into a scratch folder, `node --test` over
+   QG31–QG34 (16:57–16:58): **8 of 12 fail**, each for § 17.3's reason. The tout's photo is not the flyer's. The card is
+   still portrait and two-sided. The new words subset is refused there for having no `# Back`, and so is the brackets
+   case built on it. QG31's keys and fit cases pass there, since their rules did not change, and QG34 skips there (no
+   git). On this tree, every `test/qg*.test.mjs` (16:53–16:56), **13 of 14**. The one failure was QG33's built case, a
+   defect of its own: it put its brackets in a sentence the old fixture had, and it picked the card by piece, where the
+   letter sheet, planned first, is the same piece. Fixed, and **2 of 2** (16:57). **The mutants**, each in a mirror after
+   its unchanged mirror's control, which passed. The fit refusal off: QG31 red ("headline line 1 too long was not
+   refused"). The bracket rule off: QG33 red, 3 problems.
+3. **The letter sheets (§ 17.2 item 1), where the parts sit.** Each copy is its piece's face at its trim, in a cell that
+   clips what front B's rules run into a bleed, so the tout's band and foot stop at its edge.
+   - `letter-touts`: two touts, centred, with 1 in above, between and below them.
+   - `letter-entry-cards`: the cards fill the page inside its 0.5 in margin (7.5 × 10 in). With eight, the grid is
+     2 × 4 at 3.75 × 2.5 in; with six, 2 × 3 at 3.75 × 3.33 in, a size the contract leaves open. These are the shares
+     of the same area.
+   - **The cut guides** (the builder's to propose): one light dashed line in the template's `--line` along each inner
+     cut. Each stops 0.05 in short of the grid's outer edges, because those edges sit at the paper's 0.5 in margin, and a
+     line that ends exactly there anti-aliases into it.
+   - The build refuses anything drawn within 0.5 in of the paper's edge, and any word less than its inset inside its
+     own cut (`checks.mjs` `letterFindings`).
+4. **Eight, else six (§ 17.3 item 1), measured.** With the words given: **six a page**; at eight they are **81.8 layout
+   px over**, and the report says so. At my first spacing, six was over too, by 20.8. I tightened the spacing, never the
+   type: the email line from 0.55 to 0.45 in tall, the fine print's leading from 1.22 to 1.15, the gap above it from 8
+   to 4 px. The heading is 18 px with a 48 px logo so it stays on one line (the floor binds the fine print, not the
+   heading). Each card gets a 4 px allowance above and below inside its 0.25 in inset, because a line's glyph box stands
+   above and below a tight line box. The heading's and the fine print's last line were first refused as within 0.25 in
+   of the cut. The fixture's short words fit eight, and QG32 holds eight, six and too long for either.
+5. ⚠ **The card's logo is at the top right, beside its heading**, not at the bottom right (§ 17 item 3). The fine print
+   runs the card's full width at its foot; a logo there would have cost lines.
+6. **The card's own PDF takes the layout its sheet used**: today six's 3.75 × 3.33 in, plus the bleed, **288 × 258 pt**.
+   Its sheet is planned first. The piece's `face` in `sizes.mjs` is eight's, the first layout tried.
+7. **The tout's photo is the flyer's** (§ 17.3 item 2), staged under its own position (`tout`, whose window is its own),
+   its caption the flyer's name for it, and refused without one, as the flyer refuses. § 17.2 item 3's rule
+   (`toutPhoto`, `--tout-avoid`) was built, delivered at 16:26 and removed. It chose rung 1's third photo, which the KMS
+   names no meal for. It printed captionless, as a proof, rather than being refused: my call, never ruled.
+8. **The words file's subset (§ 17.3 item 1)**: `# Front` alone; the fields; the fine print, in which `**bold**` runs
+   in pairs may stand anywhere. Any other emphasis, a second heading or a `# Back` is refused, naming the line. The
+   `# Front, one-sided` section of § 17.2 is gone with its page.
+9. **The proofs**, into the ignored `dist-print/letter-2026-10-23b/` (the glam set, `data/flyer-front.json`, the KMS's
+   names and the two words files). Read from the PDFs with pdfinfo: `letter-touts-PROOF.pdf` and
+   `letter-entry-cards-PROOF.pdf` each one page of 612 × 792 pt; `tout-PROOF.pdf` 450 × 306; `entry-card-PROOF.pdf`
+   288 × 258. jsQR decodes both touts' codes to the `boston` URL, from a 300 dpi render of the PDF and from the PNG.
+   Each piece is `-PROOF` only for its words, which are not marked approved (17.1 item 3). Not committed: the tout
+   carries a photo.
+10. ⚠ **§ 17.3 item 2, as committed, names the flyer's photo by its ID**. This file's header forbids a photo ID in
+    this repository, and P1 and Q5 do not look for one (P1 reads images; Q5, the fixture IDs). Not changed here: the
+    contract's text is the orchestrator's.
+11. **The gates at `a24d1a0`**, the whole site suite (`nice -n 15 npm --prefix boston-2026-10 test`, the print set inside it),
+    16:59:03–17:22:37, at a load average near 500 from other work on the machine: **1120 of 1121**, none skipped. The one
+    red is QC, "a run that stalls on every attempt still fails" (expected 3 attempts, saw 1), a timing case of
+    `mockups/png.mjs`'s retry, which this branch does not change (`git diff 7974573 HEAD` is empty for both files). Run
+    alone after it, at 17:22:53: **4 of 4**. At `1809855` (§ 17.1) the whole suite was 1120 of 1120 (16:02–16:13).
+12. ⚠ **Not done here**: § 17 item 6, the print-ready sheet, which is the orchestrator's after the Advisor's look. 17.1
+    item 2 still stands: the two pieces are in `GIVEAWAY_PIECES`, not `PRINT_PIECES`.
+
+### 17.4 Amendment, 2026-10-23 (night): the tout's headline, a straight edge, two units, and finer print. CONTRACT, before any code
+
+**Why.** The Advisor on version 3's proofs (Fit AF's decision record § 7t item 8): *"Drop your email to win" – and make
+"win" blue. I think we can bump up the font size a little bit as well. Let's make the border solid – the raggedness
+isn't working"*; of the ribbon and the fine print, *"this needs to be unified. The fine print should be lighter weight
+and ideally small enough to fit on 2 lines"*; of the scan line and the QR code, *"this needs to be made more into a unit
+– at the very least "See this week's menu" should be stacked on top of the QR code and domain name"*; and of the card's
+fine print, *"this fine print can be a little bit smaller. This is body copy sized."*
+
+1. **The headline** is the words file's (now *DROP YOUR EMAIL / TO \*WIN.\**), its accent in **blue** (the flyer's lede
+   blue): a tout words key **`headlineAccent`** (`green`, the default, `blue` or `orange`; anything else refused); the
+   headline **larger** than version 3's 42 layout px, the largest that sets each given line on one line in the band
+   beside the logo (at least 46), the size in the report.
+2. **The band's lower edge is straight**: no torn or ragged edge on the tout (the flyer's own is unchanged).
+3. **The ribbon and the fine print are one unit**: left-aligned to one edge, the ribbon's width and the fine print's
+   measure the same column, set tight under it. The tout's fine print in the body face's **regular weight** (no
+   semibold), **at most two lines** at the largest size from 7 pt down to a **fine-print floor of 6.5 pt**; if two lines do
+   not fit at 6.5 pt, three at the largest that fits, and the report says so.
+4. **The scan unit**: *See this week's menu* **stacked above** the QR code, centred on it, with *eatfitaf.com* under it
+   as now: one block, the space around it shared evenly.
+5. **The card's fine print smaller**: 7 pt (from § 17.3's 8.4), the same fine-print floor; then § 17.3 item 1's count
+   again: **eight a page** if every card fits with 0.25 in clear of each cut, else six, the report saying which.
+6. **Cases**: QG31 for items 1–4 (the headline's words and colour from the PDF, the straight edge, the fine print's
+   weight and lines, the scan line above the code), QG32 for item 5 (the size and the count); the mutants as before. The
+   fine-print floor is a named value beside the type floor in `print/sizes.mjs`, used only by § 17's fine print.
+
+### 17.5 Amendment, 2026-10-23 (night): the headline on three lines, a shorter foot, a bigger photo. CONTRACT, before any code
+
+**Why.** The Advisor on version 4 (Fit AF's decision record § 7t item 9): *"DROP YOUR / EMAIL / TO WIN. Then let's reduce
+the height of the orange band to 30%, moving and shrinking the QR code as needed. The "One winner" banner needs to have
+its text centered. This will let the photo be bigger and make the 3 line text lockup make sense. The logo will need to
+move, somewhere (currently it is just floating in space). It might need to go into the orange area. The fine print can
+break into 3 lines."*
+
+1. **The headline on three lines**, as the words file now gives them (*DROP YOUR / EMAIL / TO \*WIN\**, no full stop),
+   the accent blue (§ 17.4 item 1), at the largest size that sets each line on one line in the band's column (at least
+   § 17.4's 46 layout px), the size in the report.
+2. **The orange foot is 30 % of the tout's height** (6 × 4 in: 1.2 in), the band and the photo the 70 % above it; the
+   **photo larger** with it (taller, and wider if the headline's column allows), its caption as before.
+3. **The QR unit moves into the shorter foot and shrinks as needed**, never below **0.75 in** square (§ 17 item 2), *See
+   this week's menu* and *eatfitaf.com* kept with it as one unit (§ 17.4 item 4; side by side if stacked no longer fits,
+   the builder's proposal, named in the report); it still decodes to the `boston` URL.
+4. **The ribbon's text is centred** in the ribbon.
+5. **The logo moves out of the band** to a place it belongs: the builder's proposal, the foot first (the reversed logo on
+   the orange, contrast held), named in the report.
+6. **The fine print may run to three lines** (§ 17.4 item 3's two-line aim lifted): the largest size from 7 pt down to the
+   6.5 pt floor that fits the foot's column in three lines or fewer, regular weight.
+7. **Cases**: QG31 amended for items 1–6 (the headline's three lines, the foot's height ±0.02 in, the code at ≥ 0.75 in
+   and decoding, the ribbon text centred to 0.5 pt, the logo outside the band, the fine print's lines and weight); the
+   mutants as before. The card is unchanged by § 17.5.
+
+### 17.6 Amendment, 2026-10-23 (night): the card's heading, its whole width for the email, and its fine print in ten lines. CONTRACT, before any code
+
+**Why.** The Advisor on the eight-up card (Fit AF's decision record § 7t item 10): *"Change it to headline and subhead:
+Enter your email to win / a week of Fit AF meals … I just wanted to make "email" the action. Then we can remove "Email:"
+from the entry line – giving entrants the maximum space to write"*; and *"I'd like to go from 11 to either 9 or 10 lines.
+Then we can use that extra vertical space (the fine print should be bottom aligned) to allow for more room to write the
+email address."*
+
+1. **A heading and a subhead**, as the words file now gives them (`##` *Enter your email to win*, then the line *a week
+   of Fit AF meals*): the heading as now (the heading face, the CTA orange), the subhead under it smaller in the ink, the
+   logo beside the heading as now.
+2. **The email line has no label**: the `@` and the `.` with the writing lines between them across the card's whole
+   measure (inside the 0.25 in clear of each cut), the first run the longest.
+3. **The fine print in ten lines or fewer, bottom-aligned**: the card's fine print sits on the card's bottom inset; its
+   size the largest from § 17.4's 7 pt down to the 6.5 pt floor that sets it in **≤ 10 lines**; if 6.5 pt still takes 11,
+   its three semibold runs set in the regular weight, and then the size search again; if still 11, the report says so
+   (the words are the Advisor's to cut). The size, the weight and the line count in the report.
+4. **The space freed goes to the email line**: the room between the heading block and the fine print, the email line
+   placed in it with the most height a hand needs (the line on the lower part of that room).
+5. **Cases**: QG32 amended (the heading and subhead from the PDF, no *Email:*, the `@` and `.` present, the fine print's
+   bottom on the inset to 0.5 pt, its lines ≤ 10, its size ≥ 6.5 pt, eight a page still); the mutants as before. The
+   tout is unchanged by § 17.6.
+
+### 17.7 Amendment, 2026-10-23 (night): two accents, the logo back in the band, a dark address, a larger card heading. CONTRACT, before any code
+
+**Why.** The Advisor on version 5 (Fit AF's decision record § 7t item 11): *"DROP / YOUR EMAIL / TO WIN. Where "EMAIL" is
+blue, "WIN" is green, and "Fresh Fit AF meals" is in blue. Move the logo back to the black section of the header please.
+"See this week's menu" or "eatfitaf.com" in the footer needs to be in an accent color (or black)"*; and of the card,
+*"The headline on the entry cards can be bigger. Please add whitespace between the email line and the block of fine
+print."*
+
+1. **Colour by span**: in the tout's `headline` lines and its `lede`, `{blue:…}`, `{green:…}` and `{orange:…}` set the
+   words between in that brand colour (the flyer's lede blue, the brand green, the CTA orange); any other name, or an
+   unclosed brace, is refused naming the line. `*…*` keeps its meaning (the headline's green, the lede's `ledeAccent`), so
+   the flyer's words files are unchanged. The words file now gives *DROP / YOUR {blue:EMAIL} / TO {green:WIN}* and *A week
+   of {blue:fresh Fit AF meals}, on us.* The headline at the largest size that sets each line in the band's column.
+2. **The logo back in the band**, the reversed logo, its place the builder's (the band's top right, clear of the
+   headline, as versions 1–4); the foot's left freed for the ribbon and the fine print.
+3. **The address dark**: *eatfitaf.com* in the band's near-black on the orange (contrast ≥ 4.5:1, measured and named in
+   the report); *See this week's menu* stays white. The scan unit otherwise as § 17.5.
+4. **The card's heading larger**: the largest size at which *Enter your email to win* sets on one line beside the logo
+   (at least version 5's plus 2 layout px), the subhead under it as now.
+5. **Whitespace under the email line**: at least **0.12 in** between the email line's writing rule and the fine print's
+   first line, taken from the room above the line, never from the fine print (§ 17.6 item 3 stands: ≤ 10 lines, the
+   floor).
+6. **Cases**: QG31 for items 1–3 (the spans' colours read from the PDF, the logo inside the band, the address's colour
+   and contrast), QG32 for items 4–5 (the heading's size, the gap ≥ 0.12 in); a refusal case for item 1's markup; the
+   mutants as before.
+
+### 17.8 Amendment, 2026-10-23 (night): the ribbon to the photo's line, the accents swapped, the card without its subhead. CONTRACT, before any code
+
+**Why.** The Advisor on version 6 (Fit AF's decision record § 7t item 12), of the ribbon crossing the line the photo's
+left edge makes down the tout, *"the "One Winner" banner should should cross the vertical line formed by the photo"*
+(read as *should not*: it crosses it in version 6; the reading is told to him); *"Let's swap the accents colors –
+"email" and "fresh Fit AF meals" in green and "win" in blue"*; of the card, *"let's get rid of the subhead and then move
+the email entry line up – I'm still trying to get more whitespace between the email entry blank and the fine print"*;
+and *"Please plan to drop the faint cut lines in the final version."*
+
+1. **The ribbon ends on the photo's line**: the ribbon's right end (its notch's tip) and the fine print's measure stop at
+   the x of the photo's left edge, less the band's own inset, so nothing in the foot's left column crosses that line;
+   the fine print may run to three lines (§ 17.5 item 6) at the same floor.
+2. **The accents swapped** in the words file (*YOUR {green:EMAIL}*, *TO {blue:WIN}*, *{green:fresh Fit AF meals}*): no
+   code change beyond what § 17.7 item 1 built.
+3. **The card without its subhead** (the words file's line removed); **the email line moved up** under the heading, as
+   close as the heading's own spacing allows, and the room freed between it and the fine print kept as whitespace (the
+   gap at least § 17.7's 0.12 in, now as large as the card gives); the fine print as § 17.6.
+4. **The final files carry no cut guides**: the dashed lines are drawn only while the files are proofs (`-PROOF`); an
+   approved build draws none.
+5. **Cases**: QG31 (the ribbon's right end and the fine print's measure ≤ the photo's left edge less the inset), QG32
+   (no subhead, the email line's position under the heading, the gap), QG33 or a new case for item 4 (guides in a proof,
+   none in an approved build); the mutants as before.
+
+### 17.9 Amendment, 2026-10-23 (night): the card's line where the Advisor drew it, a blue ribbon to compare, and the release. CONTRACT, before any code
+
+**Why.** The Advisor on version 7 (Fit AF's decision record § 7t item 13), with his own edit of a card: *"can you please
+move the email line down by however much I did in this"*; *"Let's try the "One winner" banner in blue – just to see what
+it looks like (there's a lot of black on the page). But otherwise I think we're ready to ship!"* His edit, measured
+against version 7's card at the same scale (the heading and the fine print fixed): the line **0.115 in lower** (8.3 pt),
+which leaves about 0.16 in from the line (the `@`'s lowest ink) to the fine print and about 0.35 in from the heading to
+the line.
+
+1. **The card's email line 0.115 in lower** than version 7 (the heading and the fine print where they are), so the gap
+   from the line's lowest ink to the fine print's first line is 0.16 in ± 0.02.
+2. **The ribbon's colour a choice**: a tout words key **`bannerColor`**, `ink` (the default, versions 1–7) or `blue` (the
+   flyer's lede blue), the ribbon's words white on either; the report names the words' contrast on the ribbon (measured,
+   not a gate: the Advisor compares the two by eye).
+3. **The release**: the words are **approved** (`"approved": true`; the card's `<!-- approved -->`), on his *"ready to
+   ship"*. The approved build writes the letter PDFs with no `-PROOF` and **no cut guides** (§ 17.8 item 4), **twice**: the
+   ribbon in ink and in blue (`--out-dir` per variant, the words file's `bannerColor` set for each), for him to pick.
+4. **Cases**: QG32 for item 1 (the gap 0.16 ± 0.02 in), QG31 for item 2 (the ribbon's fill per `bannerColor`; a value
+   other than `ink` or `blue` refused), QG33 for item 3 (an approved build: no `-PROOF`, no guide drawn); the mutants as
+   before.
+
+### 17.9.1 Built, 2026-10-23 (night): §§ 17.4–17.9, found at the build, not ruled (but item 7's, the orchestrator's)
+
+1. **The commits.** `3f8c0ac` is § 17.4 as it made the proofs of 20:26 (`dist-print/letter-2026-10-23c/`), a checkpoint;
+   its cases were amended but not run to the end, the run stopped at 21:01 under a machine load near 900. `f2f77b5` is
+   §§ 17.5–17.6 as they made the proofs of 21:12–21:24 (`-23d`), a checkpoint: every QG file 14 of 15, the one red the
+   defect of item 6 below, then QG32 5 of 5 after its fix. `365a2ff` holds the cases for §§ 17.4–17.7; `559ce85` the
+   § 17.7 code (its proofs in `-23e/`). `a1bee55` holds § 17.8's cases and `526612a` its code (its proofs in
+   `-23f/`). `2e30b1e` holds § 17.9's cases and `1587e8c` its code; **the release** was built from `1587e8c`'s code, into
+   the ignored `dist-print/final-2026-10-23-ribbon-ink/` and `dist-print/final-2026-10-23-ribbon-blue/` (item 11).
+2. **The cases, before and after.** On `fdd448f` (§ 17.3's code, the base before any of this), exported by `git archive`,
+   `node --test` over QG31–QG34 (21:44–21:45): **10 of 13 fail**, each for these sections' reasons. The tout's file is
+   refused for its spans and keys; the fixture's headline runs 35.5 layout px over the band beside a band logo it no
+   longer has room for; the card's subhead and its label-free email line are refused; the brackets case is built on
+   both. The two size cases pass there, and QG34 skips there (no git). On this tree, the QG files in parts after each
+   fix: QG31 with QG34 and the mutants (21:38–21:42), **7 of 8**. The one red was the look case sampling "TWO" across
+   its glyph box, which reaches into the green line below; now sampled within its own line, **1 of 1** (21:42). The
+   whole set is in the suite run of item 9. **§ 17.8**: the final cases on `559ce85` (22:09–22:11), **4 of 13 fail**,
+   each for § 17.8's reason (the ribbon 77.0 and the fine print 63.3 layout px past the photo's line; the email line 1.21
+   in under the heading; guides drawn on an approved build). On `526612a`'s tree, every QG file (22:01–22:08), **16 of
+   16**. **The mutants**, each after its unchanged mirror's control, which passed.
+   The fit refusal off: QG31 red ("headline line 1 too long was not refused"). The bracket rule off: QG33 red, 3
+   problems.
+3. **Sizes are settled by measuring, never guessed** (`build-print.mjs` `settleTout`, `settleCard`). Each size is tried
+   on its own page in a measuring pass and stepped down until what it holds fits, and the report names what was settled.
+   **The tout, in turn:**
+   - **The scan unit.** Stacked if the foot holds it, else side by side, its code as large as fits from 1 in and never
+     under 0.75 in. The foot is judged by its words and by the code's white tile, which is not a painted field (white is
+     the page's colour), so it is read as the code's box plus the tile's 9 layout px a side.
+   - **The headline.** Measured at 46 layout px, scaled to the largest whole size at which each line fills its box, then
+     down a px while a line or the band runs over.
+   - **The fine print.** From 7 pt down to the 6.5 pt floor until it fits its lines.
+
+   **The card:** its heading the same way, then its fine print, on ten lines or fewer, else with its bold runs regular.
+   **With the words given:**
+   - The tout's headline 58 layout px on the words file's three lines (it was 46 at § 17.4 and 59 at § 17.5).
+   - The tout's fine print 7 pt on 3 lines.
+   - The scan unit side by side, the code 0.8 in: stacked does not fit a 1.2 in foot, about 157 layout px against 120.
+   - The card's heading 28 layout px (it was 18; it stayed 28 when § 17.8 removed the subhead).
+   - The card's fine print 6.5 pt on 10 lines, its bold runs kept.
+   - Eight cards a page.
+4. **Where the parts sit, the builder's proposals.**
+   - **§ 17.4.** At the 46 px least, the headline's first line (§ 17.4's words) was about 422 layout px against a band
+     393 wide, and 147 px over beside the logo. The photo went to 2.2 in and the logo beside the headline's shortest line.
+   - **§ 17.5.** The band and the photo are 2.8 in tall above the 1.2 in foot, the photo 2.8 in wide (its window square;
+     64 % of its width shows). The logo moved to the foot's left at 80 layout px. The ribbon's words are centred.
+   - **§ 17.7.** The logo is back at the band's top right, 104 layout px, beside the headline's first line, which keeps 14
+     px clear of it.
+     The foot's left is the ribbon and the fine print.
+   - **§ 17.8.** That column has a fixed measure, 348 layout px, ending at the photo's left edge less the band's own 18
+     px inset; the ribbon's notch tip and the fine print stop there, and the scan unit sits at the foot's right. The band's top padding grows with the headline (0.2 of its
+     size), so the first line keeps the safe margin at any settled size.
+   - **The card.** Its heading, with the logo beside it (§ 17.8: its subhead gone with the words, a subhead line still
+     read if a file gives one). The email line spans the whole measure; its first run is drawn the longest, as § 17.6
+     item 2 asks, though the words file's runs are 8 / 10 / 3, so the first is drawn at 11. Since § 17.8 the line sits
+     right under the heading at its own 0.4 in. The room between it and the fine print, which sits on the bottom inset,
+     is whitespace, at least 0.12 in.
+   - **The cut guides** (§ 17.8 item 4) are drawn only while a sheet is a proof; an approved build draws none. QG33 holds
+     both.
+5. **The fine-print floor** (`sizes.mjs` `FINE_FLOOR_PT`, 6.5 pt, beside `TYPE_FLOOR_PX`) applies only to the runs inside
+   `[data-fine]`: the tout's and the card's fine print. The measuring pass records each run's weight and colour, and the
+   fine print's lines across its runs (a bold run and its neighbours share a line).
+6. **Found by the cases.** QG32 found the card's fields shrinking under the email line's least height, which set the line
+   over the fine print without leaving the card's box, and passed eight a page for words that do not fit it. The
+   fields now grow and never shrink, so an overflow shows at the bottom and is refused. And § 17.6 item 3, the fine
+   print on the inset to 0.5 pt, collided with reading an inset by glyph boxes, which hang below a tight line. A run's
+   inset is now read **down by its lines as set** (its nearest block's box) and across by its glyphs; the card lost a
+   4 px bottom allowance with it.
+7. ⚠ **§ 17.7 item 3, the orchestrator's ruling (2026-10-23).** The address in the band's near-black, `--ink` #212529,
+   on the foot's `--cta` #d66400, measured from the drawn colours at **4.17:1** (WCAG 2). That is under the 4.5 item 3
+   named, and no template colour reaches 4.5 on that orange (`--navy` 3.90, `--white` 3.70; black, 5.68, is not a
+   token, and Q7 forbids a raw colour). Ruled: **accepted at 4.17**. The 4.5 had been the orchestrator's own number,
+   not the Advisor's ("an accent color (or black)"). No new token and no chip. The report names the ratio and flags
+   anything under 4.0; QG31 holds it at 4.0 or more.
+8. **A tenth of a layout px.** At fractional settled sizes, the drawn page's rounding alone read a band's words "0.0
+   layout px over" its top. § 17's fit checks, and the settling's, now take a tenth of a layout px
+   (`GIVEAWAY_FIT_TOLERANCE_PX`); the flyer's back keeps its hundredth. And under a load near 650, one build failed
+   cleaning a Chrome profile still being written (`mockups/png.mjs`, not changed here); it passed run again.
+9. **The gates at `1587e8c`**, the whole site suite (`nice -n 15 npm --prefix boston-2026-10 test`, the print set and every
+   QG file inside it), on a clean tree, 22:45:24–23:01:03: **1126 of 1126**, none skipped. Two runs before it were stopped
+   unfinished, each because the next amendment had arrived: at `559ce85`, 514 results, none failing; at `526612a`, 486,
+   none failing.
+10. **The release (§ 17.9).** The words approved by the orchestrator on the Advisor's "ready to ship": the tout's
+    `"approved": true` and the card's mark, both in Fit AF's files, neither set here. Built twice: the ribbon in ink (the
+    words file as it stands) and in blue (a scratch copy given `bannerColor`; the Fit AF file not edited). Each folder holds
+    `letter-touts.pdf`, `letter-entry-cards.pdf`, `tout.pdf` and `entry-card.pdf` with their PNGs. Each was read back
+    from its PDFs:
+    - pdfinfo: the letter sheets 612 × 792 pt, the tout 450 × 306, the card 288 × 198.
+    - No name holds `PROOF`, and the report's last line is "placeholders remain: none".
+    - jsQR decodes the four codes to the `boston` URL, at 300 dpi and in the PNGs.
+    - No cut guide is drawn: 0 ink pixels in a band along every inner cut.
+    - On the card, 0.150 in of white from the email line's lowest ink to the fine print (item 1's 0.16 ± 0.02), and
+      0.34 in from the heading.
+    - The ribbon's words: 15.43:1 on the ink, 2.45:1 on the blue, measured and not a gate; the Advisor compares the
+      two by eye.
+11. **§ 17.9's cases on `526612a`** (§ 17.8's code): **4 of 16 fail** (22:45–22:54), each for its reason: the `bannerColor` key refused; no ribbon line in the report; no blue
+    ribbon; 0.270 in of white under the email line, which less 0.115 is 0.155. The approved build's case passes there,
+    since § 17.8 item 4 had built it. Item 1's gap is read on an invented card whose fine print
+    sets as the Advisor's, 6.5 pt on ten lines (calibrated: 132 words set at 6.75 pt, 140 at 6.5 on ten, 148 on eleven).
+    The other fixtures' fine print is shorter, so the white above it is wider by design and not held to 0.16.
+12. ⚠ **Not done here.** § 17 item 6, the print-ready sheet, is the orchestrator's. The words files' approval is the
+    orchestrator's (on the Advisor's word), set in Fit AF, not here.

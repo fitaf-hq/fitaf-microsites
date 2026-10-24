@@ -8,25 +8,49 @@
 // mock-ups' (the template's tokens and fonts, then mockups.css), then print.css, then the sizes (sizes.mjs) as rules.
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { TOUT_POSITION } from "./assign.mjs";
 import { campaign, esc, makeParts } from "../mockups/parts.mjs";
-import { flyerFace, PIECES, tentFace } from "../mockups/pieces.mjs";
+import { entryFace, flyerFace, PIECES, tentFace, toutFace } from "../mockups/pieces.mjs";
 import {
   BACK_GAP_PX,
   BACK_LINE_HEIGHT,
   BACK_TEXT_PX,
   BLEED_IN,
   CSS_PX_PER_INCH,
+  ENTRY_EMAIL_PITCH_IN,
+  ENTRY_EMAIL_PX,
+  ENTRY_HEAD_PX,
+  ENTRY_LINE_PITCH_IN,
+  ENTRY_LOGO_PX,
+  CARD_CUT_IN,
+  ENTRY_FINE_PX,
+  ENTRY_RULE_GAP_IN,
+  ENTRY_SUBHEAD_PX,
+  ENTRY_TEXT_PX,
   FRONT_B_CALLOUT_PX,
   FRONT_B_HEAD_PX,
   FRONT_B_LEDE_PX,
   FRONT_B_OFFER_PX,
   FRONT_B_QR_IN,
   FRONT_OFFER_PX,
+  FINE_PT,
   FRONT_QR_IN,
+  GIVEAWAY_PIECES,
   LAYOUT_PX_PER_INCH,
+  LETTER,
+  GUIDE_SHORT_IN,
+  LETTER_SHEETS,
   pageOf,
   PRINT_PIECES,
+  ptPx,
   SAFE_IN,
+  TOUT_HEAD_MIN_PX,
+  TOUT_LEDE_PX,
+  TOUT_LOGO_PX,
+  TOUT_PHOTO_W_IN,
+  TOUT_QR_IN,
+  TOUT_SCAN_PX,
+  TOUT_TOP_IN,
 } from "./sizes.mjs";
 
 /** § 8 item 4: the flyer is also made this many times, flyer-1 to flyer-4, each with a photo of a rung-4 array. */
@@ -50,10 +74,16 @@ const flyerPiece = () => PRINT_PIECES.find((p) => p.id === "flyer");
  * Every page the build prints, in order: the tent card, then the flyer, then flyer-1 to flyer-4 (unless `fourFlyers` is
  * false). `base` is the file name before "-PROOF" and the extension (tent-card, flyer, flyer-3).
  */
-export function pagesToPrint({ fourFlyers = true } = {}) {
+export function pagesToPrint({ fourFlyers = true, tout = false, entry = false } = {}) {
   const [tent, flyer] = ["tent-card", "flyer"].map((id) => PRINT_PIECES.find((p) => p.id === id));
   const four = fourFlyers ? Array.from({ length: FOUR_FLYERS }, (_, i) => ({ piece: flyer, number: i + 1, base: `flyer-${i + 1}` })) : [];
-  return [{ piece: tent, number: null, base: "tent-card" }, { piece: flyer, number: null, base: "flyer" }, ...four];
+  // § 17: the giveaway's tout and entry card, last, each only when its words are given; § 17.2 item 1: each with its
+  // letter sheet (`letter`: sizes.mjs LETTER_SHEETS), the sheet first, so that the card's own PDF takes the layout it uses
+  const giveaway = GIVEAWAY_PIECES.filter((p) => (p.words === "tout" && tout) || (p.words === "entry" && entry)).flatMap((piece) => [
+    ...LETTER_SHEETS.filter((sheet) => sheet.piece === piece.id).map((sheet) => ({ piece, number: null, base: sheet.base, letter: sheet })),
+    { piece, number: null, base: piece.stem },
+  ]);
+  return [{ piece: tent, number: null, base: "tent-card" }, { piece: flyer, number: null, base: "flyer" }, ...four, ...giveaway];
 }
 
 /** Inches to the mock-ups' layout pixels, which the page is zoomed from (to the CSS inch). */
@@ -87,7 +117,29 @@ export function sizeRules(piece) {
     // § 13: front B's sizes (print.css reads them for front B alone)
     `.print-face > .board { --fb-head: ${FRONT_B_HEAD_PX}px; --fb-lede: ${FRONT_B_LEDE_PX}px; --fb-offer: ${FRONT_B_OFFER_PX}px; --fb-callout: ${FRONT_B_CALLOUT_PX}px; --fb-qr: ${px(FRONT_B_QR_IN)}px; }`,
     ...(piece.back ? [`.print-face > .board { --back-text: ${BACK_TEXT_PX}px; --back-line: ${BACK_LINE_HEIGHT}; --back-gap: ${BACK_GAP_PX}px; }`] : []),
+    ...giveawayRules(piece),
   ].join("\n");
+}
+
+/**
+ * § 17: the giveaway pieces' sizes (sizes.mjs) as CSS, for print.css's .print-tout and .print-entry-card rules: the tout's
+ * band and photo, front B's sizes as the tout sets them, its scan line and fine print; the entry card's type, its lines'
+ * pitch and its logo. Nothing for any other piece.
+ */
+function giveawayRules(piece) {
+  if (piece.id === "tout") {
+    return [
+      `.print-face > .board { --tout-top: ${px(TOUT_TOP_IN)}px; --tout-photo-w: ${px(TOUT_PHOTO_W_IN)}px; --tout-logo: ${TOUT_LOGO_PX}px; --tout-scan: ${TOUT_SCAN_PX}px; --tout-fine: ${ptPx(FINE_PT)}px; }`,
+      `.print-face > .board { --fb-head: ${TOUT_HEAD_MIN_PX}px; --fb-lede: ${TOUT_LEDE_PX}px; --fb-qr: ${px(TOUT_QR_IN)}px; }`,
+    ];
+  }
+  if (piece.id === "entry-card") {
+    return [
+      `.print-face > .board { --entry-text: ${ENTRY_TEXT_PX}px; --entry-head: ${ENTRY_HEAD_PX}px; --entry-rules: ${ENTRY_FINE_PX}px; --entry-pitch: ${px(ENTRY_LINE_PITCH_IN)}px; --entry-logo: ${ENTRY_LOGO_PX}px; }`,
+      `.print-face > .board { --entry-inset: ${px(CARD_CUT_IN)}px; --entry-email: ${ENTRY_EMAIL_PX}px; --entry-email-pitch: ${px(ENTRY_EMAIL_PITCH_IN)}px; --entry-sub: ${ENTRY_SUBHEAD_PX}px; --entry-rule-gap: ${px(ENTRY_RULE_GAP_IN)}px; }`,
+    ];
+  }
+  return [];
 }
 
 /**
@@ -145,22 +197,101 @@ export function printDocument(piece, inputs, printCss, back, front) {
   return pageHtml(piece, inputs, printCss, sheets);
 }
 
+/**
+ * § 17: one side of a giveaway piece as a sheet, its one face (print/, its own words): the tout's (mockups/pieces.mjs
+ * toutFace), or the entry card's front or back (entryFace).
+ */
+function giveawayFace(piece, inputs, words, side) {
+  const c = campaign(inputs);
+  const face = (piece.id === "tout" ? toutFace(c, makeParts(inputs), words) : entryFace(c, makeParts(inputs), words)).trim();
+  return `<div class="board board-${piece.id} board-${piece.id}-${side}">\n${face}\n</div>`;
+}
+
+function giveawaySheet(piece, inputs, words, side) {
+  return `<div class="print-sheet${side === "back" ? " print-sheet-back" : ""}"><div class="print-page">\n<div class="print-face">${giveawayFace(piece, inputs, words, side)}</div>\n</div></div>`;
+}
+
+/**
+ * § 17.2 item 3: the inputs with the tout's photo position (print/assign.mjs TOUT_POSITION), its own file name in the
+ * photos folder (`tout.jpg`), as the back's are: the photo when it is there, else the mock-ups' labelled placeholder.
+ */
+export function withToutPhoto(inputs) {
+  const file = `${TOUT_POSITION}.jpg`;
+  const tout = { file, present: existsSync(join(inputs.photosDir, file)), source: "print/assign.mjs#TOUT_POSITION" };
+  return { ...inputs, photos: { ...inputs.photos, [TOUT_POSITION]: tout } };
+}
+
+/**
+ * § 17 items 1–3: the document a giveaway piece's PDF is printed from, a page per side: the tout's one; the entry card's
+ * front (the fields) then its back (the rules), the back upright, for a flip on the long edge. `words`: the piece's words
+ * file read (print/tout.mjs readTout, print/entry.mjs readEntry).
+ */
+export function giveawayDocument(piece, inputs, printCss, words) {
+  const sides = (piece.sides ?? 1) === 1 ? ["front"] : ["front", "back"];
+  return pageHtml(piece, withToutPhoto(inputs), printCss, sides.map((side) => giveawaySheet(piece, withToutPhoto(inputs), words, side)));
+}
+
+/**
+ * § 17.2 item 1: a letter sheet's sizes as CSS, for one of its layouts: the US Letter page, no bleed; each cell the layout's
+ * face, placed by its own style, its board the cell; and the piece's own sizes (sizeRules', as each face needs them).
+ */
+export function letterRules(layout, piece) {
+  const { face } = layout;
+  const board = sizeRules({ ...piece, face }).split("\n").filter((rule) => rule.startsWith(".print-face > .board { --"));
+  return [
+    `@page { size: ${LETTER.w}in ${LETTER.h}in; margin: 0; }`,
+    `.print-sheet { width: ${LETTER.w}in; height: ${LETTER.h}in; }`,
+    `.print-page { --bleed: ${px(BLEED_IN)}px; --safe: ${px(SAFE_IN)}px; width: ${px(LETTER.w)}px; height: ${px(LETTER.h)}px; transform: scale(${CSS_PX_PER_INCH / LAYOUT_PX_PER_INCH}); }`,
+    `.print-face { width: ${px(face.w)}px; height: ${px(face.h)}px; }`,
+    `.print-face > .board { left: 0; top: 0; width: ${px(face.w)}px; height: ${px(face.h)}px; }`,
+    ...board,
+  ].join("\n");
+}
+
+/**
+ * § 17.3 item 1: the light dashed cut guides of a grid of copies: one along each cut between two columns and between two
+ * rows, spanning the grid, GUIDE_SHORT_IN short of its outer edges (which are at the paper's margin), each placed by its
+ * own style (layout px).
+ */
+function guidesOf(layout) {
+  const [x0, y0] = [layout.cells[0].x, layout.cells[0].y];
+  const [w, h] = [layout.cols * layout.face.w, layout.rows * layout.face.h];
+  const v = Array.from({ length: layout.cols - 1 }, (_, i) => `<span class="letter-guide letter-guide-v" style="left: ${px(x0 + (i + 1) * layout.face.w)}px; top: ${px(y0 + GUIDE_SHORT_IN)}px; height: ${px(h - 2 * GUIDE_SHORT_IN)}px"></span>`);
+  const hz = Array.from({ length: layout.rows - 1 }, (_, i) => `<span class="letter-guide letter-guide-h" style="top: ${px(y0 + (i + 1) * layout.face.h)}px; left: ${px(x0 + GUIDE_SHORT_IN)}px; width: ${px(w - 2 * GUIDE_SHORT_IN)}px"></span>`);
+  return [...v, ...hz].join("");
+}
+
+/**
+ * § 17.2 item 1: the document a letter sheet's PDF is printed from, in one of its layouts: a US Letter page holding a copy
+ * of the piece's face in each cell, drawn at its trim without bleed (the cell clips what front B's rules run into a
+ * bleed), and, when the sheet has them and it is a `proof` (§ 17.8 item 4: the final files carry none), the light dashed
+ * cut guides between its copies (§ 17.3 item 1: one page).
+ */
+export function letterDocument(sheet, layout, piece, inputs, printCss, words, { proof = true } = {}) {
+  const own = withToutPhoto(inputs);
+  const cells = layout.cells.map((cell) => `<div class="print-face" style="left: ${px(cell.x)}px; top: ${px(cell.y)}px">${giveawayFace({ ...piece, face: layout.face }, own, words, "front")}</div>`);
+  const page = `<div class="print-sheet print-sheet-letter"><div class="print-page">\n${cells.join("\n")}${sheet.guides && proof ? `\n${guidesOf(layout)}` : ""}\n</div></div>`;
+  return pageHtml(piece, own, printCss, [page], { rules: letterRules(layout, piece), letter: true });
+}
+
 /** The page around a piece's sheets: the mock-ups' style, print.css and the sizes; no legend, caption or script. */
-function pageHtml(piece, inputs, printCss, sheets) {
+function pageHtml(piece, inputs, printCss, sheets, { rules = sizeRules(piece), letter = false } = {}) {
+  // § 17: a giveaway piece names its own title (it has no mock-up), and the tout takes front B's rules (`look`)
+  const title = piece.title ?? PIECES.find((p) => p.id === piece.id).title;
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>${esc(PIECES.find((p) => p.id === piece.id).title)}</title>
+<title>${esc(title)}</title>
 <style>
 ${inputs.site.root}
 ${inputs.site.fonts}
 ${inputs.css.trim()}
 ${printCss.trim()}
-${sizeRules(piece)}
+${rules}
 </style>
 </head>
-<body class="print print-${piece.id}">
+<body class="print print-${piece.id}${piece.look ? ` print-${piece.look}` : ""}${letter ? " print-letter" : ""}">
 ${sheets.join("\n")}
 </body>
 </html>
@@ -189,6 +320,23 @@ export function placeholdersOf(piece, inputs, front) {
   const offer = offerIsPlaceholder(inputs) ? [`the offer "${campaign(inputs).offer.value}"`] : [];
   const words = front && piece.id === "flyer" && !front.approved ? [`front B's words, ${front.source} not approved`] : [];
   return [...photos, ...offer, ...words];
+}
+
+/** § 17 item 4: a `[bracket]` in a words file is a value not given yet (the prize, its value …), each once, in order. */
+const BRACKET = /\[[^\][]*\]/g;
+export const bracketsOf = (texts) => [...new Set(texts.flatMap((t) => t.match(BRACKET) ?? []))];
+
+/**
+ * § 17 item 4 (§ 1's rule, and § 13 item 3's for words not yet approved): what still stands in on a giveaway piece: its
+ * photo position without a photo (the tout's, the flyer's photo), its words until they are approved (the tout's
+ * `"approved": true`, the entry card's `<!-- approved -->` last line), and each `[bracket]` its words file holds, named.
+ * Any one keeps the piece a proof.
+ */
+export function giveawayPlaceholders(piece, inputs, words) {
+  const { photos: shown } = withToutPhoto(inputs);
+  const photos = piece.positions.filter((position) => !shown[position]?.present).map((position) => `photo ${position}`);
+  const unapproved = words.approved ? [] : [`the ${piece.title.toLowerCase().replace(/^giveaway /, "")}'s words, ${words.source} not approved`];
+  return [...photos, ...unapproved, ...bracketsOf(words.texts).map((b) => `${b} in ${words.source}`)];
 }
 
 /**

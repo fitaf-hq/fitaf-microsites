@@ -29,7 +29,7 @@ const ITEMS = { bar: [2, 6], steps: [2, 4], plans: [2, 4] };
 const KIND_NAMES = { bar: "a bar", steps: "steps", plans: "plans" };
 const MIX_NAMES = { ...KIND_NAMES, bar: "a bar's items" };
 /** The page's own copy's characters: letters and their marks, digits, the space, and its punctuation. */
-const COPY_CHAR = /[\p{L}\p{M}\p{N} .,:;!?'’‘“”"()&$%/+·×…–—-]/u;
+export const COPY_CHAR = /[\p{L}\p{M}\p{N} .,:;!?'’‘“”"()&$%/+·×…–—-]/u;
 /** What each refused construct is called, by the first sign of it in a line, in this order. */
 const REFUSED = [
   [/^\s+\S/, "an indented line (Markdown reads it as code or a continuation)"],

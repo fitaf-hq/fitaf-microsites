@@ -1,0 +1,79 @@
+// QG33 (SPEC-print-pieces.md § 17 item 5's Q33; test/qg-checks.mjs): the -PROOF rule. A `[bracket]` in either words file
+// keeps its piece a proof and is named, each once; none does not (with the words approved and every photo present); words
+// not yet approved keep it a proof too (§ 13 item 3, which § 17 cites). Built, the report's last line names each bracket.
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { ROOT } from "../build.mjs";
+import { bracketsOf } from "../print/pages.mjs";
+import { lockedBuild, NO_CHROME, photoSet } from "./print-fixtures.mjs";
+import { ENTRY_FIXTURE, proofRuleProblems, TOUT_FIXTURE, wordsFile } from "./qg-checks.mjs";
+
+test("QG33: a bracket proofs, none does not; each bracket named once", async () => {
+  assert.deepEqual(await proofRuleProblems(ROOT), []);
+  assert.deepEqual(bracketsOf(["about $[value], [a] and [value]", "no bracket", "[b]"]), ["[value]", "[a]", "[b]"]);
+  assert.deepEqual(bracketsOf(["no bracket here", "nor ] here ["]), []);
+});
+
+test("QG33: built, the entry card with brackets is a proof and the report's last line names each", { skip: NO_CHROME }, async () => {
+  const text = ENTRY_FIXTURE.replace("A second paragraph of fine print, its words plain.", "A second paragraph, about $[value], from [the sponsor].");
+  assert.notEqual(text, ENTRY_FIXTURE, "the fixture holds the sentence the case puts its brackets in");
+  const file = await wordsFile(text, "entry-words.md");
+  const dir = await mkdtemp(join(tmpdir(), "boston-qg33-"));
+  try {
+    const built = await lockedBuild({ outDir: join(dir, "out"), fourFlyers: false, entryPath: file.path });
+    const card = built.planned.find((p) => p.page.base === "entry-card");
+    assert.equal(card.stem, "entry-card-PROOF");
+    const last = built.lines.at(-1);
+    assert.match(last, /^placeholders remain: /);
+    for (const b of ["[value] in entry-words.md", "[the sponsor] in entry-words.md"]) assert.ok(last.includes(b), `the last line names ${b}: ${last}`);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+    await rm(file.dir, { recursive: true, force: true });
+  }
+});
+
+test("QG33 (§ 17.8 item 4): the cut guides drawn on a proof's letter sheet, and none on an approved build's", { skip: NO_CHROME }, async () => {
+  const approvedWords = `${ENTRY_FIXTURE.replace(/\n+$/, "")}\n\n<!-- approved -->\n`;
+  for (const [what, text, stem, guides] of [
+    ["the proof", ENTRY_FIXTURE, "letter-entry-cards-PROOF", true],
+    ["the approved build", approvedWords, "letter-entry-cards", false],
+  ]) {
+    const file = await wordsFile(text, "entry-words.md");
+    const dir = await mkdtemp(join(tmpdir(), "boston-qg33-guides-"));
+    try {
+      const built = await lockedBuild({ outDir: join(dir, "out"), fourFlyers: false, entryPath: file.path });
+      const sheet = built.planned.find((p) => p.page.base === "letter-entry-cards");
+      assert.equal(sheet.stem, stem, what);
+      const drawn = sheet.measured.sheets[0].guides.length;
+      assert.equal(drawn > 0, guides, `${what}: ${drawn} cut guide(s) drawn`);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+      await rm(file.dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("QG33 (§ 17.9 item 3): an approved build of the tout and the card, with its photo: no -PROOF in any name, no cut guide drawn, no placeholder left", { skip: NO_CHROME }, async () => {
+  const set = await photoSet();
+  const tout = await wordsFile({ ...TOUT_FIXTURE, approved: true }, "tout-words.json");
+  const entry = await wordsFile(`${ENTRY_FIXTURE.replace(/\n+$/, "")}\n\n<!-- approved -->\n`, "entry-words.md");
+  const dir = await mkdtemp(join(tmpdir(), "boston-qg33-release-"));
+  try {
+    const built = await lockedBuild({ outDir: join(dir, "out"), fourFlyers: false, toutPath: tout.path, entryPath: entry.path, ...set.photos });
+    const giveaway = built.planned.filter((p) => p.giveaway);
+    assert.deepEqual(giveaway.map((p) => p.stem).sort(), ["entry-card", "letter-entry-cards", "letter-touts", "tout"]);
+    for (const p of giveaway) assert.deepEqual(p.placeholders, [], p.stem);
+    const files = await readdir(join(dir, "out"));
+    assert.deepEqual(files.filter((n) => /^(tout|letter-|entry-card)/.test(n) && n.includes("PROOF")), []);
+    const sheet = built.planned.find((p) => p.page.base === "letter-entry-cards");
+    assert.equal(sheet.measured.sheets[0].guides.length, 0, "no cut guide on the approved sheet");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+    await rm(tout.dir, { recursive: true, force: true });
+    await rm(entry.dir, { recursive: true, force: true });
+    await rm(set.dir, { recursive: true, force: true });
+  }
+});

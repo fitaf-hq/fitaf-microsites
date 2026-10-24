@@ -1,7 +1,23 @@
 // The checks a printed piece must pass before it is printed (SPEC-print-pieces.md §§ 2–3, 12), over what the measuring pass
 // (measure.js, in headless Chrome) found on the page: inches from the page's top-left corner. Each returns the refusals,
 // one sentence each; none means the piece passes.
-import { BACK_GAP_PX, BACK_MIN_TEXT_PX, BLEED_IN, CSS_PX_PER_INCH, FRONT_OFFER_MAX_LINES, LAYOUT_PX_PER_INCH, MIN_PPI, pageOf, SAFE_IN } from "./sizes.mjs";
+import {
+  BACK_GAP_PX,
+  BACK_MIN_TEXT_PX,
+  BLEED_IN,
+  CSS_PX_PER_INCH,
+  ENTRY_LINE_PITCH_MIN_IN,
+  FINE_FLOOR_PX,
+  FRONT_OFFER_MAX_LINES,
+  LAYOUT_PX_PER_INCH,
+  LETTER,
+  LETTER_MARGIN_IN,
+  MIN_PPI,
+  pageOf,
+  SAFE_IN,
+  TOUT_QR_MIN_IN,
+  TYPE_FLOOR_PX,
+} from "./sizes.mjs";
 
 /** Half a CSS pixel: a measured edge this close to another is on it. */
 const TOLERANCE_IN = 0.5 / CSS_PX_PER_INCH;
@@ -123,6 +139,125 @@ export function backFindings(piece, sheet) {
   }
   const smallestPx = Math.min(...face.texts.map((t) => t.size));
   return { refusals, spacePx, smallestPx };
+}
+
+/**
+ * § 17: a tenth of a layout px. A giveaway piece's sizes are settled by measuring and land on fractional px, where the
+ * drawn page's rounding alone puts a box's words a few hundredths past an edge they sit on (§ 17.7's fixture read 0.0
+ * over at the band's top); words this close are on it. The flyer's back keeps FIT_TOLERANCE_PX.
+ */
+const GIVEAWAY_FIT_TOLERANCE_PX = 0.1;
+
+/**
+ * The room a box of words leaves inside its content box on each side, in layout px (below zero, it runs over); across
+ * only, for words measured across alone (measure.js: a headline line).
+ */
+function roomOf(fit) {
+  const [w, c] = [edgesOf(fit.words), edgesOf(fit.content)];
+  const sides = fit.words.y === null ? ["left", "right"] : SIDES;
+  return Object.fromEntries(sides.map((side) => [side, (w[side] - c[side]) * INWARD[side] * LAYOUT_PX_PER_INCH]));
+}
+
+/**
+ * § 17 items 2–3, over one side of a giveaway piece as measured (its sheet: { page, faces }): it must FIT, not shrink.
+ * REFUSED, each naming by how much: words that run past the box they must stay in (each [data-fit]: the tout's band, its
+ * headline's lines and its foot; the entry card's front and its rules), in layout px; any run of text, or the QR code,
+ * less than `inset` (SAFE_IN) inside a cut edge (refused, as on the flyer's back: no approved layout here forbids moving
+ * a part), the cut edges a face's sides one BLEED_IN inside the page's or, on a letter sheet (`everySide`), all four
+ * (§ 17.2 item 1: each piece's own edge is a cut); any type below TYPE_FLOOR_PX; a QR code under TOUT_QR_MIN_IN square; the
+ * entry card's writing lines closer than ENTRY_LINE_PITCH_MIN_IN. Every face of the sheet. Returns { refusals,
+ * smallestPx, spacePx } (spacePx: the least room any fit box leaves below its words or to their right, in layout px;
+ * below zero, over).
+ */
+export function giveawayFindings(piece, sheet, { inset = SAFE_IN, everySide = false } = {}) {
+  const refusals = [];
+  const said = [];
+  const many = sheet.faces.length > 1;
+  sheet.faces.forEach((face, f) => {
+    const name = (r) => (many ? `copy ${f + 1}: ${r}` : r);
+    const trim = edgesOf(face.trim);
+    const cuts = everySide ? SIDES : cutsOf(trim, edgesOf(sheet.page));
+    const fits = face.fits.filter((fit) => fit.words);
+    for (const fit of fits) {
+      const room = roomOf(fit);
+      const over = Object.fromEntries(Object.entries(room).filter(([, px]) => px < -GIVEAWAY_FIT_TOLERANCE_PX).map(([side, px]) => [side, -px]));
+      const worst = Math.max(0, ...Object.values(over));
+      if (worst > 0) refusals.push(name(`${fit.what} does not fit: its words run ${worst.toFixed(1)} layout px over (${Object.keys(over).join(", ")}) (§ 17 item 2: fewer words; nothing is shrunk)`));
+      // the room said is below and to the right: words are set from their box's top left, so its other two sides hold none
+      said.push(...Object.entries(room).filter(([side]) => side === "right" || side === "bottom").map(([, px]) => px));
+    }
+    for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
+      // a run of text across by its glyphs, down by its lines as set (§ 17.6 item 3: the fine print on the inset)
+      const box = edgesOf(item.set ? { x: item.x, w: item.w, y: Math.max(item.y, item.set.y), h: Math.min(item.y + item.h, item.set.y + item.set.h) - Math.max(item.y, item.set.y) } : item);
+      const short = cuts.filter((side) => (box[side] - trim[side]) * INWARD[side] < inset - TOLERANCE_IN);
+      if (short.length) refusals.push(name(`${item.what} is less than ${inset} in inside the trim (${short.join(", ")})`));
+      // § 17.4: the fine print's floor is its own (6.5 pt), every other run's the type floor
+      const floor = item.fine ? FINE_FLOOR_PX : TYPE_FLOOR_PX;
+      if (item.size !== undefined && item.size < floor - FIT_TOLERANCE_PX) refusals.push(name(`"${item.text}" is ${item.size} layout px, below the ${item.fine ? "fine print's " : ""}floor of ${Number(floor.toFixed(2))}`));
+    }
+    for (const qr of face.qrs) if (Math.min(qr.w, qr.h) < TOUT_QR_MIN_IN - TOLERANCE_IN) refusals.push(name(`the QR code is ${inches(Math.min(qr.w, qr.h))} in, under ${TOUT_QR_MIN_IN} in square`));
+    face.lines.slice(1).forEach((line, i) => {
+      const pitch = line.y - face.lines[i].y;
+      if (pitch < ENTRY_LINE_PITCH_MIN_IN - TOLERANCE_IN) refusals.push(name(`writing lines ${i + 1} and ${i + 2} are ${inches(pitch)} in apart, under ${ENTRY_LINE_PITCH_MIN_IN} in`));
+    });
+  });
+  // the smallest type but the fine print's (which has its own floor), and the fine print's size and lines
+  const texts = sheet.faces.flatMap((face) => face.texts);
+  const smallestPx = Math.min(...texts.filter((t) => !t.fine).map((t) => t.size));
+  const fine = texts.filter((t) => t.fine);
+  const finePx = fine.length ? Math.min(...fine.map((t) => t.size)) : null;
+  const fineLines = fine.length ? Math.max(...sheet.faces.map((face) => face.fineLines)) : null;
+  return { refusals, smallestPx, spacePx: said.length ? Math.min(...said) : null, finePx, fineLines };
+}
+
+/**
+ * § 17.2 item 1, over one page of a letter sheet as measured, in one of its layouts: the page is US Letter; it holds a copy
+ * of the piece in each of the layout's cells, each the layout's face; each copy's words fit and sit `sheet.inset` inside its own edge, a cut
+ * (giveawayFindings, every side); and nothing is drawn within LETTER_MARGIN_IN of the paper's edge: no run of text, QR
+ * code, logo, writing line or cut guide, and no painted field as drawn (a field is drawn inside its copy's cell, which
+ * clips what runs past it). REFUSED, each naming it. Returns { refusals, smallestPx, spacePx }.
+ */
+export function letterFindings(sheet, layout, piece, measured) {
+  const refusals = [];
+  const { face } = layout;
+  if (!near(measured.page.w, LETTER.w) || !near(measured.page.h, LETTER.h)) refusals.push(`the page is ${inches(measured.page.w)} × ${inches(measured.page.h)} in, not US Letter`);
+  if (measured.faces.length !== layout.cells.length) refusals.push(`${measured.faces.length} copies drawn, not ${layout.cells.length}`);
+  measured.faces.forEach((f, i) => {
+    if (!near(f.trim.w, face.w) || !near(f.trim.h, face.h)) refusals.push(`copy ${i + 1}: its trim is ${inches(f.trim.w)} × ${inches(f.trim.h)} in, not ${face.w} × ${face.h}`);
+  });
+  const fit = giveawayFindings(piece, measured, { inset: sheet.inset, everySide: true });
+  const page = edgesOf(measured.page);
+  const clip = (r, cell) => ({ x: Math.max(r.x, cell.x), y: Math.max(r.y, cell.y), w: Math.min(r.x + r.w, cell.x + cell.w) - Math.max(r.x, cell.x), h: Math.min(r.y + r.h, cell.y + cell.h) - Math.max(r.y, cell.y) });
+  const drawn = [
+    ...measured.faces.flatMap((f, i) => [
+      ...f.texts.map((t) => [`copy ${i + 1}: the text "${t.text}"`, t]),
+      ...f.qrs.map((q) => [`copy ${i + 1}: the QR code`, q]),
+      ...f.logos.map((l) => [`copy ${i + 1}: a logo`, l]),
+      ...f.fields.map((field) => [`copy ${i + 1}: ${field.what}`, clip(field, f.trim)]).filter(([, r]) => r.w > 0 && r.h > 0),
+    ]),
+    ...measured.faces.flatMap((f, i) => f.lines.map((l) => [`copy ${i + 1}: a writing line`, l])),
+    ...(measured.guides ?? []).map((g) => ["a cut guide", g]),
+  ];
+  for (const [what, r] of drawn) {
+    const short = SIDES.filter((side) => (edgesOf(r)[side] - page[side]) * INWARD[side] < LETTER_MARGIN_IN - TOLERANCE_IN);
+    if (short.length) refusals.push(`${what} is less than ${LETTER_MARGIN_IN} in from the paper's edge (${short.join(", ")})`);
+  }
+  return { refusals: [...refusals, ...fit.refusals], smallestPx: fit.smallestPx, spacePx: fit.spacePx, finePx: fit.finePx, fineLines: fit.fineLines };
+}
+
+/** A CSS rgb()/rgba() colour as [r, g, b] (0–255), or null. */
+const rgbOf = (css) => /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(css ?? "")?.slice(1, 4).map(Number) ?? null;
+/** WCAG 2's relative luminance of an [r, g, b]. */
+const luminance = (rgb) => {
+  const [r, g, b] = rgb.map((c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+/** § 17.7 item 3: WCAG 2's contrast ratio of two CSS colours (as measure.js reads them), or null. */
+export function contrastOf(fg, bg) {
+  const [a, b] = [rgbOf(fg), rgbOf(bg)];
+  if (!a || !b) return null;
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
 }
 
 /**

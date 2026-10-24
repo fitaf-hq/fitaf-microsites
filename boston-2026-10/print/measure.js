@@ -20,12 +20,24 @@
 
   function face(board, pageColour) {
     const texts = [];
+    // § 17.4: the lines the fine print is set on, across its runs (a bold run and its neighbours share a line)
+    const fineTops = new Set();
     const walker = document.createTreeWalker(board, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       if (!node.data.trim() || annotation(node.parentElement)) continue;
       const range = document.createRange();
       range.selectNodeContents(node);
-      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range) });
+      // § 17.4: a run of the fine print ([data-fine]) is marked, for its own floor
+      const fine = node.parentElement.closest("[data-fine]") !== null;
+      if (fine) for (const r of range.getClientRects()) if (r.width > 0) fineTops.add(Math.round(r.top));
+      // its weight too, for the fine print's (§ 17.4 item 3: the body face's regular)
+      const weight = Number(getComputedStyle(node.parentElement).fontWeight);
+      // § 17.6: and the run's lines as set, its nearest block's box down (its glyphs stand above and below a tight line)
+      let block = node.parentElement;
+      while (block !== board && getComputedStyle(block).display.startsWith("inline")) block = block.parentElement;
+      const set = inches(block.getBoundingClientRect());
+      const color = getComputedStyle(node.parentElement).color;
+      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range), weight, color, set: { y: set.y, h: set.h }, ...(fine ? { fine } : {}) });
     }
     const fields = [...board.querySelectorAll("*")]
       .filter((el) => !annotation(el))
@@ -34,7 +46,8 @@
         const style = getComputedStyle(el);
         return !unpainted(style.backgroundColor, pageColour) || style.backgroundImage !== "none";
       })
-      .map((el) => ({ what: nameOf(el), ...inches(el.getBoundingClientRect()) }));
+      // § 17.7 item 3: and its colour, for a contrast against it
+      .map((el) => ({ what: nameOf(el), ...inches(el.getBoundingClientRect()), bg: getComputedStyle(el).backgroundColor }));
     // The content box, as drawn: the computed padding and borders are in layout pixels and the page is drawn scaled
     // (pages.mjs sizeRules), so they are scaled by the element's drawn width over its layout width. On a face turned
     // 180° (the tent's upper) each side is drawn opposite its own: its top padding at the bottom, its left at the right
@@ -56,7 +69,41 @@
     const blocks = [...board.querySelectorAll(".rule, .headline, .offer, .scan, .flyer-body, .tent-body, .flyer-back-photos, .flyer-back-words, .flyer-back-foot, .flyer-back-body")]
       .filter((el) => !annotation(el))
       .map((el) => ({ what: [...el.classList].join("."), ...inches(el.getBoundingClientRect()), content: contentOf(el), lines: linesIn(el) }));
+    // § 17: each box whose words must not overflow it ([data-fit]): its content box, as drawn, and the box its words fill:
+    // across, their glyphs (every run of text inside it, from a Range); down, their lines, the box of each run's nearest
+    // block (a glyph's box is its font's whole height, which overhangs a tight line, so it would read a set line as over).
+    // A run whose block is the fit box itself (a headline line) is measured across alone. And the entry card's writing lines
+    const blockOf = (node, el) => {
+      let block = node.parentElement;
+      while (block !== el && getComputedStyle(block).display.startsWith("inline")) block = block.parentElement;
+      return block;
+    };
+    const wordsBox = (el) => {
+      const across = [];
+      const down = [];
+      const inside = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let node = inside.nextNode(); node; node = inside.nextNode()) {
+        if (!node.data.trim() || annotation(node.parentElement)) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        across.push(inches(range.getBoundingClientRect()));
+        const block = blockOf(node, el);
+        if (block !== el) down.push(inches(block.getBoundingClientRect()));
+      }
+      if (!across.length) return null;
+      const x = Math.min(...across.map((r) => r.x));
+      const y = down.length ? Math.min(...down.map((r) => r.y)) : null;
+      return { x, w: Math.max(...across.map((r) => r.x + r.w)) - x, y, h: y === null ? null : Math.max(...down.map((r) => r.y + r.h)) - y };
+    };
+    const fits = [...board.querySelectorAll("[data-fit]")].map((el) => ({ what: el.dataset.fit, content: contentOf(el), words: wordsBox(el) }));
+    // each field's writing lines (the email's are several on one line, § 17.2 item 2), and each field's first, whose pitch is checked
+    const entryFields = [...board.querySelectorAll(".entry-field")].map((el) => ({ lines: [...el.querySelectorAll(".entry-line")].map((line) => inches(line.getBoundingClientRect())) }));
+    const lines = entryFields.filter((field) => field.lines.length).map((field) => field.lines[0]);
     return {
+      fineLines: fineTops.size,
+      fits,
+      entryFields,
+      lines,
       trim: inches(board.getBoundingClientRect()),
       photos: [...board.querySelectorAll("[data-slot]")].map((el) => ({ slot: el.dataset.slot, ...inches(el.getBoundingClientRect()) })),
       texts,
@@ -70,7 +117,9 @@
   function sheet(el) {
     const page = el.querySelector(".print-page");
     const pageColour = getComputedStyle(page).backgroundColor;
-    return { page: inches(page.getBoundingClientRect()), faces: [...el.querySelectorAll(".print-face > .board")].map((board) => face(board, pageColour)) };
+    // § 17.2 item 1: a letter sheet's cut guides, drawn on the page between its cells
+    const guides = [...el.querySelectorAll(".letter-guide")].map((guide) => inches(guide.getBoundingClientRect()));
+    return { page: inches(page.getBoundingClientRect()), faces: [...el.querySelectorAll(".print-face > .board")].map((board) => face(board, pageColour)), guides };
   }
 
   function measure() {
