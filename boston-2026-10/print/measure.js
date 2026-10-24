@@ -32,7 +32,11 @@
       if (fine) for (const r of range.getClientRects()) if (r.width > 0) fineTops.add(Math.round(r.top));
       // its weight too, for the fine print's (§ 17.4 item 3: the body face's regular)
       const weight = Number(getComputedStyle(node.parentElement).fontWeight);
-      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range), weight, ...(fine ? { fine } : {}) });
+      // § 17.6: and the run's lines as set, its nearest block's box down (its glyphs stand above and below a tight line)
+      let block = node.parentElement;
+      while (block !== board && getComputedStyle(block).display.startsWith("inline")) block = block.parentElement;
+      const set = inches(block.getBoundingClientRect());
+      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range), weight, set: { y: set.y, h: set.h }, ...(fine ? { fine } : {}) });
     }
     const fields = [...board.querySelectorAll("*")]
       .filter((el) => !annotation(el))

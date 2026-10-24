@@ -180,7 +180,9 @@ export function giveawayFindings(piece, sheet, { inset = SAFE_IN, everySide = fa
       said.push(...Object.entries(room).filter(([side]) => side === "right" || side === "bottom").map(([, px]) => px));
     }
     for (const item of [...face.texts.map((t) => ({ ...t, what: `the text "${t.text}"` })), ...face.qrs.map((q) => ({ ...q, what: "the QR code" }))]) {
-      const short = cuts.filter((side) => (edgesOf(item)[side] - trim[side]) * INWARD[side] < inset - TOLERANCE_IN);
+      // a run of text across by its glyphs, down by its lines as set (§ 17.6 item 3: the fine print on the inset)
+      const box = edgesOf(item.set ? { x: item.x, w: item.w, y: Math.max(item.y, item.set.y), h: Math.min(item.y + item.h, item.set.y + item.set.h) - Math.max(item.y, item.set.y) } : item);
+      const short = cuts.filter((side) => (box[side] - trim[side]) * INWARD[side] < inset - TOLERANCE_IN);
       if (short.length) refusals.push(name(`${item.what} is less than ${inset} in inside the trim (${short.join(", ")})`));
       // § 17.4: the fine print's floor is its own (6.5 pt), every other run's the type floor
       const floor = item.fine ? FINE_FLOOR_PX : TYPE_FLOOR_PX;

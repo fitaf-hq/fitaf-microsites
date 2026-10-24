@@ -3,6 +3,7 @@
 // file a person can edit, read in ONLY this subset (§ 17.3 item 1: one side, its rules on it as fine print):
 //   # Front                      then, each after one blank line:
 //   ## <heading>
+//   <subhead>                    (optional, § 17.6 item 1) one line of words, set under the heading
 //   - <label>                    the fields, one to ENTRY_FIELDS_MAX lines, each printed as a label over a writing line;
 //                                a field holding runs of underscores (§ 17.2 item 2: "Email: ________ @ __________ . ___")
 //                                is printed as its own line, each run a writing line as long as the run, the words
@@ -65,12 +66,17 @@ export function parseEntry(text, source) {
     for (const ch of plain) if (!ENTRY_CHAR(ch)) refuse(n, `a character outside the subset, ${JSON.stringify(ch)} (U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")})`);
     return line;
   };
-  const [side, head, list, ...rest] = blocks;
+  const [side, head, ...after] = blocks;
+  // § 17.6 item 1: a line of words between the heading and the fields is the subhead
+  const subBlock = after[0] && !FIELD.test(after[0].lines[0]) && after[1] && FIELD.test(after[1].lines[0]) ? after.shift() : null;
+  const [list, ...rest] = after;
   if (!side || side.lines[0] !== FRONT) refuse(side?.n ?? 1, `the first line must be "${FRONT}"`);
   if (side.lines.length > 1) refuse(side.n + 1, `"${FRONT}" stands alone, a blank line after it`);
   const h = head && HEADING.exec(head.lines[0]);
   if (!h || head.lines.length > 1) refuse(head?.n ?? side.n, `"${FRONT}" is followed by its "## <heading>", alone`);
-  const front = { heading: { text: words(head.n, h[1]).trim(), line: head.n }, fields: [], paragraphs: [] };
+  if (subBlock && subBlock.lines.length > 1) refuse(subBlock.n + 1, "the subhead is one line");
+  const subhead = subBlock ? { text: words(subBlock.n, subBlock.lines[0]).trim(), line: subBlock.n } : null;
+  const front = { heading: { text: words(head.n, h[1]).trim(), line: head.n }, subhead, fields: [], paragraphs: [] };
   if (!list || !FIELD.test(list.lines[0])) refuse(list?.n ?? head.n, "the heading is followed by its fields, - <label> each");
   list.lines.forEach((line, j) => {
     const f = FIELD.exec(line);
@@ -91,7 +97,7 @@ export function parseEntry(text, source) {
     front.paragraphs.push({ runs, text: pieces.join(""), line: p.n });
   }
   if (!front.paragraphs.length) refuse(list.n, "the card has no fine print (a paragraph after its fields)");
-  const texts = [front.heading.text, ...front.fields.map((f) => f.label), ...front.paragraphs.map((p) => p.text)];
+  const texts = [front.heading.text, front.subhead?.text ?? "", ...front.fields.map((f) => f.label), ...front.paragraphs.map((p) => p.text)];
   return { source, front, approved, texts };
 }
 

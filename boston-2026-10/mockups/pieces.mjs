@@ -174,21 +174,21 @@ function flyerFrontB(c, parts, words) {
 
 /**
  * The giveaway tout (SPEC-print-pieces.md § 17), print-only: front B's look laid out landscape. Across the top, the dark
- * band (the headline, its accent words in `headlineAccent`'s colour, § 17.4 item 1; the lede; the reversed logo at its
- * right, beside the headline's shortest line, which keeps clear of it) and beside it its photo, the flyer's (§ 17.3 item 2), with its caption, running into the bleed on the top and the
- * right; under both, on a straight edge (§ 17.4 item 2), the orange foot: the banner's ribbon and the fine print one
- * left-aligned column (item 3), then `scan` stacked above the QR code with the address under it, one block (item 4).
+ * band (the headline, its accent words in `headlineAccent`'s colour, § 17.4 item 1; the lede) and beside it its photo, the
+ * flyer's (§ 17.3 item 2), with its caption, running into the bleed on the top and the right, both 70 % of the tout's
+ * height (§ 17.5 item 2); under both, on a straight edge (§ 17.4 item 2), the orange foot: the logo, out of the band (§ 17.5
+ * item 5), the banner's ribbon and the fine print one left-aligned column, the ribbon's words centred (§ 17.4 item 3, § 17.5
+ * item 4), and the scan unit, `scan`, the QR code and the address, stacked or side by side (§ 17.5 item 3).
  * Its words are the tout's words file's (`words`, print/tout.mjs), cited by key; no legend lists it. A box whose words
  * must not overflow it carries `data-fit` (print/checks.mjs giveawayFindings): the band, each headline line, the foot.
  */
 export function toutFace(c, parts, words) {
   const cite = (key) => `data-src="${esc(`${words.source}#${key}`)}"`;
   const accented = (t, cls) => t.split("*").map((part, j) => (j % 2 ? `<span class="${cls}">${esc(part)}</span>` : esc(part))).join("");
-  // § 17.4 item 1: the logo sits beside the headline's shortest line (its words, asterisks aside), which keeps clear of it
-  const lengths = words.headline.map((t) => t.replaceAll("*", "").length);
-  const beside = lengths.indexOf(Math.min(...lengths));
-  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}${i === beside ? " tout-line-logo" : ""}" data-fit="headline line ${i + 1}">${accented(t, "fb-accent")}</span>`).join("");
-  const band = ` style="${words.size ? `--tout-head: ${words.size}px; ` : ""}--tout-logo-line: ${beside}"`;
+  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}" data-fit="headline line ${i + 1}">${accented(t, "fb-accent")}</span>`).join("");
+  const band = words.size ? ` style="--tout-head: ${words.size}px"` : "";
+  // § 17.5 item 3: the scan unit stacked, or side by side, and its code's side, as the build settles them
+  const foot = words.qrPx ? ` style="--fb-qr: ${words.qrPx}px"` : "";
   // § 17.4 item 3: the fine print's size, as the build settles it (print/build-print.mjs settleTout)
   const fineSize = words.finePx ? ` style="font-size: ${words.finePx}px"` : "";
   const lede = words.lede.map((line) => `<span class="fb-lede-line">${accented(line, "fb-lede-accent")}</span>`).join("");
@@ -197,41 +197,58 @@ export function toutFace(c, parts, words) {
   return `
 <div class="tout-top">
 <div class="fb-band tout-band" data-fit="the band"${band}>${HALFTONE}
-  ${bandLogo(parts, words.logo)}
   <h1 class="fb-head tout-head" data-head-accent="${esc(words.headlineAccent ?? "green")}" ${cite("headline")}>${lines}</h1>
   <p class="fb-lede tout-lede" data-lede-accent="${esc(words.ledeAccent)}" ${cite("lede")}>${lede}</p>
 </div>
 <div class="tout-hero">${parts.photo("tout")}${parts.caption("tout", "fb-name tout-name")}</div>
 </div>
-<div class="fb-foot tout-foot" data-fit="the foot">
+<div class="fb-foot tout-foot" data-fit="the foot"${foot}>
+  ${footLogo(parts, words.logo)}
   <div class="fb-cta tout-cta"><p class="fb-banner tout-banner" ${cite("banner")}><span class="tout-ribbon">${esc(words.banner)}</span></p><p class="tout-fine" data-fine ${cite("fine")}${fineSize}>${esc(words.fine)}</p></div>
-  <div class="scan scan-under fb-scan tout-scan-unit"><p class="tout-scan" ${cite("scan")}>${esc(words.scan)}</p><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
+  <div class="scan tout-scan-unit" data-arrange="${esc(words.arrange ?? "stacked")}"><p class="tout-scan" ${cite("scan")}>${esc(words.scan)}</p><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
 </div>`;
 }
 
 /**
  * The giveaway's entry card (SPEC-print-pieces.md § 17 item 3, as §§ 17.2–17.3 have it), print-only and plain, for a pen,
- * one side: on white, the template's ink and one accent (its heading), no photo. Its heading, the logo small beside it at
- * the top right; each field a label over a writing line (a field holding blanks, the email's, its own line: each blank a
- * writing line as long as its run, the words between them printed); then the fine print, the rules, its **bold** runs
- * bold. Its words are the entry words file's (`words`, print/entry.mjs), each cited by its line; no legend lists it. The
+ * one side: on white, the template's ink and one accent (its heading), no photo. Its heading, and its subhead under it
+ * (§ 17.6 item 1), the logo small beside them at the top right; each field a label over a writing line (a field holding
+ * blanks, the email's, its own line, across the card's whole measure and the room the fine print leaves, § 17.6 items
+ * 2 and 4: each blank a writing line as long as its run, the first the longest, the words between them printed); then the
+ * fine print, the rules, on the card's bottom inset, its **bold** runs bold. Its words are the entry words file's (`words`, print/entry.mjs), each cited by its line; no legend lists it. The
  * box its words must not overflow carries `data-fit` (print/checks.mjs giveawayFindings).
  */
 export function entryFace(c, parts, words) {
   const cite = (line) => `data-src="${esc(`${words.source}#L${line}`)}"`;
   const own = words.front;
   const blank = (n) => `<span class="entry-line entry-blank" style="flex-grow: ${n}"></span>`;
+  // § 17.6 item 2: across the card's whole measure, the first run the longest (the part before the @ is the longest to write)
+  const grows = (fieldParts) => {
+    const runs = fieldParts.filter((p) => p.blank).map((p) => p.blank);
+    const first = Math.max(runs[0], ...runs.slice(1).map((n) => n + 1));
+    let k = 0;
+    return fieldParts.map((p) => (p.blank ? { blank: k++ === 0 ? first : p.blank } : p));
+  };
   const field = (f) =>
     f.parts
-      ? `<div class="entry-field entry-email" ${cite(f.line)}>${f.parts.map((p) => (p.blank ? blank(p.blank) : `<span class="entry-email-word">${esc(p.text)}</span>`)).join("")}</div>`
+      ? `<div class="entry-field entry-email" ${cite(f.line)}>${grows(f.parts).map((p) => (p.blank ? blank(p.blank) : `<span class="entry-email-word">${esc(p.text)}</span>`)).join("")}</div>`
       : `<div class="entry-field" ${cite(f.line)}><p class="entry-label">${esc(f.label)}</p><span class="entry-line"></span></div>`;
-  const fine = (p) => `<p class="entry-fine" data-fine ${cite(p.line)}>${p.runs.map((r) => (r.bold ? `<b>${esc(r.text)}</b>` : esc(r.text))).join("")}</p>`;
+  // § 17.6 item 3: the fine print's size, and its bold runs set regular when ten lines need it, as the build settles them
+  const fineStyle = words.finePx ? ` style="font-size: ${words.finePx}px"` : "";
+  const weight = words.fineRegular ? ` data-weight="regular"` : "";
+  const fine = (p) => `<p class="entry-fine" data-fine ${cite(p.line)}${fineStyle}${weight}>${p.runs.map((r) => (r.bold ? `<b>${esc(r.text)}</b>` : esc(r.text))).join("")}</p>`;
+  const sub = own.subhead ? `<p class="entry-sub" ${cite(own.subhead.line)}>${esc(own.subhead.text)}</p>` : "";
   return `
 <div class="entry-body" data-fit="the card">
-  <div class="entry-top"><h1 class="entry-head" ${cite(own.heading.line)}>${esc(own.heading.text)}</h1>${parts.logo("entry-logo")}</div>
+  <div class="entry-top"><div class="entry-titles"><h1 class="entry-head" ${cite(own.heading.line)}>${esc(own.heading.text)}</h1>${sub}</div>${parts.logo("entry-logo")}</div>
   <div class="entry-fields">${own.fields.map(field).join("")}</div>
   <div class="entry-notes">${own.paragraphs.map(fine).join("")}</div>
 </div>`;
+}
+
+/** § 17.5 item 5: the tout's logo in its foot, by the words file's `logo`, as the band's was (the orange is a dark ground). */
+function footLogo(parts, treatment) {
+  return treatment === "plate" ? parts.logo("tout-foot-logo") : parts.logoReversed(REVERSED_LOGO_FILES[treatment], "tout-foot-logo");
 }
 
 /** § 15 item 1: the band's logo by the words file's `logo`: drawn for the dark ground (its own white field gone, the

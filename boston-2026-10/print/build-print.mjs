@@ -68,8 +68,13 @@ import {
   PRINT_PIECES,
   ptPx,
   TOUT_FINE_LINES,
+  CARD_FINE_LINES,
+  LETTER_SHEETS,
   TOUT_HEAD_MAX_PX,
   TOUT_HEAD_MIN_PX,
+  TOUT_QR_IN,
+  TOUT_QR_MIN_IN,
+  TOUT_QR_STEP_IN,
   TYPE_FLOOR_PX,
 } from "./sizes.mjs";
 
@@ -288,8 +293,15 @@ async function printPdf(run, html, pdf) {
 async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs, chosen, giveaway }) {
   // § 17.4 items 1 and 3: the tout's headline and fine print sizes, settled once, for its own PDF and its sheet alike
   if (page.piece.id === "tout" && !giveaway.toutSettled) giveaway.toutSettled = await settleTout({ run, stage, piece: page.piece, pageInputs, printCss, measureJs, words: giveaway.tout });
-  const settled = page.piece.id === "tout" ? giveaway.toutSettled : null;
-  const words = settled ? { ...giveaway.tout, size: settled.headPx, finePx: ptPx(settled.finePt) } : giveaway[page.piece.words];
+  // § 17.6 item 3: the card's fine print, settled once, at the first layout's card, for its sheet and its own PDF alike
+  if (page.piece.id === "entry-card" && !giveaway.cardSettled) giveaway.cardSettled = await settleCard({ run, stage, piece: page.piece, pageInputs, printCss, measureJs, words: giveaway.entry });
+  const settled = page.piece.id === "tout" ? giveaway.toutSettled : page.piece.id === "entry-card" ? giveaway.cardSettled : null;
+  const words =
+    page.piece.id === "tout"
+      ? { ...giveaway.tout, size: settled.headPx, finePx: ptPx(settled.finePt), qrPx: settled.qrIn * LAYOUT_PX_PER_INCH, arrange: settled.arrange }
+      : page.piece.id === "entry-card"
+        ? { ...giveaway.entry, finePx: ptPx(settled.finePt), fineRegular: settled.regular }
+        : giveaway[page.piece.words];
   const letter = page.letter;
   const piece = !letter && page.piece.id === "entry-card" && giveaway.cardFace ? { ...page.piece, face: giveaway.cardFace } : page.piece;
   const html = join(stage, `${page.base}.html`);
@@ -311,56 +323,114 @@ async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs,
   if (used && piece.id === "entry-card") giveaway.cardFace = used.face;
   const photos = resolution(measured.sheets.flatMap((sheet) => sheet.faces.flatMap((f) => f.photos)), pixels);
   const refusals = [
-    ...(settled?.refusal ? [settled.refusal] : []),
+    ...(settled?.refusals ?? []),
     ...(letter && !used ? tried.flatMap((t) => t.refusals.map((r) => `${t.layout.count} a page: ${r}`)) : []),
     ...(letter ? [] : measured.sheets.length === sidesOf(piece) ? [] : [`${measured.sheets.length} side(s) drawn, not ${sidesOf(piece)}`]),
     ...(letter ? [] : sides.flatMap((s) => s.refusals)),
     ...photos.refusals,
   ];
+  // a refused tout names the sizes it settled on, so the refusal can be read against them
+  if (refusals.length && page.piece.id === "tout") refusals.push(`(settled: the headline ${settled.headPx} layout px, the code ${Number(settled.qrIn.toFixed(2))} in ${settled.arrange}, the fine print ${settled.finePt} pt on ${settled.fineLines} lines)`);
   const placeholders = giveawayPlaceholders(piece, pageInputs, words);
   const shows = showsOf(measured.faces[0], pixels);
   return { page, piece, html, measured, photos: photos.rows, shows, refusals, warnings: [], placeholders, stem: stemOf(page, placeholders), giveaway: { words, sides, used, tried, settled } };
 }
 
+/** The code's white tile around it, each side: print.css .fb-qr's padding (6px) and border (3px). */
+const QR_TILE_PX = 9;
 /** A hundredth of a layout px: words this close to their box's edge are on it (checks.mjs's own tolerance). */
 const ROOM_TOLERANCE_PX = 0.01;
 
 /**
- * § 17.4 items 1 and 3: the tout's two sizes, settled by measuring its own page (a measuring pass a try, its html a copy).
- * The headline (unless the words file sets `size`): measured at TOUT_HEAD_MIN_PX, scaled to the largest whole size at
- * which each line's glyphs fill its box (the shortest line's beside the logo) and no further than TOUT_HEAD_MAX_PX, then down
- * a px at a time while a line or the band runs over. The fine print: the largest size from FINE_PT down to FINE_FLOOR_PT,
- * by FINE_STEP_PT, that sets it on TOUT_FINE_LINES lines, else on one more; neither, at the floor: `refusal`. Returns
- * { headPx, finePt, fineLines, most, refusal }.
+ * §§ 17.4–17.5: the tout's sizes, settled by measuring its own page (a measuring pass a try, its html a copy), in turn:
+ * 1. The scan unit (§ 17.5 item 3): stacked with the code TOUT_QR_IN square if the foot holds it, else stacked with the
+ *    code as large as the foot's height leaves (by TOUT_QR_STEP_IN), else side by side; never under TOUT_QR_MIN_IN.
+ * 2. The headline (§ 17.5 item 1; unless the words file sets `size`): measured at TOUT_HEAD_MIN_PX, scaled to the largest
+ *    whole size at which each line's glyphs fill the band's column, no further than TOUT_HEAD_MAX_PX, then down a px at a
+ *    time while a line or the band runs over.
+ * 3. The fine print (§ 17.5 item 6): the largest size from FINE_PT down to FINE_FLOOR_PT, by FINE_STEP_PT, that sets it
+ *    on TOUT_FINE_LINES lines or fewer.
+ * What cannot be settled (the foot overflows with the code at its least, the fine print over its lines at the floor) is
+ * `refusals`. Returns { headPx, finePt, fineLines, qrIn, arrange, refusals }.
  */
 async function settleTout({ run, stage, piece, pageInputs, printCss, measureJs, words }) {
   const html = join(stage, "tout.settle.html");
-  const at = async (headPx, finePt) => {
-    await writeFile(html, giveawayDocument(piece, pageInputs, printCss, { ...words, size: headPx, finePx: ptPx(finePt) }));
+  const settled = { headPx: words.size ?? TOUT_HEAD_MIN_PX, finePt: FINE_PT, qrIn: TOUT_QR_IN, arrange: "stacked" };
+  const measureAt = async () => {
+    const { headPx, finePt, qrIn, arrange } = settled;
+    await writeFile(html, giveawayDocument(piece, pageInputs, printCss, { ...words, size: headPx, finePx: ptPx(finePt), qrPx: qrIn * LAYOUT_PX_PER_INCH, arrange }));
     return (await measure(run, html, measureJs)).faces[0];
   };
-  const over = (face) => face.fits.some((fit) => (/^headline line /.test(fit.what) || fit.what === "the band") && fit.words && roomOfFit(fit) < -ROOM_TOLERANCE_PX);
-  let headPx = words.size ?? TOUT_HEAD_MIN_PX;
-  let face = await at(headPx, FINE_PT);
+  const fitOf = (face, what) => face.fits.find((fit) => fit.what === what && fit.words);
+  // how far the foot's words, and the code's white tile (no words, but its unit's tallest part side by side), run past its
+  // box, at both ends together, in layout px (its parts are centred in it, so an excess shows at both ends)
+  const footOver = (face) => {
+    const foot = fitOf(face, "the foot");
+    if (!foot) return 0;
+    // the tile is white, the page's own colour, so no painted field: the code's box and the tile's padding and border
+    const [qr] = face.qrs;
+    const pad = QR_TILE_PX / LAYOUT_PX_PER_INCH;
+    const tile = qr ? { x: qr.x - pad, y: qr.y - pad, w: qr.w + 2 * pad, h: qr.h + 2 * pad } : null;
+    const past = (box) => Math.max(0, foot.content.y - box.y) + Math.max(0, box.y + box.h - (foot.content.y + foot.content.h));
+    return Math.max(...[foot.words, tile].filter(Boolean).map(past)) * LAYOUT_PX_PER_INCH;
+  };
+  const headOver = (face) => face.fits.some((fit) => (/^headline line /.test(fit.what) || fit.what === "the band") && fit.words && roomOfFit(fit) < -ROOM_TOLERANCE_PX);
+  const step = (inches) => Math.floor(inches / TOUT_QR_STEP_IN + 1e-9) * TOUT_QR_STEP_IN;
+  // 1. the scan unit
+  let face = await measureAt();
+  const over = footOver(face);
+  if (over > ROOM_TOLERANCE_PX) {
+    const stacked = step(TOUT_QR_IN - over / LAYOUT_PX_PER_INCH);
+    if (stacked >= TOUT_QR_MIN_IN - 1e-9) settled.qrIn = stacked;
+    else settled.arrange = "beside";
+    face = await measureAt();
+    while (footOver(face) > ROOM_TOLERANCE_PX && settled.qrIn > TOUT_QR_MIN_IN + 1e-9) {
+      settled.qrIn = Math.max(TOUT_QR_MIN_IN, step(settled.qrIn - Math.max(TOUT_QR_STEP_IN, footOver(face) / LAYOUT_PX_PER_INCH)));
+      face = await measureAt();
+    }
+  }
+  const refusals = footOver(face) > ROOM_TOLERANCE_PX ? [`the foot does not hold the scan unit with the code at ${TOUT_QR_MIN_IN} in: its words run ${footOver(face).toFixed(1)} layout px over (§ 17.5 item 3)`] : [];
+  // 2. the headline
   if (!words.size) {
     const lines = face.fits.filter((fit) => /^headline line /.test(fit.what) && fit.words);
     const scale = Math.min(...lines.map((fit) => fit.content.w / fit.words.w));
-    headPx = Math.max(TOUT_HEAD_MIN_PX, Math.min(TOUT_HEAD_MAX_PX, Math.floor(headPx * scale)));
-  }
-  let last = null;
-  for (const most of [TOUT_FINE_LINES, TOUT_FINE_LINES + 1]) {
-    for (let finePt = FINE_PT; finePt >= FINE_FLOOR_PT - 1e-9; finePt -= FINE_STEP_PT) {
-      face = await at(headPx, finePt);
-      while (!words.size && headPx > TOUT_HEAD_MIN_PX && over(face)) {
-        headPx -= 1;
-        face = await at(headPx, finePt);
-      }
-      last = { headPx, finePt, fineLines: face.fineLines };
-      if (face.fineLines <= most) return { ...last, most };
+    settled.headPx = Math.max(TOUT_HEAD_MIN_PX, Math.min(TOUT_HEAD_MAX_PX, Math.floor(settled.headPx * scale)));
+    face = await measureAt();
+    while (settled.headPx > TOUT_HEAD_MIN_PX && headOver(face)) {
+      settled.headPx -= 1;
+      face = await measureAt();
     }
   }
-  const refusal = `the fine print runs to ${last.fineLines} lines at the fine-print floor of ${FINE_FLOOR_PT} pt, more than ${TOUT_FINE_LINES + 1} (§ 17.4 item 3: fewer words; nothing is shrunk)`;
-  return { ...last, most: null, refusal };
+  // 3. the fine print
+  while (face.fineLines > TOUT_FINE_LINES && settled.finePt > FINE_FLOOR_PT + 1e-9) {
+    settled.finePt = Math.max(FINE_FLOOR_PT, settled.finePt - FINE_STEP_PT);
+    face = await measureAt();
+  }
+  if (face.fineLines > TOUT_FINE_LINES) refusals.push(`the fine print runs to ${face.fineLines} lines at the fine-print floor of ${FINE_FLOOR_PT} pt, more than ${TOUT_FINE_LINES} (§ 17.5 item 6: fewer words; nothing is shrunk)`);
+  return { ...settled, fineLines: face.fineLines, refusals };
+}
+
+/**
+ * § 17.6 item 3: the card's fine print, settled by measuring the card at the first layout's size (LETTER_SHEETS' eight):
+ * the largest size from FINE_PT down to FINE_FLOOR_PT, by FINE_STEP_PT, that sets it on CARD_FINE_LINES lines or fewer; if
+ * none, its bold runs set regular and the search again; if still none, the floor's, regular, and `over` (the report says
+ * so: the words are the Advisor's to cut). Returns { finePt, regular, fineLines, over }.
+ */
+async function settleCard({ run, stage, piece, pageInputs, printCss, measureJs, words }) {
+  const html = join(stage, "entry-card.settle.html");
+  const face = LETTER_SHEETS.find((sheet) => sheet.piece === piece.id).layouts[0].face;
+  const linesAt = async (finePt, regular) => {
+    await writeFile(html, giveawayDocument({ ...piece, face }, pageInputs, printCss, { ...words, finePx: ptPx(finePt), fineRegular: regular }));
+    return (await measure(run, html, measureJs)).faces[0].fineLines;
+  };
+  let last = null;
+  for (const regular of [false, true]) {
+    for (let finePt = FINE_PT; finePt >= FINE_FLOOR_PT - 1e-9; finePt -= FINE_STEP_PT) {
+      last = { finePt, regular, fineLines: await linesAt(finePt, regular) };
+      if (last.fineLines <= CARD_FINE_LINES) return { ...last, over: false };
+    }
+  }
+  return { ...last, over: true };
 }
 
 /**
@@ -555,11 +625,16 @@ function grouped(items) {
  */
 function giveawayLines(planned, chosen, at, shown) {
   const lines = [];
+  const card = planned.find((q) => q.piece.id === "entry-card")?.giveaway.settled;
+  if (card) {
+    // § 17.6 item 3: the card's fine print as it settled
+    const weight = card.regular ? "its bold runs set regular (in the semibold, ten lines did not fit at the floor)" : "its bold runs semibold";
+    lines.push(`entry-card: the fine print ${card.finePt} pt on ${card.fineLines} lines${card.over ? `, more than ${CARD_FINE_LINES} even at the floor and regular: the words are the Advisor's to cut` : `, at most ${CARD_FINE_LINES}`}; ${weight}`);
+  }
   const settled = planned.find((q) => q.piece.id === "tout")?.giveaway.settled;
   if (settled) {
-    // § 17.4 items 1 and 3: the sizes the tout settled on, and why
-    const why = settled.most === TOUT_FINE_LINES ? `on ${settled.fineLines} line(s), at most ${TOUT_FINE_LINES}` : `on ${settled.fineLines} lines: ${TOUT_FINE_LINES} did not fit at the floor of ${FINE_FLOOR_PT} pt`;
-    lines.push(`tout: the headline at ${settled.headPx} layout px (the largest that sets each line on one line, at least ${TOUT_HEAD_MIN_PX}); the fine print ${settled.finePt} pt, ${why}`);
+    // §§ 17.4–17.5: the sizes the tout settled on
+    lines.push(`tout: the headline at ${settled.headPx} layout px (the largest that sets each line on one line, at least ${TOUT_HEAD_MIN_PX}); the fine print ${settled.finePt} pt on ${settled.fineLines} line(s), at most ${TOUT_FINE_LINES}; the scan unit ${settled.arrange === "stacked" ? "stacked" : "side by side (stacked does not fit the foot)"}, the code ${Number(settled.qrIn.toFixed(2))} in`);
   }
   for (const p of planned.filter((q) => q.giveaway)) {
     const { words, sides, used, tried } = p.giveaway;

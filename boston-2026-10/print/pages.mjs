@@ -24,6 +24,7 @@ import {
   ENTRY_LOGO_PX,
   CARD_CUT_IN,
   ENTRY_FINE_PX,
+  ENTRY_SUBHEAD_PX,
   ENTRY_TEXT_PX,
   FRONT_B_CALLOUT_PX,
   FRONT_B_HEAD_PX,
@@ -134,7 +135,7 @@ function giveawayRules(piece) {
   if (piece.id === "entry-card") {
     return [
       `.print-face > .board { --entry-text: ${ENTRY_TEXT_PX}px; --entry-head: ${ENTRY_HEAD_PX}px; --entry-rules: ${ENTRY_FINE_PX}px; --entry-pitch: ${px(ENTRY_LINE_PITCH_IN)}px; --entry-logo: ${ENTRY_LOGO_PX}px; }`,
-      `.print-face > .board { --entry-inset: ${px(CARD_CUT_IN)}px; --entry-email: ${ENTRY_EMAIL_PX}px; --entry-email-pitch: ${px(ENTRY_EMAIL_PITCH_IN)}px; }`,
+      `.print-face > .board { --entry-inset: ${px(CARD_CUT_IN)}px; --entry-email: ${ENTRY_EMAIL_PX}px; --entry-email-pitch: ${px(ENTRY_EMAIL_PITCH_IN)}px; --entry-sub: ${ENTRY_SUBHEAD_PX}px; }`,
     ];
   }
   return [];

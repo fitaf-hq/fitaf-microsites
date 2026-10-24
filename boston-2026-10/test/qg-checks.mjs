@@ -52,14 +52,17 @@ export const CARD_FINE_PX = (7 / 72) * 120;
 const floorOf = (t) => (t.fine ? FINE_FLOOR_PX : FLOOR_PX) - 0.01;
 
 /**
- * QG32: the entry card's words, a fixture's, in § 17.3's shape: one side, its heading, its one field email-shaped (its
- * blanks writing lines, its @ and . printed), and its fine print, with **bold** runs. Short enough for eight a page.
+ * QG32: the entry card's words, a fixture's, in § 17.6's shape: one side, its heading and subhead, its one field
+ * email-shaped with no label (its blanks writing lines, its @ and . printed), and its fine print, with **bold** runs.
+ * Short enough for eight a page.
  */
 export const ENTRY_FIXTURE = `# Front
 
 ## Fixture heading words
 
-- Mail: ______ @ ________ . ___
+Fixture subhead words
+
+- ______ @ ________ . ___
 
 **Fixture rule one.** Its words after the bold. **A second bold run**: then plain words to the end of the paragraph.
 
@@ -71,8 +74,8 @@ export const ENTRY_FINE = [
   "Fixture rule one. Its words after the bold. A second bold run: then plain words to the end of the paragraph.",
   "A second paragraph of fine print, its words plain.",
 ];
-/** The runs the fixture's card carries, in its order: the heading, the email line's words, its @ and its ., the fine print. */
-export const ENTRY_RUNS = ["Fixture heading words", "Mail:", "@", ".", ...ENTRY_FINE];
+/** The runs the fixture's card carries, in its order: the heading, the subhead, the email line's @ and ., the fine print. */
+export const ENTRY_RUNS = ["Fixture heading words", "Fixture subhead words", "@", ".", ...ENTRY_FINE];
 
 /**
  * § 17.3 item 1: the fixture with its fine print said `times` times over (as one paragraph each), to fit six a page but
@@ -288,11 +291,10 @@ export async function toutFitProblems(root) {
       await rm(file.dir, { recursive: true, force: true });
     }
   }
-  // § 17.4 item 3: fine print that two lines cannot hold at the fine-print floor is set on three, said; more, refused
+  // § 17.5 item 6: the fine print on three lines at most, from 7 pt down to its floor, said; more, refused
   const fine = (times) => ({ ...TOUT_FIXTURE, fine: Array.from({ length: times }, () => TOUT_FIXTURE.fine).join(" ").slice(0, Math.round(TOUT_FIXTURE.fine.length * times)) });
   for (const [what, words, expect] of [
-    ["the fixture as it is", TOUT_FIXTURE, /^tout: the headline at \d+ layout px .*; the fine print [\d.]+ pt, on [12] line\(s\), at most 2$/],
-    ["fine print for three lines", fine(2), /; the fine print [\d.]+ pt, on 3 lines: 2 did not fit at the floor of 6\.5 pt$/],
+    ["the fixture as it is", TOUT_FIXTURE, /^tout: the headline at \d+ layout px .*; the fine print [\d.]+ pt on [123] line\(s\), at most 3; the scan unit (stacked|side by side \(stacked does not fit the foot\)), the code [\d.]+ in$/],
   ]) {
     const file = await wordsFile(words, "tout-words.json");
     try {
@@ -316,7 +318,7 @@ export async function toutFitProblems(root) {
         await build(root, { outDir: join(dir, "dist-print"), fourFlyers: false, toutPath: long.path });
         problems.push("fine print too long for three lines at the floor was not refused");
       } catch (err) {
-        if (!/the fine print runs to \d+ lines at the fine-print floor of 6\.5 pt, more than 3/.test(err.message)) problems.push(`fine print too long, refused as: ${err.message.slice(0, 300)}`);
+        if (!/the fine print runs to \d+ lines at the fine-print floor of 6\.5 pt, more than 3 \(§ 17\.5 item 6/.test(err.message)) problems.push(`fine print too long, refused as: ${err.message.slice(0, 300)}`);
       }
     });
   } finally {
@@ -344,12 +346,15 @@ const SIGNATURE = [0x8c, 0xc6, 0x3f];
 const CTA = [0xd6, 0x64, 0x00];
 
 /**
- * QG31 (§ 17.4 items 1–4), built with the fixture's words (its headline accent blue) and no photos: the headline at least
- * 46 layout px and the largest that sets each line (one more px would run a line, or the band, over); its accent words
- * blue in the PDF, not green; the band's lower edge straight (no torn edge in the page; in the PDF, above the foot's top
- * across the band, no orange); the fine print in the regular weight, on at most two lines; the ribbon and the fine print
- * one column (the same left edge, the ribbon its full width, the fine print tight under it); the scan line above the QR
- * code, centred on it, the address under it. The problems.
+ * QG31 (§ 17.4 items 1–4 as § 17.5 items 1–6 amend them), built with the fixture's words (its headline accent blue, on
+ * three lines) and no photos: the headline on its three lines, at least 46 layout px and the largest that sets each line
+ * (one more px would run a line, or the band, over); its accent words blue in the PDF, not green; the band's lower edge
+ * straight (no torn edge in the page; in the PDF, above the foot's top across the band, no orange); the foot 30 % of the
+ * tout's height (1.2 in, to 0.02 in); the logo out of the band, in the foot; the fine print in the regular weight, on at
+ * most three lines; the ribbon and the fine print one column (the same left edge, the ribbon its full width, the fine
+ * print tight under it), the ribbon's words centred in it to 0.5 pt; the scan unit as the report names it: stacked, the
+ * scan line above the code and centred on it with the address under it; or side by side, the scan line and the address
+ * beside the code, within its height. The problems.
  */
 export async function toutLookProblems(root, toutPath) {
   const { giveawayDocument } = await load(root, "print/pages.mjs");
@@ -368,6 +373,7 @@ export async function toutLookProblems(root, toutPath) {
     const size = said ? Number(said[1]) : null;
     if (!(size >= 46)) problems.push(`the headline is ${size} layout px, not at least 46`);
     const lines = face.fits.filter((fit) => /^headline line /.test(fit.what) && fit.words);
+    if (lines.length !== 3) problems.push(`the headline is measured on ${lines.length} lines, not its 3`);
     const band = face.fits.find((fit) => fit.what === "the band");
     const grows = [
       ...lines.map((fit) => (fit.content.x + fit.content.w - fit.words.x - fit.words.w) * 120 - (fit.words.w * 120) / size),
@@ -398,7 +404,7 @@ export async function toutLookProblems(root, toutPath) {
     // item 3: the fine print, regular, at most two lines; the ribbon and it one column
     const fine = face.texts.filter((t) => t.fine);
     if (!fine.length || fine.some((t) => t.weight !== 400)) problems.push(`the fine print's weight is ${fine.map((t) => t.weight).join(", ")}, not 400`);
-    if (!(face.fineLines >= 1 && face.fineLines <= 2)) problems.push(`the fine print is on ${face.fineLines} lines, not at most 2`);
+    if (!(face.fineLines >= 1 && face.fineLines <= 3)) problems.push(`the fine print is on ${face.fineLines} lines, not at most 3`);
     const ribbon = face.fields.find((fld) => fld.what.includes("tout-ribbon"));
     if (!ribbon || !fine.length) problems.push("the ribbon or the fine print is not measured");
     else {
@@ -406,16 +412,38 @@ export async function toutLookProblems(root, toutPath) {
       if (Math.abs(r.x - t.x) > 0.03) problems.push(`the ribbon starts ${(r.x - t.x).toFixed(3)} in from the fine print: not one left edge`);
       if (r.x + r.w < t.x + t.w - 0.03) problems.push("the ribbon is narrower than the fine print's measure");
       if (t.y - (r.y + r.h) > 0.1) problems.push(`the fine print is ${(t.y - r.y - r.h).toFixed(3)} in under the ribbon: not set tight`);
+      // § 17.5 item 4: the ribbon's words centred in it, to 0.5 pt
+      const words = face.texts.find((x) => x.text === TOUT_FIXTURE.banner);
+      if (!words || Math.abs(words.x + words.w / 2 - (r.x + r.w / 2)) > 0.5 / 72) problems.push(`the ribbon's words are not centred in it: ${words ? ((words.x + words.w / 2 - (r.x + r.w / 2)) * 72).toFixed(2) : "?"} pt off`);
     }
-    // item 4: the scan line stacked above the code, centred on it, the address under it
+    // § 17.5 item 2: the foot 30 % of the tout's 4 in, 1.2 in from the trim's bottom, to 0.02 in
+    if (foot) {
+      const height = face.trim.y + face.trim.h - foot.y;
+      if (Math.abs(height - 1.2) > 0.02) problems.push(`the foot is ${height.toFixed(3)} in tall in the trim, not 1.2`);
+    }
+    // § 17.5 item 5: no logo in the band, and the tout's logo in the foot (the code's own, at its centre, aside)
+    const [code] = face.qrs;
+    const within = (a, b) => a.x >= b.x - 0.01 && a.y >= b.y - 0.01 && a.x + a.w <= b.x + b.w + 0.01 && a.y + a.h <= b.y + b.h + 0.01;
+    const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    const logos = face.logos.filter((l) => !(code && within(l, code)));
+    if (bandField && logos.some((l) => overlaps(l, bandField))) problems.push("a logo is in the band");
+    if (!foot || logos.length !== 1 || !within(logos[0], foot)) problems.push(`the tout's logo is not in the foot (${logos.length} logo(s) beside the code's)`);
+    // item 4 (§ 17.5 item 3): the scan unit, as the report names it
     const scan = face.texts.find((t) => t.text === TOUT_FIXTURE.scan);
     const address = face.texts.find((t) => t.text === "eatfitaf.com");
     const [qr] = face.qrs;
-    if (!scan || !address || !qr) problems.push("the scan line, the address or the code is not measured");
-    else {
+    const arrange = /the scan unit (stacked|side by side)/.exec(built.lines.find((l) => l.startsWith("tout: the headline at")) ?? "")?.[1];
+    if (!scan || !address || !qr || !arrange) problems.push("the scan line, the address, the code or the report's arrangement is missing");
+    else if (arrange === "stacked") {
       if (scan.y + scan.h > qr.y + 0.01) problems.push("the scan line is not above the QR code");
       if (Math.abs(scan.x + scan.w / 2 - (qr.x + qr.w / 2)) > 0.05) problems.push("the scan line is not centred on the QR code");
       if (address.y < qr.y + qr.h - 0.01) problems.push("the address is not under the QR code");
+    } else {
+      for (const [what, t] of [["the scan line", scan], ["the address", address]]) {
+        if (t.x + t.w > qr.x + 0.01) problems.push(`${what} is not beside the code, at its left`);
+        if (t.y < qr.y - 0.1 || t.y + t.h > qr.y + qr.h + 0.1) problems.push(`${what} is not within the code's height`);
+      }
+      if (scan.y > address.y) problems.push("the scan line is not above the address");
     }
     return problems;
   });
@@ -455,7 +483,7 @@ export const CARD_LAYOUTS = { 8: { w: 3.75, h: 2.5 }, 6: { w: 3.75, h: 10 / 3 } 
  * bleed, carrying the same runs. The report names the layout, and the one before it that did not fit with the layout px it
  * was over. The problems.
  */
-export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_RUNS } = {}) {
+export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_RUNS, tenLines = true } = {}) {
   return withTmp(async (dir) => {
     const out = join(dir, "dist-print");
     const built = await build(root, { outDir: out, fourFlyers: false, entryPath });
@@ -473,11 +501,13 @@ export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_R
     const over = built.lines.find((l) => l.startsWith("letter-entry-cards: 8 a page did not fit"));
     if (count === 6 && !/did not fit, \d+(\.\d+)? layout px over/.test(over ?? "")) problems.push(`the report does not say by how much eight did not fit: ${over}`);
     if (count === 8 && over) problems.push(`eight fit, yet the report says: ${over}`);
+    // § 17.6 item 3: the report names the fine print's size, its weight and its lines
+    if (!built.lines.some((l) => /^entry-card: the fine print [\d.]+ pt on \d+ lines.*; its bold runs (semibold|set regular)/.test(l))) problems.push("the report does not name the card's fine print size, lines and weight");
     for (const [p, n] of [[cards, 1], [card, 1]]) {
       const run = missingInOrder(pdfOf(p), n, runs);
       if (run !== null) problems.push(`${p.stem}.pdf lacks "${run}" in order`);
     }
-    for (const run of [runs[0], "Mail:", runs.at(-1)]) if (timesOn(pdfOf(cards), 1, run) !== count) problems.push(`${cards.stem}.pdf carries "${run}" ${timesOn(pdfOf(cards), 1, run)} times, not ${count}`);
+    for (const run of [runs[0], runs[1], runs.at(-1)]) if (timesOn(pdfOf(cards), 1, run) !== count) problems.push(`${cards.stem}.pdf carries "${run}" ${timesOn(pdfOf(cards), 1, run)} times, not ${count}`);
     const dpi = 300;
     const page = drawn(pdfOf(cards), 1, dpi);
     sheet.faces.forEach((f, c) => {
@@ -489,9 +519,24 @@ export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_R
         const inset = Math.min(t.x - f.trim.x, t.y - f.trim.y, f.trim.x + f.trim.w - t.x - t.w, f.trim.y + f.trim.h - t.y - t.h);
         if (inset < CARD_CUT_IN - TOLERANCE_IN) problems.push(`card ${c + 1}: "${t.text.slice(0, 40)}" is ${inset.toFixed(3)} in from its cut, under ${CARD_CUT_IN}`);
         if (!(t.size >= floorOf(t))) problems.push(`card ${c + 1}: "${t.text.slice(0, 40)}" is ${t.size} layout px, under its floor`);
-        // § 17.4 item 5: the card's fine print at 7 pt
-        if (t.fine && Math.abs(t.size - CARD_FINE_PX) > 0.01) problems.push(`card ${c + 1}: its fine print is ${t.size} layout px, not 7 pt (${CARD_FINE_PX.toFixed(2)})`);
+        // §§ 17.4 item 5, 17.6 item 3: the card's fine print from 7 pt down to its 6.5 pt floor
+        if (t.fine && !(t.size <= CARD_FINE_PX + 0.01 && t.size >= FINE_FLOOR_PX - 0.01)) problems.push(`card ${c + 1}: its fine print is ${t.size} layout px, not 6.5 to 7 pt`);
+        // § 17.6 item 2: no label: every run of text the heading, the subhead, the email line's @ and ., or the fine print
+        if (!t.fine && ![runs[0], runs[1], "@", "."].includes(t.text)) problems.push(`card ${c + 1}: "${t.text.slice(0, 40)}" is none of the card's words`);
       }
+    });
+    sheet.faces.forEach((f, c) => {
+      const fine = f.texts.filter((t) => t.fine);
+      // § 17.6 item 3: the fine print one size, on ten lines or fewer, its last line on the card's bottom inset to 0.5 pt
+      if (new Set(fine.map((t) => t.size)).size !== 1) problems.push(`card ${c + 1}: its fine print is in ${new Set(fine.map((t) => t.size)).size} sizes`);
+      if (tenLines && f.fineLines > 10) problems.push(`card ${c + 1}: its fine print is on ${f.fineLines} lines, more than 10`);
+      const bottom = Math.max(...fine.map((t) => t.set.y + t.set.h));
+      if (Math.abs(f.trim.y + f.trim.h - CARD_CUT_IN - bottom) > 0.5 / 72) problems.push(`card ${c + 1}: its fine print ends ${((f.trim.y + f.trim.h - CARD_CUT_IN - bottom) * 72).toFixed(2)} pt off the bottom inset`);
+      // § 17.6 item 2: the email line across the card's whole measure, inside the inset, its first run the longest
+      const blanks = f.entryFields.flatMap((field) => field.lines);
+      const [left, right] = [f.trim.x + CARD_CUT_IN, f.trim.x + f.trim.w - CARD_CUT_IN];
+      if (blanks.length && (Math.abs(blanks[0].x - left) > 0.02 || Math.abs(blanks.at(-1).x + blanks.at(-1).w - right) > 0.02)) problems.push(`card ${c + 1}: the email line runs ${blanks[0].x.toFixed(2)}–${(blanks.at(-1).x + blanks.at(-1).w).toFixed(2)} in, not the measure ${left.toFixed(2)}–${right.toFixed(2)}`);
+      if (blanks.length && blanks.slice(1).some((b) => b.w >= blanks[0].w)) problems.push(`card ${c + 1}: the email line's first run is not the longest`);
     });
     problems.push(...paperProblems(`${cards.stem}.pdf`, pdfOf(cards), 1, sheet.faces.map((f) => f.trim)));
     for (const png of [`${card.stem}.png`, `${cards.stem}.png`]) {
