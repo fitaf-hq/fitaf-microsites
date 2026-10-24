@@ -858,3 +858,24 @@ and *"Please plan to drop the faint cut lines in the final version."*
 5. **Cases**: QG31 (the ribbon's right end and the fine print's measure ≤ the photo's left edge less the inset), QG32
    (no subhead, the email line's position under the heading, the gap), QG33 or a new case for item 4 (guides in a proof,
    none in an approved build); the mutants as before.
+
+### 17.9 Amendment, 2026-10-23 (night): the card's line where the Advisor drew it, a blue ribbon to compare, and the release. CONTRACT, before any code
+
+**Why.** The Advisor on version 7 (Fit AF's decision record § 7t item 13), with his own edit of a card: *"can you please
+move the email line down by however much I did in this"*; *"Let's try the "One winner" banner in blue – just to see what
+it looks like (there's a lot of black on the page). But otherwise I think we're ready to ship!"* His edit, measured
+against version 7's card at the same scale (the heading and the fine print fixed): the line **0.115 in lower** (8.3 pt),
+which leaves about 0.16 in from the line (the `@`'s lowest ink) to the fine print and about 0.35 in from the heading to
+the line.
+
+1. **The card's email line 0.115 in lower** than version 7 (the heading and the fine print where they are), so the gap
+   from the line's lowest ink to the fine print's first line is 0.16 in ± 0.02.
+2. **The ribbon's colour a choice**: a tout words key **`bannerColor`**, `ink` (the default, versions 1–7) or `blue` (the
+   flyer's lede blue), the ribbon's words white on either; the report names the words' contrast on the ribbon (measured,
+   not a gate: the Advisor compares the two by eye).
+3. **The release**: the words are **approved** (`"approved": true`; the card's `<!-- approved -->`), on his *"ready to
+   ship"*. The approved build writes the letter PDFs with no `-PROOF` and **no cut guides** (§ 17.8 item 4), **twice**: the
+   ribbon in ink and in blue (`--out-dir` per variant, the words file's `bannerColor` set for each), for him to pick.
+4. **Cases**: QG32 for item 1 (the gap 0.16 ± 0.02 in), QG31 for item 2 (the ribbon's fill per `bannerColor`; a value
+   other than `ink` or `blue` refused), QG33 for item 3 (an approved build: no `-PROOF`, no guide drawn); the mutants as
+   before.
