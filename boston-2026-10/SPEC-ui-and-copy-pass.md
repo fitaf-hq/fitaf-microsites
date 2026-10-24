@@ -281,3 +281,36 @@ never committed; the build's were written to a scratch directory outside this re
    and kept while confirmed; the step's words after the end. Mutants: the struck price computed from the wrong side
    (list × 0.75), and an E1 scheduled for a save with no offer. Goldens moved once, with proof; the whole site suite,
    Storybook, the watch and contrast green.
+
+### 1.3 The privacy page in production before the drawing, apart from the save step. CONTRACT, before any code
+
+**The Advisor** (Fit AF's decision record `2026-10-17-…` § 7u item 1, *"yes please"*), on a measurement: the entry
+cards printed for the Boston events (`SPEC-print-pieces.md` § 17) say *"Privacy: eatfitaf.com/privacy/"*, and production
+answered **404** there (2026-10-23 about 23:20 PDT, `curl`; `/privacy` and `/privacy/index.html` too), because the
+production build writes `/privacy/` only with `data/save.json` `production` true (SP9). The events start Monday 10-26.
+
+1. **Production carries `/privacy/` once `consent/DRAFT.md` § 6 is approved, whatever `production` says.** § 6's
+   approval is one line inside § 6, `<!-- approved YYYY-MM-DD -->` (the words files' convention), written only on the
+   Advisor's word, never by the build or an agent. With it and `production` false, the production build writes
+   `privacy/index.html` exactly as with `production` true (no DRAFT tag; § 6's paragraphs; no script) and **nothing
+   else changes**: `index.html` and every other file byte for byte (S20; PV5 moves by that one file). Without it, as
+   today. With `production` true, as today (its v1 refusals unchanged).
+2. **A bracket left in an approved § 6 refuses the production build**, naming the page (SP9's rule, now with `production`
+   false too); so does a marker whose date is not a real date.
+3. **§ 6 gains the drawing's paragraph**, after *What we collect and why*, in § 6's own form (a blockquote line opening
+   with a bold heading). Draft words, until his look:
+
+   > **Our Boston drawing.** If you entered our drawing at a Boston event (October 26–29, 2026), we keep only the email
+   > on your card — nothing else from a business card — to draw the winner on October 30, tell them, and email you about
+   > our meals and offers, as the card says. Photos of the cards are deleted once the winner has accepted, and the cards
+   > are shredded. Unsubscribe from any email at any time, or ask us to delete your entry: privacy@eatfitaf.com.
+
+   The development build's `/privacy/` carries it at once (DRAFT-tagged, as now).
+4. **Cases first**, red on § 1.2's tip: SP9 amended (`production` false with § 6 approved: the page, § 6's paragraphs
+   in order, no DRAFT tag, no script, the template's tokens; without the marker: no page; a bracket with the marker, or
+   a marker with a bad date: refused, naming the page); the drawing's paragraph on both builds' `/privacy/`, in its place.
+   Mutant: the marker ignored (a production build without it writes the page). Goldens moved once, with proof (PV5 by
+   exactly the privacy pages). The whole site suite, Storybook, the watch and contrast green.
+5. **Not here**: the marker itself (after his look at the development page at 390 px); the production pin (`fitaf-infra`);
+   `privacy@`'s mail, which has no MX until `fitaf-infra` 1.12's forwarding (release (a)): until then the page names an
+   address that bounces, which is his to weigh.
