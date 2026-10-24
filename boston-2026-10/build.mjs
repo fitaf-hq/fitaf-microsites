@@ -28,7 +28,7 @@ import { scriptJson } from "./src/worker/script-json.js";
 import { checkSelection, legacyKey } from "./scripts/selection.mjs";
 import { addDays, DAYS as MS_PER_DAY, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 import { e1, ex } from "./src/worker/messages.js";
-import { productionRefusals } from "./scripts/production-inputs.mjs";
+import { printedRefusals, productionRefusals } from "./scripts/production-inputs.mjs";
 import { qrEvent } from "./src/qr-event.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -770,6 +770,42 @@ ${paragraphs.join("\n")}
 `;
 }
 
+/**
+ * SPEC-ui-and-copy-pass § 1.3 (2026-10-23; the entry cards printed for the Boston events name eatfitaf.com/privacy/): § 6
+ * approved is one line inside it, `<!-- approved YYYY-MM-DD -->`, written on the Advisor's word alone. Its date, or null
+ * when § 6 has no such line; a line that opens `<!-- approved` in any other form, or names no real date, or more than one
+ * such line, refuses the build, naming the page, before anything is written.
+ */
+const APPROVAL_OPENING = /<!--\s*approved\b/;
+const APPROVAL_LINE = /^<!-- approved (\d{4}-\d{2}-\d{2}) -->$/;
+/** A YYYY-MM-DD that names a day of the calendar (2026-02-30 does not). */
+function realDay(ymd) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+}
+export function privacyApproval(draftText) {
+  const section = draftText.split(/^## 6\. .*$/m)[1]?.split(/^## /m)[0] ?? "";
+  const lines = section.split("\n").filter((l) => APPROVAL_OPENING.test(l));
+  if (!lines.length) return null;
+  const date = lines.length === 1 ? APPROVAL_LINE.exec(lines[0].trim())?.[1] : undefined;
+  if (!date || !realDay(date)) {
+    throw new Error(
+      `build refused: consent/DRAFT.md § 6's approval line is not one "<!-- approved YYYY-MM-DD -->" with a real date (${lines.join(" | ")}), so the privacy page cannot be published`,
+    );
+  }
+  return date;
+}
+
+/** § 1.3: the production build's /privacy/ with `production` false and § 6 approved: the page `production` true writes,
+ *  refused, naming it, if it prints a placeholder or the draft tag (production-inputs' rule for printed words). */
+async function approvedPrivacy({ draftText, save }) {
+  const privacy = await privacyPage({ draftText, save, draft: false });
+  const refusals = printedRefusals([{ where: "the privacy page", text: printedText(privacy) }]);
+  if (refusals.length) throw new Error(`production build refused (consent/DRAFT.md § 6 approved):\n${refusals.map((r) => `- ${r}`).join("\n")}`);
+  return privacy;
+}
+
 /** Write /privacy/ beside the pages. */
 async function writePrivacy(outDir, html) {
   const path = join(outDir, PRIVACY_DIR, "index.html");
@@ -935,12 +971,17 @@ export async function build({
   // true, it carries Flow 1, and the build refuses here, writing nothing, until every input is approved.
   const save = await loadJson(savePath);
   const draftText = await readFile(draftPath, "utf8");
+  // SPEC-ui-and-copy-pass § 1.3: with § 6 approved, the production build carries /privacy/ whatever `production` says.
+  const privacyApproved = privacyApproval(draftText);
   const prod =
     target !== "prod"
       ? null
       : save.production === true
         ? await productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftText, productionVars })
-        : { html: await renderPage(plans, PROD_SLOTS, messages, card, photos, events), privacy: null };
+        : {
+            html: await renderPage(plans, PROD_SLOTS, messages, card, photos, events),
+            privacy: privacyApproved ? await approvedPrivacy({ draftText, save }) : null,
+          };
   // SPEC-preview-sites § 3: the preview page is the production page's slots (PROD_SLOTS) with a preview's changes, never
   // productionPage's: a preview carries no save step (rung 4) whatever data/save.json's `production` says.
   const preview = target === "preview" ? await previewSlots(messages) : null; // the banner's words checked, too
@@ -960,7 +1001,8 @@ export async function build({
   }
   const files = await copyStatic(outDir, photos, sheetsDir, preview ? PREVIEW_STATIC_DIRS : STATIC_DIRS); // § 8: a preview, no why/
   // § 9 item 1: /privacy/, a static page beside the plan pages (as /why/): the development build always, marked as the
-  // step is; the production build only with `production` true; the preview build never (it has no save step).
+  // step is; the production build with `production` true, or with DRAFT § 6 approved (SPEC-ui-and-copy-pass § 1.3); the
+  // preview build never (it has no save step).
   const privacy = target === "dev" ? await privacyPage({ draftText, save, draft: true }) : target === "prod" ? prod.privacy : null;
   if (privacy) files.push((await writePrivacy(outDir, privacy)).path);
   // QR codes point at the production URL, so only the production build writes them.

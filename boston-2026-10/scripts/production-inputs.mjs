@@ -105,8 +105,9 @@ function varRefusals(vars) {
   return out;
 }
 
-/** `printed`: [{ where, text }], the words the page and the emails print (build.mjs renders them). */
-function printedRefusals(printed) {
+/** `printed`: [{ where, text }], the words the page and the emails print (build.mjs renders them). Exported for
+ *  SPEC-ui-and-copy-pass § 1.3: the privacy page alone, published once DRAFT § 6 is approved, is checked by the same rule. */
+export function printedRefusals(printed) {
   const out = [];
   for (const { where, text } of printed) {
     if (/DRAFT — not for use/.test(text)) out.push(`${where} carries the draft tag (DRAFT — not for use)`);

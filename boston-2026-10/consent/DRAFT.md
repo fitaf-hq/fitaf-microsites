@@ -123,6 +123,10 @@ any time.
 > **What we collect and why.** Your email and ZIP code, to send the offer you saved (once) and to check we
 > deliver to you — or, if we don't yet, to tell you when we do. Only if you tick the box and confirm, your
 > permission to send menus and offers by email.
+> **Our Boston drawing.** If you entered our drawing at a Boston event (October 26–29, 2026), we keep only the email
+> on your card — nothing else from a business card — to draw the winner on October 30, tell them, and email you about
+> our meals and offers, as the card says. Photos of the cards are deleted once the winner has accepted, and the cards
+> are shredded. Unsubscribe from any email at any time, or ask us to delete your entry: privacy@eatfitaf.com.
 > **What we don't do.** We don't sell or share your information for others' advertising. We don't collect
 > health information.
 > **Your choices.** Unsubscribe from any email at any time — it's as easy as signing up. Ask us to see,
