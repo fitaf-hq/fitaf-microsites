@@ -42,10 +42,13 @@ the offer's last day, or the next day on that day); the page fills it.
 ### After the offer ends
 
 `SPEC-ui-and-copy-pass.md` § 1.2 item 3 (2026-10-23): after the last offer's last day the step still saves, with no offer
-and nothing sent: no offer line, no date held; the fields and the box as above. The lead and the button are the Advisor's
-words; the fine print and the saved line are proposed. A draft, as all of this file.
+and nothing sent: no offer line, no date held; the ZIP code's field and the box as above, the email's help line its own
+(no link is sent tomorrow). The lead and the button are the Advisor's words; the email's help line, the fine print and
+the saved line are proposed. A draft, as all of this file.
 
 > Not ready today? Save your plan, and we'll email you when our next offer opens.
+>
+> **Email** — *we'll email you here when our next offer opens*
 >
 > **[ Save my plan ]**
 >

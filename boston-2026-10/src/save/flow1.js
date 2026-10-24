@@ -100,6 +100,8 @@
     el("save-step-offer").hidden = saved || later;
     el("save-lead").hidden = saved || later;
     el("save-lead-later").hidden = saved || !later;
+    el("save-email-help").hidden = later; // after the end no link is sent tomorrow: the field's own help line
+    el("save-email-help-later").hidden = !later;
     el("save-form").hidden = saved;
     el("save-submit").hidden = later;
     el("save-submit-later").hidden = !later;

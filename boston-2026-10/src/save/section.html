@@ -6,7 +6,8 @@
             <p class="save-lead" id="save-lead-later" hidden>Not ready today? Save your plan, and we'll email you when our next offer opens.</p>
             <form id="save-form" novalidate>
               <label class="field"><span class="field-name">Email</span>
-                <span class="field-help">we'll send your link here tomorrow</span>
+                <span class="field-help" id="save-email-help">we'll send your link here tomorrow</span>
+                <span class="field-help" id="save-email-help-later" hidden>we'll email you here when our next offer opens</span>
                 <input id="save-email" type="email" autocomplete="email" maxlength="254"></label>
               <p class="field-error" id="save-email-error" role="alert" hidden></p>
               <label class="field"><span class="field-name">Delivery ZIP code</span>
