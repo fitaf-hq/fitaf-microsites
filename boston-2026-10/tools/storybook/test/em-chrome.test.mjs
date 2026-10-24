@@ -286,8 +286,31 @@ test("EM2: a week of one list shows no chooser, and the card as the base's, its 
       const name = WORDS.menus[CC];
       const dated = `${name} (${em.weekOf(em.MENUS_WEEK)})`;
       assert.ok(before.text.includes(dated), `control: ${BASE}'s heading names the week`);
-      assert.equal(after_.text, before.text.replace(dated, name), `${width} ${hash}: the card's text, the heading the menu's name alone`);
-      assert.deepEqual(after_.boxes, before.boxes, `${width} ${hash}: the card's boxes`);
+      // The site's SPEC-ui-and-copy-pass § 1.2 item 1 (2026-10-23): an answer set above its plan (5 on the 4) shows its own
+      // meals, and its weekly total those meals at the plan's price a meal; read from the site's table and words (ms-harness).
+      const key = hash.replace(/^#[a-z]+-/, "").replace(/-s$/, "");
+      const goal = hash.slice(1).split("-")[0];
+      const row = ms.TABLE.find((r) => r.key === key);
+      const unit = WORDS.plan_page;
+      const figures = (text) =>
+        row.meals === row.plan
+          ? text
+          : text
+              .replace(`${ms.dollars(row.plan * ms.centsOf(goal, row.plan))}${unit.total_unit}`, `${ms.dollars(row.meals * ms.centsOf(goal, row.plan))}${unit.total_unit}`)
+              .replace(`\n${row.plan} ${unit.meals_unit}`, `\n${row.meals} ${unit.meals_unit}`);
+      assert.equal(after_.text, figures(before.text.replace(dated, name)), `${width} ${hash}: the card's text, the heading the menu's name alone`);
+      // § 1.2 item 1 redraws an answer set's total and meals when it is above its plan: those two figures and the unit
+      // beside each are held apart there; every other box as the base's.
+      const redrawn = (boxes) => {
+        if (row.meals === row.plan) return boxes;
+        const drop = new Set();
+        for (const id of ["result-total", "result-meals"]) {
+          const i = boxes.findIndex((b) => b.startsWith(`span#${id}.fig `));
+          if (i >= 0) [i, i + 1].forEach((j) => drop.add(j));
+        }
+        return boxes.filter((_, j) => !drop.has(j));
+      };
+      assert.deepEqual(redrawn(after_.boxes), redrawn(before.boxes), `${width} ${hash}: the card's boxes`);
     }
   }
 });
