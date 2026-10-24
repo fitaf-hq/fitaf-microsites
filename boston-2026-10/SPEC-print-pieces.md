@@ -809,3 +809,29 @@ email address."*
 5. **Cases**: QG32 amended (the heading and subhead from the PDF, no *Email:*, the `@` and `.` present, the fine print's
    bottom on the inset to 0.5 pt, its lines ≤ 10, its size ≥ 6.5 pt, eight a page still); the mutants as before. The
    tout is unchanged by § 17.6.
+
+### 17.7 Amendment, 2026-10-23 (night): two accents, the logo back in the band, a dark address, a larger card heading. CONTRACT, before any code
+
+**Why.** The Advisor on version 5 (Fit AF's decision record § 7t item 11): *"DROP / YOUR EMAIL / TO WIN. Where "EMAIL" is
+blue, "WIN" is green, and "Fresh Fit AF meals" is in blue. Move the logo back to the black section of the header please.
+"See this week's menu" or "eatfitaf.com" in the footer needs to be in an accent color (or black)"*; and of the card,
+*"The headline on the entry cards can be bigger. Please add whitespace between the email line and the block of fine
+print."*
+
+1. **Colour by span**: in the tout's `headline` lines and its `lede`, `{blue:…}`, `{green:…}` and `{orange:…}` set the
+   words between in that brand colour (the flyer's lede blue, the brand green, the CTA orange); any other name, or an
+   unclosed brace, is refused naming the line. `*…*` keeps its meaning (the headline's green, the lede's `ledeAccent`), so
+   the flyer's words files are unchanged. The words file now gives *DROP / YOUR {blue:EMAIL} / TO {green:WIN}* and *A week
+   of {blue:fresh Fit AF meals}, on us.* The headline at the largest size that sets each line in the band's column.
+2. **The logo back in the band**, the reversed logo, its place the builder's (the band's top right, clear of the
+   headline, as versions 1–4); the foot's left freed for the ribbon and the fine print.
+3. **The address dark**: *eatfitaf.com* in the band's near-black on the orange (contrast ≥ 4.5:1, measured and named in
+   the report); *See this week's menu* stays white. The scan unit otherwise as § 17.5.
+4. **The card's heading larger**: the largest size at which *Enter your email to win* sets on one line beside the logo
+   (at least version 5's plus 2 layout px), the subhead under it as now.
+5. **Whitespace under the email line**: at least **0.12 in** between the email line's writing rule and the fine print's
+   first line, taken from the room above the line, never from the fine print (§ 17.6 item 3 stands: ≤ 10 lines, the
+   floor).
+6. **Cases**: QG31 for items 1–3 (the spans' colours read from the PDF, the logo inside the band, the address's colour
+   and contrast), QG32 for items 4–5 (the heading's size, the gap ≥ 0.12 in); a refusal case for item 1's markup; the
+   mutants as before.
