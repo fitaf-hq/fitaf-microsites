@@ -37,6 +37,11 @@ test("QG31: a tout words file outside its keys is refused, naming the key", asyn
     [{ ...TOUT_FIXTURE, headline: ["a", "b", "c", "d"] }, /"headline" must be one to 3 lines/],
     [{ ...TOUT_FIXTURE, banner: "x".repeat(33) }, /"banner" must be one line of at most 32/],
     [{ ...TOUT_FIXTURE, headlineAccent: "red" }, /"headlineAccent" must be one of green, blue, orange/],
+    // § 17.7 item 1: the colour spans' markup, each refused naming its line
+    [{ ...TOUT_FIXTURE, headline: ["FIXTURE", "LINE {red:TWO}"] }, /"headline" line 2: \{red:…\} is not one of blue, green, orange/],
+    [{ ...TOUT_FIXTURE, headline: ["FIXTURE", "LINE {blue:TWO"] }, /"headline" line 2: a brace unclosed, or a span inside another/],
+    [{ ...TOUT_FIXTURE, headline: ["{blue:A {green:B}}"] }, /"headline" line 1: a brace unclosed, or a span inside another/],
+    [{ ...TOUT_FIXTURE, lede: "A lede with {pink:words}." }, /"lede": \{pink:…\} is not one of blue, green, orange/],
   ];
   for (const [words, why] of cases) {
     const file = await wordsFile(words, "tout-words.json");
@@ -49,7 +54,7 @@ test("QG31: a tout words file outside its keys is refused, naming the key", asyn
   const file = await wordsFile(TOUT_FIXTURE, "tout-words.json");
   try {
     const read = await readTout(file.path);
-    assert.deepEqual([read.headline, read.banner, read.scan, read.fine, read.approved, read.source, read.headlineAccent], [TOUT_FIXTURE.headline, TOUT_FIXTURE.banner, TOUT_FIXTURE.scan, TOUT_FIXTURE.fine, false, "tout-words.json", "blue"]);
+    assert.deepEqual([read.headline, read.banner, read.scan, read.fine, read.approved, read.source, read.headlineAccent], [TOUT_FIXTURE.headline, TOUT_FIXTURE.banner, TOUT_FIXTURE.scan, TOUT_FIXTURE.fine, false, "tout-words.json", "green"]);
   } finally {
     await rm(file.dir, { recursive: true, force: true });
   }
@@ -68,7 +73,7 @@ test("QG31: what does not fit is refused, naming the layout px over, never shrun
   assert.deepEqual(await toutFitProblems(ROOT), []);
 });
 
-test("QG31 (§ 17.4 items 1–4): the headline the largest at 46 or more, its accent blue; the edge straight; the fine print regular on two lines under its ribbon; the scan line above the code", { skip: NO_CHROME || NO_POPPLER }, async () => {
+test("QG31 (§§ 17.4–17.7): the headline the largest on its three lines, its spans' colours from the PDF; the logo in the band; the edge straight; the foot 1.2 in; the fine print regular on at most three lines under its centred ribbon; the scan unit; the address dark, its contrast named", { skip: NO_CHROME || NO_POPPLER }, async () => {
   const file = await wordsFile(TOUT_FIXTURE, "tout-words.json");
   try {
     assert.deepEqual(await toutLookProblems(ROOT, file.path), []);

@@ -35,16 +35,21 @@ const load = (root, rel) => import(pathToFileURL(join(root, rel)).href);
 
 /**
  * QG31: the tout's words, a fixture's: neutral, and no bracket (so a proof only for want of approval or a photo); its
- * headline's accent blue (§ 17.4 item 1) and its fine print short enough for two lines (item 3).
+ * headline and lede coloured by span (§ 17.7 item 1: a blue, a green, a blue) and its fine print short enough for two
+ * lines.
  */
 export const TOUT_FIXTURE = {
-  headline: ["FIXTURE", "LINE *TWO*", "THREE"],
-  headlineAccent: "blue",
-  lede: "A fixture lede with *its accent* words.",
+  headline: ["FIXTURE", "LINE {blue:TWO}", "AND {green:THREE}"],
+  lede: "A fixture lede with {blue:its accent} words.",
   banner: "Fixture banner words",
   scan: "Fixture scan line",
   fine: "Fixture fine print, regular weight, at most two lines: these words stand in for the giveaway's, kept outside this repository.",
 };
+/** A words file's line as it prints: its colour spans' and accents' marks not printed (§ 17.7 item 1, § 13 item 11). */
+export const plainOf = (t) => t.replace(/\{[a-z]+:([^{}]*)\}/g, "$1").replaceAll("*", "");
+/** § 17.7 items 4–5: the card's heading's least size (version 5's 18 plus 2, layout px), and the gap under its email line. */
+export const HEAD_MIN_PX = 20;
+export const RULE_GAP_IN = 0.12;
 /** § 17.4: the fine print's floor (6.5 pt) in layout px, and its size on the card (7 pt). */
 export const FINE_FLOOR_PX = (6.5 / 72) * 120;
 export const CARD_FINE_PX = (7 / 72) * 120;
@@ -230,7 +235,7 @@ export async function toutProblems(root, toutPath, words) {
       if (!caption) problems.push(`assignment.json names the tout's photo as ${JSON.stringify(record.tout?.id)}, not a fixture photo`);
       // § 17.3 item 2: the tout's photo is the flyer's
       if (record.tout?.id !== record.positions.flyer?.id) problems.push(`the tout's photo is ${record.tout?.id}, not the flyer's, ${record.positions.flyer?.id}`);
-      const runs = [...words.headline, words.lede, words.banner, words.scan, "eatfitaf.com", words.fine, caption ?? ""].map((r) => r.replaceAll("*", ""));
+      const runs = [...words.headline, words.lede, words.banner, words.scan, "eatfitaf.com", words.fine, caption ?? ""].map(plainOf);
       for (const run of runs) if (!carries(pdf, 1, run)) problems.push(`${tout.stem}.pdf lacks "${run}"`);
       const qrs = tout.measured.faces.flatMap((f) => f.qrs);
       if (qrs.length !== 1) problems.push(`the tout has ${qrs.length} QR codes, not 1`);
@@ -246,7 +251,7 @@ export async function toutProblems(root, toutPath, words) {
       if (faces.length === 2 && faces[1].trim.y - (faces[0].trim.y + faces[0].trim.h) < 1 - TOLERANCE_IN) problems.push("the two touts are less than 1 in apart");
       const reads = qrReads(sheet, 1, faces.flatMap((f) => f.qrs));
       if (reads.length !== 2 || reads.some((r) => r !== BOSTON_URL)) problems.push(`the sheet's QR codes decode to ${JSON.stringify(reads)}`);
-      for (const run of [words.headline[1].replaceAll("*", ""), words.banner, words.fine]) if (timesOn(sheet, 1, run) !== 2) problems.push(`${letter.stem}.pdf carries "${run}" ${timesOn(sheet, 1, run)} times, not 2`);
+      for (const run of [plainOf(words.headline[1]), words.banner, words.fine]) if (timesOn(sheet, 1, run) !== 2) problems.push(`${letter.stem}.pdf carries "${run}" ${timesOn(sheet, 1, run)} times, not 2`);
       problems.push(...paperProblems(`${letter.stem}.pdf`, sheet, 1, faces.map((f) => f.trim)));
       return problems;
     });
@@ -340,6 +345,18 @@ function colourShare(png, box, dpi, rgb, tolerance = 40) {
   }
   return all ? near / all : 0;
 }
+/** § 17.7 item 3: the band's near-black (--ink) and the white, as the measuring pass reads a run's colour. */
+const INK_CSS = "rgb(33, 37, 41)";
+const WHITE_CSS = "rgb(255, 255, 255)";
+/** WCAG 2's contrast ratio of two CSS rgb() colours (an oracle of its own, not the build's). */
+function wcag(fg, bg) {
+  const lum = (css) => {
+    const [r, g, b] = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(css).slice(1, 4).map((c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
 /** The template's blue (--lean), green (--signature) and the foot's orange (--cta), as drawn. */
 const LEAN = [0x48, 0xae, 0xee];
 const SIGNATURE = [0x8c, 0xc6, 0x3f];
@@ -382,11 +399,18 @@ export async function toutLookProblems(root, toutPath) {
     if (size !== null && size < 72 && Math.min(...grows) >= 0) problems.push(`at ${size + 1} layout px every line and the band would still fit: ${size} is not the largest`);
     const pdf = join(out, `${tout.stem}.pdf`);
     const page = drawn(pdf, 1, 150);
-    const accent = face.texts.find((t) => t.text === "TWO");
-    if (!accent) problems.push("the headline's accent word is not measured");
-    else {
-      if (colourShare(page, accent, 150, LEAN) < 0.1) problems.push(`the accent word is not blue in the PDF (${colourShare(page, accent, 150, LEAN).toFixed(3)} of its box)`);
-      if (colourShare(page, accent, 150, SIGNATURE) > 0.01) problems.push("the accent word is green in the PDF");
+    // § 17.7 item 1: each span's words in its colour in the PDF, and not in the other
+    for (const [word, want, not] of [["TWO", LEAN, SIGNATURE], ["THREE", SIGNATURE, LEAN], ["its accent", LEAN, SIGNATURE]]) {
+      const found = face.texts.find((t) => t.text === word);
+      // sampled within its own line (its glyph box, taller than a tight line, reaches into the next), its middle 70 %
+      const top = found ? Math.max(found.y, found.set.y) : 0;
+      const h = found ? Math.min(found.y + found.h, found.set.y + found.set.h) - top : 0;
+      const run = found ? { x: found.x, w: found.w, y: top + 0.15 * h, h: 0.7 * h } : null;
+      if (!run) problems.push(`"${word}" is not measured`);
+      else {
+        if (colourShare(page, run, 150, want) < 0.1) problems.push(`"${word}" is not in its colour in the PDF (${colourShare(page, run, 150, want).toFixed(3)} of its box)`);
+        if (colourShare(page, run, 150, not) > 0.01) problems.push(`"${word}" is in the other colour in the PDF`);
+      }
     }
     // item 2: no torn edge, in the page and in the PDF
     const inputs = await loadInputs({ photosDir: join(dir, "no-photos"), today: ON });
@@ -421,13 +445,27 @@ export async function toutLookProblems(root, toutPath) {
       const height = face.trim.y + face.trim.h - foot.y;
       if (Math.abs(height - 1.2) > 0.02) problems.push(`the foot is ${height.toFixed(3)} in tall in the trim, not 1.2`);
     }
-    // § 17.5 item 5: no logo in the band, and the tout's logo in the foot (the code's own, at its centre, aside)
+    // § 17.7 item 2: the tout's logo back in the band, at its top right, clear of the headline (the code's own, at its
+    // centre, aside)
     const [code] = face.qrs;
     const within = (a, b) => a.x >= b.x - 0.01 && a.y >= b.y - 0.01 && a.x + a.w <= b.x + b.w + 0.01 && a.y + a.h <= b.y + b.h + 0.01;
     const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
     const logos = face.logos.filter((l) => !(code && within(l, code)));
-    if (bandField && logos.some((l) => overlaps(l, bandField))) problems.push("a logo is in the band");
-    if (!foot || logos.length !== 1 || !within(logos[0], foot)) problems.push(`the tout's logo is not in the foot (${logos.length} logo(s) beside the code's)`);
+    if (!bandField || logos.length !== 1 || !within(logos[0], bandField)) problems.push(`the tout's logo is not in the band (${logos.length} logo(s) beside the code's)`);
+    else {
+      if (logos[0].x + logos[0].w / 2 < bandField.x + bandField.w / 2 || logos[0].y > bandField.y + bandField.h / 2) problems.push("the band's logo is not at its top right");
+      for (const t of face.texts.filter((x) => lines.length && overlaps(x, logos[0]))) problems.push(`"${t.text}" runs into the band's logo`);
+    }
+    // § 17.7 item 3: the address in the band's near-black (--ink) on the orange, its contrast as the report names it
+    const addressRun = face.texts.find((t) => t.text === "eatfitaf.com");
+    const footBg = foot?.bg;
+    if (!addressRun || addressRun.color !== INK_CSS) problems.push(`the address is ${addressRun?.color}, not the band's near-black ${INK_CSS}`);
+    if (!addressRun || face.texts.find((t) => t.text === TOUT_FIXTURE.scan)?.color !== WHITE_CSS) problems.push("the scan line is not white");
+    const ratioLine = built.lines.find((l) => l.startsWith("tout: eatfitaf.com ")) ?? "";
+    const named = /contrast (\d+\.\d\d):1/.exec(ratioLine)?.[1];
+    if (!named || !addressRun || Math.abs(Number(named) - wcag(addressRun.color, footBg)) > 0.005) problems.push(`the report's contrast "${ratioLine}" is not the drawn colours' ${addressRun ? wcag(addressRun.color, footBg).toFixed(2) : "?"}`);
+    // the orchestrator's ruling (2026-10-23): --ink on --cta accepted at its 4.17:1; at least 4.0, so a lighter colour fails
+    if (addressRun && wcag(addressRun.color, footBg) < 4) problems.push(`the address's contrast is ${wcag(addressRun.color, footBg).toFixed(2)}:1, under 4.0`);
     // item 4 (§ 17.5 item 3): the scan unit, as the report names it
     const scan = face.texts.find((t) => t.text === TOUT_FIXTURE.scan);
     const address = face.texts.find((t) => t.text === "eatfitaf.com");
@@ -537,7 +575,22 @@ export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_R
       const [left, right] = [f.trim.x + CARD_CUT_IN, f.trim.x + f.trim.w - CARD_CUT_IN];
       if (blanks.length && (Math.abs(blanks[0].x - left) > 0.02 || Math.abs(blanks.at(-1).x + blanks.at(-1).w - right) > 0.02)) problems.push(`card ${c + 1}: the email line runs ${blanks[0].x.toFixed(2)}–${(blanks.at(-1).x + blanks.at(-1).w).toFixed(2)} in, not the measure ${left.toFixed(2)}–${right.toFixed(2)}`);
       if (blanks.length && blanks.slice(1).some((b) => b.w >= blanks[0].w)) problems.push(`card ${c + 1}: the email line's first run is not the longest`);
+      // § 17.7 item 5: at least 0.12 in from the email line's rule to the fine print's first line
+      const gap = Math.min(...fine.map((t) => t.set.y)) - Math.max(...blanks.map((b) => b.y + b.h));
+      if (!(gap >= RULE_GAP_IN - 0.005)) problems.push(`card ${c + 1}: ${gap.toFixed(3)} in from the email line to the fine print, under ${RULE_GAP_IN}`);
     });
+    // § 17.7 item 4: the heading at least version 5's 18 plus 2 layout px, the largest on one line beside the logo (one more
+    // px would run it past its box), the size the report names
+    const headSaid = /^entry-card: the heading at (\d+) layout px/.exec(built.lines.find((l) => l.startsWith("entry-card: the heading at")) ?? "");
+    const headPx = headSaid ? Number(headSaid[1]) : null;
+    if (!(headPx >= HEAD_MIN_PX)) problems.push(`the card's heading is ${headPx} layout px, not at least ${HEAD_MIN_PX}`);
+    const heading = sheet.faces[0].fits.find((fit) => fit.what === "the heading" && fit.words);
+    if (!heading) problems.push("the card's heading is not measured");
+    else {
+      const room = (heading.content.x + heading.content.w - heading.words.x - heading.words.w) * 120;
+      if (room < -0.01) problems.push(`the card's heading runs ${(-room).toFixed(1)} layout px past its box`);
+      if (headPx !== null && headPx < 40 && room >= (heading.words.w * 120) / headPx) problems.push(`at ${headPx + 1} layout px the card's heading would still fit: ${headPx} is not the largest`);
+    }
     problems.push(...paperProblems(`${cards.stem}.pdf`, pdfOf(cards), 1, sheet.faces.map((f) => f.trim)));
     for (const png of [`${card.stem}.png`, `${cards.stem}.png`]) {
       const ok = await readFile(join(out, png)).then(() => true, () => false);
