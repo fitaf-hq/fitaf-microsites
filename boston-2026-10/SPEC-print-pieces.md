@@ -879,3 +879,105 @@ the line.
 4. **Cases**: QG32 for item 1 (the gap 0.16 ± 0.02 in), QG31 for item 2 (the ribbon's fill per `bannerColor`; a value
    other than `ink` or `blue` refused), QG33 for item 3 (an approved build: no `-PROOF`, no guide drawn); the mutants as
    before.
+
+### 17.9.1 Built, 2026-10-23 (night): §§ 17.4–17.9, found at the build, not ruled (but item 7's, the orchestrator's)
+
+1. **The commits.** `3f8c0ac` is § 17.4 as it made the proofs of 20:26 (`dist-print/letter-2026-10-23c/`), a checkpoint;
+   its cases were amended but not run to the end, the run stopped at 21:01 under a machine load near 900. `f2f77b5` is
+   §§ 17.5–17.6 as they made the proofs of 21:12–21:24 (`-23d`), a checkpoint: every QG file 14 of 15, the one red the
+   defect of item 6 below, then QG32 5 of 5 after its fix. `365a2ff` holds the cases for §§ 17.4–17.7; `559ce85` the
+   § 17.7 code (its proofs in `-23e/`). `a1bee55` holds § 17.8's cases and `526612a` its code (its proofs in
+   `-23f/`). `2e30b1e` holds § 17.9's cases and `1587e8c` its code; **the release** was built from `1587e8c`'s code, into
+   the ignored `dist-print/final-2026-10-23-ribbon-ink/` and `dist-print/final-2026-10-23-ribbon-blue/` (item 11).
+2. **The cases, before and after.** On `fdd448f` (§ 17.3's code, the base before any of this), exported by `git archive`,
+   `node --test` over QG31–QG34 (21:44–21:45): **10 of 13 fail**, each for these sections' reasons. The tout's file is
+   refused for its spans and keys; the fixture's headline runs 35.5 layout px over the band beside a band logo it no
+   longer has room for; the card's subhead and its label-free email line are refused; the brackets case is built on
+   both. The two size cases pass there, and QG34 skips there (no git). On this tree, the QG files in parts after each
+   fix: QG31 with QG34 and the mutants (21:38–21:42), **7 of 8**. The one red was the look case sampling "TWO" across
+   its glyph box, which reaches into the green line below; now sampled within its own line, **1 of 1** (21:42). The
+   whole set is in the suite run of item 9. **§ 17.8**: the final cases on `559ce85` (22:09–22:11), **4 of 13 fail**,
+   each for § 17.8's reason (the ribbon 77.0 and the fine print 63.3 layout px past the photo's line; the email line 1.21
+   in under the heading; guides drawn on an approved build). On `526612a`'s tree, every QG file (22:01–22:08), **16 of
+   16**. **The mutants**, each after its unchanged mirror's control, which passed.
+   The fit refusal off: QG31 red ("headline line 1 too long was not refused"). The bracket rule off: QG33 red, 3
+   problems.
+3. **Sizes are settled by measuring, never guessed** (`build-print.mjs` `settleTout`, `settleCard`). Each size is tried
+   on its own page in a measuring pass and stepped down until what it holds fits, and the report names what was settled.
+   **The tout, in turn:**
+   - **The scan unit.** Stacked if the foot holds it, else side by side, its code as large as fits from 1 in and never
+     under 0.75 in. The foot is judged by its words and by the code's white tile, which is not a painted field (white is
+     the page's colour), so it is read as the code's box plus the tile's 9 layout px a side.
+   - **The headline.** Measured at 46 layout px, scaled to the largest whole size at which each line fills its box, then
+     down a px while a line or the band runs over.
+   - **The fine print.** From 7 pt down to the 6.5 pt floor until it fits its lines.
+
+   **The card:** its heading the same way, then its fine print, on ten lines or fewer, else with its bold runs regular.
+   **With the words given:**
+   - The tout's headline 58 layout px on the words file's three lines (it was 46 at § 17.4 and 59 at § 17.5).
+   - The tout's fine print 7 pt on 3 lines.
+   - The scan unit side by side, the code 0.8 in: stacked does not fit a 1.2 in foot, about 157 layout px against 120.
+   - The card's heading 28 layout px (it was 18; it stayed 28 when § 17.8 removed the subhead).
+   - The card's fine print 6.5 pt on 10 lines, its bold runs kept.
+   - Eight cards a page.
+4. **Where the parts sit, the builder's proposals.**
+   - **§ 17.4.** At the 46 px least, the headline's first line (§ 17.4's words) was about 422 layout px against a band
+     393 wide, and 147 px over beside the logo. The photo went to 2.2 in and the logo beside the headline's shortest line.
+   - **§ 17.5.** The band and the photo are 2.8 in tall above the 1.2 in foot, the photo 2.8 in wide (its window square;
+     64 % of its width shows). The logo moved to the foot's left at 80 layout px. The ribbon's words are centred.
+   - **§ 17.7.** The logo is back at the band's top right, 104 layout px, beside the headline's first line, which keeps 14
+     px clear of it.
+     The foot's left is the ribbon and the fine print.
+   - **§ 17.8.** That column has a fixed measure, 348 layout px, ending at the photo's left edge less the band's own 18
+     px inset; the ribbon's notch tip and the fine print stop there, and the scan unit sits at the foot's right. The band's top padding grows with the headline (0.2 of its
+     size), so the first line keeps the safe margin at any settled size.
+   - **The card.** Its heading, with the logo beside it (§ 17.8: its subhead gone with the words, a subhead line still
+     read if a file gives one). The email line spans the whole measure; its first run is drawn the longest, as § 17.6
+     item 2 asks, though the words file's runs are 8 / 10 / 3, so the first is drawn at 11. Since § 17.8 the line sits
+     right under the heading at its own 0.4 in. The room between it and the fine print, which sits on the bottom inset,
+     is whitespace, at least 0.12 in.
+   - **The cut guides** (§ 17.8 item 4) are drawn only while a sheet is a proof; an approved build draws none. QG33 holds
+     both.
+5. **The fine-print floor** (`sizes.mjs` `FINE_FLOOR_PT`, 6.5 pt, beside `TYPE_FLOOR_PX`) applies only to the runs inside
+   `[data-fine]`: the tout's and the card's fine print. The measuring pass records each run's weight and colour, and the
+   fine print's lines across its runs (a bold run and its neighbours share a line).
+6. **Found by the cases.** QG32 found the card's fields shrinking under the email line's least height, which set the line
+   over the fine print without leaving the card's box, and passed eight a page for words that do not fit it. The
+   fields now grow and never shrink, so an overflow shows at the bottom and is refused. And § 17.6 item 3, the fine
+   print on the inset to 0.5 pt, collided with reading an inset by glyph boxes, which hang below a tight line. A run's
+   inset is now read **down by its lines as set** (its nearest block's box) and across by its glyphs; the card lost a
+   4 px bottom allowance with it.
+7. ⚠ **§ 17.7 item 3, the orchestrator's ruling (2026-10-23).** The address in the band's near-black, `--ink` #212529,
+   on the foot's `--cta` #d66400, measured from the drawn colours at **4.17:1** (WCAG 2). That is under the 4.5 item 3
+   named, and no template colour reaches 4.5 on that orange (`--navy` 3.90, `--white` 3.70; black, 5.68, is not a
+   token, and Q7 forbids a raw colour). Ruled: **accepted at 4.17**. The 4.5 had been the orchestrator's own number,
+   not the Advisor's ("an accent color (or black)"). No new token and no chip. The report names the ratio and flags
+   anything under 4.0; QG31 holds it at 4.0 or more.
+8. **A tenth of a layout px.** At fractional settled sizes, the drawn page's rounding alone read a band's words "0.0
+   layout px over" its top. § 17's fit checks, and the settling's, now take a tenth of a layout px
+   (`GIVEAWAY_FIT_TOLERANCE_PX`); the flyer's back keeps its hundredth. And under a load near 650, one build failed
+   cleaning a Chrome profile still being written (`mockups/png.mjs`, not changed here); it passed run again.
+9. **The gates at `1587e8c`**, the whole site suite (`nice -n 15 npm --prefix boston-2026-10 test`, the print set and every
+   QG file inside it), on a clean tree, 22:45:24–23:01:03: **1126 of 1126**, none skipped. Two runs before it were stopped
+   unfinished, each because the next amendment had arrived: at `559ce85`, 514 results, none failing; at `526612a`, 486,
+   none failing.
+10. **The release (§ 17.9).** The words approved by the orchestrator on the Advisor's "ready to ship": the tout's
+    `"approved": true` and the card's mark, both in Fit AF's files, neither set here. Built twice: the ribbon in ink (the
+    words file as it stands) and in blue (a scratch copy given `bannerColor`; the Fit AF file not edited). Each folder holds
+    `letter-touts.pdf`, `letter-entry-cards.pdf`, `tout.pdf` and `entry-card.pdf` with their PNGs. Each was read back
+    from its PDFs:
+    - pdfinfo: the letter sheets 612 × 792 pt, the tout 450 × 306, the card 288 × 198.
+    - No name holds `PROOF`, and the report's last line is "placeholders remain: none".
+    - jsQR decodes the four codes to the `boston` URL, at 300 dpi and in the PNGs.
+    - No cut guide is drawn: 0 ink pixels in a band along every inner cut.
+    - On the card, 0.150 in of white from the email line's lowest ink to the fine print (item 1's 0.16 ± 0.02), and
+      0.34 in from the heading.
+    - The ribbon's words: 15.43:1 on the ink, 2.45:1 on the blue, measured and not a gate; the Advisor compares the
+      two by eye.
+11. **§ 17.9's cases on `526612a`** (§ 17.8's code): **4 of 16 fail** (22:45–22:54), each for its reason: the `bannerColor` key refused; no ribbon line in the report; no blue
+    ribbon; 0.270 in of white under the email line, which less 0.115 is 0.155. The approved build's case passes there,
+    since § 17.8 item 4 had built it. Item 1's gap is read on an invented card whose fine print
+    sets as the Advisor's, 6.5 pt on ten lines (calibrated: 132 words set at 6.75 pt, 140 at 6.5 on ten, 148 on eleven).
+    The other fixtures' fine print is shorter, so the white above it is wider by design and not held to 0.16.
+12. ⚠ **Not done here.** § 17 item 6, the print-ready sheet, is the orchestrator's. The words files' approval is the
+    orchestrator's (on the Advisor's word), set in Fit AF, not here.
