@@ -786,3 +786,26 @@ break into 3 lines."*
 7. **Cases**: QG31 amended for items 1–6 (the headline's three lines, the foot's height ±0.02 in, the code at ≥ 0.75 in
    and decoding, the ribbon text centred to 0.5 pt, the logo outside the band, the fine print's lines and weight); the
    mutants as before. The card is unchanged by § 17.5.
+
+### 17.6 Amendment, 2026-10-23 (night): the card's heading, its whole width for the email, and its fine print in ten lines. CONTRACT, before any code
+
+**Why.** The Advisor on the eight-up card (Fit AF's decision record § 7t item 10): *"Change it to headline and subhead:
+Enter your email to win / a week of Fit AF meals … I just wanted to make "email" the action. Then we can remove "Email:"
+from the entry line – giving entrants the maximum space to write"*; and *"I'd like to go from 11 to either 9 or 10 lines.
+Then we can use that extra vertical space (the fine print should be bottom aligned) to allow for more room to write the
+email address."*
+
+1. **A heading and a subhead**, as the words file now gives them (`##` *Enter your email to win*, then the line *a week
+   of Fit AF meals*): the heading as now (the heading face, the CTA orange), the subhead under it smaller in the ink, the
+   logo beside the heading as now.
+2. **The email line has no label**: the `@` and the `.` with the writing lines between them across the card's whole
+   measure (inside the 0.25 in clear of each cut), the first run the longest.
+3. **The fine print in ten lines or fewer, bottom-aligned**: the card's fine print sits on the card's bottom inset; its
+   size the largest from § 17.4's 7 pt down to the 6.5 pt floor that sets it in **≤ 10 lines**; if 6.5 pt still takes 11,
+   its three semibold runs set in the regular weight, and then the size search again; if still 11, the report says so
+   (the words are the Advisor's to cut). The size, the weight and the line count in the report.
+4. **The space freed goes to the email line**: the room between the heading block and the fine print, the email line
+   placed in it with the most height a hand needs (the line on the lower part of that room).
+5. **Cases**: QG32 amended (the heading and subhead from the PDF, no *Email:*, the `@` and `.` present, the fine print's
+   bottom on the inset to 0.5 pt, its lines ≤ 10, its size ≥ 6.5 pt, eight a page still); the mutants as before. The
+   tout is unchanged by § 17.6.
