@@ -34,7 +34,14 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   token is only the `/o/` link's identifier); E1 and `/o` say *"Your pricing is held until"* its `valid_to`; and the
   production build refuses a `none` offer carrying a code. The Boston event's offer is one, held until **2026-10-29**
   with its approved label *"Sign up today to save 25%"* (`label_approved` 2026-10-21, § 10.2: the same two fields as
-  `boston/print-final`'s); the file's `status` stays `placeholder`, every other offer still `[The offer]`.
+  `boston/print-final`'s); the file's `status` stays `placeholder`, every other offer still `[The offer]`. ⭐ Since
+  `SPEC-ui-and-copy-pass.md` § 1 (2026-10-23) an offer may carry **`headline`**, the words the page's offer box prints
+  (the Boston offer's *"Today only: sign up to save 25%"*, the Advisor's, "OK with iterating"; without it the box prints
+  the label, which the step's line, E1 and `/o` keep: *"Today only"* would be false in a next-morning email; a
+  placeholder headline is refused by the production build), and **`savings_percent`**, a whole number from 1 to 99 (the
+  Boston offer's 25, the percentage its words name): while that offer is current, See all plans strikes each weekly price
+  through beside its price after it, each computed by the build and rounded to the cent (item 7, the contract's default
+  until the Advisor says what *"as discounts"* meant).
 - **`messages.json`**: the campaign's phrases (the M of POEMS). The page's headline, intro line, tagline (the
   first sentence of its meta description) and top bar come from here (`build.mjs` `messageSlots`), and so
   do the same phrases on the four mock-ups (`mockups/`), plus the mock-ups' own (the scan prompt, the

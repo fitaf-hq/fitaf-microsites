@@ -116,6 +116,19 @@ async function render(page, selector, name) {
   await el.screenshot({ path: join(RENDERS, `${name}.png`) });
 }
 
+/** A PNG of the page from `fromSelector`'s top to `below` px past `toSelector`'s bottom (the whole width), when UC_RENDERS
+ *  names a directory: what follows an element, or the lack of it, is in the picture. */
+async function renderSpan(page, fromSelector, toSelector, below, name) {
+  if (!RENDERS) return;
+  await mkdir(RENDERS, { recursive: true });
+  const clip = await page.evaluate((a, b, extra) => {
+    const top = document.querySelector(a).getBoundingClientRect().top + window.scrollY;
+    const bottom = document.querySelector(b).getBoundingClientRect().bottom + window.scrollY + extra;
+    return { x: 0, y: Math.max(0, top), width: document.documentElement.clientWidth, height: Math.min(bottom, document.documentElement.scrollHeight) - Math.max(0, top) };
+  }, fromSelector, toSelector, below);
+  await page.screenshot({ path: join(RENDERS, `${name}.png`), clip, captureBeyondViewport: true });
+}
+
 /** Runs in the page: the offer box as drawn, and the colours of the tokens it must use (read off probes). */
 function readBox(clearance) {
   const box = document.getElementById("offer-box");
@@ -303,7 +316,8 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
     await page.waitForSelector("#cc-list:not([hidden])");
     assert.equal(await drawn(page, "save"), true, "open: the step, beside the card's checkout button");
     assert.equal(await drawn(page, "save-form"), true, "open: its form");
-    await render(page, "#save", "uc2-step-open-390");
+    await render(page, "#offer-box", "uc1-offer-box-in-page-390");
+    await renderSpan(page, "#result", "#save", 8, "uc2-step-open-390");
     await page.type("#save-email", "not-an-address");
     await page.click("#save-submit");
     const under = await page.evaluate(() => {
@@ -332,6 +346,7 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
     await page.waitForSelector("#cc-list:not([hidden])");
     assert.equal(await drawn(page, "offer-box"), false, "after the offer's end: no box");
     assert.equal(await drawn(page, "save"), false, "and no step (SPEC-save-offer-production § 10.7; § 1 item 9 not built)");
-    await render(page, "#result", "uc9-after-the-offer-390");
+    await renderSpan(page, "#top", "main .tabs", 40, "uc9-after-the-offer-top-390");
+    await renderSpan(page, "#result", "#result", 160, "uc9-after-the-offer-end-390");
   });
 });
