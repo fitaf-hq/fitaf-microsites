@@ -16,6 +16,8 @@
 //   item 3) no box, and the step with no offer, its own lead, beside the card. And See all plans while the offer is
 //   current (item 7, as § 1.2 item 2 corrects it: the store's price, the higher one struck through beside it), and the
 //   card of a 5-meal row (§ 1.2 item 1: its meals at the plan's price a meal). Turnstile and /api/save are stood in for.
+//   The development /privacy/ at 390 (§ 1.3, what the Advisor looks at before § 6's approval line): § 6's paragraphs drawn
+//   in their order, the drawing's after "What we collect and why", no sideways scroll; its PNG with UC_RENDERS.
 // The page is the site's own development build (`node build.mjs --env dev --out`, as the stories' pages are built), its
 // clock fixed at noon in New York on 2026-10-24 (a day of the offer: microsite/clock.mjs's fixClock, before the page's
 // own scripts), served on 127.0.0.1; nothing else is requested (Turnstile's script is refused, as SM-8 has it). The words
@@ -87,7 +89,7 @@ function standInTurnstile() {
 
 /** `fn(page)` on the page served from `dir` at `hash`, `width` wide, its clock at `now`, in a fresh Chrome. No
  *  photograph is requested (a render never shows one); /api/save answers { ok: true } (the Worker, stood in for). */
-async function withPage({ dir, hash = "", width, now = OFFER_DAY_MS }, fn) {
+async function withPage({ dir, path = "/index.html", hash = "", width, now = OFFER_DAY_MS }, fn) {
   const server = await serveStatic(dir);
   const chrome = await freshChrome();
   try {
@@ -102,7 +104,7 @@ async function withPage({ dir, hash = "", width, now = OFFER_DAY_MS }, fn) {
     });
     await page.evaluateOnNewDocument(fixClock, now);
     await page.evaluateOnNewDocument(standInTurnstile);
-    await page.goto(`${server.base}/index.html${hash}`, { waitUntil: "load" });
+    await page.goto(`${server.base}${path}${hash}`, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     return await fn(page);
   } finally {
@@ -373,5 +375,29 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
     assert.deepEqual(card.figures.slice(1), [`$${(lean4 / 100).toFixed(2)}`, "5"], "the plan's price a meal; the five meals it lists");
     assert.equal(card.figures[0], `$${((lean4 * 5) / 100).toFixed(2)}`, "its weekly price, five at the plan's price a meal (§ 1.2 item 1)");
     await render(page, "#result", "uc6-card-5-meals-390");
+  });
+});
+
+test("The development /privacy/ in Chrome at 390 (§ 1.3): § 6's paragraphs in order, the drawing's after What we collect and why; its PNG with UC_RENDERS", { timeout: TIMEOUT_MS }, async () => {
+  await devSite();
+  const draft = await readFile(siteFile("consent", "DRAFT.md"), "utf8");
+  // § 6's paragraphs' bold headings, read from the draft's own lines ("> **Who we are.** …"), in order.
+  const section = draft.split(/^## 6\. .*$/m)[1].split(/^## /m)[0];
+  const headings = [...section.matchAll(/^> \*\*([^*]+)\*\*/gm)].map((m) => m[1]);
+  assert.ok(headings.includes("Our Boston drawing."), "control: § 6 carries the drawing's paragraph");
+  await withPage({ dir: devOut, path: "/privacy/index.html", width: VIEWPORTS.w390 }, async (page) => {
+    const drawn = await page.evaluate(() => ({
+      headings: [...document.querySelectorAll("main.privacy p strong")].filter((s) => s.checkVisibility()).map((s) => s.textContent),
+      tag: Boolean(document.querySelector(".draft-tag")?.checkVisibility()),
+      sideways: document.documentElement.scrollWidth > window.innerWidth,
+    }));
+    assert.deepEqual(drawn.headings, headings, "§ 6's paragraphs drawn, in its order");
+    assert.equal(drawn.headings.indexOf("Our Boston drawing."), drawn.headings.indexOf("What we collect and why.") + 1, "the drawing's after What we collect and why");
+    assert.equal(drawn.tag, true, "the development page's DRAFT tag");
+    assert.equal(drawn.sideways, false, "no sideways scroll at 390");
+    if (RENDERS) {
+      await mkdir(RENDERS, { recursive: true });
+      await page.screenshot({ path: join(RENDERS, "uc13-privacy-390.png"), fullPage: true });
+    }
   });
 });
