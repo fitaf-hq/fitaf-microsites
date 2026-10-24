@@ -36,7 +36,8 @@
       let block = node.parentElement;
       while (block !== board && getComputedStyle(block).display.startsWith("inline")) block = block.parentElement;
       const set = inches(block.getBoundingClientRect());
-      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range), weight, set: { y: set.y, h: set.h }, ...(fine ? { fine } : {}) });
+      const color = getComputedStyle(node.parentElement).color;
+      texts.push({ text: node.data.trim(), ...inches(range.getBoundingClientRect()), size: sizeOf(node.parentElement), lines: linesOf(range), weight, color, set: { y: set.y, h: set.h }, ...(fine ? { fine } : {}) });
     }
     const fields = [...board.querySelectorAll("*")]
       .filter((el) => !annotation(el))
@@ -45,7 +46,8 @@
         const style = getComputedStyle(el);
         return !unpainted(style.backgroundColor, pageColour) || style.backgroundImage !== "none";
       })
-      .map((el) => ({ what: nameOf(el), ...inches(el.getBoundingClientRect()) }));
+      // § 17.7 item 3: and its colour, for a contrast against it
+      .map((el) => ({ what: nameOf(el), ...inches(el.getBoundingClientRect()), bg: getComputedStyle(el).backgroundColor }));
     // The content box, as drawn: the computed padding and borders are in layout pixels and the page is drawn scaled
     // (pages.mjs sizeRules), so they are scaled by the element's drawn width over its layout width. On a face turned
     // 180° (the tent's upper) each side is drawn opposite its own: its top padding at the bottom, its left at the right

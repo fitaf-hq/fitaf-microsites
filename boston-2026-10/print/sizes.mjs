@@ -71,7 +71,7 @@ export const PRINT_PIECES = [
  * § 17 (2026-10-23): the giveaway tout's sizes, in layout px but the inches: front B's look laid out landscape. The band
  * and the photo beside it are TOUT_TOP_IN tall (inside the trim), the photo TOUT_PHOTO_W_IN wide; the foot takes the rest.
  * Since § 17.5 (2026-10-23, night) the band and the photo are TOUT_TOP_IN tall, the foot 30 % of the tout (TOUT_FOOT_SHARE:
- * 1.2 in), the photo 2.8 in wide; the logo, out of the band, at the foot's left, TOUT_LOGO_PX wide; the lede at 18px; the
+ * 1.2 in), the photo 2.8 in wide; the logo at the band's top right, TOUT_LOGO_PX wide (§ 17.7 item 2); the lede at 18px; the
  * scan unit (`scan`, the code and the address, § 17.4 item 4) stacked if it fits the foot, else side by side, the code
  * as large as fits from TOUT_QR_IN, never under TOUT_QR_MIN_IN (print/build-print.mjs settleTout); no type on the tout or
  * the entry card under the type floor, TYPE_FLOOR_PX (§ 12 item 3's 14 layout px, 8.4 pt), but the fine print, which has
@@ -100,7 +100,7 @@ export const TOUT_HEAD_MAX_PX = 96;
 export const TOUT_FOOT_SHARE = 0.3;
 export const TOUT_TOP_IN = 4 * (1 - TOUT_FOOT_SHARE);
 export const TOUT_PHOTO_W_IN = 2.8;
-export const TOUT_LOGO_PX = 80;
+export const TOUT_LOGO_PX = 104;
 export const TOUT_LEDE_PX = 18;
 export const TOUT_SCAN_PX = 17;
 export const TOUT_QR_IN = 1;
@@ -121,6 +121,11 @@ export const ENTRY_EMAIL_PITCH_IN = 0.4;
 export const ENTRY_EMAIL_PX = 24;
 export const ENTRY_TEXT_PX = 15;
 export const ENTRY_HEAD_PX = 18;
+/** § 17.7 item 4: the heading the largest that sets on one line beside the logo, from ENTRY_HEAD_MIN_PX (version 5's plus 2). */
+export const ENTRY_HEAD_MIN_PX = ENTRY_HEAD_PX + 2;
+export const ENTRY_HEAD_MAX_PX = 40;
+/** § 17.7 item 5: at least this between the email line's writing rule and the fine print's first line, from the room above. */
+export const ENTRY_RULE_GAP_IN = 0.12;
 export const ENTRY_SUBHEAD_PX = 15;
 export const ENTRY_FINE_PX = ptPx(FINE_PT);
 export const ENTRY_LOGO_PX = 48;

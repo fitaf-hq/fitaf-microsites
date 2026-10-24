@@ -142,6 +142,13 @@ export function backFindings(piece, sheet) {
 }
 
 /**
+ * § 17: a tenth of a layout px. A giveaway piece's sizes are settled by measuring and land on fractional px, where the
+ * drawn page's rounding alone puts a box's words a few hundredths past an edge they sit on (§ 17.7's fixture read 0.0
+ * over at the band's top); words this close are on it. The flyer's back keeps FIT_TOLERANCE_PX.
+ */
+const GIVEAWAY_FIT_TOLERANCE_PX = 0.1;
+
+/**
  * The room a box of words leaves inside its content box on each side, in layout px (below zero, it runs over); across
  * only, for words measured across alone (measure.js: a headline line).
  */
@@ -173,7 +180,7 @@ export function giveawayFindings(piece, sheet, { inset = SAFE_IN, everySide = fa
     const fits = face.fits.filter((fit) => fit.words);
     for (const fit of fits) {
       const room = roomOf(fit);
-      const over = Object.fromEntries(Object.entries(room).filter(([, px]) => px < -FIT_TOLERANCE_PX).map(([side, px]) => [side, -px]));
+      const over = Object.fromEntries(Object.entries(room).filter(([, px]) => px < -GIVEAWAY_FIT_TOLERANCE_PX).map(([side, px]) => [side, -px]));
       const worst = Math.max(0, ...Object.values(over));
       if (worst > 0) refusals.push(name(`${fit.what} does not fit: its words run ${worst.toFixed(1)} layout px over (${Object.keys(over).join(", ")}) (§ 17 item 2: fewer words; nothing is shrunk)`));
       // the room said is below and to the right: words are set from their box's top left, so its other two sides hold none
@@ -236,6 +243,21 @@ export function letterFindings(sheet, layout, piece, measured) {
     if (short.length) refusals.push(`${what} is less than ${LETTER_MARGIN_IN} in from the paper's edge (${short.join(", ")})`);
   }
   return { refusals: [...refusals, ...fit.refusals], smallestPx: fit.smallestPx, spacePx: fit.spacePx, finePx: fit.finePx, fineLines: fit.fineLines };
+}
+
+/** A CSS rgb()/rgba() colour as [r, g, b] (0–255), or null. */
+const rgbOf = (css) => /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(css ?? "")?.slice(1, 4).map(Number) ?? null;
+/** WCAG 2's relative luminance of an [r, g, b]. */
+const luminance = (rgb) => {
+  const [r, g, b] = rgb.map((c) => (c / 255 <= 0.04045 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+/** § 17.7 item 3: WCAG 2's contrast ratio of two CSS colours (as measure.js reads them), or null. */
+export function contrastOf(fg, bg) {
+  const [a, b] = [rgbOf(fg), rgbOf(bg)];
+  if (!a || !b) return null;
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
 }
 
 /**

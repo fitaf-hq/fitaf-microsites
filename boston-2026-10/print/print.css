@@ -288,24 +288,29 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 }
 .print-tout .tout-band { flex: 1; min-width: 0; margin: 0; padding: calc(var(--bleed) + 26px) 18px 20px calc(var(--bleed) + 24px); }
 .print-tout .tout-band:has(.fb-logo-rev) .tout-head { padding-right: 0; }
-/* § 17.5 item 5: no logo in the band (it is in the foot); the headline's lines take the band's whole measure, a line that
-   runs past it refused (data-fit), never shrunk. The headline's size, --tout-head, the build's (print/build-print.mjs
-   settleTout) */
+/* § 17.7 item 2: the reversed logo at the band's top right, level with the headline's first line, which keeps clear of it
+   by 14px; the other lines take the band's whole measure; a line that runs past its box is refused (data-fit), never
+   shrunk. The headline's size, --tout-head, the build's (print/build-print.mjs settleTout). § 17.7 item 1: the colour
+   spans, the flyer's lede blue, the brand green, the CTA orange */
 .print-tout .tout-band { --tout-head: var(--fb-head); }
 /* the headline's glyphs stand above its tight line by about a fifth of its size: the band's top padding grows with it, so
    the first line keeps the safe margin whatever size the build settles */
 .print-tout .tout-band { padding-top: calc(var(--bleed) + 18px + 0.2 * var(--tout-head)); }
 .print-tout .tout-band .tout-head { padding-right: 0; font-size: var(--tout-head); }
+.print-tout .tout-band .fb-logo-top { top: calc(var(--bleed) + 18px + 0.2 * var(--tout-head)); right: 18px; width: var(--tout-logo); }
+.print-tout .tout-head .tout-line-logo { padding-right: calc(var(--tout-logo) + 14px); }
+.print-tout .tout-c-blue { color: var(--lean); }
+.print-tout .tout-c-green { color: var(--signature); }
+.print-tout .tout-c-orange { color: var(--cta); }
 .print-tout .tout-hero { position: relative; flex: none; width: calc(var(--tout-photo-w) + var(--bleed)); }
 .print-tout .tout-name { left: 12px; bottom: 12px; max-width: calc(100% - var(--bleed) - var(--safe) - 12px); }
 .print-tout .tout-head[data-head-accent="blue"] .fb-accent { color: var(--lean); }
 .print-tout .tout-head[data-head-accent="orange"] .fb-accent { color: var(--orange); }
-/* § 17.5 items 2–5: the foot, 30 % of the tout's height (the band and photo above it --tout-top): at its left the logo, on
-   the orange (a dark ground, as the band was); the ribbon, its words centred, and the fine print under it, one column;
+/* § 17.5 items 2–4: the foot, 30 % of the tout's height (the band and photo above it --tout-top): at its left (§ 17.7 item
+   2: the logo back in the band) the ribbon, its words centred, and the fine print under it, one column;
    the scan unit at its right, the scan line, the code and the address stacked, or, when stacked no longer fits the foot,
    side by side: the scan line and the address beside the code, at its left, right-aligned (data-arrange, the build's) */
 .print-tout .tout-foot { flex: 1; min-height: 0; gap: 16px; padding: 12px calc(var(--bleed) + 18px) calc(var(--bleed) + 12px); }
-.print-tout .tout-foot-logo { position: relative; z-index: 1; flex: none; width: var(--tout-logo); }
 .print-tout .tout-cta { align-self: center; display: flex; flex-direction: column; align-items: stretch; }
 .print-tout .tout-banner { margin: 0 0 5px; }
 .print-tout .tout-banner .tout-ribbon { display: block; text-align: center; }
@@ -315,7 +320,9 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-tout .tout-scan-unit[data-arrange="beside"] { grid-template-areas: "scan qr" "addr qr"; justify-items: end; }
 .print-tout .tout-scan-unit .tout-scan { grid-area: scan; }
 .print-tout .tout-scan-unit .fb-qr { grid-area: qr; }
-.print-tout .tout-scan-unit .address { grid-area: addr; margin: 0; color: var(--white); }
+/* § 17.7 item 3: the address in the band's near-black on the orange (its contrast measured, the build's report); the scan
+   line stays white */
+.print-tout .tout-scan-unit .address { grid-area: addr; margin: 0; color: var(--ink); }
 .print-tout .tout-scan-unit[data-arrange="beside"] .tout-scan { align-self: end; max-width: 7em; white-space: normal; text-align: right; }
 .print-tout .tout-scan-unit[data-arrange="beside"] .address { align-self: start; }
 .print-tout .tout-scan {
@@ -338,6 +345,10 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 }
 .print-entry-card .entry-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .print-entry-card .entry-head { margin: 0; color: var(--cta); font: 700 var(--entry-head)/1.15 var(--head); }
+/* § 17.7 item 4: the heading on one line, as large as fits beside the logo (the build settles its size): its column may
+   not grow past the logo, so a heading too large runs past its box and is refused (data-fit), never wrapped */
+.print-entry-card .entry-titles { flex: 1; min-width: 0; }
+.print-entry-card .entry-head { white-space: nowrap; }
 /* § 17.6 item 1: the subhead under the heading, smaller, in the ink */
 .print-entry-card .entry-sub { margin: 2px 0 0; color: var(--ink); font: 600 var(--entry-sub)/1.2 var(--head); }
 .print-entry-card .entry-logo { flex: none; width: var(--entry-logo); }
@@ -357,7 +368,8 @@ html, body { margin: 0; padding: 0; background: var(--white); }
 .print-entry-card .entry-email .entry-line { flex: 1 1 0; min-width: 0; margin-top: 0; margin-bottom: 4px; }
 .print-entry-card .entry-email-word { flex: none; font: 700 var(--entry-email)/1 var(--head); }
 .print-entry-card .entry-email-word:first-child { font: 600 var(--entry-text)/1.3 var(--head); }
-.print-entry-card .entry-notes { flex: none; margin-top: auto; padding-top: 4px; }
+/* § 17.7 item 5: at least --entry-rule-gap between the email line's rule (4px above its row's foot) and the fine print */
+.print-entry-card .entry-notes { flex: none; margin-top: auto; padding-top: calc(var(--entry-rule-gap) - 4px); }
 .print-entry-card .entry-fine { margin: 0; font-size: var(--entry-rules); line-height: 1.15; }
 .print-entry-card .entry-fine + .entry-fine { margin-top: 4px; }
 .print-entry-card .entry-fine b { font-weight: 600; }

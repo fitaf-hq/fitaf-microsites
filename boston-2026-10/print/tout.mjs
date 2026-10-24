@@ -5,6 +5,8 @@
 //   headline, accent, size, lede, ledeAccent, logo   as front B's (the headline set as given, never rewrapped; without
 //                                                    `size`, the largest that sets each line on one line, § 17.4 item 1)
 //   headlineAccent  green, blue or orange: the colour of the headline's words between asterisks (optional; green otherwise)
+// § 17.7 item 1: in the headline's lines and the lede, {blue:…}, {green:…} and {orange:…} set the words between in that
+// brand colour; any other name, a brace unclosed, or one inside another, is refused naming the line. *…* keeps its meaning.
 //   banner    the line on § 15's ribbon in the foot (required here; at most BANNER_MAX_CHARS)
 //   scan      one short line beside the QR code (required)
 //   fine      the fine print, one paragraph, set at the type floor (required)
@@ -16,6 +18,15 @@ const KEYS = ["headline", "accent", "headlineAccent", "size", "lede", "ledeAccen
 /** § 17.4 item 1: the headline's accent colours (the words between asterisks), by the template's own tokens; the first the default. */
 export const HEADLINE_ACCENTS = ["green", "blue", "orange"];
 const SECTION = "§ 17";
+/** § 17.7 item 1: the colours a span may name, the brand's (print.css .tout-c-*), and a span's form. */
+export const SPAN_COLOURS = ["blue", "green", "orange"];
+const SPAN = /\{([a-z]+):([^{}]*)\}/g;
+/** A line's spans, checked: the reason it is refused, or null. */
+function spanProblem(line) {
+  for (const [, name] of line.matchAll(SPAN)) if (!SPAN_COLOURS.includes(name)) return `{${name}:…} is not one of ${SPAN_COLOURS.join(", ")}`;
+  return /[{}]/.test(line.replace(SPAN, "")) ? "a brace unclosed, or a span inside another" : null;
+}
+
 /** The scan line's longest: it sits beside the code, in the foot. */
 export const SCAN_MAX_CHARS = 40;
 
@@ -28,6 +39,15 @@ export async function readTout(path) {
     throw new Error(`${path}: ${why} (SPEC-print-pieces.md ${SECTION})`);
   };
   const words = checkFront(raw, path, { keys: KEYS, section: SECTION });
+  // § 17.7 item 1: the colour spans, line by line
+  for (const [i, line] of words.headline.entries()) {
+    const why = spanProblem(line);
+    if (why) refuse(`"headline" line ${i + 1}: ${why}`);
+  }
+  for (const [i, line] of words.lede.entries()) {
+    const why = spanProblem(line);
+    if (why) refuse(`"lede"${words.lede.length > 1 ? ` line ${i + 1}` : ""}: ${why}`);
+  }
   if (raw.banner === undefined) refuse(`"banner" is required: the line on the foot's ribbon`);
   if (!oneLine(raw.scan, SCAN_MAX_CHARS)) refuse(`"scan" must be one line of at most ${SCAN_MAX_CHARS} characters`);
   if (!oneLine(raw.fine)) refuse(`"fine" must be the fine print, one paragraph of text`);

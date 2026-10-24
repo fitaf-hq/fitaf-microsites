@@ -50,7 +50,7 @@ import { assignPhotos, BACK_POSITIONS, backPhotoIds, FLYER_POSITION, fourFlyerPh
 import { BACK_PATH, BACK_SOURCE, readBack } from "./back.mjs";
 import { readEntry } from "./entry.mjs";
 import { readFront } from "./front.mjs";
-import { backFindings, frontFindings, giveawayFindings, layoutFindings, letterFindings, resolution, showing } from "./checks.mjs";
+import { backFindings, contrastOf, frontFindings, giveawayFindings, layoutFindings, letterFindings, resolution, showing } from "./checks.mjs";
 import { jpegSize } from "./jpeg.mjs";
 import { backPlaceholders, giveawayDocument, giveawayPlaceholders, letterDocument, pagesToPrint, placeholdersOf, printDocument } from "./pages.mjs";
 import { readTout } from "./tout.mjs";
@@ -69,6 +69,8 @@ import {
   ptPx,
   TOUT_FINE_LINES,
   CARD_FINE_LINES,
+  ENTRY_HEAD_MAX_PX,
+  ENTRY_HEAD_MIN_PX,
   LETTER_SHEETS,
   TOUT_HEAD_MAX_PX,
   TOUT_HEAD_MIN_PX,
@@ -300,7 +302,7 @@ async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs,
     page.piece.id === "tout"
       ? { ...giveaway.tout, size: settled.headPx, finePx: ptPx(settled.finePt), qrPx: settled.qrIn * LAYOUT_PX_PER_INCH, arrange: settled.arrange }
       : page.piece.id === "entry-card"
-        ? { ...giveaway.entry, finePx: ptPx(settled.finePt), fineRegular: settled.regular }
+        ? { ...giveaway.entry, headPx: settled.headPx, finePx: ptPx(settled.finePt), fineRegular: settled.regular }
         : giveaway[page.piece.words];
   const letter = page.letter;
   const piece = !letter && page.piece.id === "entry-card" && giveaway.cardFace ? { ...page.piece, face: giveaway.cardFace } : page.piece;
@@ -336,10 +338,16 @@ async function planGiveaway({ run, stage, page, pageInputs, printCss, measureJs,
   return { page, piece, html, measured, photos: photos.rows, shows, refusals, warnings: [], placeholders, stem: stemOf(page, placeholders), giveaway: { words, sides, used, tried, settled } };
 }
 
+/**
+ * § 17.7 item 3: the address's contrast on the orange (WCAG 2), measured and named in the report. The orchestrator's ruling
+ * (2026-10-23): --ink on --cta accepted at its measured 4.17:1 (the 4.5 was the orchestrator's own number, not the
+ * Advisor's); the report flags anything under ADDRESS_CONTRAST, so a lighter colour would show.
+ */
+const ADDRESS_CONTRAST = 4;
 /** The code's white tile around it, each side: print.css .fb-qr's padding (6px) and border (3px). */
 const QR_TILE_PX = 9;
-/** A hundredth of a layout px: words this close to their box's edge are on it (checks.mjs's own tolerance). */
-const ROOM_TOLERANCE_PX = 0.01;
+/** A tenth of a layout px: words this close to their box's edge are on it (checks.mjs GIVEAWAY_FIT_TOLERANCE_PX). */
+const ROOM_TOLERANCE_PX = 0.1;
 
 /**
  * §§ 17.4–17.5: the tout's sizes, settled by measuring its own page (a measuring pass a try, its html a copy), in turn:
@@ -411,22 +419,37 @@ async function settleTout({ run, stage, piece, pageInputs, printCss, measureJs, 
 }
 
 /**
- * § 17.6 item 3: the card's fine print, settled by measuring the card at the first layout's size (LETTER_SHEETS' eight):
- * the largest size from FINE_PT down to FINE_FLOOR_PT, by FINE_STEP_PT, that sets it on CARD_FINE_LINES lines or fewer; if
- * none, its bold runs set regular and the search again; if still none, the floor's, regular, and `over` (the report says
- * so: the words are the Advisor's to cut). Returns { finePt, regular, fineLines, over }.
+ * §§ 17.6–17.7: the card, settled by measuring it at the first layout's size (LETTER_SHEETS' eight), in turn:
+ * 1. Its heading (§ 17.7 item 4): measured at ENTRY_HEAD_MIN_PX, scaled to the largest whole size at which it sets on one
+ *    line beside the logo, no further than ENTRY_HEAD_MAX_PX, then down a px at a time while it runs past its box.
+ * 2. Its fine print (§ 17.6 item 3): the largest size from FINE_PT down to FINE_FLOOR_PT, by FINE_STEP_PT, that sets it on
+ *    CARD_FINE_LINES lines or fewer; if none, its bold runs set regular and the search again; if still none, the floor's,
+ *    regular, and `over` (the report says so: the words are the Advisor's to cut).
+ * Returns { headPx, finePt, regular, fineLines, over }.
  */
 async function settleCard({ run, stage, piece, pageInputs, printCss, measureJs, words }) {
   const html = join(stage, "entry-card.settle.html");
   const face = LETTER_SHEETS.find((sheet) => sheet.piece === piece.id).layouts[0].face;
-  const linesAt = async (finePt, regular) => {
-    await writeFile(html, giveawayDocument({ ...piece, face }, pageInputs, printCss, { ...words, finePx: ptPx(finePt), fineRegular: regular }));
-    return (await measure(run, html, measureJs)).faces[0].fineLines;
+  const at = async (headPx, finePt, regular) => {
+    await writeFile(html, giveawayDocument({ ...piece, face }, pageInputs, printCss, { ...words, headPx, finePx: ptPx(finePt), fineRegular: regular }));
+    return (await measure(run, html, measureJs)).faces[0];
   };
+  const headingOf = (measured) => measured.fits.find((fit) => fit.what === "the heading" && fit.words);
+  // 1. the heading
+  let headPx = ENTRY_HEAD_MIN_PX;
+  let measured = await at(headPx, FINE_PT, false);
+  const heading = headingOf(measured);
+  if (heading) headPx = Math.max(ENTRY_HEAD_MIN_PX, Math.min(ENTRY_HEAD_MAX_PX, Math.floor(headPx * (heading.content.w / heading.words.w))));
+  measured = await at(headPx, FINE_PT, false);
+  while (headPx > ENTRY_HEAD_MIN_PX && headingOf(measured) && roomOfFit(headingOf(measured)) < -ROOM_TOLERANCE_PX) {
+    headPx -= 1;
+    measured = await at(headPx, FINE_PT, false);
+  }
+  // 2. the fine print
   let last = null;
   for (const regular of [false, true]) {
     for (let finePt = FINE_PT; finePt >= FINE_FLOOR_PT - 1e-9; finePt -= FINE_STEP_PT) {
-      last = { finePt, regular, fineLines: await linesAt(finePt, regular) };
+      last = { headPx, finePt, regular, fineLines: (finePt === FINE_PT && !regular ? measured : await at(headPx, finePt, regular)).fineLines };
       if (last.fineLines <= CARD_FINE_LINES) return { ...last, over: false };
     }
   }
@@ -629,10 +652,18 @@ function giveawayLines(planned, chosen, at, shown) {
   if (card) {
     // § 17.6 item 3: the card's fine print as it settled
     const weight = card.regular ? "its bold runs set regular (in the semibold, ten lines did not fit at the floor)" : "its bold runs semibold";
+    lines.push(`entry-card: the heading at ${card.headPx} layout px (the largest on one line beside the logo, at least ${ENTRY_HEAD_MIN_PX})`);
     lines.push(`entry-card: the fine print ${card.finePt} pt on ${card.fineLines} lines${card.over ? `, more than ${CARD_FINE_LINES} even at the floor and regular: the words are the Advisor's to cut` : `, at most ${CARD_FINE_LINES}`}; ${weight}`);
   }
   const settled = planned.find((q) => q.piece.id === "tout")?.giveaway.settled;
   if (settled) {
+    // § 17.7 item 3: the address on the orange, its contrast as drawn (WCAG 2, its colour and the foot's, measured)
+    const own = planned.find((q) => q.page.base === "tout");
+    const face = own?.measured.faces[0];
+    const address = face?.texts.find((t) => t.text === "eatfitaf.com");
+    const foot = face?.fields.find((field) => field.what.includes("tout-foot"));
+    const ratio = address && foot ? contrastOf(address.color, foot.bg) : null;
+    if (ratio !== null) lines.push(`tout: eatfitaf.com ${address.color} on the foot's ${foot.bg}, contrast ${ratio.toFixed(2)}:1${ratio >= ADDRESS_CONTRAST ? "" : `, under the ${ADDRESS_CONTRAST}:1 the orchestrator ruled for § 17.7 item 3`}`);
     // §§ 17.4–17.5: the sizes the tout settled on
     lines.push(`tout: the headline at ${settled.headPx} layout px (the largest that sets each line on one line, at least ${TOUT_HEAD_MIN_PX}); the fine print ${settled.finePt} pt on ${settled.fineLines} line(s), at most ${TOUT_FINE_LINES}; the scan unit ${settled.arrange === "stacked" ? "stacked" : "side by side (stacked does not fit the foot)"}, the code ${Number(settled.qrIn.toFixed(2))} in`);
   }

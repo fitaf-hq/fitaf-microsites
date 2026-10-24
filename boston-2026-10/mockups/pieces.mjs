@@ -176,16 +176,24 @@ function flyerFrontB(c, parts, words) {
  * The giveaway tout (SPEC-print-pieces.md § 17), print-only: front B's look laid out landscape. Across the top, the dark
  * band (the headline, its accent words in `headlineAccent`'s colour, § 17.4 item 1; the lede) and beside it its photo, the
  * flyer's (§ 17.3 item 2), with its caption, running into the bleed on the top and the right, both 70 % of the tout's
- * height (§ 17.5 item 2); under both, on a straight edge (§ 17.4 item 2), the orange foot: the logo, out of the band (§ 17.5
- * item 5), the banner's ribbon and the fine print one left-aligned column, the ribbon's words centred (§ 17.4 item 3, § 17.5
- * item 4), and the scan unit, `scan`, the QR code and the address, stacked or side by side (§ 17.5 item 3).
+ * height (§ 17.5 item 2), the reversed logo at the band's top right, its first line clear of it (§ 17.7 item 2); under both,
+ * on a straight edge (§ 17.4 item 2), the orange foot: the banner's ribbon and the fine print one left-aligned column, the
+ * ribbon's words centred (§ 17.4 item 3, § 17.5 item 4), and the scan unit, `scan`, the QR code and the address (dark,
+ * § 17.7 item 3), stacked or side by side (§ 17.5 item 3). Colour spans in the headline and the lede (§ 17.7 item 1).
  * Its words are the tout's words file's (`words`, print/tout.mjs), cited by key; no legend lists it. A box whose words
  * must not overflow it carries `data-fit` (print/checks.mjs giveawayFindings): the band, each headline line, the foot.
  */
 export function toutFace(c, parts, words) {
   const cite = (key) => `data-src="${esc(`${words.source}#${key}`)}"`;
-  const accented = (t, cls) => t.split("*").map((part, j) => (j % 2 ? `<span class="${cls}">${esc(part)}</span>` : esc(part))).join("");
-  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}" data-fit="headline line ${i + 1}">${accented(t, "fb-accent")}</span>`).join("");
+  // § 17.7 item 1: {blue:…}, {green:…}, {orange:…} set their words in that colour; *…* keeps its own (`cls`)
+  const starred = (t, cls) => t.split("*").map((part, j) => (j % 2 ? `<span class="${cls}">${esc(part)}</span>` : esc(part))).join("");
+  const accented = (t, cls) =>
+    t.split(/(\{[a-z]+:[^{}]*\})/).map((part) => {
+      const span = /^\{([a-z]+):([^{}]*)\}$/.exec(part);
+      return span ? `<span class="tout-c-${esc(span[1])}">${starred(span[2], cls)}</span>` : starred(part, cls);
+    }).join("");
+  // § 17.7 item 2: the logo at the band's top right, the headline's first line clear of it
+  const lines = words.headline.map((t, i) => `<span class="fb-line${i === words.accent ? " fb-accent" : ""}${i === 0 ? " tout-line-logo" : ""}" data-fit="headline line ${i + 1}">${accented(t, "fb-accent")}</span>`).join("");
   const band = words.size ? ` style="--tout-head: ${words.size}px"` : "";
   // § 17.5 item 3: the scan unit stacked, or side by side, and its code's side, as the build settles them
   const foot = words.qrPx ? ` style="--fb-qr: ${words.qrPx}px"` : "";
@@ -197,13 +205,13 @@ export function toutFace(c, parts, words) {
   return `
 <div class="tout-top">
 <div class="fb-band tout-band" data-fit="the band"${band}>${HALFTONE}
+  ${bandLogo(parts, words.logo)}
   <h1 class="fb-head tout-head" data-head-accent="${esc(words.headlineAccent ?? "green")}" ${cite("headline")}>${lines}</h1>
   <p class="fb-lede tout-lede" data-lede-accent="${esc(words.ledeAccent)}" ${cite("lede")}>${lede}</p>
 </div>
 <div class="tout-hero">${parts.photo("tout")}${parts.caption("tout", "fb-name tout-name")}</div>
 </div>
 <div class="fb-foot tout-foot" data-fit="the foot"${foot}>
-  ${footLogo(parts, words.logo)}
   <div class="fb-cta tout-cta"><p class="fb-banner tout-banner" ${cite("banner")}><span class="tout-ribbon">${esc(words.banner)}</span></p><p class="tout-fine" data-fine ${cite("fine")}${fineSize}>${esc(words.fine)}</p></div>
   <div class="scan tout-scan-unit" data-arrange="${esc(words.arrange ?? "stacked")}"><p class="tout-scan" ${cite("scan")}>${esc(words.scan)}</p><div class="fb-qr">${parts.qr(qrH)}${parts.logo("fb-qr-logo")}</div>${parts.text("p", "address", c.address, "web address")}</div>
 </div>`;
@@ -240,15 +248,10 @@ export function entryFace(c, parts, words) {
   const sub = own.subhead ? `<p class="entry-sub" ${cite(own.subhead.line)}>${esc(own.subhead.text)}</p>` : "";
   return `
 <div class="entry-body" data-fit="the card">
-  <div class="entry-top"><div class="entry-titles"><h1 class="entry-head" ${cite(own.heading.line)}>${esc(own.heading.text)}</h1>${sub}</div>${parts.logo("entry-logo")}</div>
+  <div class="entry-top"><div class="entry-titles"><h1 class="entry-head" data-fit="the heading" ${cite(own.heading.line)}${words.headPx ? ` style="font-size: ${words.headPx}px"` : ""}>${esc(own.heading.text)}</h1>${sub}</div>${parts.logo("entry-logo")}</div>
   <div class="entry-fields">${own.fields.map(field).join("")}</div>
   <div class="entry-notes">${own.paragraphs.map(fine).join("")}</div>
 </div>`;
-}
-
-/** § 17.5 item 5: the tout's logo in its foot, by the words file's `logo`, as the band's was (the orange is a dark ground). */
-function footLogo(parts, treatment) {
-  return treatment === "plate" ? parts.logo("tout-foot-logo") : parts.logoReversed(REVERSED_LOGO_FILES[treatment], "tout-foot-logo");
 }
 
 /** § 15 item 1: the band's logo by the words file's `logo`: drawn for the dark ground (its own white field gone, the
