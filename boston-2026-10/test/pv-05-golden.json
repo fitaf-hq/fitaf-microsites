@@ -1,6 +1,6 @@
 {
   "about": "PV5's before (SPEC-preview-sites § 4): the SHA-256 of every file the production and the development build write (build() with target prod, then dev, each into an empty directory), over recorded_at's own tree, the contract's commit before any of the preview build's code (test/pv-05-record.mjs, which wrote this file). Re-record only by running the recorder; never by hand.",
-  "recorded_at": "dbfcb62",
+  "recorded_at": "b1e29d7",
   "files": {
     "prod": {
       "assets/fitaf-logo.png": "e51500f85fee09c3a5762e82cd3812ac824fa81378478035a94ab91e5de94ef0",
@@ -38,7 +38,7 @@
       "fonts/poppins-latin-600-normal.woff2": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
       "fonts/poppins-latin-700-normal.woff2": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
       "index.html": "09848a70a482702693a1b7affe4386db66023038bac7162198fb71b5215218da",
-      "privacy/index.html": "af1c348e0bde15ec53c2cf437ae8339380922fbb48e1d34793d23a2233da1ee9",
+      "privacy/index.html": "4708034f3a7646d1471ecd33c42d747ca3af9c16dc859aec4871b5ecddac9080",
       "seminar/index.html": "854c7fd6178d61123180e7efebf8cca126dc7935720fb47175d1a73777a432e7",
       "why/index.html": "43afc5edee8b86386249f2eef0d862ec8f50e0b88b4343d8e01ecb9a4dd78f7f"
     }
