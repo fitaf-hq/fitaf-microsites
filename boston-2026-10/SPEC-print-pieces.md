@@ -761,3 +761,28 @@ fine print, *"this fine print can be a little bit smaller. This is body copy siz
 6. **Cases**: QG31 for items 1–4 (the headline's words and colour from the PDF, the straight edge, the fine print's
    weight and lines, the scan line above the code), QG32 for item 5 (the size and the count); the mutants as before. The
    fine-print floor is a named value beside the type floor in `print/sizes.mjs`, used only by § 17's fine print.
+
+### 17.5 Amendment, 2026-10-23 (night): the headline on three lines, a shorter foot, a bigger photo. CONTRACT, before any code
+
+**Why.** The Advisor on version 4 (Fit AF's decision record § 7t item 9): *"DROP YOUR / EMAIL / TO WIN. Then let's reduce
+the height of the orange band to 30%, moving and shrinking the QR code as needed. The "One winner" banner needs to have
+its text centered. This will let the photo be bigger and make the 3 line text lockup make sense. The logo will need to
+move, somewhere (currently it is just floating in space). It might need to go into the orange area. The fine print can
+break into 3 lines."*
+
+1. **The headline on three lines**, as the words file now gives them (*DROP YOUR / EMAIL / TO \*WIN\**, no full stop),
+   the accent blue (§ 17.4 item 1), at the largest size that sets each line on one line in the band's column (at least
+   § 17.4's 46 layout px), the size in the report.
+2. **The orange foot is 30 % of the tout's height** (6 × 4 in: 1.2 in), the band and the photo the 70 % above it; the
+   **photo larger** with it (taller, and wider if the headline's column allows), its caption as before.
+3. **The QR unit moves into the shorter foot and shrinks as needed**, never below **0.75 in** square (§ 17 item 2), *See
+   this week's menu* and *eatfitaf.com* kept with it as one unit (§ 17.4 item 4; side by side if stacked no longer fits,
+   the builder's proposal, named in the report); it still decodes to the `boston` URL.
+4. **The ribbon's text is centred** in the ribbon.
+5. **The logo moves out of the band** to a place it belongs: the builder's proposal, the foot first (the reversed logo on
+   the orange, contrast held), named in the report.
+6. **The fine print may run to three lines** (§ 17.4 item 3's two-line aim lifted): the largest size from 7 pt down to the
+   6.5 pt floor that fits the foot's column in three lines or fewer, regular weight.
+7. **Cases**: QG31 amended for items 1–6 (the headline's three lines, the foot's height ±0.02 in, the code at ≥ 0.75 in
+   and decoding, the ribbon text centred to 0.5 pt, the logo outside the band, the fine print's lines and weight); the
+   mutants as before. The card is unchanged by § 17.5.
