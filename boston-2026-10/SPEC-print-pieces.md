@@ -835,3 +835,26 @@ print."*
 6. **Cases**: QG31 for items 1–3 (the spans' colours read from the PDF, the logo inside the band, the address's colour
    and contrast), QG32 for items 4–5 (the heading's size, the gap ≥ 0.12 in); a refusal case for item 1's markup; the
    mutants as before.
+
+### 17.8 Amendment, 2026-10-23 (night): the ribbon to the photo's line, the accents swapped, the card without its subhead. CONTRACT, before any code
+
+**Why.** The Advisor on version 6 (Fit AF's decision record § 7t item 12), of the ribbon crossing the line the photo's
+left edge makes down the tout, *"the "One Winner" banner should should cross the vertical line formed by the photo"*
+(read as *should not*: it crosses it in version 6; the reading is told to him); *"Let's swap the accents colors –
+"email" and "fresh Fit AF meals" in green and "win" in blue"*; of the card, *"let's get rid of the subhead and then move
+the email entry line up – I'm still trying to get more whitespace between the email entry blank and the fine print"*;
+and *"Please plan to drop the faint cut lines in the final version."*
+
+1. **The ribbon ends on the photo's line**: the ribbon's right end (its notch's tip) and the fine print's measure stop at
+   the x of the photo's left edge, less the band's own inset, so nothing in the foot's left column crosses that line;
+   the fine print may run to three lines (§ 17.5 item 6) at the same floor.
+2. **The accents swapped** in the words file (*YOUR {green:EMAIL}*, *TO {blue:WIN}*, *{green:fresh Fit AF meals}*): no
+   code change beyond what § 17.7 item 1 built.
+3. **The card without its subhead** (the words file's line removed); **the email line moved up** under the heading, as
+   close as the heading's own spacing allows, and the room freed between it and the fine print kept as whitespace (the
+   gap at least § 17.7's 0.12 in, now as large as the card gives); the fine print as § 17.6.
+4. **The final files carry no cut guides**: the dashed lines are drawn only while the files are proofs (`-PROOF`); an
+   approved build draws none.
+5. **Cases**: QG31 (the ribbon's right end and the fine print's measure ≤ the photo's left edge less the inset), QG32
+   (no subhead, the email line's position under the heading, the gap), QG33 or a new case for item 4 (guides in a proof,
+   none in an approved build); the mutants as before.
