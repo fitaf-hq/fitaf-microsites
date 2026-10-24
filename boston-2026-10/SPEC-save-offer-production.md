@@ -394,3 +394,19 @@ The audit found one such link, in `src/worker/redeem.js`:
 S11 4/4. 44 files (S1–S17, SP1–SP11 with SP6's S1–S17 against production, the mutants, CC-8 and M1–M13): 112 of 112.
 
 **Goldens.** Only CC-8b moved: `src/worker/redeem.js`, `d2689a2b…` → `d1c45d59…`; none added or removed. The pages, S20, U4, M14 and WC-9 did not move, because the link is the Worker's, not the build's.
+
+## 10. Amendment, 2026-10-24: production's migration script (fitaf-infra CONTRACT 1.10.1). CONTRACT, with its one line
+
+**Why.** fitaf-infra's prod apply migrates production's database through this package's own script, as dev's does:
+*"A pinned microsite without db:migrate:prod stops first"* (its `scripts/ci/run.sh`). Its release order names the script
+(*"its `package.json` carrying `db:migrate:prod` (for example `wrangler d1 migrations apply fitaf-leads-prod --remote`)"*);
+nothing here asked for it, so no commit of this repository has it, and the prod pin `ef62757` would stop release (a)'s
+`apply-prod` with nothing applied.
+
+1. `package.json` gains `"db:migrate:prod": "wrangler d1 migrations apply fitaf-leads-prod --remote"`: the top-level
+   configuration (production's), the database by name, as § 4 item 9's `DB` is bound with no id. CI runs it; nobody runs
+   it from here.
+2. Nothing else changes: no file the build reads, so production's and development's builds are byte for byte the same
+   as at `ef62757`. The commit is made from `ef62757` so the prod pin can move to it without the dev line's changes; it is
+   then merged into the dev line, so every later pin carries it.
+3. The README's *"Deploys are not run from here"* names it beside `db:migrate:dev`.
