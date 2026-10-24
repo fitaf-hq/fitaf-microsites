@@ -282,6 +282,78 @@ never committed; the build's were written to a scratch directory outside this re
    (list × 0.75), and an E1 scheduled for a save with no offer. Goldens moved once, with proof; the whole site suite,
    Storybook, the watch and contrast green.
 
+### 1.2.1 Built — found at the build, not ruled
+
+Built on `boston/ui-copy-pass` from `9b1438c` (§ 1.1's tip), with `bd80a41` (§ 1.3's contract) beneath the code,
+2026-10-23 (night, Pacific). As § 1.1: each case one file at a time (or a named set) at `nice -n 15`, beside other teams'
+gates (load average 150 to 560); the whole site suite and Storybook's alone at the tip, twice (the help line, 2, came
+after the first run; § 1.3.1).
+`data/save.json`'s `production` is still **false** and the wording still **`v0.3-draft`**.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `ab847b1` | the cases first, run red on `9b1438c`'s code; the cases they amend |
+| `eae4d94` | item 1, the code, alone (so SP3's base can take its diff); MS-3 and MS-10 amended |
+| `dbfcb62` | items 2–3, the code; DRAFT § 1's *After the offer ends*, §§ 5–6's retention of such a save; S11b, S23 and SP3's list of moved Worker files amended |
+| `58cbd2a` | EM2 in Chrome amended for item 1 (test-only) |
+| `057a5b1`, `c84a5dc` | the goldens, re-recorded once each from `dbfcb62`'s own tree; the date in S20's note |
+| `190d012` | found in Chrome at the build (below, 2): the email field's help line after the end, its cases first, red on `c606b2e` |
+| `e8fd524` | its code: the field's own help line after the end |
+| `774e4db` | PV5 and U4 re-recorded once from `e8fd524`'s tree: the development pages alone |
+
+**Cases, before and after** (red on `9b1438c`'s code, green at the code)
+
+| case | file | red | green |
+|---|---|---|---|
+| UC6, the card's count and weekly price (item 1) | `test/uc6-card-price.test.mjs` | 2 of 3 (the control and the unchanged rows: guards) | 3 of 3 |
+| MS-1, the eight rows' figures, the same rule | `test/ms-01-eight-rows.test.mjs` | 1 of 2 | 2 of 2 |
+| UC7, See all plans corrected (item 2), its mutant in a mirror (the struck price from the wrong side, list × 0.75) | `test/uc7-plans-as-discounts.test.mjs` | 1 of 6 | 6 of 6 |
+| UC9, a save after the offer's end (item 3), its mutant in a copied Worker tree (an E1 scheduled for a save with no offer) | `test/uc9-save-after-the-offer.test.mjs` | 1 of 6 (the live offer's control); with the help line, 4 of 6 on `c606b2e` | 6 of 6 |
+| S14 and S15 (the lapse's fourth rule, `no_offer`), S18 (§ 1 ends at the step after the end), SP16 (after the end, the step with no offer and the save kept) | `test/s14-*`, `s15-*`, `s18-*`, `sp16-*` | amended with the cases | green |
+| In Chrome at 390: the struck price above the price paid; the step after the end; the card of a 5-meal row | `tools/storybook/test/uc-chrome.test.mjs` | amended with the cases | green |
+
+**Made stale by the code, amended**: MS-3 (the default rows: five meals at the 4 plan's price); MS-10's rounding-up mutant
+(MS-1 now sees it by the 7 plan's price a meal, $12.50 for $13.00, the meals being five either way); S11b (an offer may
+carry `percent_off`; `savings_percent` went); S23 (save-data's `struck`); SP3's moved Worker files (`lapse.js`,
+`save-store.js`, `scheduled.js`); EM2 in Chrome (the one-list week opens `#performance-or-5d`, a 5-meal row: its two
+figures as item 1 makes them, the boxes of those two and their units held apart, every other box the base's).
+
+**Goldens**, once each, from `dbfcb62`'s own tree (`git archive`), each against `9b1438c`'s: S20 (and CC-4)
+`index.html` alone, by item 1 (3 lines out, 5 in: `#plan-data`'s meals and totals, `app.js`'s lines writing them; every
+other file byte-identical by `diff -rq`); WC-8's no-picks page; U4 (production's three pages +531 bytes, development's
++2,451); WC-9 (the four fragments of the two answer sets above their plan); PV5; CC-8b (`data/offers.json`,
+`data/save.json`, `src/worker/index.js`, `lapse.js`, `save-store.js`, `scheduled.js`); SP3's base takes
+`bd80a41..eae4d94` over `src/app.js` and `build.mjs`.
+
+**Found at the build, not ruled**
+
+1. ⚠ **Item 3's *"or until the second-chance offer's email is sent"* has no email to wait for.** Nothing in this build
+   sends a save with no offer anything: `data/offers.json` holds no next offer, and E1 is the only message that carries
+   the tick's confirmation link. So today every such save is deleted at 30 days whatever its tick; *"kept while
+   confirmed"* (UC9) is reached only by marking the contact confirmed in the store directly, never by a visitor. The
+   second chance's email, and the confirmation it carries, need a contract of their own once that offer exists.
+2. ⚠ **Found in Chrome, not by a case: after the end the email field still said *"we'll send your link here
+   tomorrow"*,** a link never sent (the step after the end kept *"the fields … as above"*). The field now has its own help
+   line after the end, proposed: *"we'll email you here when our next offer opens"*; UC9 and the Chrome case hold it. The
+   tick's *"We'll ask you to confirm"* is unchanged: true only once the second chance's email exists (1).
+3. **The step's email help line, fine print and done line after the end are proposed words** (DRAFT § 1 *After the
+   offer ends*); only the lead and the button are the Advisor's. Fine print: *"We'll keep your email and ZIP code for 30 days, or until we email
+   you about our next offer, whichever comes first, and then delete them unless you've confirmed. Only if you tick the box
+   and then confirm it will we send you anything else. We don't sell your information."* Done line: *"Saved — we'll
+   email you at (their email) when our next offer opens."* No offer line and no date held are drawn.
+4. **The share's check reads the first percentage in the label and in the headline** (`25%`); a label naming none
+   passes, and a second percentage in one field is not read. Boston's label and headline each name 25%.
+5. **The struck price is the store's weekly price × 100 ÷ (100 − the share), rounded to the cent** (Lean 7: $87.50 →
+   $116.67, 11,666.67¢); it is above the price paid by construction, so *"never below the list"* holds for every share
+   the build accepts (1 to 99).
+6. **SP3's base** cannot take item 1's doc-comment hunk (the base's comment, `768ca36`, predates the preview build's
+   wording), so SP3 leaves out a hunk whose every changed line is a comment (`codeOnly`, for that entry alone); its code
+   hunks apply and the base builds S20's page.
+7. **The out-of-area path is unchanged after the end** (an expansion save never needed an offer); no case of its own
+   was added for it after the end.
+
 ### 1.3 The privacy page in production before the drawing, apart from the save step. CONTRACT, before any code
 
 **The Advisor** (Fit AF's decision record `2026-10-17-…` § 7u item 1, *"yes please"*), on a measurement: the entry
@@ -314,3 +386,77 @@ production build writes `/privacy/` only with `data/save.json` `production` true
 5. **Not here**: the marker itself (after his look at the development page at 390 px); the production pin (`fitaf-infra`);
    `privacy@`'s mail, which has no MX until `fitaf-infra` 1.12's forwarding (release (a)): until then the page names an
    address that bounces, which is his to weigh.
+
+### 1.3.1 Built — found at the build, not ruled
+
+Built from § 1.2's tip (`c84a5dc`), 2026-10-23 into 2026-10-24 (night, Pacific), as § 1.2.1 says. ⛔ **The committed
+`consent/DRAFT.md` carries no approval line**: the cases write theirs into a copy (`build()`'s `draftPath`), and SP9
+holds the committed file to none (a control). So the production build is unchanged (S20), and `/privacy/` reaches
+production only when the Advisor's line is written and the site released.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `c94e470` | SP9's cases first, run red on `c84a5dc`'s code |
+| `b1e29d7` | the code: § 6's approval line read; with it and `production` false, the production build's `/privacy/`; the drawing's paragraph in § 6 |
+| `ef64d79` | PV5 re-recorded once from `b1e29d7`'s own tree: the development `privacy/index.html` alone |
+| `c606b2e` | the development `/privacy/` in Chrome at 390 (test-only); the README rows |
+| the next commit | §§ 1.2.1 and 1.3.1; `uc-chrome`'s server closed when Chrome fails to launch (test-only, below) |
+
+**Cases, before and after**
+
+| case | file | red | green |
+|---|---|---|---|
+| SP9 amended: approved with `production` false (the page, § 6's paragraphs in order, no DRAFT tag, no script, the template's tokens, the same bytes `production` true writes, every other file byte for byte; without the line no page); a bracket, or a malformed line, refused naming the page; the drawing's paragraph on both builds' page; its mutant in a mirror (the approval line ignored) | `test/sp9-privacy-page.test.mjs` | 3 of 9 | 9 of 9 |
+| The development `/privacy/` in Chrome at 390: § 6's paragraphs drawn in order, the drawing's after *What we collect and why*, the DRAFT tag, no sideways scroll | `tools/storybook/test/uc-chrome.test.mjs` | (new with the code) | 1 of 1 |
+
+**Goldens**: PV5 alone, by the development `privacy/index.html` (one paragraph added; `diff -rq` of both trees'
+builds). S20 and every production file unchanged.
+
+**Found at the build, not ruled**
+
+1. **The line is exactly `<!-- approved YYYY-MM-DD -->`, one, inside § 6** (between its heading and § 7's), its date a
+   day of the calendar. The flyer's words files mark approval with `<!-- approved -->` and no date; in § 6 that form is
+   refused, as is a second line or any words after the date (*"<!-- approved 2026-10-26 by me -->"*). A line outside
+   § 6 is not read.
+2. **A malformed line refuses every build**, the development and preview builds too: the line is read before the
+   target is, so it is caught before a deploy of either. A well-formed line changes the production build alone.
+3. **With the line and `production` false, the page is held to the production step's rule for printed words** (no
+   bracket, no draft tag: `scripts/production-inputs.mjs` `printedRefusals`, now exported). The step's other v1
+   refusals (the wording's version and status line, the offers, the ZIP list, the sender, the site key) are not asked:
+   the page prints none of them. With `production` true, as before.
+4. **No production page links to `/privacy/` while `production` is false** (the step, which carries the link, is not on
+   it): the page is reached by its address, from the cards.
+5. ⚠ **The page now names `privacy@eatfitaf.com` three times** (*Who we are*, the drawing's, *Your choices*), and § 1.3
+   item 5 stands: it has no MX until `fitaf-infra` 1.12's forwarding.
+6. ⚠ **§ 6's *How long we keep it* does not mention the drawing**, and the drawing's paragraph gives no period for the
+   entrant's email (it does for the photos, until the winner accepts, and the cards, shredded); read together, the email
+   is kept until an unsubscribe or a request. Whether *How long* (and § 5's *Kept for*, which UC5 holds it to) gains the
+   drawing is his; nothing was added to either.
+
+**Gates at the tip, for §§ 1.2 and 1.3** (`774e4db`, each alone, `nice -n 15`, beside other teams' gates at load
+average 60 to 560):
+
+- the whole site suite, `npm --prefix boston-2026-10 test`: **1,157 of 1,157** (also 1,157 of 1,157 at `ef64d79`,
+  before the help line);
+- Storybook's, `npm --prefix boston-2026-10/tools/storybook test`: **70 of 71** in the one run; UC1 failed on Chrome's
+  launch (*"Timed out after 30000 ms while waiting for the WS endpoint URL"*, load about 370), and the file then did not
+  exit: its `withPage` started the static server before the launch and closed it only inside a `try` the failed
+  launch never entered. Stopped after 20 minutes; the server now closes when the launch fails (test-only, the next
+  commit), and `uc-chrome.test.mjs` **re-run alone: 4 of 4**. (71 of 71 at `c606b2e`, before the help line.) ⚠ Five
+  other Chrome files start their server the same way (`em-`, `ms-`, `pr-`, `ss-`, `w-why-chrome.test.mjs`); not
+  changed here;
+- the watch, `npm --prefix boston-2026-10/tools/storefront-watch test`: **213 of 213**;
+- contrast, `npm --prefix boston-2026-10 run contrast`: **94 of 94**.
+
+**Renders** (Chrome at 390, the development build with the week delivered 2026-11-01 or none, every photograph refused;
+`UC_RENDERS=<dir> node --test tools/storybook/test/uc-chrome.test.mjs`, never committed, handed to the orchestrator):
+- `uc7-all-plans-390.png`: See all plans on a day of the offer, each plan's weekly price as the store charges it, beside
+  it the higher one struck through (Lean 7: ~~$116.67/wk~~ $87.50/wk);
+- `uc6-card-5-meals-390.png`: the card of five meals on the Lean 4 plan, *$65.00/week · $13.00/meal · 5 meals/week*;
+- `uc9-step-after-the-offer-390.png`: on 2026-10-30, the step after the card, its own lead, help line, button and fine
+  print, no offer line;
+- `uc13-privacy-390.png`: the development `/privacy/`, DRAFT-tagged, the drawing's paragraph after *What we collect
+  and why*;
+- and § 1.1's, redrawn: `uc1-*`, `uc2-*`, `uc3-*`, `uc8-*`, `uc9-after-the-offer-top-390.png`.

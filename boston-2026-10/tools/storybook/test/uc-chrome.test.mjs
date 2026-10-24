@@ -91,8 +91,11 @@ function standInTurnstile() {
  *  photograph is requested (a render never shows one); /api/save answers { ok: true } (the Worker, stood in for). */
 async function withPage({ dir, path = "/index.html", hash = "", width, now = OFFER_DAY_MS }, fn) {
   const server = await serveStatic(dir);
-  const chrome = await freshChrome();
+  // Chrome launched inside the try: a launch that fails (under load, its endpoint not seen in 30 s) still closes the
+  // server, or the file never exits (found at the build, 2026-10-24: the file hung 20 minutes after UC1's launch failed).
+  let chrome = null;
   try {
+    chrome = await freshChrome();
     const page = await chrome.browser.newPage();
     await page.setViewport({ width: width.width, height: width.height });
     await page.setRequestInterception(true);
@@ -108,7 +111,7 @@ async function withPage({ dir, path = "/index.html", hash = "", width, now = OFF
     await page.evaluate(() => document.fonts.ready);
     return await fn(page);
   } finally {
-    await chrome.close();
+    await chrome?.close();
     await server.close();
   }
 }
