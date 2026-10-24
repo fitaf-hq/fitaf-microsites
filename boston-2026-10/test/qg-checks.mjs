@@ -50,8 +50,46 @@ export const plainOf = (t) => t.replace(/\{[a-z]+:([^{}]*)\}/g, "$1").replaceAll
 /** § 17.7 items 4–5: the card's heading's least size (version 5's 18 plus 2, layout px), and the gap under its email line. */
 export const HEAD_MIN_PX = 20;
 export const RULE_GAP_IN = 0.12;
-/** § 17.8 item 3: the email line's row, right under the heading (print/sizes.mjs ENTRY_EMAIL_PITCH_IN). */
-export const EMAIL_ROW_IN = 0.4;
+/** § 17.8 item 3: the email line's row, right under the heading (print/sizes.mjs ENTRY_EMAIL_PITCH_IN: since § 17.9, 0.515 in). */
+export const EMAIL_ROW_IN = 0.515;
+/**
+ * § 17.9 item 1: a card whose fine print sets as the Advisor's does (6.5 pt on ten lines, eight a page; measured
+ * 2026-10-23 on this tree: 132 words set at 6.75 pt, 140 at 6.5 on ten, 148 on eleven), invented words, so the gap he
+ * drew is read on a card of the same shape.
+ */
+const TEN_LINE_WORDS = ["fixture", "words", "of", "the", "fine", "print,", "a", "rule", "set", "small", "and", "plain;", "every", "entry", "counts", "once."];
+export const ENTRY_TEN_LINE_FIXTURE = `# Front
+
+## Fixture heading words
+
+- ______ @ ________ . ___
+
+**Fixture rule one.** ${Array.from({ length: 140 }, (_, i) => TEN_LINE_WORDS[i % TEN_LINE_WORDS.length]).join(" ")} **A bold run.** The end.
+`;
+/** § 17.9 item 1: the gap from the email line's lowest ink to the fine print's first, where the Advisor drew it. */
+export const INK_GAP_IN = 0.16;
+export const INK_GAP_TOLERANCE_IN = 0.02;
+
+/**
+ * The ink of a box of a page drawn at `dpi`, as the runs of rows it is in (a row with any pixel under INK_LEVEL, its
+ * paper white), top to bottom, each { start, end } in inches from the page's top.
+ */
+function inkRows(png, box, dpi) {
+  const at = (inches) => Math.round(inches * dpi);
+  const runs = [];
+  for (let y = at(box.y); y < at(box.y + box.h); y += 1) {
+    let any = false;
+    for (let x = at(box.x); x < at(box.x + box.w) && !any; x += 1) {
+      const i = (y * png.width + x) * 4;
+      any = Math.min(png.data[i], png.data[i + 1], png.data[i + 2]) < INK_LEVEL;
+    }
+    if (!any) continue;
+    const last = runs.at(-1);
+    if (last && Math.round(last.end * dpi) === y - 1) last.end = y / dpi;
+    else runs.push({ start: y / dpi, end: y / dpi });
+  }
+  return runs;
+}
 /** § 17.4: the fine print's floor (6.5 pt) in layout px, and its size on the card (7 pt). */
 export const FINE_FLOOR_PX = (6.5 / 72) * 120;
 export const CARD_FINE_PX = (7 / 72) * 120;
@@ -345,10 +383,41 @@ function colourShare(png, box, dpi, rgb, tolerance = 40) {
   }
   return all ? near / all : 0;
 }
+/** § 17.9 item 2: the report's line for the ribbon names its fill, its words' colour and their contrast as drawn. */
+function ribbonReportProblems(built, face, ribbon) {
+  const words = face.texts.find((t) => t.text === TOUT_FIXTURE.banner);
+  const line = built.lines.find((l) => l.startsWith("tout: the ribbon ")) ?? "";
+  const named = /contrast (\d+\.\d\d):1/.exec(line)?.[1];
+  const problems = [];
+  if (!words || words.color !== WHITE_CSS) problems.push(`the ribbon's words are ${words?.color}, not white`);
+  if (!named || !words || Math.abs(Number(named) - wcag(words.color, ribbon.bg)) > 0.005) problems.push(`the report's ribbon line "${line}" does not name its drawn contrast`);
+  return problems;
+}
+
+/**
+ * QG31 (§ 17.9 item 2): the fixture's tout built with `bannerColor` `blue`: its ribbon in the flyer's lede blue (--lean),
+ * its words white, the report naming their contrast. The problems.
+ */
+export async function ribbonBlueProblems(root) {
+  const file = await wordsFile({ ...TOUT_FIXTURE, bannerColor: "blue" }, "tout-words.json");
+  try {
+    return await withTmp(async (dir) => {
+      const built = await build(root, { outDir: join(dir, "dist-print"), fourFlyers: false, toutPath: file.path });
+      const face = built.planned.find((p) => p.page.base === "tout").measured.faces[0];
+      const ribbon = face.fields.find((field) => field.what.includes("tout-ribbon"));
+      if (!ribbon) return ["the ribbon is not measured"];
+      return [...(ribbon.bg === LEAN_CSS ? [] : [`the ribbon is ${ribbon.bg}, not the lede blue ${LEAN_CSS}`]), ...ribbonReportProblems(built, face, ribbon)];
+    });
+  } finally {
+    await rm(file.dir, { recursive: true, force: true });
+  }
+}
+
 /** § 17.8 item 1: the band's own inset at its right (print.css .tout-band's 18px padding), in layout px. */
 const BAND_INSET_PX = 18;
 /** § 17.7 item 3: the band's near-black (--ink) and the white, as the measuring pass reads a run's colour. */
 const INK_CSS = "rgb(33, 37, 41)";
+const LEAN_CSS = "rgb(72, 174, 238)";
 const WHITE_CSS = "rgb(255, 255, 255)";
 /** WCAG 2's contrast ratio of two CSS rgb() colours (an oracle of its own, not the build's). */
 function wcag(fg, bg) {
@@ -447,6 +516,10 @@ export async function toutLookProblems(root, toutPath) {
         if (r.x + r.w > line + 0.01) problems.push(`the ribbon runs ${((r.x + r.w - line) * 120).toFixed(1)} layout px past the photo's line`);
         for (const run of fine) if (run.x + run.w > line + 0.01) problems.push(`the fine print runs ${((run.x + run.w - line) * 120).toFixed(1)} layout px past the photo's line`);
       }
+      // § 17.9 item 2: the ribbon's fill by bannerColor (the fixture gives none: ink), its words white, the report naming
+      // their contrast on it
+      if (r.bg !== INK_CSS) problems.push(`the ribbon is ${r.bg}, not the ink ${INK_CSS} (bannerColor's default)`);
+      problems.push(...ribbonReportProblems(built, face, r));
       // § 17.5 item 4: the ribbon's words centred in it, to 0.5 pt
       const words = face.texts.find((x) => x.text === TOUT_FIXTURE.banner);
       if (!words || Math.abs(words.x + words.w / 2 - (r.x + r.w / 2)) > 0.5 / 72) problems.push(`the ribbon's words are not centred in it: ${words ? ((words.x + words.w / 2 - (r.x + r.w / 2)) * 72).toFixed(2) : "?"} pt off`);
@@ -532,7 +605,7 @@ export const CARD_LAYOUTS = { 8: { w: 3.75, h: 2.5 }, 6: { w: 3.75, h: 10 / 3 } 
  * bleed, carrying the same runs. The report names the layout, and the one before it that did not fit with the layout px it
  * was over. The problems.
  */
-export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_RUNS, tenLines = true } = {}) {
+export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_RUNS, tenLines = true, inkGap = false } = {}) {
   return withTmp(async (dir) => {
     const out = join(dir, "dist-print");
     const built = await build(root, { outDir: out, fourFlyers: false, entryPath });
@@ -595,6 +668,11 @@ export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_R
       const above = Math.max(head ? head.set.y + head.set.h : 0, ...f.logos.map((l) => l.y + l.h));
       const rule = Math.max(...blanks.map((b) => b.y + b.h));
       if (blanks.length && rule - above > EMAIL_ROW_IN + 0.02) problems.push(`card ${c + 1}: the email line is ${(rule - above).toFixed(3)} in under the heading, more than its row's ${EMAIL_ROW_IN}`);
+      // § 17.9 item 1: from the email line's lowest ink (its @, its rule) to the fine print's first ink, read off the PDF
+      const runsOfInk = inkRows(page, { x: f.trim.x + CARD_CUT_IN, y: f.trim.y + CARD_CUT_IN, w: f.trim.w - 2 * CARD_CUT_IN, h: f.trim.h - 2 * CARD_CUT_IN }, dpi);
+      const at = runsOfInk.findIndex((r) => r.start <= rule && r.end >= Math.min(...blanks.map((b) => b.y)));
+      const gapOfInk = at >= 0 && runsOfInk[at + 1] ? runsOfInk[at + 1].start - runsOfInk[at].end : null;
+      if (inkGap && (gapOfInk === null || Math.abs(gapOfInk - INK_GAP_IN) > INK_GAP_TOLERANCE_IN)) problems.push(`card ${c + 1}: ${gapOfInk?.toFixed(3)} in of white from the email line's ink to the fine print's, not ${INK_GAP_IN} ± ${INK_GAP_TOLERANCE_IN}`);
     });
     // § 17.7 item 4: the heading at least version 5's 18 plus 2 layout px, the largest on one line beside the logo (one more
     // px would run it past its box), the size the report names

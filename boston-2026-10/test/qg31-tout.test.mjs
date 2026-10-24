@@ -16,7 +16,7 @@ import { readTout } from "../print/tout.mjs";
 import { GIVEAWAY_PIECES, pagePoints } from "../print/sizes.mjs";
 import { ROOT } from "../build.mjs";
 import { NO_CHROME } from "./print-fixtures.mjs";
-import { NO_POPPLER, TOUT_FIXTURE, toutFitProblems, toutLookProblems, toutProblems, wordsFile } from "./qg-checks.mjs";
+import { NO_POPPLER, ribbonBlueProblems, TOUT_FIXTURE, toutFitProblems, toutLookProblems, toutProblems, wordsFile } from "./qg-checks.mjs";
 
 const tout = GIVEAWAY_PIECES.find((p) => p.id === "tout");
 
@@ -37,6 +37,8 @@ test("QG31: a tout words file outside its keys is refused, naming the key", asyn
     [{ ...TOUT_FIXTURE, headline: ["a", "b", "c", "d"] }, /"headline" must be one to 3 lines/],
     [{ ...TOUT_FIXTURE, banner: "x".repeat(33) }, /"banner" must be one line of at most 32/],
     [{ ...TOUT_FIXTURE, headlineAccent: "red" }, /"headlineAccent" must be one of green, blue, orange/],
+    // § 17.9 item 2: the ribbon's fill, ink or blue
+    [{ ...TOUT_FIXTURE, bannerColor: "red" }, /"bannerColor" must be one of ink, blue/],
     // § 17.7 item 1: the colour spans' markup, each refused naming its line
     [{ ...TOUT_FIXTURE, headline: ["FIXTURE", "LINE {red:TWO}"] }, /"headline" line 2: \{red:…\} is not one of blue, green, orange/],
     [{ ...TOUT_FIXTURE, headline: ["FIXTURE", "LINE {blue:TWO"] }, /"headline" line 2: a brace unclosed, or a span inside another/],
@@ -80,4 +82,8 @@ test("QG31 (§§ 17.4–17.8): the headline the largest on its three lines, its 
   } finally {
     await rm(file.dir, { recursive: true, force: true });
   }
+});
+
+test("QG31 (§ 17.9 item 2): bannerColor blue sets the ribbon in the lede blue, its words white, the report naming their contrast", { skip: NO_CHROME }, async () => {
+  assert.deepEqual(await ribbonBlueProblems(ROOT), []);
 });

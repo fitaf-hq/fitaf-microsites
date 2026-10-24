@@ -13,7 +13,7 @@ import { ROOT } from "../build.mjs";
 import { parseEntry } from "../print/entry.mjs";
 import { GIVEAWAY_PIECES, pagePoints } from "../print/sizes.mjs";
 import { NO_CHROME } from "./print-fixtures.mjs";
-import { ENTRY_FINE, ENTRY_FIXTURE, ENTRY_RUNS, entryProblems, entryTooLongProblems, longEntry, NO_POPPLER, wordsFile } from "./qg-checks.mjs";
+import { ENTRY_FINE, ENTRY_FIXTURE, ENTRY_RUNS, ENTRY_TEN_LINE_FIXTURE, entryProblems, entryTooLongProblems, longEntry, NO_POPPLER, wordsFile } from "./qg-checks.mjs";
 
 const card = GIVEAWAY_PIECES.find((p) => p.id === "entry-card");
 
@@ -80,4 +80,9 @@ test("QG32: built, eight cards a page when they fit; the heading, the @ and . an
 test("QG32: built, six a page when eight do not fit, the report saying by how much; too long for six, refused", { skip: NO_CHROME || NO_POPPLER }, async () => {
   assert.deepEqual(await withWords(longEntry(5), (path) => entryProblems(ROOT, path, { count: 6, tenLines: false })), []);
   assert.deepEqual(await withWords(longEntry(12), (path) => entryTooLongProblems(ROOT, path)), []);
+});
+
+test("QG32 (§ 17.9 item 1): on a card whose fine print sets as the Advisor's (6.5 pt, ten lines), 0.16 ± 0.02 in of white from the email line's lowest ink to the fine print, read off the PDF", { skip: NO_CHROME || NO_POPPLER }, async () => {
+  const runs = ["Fixture heading words", "@", ".", "Fixture rule one.", "The end."];
+  assert.deepEqual(await withWords(ENTRY_TEN_LINE_FIXTURE, (path) => entryProblems(ROOT, path, { count: 8, runs, inkGap: true })), []);
 });
