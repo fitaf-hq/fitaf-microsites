@@ -31,6 +31,9 @@ const AFTER = at("2026-10-30", 12);
 /** The step's words after the offer's end: the Advisor's (§ 1.2 item 3). */
 const LEAD = "Not ready today? Save your plan, and we'll email you when our next offer opens.";
 const BUTTON = "Save my plan";
+/** The email field's help line on a day of the offer; after its end it would promise a link tomorrow that is never sent
+ *  (found in Chrome at the build, 2026-10-24), so the step after the end has its own (DRAFT § 1, proposed). */
+const OFFER_EMAIL_HELP = "we'll send your link here tomorrow";
 /** The line DRAFT § 1 gives a paragraph of the after-the-end block, as a reader reads it. */
 const squash = (s) => s.replace(/\*+/g, "").replace(/\s+/g, " ").trim();
 
@@ -114,6 +117,11 @@ test("UC9: the page after the offer's end — the step beside checkout, its own 
   assert.ok(read.includes(BUTTON), `its button: ${BUTTON}`);
   for (const id of ["save-step-offer", "save-lead", "save-submit", "save-notice"]) assert.equal(shown(page, id), false, `the offer's #${id} not shown`);
   assert.equal(shown(page, "save-notice-later"), true, "its own fine print");
+  assert.equal(shown(page, "save-email-help"), false, `not the offer's email help line (${OFFER_EMAIL_HELP}: nothing is sent)`);
+  assert.equal(shown(page, "save-email-help-later"), true, "the email field's own help line");
+  const live = openStep(html, { hash: CHECKOUT });
+  assert.deepEqual([shown(live, "save-email-help"), shown(live, "save-email-help-later")], [true, false], "control: on a day of the offer, the offer's help line");
+  assert.equal(live.el("save-email-help").textContent.trim(), OFFER_EMAIL_HELP, "control: its words");
   await saveWith(page);
   assert.equal(page.fetches.length, 1, "the save is sent");
   assert.equal(JSON.parse(page.fetches[0].init.body).kind, "offer", "as an offer save (the Worker finds no offer for it)");
@@ -126,12 +134,15 @@ test("UC9: the step's words after the end are DRAFT § 1's (a draft); on the pag
   const block = md.split("## 1. What the visitor sees")[1].split("## 2.")[0].split("### After the offer ends")[1];
   assert.ok(block, "DRAFT § 1 carries the step after the offer ends");
   const paragraphs = block.split(/\n>\s*\n/).map((p) => squash(p.split("\n").filter((l) => l.startsWith(">")).map((l) => l.slice(1)).join(" "))).filter(Boolean);
-  assert.deepEqual(paragraphs.slice(0, 2), [LEAD, `[ ${BUTTON} ]`], "the Advisor's lead and button");
+  assert.deepEqual([paragraphs[0], paragraphs[2]], [LEAD, `[ ${BUTTON} ]`], "the Advisor's lead and button");
+  assert.match(paragraphs[1], /^Email — /, "the email field's own help line, between them (proposed)");
+  assert.ok(!paragraphs[1].includes("tomorrow"), "no promise of a link tomorrow");
   const html = await weekPage();
   const text = squash(html.replace(/<[^>]+>/g, " ").replace(/&#39;/g, "'"));
   // As S18 reads § 1: a button's brackets and the notice's link are the page's own; "(their email)" the done line's slot.
-  const onPage = (p) => squash(p.replace(/^\[ (.+) \]$/, "$1").replace("[Privacy notice]", "Privacy notice").replace("(their email) ", ""));
-  assert.equal(paragraphs.length, 4, "the lead, the button, the fine print and the done line");
+  // The field's label is the page's own ("Email"); its help line is the words.
+  const onPage = (p) => squash(p.replace(/^\[ (.+) \]$/, "$1").replace(/^Email — /, "").replace("[Privacy notice]", "Privacy notice").replace("(their email) ", ""));
+  assert.equal(paragraphs.length, 5, "the lead, the email's help line, the button, the fine print and the done line");
   for (const p of paragraphs) assert.ok(text.includes(onPage(p)), `on the page: ${p}`);
 });
 

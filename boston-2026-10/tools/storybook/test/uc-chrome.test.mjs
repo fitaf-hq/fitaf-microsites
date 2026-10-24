@@ -357,9 +357,9 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
     assert.equal(await drawn(page, "offer-box"), false, "after the offer's end: no box");
     assert.equal(await drawn(page, "save"), true, "the step, with no offer (§ 1.2 item 3)");
     assert.deepEqual(
-      await page.evaluate(() => ["save-step-offer", "save-lead", "save-lead-later", "save-submit-later"].map((id) => document.getElementById(id).checkVisibility())),
-      [false, false, true, true],
-      "no offer line, its own lead and button",
+      await page.evaluate(() => ["save-step-offer", "save-lead", "save-email-help", "save-lead-later", "save-email-help-later", "save-submit-later"].map((id) => document.getElementById(id).checkVisibility())),
+      [false, false, false, true, true, true],
+      "no offer line, its own lead, email help line and button",
     );
     await renderSpan(page, "#top", "main .tabs", 40, "uc9-after-the-offer-top-390");
     await renderSpan(page, "#result", "#save", 8, "uc9-step-after-the-offer-390");
