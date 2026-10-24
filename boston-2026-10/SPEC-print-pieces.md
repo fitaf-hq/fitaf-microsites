@@ -735,3 +735,29 @@ that way"*; and of the tout's new photo, *"this looks slightly worse"*.
     alone after it, at 17:22:53: **4 of 4**. At `1809855` (§ 17.1) the whole suite was 1120 of 1120 (16:02–16:13).
 12. ⚠ **Not done here**: § 17 item 6, the print-ready sheet, which is the orchestrator's after the Advisor's look. 17.1
     item 2 still stands: the two pieces are in `GIVEAWAY_PIECES`, not `PRINT_PIECES`.
+
+### 17.4 Amendment, 2026-10-23 (night): the tout's headline, a straight edge, two units, and finer print. CONTRACT, before any code
+
+**Why.** The Advisor on version 3's proofs (Fit AF's decision record § 7t item 8): *"Drop your email to win" – and make
+"win" blue. I think we can bump up the font size a little bit as well. Let's make the border solid – the raggedness
+isn't working"*; of the ribbon and the fine print, *"this needs to be unified. The fine print should be lighter weight
+and ideally small enough to fit on 2 lines"*; of the scan line and the QR code, *"this needs to be made more into a unit
+– at the very least "See this week's menu" should be stacked on top of the QR code and domain name"*; and of the card's
+fine print, *"this fine print can be a little bit smaller. This is body copy sized."*
+
+1. **The headline** is the words file's (now *DROP YOUR EMAIL / TO \*WIN.\**), its accent in **blue** (the flyer's lede
+   blue): a tout words key **`headlineAccent`** (`green`, the default, `blue` or `orange`; anything else refused); the
+   headline **larger** than version 3's 42 layout px, the largest that sets each given line on one line in the band
+   beside the logo (at least 46), the size in the report.
+2. **The band's lower edge is straight**: no torn or ragged edge on the tout (the flyer's own is unchanged).
+3. **The ribbon and the fine print are one unit**: left-aligned to one edge, the ribbon's width and the fine print's
+   measure the same column, set tight under it. The tout's fine print in the body face's **regular weight** (no
+   semibold), **at most two lines** at the largest size from 7 pt down to a **fine-print floor of 6.5 pt**; if two lines do
+   not fit at 6.5 pt, three at the largest that fits, and the report says so.
+4. **The scan unit**: *See this week's menu* **stacked above** the QR code, centred on it, with *eatfitaf.com* under it
+   as now: one block, the space around it shared evenly.
+5. **The card's fine print smaller**: 7 pt (from § 17.3's 8.4), the same fine-print floor; then § 17.3 item 1's count
+   again: **eight a page** if every card fits with 0.25 in clear of each cut, else six, the report saying which.
+6. **Cases**: QG31 for items 1–4 (the headline's words and colour from the PDF, the straight edge, the fine print's
+   weight and lines, the scan line above the code), QG32 for item 5 (the size and the count); the mutants as before. The
+   fine-print floor is a named value beside the type floor in `print/sizes.mjs`, used only by § 17's fine print.
