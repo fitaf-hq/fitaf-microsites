@@ -34,3 +34,24 @@ test("QG33: built, the entry card with brackets is a proof and the report's last
     await rm(file.dir, { recursive: true, force: true });
   }
 });
+
+test("QG33 (§ 17.8 item 4): the cut guides drawn on a proof's letter sheet, and none on an approved build's", { skip: NO_CHROME }, async () => {
+  const approvedWords = `${ENTRY_FIXTURE.replace(/\n+$/, "")}\n\n<!-- approved -->\n`;
+  for (const [what, text, stem, guides] of [
+    ["the proof", ENTRY_FIXTURE, "letter-entry-cards-PROOF", true],
+    ["the approved build", approvedWords, "letter-entry-cards", false],
+  ]) {
+    const file = await wordsFile(text, "entry-words.md");
+    const dir = await mkdtemp(join(tmpdir(), "boston-qg33-guides-"));
+    try {
+      const built = await lockedBuild({ outDir: join(dir, "out"), fourFlyers: false, entryPath: file.path });
+      const sheet = built.planned.find((p) => p.page.base === "letter-entry-cards");
+      assert.equal(sheet.stem, stem, what);
+      const drawn = sheet.measured.sheets[0].guides.length;
+      assert.equal(drawn > 0, guides, `${what}: ${drawn} cut guide(s) drawn`);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+      await rm(file.dir, { recursive: true, force: true });
+    }
+  }
+});

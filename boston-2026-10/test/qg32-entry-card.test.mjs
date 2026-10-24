@@ -22,14 +22,15 @@ test("QG32: the entry card is one side, landscape, at eight a page's size (3.75 
   assert.deepEqual(pagePoints(card), { w: 288, h: 198 });
 });
 
-test("QG32: the entry words file read in its subset: one side, its heading and subhead, its email-shaped field, its fine print's bold runs", () => {
+test("QG32: the entry words file read in its subset: one side, its heading (a subhead optional), its email-shaped field, its fine print's bold runs", () => {
   const words = parseEntry(ENTRY_FIXTURE, "entry-words.md");
   assert.equal(words.front.heading.text, "Fixture heading words");
-  assert.deepEqual(words.front.subhead, { text: "Fixture subhead words", line: 5 });
+  // § 17.8 item 3: no subhead; one stays allowed (§ 17.6 item 1), a line between the heading and the fields
+  assert.equal(words.front.subhead, null);
+  assert.deepEqual(parseEntry(ENTRY_FIXTURE.replace("## Fixture heading words\n", "## Fixture heading words\n\nA subhead\n"), "x.md").front.subhead, { text: "A subhead", line: 5 });
   assert.deepEqual(words.front.fields.map((f) => f.label), ["@ ."]);
   // §§ 17.2 item 2, 17.6 item 2: the email-shaped field with no label, its blanks writing lines, its @ and . between them
   assert.deepEqual(words.front.fields[0].parts, [{ blank: 6 }, { text: "@" }, { blank: 8 }, { text: "." }, { blank: 3 }]);
-  assert.equal(parseEntry(ENTRY_FIXTURE.replace("Fixture subhead words\n\n", ""), "x.md").front.subhead, null, "the subhead is optional");
   assert.deepEqual(words.front.paragraphs.map((p) => p.text), ENTRY_FINE);
   assert.deepEqual(words.front.paragraphs[0].runs.map((r) => [r.bold, r.text]), [
     [true, "Fixture rule one."],
@@ -39,23 +40,23 @@ test("QG32: the entry words file read in its subset: one side, its heading and s
   ]);
   assert.equal(words.approved, false);
   assert.equal(parseEntry(`${ENTRY_FIXTURE}\n<!-- approved -->\n`, "x.md").approved, true);
-  assert.deepEqual(ENTRY_RUNS.slice(1, 4), ["Fixture subhead words", "@", "."]);
+  assert.deepEqual(ENTRY_RUNS.slice(1, 3), ["@", "."]);
 });
 
 test("QG32: outside the subset, refused, naming the line", () => {
   const swap = (from, to) => ENTRY_FIXTURE.replace(from, to);
   const cases = [
     [ENTRY_FIXTURE.replace("# Front\n\n", ""), /line 1: the first line must be "# Front"/],
-    [swap("its words plain.", "its [words](https://x)."), /line 11: a link/],
-    [swap("its words plain.", "its *words* plain."), /line 11: emphasis/],
-    [swap("**A second bold run**", "**A second bold run"), /line 9: a \*\*bold\*\* run is not closed/],
-    [swap("its words plain.", "its <b>words</b>."), /line 11: HTML/],
-    [swap("- ______ @ ________ . ___\n", "- ______ @ ________ . ___\n\n"), /line 9: a second blank line/],
+    [swap("its words plain.", "its [words](https://x)."), /line 9: a link/],
+    [swap("its words plain.", "its *words* plain."), /line 9: emphasis/],
+    [swap("**A second bold run**", "**A second bold run"), /line 7: a \*\*bold\*\* run is not closed/],
+    [swap("its words plain.", "its <b>words</b>."), /line 9: HTML/],
+    [swap("- ______ @ ________ . ___\n", "- ______ @ ________ . ___\n\n"), /line 7: a second blank line/],
     [swap("## Fixture heading words", "### A third level"), /line 3: "# Front" is followed by its "## <heading>"/],
-    [swap("- ______ @ ________ . ___", "- One\n- Two\n- Three\n- Four\n- Five\n- Six\n- Seven"), /line 7: 7 fields, more than 6/],
-    [swap("- ______ @ ________ . ___", "- Mail_x_"), /line 7: emphasis/],
-    [swap("Fixture subhead words", "Fixture subhead words\nand a second line"), /line 6: the subhead is one line/],
-    [`${ENTRY_FIXTURE}\n# Back\n\n## Rules\n\nWords.\n`, /line 13: a heading out of its place/],
+    [swap("- ______ @ ________ . ___", "- One\n- Two\n- Three\n- Four\n- Five\n- Six\n- Seven"), /line 5: 7 fields, more than 6/],
+    [swap("- ______ @ ________ . ___", "- Mail_x_"), /line 5: emphasis/],
+    [swap("## Fixture heading words\n", "## Fixture heading words\n\nA subhead\nand a second line\n"), /line 6: the subhead is one line/],
+    [`${ENTRY_FIXTURE}\n# Back\n\n## Rules\n\nWords.\n`, /line 11: a heading out of its place/],
     [`${ENTRY_FIXTURE}\n<!-- approved -->\nmore\n`, /an HTML comment/],
   ];
   for (const [text, why] of cases) {
@@ -72,7 +73,7 @@ async function withWords(text, fn) {
   }
 }
 
-test("QG32: built, eight cards a page when they fit; the heading, subhead, @ and . and the fine print from the PDF on each; no label; the email line across the measure; the fine print on the inset in ten lines; the margins clear", { skip: NO_CHROME || NO_POPPLER }, async () => {
+test("QG32: built, eight cards a page when they fit; the heading, the @ and . and the fine print from the PDF on each; no label; the email line across the measure right under the heading; the fine print on the inset in ten lines; the margins clear", { skip: NO_CHROME || NO_POPPLER }, async () => {
   assert.deepEqual(await withWords(ENTRY_FIXTURE, (path) => entryProblems(ROOT, path, { count: 8 })), []);
 });
 

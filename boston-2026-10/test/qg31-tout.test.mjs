@@ -73,7 +73,7 @@ test("QG31: what does not fit is refused, naming the layout px over, never shrun
   assert.deepEqual(await toutFitProblems(ROOT), []);
 });
 
-test("QG31 (§§ 17.4–17.7): the headline the largest on its three lines, its spans' colours from the PDF; the logo in the band; the edge straight; the foot 1.2 in; the fine print regular on at most three lines under its centred ribbon; the scan unit; the address dark, its contrast named", { skip: NO_CHROME || NO_POPPLER }, async () => {
+test("QG31 (§§ 17.4–17.8): the headline the largest on its three lines, its spans' colours from the PDF; the logo in the band; the edge straight; the foot 1.2 in; the fine print regular on at most three lines under its centred ribbon, both short of the photo's line; the scan unit; the address dark, its contrast named", { skip: NO_CHROME || NO_POPPLER }, async () => {
   const file = await wordsFile(TOUT_FIXTURE, "tout-words.json");
   try {
     assert.deepEqual(await toutLookProblems(ROOT, file.path), []);

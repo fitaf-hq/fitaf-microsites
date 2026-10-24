@@ -50,6 +50,8 @@ export const plainOf = (t) => t.replace(/\{[a-z]+:([^{}]*)\}/g, "$1").replaceAll
 /** § 17.7 items 4–5: the card's heading's least size (version 5's 18 plus 2, layout px), and the gap under its email line. */
 export const HEAD_MIN_PX = 20;
 export const RULE_GAP_IN = 0.12;
+/** § 17.8 item 3: the email line's row, right under the heading (print/sizes.mjs ENTRY_EMAIL_PITCH_IN). */
+export const EMAIL_ROW_IN = 0.4;
 /** § 17.4: the fine print's floor (6.5 pt) in layout px, and its size on the card (7 pt). */
 export const FINE_FLOOR_PX = (6.5 / 72) * 120;
 export const CARD_FINE_PX = (7 / 72) * 120;
@@ -57,15 +59,13 @@ export const CARD_FINE_PX = (7 / 72) * 120;
 const floorOf = (t) => (t.fine ? FINE_FLOOR_PX : FLOOR_PX) - 0.01;
 
 /**
- * QG32: the entry card's words, a fixture's, in § 17.6's shape: one side, its heading and subhead, its one field
+ * QG32: the entry card's words, a fixture's, in § 17.8's shape: one side, its heading (no subhead), its one field
  * email-shaped with no label (its blanks writing lines, its @ and . printed), and its fine print, with **bold** runs.
  * Short enough for eight a page.
  */
 export const ENTRY_FIXTURE = `# Front
 
 ## Fixture heading words
-
-Fixture subhead words
 
 - ______ @ ________ . ___
 
@@ -79,8 +79,8 @@ export const ENTRY_FINE = [
   "Fixture rule one. Its words after the bold. A second bold run: then plain words to the end of the paragraph.",
   "A second paragraph of fine print, its words plain.",
 ];
-/** The runs the fixture's card carries, in its order: the heading, the subhead, the email line's @ and ., the fine print. */
-export const ENTRY_RUNS = ["Fixture heading words", "Fixture subhead words", "@", ".", ...ENTRY_FINE];
+/** The runs the fixture's card carries, in its order: the heading, the email line's @ and ., the fine print. */
+export const ENTRY_RUNS = ["Fixture heading words", "@", ".", ...ENTRY_FINE];
 
 /**
  * § 17.3 item 1: the fixture with its fine print said `times` times over (as one paragraph each), to fit six a page but
@@ -345,6 +345,8 @@ function colourShare(png, box, dpi, rgb, tolerance = 40) {
   }
   return all ? near / all : 0;
 }
+/** § 17.8 item 1: the band's own inset at its right (print.css .tout-band's 18px padding), in layout px. */
+const BAND_INSET_PX = 18;
 /** § 17.7 item 3: the band's near-black (--ink) and the white, as the measuring pass reads a run's colour. */
 const INK_CSS = "rgb(33, 37, 41)";
 const WHITE_CSS = "rgb(255, 255, 255)";
@@ -436,6 +438,15 @@ export async function toutLookProblems(root, toutPath) {
       if (Math.abs(r.x - t.x) > 0.03) problems.push(`the ribbon starts ${(r.x - t.x).toFixed(3)} in from the fine print: not one left edge`);
       if (r.x + r.w < t.x + t.w - 0.03) problems.push("the ribbon is narrower than the fine print's measure");
       if (t.y - (r.y + r.h) > 0.1) problems.push(`the fine print is ${(t.y - r.y - r.h).toFixed(3)} in under the ribbon: not set tight`);
+      // § 17.8 item 1: the ribbon's notch tip and the fine print's measure stop at the photo's left edge less the band's
+      // 18 layout px inset
+      const photo = face.photos.find((ph) => ph.slot === "tout");
+      const line = photo ? photo.x - BAND_INSET_PX / 120 : null;
+      if (line === null) problems.push("the tout's photo is not measured");
+      else {
+        if (r.x + r.w > line + 0.01) problems.push(`the ribbon runs ${((r.x + r.w - line) * 120).toFixed(1)} layout px past the photo's line`);
+        for (const run of fine) if (run.x + run.w > line + 0.01) problems.push(`the fine print runs ${((run.x + run.w - line) * 120).toFixed(1)} layout px past the photo's line`);
+      }
       // § 17.5 item 4: the ribbon's words centred in it, to 0.5 pt
       const words = face.texts.find((x) => x.text === TOUT_FIXTURE.banner);
       if (!words || Math.abs(words.x + words.w / 2 - (r.x + r.w / 2)) > 0.5 / 72) problems.push(`the ribbon's words are not centred in it: ${words ? ((words.x + words.w / 2 - (r.x + r.w / 2)) * 72).toFixed(2) : "?"} pt off`);
@@ -545,7 +556,7 @@ export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_R
       const run = missingInOrder(pdfOf(p), n, runs);
       if (run !== null) problems.push(`${p.stem}.pdf lacks "${run}" in order`);
     }
-    for (const run of [runs[0], runs[1], runs.at(-1)]) if (timesOn(pdfOf(cards), 1, run) !== count) problems.push(`${cards.stem}.pdf carries "${run}" ${timesOn(pdfOf(cards), 1, run)} times, not ${count}`);
+    for (const run of [runs[0], runs.at(-1)]) if (timesOn(pdfOf(cards), 1, run) !== count) problems.push(`${cards.stem}.pdf carries "${run}" ${timesOn(pdfOf(cards), 1, run)} times, not ${count}`);
     const dpi = 300;
     const page = drawn(pdfOf(cards), 1, dpi);
     sheet.faces.forEach((f, c) => {
@@ -560,7 +571,7 @@ export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_R
         // §§ 17.4 item 5, 17.6 item 3: the card's fine print from 7 pt down to its 6.5 pt floor
         if (t.fine && !(t.size <= CARD_FINE_PX + 0.01 && t.size >= FINE_FLOOR_PX - 0.01)) problems.push(`card ${c + 1}: its fine print is ${t.size} layout px, not 6.5 to 7 pt`);
         // § 17.6 item 2: no label: every run of text the heading, the subhead, the email line's @ and ., or the fine print
-        if (!t.fine && ![runs[0], runs[1], "@", "."].includes(t.text)) problems.push(`card ${c + 1}: "${t.text.slice(0, 40)}" is none of the card's words`);
+        if (!t.fine && ![runs[0], "@", "."].includes(t.text)) problems.push(`card ${c + 1}: "${t.text.slice(0, 40)}" is none of the card's words`);
       }
     });
     sheet.faces.forEach((f, c) => {
@@ -578,6 +589,12 @@ export async function entryProblems(root, entryPath, { count = 8, runs = ENTRY_R
       // § 17.7 item 5: at least 0.12 in from the email line's rule to the fine print's first line
       const gap = Math.min(...fine.map((t) => t.set.y)) - Math.max(...blanks.map((b) => b.y + b.h));
       if (!(gap >= RULE_GAP_IN - 0.005)) problems.push(`card ${c + 1}: ${gap.toFixed(3)} in from the email line to the fine print, under ${RULE_GAP_IN}`);
+      // § 17.8 item 3: the email line right under the heading (its row, EMAIL_ROW_IN tall, the next thing below the heading
+      // and the logo), so the room freed is the whitespace above the fine print
+      const head = f.texts.find((t) => t.text === runs[0]);
+      const above = Math.max(head ? head.set.y + head.set.h : 0, ...f.logos.map((l) => l.y + l.h));
+      const rule = Math.max(...blanks.map((b) => b.y + b.h));
+      if (blanks.length && rule - above > EMAIL_ROW_IN + 0.02) problems.push(`card ${c + 1}: the email line is ${(rule - above).toFixed(3)} in under the heading, more than its row's ${EMAIL_ROW_IN}`);
     });
     // § 17.7 item 4: the heading at least version 5's 18 plus 2 layout px, the largest on one line beside the logo (one more
     // px would run it past its box), the size the report names
