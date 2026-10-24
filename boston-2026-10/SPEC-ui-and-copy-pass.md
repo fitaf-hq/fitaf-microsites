@@ -248,3 +248,36 @@ never committed; the build's were written to a scratch directory outside this re
 - `uc9-after-the-offer-top-390.png`, `uc9-after-the-offer-end-390.png`: on 2026-10-30, no box at the top and no step after the card (§ 10.7, item 9 not built);
 - `uc8-card-390.png`, `uc8-card-1280.png`: the five chips three then two, and the breakfasts' badges (the week delivered 2026-11-01, Lean, weekdays, breakfast);
 - `uc7-all-plans-390.png`: See all plans, each weekly price struck through, its price after 25% beside it.
+
+### 1.2 Rulings, 2026-10-23 (night): the card's price, the plans' marked-down prices, and a save after the offer. CONTRACT, before any code
+
+**The Advisor** (Fit AF's decision record `2026-10-17-…` § 7t item 15), on § 1.1's three open items.
+
+1. **Item 6, the card's count and price** (*"yes please fix this math"*): the card's count is the meals it lists, and
+   **its weekly price is the plan's price a meal times that count**, as the store charges it (the 2026-10-16 smoke: five
+   meals on Lean 4 at $13.00, $65.00): *$65.00/week · $13.00/meal · 5 meals/week*; the 15-meal cart on the 14 plan by the
+   same rule. A row whose meals equal its plan's count is unchanged. Every place the card's weekly total prints follows.
+2. **Item 7, corrected: the store's price is the price paid; the struck price is the higher one.** ⛔ § 1 item 7's
+   default and § 1.1's build had it backwards (the list price struck and a lower price beside it, a price nobody can pay).
+   The record (Fit AF's decision `2026-10-17-…` § 7d: *"The price a customer pays is today's list price in every case;
+   only the value we say it is worth changes"*; § 7r item 5: the 25% *"was a marketing exercise … we're showing marked
+   down prices on the site"*, from his note *"Estimated value: {~120-160% of current list price}; Your value: {current
+   list price}"*); and the Advisor now: *"The HMP storefront \*effectively\* has the discount applied. The microsite shows
+   the un-discounted price struck through. It is currently \*impossible\* to pay the non-discounted price."* So while an
+   offer is current, **See all plans shows each plan's weekly price as the store charges it, and beside it, struck
+   through, that price ÷ (1 − the offer's share)**, rounded to the cent (Lean 7: ~~$116.67~~ **$87.50**); the share is a
+   number of the offer (`data/offers.json` `offers[].percent_off`, 25, beside its label; the build refuses a label whose
+   percentage disagrees with it), never a literal in the code. With no current offer, the list price alone, as before.
+3. **Item 9, a save after the offer ends** (*"This whole section is going to get updated – but your ideas are good so
+   please implement them"*): after the last offer's `valid_to` the step still renders, worded *"Not ready today? Save
+   your plan, and we'll email you when our next offer opens."* and its button *"Save my plan"* (draft words, the page's
+   words file); it saves the email, the ZIP code and the tick **with no offer**, and **sends nothing**: no E1 is scheduled
+   for it (a state of its own, not `scheduled`). **It is kept 30 days from the save, or until the second-chance offer's
+   email is sent, whichever is first**, then deleted unless its tick was confirmed; the tick's confirmation travels in
+   that email when it exists. Its fine print says so in the step's own words (a draft). The out-of-area path unchanged.
+4. **Cases first**, red on `9b1438c` before the code: the card's total for a 5-meal and a 15-meal row and an unchanged row;
+   See all plans' struck price for each plan and the price beside it equal to the store's (no price below the list); the
+   refusal of a label/`percent_off` mismatch; a save after `valid_to` stored with no offer, no E1 due, purged at 30 days
+   and kept while confirmed; the step's words after the end. Mutants: the struck price computed from the wrong side
+   (list × 0.75), and an E1 scheduled for a save with no offer. Goldens moved once, with proof; the whole site suite,
+   Storybook, the watch and contrast green.
