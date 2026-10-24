@@ -110,7 +110,13 @@
 // development pages +9,720 bytes each (item 8's lines, items 1–3's box, step and messages, item 7's prices after the offer
 // and plan-prices.js), their visible page at every fragment (the Family anchor, SAVE_FAMILY, is gone). Both trees' builds
 // differ in index.html, demo/, boston/, seminar/ and privacy/ alone (§ 1 item 5's two paragraphs on the last).
-// From here the reference is ede2e07's tree.
+// ⚠ RE-RECORDED at dbfcb62 (`node test/u-04-record.mjs --commit dbfcb62`): SPEC-ui-and-copy-pass § 1.2. Against ede2e07's
+// record, all six contents byte-identical; the three production pages +531 bytes each (item 1: #plan-data's meals and
+// totals, app.js's lines), their visible page at the two answer sets above their plan; the three development pages +2,451
+// bytes each (item 1, item 2's struck prices, item 3's step with no offer), their visible page where a cart shows the step
+// (U4 reads it on 2026-09-29, when no offer is live, so the step shows with no offer). Both trees' builds differ in
+// index.html, demo/, boston/, seminar/ and privacy/ alone (DRAFT § 6's retention on the last).
+// From here the reference is dbfcb62's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -119,7 +125,7 @@ import { normalWeekRecord } from "./u-checks.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to ede2e07's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "ede2e07");
+test("U4: a normal week, the content and the page as served, byte-identical to dbfcb62's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "dbfcb62");
   assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
 });

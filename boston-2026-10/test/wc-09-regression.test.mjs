@@ -28,6 +28,8 @@
 // ⚠ RE-RECORDED by `--visible-at ede2e07` for SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23: the chips in their grid, a
 // meal's count as a badge on its tile): `visible` at the 18 answered fragments (the card's list attribute, and a counted
 // meal's badge and hidden words); "" and #family, picks_data, page_sha256 and the sheet unchanged (409b805's).
+// ⚠ RE-RECORDED by `--visible-at dbfcb62` for SPEC-ui-and-copy-pass § 1.2 item 1 (the card's meals and weekly total):
+// `visible` at the four fragments of the two answer sets above their plan (or-5d and and-5d-b, with and without snacks).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -48,7 +50,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
-  assert.equal(golden.visible_at, "ede2e07", "the visible pages: ede2e07's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8)");
+  assert.equal(golden.visible_at, "dbfcb62", "the visible pages: dbfcb62's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8, § 1.2 item 1)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {

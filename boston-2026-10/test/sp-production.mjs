@@ -235,7 +235,38 @@ export const BASE = "768ca36";
  *  and the count badge: src/chefs-choice/ and scripts/chefs-choice.mjs's one slot), from e875280 (its contract) to
  *  ede2e07 (its last code); its other items change only the pages with an offer, which the production page with
  *  `production` false is not (shown: both trees' production pages differ by the card's lines alone). */
-export const LATER = [["ce91cba", "773e597"], ["e875280", "ede2e07", ["src/chefs-choice", "scripts/chefs-choice.mjs"]]];
+export const LATER = [
+  ["ce91cba", "773e597"],
+  ["e875280", "ede2e07", ["src/chefs-choice", "scripts/chefs-choice.mjs"]],
+  // SPEC-ui-and-copy-pass § 1.2 item 1 (the card's meals and its weekly total at the plan's price a meal), the one commit
+  // of the production page's change (clientData and app.js); its items 2–3 move only the pages with an offer. Its
+  // doc-comment hunk does not apply to the base (whose comment predates the preview build's), and a hunk that changes only
+  // comments moves no page: `codeOnly` leaves such hunks out.
+  ["bd80a41", "eae4d94", ["src/app.js", "build.mjs"], { codeOnly: true }],
+];
+
+/** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
+function codeHunks(diff) {
+  const comment = /^[+-]\s*(\*|\/\/|\/\*)/;
+  const out = [];
+  let hunk = null;
+  const flush = () => {
+    if (hunk && hunk.some((l) => /^[+-]/.test(l) && !comment.test(l))) out.push(...hunk);
+    hunk = null;
+  };
+  for (const line of diff.split("\n")) {
+    if (line.startsWith("@@")) {
+      flush();
+      hunk = [line];
+    } else if (line.startsWith("diff --git")) {
+      flush();
+      out.push(line);
+    } else if (hunk) hunk.push(line);
+    else out.push(line);
+  }
+  flush();
+  return out.join("\n");
+}
 const LATER_PATHS = ["build.mjs", "data", "scripts", "src"];
 
 function run(cmd, args, { input } = {}) {
@@ -255,8 +286,9 @@ export async function basePackage() {
   run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", BASE, prefix]) });
   const pkg = join(scratch, "base", prefix);
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
-  for (const [from, to, paths = LATER_PATHS] of LATER) {
-    const diff = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...paths.map((p) => `${prefix}/${p}`)]);
+  for (const [from, to, paths = LATER_PATHS, { codeOnly = false } = {}] of LATER) {
+    const whole = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...paths.map((p) => `${prefix}/${p}`)]);
+    const diff = codeOnly ? Buffer.from(codeHunks(whole.toString("utf8"))) : whole;
     if (diff.length) run("patch", ["-p1", "--forward", "--silent", "-d", join(scratch, "base")], { input: diff });
   }
   return { pkg, dispose: () => rm(scratch, { recursive: true, force: true }) };

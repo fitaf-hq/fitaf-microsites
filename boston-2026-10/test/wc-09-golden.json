@@ -1,7 +1,7 @@
 {
   "about": "WC-9's before (SPEC-week-content § 5): the production build of recorded_at, built --on `on` from that commit's own tree (test/wc-09-record.mjs, which wrote this file). picks_data is its #picks-data; visible is, per fragment, the SHA-256 of the visible page opened at opened_at, with the week's sheet URL rewritten to /week/<file>. Re-record only by running the recorder; never by hand. Since SPEC-meal-selection § 12 (--visible-at): visible is instead the page production's Worker serves from visible_at's own tree with that week's content in its bucket, opened at opened_at; everything else is recorded_at's.",
   "recorded_at": "409b805",
-  "visible_at": "ede2e07",
+  "visible_at": "dbfcb62",
   "on": "2026-10-11",
   "week": "2026-10-18",
   "opened_at": "2026-10-11T16:00:00.000Z",
@@ -17,8 +17,8 @@
     "#signature-14": "8cee11fd5284b9b40d2e96c16c24b964ce9a4ae422281f445f5eb23d055b3dff",
     "#lean-or-7d": "e2bc3427e13fa7c3e4f23dc281919d4695ba1b72f0b48b67cb9efc39abb8814e",
     "#lean-or-7d-s": "377ecac185868d0f501d460c0f1fdddcc0c4efbade6c560dc62bf26ff9ddc2c9",
-    "#lean-or-5d": "2967045bb128cab1afc9990bed17597919fe4b8e6b4b1e57210087cebe70266b",
-    "#lean-or-5d-s": "0a5887c9f49f1bca8280aa5d6eb2f71e1f94ce7ed5cfbe4d07dfac5eea808e83",
+    "#lean-or-5d": "794591e0618bbbfab3491da0b393ec3db68c1f89f592e40ee9b10fbfe845e947",
+    "#lean-or-5d-s": "999fa9d1490aba382c62d7f167661ff736815ff82bc9c5afe61a5d19ee10380d",
     "#lean-and-7d": "80c4c8d860eb0e311085bc129b9d274a252f04cda6d9a596ff45b881177d19a1",
     "#lean-and-7d-s": "231bba6e83ce8ab563b493beab0bad04e0131f8b9d2b192a400861b510fd79ab",
     "#lean-and-5d": "c4b6103259e7073457e6b00992be99d960c3f8c4bdfd1735d1f85b43c42c3719",
@@ -29,8 +29,8 @@
     "#lean-or-5d-b-s": "d1c5231184bb1f334a4ba995b59bcd8ec12d7c2da9bd03c8ca0eac1d55e50b4a",
     "#lean-and-7d-b": "110353ed4a73dd87dd60042ac8e36d9db9b247f3a836fdd4ef8f8ffcf43f4214",
     "#lean-and-7d-b-s": "9460bdb9dc750c23789d74a946653f95215db89d3ab0818f60c2e2b7ece9bf06",
-    "#lean-and-5d-b": "0b3a3e7ad3d5b0932a5ab0067f4a203edb428029290c4af7941b80d871cca04f",
-    "#lean-and-5d-b-s": "979b5f53f3883cf3d5f0873130e6a301b12be519c5735bf2363786607f82dc2d"
+    "#lean-and-5d-b": "4571d40912ab73e13a4ec049b23f96af9a8e69ce113e081d4fc9d6b798cc050a",
+    "#lean-and-5d-b-s": "f1f6a9ac7d2aba91eb9a226213441189bc560f7d3b51508a777d84bd9d20b780"
   },
   "picks_data": {
     "zone": "America/New_York",

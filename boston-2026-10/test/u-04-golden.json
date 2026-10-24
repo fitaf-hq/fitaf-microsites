@@ -1,18 +1,18 @@
 {
   "about": "U4's before (SPEC-week-content § 8 item 5): test/u-checks.mjs normalWeekRecord() over recorded_at's own tree (test/u-04-record.mjs, which wrote this file): per normal week and target, the content command's files, the page as served with that week once its lines naming `updating` are removed (recorded_at's page has none), and the visible page per fragment. Re-record only by running the recorder; never by hand.",
-  "recorded_at": "ede2e07",
+  "recorded_at": "dbfcb62",
   "record": {
     "the v1 fixture, 2026-10-04 · prod": {
       "content": {
         "week/picks-data.json": "1374 bytes sha256:e03fde2974b9c9b472013e281b40d4916eba6e1b1a3f08fcf97861c5332d0645"
       },
-      "page": "64081 bytes sha256:56077ad04cf05e1485c8ce18189cf09892b46e69838597528b1baa336ec0bd97",
+      "page": "64612 bytes sha256:d546a2530522d512de37846b958aded22a8ab4cd0952052b04b4b16d2bbb67fd",
       "visible": {
         "(no fragment)": "289a9db881c64d63b0b4948777d0ede2ac2688972c3199e65ed58ba4d8840960",
         "#lean-7": "72e6b829641ded7d1487d512edbc3cb9840207c065164d1ccb709bef91b43c5b",
         "#lean-or-7d": "72e6b829641ded7d1487d512edbc3cb9840207c065164d1ccb709bef91b43c5b",
-        "#lean-or-5d-s": "d03a45eee872fef4c093392ac58a8d6a74d0ffe1e4ec1c0789761b8acc09211d",
-        "#signature-and-5d-b-s": "94a6a80eec22deefe7179c5e27c480808e8ac81e21c5789bb13e74f7a47664d9",
+        "#lean-or-5d-s": "df223a9c4986d926f33cc0ac077182157eafaf4249696b7975588e5da1cb1b5a",
+        "#signature-and-5d-b-s": "2e996af8c623c93fc309f52ac171693d28f89d1bfe179025ecccdf36db55c1c3",
         "#performance-and-7d-b": "fb1089e660b63b2ba36cfc6134b79131a123d91f9fd2254e22cd99be122ef002",
         "#family": "3f2821e667227dc19ce0f87109b5defc419f3f620164a11b640e11f203e7e5f2"
       }
@@ -21,13 +21,13 @@
       "content": {
         "week/picks-data.json": "1374 bytes sha256:e03fde2974b9c9b472013e281b40d4916eba6e1b1a3f08fcf97861c5332d0645"
       },
-      "page": "100425 bytes sha256:045fc05dc635b59041a329ac27cc78b9b0e77d1d49340ddcedfdf8e3950c686a",
+      "page": "102876 bytes sha256:24438878b01c87641c7244605954772af3ad2a9fd16fd5d5abcd93150e7de300",
       "visible": {
         "(no fragment)": "804746e5458e3d1fee68a40007517544886c9748df43bf5ec26d0e094f75cab6",
-        "#lean-7": "87f0943a2b295616b154ab61939f44a9585be98a9e23024056dadf79b2253a25",
-        "#lean-or-7d": "87f0943a2b295616b154ab61939f44a9585be98a9e23024056dadf79b2253a25",
-        "#lean-or-5d-s": "163fd989a8cb03214093ab504498e0685f3014d782d5c844dc039b1d25f82621",
-        "#signature-and-5d-b-s": "144537e7a7c2178c306b14d45dcc26012c6956107e82d07756dde17566b85146",
+        "#lean-7": "68e050ec2c833bcf443897a72ae8c89deeef87d1139aa1a0b2b551d991c3d678",
+        "#lean-or-7d": "68e050ec2c833bcf443897a72ae8c89deeef87d1139aa1a0b2b551d991c3d678",
+        "#lean-or-5d-s": "cccf2f890a841e0a57f4751193751ce4a718d3a0885f3005050ac390d55c6d9d",
+        "#signature-and-5d-b-s": "d50ea60dac5ceca5a8e4f3b7638179a11d5e198067b304e97291d8649c81062c",
         "#performance-and-7d-b": "43bf80810c32ed36017c3a94550bce8b0978d666cc9e1daeabbc91b6aed93322",
         "#family": "fba2d65e26a5e74d841a9d6bfb71f780fe3161d4ccbbc278557ae153aad14278"
       }
@@ -36,13 +36,13 @@
       "content": {
         "week/picks-data.json": "7246 bytes sha256:ed14a2662d642fd651f5ab950794ef59b3e31d7bf04a5939cea3ed12b800f9ed"
       },
-      "page": "69953 bytes sha256:c18899ee372003fe96e918ce7bc3b1981a3ea93d50de22a3d6c6d09e5c9ffe96",
+      "page": "70484 bytes sha256:66488af4363efca9f2d4b17231ed96fdef5e87c1d13630a22c72dc111b7bd644",
       "visible": {
         "(no fragment)": "289a9db881c64d63b0b4948777d0ede2ac2688972c3199e65ed58ba4d8840960",
         "#lean-7": "8f6493cc10a8a1161a936edea4907416c9c82022281520563c9db177c7842ecb",
         "#lean-or-7d": "8f6493cc10a8a1161a936edea4907416c9c82022281520563c9db177c7842ecb",
-        "#lean-or-5d-s": "a8ec4dfb8d37423bf12beb7abbe2caea625cf0605ca3b4ac6936efb92758a6fa",
-        "#signature-and-5d-b-s": "168b1783f5d15e76a2ce860e967f71d4cfc51d49e04d587e908630f558a8828e",
+        "#lean-or-5d-s": "f4da1174d56e89b5d59094faea00ff162d5f7dc4f1b84e9a1808d7dd58474c61",
+        "#signature-and-5d-b-s": "3d0f25fd8f042976135fc2d93c3ba6140e6c93320d818c8f87a4b8c278c9815d",
         "#performance-and-7d-b": "02cac30959d3340143b37ff1bb2a455b951b8e1ac76facb427a03b9657a5d043",
         "#family": "3f2821e667227dc19ce0f87109b5defc419f3f620164a11b640e11f203e7e5f2"
       }
@@ -51,14 +51,14 @@
       "content": {
         "week/picks-data.json": "7246 bytes sha256:ed14a2662d642fd651f5ab950794ef59b3e31d7bf04a5939cea3ed12b800f9ed"
       },
-      "page": "106297 bytes sha256:ab9d35eadb8ef7ee18b296fe910ca0e3abeefa31deffcc17cba043b0bd7d79dc",
+      "page": "108748 bytes sha256:55a8b2ca910d74697770993b2f5edfc8d0e4b749edb7b4c6fd30bf859d01335f",
       "visible": {
         "(no fragment)": "804746e5458e3d1fee68a40007517544886c9748df43bf5ec26d0e094f75cab6",
-        "#lean-7": "e63318494757193b87b2ecacabd670af10466dd4f928b69dcc06e8cc78af672c",
-        "#lean-or-7d": "e63318494757193b87b2ecacabd670af10466dd4f928b69dcc06e8cc78af672c",
-        "#lean-or-5d-s": "e363334c1c42ee31a271860a8102009894fb1450d651928b0e16477094f24c38",
-        "#signature-and-5d-b-s": "12ddcaaac6b1a4002d31fced1bf70803b27aa0773947828cc784269fc651c645",
-        "#performance-and-7d-b": "85bca1b6fb095500fe1f1c844daa08a6e96ff6847e6a284f883a0cb1f0706b82",
+        "#lean-7": "62bdba2069bba7eb43d2331d0be23d3313c26d252e68070969076994bb742d8a",
+        "#lean-or-7d": "62bdba2069bba7eb43d2331d0be23d3313c26d252e68070969076994bb742d8a",
+        "#lean-or-5d-s": "a2252f326e67a52dbdae6f080f8795dba449cc1ec1b3f87ce59aa911326a9765",
+        "#signature-and-5d-b-s": "7a369cfaab8d27b3557db1a11873de8a1c18f2b41f63712a4a228b09581dc54c",
+        "#performance-and-7d-b": "057968e33b8975f66257915da3f880169b4c9aedc20530ce30b3e2ad666e7e25",
         "#family": "fba2d65e26a5e74d841a9d6bfb71f780fe3161d4ccbbc278557ae153aad14278"
       }
     },
@@ -67,13 +67,13 @@
         "week/picks-data.json": "30990 bytes sha256:4e2fe5457505f5139837a8b4290b15004192a8e9dcfc76cd076d724c554465e4",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "93697 bytes sha256:878e2d489b5c6b30dae98121122ae1ce948850df5e15b195caacee679c683f59",
+      "page": "94228 bytes sha256:0e587ceddea94568bcc1ba8ec79e8d9f70d5034b7595faea21d7a5162c64aefa",
       "visible": {
         "(no fragment)": "289a9db881c64d63b0b4948777d0ede2ac2688972c3199e65ed58ba4d8840960",
         "#lean-7": "e2bc3427e13fa7c3e4f23dc281919d4695ba1b72f0b48b67cb9efc39abb8814e",
         "#lean-or-7d": "e2bc3427e13fa7c3e4f23dc281919d4695ba1b72f0b48b67cb9efc39abb8814e",
-        "#lean-or-5d-s": "0a5887c9f49f1bca8280aa5d6eb2f71e1f94ce7ed5cfbe4d07dfac5eea808e83",
-        "#signature-and-5d-b-s": "37a53088976cabae71e22b850d6e6828fb7a6e04a9afb4cf1c2eaa15b518f3d7",
+        "#lean-or-5d-s": "999fa9d1490aba382c62d7f167661ff736815ff82bc9c5afe61a5d19ee10380d",
+        "#signature-and-5d-b-s": "0679761cc185e27c1c68f40539175f3cb9f70d5be18d049639495e1af5410295",
         "#performance-and-7d-b": "cd4d46c22b119aa0eaf4ec4564950a84a221b3e46873f0ada86dd4bc569b17b5",
         "#family": "3f2821e667227dc19ce0f87109b5defc419f3f620164a11b640e11f203e7e5f2"
       }
@@ -83,14 +83,14 @@
         "week/picks-data.json": "30990 bytes sha256:8177932d30aa04d7fa0cfd5d60872caf266b0ba1ec0c03c3ee2a31940e231a9b",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "130041 bytes sha256:701fe279175b0105f0f3ab89b9fd69f3f94d7f3a8ae949b2ecfbb86cb7f4e0c9",
+      "page": "132492 bytes sha256:e98dd22e3b42b69164d67d67689ad4fb85afc7c4c9e968f854f5bf06b9619eee",
       "visible": {
         "(no fragment)": "804746e5458e3d1fee68a40007517544886c9748df43bf5ec26d0e094f75cab6",
-        "#lean-7": "67a46a84efaa1a25e17efc690cb20c99f3e0cd7a5f683ab2a2d810b880f0659e",
-        "#lean-or-7d": "67a46a84efaa1a25e17efc690cb20c99f3e0cd7a5f683ab2a2d810b880f0659e",
-        "#lean-or-5d-s": "6dbca1ee27cd8b21b8a786a1e6ecfb78413a46f46ae4365b90602000f0612852",
-        "#signature-and-5d-b-s": "9f49d23df97159481b2629edc1fb0160eb13cbab0bf5242b8814dc84a9c3938c",
-        "#performance-and-7d-b": "8750d068d9f065b7b6bc3af70c718db604a2ee9109067788bd111383d89fd8e2",
+        "#lean-7": "055231b027a585b369e5c778b53fc2e27a3e225326ca5b9c17d7ad4c1396a7f2",
+        "#lean-or-7d": "055231b027a585b369e5c778b53fc2e27a3e225326ca5b9c17d7ad4c1396a7f2",
+        "#lean-or-5d-s": "ef4d8289bf804bd3a1ca803722999d70f057d161047eee2db6eb75cdf6a41bee",
+        "#signature-and-5d-b-s": "17ac7fc9ca2360701c3ba09ab6779b15d7e787385ff60f32a5c2bdfdb7dd46d8",
+        "#performance-and-7d-b": "ee96bbeb340e037dfa61ef98cfd9dc63b5678834febdbef088fd033a760b5dc2",
         "#family": "fba2d65e26a5e74d841a9d6bfb71f780fe3161d4ccbbc278557ae153aad14278"
       }
     }

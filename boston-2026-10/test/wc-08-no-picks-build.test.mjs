@@ -26,8 +26,11 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  1c68a68b… until then. Re-recorded once more at 5231265 for SPEC-every-menu-and-nutrition § 11 (2026-10-22: Why Fit
  *  AF? above the tabs, the card's rings and circled i; its § 11.1 says which lines): renderPage at ce91cba's own tree
  *  reproduces 21abbe56…, at 5231265's gives 321da0a6…. Re-recorded once more at 773e597 for § 11.2 (Why Fit AF? an
- *  outline button in the unselected chip's look): 5231265's tree reproduces 321da0a6…, 773e597's gives this. */
-const TODAY_NO_PICKS_SHA256 = "01270dcad503c74efbf099de31267d0b8ea70a44ca1b1d7e9eddb1d7fb2ae3c1";
+ *  outline button in the unselected chip's look): 5231265's tree reproduces 321da0a6…, 773e597's gives 01270dca….
+ *  Re-recorded once more at dbfcb62 for SPEC-ui-and-copy-pass § 1.2 item 1 (the card's meals and its weekly total at the
+ *  plan's price a meal: #plan-data's answers and app.js's lines): 9b1438c's tree reproduces 01270dca…, dbfcb62's gives
+ *  this. */
+const TODAY_NO_PICKS_SHA256 = "f3cd8763780ae518d591b37797982e67909213c5baea18c5b7d8faa1705750a8";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
