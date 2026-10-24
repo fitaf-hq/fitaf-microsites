@@ -41,10 +41,11 @@ test("MS-3 (§ 12): Q1 alone gives or, weekdays and and, weekdays: their fragmen
       const { plan, meals } = rowOf(key);
       const r = resultOf(page);
       assert.equal(r.selection, key, `#${goal}, ${ld}: the card's answer set`);
+      // SPEC-ui-and-copy-pass § 1.2 item 1 (2026-10-23): the meals the card lists, at the plan's price a meal.
       assert.deepEqual(
         [r.meals, r.perMeal, r.total, r.cta],
-        [String(plan), dollars(centsOf(goal, plan)), dollars(plan * centsOf(goal, plan)), `${PLANS.order_base_url}?mpid=${mpidOf(goal, plan)}`],
-        `#${goal}, ${ld}: the ${plan}-meal plan`,
+        [String(meals), dollars(centsOf(goal, plan)), dollars(meals * centsOf(goal, plan)), `${PLANS.order_base_url}?mpid=${mpidOf(goal, plan)}`],
+        `#${goal}, ${ld}: ${meals} meals through the ${plan}-meal plan`,
       );
       assert.equal(r.rounded !== null, plan < meals, `#${goal}, ${ld}: the rounded line only where ${meals} goes through as ${plan}`);
       assert.deepEqual(r, resultOf(open(html, `#${goal}-${key}`)), `#${goal}, ${ld}: the card as #${goal}-${key} opens it`);

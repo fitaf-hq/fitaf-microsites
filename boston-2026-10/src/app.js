@@ -104,9 +104,11 @@
     result.setAttribute("data-selection", cell ? answerPart(s) : "");
     $("#all-link").hidden = s.tab !== "individual";
     if (cell) {
+      // SPEC-ui-and-copy-pass § 1.2 item 1: the meals the card lists, and its weekly total those meals at the plan's price
+      // a meal (the build's, for an answer set above its plan); a set of the plan's own count shows the plan's total.
       $("#result-per-meal").textContent = cell.per_meal;
-      $("#result-total").textContent = cell.total;
-      $("#result-meals").textContent = String(row.plan);
+      $("#result-total").textContent = row.meals === row.plan ? cell.total : plan.totals[answerKey(s)];
+      $("#result-meals").textContent = String(row.meals);
       $("#result-rounded").textContent = row.rounded;
       $("#result-rounded").hidden = !row.rounded;
       $("#result-cta").href = data.base + "?mpid=" + cell.mpid;

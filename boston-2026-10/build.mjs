@@ -310,6 +310,9 @@ function familySection(plans, orderLinks = true) {
  * SPEC-meal-selection: per answer set (`or-5d`, § 8 item 2) the plan it goes through and the rounded line, or "" (§ 2);
  * each size's cells for every plan an answer set goes through; the defaults; today's two counts as answer sets (§ 3:
  * `#lean-7`, `#meals-14`); and whether Q4 is on the page. With `orderLinks` false (a preview) the order page's base is empty.
+ * SPEC-ui-and-copy-pass § 1.2 item 1 (the Advisor, 2026-10-23: "yes please fix this math"): an answer set's `meals`, the
+ * meals its card lists, and per size, for an answer set whose meals are more than its plan's (5 on the 4, 15 on the 14),
+ * `totals`: its weekly total, those meals at the plan's price a meal, as the store charges it (five on Lean 4, $65.00).
  */
 function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true) {
   const { rows, defaults } = checkSelection(plans);
@@ -318,7 +321,7 @@ function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true)
   return {
     base: orderLinks ? plans.order_base_url : PREVIEW_ORDER_BASE,
     answers: Object.fromEntries(
-      [...rows].map(([key, r]) => [key, { plan: r.plan, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
+      [...rows].map(([key, r]) => [key, { plan: r.plan, meals: r.meals, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
     ),
     defaults,
     legacy: Object.fromEntries(legacy),
@@ -338,6 +341,9 @@ function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true)
             },
           ];
         }),
+      ),
+      totals: Object.fromEntries(
+        [...rows].filter(([, r]) => r.meals !== r.plan).map(([key, r]) => [key, money(cellFor(plan, r.plan).price_per_meal_cents * r.meals)]),
       ),
     })),
   };
