@@ -1239,3 +1239,182 @@ that we're able to find and fill the field."*
 6. **When**: built on `boston/handoff-zero-and-photos` with § 30 as ONE new Footer block
    (`storefront/footer-block/YYYY-MM-DD-fitaf-handoff-<commit>.md`), rehearsed (item 4), then pasted by the Advisor
    before 2026-10-26 17:00 Eastern.
+
+### 31.1 Built — found at the build, not ruled (2026-10-25)
+
+Both sections, one Footer block. Red at `9fff66d` (the cases alone, the block unchanged), built at `f05d355`, the Footer
+block file `storefront/footer-block/2026-10-25-fitaf-handoff-f05d355.md` (status *built, not pasted*). §§ 30 and 31 above
+are unchanged; this says what the build chose where they left a choice, what it measured, and what only the live
+rehearsal can show.
+
+**Red, then green.** Run red against the unchanged block (`9fff66d`): the site suite's new file
+(`test/r2-92-93-box-and-zero.test.mjs`) **8 of 8 failing**; the watch package's two new files
+(`tools/storefront-watch/test/r2-p30-placeholder.test.mjs`, `r2-z31-zero.test.mjs`, Chrome) **18 of 18 failing**, each
+for the block's reason (P2 on the old block: the shown box moved 344 → 384 px when the logo arrived, and a slide with no
+cell had no box); Storybook's SM-10 failing on **exactly P4's 8 readings** (Screens A, B twice, C, at both widths), no
+other. Green at `f05d355`: those files **8 of 8**, **18 of 18**, SM-10 passing; the gates in full below.
+
+#### § 30 item 2, measured: which meals a visitor can cart lack a cell, by the program that builds the link
+
+The program: `scripts/week-content.mjs`'s own chain (`readPicks` → `checkPicks` → `cartOf` → the link tool's
+`payloadFromArgs` and `handoffLink`, `--photos` from `data/photo-sheets.json`), run over `data/picks/` at this branch's
+base (`c6dd3a5`'s data), production host; every link of every list, answer set and size, meal links and snack links;
+each link's photo part decoded item by item. **"Every path"**: only the cart links (Chef's Choice and, for 1 November,
+the four other menus) carry `#fitaf=`; *Choose my own meals* and the plans' buttons open the plan's order page with no
+fragment (`src/app.js`: `base + "?mpid=" + mpid`; `chefs-choice.js`: `own.href = choose.href`), so no hand-off and no
+screen runs on them.
+
+| week (delivery) | picks file | lists | links | meals carted | meals with a cell, every link | snacks carted | snacks with a cell in the link | snacks with a cell in the week's sheet |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| 2026-10-04 | none in `data/picks/` | — | 0 | — | — | — | — | (sheet: 14 cells) |
+| 2026-10-11 | version 1 | chefs-choice | 6 | 14 | **14** | 0 | — | — |
+| 2026-10-18 | version 2 | chefs-choice | 48 | 17 | **17** | 7 | **0** | 7 |
+| 2026-10-25 | version 2 | chefs-choice | 48 | 17 | **17** | 7 | **0** | 7 |
+| 2026-11-01 | version 2 | chefs-choice + 4 menus | 216 | 26 | **26** | 5 | **0** | 5 |
+
+**Every item a link carries without a cell, by cause** (the coordinator's four):
+
+| cause | count | the items |
+|---|---:|---|
+| (a) a pick whose meal has no bound photograph | **0** | every meal of every carted list has its cell, in every link |
+| (b) a snack | **19** (7 + 7 + 5; 10 distinct names) | 10-18: 🟠NEW: Caramel Apple ProNuts, 🟠NEW: Cheesecake Brownie Bites, Cookies & Cream Protein Dirt, De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha, De-Stress Superfood Bites: Triple Chocolate & Ashwagandha, Golden Oreo Protein Sand, Performance Superfood Bites: Orange Creamsicle & Cordyceps · 10-25: the two 🟠NEW:, Cognition Superfood Bites: Blueberry Cream & Lion's Mane, Cookies & Cream Protein Dirt, Golden Oreo Protein Sand, Immunity Superfood Bites: Chocolate Peanut Butter & Chaga, Relaxation Superfood Bites: Apple Crisp & Reishi · 11-01: Cookies & Cream Protein Dirt, 🟠NEW: Caramel Apple ProNuts, De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha, 🟠NEW: Cheesecake Brownie Bites, Golden Oreo Protein Sand |
+| (c) an item not one of that week's picks | **0** | every link item is a cart meal or the week's snack list |
+| (d) anything else | **0** | |
+
+⭐ **The finding: the missing photographs are the snacks, and not by the sheet.** Since `fitaf`
+`scripts/menus/emit_microsite_photos.spec.md` § 11 (2026-10-10) every snack has its cell in the week's sheet (19 of 19
+here); **the link tool drops it**: `scripts/handoff-link.mjs`'s `photoPart` maps the MEALS only (*"the photo part's cells
+stay the meals'"*, `SPEC-snacks-in-the-cart.md` § 2, written before § 11 of the emitter), so every snack slide of every
+snack link takes § 2's fallback: the store card's image if the page had already loaded it, else no photograph (on a slow
+store, most). The block already reads one cell per item in the link's order, meals then
+snacks (`photos()`: `f[k + 3]` over `p.items`), so carrying them is a change to the link tool alone (its `photoPart` given
+the snacks after the meals), no block change and no new sheet; not made here (§ 30 item 2: report; and it is
+`SPEC-snacks-in-the-cart`'s rule to amend). Until it is, a snack slide with no loaded card image shows § 30's placeholder.
+
+**Not measured here**, and so not in the table: whether the sheet loads at all on the store's page (the orchestrator's:
+§ 18's cache partitioning, a Content-Security-Policy or `Cross-Origin-Resource-Policy`; a failure there makes every
+slide fall back, now to the placeholder); the bucket's live objects (no request leaves this machine; the table is what
+this program makes from this commit's data); links built before § 17 still in circulation (no photo part: the card's
+loaded image, else the placeholder).
+
+#### § 30, as built
+
+- **Every slide's box first, always** (`div.f`, then the name, `b`): `min(220px, 32vh)` high, square (`aspect-ratio: 1`)
+  unless its cell gives its own ratio (every sheet's cells are 176 × 176, so square). The card's loaded photograph
+  (today's fallback, `pic()`) now goes INSIDE the box (`img.k`, `object-fit: cover`), so a slide's height never depends
+  on which photograph it has; ⚠ that photograph is cropped square where it was 420 wide (the build's choice: one box for
+  every slide). The sheet failing (`BAD`) removes the sheet's img and keeps the box.
+- **The placeholder**: the box's `::before`, a plate centred in the box, the screen's `--white` with **the store's own
+  logo** (§ 15.3's: `img.header__logo-image` once loaded, from its `currentSrc`, nothing requested) contained in it, as the
+  screen's top logo sits on its plate (*"Top, on a white plate"*); on the screen's own navy around it. The mark is a CSS
+  custom property, `--m`, set on the screen when the logo is placed; before that the plate is not drawn (an empty box
+  of the same size). ⚠ *"The Fit AF mark"* is read as that logo: the block may not request or carry an image (§ 1), and
+  the store's logo is the one Fit AF mark already on the page. No header logo: an empty box.
+- **The empty carousel** (before the first meal, Screen · A) shows the same plate in the same place (`.c:empty::before`),
+  and the carousel's height is reserved from the first frame (`min(220px, 32vh) + 61px`: the box, and two lines of the
+  name), so the first slide moves nothing.
+- **Nothing else moves either**, found at the build: the screen centres its content, so ANY height change moved the
+  title and the bar. Three more are now fixed in size: the name, at most two lines (`-webkit-line-clamp: 2`, a third cut
+  with an ellipsis); the step line, two lines reserved (`min-height: 2.8em`; a third, a long snack name at 390, still
+  grows it); and ⭐ **the screen's logo**, which § 16 recorded *"can appear after the screen does, pushing the title down
+  as it arrives"*: it is now positioned over a reserved 80 px above the title (the 48 px logo, its 8 px padding, its
+  16 px margin), so its arrival moves nothing (P2 holds the logo 1.5 s). ⚠ On a store whose stylesheet makes every box
+  `border-box`, the logo is 16 px shorter and the gap under it 16 px taller; with no header logo, the 80 px are empty.
+- **P2 measures it**: at every frame of a run whose sheet arrives 1.2 s and logo 1.5 s late, at 1280 and 390, the title,
+  the bar, the carousel and the step line in one place, one box, each slide one height, the screen's scroll height one.
+  P1 at both widths; P3 (the sheet refused, 404) at both. The mutant (the box's class given only when the sheet's img
+  loads) fails P1 and P2. **P4**: SM-10's walk reads the placeholder (Screen · A's empty carousel, its mark a `url(…)`;
+  Screens B and C, the shown box first, square at the photograph's size, its `::before` drawn) and `placeholderPlaces`
+  requires the plate one size in one place across A, B and C at each width.
+- ⚠ **Not changed**: the store's own page scrollbar, beside the screen on a browser that always shows one (the screen is
+  fixed over the viewport, not over the root's scrollbar), moves as the store's page grows under it; the screen does
+  not touch the store's page (§ 2 item 5). If that scrollbar is part of what the Advisor saw, § 30 does not reach it.
+
+#### § 31, as built
+
+- **The constant**: `ZERO = "zero"`, never the link's `~<code>` (R2-93b and Z1c, with a coded link; the mutant
+  `CODE || ZERO` fails both).
+- **When**: at done, after the mark and the style (so H7 already hides the discounts) and **before the screen goes**: the
+  verdict line `zero: <it>` comes just before `done: /checkout`, and the screen is removed with the done line, as always.
+  So the visitor sees nothing of it and the first step is not interactive until it is settled. ⚠ That holds the screen up
+  for the zero step's time (on the stand-in about 0.5 s; the bound below at most).
+- **The field** (selectors): the first `input` inside a `.checkout-discounts` (any of the three placements § 10 names;
+  `checkout-discounts` is H7's F2 literal, found in the store's release files since `main-2HXLHIG7.js`) whose markup
+  (`outerHTML`: its name, id, placeholder, aria-label, formcontrolname) matches `/discount|coupon|promo|code/i` and not
+  `/gift/i` (each placement also holds a gift-card field). **Events**: its `value` set to `zero`, then `input`, `change`
+  and `blur`, each bubbling (`input` is what Angular's `DefaultValueAccessor` reads; `blur` marks it touched). **Its
+  Apply**: the first `button` after the field (`compareDocumentPosition`'s FOLLOWING bit) in the same placement, pressed
+  with `click()` at a later poll, once not `disabled` (a form that enables Apply only once the field has a value), once.
+- **The sign**: a `.summary__row--discount` more than at done (H9's literal, F2-checked), or `zero` (any case) in the text
+  of a `.checkout-discounts` or a discount row (an applied-code mark beside the field). **A refusal**: an element with
+  text matching `[role=alert],[class*=error]` in that placement after the press.
+- ⛔ **What they rest on in the live store: only the two class names** (`checkout-discounts`, `summary__row--discount`),
+  read from its public code for H7 and H9. **The field's attributes, the Apply's place, the applied mark and the refusal's
+  element were never read from the store** (no request to it from here; no local copy of its code): they are the
+  contract's words and the stand-in's (`browser-store.mjs`, written from the contract, none of the store's code).
+- **The bound** (§ 31 item 3): `ZERO_POLLS = 25` polls of `POLL_MS` (200 ms), **5 s after the press**, then `zero: no
+  sign`; the field must appear within 5 polls (1 s) and an enabled Apply within 5 more, else `zero: not found`; any fault
+  is `not found`. Every verdict goes on to `done` exactly as before (Z3, Z4, Z4b: the screen gone, step 1, Continue to
+  step 2). Worst case it adds about 6 s before the checkout shows; it only waits when the store gives no sign at all.
+- **Once**: one press per run; a code the store already shows applied is neither typed nor pressed (`zero: applied`, Z5);
+  a reload of `/checkout` has no link (the fragment went before CHECKOUT), so the block does nothing (Z5, with the stand-in
+  placing the Footer on the reloaded checkout and keeping the code).
+- ⚠ **A coded link** (`~<code>`): § 10 item 2 DISPLAYS the discounts for it (`fitaf-code`), so there `zero` is typed into
+  a field the visitor can see, and the store may then refuse the visitor's own code (one code per order: the Advisor's
+  premise). No microsite link carries a code today (the Boston offer is a price promise, `SPEC-save-offer-production.md`
+  § 10; `chefs-choice.mjs` passes no `--code`). ⬜ The Advisor's: apply on a coded link or not.
+- ⚠ **The 15,360 bytes of § 30 item 3** are § 17.3's, raised to **20,480** by § 25.7 (the build's `MAX_SHIPPED_BYTES`);
+  the block was already 18,423 before these sections, so 15,360 could not be met by any build. Held to the build's
+  20,480.
+
+#### The size, the text, the pins
+
+- The Footer block **20,341** bytes and the console file **20,322** (18,423 and 18,404 before): § 30 costs
+  about 548, § 31 about 1,370; under the 20,480 ceiling by 139. Every character ASCII; two `<` in the Footer block
+  (its own) and none in the console file. Text SHA-256 `6d36d4bf2f1a07f105bab56528e3c785dfbf760f19bc4ec813d1d372fe9e295d`.
+- **Pins moved** (each because the shipped text changed, in the commit that changes it): R2-32's `SHIPPED_SHA256`,
+  PR-10's `FOOTER_TEXT_SHA256`, and CC-8's golden `footer_text_sha256`, from `efcbc570…` to `6d36d4bf…`; CC-8's
+  `replaces` names the live `efcbc570…` (the watch's `expectedFooter`, `8b11e54`) until the paste.
+  `storefront/watch-baseline.json` is untouched.
+- **Cases the contract made stale, amended in the green commit, each named**: **R2-74** (an old link, step for step as
+  the live block) compared the whole log, and § 31 adds exactly one line, `zero: not found` on that page (no checkout
+  component): it now requires that line once, just before done, and compares the rest as before (the slides
+  unchanged). The watch's **P2** (smoke plumbing) compared the block's exact lines: they are now `fill C`, `zero:
+  applied`, `done`. The watch's **P3b** (`routeHeld`) read the checkout as soon as the step bar appeared, which is now
+  before the screen goes (the zero step between them): it reads once the bar is up and the screen gone. Storybook's
+  **SM-9** mutant changed the title's rule by its text, `margin:0 0 16px`, now `margin:80px 0 16px`.
+- **No golden re-recorded** but CC-8's footer pin above (no §§ 30–31 case needs one); `storefront/dependencies.json`
+  unchanged: § 31's selectors use only F2's existing `checkout-discounts` and `summary__row--discount`.
+- **The stand-in's new default**: its code field's Apply accepts `zero` (300 ms later) and shows its mark beside the
+  field, not a summary row, so R2-55's rows are as before; every watch case that reaches the checkout now runs § 31's
+  step (about 0.5 s).
+
+#### Gates (each run alone, at `f05d355`)
+
+- **The site suite**, as the brief runs it (`npm --prefix boston-2026-10 test`, Node 22.18.0, `nice -n 15`): **1,165 of
+  1,165** (1,157 at `c6dd3a5`, and R2-92/R2-93's 8), 28 min 13 s on a machine whose load average was 35–137 from other
+  work.
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`): **231 of 231** (213, and P1–P3 and Z1–Z5's
+  18), 3 min 47 s. Its first full run, before P2 and P3b were amended, was 229 of 231, those two.
+- **Storybook** (`npm --prefix boston-2026-10/tools/storybook test`): **71 of 71**, run on this block's source before the
+  commit (the same files); SM-10 with P4, and SM-9 with its mutant's site moved.
+- **Contrast** (`npm --prefix boston-2026-10 run contrast`): 94 of 94.
+- **The build** (`npm --prefix boston-2026-10 run build:storefront`, clean tree): `fitaf-handoff f05d355
+  sha256:6d36d4bf…`, the Footer block 20,341 bytes (fragment SHA-256 `4d2381d4…`), the console file 20,322.
+
+#### Left for the live rehearsal (§ 31 item 4, the orchestrator's) and the Advisor
+
+- ⬜ `zero` exists in the store and applies: the field is found (which placement, at each width), Apply is enabled by
+  the events above, the store's sign is one the block reads (else the log says `no sign` after 5 s, the screen up that
+  long, and the selectors are amended from the live markup); **the order's total unchanged; the store's order shows
+  `zero`** (the admin, seen by a person; no agent types there). The console's `zero:` line is the block's own report.
+- ⬜ **"The store's order shows `zero`" needs an order**: the smoke never places one (§ 29: nothing submitted), so the
+  rehearsal as § 29 ran it shows the code applied in the cart and the total, not on an order; an order with `zero` is a
+  person's (a test order, or the first real one), and the admin is read by a person.
+- ⬜ After the paste, every hourly live smoke (`--live`) runs the store's own block, so each applies `zero` to its own
+  cart (never an order); its report prints the block's lines per width, the `zero:` verdict among them.
+- ⬜ The look: the placeholder's plate on the screen at both widths; the store's logo in it; the card's photograph cropped
+  square; the title 80 px down with the logo absolutely placed (and whether the store's stylesheet is `border-box`).
+- ⬜ Whether the sheet loads on the store's page at all (the orchestrator's: § 18's partitioned cache, CSP, CORP).
+- ⬜ The snacks' cells (the finding above): a link-tool amendment, if wanted.
+- ⬜ A coded link and `zero` (above): the Advisor's.
