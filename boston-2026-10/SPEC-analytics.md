@@ -473,3 +473,35 @@ fixture files.
   the mutant and its control two; `aj-checks.mjs` is not a test file).
 - **Not done here**: the real report (no token here; the SQL API never reached), the whole suite, Storybook and the
   watch; nothing deployed, no merge.
+
+## 12. Amendment, 2026-10-25: a tester's browser sends no analytics (`?no-tracking`). CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-25: *"blacklisting my (and other) browsers from generating analytics while testing. I
+think *an* option is adding a "?no-tracking"-style URL parameter when testing … it feels relatively low effort to
+implement. That said, I am OK layering in multiple approach."* The analytics count from 2026-10-26 17:00 Eastern (one
+hour before the Boston events); every visit of ours after that must not be counted.
+
+1. **Switching it on.** A request that reaches either Worker's page routes (`assets.run_worker_first`: `/` and each event
+   page, production's and development's) whose query string holds the parameter **`no-tracking`** (any value, or none)
+   is answered **302** to the same URL **without that parameter** (every other parameter kept, in order; a browser keeps
+   the fragment), with
+   `Set-Cookie: fitaf_no_tracking=1; Path=/; Max-Age=31536000; Secure; HttpOnly; SameSite=Lax`. The page itself is
+   unchanged: its script reads no cookie and touches no storage (T5, A1).
+2. **Switching it off.** The parameter **`tracking`** the same way, its cookie `fitaf_no_tracking=; Path=/; Max-Age=0;
+   Secure; HttpOnly; SameSite=Lax`. Both parameters at once: off wins (the cookie cleared), so a mistaken link never
+   hides a real visitor.
+3. **The beacon.** `POST /a` carrying the cookie `fitaf_no_tracking=1` is answered **204**, as every beacon is, and
+   **nothing is done**: no data point, and the salt is neither read nor written (SALTS untouched). Any other value of the
+   cookie, or none, is today's path.
+4. **Nothing else changes**: every other request of SP3's and WC-6's lists answers as today, byte for byte; the save
+   step, `/o`, `/confirm` and the cron ignore the cookie (a tester's save is a real save).
+5. **Later layers, not built here**: an IP list held as a Worker secret (never in this public repository), and the
+   report's own exclusion; each is its own amendment.
+6. **Cases**, written first and run red: N1 `?no-tracking` → 302, `Location` without it (another parameter kept), the
+   cookie with exactly those attributes, on both Workers; N2 `?tracking` → 302 and the clearing cookie; both → cleared;
+   N3 `POST /a` with the cookie → 204, zero data points, no SALTS read or write; N4 the same beacon without it is
+   written (control); N5 a request without either parameter is unchanged (SP3's and WC-6's lists); N6 the page carries
+   no `cookie` read. **Mutants**, each caught: the beacon ignoring the cookie; the cookie without `HttpOnly`; the
+   redirect dropping another parameter; `tracking` not clearing.
+7. **When**: built on `boston/no-tracking` (from `c6dd3a5`, release (b)'s commit), released to dev, then with the next
+   production pin, before 2026-10-26 17:00 Eastern.
