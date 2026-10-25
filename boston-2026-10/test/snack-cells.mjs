@@ -33,3 +33,22 @@ export function withSnackCells(bytes, sheet) {
   });
   return { bytes: Buffer.from(text, "utf8"), links, cells };
 }
+
+/**
+ * The inverse, for the cases whose "before" is a hash (U4, WC-9c): `text` (a page, its visible text, or a week's
+ * content) with each link's photo part cut back to its MEALS' cells, the cells § 31.2 item 1 added after them removed:
+ * the host, the path, the width, then as many cells as the link has meal items (its `<key>` items, not `_<key>` or
+ * `~<code>`). A link whose photo part already holds no more is left as it was. Returns { text, links }: how many links
+ * were cut.
+ */
+export function withoutSnackCells(text) {
+  let links = 0;
+  const out = String(text).replace(/#fitaf=([0-9a-z.*_~-]+)(![^"&<\s]*)/g, (whole, meal, photo) => {
+    const meals = meal.split(".").slice(1).filter((part) => !part.startsWith("_") && !part.startsWith("~")).length;
+    const fields = photo.split("!"); // "", host, path, width, the cells
+    if (fields.length <= 4 + meals) return whole;
+    links++;
+    return `#fitaf=${meal}${fields.slice(0, 4 + meals).join("!")}`;
+  });
+  return { text: out, links };
+}

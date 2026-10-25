@@ -38,7 +38,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
 import { rangeless, productionFalseMirror, productionFalseSavePath } from "./cc-harness.mjs";
-import { withSnackCells } from "./snack-cells.mjs";
+import { withoutSnackCells, withSnackCells } from "./snack-cells.mjs";
 import { scriptJsonRef } from "./wc-checks.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW, sheetUrlCount, WEEK_SHEET_URL } from "./wc-regression.mjs";
 import { contentOf, noWeekPage, pageAsset, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
@@ -96,9 +96,17 @@ test("WC-9c: the page production's Worker serves with that content is, visibly, 
   try {
     const served = (await site.get("/")).text;
     assert.notEqual(served, asset, "control: the week reached the page");
+    // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries
+    // its snacks' cells; each visible page is read with exactly those removed (test/snack-cells.mjs withoutSnackCells),
+    // every other byte as visible_at's. (The recorder builds visible_at's own tree, production true since § 12 of
+    // SPEC-save-offer-production, where this case reads release (a)'s page, so it is not re-run for this.)
+    let cut = 0;
     for (const hash of REGRESSION_HASHES) {
-      assert.equal(sha256(visible(served, { hash, now: REGRESSION_NOW })), golden.visible[hash], `${hash || "(none)"}: the visible page`);
+      const read = withoutSnackCells(visible(served, { hash, now: REGRESSION_NOW }));
+      cut += read.links;
+      assert.equal(sha256(read.text), golden.visible[hash], `${hash || "(none)"}: the visible page`);
     }
+    assert.ok(cut > 0, "control: the snack links' cells were there to remove");
     const tile = await site.get(WEEK_SHEET_URL);
     assert.ok(tile.body.equals(SHEET), "the tiles' sheet is served at its new URL");
   } finally {
