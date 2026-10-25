@@ -9,9 +9,13 @@ import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, readFile, symlink } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { ROOT } from "../build.mjs";
-import { expectedFragment, FIXTURE as V1, mealLine, MESSAGES, readWithFillB } from "./cc-harness.mjs";
+import { expectedFragment, FIXTURE as V1, mealLine, MESSAGES, readWithFillB, reportWith } from "./cc-harness.mjs";
 import { assertCheckedOut, LOG_PREFIX } from "./r2-harness.mjs";
 import { cardOf, centsOf, dollars, fragmentOf, GOALS, mpidOf, open, resultOf, TABLE, V2_CARTS } from "./ms-harness.mjs";
+import { withSnackCells } from "./snack-cells.mjs";
+
+/** The content's data file, the one file whose links § 31.2 item 1 changes. */
+const WEEK_DATA = "week/picks-data.json";
 
 export const ORDER = "https://fitafnutrition.com/order";
 const fill = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (whole, k) => (k in values ? String(values[k]) : whole));
@@ -191,6 +195,14 @@ export async function contentProblems(root, basePackage, week, args, scratch, ba
   const before = await contentAt(basePackage, week, args, scratch);
   const after = await contentAt(root, week, args, scratch);
   const problems = [];
+  // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): every snack link's photo part now carries
+  // its snacks' cells too (test/snack-cells.mjs), so the base's data is read with that one change made, and its report
+  // line with that file's new size and SHA-256; every other byte compares as before.
+  if (before.files[WEEK_DATA]) {
+    const sheet = JSON.parse(await readFile(join(root, "data", "photo-sheets.json"), "utf8")).chefs_choice?.[week];
+    before.files[WEEK_DATA] = withSnackCells(before.files[WEEK_DATA], sheet).bytes;
+    before.stdout = reportWith(before.stdout, WEEK_DATA, before.files[WEEK_DATA]);
+  }
   if (before.status !== 0) problems.push(`control: ${base} does not make the week (${before.stderr.trim()})`);
   if (after.status !== before.status) problems.push(`the exit code ${after.status}, not ${base}'s ${before.status} (${after.stderr.trim()})`);
   const [paths, basePaths] = [Object.keys(after.files), Object.keys(before.files)];
