@@ -1185,3 +1185,57 @@ load, *"Target.setAutoAttach timed out"*, which passed alone and in a full re-ru
   microsite's, carried by its link, and this smoke builds its own link from the menu.
 - ⬜ The look of each step on the live page (spacing, the bar's type) is the Advisor's to judge after his paste; the
   report is text only (the smoke never takes a screenshot).
+
+## 30. Amendment, 2026-10-25: the screen never jumps, and every meal's photograph. CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-25: *"Cleaning up the interstitial – this has been a long-standing request. For some
+reason, not every photo loads (even though we should be using our own thumbnail sprite sheet). And because there's no
+placeholder image, the scrollbar bounces around making the page look broken/unprofessional."* Measured from the code
+(§ 17.1): a slide draws a photograph only for a meal whose cell the link carries (`CELLS`), and the link carries a cell
+only for a meal in that week's sheet (`data/photo-sheets.json` `chefs_choice.<week>`); every other meal's slide is its
+name alone, a different height.
+
+1. **The photo's box is always there**: every slide reserves the photograph's box at its final size from the first
+   frame, holding a placeholder (the Fit AF mark, centred on the screen's own background) until the photograph is
+   drawn, and keeping it when there is none (no cell, or the sheet failed: `BAD`). Nothing on the screen changes size or
+   position when a photograph arrives or does not; the screen never shows a scrollbar it did not show on its first frame.
+2. **Which meals have no cell — measured, not assumed**: for each week of `data/photo-sheets.json`, the meals a visitor
+   can put in a cart that week (every path: Chef's Choice, Choose my own meals, the plans) and whether the link would
+   carry a cell for each, by the program that builds the link. The builder reports the table. A meal missing from the
+   week's sheet is fixed **in the sheet's own pipeline** (the sheets are generated, never edited here), stated by the
+   builder as a finding with the meals named; nothing in the block invents a cell.
+3. **The block stays within § 17's limit** (15,360 bytes, the build refuses above), and every existing R2/§ 17 case
+   still passes.
+4. **Cases**, written first and run red: P1 a slide with no cell shows the placeholder box at the photograph's size;
+   P2 a photograph arriving changes no slide's height or the screen's scroll height (measured in the stand-in); P3 the
+   sheet failing (`BAD`) leaves every box as P1; P4 the Storybook stories of the screen (*Screen · A/B/C*, SPEC-storybook
+   § 8.3) show the placeholder. Mutant, caught: the box drawn only when the photograph loads.
+
+## 31. Amendment, 2026-10-25: every hand-off applies the store's code `zero`, hidden. CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-25: *"Add the "zero" discount code as a hidden submission to the cart's discount code. It
+applies a 0% discount code that we can use to easily segment these orders in the HMP system."* And: *"we hide the
+discount code on checkout. So it is impossible for the customer to enter multiple codes – though we need to make sure
+that we're able to find and fill the field."*
+
+1. **The code is a constant of the block**, `zero` (the store's own code, 0%; ⚠ its existence in the store is checked at
+   the rehearsal, item 4), never read from the link (the link's `~<code>` stays "not applied").
+2. **When**: at the checkout, before the first step the person sees is interactive: the block finds the store's
+   discount input (inside `.checkout-discounts`, whichever of its placements is in the page, the same selectors § 10's H7
+   hides), sets it to `zero` as a person's typing would (the events the store's form listens to), presses its apply
+   control, and waits for the store to show the code applied (its discount row or applied-code mark, as measured). The
+   discount UI stays hidden throughout (H7 unchanged); the person sees nothing of it.
+3. **It never blocks a sale**: no input found, the code refused, or no sign of it applied within a bound the builder
+   states — the checkout goes on exactly as today, and the block's log names which (`zero: not found` / `refused` /
+   `no sign`). Applied once per checkout; a reload does not apply it twice.
+4. **Rehearsed on the live store by the orchestrator before the Advisor pastes it** (as § 29): the code applies, the
+   order's total is unchanged, and the store's order shows `zero`. ⛔ No agent types into the store's admin; the paste is
+   the Advisor's.
+5. **Cases**, in the stand-in checkout (the watch package's fixture, as § 27's cases), written first and run red: Z1 the
+   input found in each placement, filled with `zero`, the apply pressed, the applied mark awaited; Z2 the discount UI
+   hidden throughout (H7's selectors still match); Z3 no input → the checkout unchanged and the log line; Z4 a refusal
+   → the same; Z5 applied once across a reload. Mutants, caught: the code read from the link; the UI shown while
+   filling; a failure that stops the checkout.
+6. **When**: built on `boston/handoff-zero-and-photos` with § 30 as ONE new Footer block
+   (`storefront/footer-block/YYYY-MM-DD-fitaf-handoff-<commit>.md`), rehearsed (item 4), then pasted by the Advisor
+   before 2026-10-26 17:00 Eastern.
