@@ -3,15 +3,17 @@
 // answers, the sign of a code applied), headless Chrome on 127.0.0.1, the SHIPPED text pasted as a person pastes it.
 //   Z1  the code field found in each placement the store renders, filled with `zero` by the events a person's typing
 //       fires, its Apply pressed once, and the sign awaited (the applied mark beside the field, or a discount row) before
-//       the screen goes; the gift-card field never touched; a coded link (`~SAVE10`) still gets `zero`.
+//       the screen goes; the gift-card field never touched. A coded link (`~SAVE10`): since § 31.2 item 3 (ruled: the
+//       visible code field is the visitor's) no `zero` at all, `zero: coded link`, nothing typed or pressed.
 //   Z2  the discount UI hidden throughout: at every event the block fires in it and at every frame while it fills, no
 //       .checkout-discounts is displayed (H7's selectors still match), and none after done.
 //   Z3  no code field: `zero: not found`, the checkout exactly as before (done, step 1, Continue to step 2).
 //   Z4  the code refused: `zero: refused`, the same; no sign at all: `zero: no sign`, after the block's stated bound.
 //   Z5  applied once: the store's Apply pressed once in a run; a reload of /checkout presses nothing; a code the store
 //       already shows applied is never applied again.
-// Mutants (each with its control, the shipped text passing the same case): the code read from the link (Z1's coded
-// link fails); the discount UI shown while filling (the code applied before the checkout's style: Z2 fails); a failure
+// Mutants (each with its control, the shipped text passing the same case): the coded link's skip removed (Z1c fails;
+// § 31's "the code read from the link" has no run left to show in, a coded link typing nothing); the discount UI shown
+// while filling (the code applied before the checkout's style: Z2 fails); a failure
 // that stops the checkout (a verdict other than "applied" never lets the checkout go: Z3 fails).
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
@@ -84,7 +86,7 @@ const pressedLines = (lines) => lines.filter((l) => l.startsWith(PRESSED));
 const ours = (lines) => lines.filter((l) => l.startsWith("[fitaf-handoff]"));
 
 /** Z1's check over one run: the field of `placement` filled with `zero`, its Apply pressed once, the sign awaited. */
-function assertApplied(r, placement, { coded = false } = {}) {
+function assertApplied(r, placement) {
   assert.equal(r.verdict, DONE, JSON.stringify(ours(r.lines)));
   assert.deepEqual(pressedLines(r.lines), [`${PRESSED}zero`], "the store's Apply pressed once, the field holding zero as its input events gave it");
   const order = ["[fixture] discount applied: zero", LINE("applied"), DONE].map((l) => r.lines.indexOf(l));
@@ -98,7 +100,7 @@ function assertApplied(r, placement, { coded = false } = {}) {
   assert.equal(clicks.length, 1, `one press in the discounts: ${JSON.stringify(clicks)}`);
   assert.ok(r.events.every((e) => e.screen && e.style), "every event while the screen is up and the checkout's style is set: before the first step is interactive");
   assert.ok(!r.events.some((e) => /^giftCard-/.test(e.name)), "the gift-card field never touched");
-  if (!coded) assert.ok(r.events.every((e) => !e.shown), "the discount UI hidden at every event");
+  assert.ok(r.events.every((e) => !e.shown), "the discount UI hidden at every event");
 }
 
 for (const placement of PLACEMENTS) {
@@ -123,23 +125,28 @@ test("Z1b: every placement rendered (the store's default), at 390 — the first 
   }
 });
 
-/** Z1c over `text`: a link carrying an offer code still gets `zero`, never the link's code. */
+/** Z1c over `text`: a link carrying an offer code gets no `zero` (§ 31.2 item 3): nothing typed or pressed, its line. */
 async function codedCase(text) {
   const r = await zeroRun({}, { text, offer: "SAVE10" });
   try {
-    assert.ok(r.run.page.url().length > 0);
-    assertApplied(r, "section", { coded: true });
+    assert.equal(r.verdict, DONE, JSON.stringify(ours(r.lines)));
+    const at = r.lines.indexOf(LINE("coded link"));
+    assert.ok(at >= 0 && at < r.lines.indexOf(DONE), `zero: coded link, before done: ${JSON.stringify(ours(r.lines))}`);
+    assert.deepEqual(r.events, [], "nothing typed or pressed in the discounts: the visible code field is the visitor's");
+    assert.deepEqual(pressedLines(r.lines), []);
+    const shown = await r.run.page.evaluate(() => [...document.querySelectorAll(".checkout-discounts")].some((d) => d.getClientRects().length > 0));
+    assert.ok(shown, "control: a coded link keeps the discounts displayed (§ 10 item 2)");
   } finally {
     await r.run.close();
   }
 }
 
-test("Z1c: a coded link (~SAVE10) — still zero, the block's constant, never the link's code", { skip, timeout: 60_000 }, async () => {
+test("Z1c: a coded link (~SAVE10) — no zero (§ 31.2 item 3): zero: coded link, nothing typed or pressed", { skip, timeout: 60_000 }, async () => {
   await codedCase(site.text);
 });
 
-test("Z1c (mutant): the code read from the link — Z1c fails", { skip, timeout: 60_000 }, async () => {
-  const mutant = mutate(site.text, "i.value = ZERO;", "i.value = CODE || ZERO;");
+test("Z1c (mutant): the coded link's skip removed — Z1c fails", { skip, timeout: 60_000 }, async () => {
+  const mutant = mutate(site.text, 'if (CODE) m = "coded link";', 'if (0) m = "coded link";');
   await assert.rejects(codedCase(mutant), (err) => {
     assert.ok(err instanceof assert.AssertionError, String(err));
     return true;

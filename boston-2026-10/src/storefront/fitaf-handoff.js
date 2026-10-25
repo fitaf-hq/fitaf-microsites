@@ -587,6 +587,8 @@ guard(function poll() {
 // per checkout: one press, never again, and a code the store already shows applied is not typed at all; a reload has
 // no link (the fragment went before CHECKOUT), so nothing runs. Its polls are POLL_MS, as every other wait (R2-82).
 // (No `<` in the shipped text: the field's place is compareDocumentPosition's FOLLOWING bit, 4.)
+// § 31.2 item 3 (ruled: the visible code field is the visitor's): a link that carries `~<code>` gets no zero at all
+// (§ 10 item 2 keeps the discounts displayed for it); its verdict is `zero: coded link`, nothing typed or pressed.
 var ZERO = "zero", ZERO_POLLS = 25;
 function zero(then) {
 var d = w.document, c = d.querySelector("app-checkout"), n = 0, t = 0, i, P, b, rows = c && c.querySelectorAll(".summary__row--discount").length;
@@ -594,7 +596,8 @@ function sign() { return c.querySelectorAll(".summary__row--discount").length > 
 (function poll() {
   var m;
   try {
-    if (!c) m = "not found";
+    if (CODE) m = "coded link";
+    else if (!c) m = "not found";
     else if (sign()) m = "applied";
     else if (!i) {
       if (i = first(c, ".checkout-discounts input", function (e) { return /discount|coupon|promo|code/i.test(e.outerHTML) && !/gift/i.test(e.outerHTML); })) {

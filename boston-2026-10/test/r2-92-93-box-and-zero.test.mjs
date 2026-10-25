@@ -8,9 +8,11 @@
 //         only when the photograph loads — R2-92 fails.
 //   R2-93 (§ 31) at the checkout, before the screen goes: the code field (inside .checkout-discounts) given `zero` by
 //         an input event (and change, blur), its Apply pressed once when enabled, never the gift card's; `zero:
-//         applied` once the store's mark shows the code, then done. A coded link (~SAVE10) still `zero`. No checkout
+//         applied` once the store's mark shows the code, then done. A coded link (~SAVE10): since § 31.2 item 3 (ruled:
+//         the visible code field is the visitor's), `zero: coded link`, nothing typed or pressed, then done. No checkout
 //         component, or no code field: `zero: not found`, done. A refusal: `zero: refused`. No sign: `zero: no sign`
-//         after 25 polls (the stated bound), done. Mutant: the code read from the link — R2-93's coded link fails.
+//         after 25 polls (the stated bound), done. Mutant: the coded link's skip removed — R2-93b fails. (§ 31's mutant,
+//         the code read from the link, has no run left to show in: a coded link types nothing at all.)
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CHECKOUT_PAYLOAD, fakeWindow, fragmentFor, LOG_PREFIX, orderPage, POLL_MS, run, script } from "./r2-harness.mjs";
@@ -144,12 +146,12 @@ function assertEnd(r, m) {
   assert.equal(r.page.document.getElementById("fitaf-screen"), null, "the screen gone");
 }
 
-/** R2-93's coded link over `text`: the link's ~SAVE10 is never typed; zero is. */
+/** R2-93b over `text`: a coded link (~SAVE10) gets no zero (§ 31.2 item 3): nothing typed, nothing pressed, its line. */
 async function codedCase(text) {
   const r = await zeroRun(text, { fragment: fragmentFor({ ...CHECKOUT_PAYLOAD, code: "SAVE10" }) });
-  assert.deepEqual(r.seen.inputs, [["coupon", "zero"]], "the block's constant typed, never the link's code");
-  assert.deepEqual(r.seen.presses, ["code"]);
-  assertEnd(r, "applied");
+  assert.deepEqual(r.seen.inputs, [], "nothing typed: the visible code field is the visitor's");
+  assert.deepEqual(r.seen.presses, [], "nothing pressed");
+  assertEnd(r, "coded link");
 }
 
 test("R2-93: the code field given zero by its input event, its Apply pressed once when enabled, the mark awaited, then done", async () => {
@@ -159,14 +161,15 @@ test("R2-93: the code field given zero by its input event, its Apply pressed onc
   assertEnd(r, "applied");
 });
 
-test("R2-93b: a coded link (~SAVE10) — still zero", async () => {
+test("R2-93b: a coded link (~SAVE10) — no zero (§ 31.2 item 3): zero: coded link, nothing typed or pressed, then done", async () => {
   await codedCase(await script());
 });
 
-test("R2-93b (mutant): the code read from the link — R2-93b fails", async () => {
+test("R2-93b (mutant): the coded link's skip removed — R2-93b fails", async () => {
   const text = await script();
-  assert.equal(text.split("i.value = ZERO;").length, 2, "the mutant's site, once in the shipped text");
-  await assert.rejects(codedCase(text.replace("i.value = ZERO;", "i.value = CODE || ZERO;")), assert.AssertionError);
+  const site = 'if (CODE) m = "coded link";';
+  assert.equal(text.split(site).length, 2, "the mutant's site, once in the shipped text");
+  await assert.rejects(codedCase(text.replace(site, 'if (0) m = "coded link";')), assert.AssertionError);
 });
 
 test("R2-93c: no checkout component, or no code field — zero: not found, then done; nothing typed or pressed", async () => {

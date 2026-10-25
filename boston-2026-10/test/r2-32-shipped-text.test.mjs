@@ -33,10 +33,11 @@ import { join } from "node:path";
 import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
 
 /** Fill C's text SHA-256 with SPEC-rung2-progress-and-checkout §§ 30 (every slide's photograph box and its placeholder;
- *  nothing on the screen moves) and 31 (the store's code `zero`, applied hidden before the screen goes). Was efcbc570…
+ *  nothing on the screen moves), 31 (the store's code `zero`, applied hidden before the screen goes) and 31.2 item 3 (a
+ *  coded link gets no zero). Was 6d36d4bf… (§§ 30–31, f05d355, not pasted), efcbc570…
  *  (the extra meal, SPEC-rung2-fill-c § 8; pasted, 8b11e54), ad25f93d… (snacks, SPEC-snacks-in-the-cart § 3; pasted,
  *  17c5693), 76871ff9… (§ 27, pasted), b65fb47f… (§ 25), 1e3802b8… (fill C). */
-const SHIPPED_SHA256 = "6d36d4bf2f1a07f105bab56528e3c785dfbf760f19bc4ec813d1d372fe9e295d";
+const SHIPPED_SHA256 = "0a6e9ef176320ac830530509260a919d27a634b5811bb6d08f85573f79eddf49";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -85,7 +86,7 @@ async function withCopy(edit, fn) {
   }
 }
 
-test("R2-32: both built files' text SHA-256 (the version line's own) is 6d36d4bf…, fill C's with rung 2's two faces, the three steps, snacks, the extra meal, the photograph's box and the code zero", async () => {
+test("R2-32: both built files' text SHA-256 (the version line's own) is 0a6e9ef1…, fill C's with rung 2's two faces, the three steps, snacks, the extra meal, the photograph's box and the code zero", async () => {
   await shippedTextCase(STOREFRONT_SOURCE);
 });
 
