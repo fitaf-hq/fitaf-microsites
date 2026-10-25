@@ -1418,3 +1418,10 @@ loaded image, else the placeholder).
 - ⬜ Whether the sheet loads on the store's page at all (the orchestrator's: § 18's partitioned cache, CSP, CORP).
 - ⬜ The snacks' cells (the finding above): a link-tool amendment, if wanted.
 - ⬜ A coded link and `zero` (above): the Advisor's.
+
+### 31.2 Amendment, 2026-10-25 (the orchestrator, on § 31.1's findings). CONTRACT, before any code
+
+1. **Every snack's photograph** (amends SPEC-snacks-in-the-cart § 2's "the photo part's cells stay the meals'"): the link carries a cell for every item, meals and snacks, in the link's order, from the week's sheet (the snack cells the photos emitter writes since its § 11); an item with no cell in the sheet still carries "". Both link builders change together: the page's own link code and scripts/handoff-link.mjs (byte-identical links, as today's cases hold them). The block is unchanged by this item.
+2. **The store's page does not move under the screen**: while #fitaf-screen is up, the store page's own scrolling is suppressed (its scrollbar hidden, e.g. overflow hidden on the root, with whatever keeps the page's width from changing when the scrollbar goes), and restored exactly as it was when the screen goes or the block stops. Cases: the root's overflow while up and after; the page's width unchanged at the hide and the restore; a mutant that never restores is caught.
+3. **A coded link (`~<code>`) does not get `zero`** (ruled: the visible code field is the visitor's; no microsite link carries a code today). Case and log line (`zero: coded link`).
+4. The block stays within the 20,480-byte ceiling (state the bytes; if item 2 does not fit, stop and report the bytes before trimming anything). § 30 item 3's 15,360 is superseded by § 25.7: say so in the note.
