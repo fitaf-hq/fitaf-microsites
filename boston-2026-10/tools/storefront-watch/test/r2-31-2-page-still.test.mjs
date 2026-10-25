@@ -10,9 +10,8 @@
 //       after done the overflow is the page's own again (visible) and the width the same.
 //   PS2 a stop (a meal not on the page, refused before any press): the same, the screen gone at the stop.
 //   Mutant: the rule put in document.head, which nothing removes (never restored): PS1 fails.
-// ⚠ SKIPPED until § 31.2 item 2 is built: it does not fit the 20,480-byte ceiling beside item 3 (§ 31.2.1). Run red on
-// 992739f's text (PS1, PS2 fail: the overflow stays visible while the screen is up); green and its mutant caught on the
-// item's code as measured in § 31.2.1 (a build of the source with it, outside the tree).
+// Built 2026-10-25 on the orchestrator's ruling (§ 31.2.1): until then committed skipped, it did not fit beside item 3.
+// Red on 992739f's text (PS1, PS2 fail: the overflow stays visible while the screen is up), then green.
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -22,8 +21,7 @@ import { VIEWPORTS } from "../lib/config.mjs";
 import { MEALS, startStore } from "./browser-store.mjs";
 import { chrome, DONE, linkFor, mutate, shipped } from "./r2-browser.mjs";
 
-const NOT_BUILT = "§ 31.2 item 2 is not built: it does not fit the 20,480-byte ceiling beside item 3 (§ 31.2.1)";
-const skip = chrome ? NOT_BUILT : "no Chrome found (set CHROME_PATH)";
+const skip = chrome ? false : "no Chrome found (set CHROME_PATH)";
 /** The item's rule as § 31.2.1 measured it: in the screen's own style, so it goes with the screen. */
 const RULE_SITE = 'make("style", S).textContent = CSS + "html{';
 

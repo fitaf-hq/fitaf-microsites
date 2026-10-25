@@ -129,11 +129,17 @@ function $(q) { return S.querySelector(q); }
 // innerHTML, and no `<` before a letter, `/` or `!` anywhere in the shipped text (R2-58). The same elements as before:
 // #fitaf-screen > style, div > (h2, div.b > i, div.c, p[role=status][aria-live=polite]).
 function make(tag, parent, cls) { var e = w.document.createElement(tag); if (cls) e.className = cls; return parent.appendChild(e); }
+// § 31.2 item 2 (the store's page does not move under the screen): the screen's own <style> also holds the page's root
+// with its overflow hidden and, in the scrollbar's place, a right padding of the scrollbar's width as the screen appears
+// (innerWidth minus the root's clientWidth: 0 with overlay scrollbars), so the page's width does not change. In the
+// screen's own style, so it goes with the screen (at done, at every stop, at either clock) and the root's own style is
+// never touched: the page is as it was. `!important`, so a class of the store's on <html> (the CDK's scroll block) does
+// not win over it.
 function screen() {
 S = w.document.createElement("div");
 S.id = "fitaf-screen";
 S.setAttribute("popover", "manual");
-make("style", S).textContent = CSS;
+make("style", S).textContent = CSS + "html{overflow:hidden!important;padding-right:" + (w.innerWidth - w.document.documentElement.clientWidth) + "px}";
 var box = make("div", S), line;
 make("h2", box).textContent = UI.title;
 make("i", make("div", box, "b"));
