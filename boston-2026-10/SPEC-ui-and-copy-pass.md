@@ -502,3 +502,142 @@ all of the same questions."* And: *"Update "Prices as of 2026-09-27." to "Prices
    product today (`plans.json` `family`: 1 meal a week, 3–4 servings, mpid 35, $38 a meal), so what the four meal
    questions and the goal choose for a family (how many family meals, whether the goal applies, whether Chef's Choice
    applies) is his to say before it is built.
+
+### 2.1 Built — found at the build, not ruled (2026-10-25)
+
+Built on `boston/round-2-questions` from `81a1199` (this contract), 2026-10-25. Each case run one file at a time at
+`nice -n 15`, beside other teams' gates; the whole site suite and Storybook's alone at the tip.
+
+**Rulings received at the build** (the Advisor, 2026-10-25, through the orchestrator), built in: (1) item 2's words, the
+heading *"Who is this for?"*, the answers *"Just me"* (the default, on the left) and *"Me and my family"*; (2) item 4's
+words, *"I'm fine keeping it whatever copy we have"*: the disclosure's label is the calculator's own heading, *"What share
+of my day is that?"*, and *"Find my portion size"* is printed nowhere; (3) item 5 is the builder's: the orchestrator
+re-read every price on the store that day (the 15 individual plans' order pages and Family's) and every price and minimum
+matched, so `read_on` alone changes; (4) item 7, Family: a line in the Family section that it serves a family of 3–4,
+from `plans.json`'s `servings`; Family's own questions are § 2.2's contract, not built here.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `9ac1f43` | the cases first, run red on `81a1199`'s code; the cases they amend |
+| `8bfe4f8` | items 1–6, the code; the cases it made stale |
+| `99f4680` | the goldens, once each from `8bfe4f8`'s own tree; the three recorders' `--release-a`; SP3's base |
+| the next commit | this section; the README rows; Chrome PR-14 amended (below) |
+
+**Cases, before and after** (`nice -n 15 node --test <file>`; red on `81a1199`'s code, green from `8bfe4f8`)
+
+| case | file | red | green |
+|---|---|---|---|
+| UQ1, the order (item 1): the five headings, the result after the goal, the result waiting for the goal and Q1 in either order, the same card whatever the order | `test/uq1-question-order.test.mjs` | 2 of 4 fail (the waiting and the card: guards) | 4 of 4 |
+| UQ2, the first question (item 2): no tabs; its look, words and order; `#family` / `#individual`; a press's fragment; its words data's; three refusals | `test/uq2-who-question.test.mjs` | 8 of 8 | 8 of 8 |
+| UQ3, Family (item 3, § 2.1's line): its section directly below the question, the individual parts hidden, every answer back; the line data's, refused missing | `test/uq3-family.test.mjs` | 3 of 3 | 3 of 3 |
+| UQ4, the calculator (item 4): below the goal's answers behind its heading, collapsed; once on the page, moved, its words `81a1199`'s; opening moves nothing above; its arithmetic `ms-golden.json`'s; no storage; none on production | `test/uq4-portion-size.test.mjs` | 5 of 6 (production's none: a guard) | 6 of 6 |
+| UQ5, the footnote's date (items 5–6): *"Prices as of 2026-10-25."* on both builds; `plans.json` otherwise `81a1199`'s; the footnote follows `read_on` | `test/uq5-footnote-date.test.mjs` | 1 of 3 | 3 of 3 |
+| UQ1–UQ4 in Chrome, 390 and 1280 | `tools/storybook/test/uq-chrome.test.mjs` | 10 of 10 | 10 of 10 |
+
+- **Amended with the cases, by what the contract changes** (red first): PR-14 1 of 1 (the headings' order), PR-9 1 of 1
+  (the date), MS-4 1 of 4, MS-12 2 of 5, S28 1 of 5, S30 2 of 3 (the tabs are the first question's answers, `#who-*`),
+  S27 1 of 2 and S31 2 of 2 (question 1 is `#q-who`, read first on Family too), W1 2 of 2, and in Chrome W2/W3 8 of 12
+  (the Why button directly above the first question), MS-8 2 of 19 (five questions' words), MS-13 1 of 1 (the Family
+  panel as before with exactly two changes undone, each found once). ⚠ W3 passed on the old page in the first red run
+  (its walk ran to the end of `main` with no `#who`): its control that the first question is in the markup was added
+  and W3 run again red, 3 of 3, before the code.
+- **Made stale by the code, amended with it**: PR-2 (the carousel above the first question), T1 (`read_on`'s literal,
+  found by the whole suite), UQ4's count of the heading (it counted `share.js`'s own comment: a defect of the case, found
+  at green), `uc-chrome`'s render span (`#who` for `main .tabs`); and found by Storybook's whole run at `99f4680`, the
+  Chrome PR-14 (six headings centred, not five; red on `81a1199` by construction, not run there).
+
+**Goldens, each re-recorded once from `8bfe4f8`'s own tree** (`99f4680`; its message carries each line). The contents
+are unchanged everywhere; the pages move by § 2's lines alone (both trees' production and development pages compared
+line by line: the tab rules, the panels' padding and the 720 px rule out; the first question in the tabs' place; the
+panels' tab roles out; the goal's group after the meal questions; the Family line split; the footnote's date; `app.js`'s
+`tab` named `who` and the tabs' wiring replaced; on the development page also the calculator moved, its heading a
+button, and `share.js`'s toggle).
+
+- **S20** (CC-4 reads it): `index.html` alone, `23b3af63…` → `841949a3…`, 64,100 → 64,197 bytes (built with production
+  false, as S20 builds since SPEC-save-offer-production § 12).
+- **PV5**, **U4**, **WC-9**: recorded by `pv-05-record.mjs --commit 8bfe4f8 --release-a`, `u-04-record.mjs --commit
+  8bfe4f8 --release-a`, `wc-09-record.mjs --visible-at 8bfe4f8 --release-a`. PV5: production's `index.html` and the
+  development `index.html`, `demo/`, `boston/`, `seminar/`; `privacy/` unchanged. U4: the six contents byte-identical,
+  production's pages +97 bytes, development's +1,738, the visible page at every fragment. WC-9: `visible` at all 20
+  fragments; `picks_data`, `page_sha256` and the sheet 409b805's.
+- **WC-8**: `f3cd8763…` → `b4a168dc…` (`c6dd3a5`'s tree reproduces `f3cd8763…`).
+- **CC-8** (CC-8a/b/c, MS-9, PR-10) and **R2-32**: item 5 moves `data/plans.json` in the Worker's reach (`46542b6f…` →
+  `3c1f8ed6…`) and the Footer block's text (below, 1).
+- **SP3's base** (`sp-production.mjs` `LATER`): below, 3.
+
+Sizes, raw / gzip: production (production false) 64,197 / 19,205; development `/` 104,388 / 30,780; under SPEC.md § 1's
+61,440 gzip.
+
+**Where the contract left a choice, and what was chosen**
+
+1. **The first question's markup**: `div.step#who`, a group named by its `h2.step-label#q-who`, as every question's;
+   its answers two `button.choice` in the meal questions' style (`.choices.counts`), `data-who="individual|family"`,
+   `#who-individual` / `#who-family`, each `aria-controls` its panel and `aria-pressed`. Not `data-q`: that is the meal
+   selection's vocabulary (A3's, and the analytics beacon's), and the tabs were never counted, so the first question is
+   not either (⚠ whether to count it is the Advisor's). `js-only`, as the tabs were: without script both panels show,
+   as before. The panels keep their ids; their tab roles went. The default is the page's own start (the individual plan,
+   as the tabs'), not a data default (`plans.json` changes by `read_on` alone), and its answer is first (`WHO`).
+2. **The tabs' arrow keys went with them**: the two answers are reached by Tab, as every question's.
+3. **The Why button stays directly above the chooser** (SPEC-every-menu-and-nutrition § 11 item 5), now the first
+   question, centred above it; the question spans the column, so the 720 px rule that centred the button on the 420 px
+   tabs went, and its entry in the preview build's cut list (`PREVIEW_WITHOUT_WHY`) with it. The panels' own 28 px went
+   too: each question's margin keeps them apart, as before.
+4. **The calculator is the development page's alone** (`devSlots`' `SHARE_PANEL`; the production page has never carried
+   it), so the disclosure is too: eatfitaf.com shows no calculator, as before. ⚠ Whether production should carry it is
+   not this contract's.
+5. **The disclosure** (ruling 2): the calculator's heading's words became its button, inside the `h3` (the phrase
+   printed once), `aria-expanded`, `aria-controls="share-body"`; the help line, the fields, the hint and the lines
+   collapse beneath it, their markup `81a1199`'s word for word (UQ4); a chevron that turns; the panel's box 12 px below the
+   goal's answers, inside the goal's group. Collapsed on every load; the open state is kept nowhere.
+6. **Family's line** (ruling 4): *"Serves a family of 3–4."*, `plan_page.family_serves` (`{min}`, `{max}`, from
+   `family.servings`), a line of its own in place of the promise line's *"· serves 3–4"*, which said it in passing (two
+   lines saying it would repeat it). ⚠ The words are the builder's reading of *"a line in the Family section saying it
+   serves a family of 3–4"*; the Advisor's own was *"(or that it serves a typical family of 3-4 people)"*.
+7. **"Hides … the individual result"** (item 3): the save step and the calculator are inside the individual panel and
+   hide with it; See all plans hides on Family, as on the Family tab.
+
+**Found at the build**
+
+1. ⚠ **Item 5 changes the Footer block's text.** `scripts/build-storefront.mjs` inlines the plans' table with a comment
+   naming `read_on` (*"/\* data/plans.json, read_on 2026-10-25 \*/"*), so the built text is `b68257d5…` where the pasted
+   block is `efcbc570…`: that comment is the only difference (both trees' text compared), no code. R2-32, PR-10 and CC-8
+   move; CC-8's `replaces` names the live text, so the watch's expectation is unchanged. Nothing needs pasting for
+   behaviour; it rides with § 2.2 item 4's block. R2-32's own rule asks for a live smoke before a changed text is pasted.
+2. ⚠ **The three recorders had stopped recording what their cases compare.** Since `c6dd3a5` (release (b), production
+   true) U4, PV5 and WC-9c build as release (a) did (`productionFalseSavePath`, `withReleaseAWording`), but
+   `u-04-record.mjs`, `pv-05-record.mjs` and `wc-09-record.mjs` still built each commit's own `data/save.json`: re-run as
+   they were, they recorded production-true pages (U4's production page +33 KB, PV5 a `privacy/`) that the cases would
+   then refuse. Each gains `--release-a`, building exactly as its case; the control: at `c6dd3a5` each reproduces its
+   committed record exactly.
+3. **SP3's base had never taken the preview build** (it moved no page), and § 2 changes lines it added (`renderPage`'s
+   `orderLinks`, `familySection`'s, the template's `{{PREVIEW_STYLE}}`, the preview's words). The base now takes the
+   preview build's own diff (`544e496..4e73661`) and then § 2's, each with one hunk left out by a new `dropHunks` option
+   (the preview's `build()` target branch, whose context the base's `build()` predates; the preview's Why cut list),
+   which refuses a pattern that drops nothing. With § 2's `data/plans.json` in the base, the moved-Worker-files entry
+   `8bfe4f8` had added was wrong and went in `99f4680`.
+4. QC (`qc-chrome-stall.test.mjs`, the mock-ups' Chrome stall) failed once in the first whole run (the machine under
+   other teams' load); alone, 4 of 4, and in the whole run at `99f4680`. Not this contract's.
+5. The calculator's hint (*"Pick a meal size and how many meals, and type either target or both."*) is unchanged; once
+   both are chosen it still reads so until a target is typed, as before.
+
+**Item 7, stated**: its first two questions are ruled (above, 1 and 2); Family with *"all of the same questions"* is
+ruled too (one meal question, 5 or 10 family meals, no goal; § 2.2's contract), not built here.
+
+**The gates at `99f4680`** (each alone, `nice -n 15`):
+
+| gate | result |
+|---|---|
+| `npm --prefix boston-2026-10 test` (09:58–10:08 PDT) | **1,181 of 1,181** |
+| `npm --prefix boston-2026-10/tools/storybook test` (10:08–10:11 PDT) | **80 of 81**: the Chrome PR-14 (above); amended, `pr-chrome.test.mjs` alone 6 of 6; SM-4 after the README rows, 6 of 6 |
+| `npm --prefix boston-2026-10 run contrast` | 94 pairs, 94 pass |
+
+The storefront watch was not run (nothing here reaches it: the Footer block's built text moves by a comment, its
+expectation is the live text's).
+
+**Renders** (Chrome at 390, the week delivered 2026-11-01, every photograph refused, the clock at noon in New York on
+2026-10-24; `UC_RENDERS=<dir> node --test tools/storybook/test/uq-chrome.test.mjs`, never committed, handed to the
+orchestrator): `uq1-questions-production-390.png` and `uq1-questions-development-390.png` (the first question, the four,
+the goal, the card); `uq3-family-390.png` (the Family section below the question, its line); `uq4-calculator-closed-390.png`
+and `uq4-calculator-open-390.png` (the calculator below the goal's answers, collapsed and open).
