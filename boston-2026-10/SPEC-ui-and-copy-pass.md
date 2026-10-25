@@ -641,3 +641,39 @@ expectation is the live text's).
 orchestrator): `uq1-questions-production-390.png` and `uq1-questions-development-390.png` (the first question, the four,
 the goal, the card); `uq3-family-390.png` (the Family section below the question, its line); `uq4-calculator-closed-390.png`
 and `uq4-calculator-open-390.png` (the calculator below the goal's answers, collapsed and open).
+
+### 2.2 Family's own questions (2026-10-25). CONTRACT, before any code
+
+**The Advisor, 2026-10-25**: *"for Family, the goal does *not* apply (this should be very clear from out documentation
+about it – including macro calculation). Family *is* effectively a goal size. For now, let's simplify it to just "lunch
+OR dinner"/"lunch AND dinner" and menu choice. We'll drop breakfasts and snacks for now. Somewhere we should say that
+that Family contains 4 portions (or that it serves a typical family of 3-4 people)."* And: *"Let's do 5 or 10 meal a week
+please – I want to try to streamline the "family" choices."* **Measured on the live store, 2026-10-25 (the
+orchestrator, headless, read only)**: `/order?mpid=35` lists the week's meals under the same names as the individual
+plans' pages, each at **$38.00**, and asks *"Please add at least 1 meals to continue"*; `/meal-plans` sells Family as
+*"3-4 Delicious Servings"*, $38.00 a meal.
+
+1. **Me and my family** asks **one** meal question, *lunch or dinner* / *lunch and dinner* (its heading and answers as
+   the individual's), and nothing else: no weekends, no breakfast, no snacks, no goal, no calculator. **5 family meals a
+   week for *or*, 10 for *and*.** Every individual answer is kept while Family is chosen and comes back with *Just me*.
+2. **The data**: `data/plans.json` `family` carries its two counts, **5 and 10, each mpid 35 at 3800 cents**, and the
+   Family answer → count mapping, as data (the builder chooses the shape, as `selection` is shaped; no count or price is
+   a literal in code). `servings` 3–4 stays. ⚠ `read_on` is unchanged by this (the prices were re-read the same day).
+3. **The result for Family**: the weekly total (N × $38.00) and the per-meal price, the Family promise, the line that it
+   serves a family of 3–4 (four portions), and the menu choice exactly as the individual's: **Chef's Choice** (the week's
+   picks, N of them, chosen from the picks file as the individual 5- and 10-meal carts choose theirs) and **Choose my own
+   meals** (the store's `/order?mpid=35`, rung 1's door). The offer and the save step apply to Family as to individuals.
+4. **The hand-off**: a Family Chef's Choice link carries N meals to `/order?mpid=35`; the block's full-plan rule reads
+   mpid 35's counts from the data (5 and 10), so a 5- or 10-meal family cart passes and any other count is refused as
+   today. ⚠ This changes the built Footer block (its COUNTS), so it ships in the **same** new block as §§ 30–31 of
+   SPEC-rung2-progress-and-checkout (one paste): build the block on this branch to prove it, but the block file that is
+   pasted is built from the merged line.
+5. **Documentation**: the Family section's wording and SPEC-meal-selection gain one line that Family has no goal and no
+   macro targets (it is a size, four portions), so no later change reads a goal into it.
+6. **Cases**, written first and run red: Family shows exactly one meal question; *or* → 5 and *and* → 10 at $38.00 a
+   meal, from the data; Chef's Choice carries 5 or 10 picks to mpid 35; the block accepts 5 and 10 for mpid 35 and
+   refuses 7; Just me restores every individual answer; the calculator and the goal are absent for Family; the
+   fragment `#family` lands on Family. Goldens move by exactly these changes, re-recorded in their own commit, each
+   named. Storybook's Family stories follow.
+7. **Rehearsed on the live store by the orchestrator** (a 5-meal Family Chef's Choice cart reaching the stripped
+   checkout), before the block is pasted.
