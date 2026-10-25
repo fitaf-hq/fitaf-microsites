@@ -1,13 +1,13 @@
 {
   "about": "U4's before (SPEC-week-content § 8 item 5): test/u-checks.mjs normalWeekRecord() over recorded_at's own tree (test/u-04-record.mjs, which wrote this file): per normal week and target, the content command's files, the page as served with that week once its lines naming `updating` are removed (recorded_at's page has none), and the visible page per fragment. Re-record only by running the recorder; never by hand.",
-  "recorded_at": "077f472",
+  "recorded_at": "5eaad96",
   "built_as": "release (a): production false, its wording (--release-a)",
   "record": {
     "the v1 fixture, 2026-10-04 · prod": {
       "content": {
         "week/picks-data.json": "1374 bytes sha256:e03fde2974b9c9b472013e281b40d4916eba6e1b1a3f08fcf97861c5332d0645"
       },
-      "page": "67370 bytes sha256:bc39d3e1ab6f2071dd91205054cd7a03eebb8286bd615cb2097f1bbd8f05cb36",
+      "page": "67537 bytes sha256:af1171eb6c0f23d020b67c363741eecf4f0a57d790f231ef78aabe86a8c097af",
       "visible": {
         "(no fragment)": "48cd7a1e433acce526fc46ddc5452bfbecd18b3ae8aaec6c6a5a407a4d39b66f",
         "#lean-7": "62c257c52ae3faef50795a937448b5c3cf69593f518982a7083ab89c6a03d276",
@@ -22,7 +22,7 @@
       "content": {
         "week/picks-data.json": "1374 bytes sha256:e03fde2974b9c9b472013e281b40d4916eba6e1b1a3f08fcf97861c5332d0645"
       },
-      "page": "107551 bytes sha256:9c98e4f3ab36c40ff02cc601595d5760bef8afee02cc79e9aa50b4105f270156",
+      "page": "107718 bytes sha256:3161a39f4c64ef310940529681566cfc0c46d0086f102b044fb31e7ed615f063",
       "visible": {
         "(no fragment)": "19f402280ef71cbe494f3bc4066ad9c9e7eb95663d22e3381c0f2e54079c8126",
         "#lean-7": "7019d69eef272990600a1cd208b0ebbabafc57fd30d24ee163650f1a3ca9bde0",
@@ -37,7 +37,7 @@
       "content": {
         "week/picks-data.json": "7346 bytes sha256:ce4454cf70dddd16f2fe5d0058b84bdaf50fb55a9cb03e3ed5588cb783040c1f"
       },
-      "page": "73342 bytes sha256:b19cd4a467c605c1967ad246f5be683c33e09601b7d628d4956800767048e6a8",
+      "page": "73509 bytes sha256:166769a6038ce63bba98f83c0c20ee8051537630984a8de03ac8ec23981696c0",
       "visible": {
         "(no fragment)": "48cd7a1e433acce526fc46ddc5452bfbecd18b3ae8aaec6c6a5a407a4d39b66f",
         "#lean-7": "d9c00beecdec9c9c5ea2c774e93c46702323e368e7a69d11f48a68746cd29f62",
@@ -52,7 +52,7 @@
       "content": {
         "week/picks-data.json": "7346 bytes sha256:ce4454cf70dddd16f2fe5d0058b84bdaf50fb55a9cb03e3ed5588cb783040c1f"
       },
-      "page": "113523 bytes sha256:193c4765aa57a4e83d3a7776fa12cbb2702572e78d483d321db0ec850fcf1a94",
+      "page": "113690 bytes sha256:84a7b38e61b03975d1ee265e511162e2b6b8b64dad0cf2961cffc61402ce481e",
       "visible": {
         "(no fragment)": "19f402280ef71cbe494f3bc4066ad9c9e7eb95663d22e3381c0f2e54079c8126",
         "#lean-7": "08bd033243ba5ae69e36811c7c44ff9a16727a669f3a65f71bba1a0442dfaa12",
@@ -68,7 +68,7 @@
         "week/picks-data.json": "31257 bytes sha256:2d89949c6a8281c545e954960338f5b236b22d105da49e340affd0347cc71dfa",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "97253 bytes sha256:25ec5af30f3732a3856a74e88d40eb8c92e26b31596a30d46ee8ed9c62338787",
+      "page": "97420 bytes sha256:db0f544ab4949308bfd43bd2563f09ffcfafbefa7691ce06b0d3eac2675a2b9a",
       "visible": {
         "(no fragment)": "48cd7a1e433acce526fc46ddc5452bfbecd18b3ae8aaec6c6a5a407a4d39b66f",
         "#lean-7": "c9ef5ca634699751930714727dbd6f4a683b7e3598077c59419eb45946ef1208",
@@ -84,7 +84,7 @@
         "week/picks-data.json": "31257 bytes sha256:e3fb1ed4570d295f92103f120793f41eb9a6d0faf731cd6b5713d03429bf33f1",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "137434 bytes sha256:653c5f72e2c5986c9838981d8201868af4b0a28fa076671654dbd183c5c1d7bf",
+      "page": "137601 bytes sha256:15f65dbe051260f22bb6dbb8572f6d4b5dfc9cdabb39bb5f525c8620279aef42",
       "visible": {
         "(no fragment)": "19f402280ef71cbe494f3bc4066ad9c9e7eb95663d22e3381c0f2e54079c8126",
         "#lean-7": "c04689935934428e3c27b66de83d91890cd671402f23c5ad03e8b24ac8012064",

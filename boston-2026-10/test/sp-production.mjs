@@ -263,14 +263,15 @@ export const LATER = [
   // § 2.2 (Family's own question, 2026-10-25) moves the result card's markup beside a line § 1 changed and the base never
   // took (`{{SAVE_FAMILY}}`, empty on this page): so first § 1's own template change (ce6b54e over its contract, e875280:
   // that slot gone, the empty DEV_SCRIPT after the card's script; no production-false page moves by it), then § 2.2, from
-  // 8bfe4f8 (§ 2's code) to 077f472 (its code, one commit), over the same files and the module build.mjs now imports,
+  // 8bfe4f8 (§ 2's code) to 5eaad96 (its code, 077f472, and the Family door's [hidden] rule), over the same files and the
+  // module build.mjs now imports,
   // scripts/family.mjs (new; the content's and the block's files make no page). Its import line's hunk does not apply to
   // the base, whose next import is not § 1's, so it is left out and the line put after the selection import the base has
   // (`insertAfter`: [path, anchor found once, the text after it]).
   ["e875280", "ce6b54e", ["src/template.html"]],
   [
     "8bfe4f8",
-    "077f472",
+    "5eaad96",
     ["src/template.html", "src/app.js", "build.mjs", "data/messages.json", "data/plans.json", "scripts/family.mjs"],
     {
       dropHunks: /^\+import \{ checkFamily \} from "\.\/scripts\/family\.mjs";$/m,

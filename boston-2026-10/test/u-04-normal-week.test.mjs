@@ -135,7 +135,10 @@
 // (MS-20 and W4 compare every other byte with older trees); the three production pages +2,661 to +2,928 bytes and the
 // development pages +2,627 to +2,894; the visible page at every fragment (visible() keeps the displayed markup, and the
 // result card now sits outside the individual panel).
-// From here the reference is 077f472's tree.
+// ⚠ RE-RECORDED at 5eaad96 (`--commit 5eaad96 --release-a`): the Family door hidden in a browser too (§ 2.2, found by
+// Storybook's run). The recorder at 077f472 reproduces 077f472's record. Against it: all six contents and every visible
+// page byte-identical; every page +167 bytes, the template's one rule and its comment.
+// From here the reference is 5eaad96's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -145,8 +148,8 @@ import { productionFalseSavePath, withReleaseAWording } from "./cc-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 077f472's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "077f472");
+test("U4: a normal week, the content and the page as served, byte-identical to 5eaad96's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "5eaad96");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   const options = { savePath: await productionFalseSavePath(), transform: withReleaseAWording };
   assert.deepEqual(await normalWeekRecord(ROOT, options), golden.record);

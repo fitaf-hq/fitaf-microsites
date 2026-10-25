@@ -32,8 +32,9 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  f3cd8763…. Re-recorded once more at 8bfe4f8 for SPEC-ui-and-copy-pass § 2 (2026-10-25: who it is for first, the goal
  *  last, the Family line, the footnote's date): c6dd3a5's tree reproduces f3cd8763…, 8bfe4f8's gives b4a168dc…. Re-recorded
  *  once more at 077f472 for § 2.2 (Family's own question; the result card shared): 8bfe4f8's tree reproduces b4a168dc…,
- *  077f472's gives this. */
-const TODAY_NO_PICKS_SHA256 = "72ed1f9dd43aedef42f8fba6c7d5e160266af329a18164cb7e73dd34e72b7fd5";
+ *  077f472's gives 72ed1f9d…; and at 5eaad96 (the Family door's [hidden] rule), 077f472's tree reproducing 72ed1f9d…,
+ *  5eaad96's gives this. */
+const TODAY_NO_PICKS_SHA256 = "6447ecd8daffd3e8d7aa42af490076e14c3bb656d7f8b9321db37105515b7ef7";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
