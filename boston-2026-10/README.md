@@ -364,15 +364,16 @@ commits it, and the content command reads it through `--from`, refusing a `--fro
 
 Both Workers — production and `dev` — and the dev Worker's secrets are managed as **infrastructure as code,
 applied by CI**. CI checks out a **pinned commit** of this repository, runs `npm run build` (or `build:dev`)
-and uploads the result; for dev it first runs `npm run db:migrate:dev`. So a commit here changes nothing
+and uploads the result; for dev it first runs `npm run db:migrate:dev`, and for production `npm run db:migrate:prod`
+(fitaf-infra CONTRACT 1.10.1: after the apply that creates the database, before every later one). So a commit here changes nothing
 live until a pin moves to it, and **a release is a pin change**, reviewed where the pin lives.
 
 - **Retired**: `deploy`, `deploy:dev` (and their `predeploy` hooks), `secret:resend:dev`,
   `secret:allowlist:dev`, `secret:token-key:dev`. ⛔ Do not add them back: a second path that writes the
   same Worker would let the live Worker drift from the code that is supposed to describe it.
-- **Kept, because CI or a person still runs them**: `build`, `build:dev`, `db:migrate:dev`, and the dev
+- **Kept, because CI or a person still runs them**: `build`, `build:dev`, `db:migrate:dev`, `db:migrate:prod`, and the dev
   data scripts below; `preview` and `preview:dev` run locally only.
-- ⚠ `wrangler.jsonc` now drives only local preview and `db:migrate:dev`. The deployed Workers' settings
+- ⚠ `wrangler.jsonc` now drives only local preview and the two `db:migrate` scripts. The deployed Workers' settings
   (vars, bindings, the cron, `workers.dev`, the custom domains) are **mirrored** in the infrastructure
   code: a change to this file reaches nothing live until it is mirrored there too.
 

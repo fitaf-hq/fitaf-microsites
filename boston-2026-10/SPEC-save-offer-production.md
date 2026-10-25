@@ -961,3 +961,22 @@ suite once, at `cf4ad49`.
 - `e1-ticked-600.png` and `e1-unticked-600.png`: E1 for a save on 10-29, held until October 30;
 - `o-page-390.png` and `o-page-1280.png`: `/o` on 10-30 for that save, held;
 - `confirm-390.png`: the confirmation page, *"weekly"*.
+
+## 11. Amendment, 2026-10-24: production's migration script (fitaf-infra CONTRACT 1.10.1). CONTRACT, with its one line
+
+⚠ **Numbered 10 at `422b077`** (the prod pin, made from `ef62757`, whose line had no § 10); **11 from its merge into the
+line that carries § 10's offer**, so a citation of *"§ 10"* for the migration script names `422b077`'s text.
+
+**Why.** fitaf-infra's prod apply migrates production's database through this package's own script, as dev's does:
+*"A pinned microsite without db:migrate:prod stops first"* (its `scripts/ci/run.sh`). Its release order names the script
+(*"its `package.json` carrying `db:migrate:prod` (for example `wrangler d1 migrations apply fitaf-leads-prod --remote`)"*);
+nothing here asked for it, so no commit of this repository has it, and the prod pin `ef62757` would stop release (a)'s
+`apply-prod` with nothing applied.
+
+1. `package.json` gains `"db:migrate:prod": "wrangler d1 migrations apply fitaf-leads-prod --remote"`: the top-level
+   configuration (production's), the database by name, as § 4 item 9's `DB` is bound with no id. CI runs it; nobody runs
+   it from here.
+2. Nothing else changes: no file the build reads, so production's and development's builds are byte for byte the same
+   as at `ef62757`. The commit is made from `ef62757` so the prod pin can move to it without the dev line's changes; it is
+   then merged into the dev line, so every later pin carries it.
+3. The README's *"Deploys are not run from here"* names it beside `db:migrate:dev`.
