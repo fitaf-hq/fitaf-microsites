@@ -13,7 +13,8 @@ const BUILD_TIMEOUT_MS = 900_000;
 const STORIES = {
   // SPEC-plan-page-refinement § 4: *Chef's Choice · closed* and *· open* are one story, *Chef's Choice*.
   Individual: ["Start", "Chosen", "Chef's Choice", "No picks this week", "All plans"],
-  Family: ["Family"],
+  // The site's SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's question answered, its result card and Chef's Choice.
+  Family: ["Family", "and · 10 meals"],
   "Whole page": ["Scroll"],
   // SPEC-meal-selection § 6 last line and § 9: the goal buttons, the eight answer sets, snacks chosen (Q4) with and without a list.
   "Meal selection": [

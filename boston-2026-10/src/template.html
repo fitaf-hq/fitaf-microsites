@@ -185,6 +185,8 @@ main.wrap { padding-top: 20px; }
 
 /* Family (since SPEC-ui-and-copy-pass § 2.2 its card, then its one question, then the result card) */
 .family-card { --accent: var(--family); margin: 0 0 28px; }
+/* Its door is a visitor's without script; the script hides it, and the store's button's display must not outrank that */
+.family-card .cta[hidden] { display: none; }
 .family-card h2 { margin-top: 0; margin-bottom: 4px; }
 .family-card p { margin: 0 0 16px; color: var(--muted); }
 
