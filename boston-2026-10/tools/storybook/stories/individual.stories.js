@@ -1,4 +1,5 @@
-// The Individual tab's states (SPEC-storybook-microsite.md § 3): each the page the site's build writes, in a frame. A
+// The Individual tab's states (SPEC-storybook-microsite.md § 3; since the site's SPEC-ui-and-copy-pass § 2 the first
+// question's individual answer, the questions above the goal): each the page the site's build writes, in a frame. A
 // story's caption names it by its group and name, as feedback names it.
 import { controls, defaults, showPage } from "./frame.js";
 import { STATES } from "./states.js";

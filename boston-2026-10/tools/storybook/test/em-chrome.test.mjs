@@ -248,7 +248,8 @@ const COUNTED = (() => {
 })();
 
 /** Runs in the page: the result card's drawn text, and each drawn box in it (its tag, id or class, and rectangle, from
- *  the card's own top left: since § 11 item 5 the Why Fit AF? button above the tabs moves the whole card down the page,
+ *  the card's own top left: since § 11 item 5 the Why Fit AF? button above the tabs (since the site's SPEC-ui-and-copy-pass
+ *  § 2 the first question) moves the whole card down the page,
  *  and the card itself is what EM2 holds to the base's). Since SPEC-ui-and-copy-pass § 1 item 8 the text reads each meal's
  *  line whole (its visually hidden words, on their own line in innerText, joined back), and a counted meal's name, badge
  *  and hidden words are left out of the boxes (`counted`, COUNTED's source). */

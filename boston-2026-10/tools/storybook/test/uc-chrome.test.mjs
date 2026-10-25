@@ -364,7 +364,8 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
       [false, false, false, true, true, true],
       "no offer line, its own lead, email help line and button",
     );
-    await renderSpan(page, "#top", "main .tabs", 40, "uc9-after-the-offer-top-390");
+    // The site's SPEC-ui-and-copy-pass § 2 item 2: the tabs are the first question (#who), in their place.
+    await renderSpan(page, "#top", "#who", 40, "uc9-after-the-offer-top-390");
     await renderSpan(page, "#result", "#save", 8, "uc9-step-after-the-offer-390");
   });
   await withPage({ dir: devWeekOut, hash: "#lean-or-5d", width }, async (page) => {

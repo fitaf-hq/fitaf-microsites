@@ -54,11 +54,13 @@ test.after(() => base.dispose());
 // token held as long, "weekly"), and offers.js, send-due.js, messages.js and redeem.js again. Since SPEC-ui-and-copy-pass
 // § 1.2 item 3 (a save after the last offer's end kept with no offer, nothing due, 30 days): src/worker/lapse.js (its rule),
 // src/worker/save-store.js (no message state when nothing is due), src/worker/scheduled.js (its cut-off), and index.js
-// and data/save.json again.
+// and data/save.json again. Since SPEC-ui-and-copy-pass § 2 item 5 (2026-10-25): data/plans.json (its read_on, the prices
+// re-read that day; the Worker reads the plans' table).
 const MOVED_WORKER_FILES = [
   "data/delivery-zips.json",
   "data/events.json",
   "data/offers.json",
+  "data/plans.json",
   "data/save.json",
   "src/worker/choose-sender.js",
   "src/worker/confirm.js",

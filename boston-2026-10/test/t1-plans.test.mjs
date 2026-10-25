@@ -5,7 +5,8 @@ import { loadPlans } from "./helpers.mjs";
 
 test("T1: every plan x shown count has an integer mpid and integer cents; no mpid shared", async () => {
   const plans = await loadPlans();
-  assert.equal(plans.read_on, "2026-09-27");
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 5 (2026-10-25): every price re-read that day, unchanged (UQ5).
+  assert.equal(plans.read_on, "2026-10-25");
   assert.equal(plans.read_from, "https://fitafnutrition.com/meal-plans");
   const counts = shownCounts(plans);
   assert.deepEqual(counts, [7, 14]);

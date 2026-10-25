@@ -174,6 +174,13 @@ export function answerOrder(q, defaults) {
   return [first, ...QUESTIONS[q].filter((a) => a !== first)];
 }
 
+/** SPEC-ui-and-copy-pass § 2 item 2: the first question, who the plan is for, which replaced the Individual/Family tabs:
+ *  its two answers, the button's `data-who` (and the fragment's `#individual` / `#family`), the individual plan first, the
+ *  default, on the left (SPEC-meal-selection § 12's rule; the page starts on it, so the order is this one). Its phrases are
+ *  `plan_page.questions.who.<answer>`, beside the meal questions'. Not in QUESTIONS: those are the meal selection's (the
+ *  analytics' vocabulary, A3), and this answer chooses a panel, not a cart. */
+export const WHO = ["individual", "family"];
+
 /** The plan page's own phrases (data/messages.json's `plan_page`), checked: a missing one refuses the build. */
 export function planPageWords(messages) {
   const words = messages.plan_page ?? {};
@@ -181,10 +188,12 @@ export function planPageWords(messages) {
   const need = (ok, what) => {
     if (!ok) throw new Error(`data/messages.json: plan_page.${what} is missing`);
   };
-  for (const [q, answers] of Object.entries(QUESTIONS)) {
+  for (const [q, answers] of [...Object.entries(QUESTIONS), ["who", WHO]]) {
     for (const key of ["heading", ...answers]) need(phrase(words.questions?.[q]?.[key]), `questions.${q}.${key}`);
   }
-  const PHRASES = [["meals_unit", []], ["rounded", ["{meals}", "{plan}"]], ["total_unit", []], ["per_meal_unit", []], ["prices_as_of", ["{date}"]]];
+  // SPEC-ui-and-copy-pass § 2.1 (the Advisor, 2026-10-25): `family_serves`, the Family section's line naming the family it
+  // serves, its numbers data/plans.json's `family.servings`.
+  const PHRASES = [["meals_unit", []], ["rounded", ["{meals}", "{plan}"]], ["total_unit", []], ["per_meal_unit", []], ["prices_as_of", ["{date}"]], ["family_serves", ["{min}", "{max}"]]];
   for (const [key, placeholders] of PHRASES) {
     need(phrase(words[key]) && placeholders.every((p) => words[key].includes(p)), `${key}${placeholders.length ? ` (with ${placeholders.join(" and ")})` : ""}`);
   }
@@ -218,6 +227,25 @@ function mealQuestions(plans, words, offer = plans.snacks.shown) {
       <div class="more" id="more" hidden>
 ${more.map((q) => question(q, words, defaults)).join("\n")}
       </div>`;
+}
+
+/** SPEC-ui-and-copy-pass § 2 item 2: the first question, "Who is this for?", in the tabs' place and in the look of the
+ *  other questions (question()'s markup: a group named by its heading, two answer buttons in the count buttons' style,
+ *  each its words alone), above both panels. Each answer controls its panel; app.js presses one from the fragment, as it
+ *  selected a tab. Like the tabs it needs the script (js-only): without it both panels show. */
+function whoQuestion(words) {
+  const w = words.questions.who;
+  const buttons = WHO.map(
+    (a, i) =>
+      `      <button type="button" class="choice" id="who-${a}" data-who="${a}" aria-controls="panel-${a}" aria-pressed="${i === 0}">` +
+      `<span class="choice-name">${emphasised(w[a])}</span></button>`,
+  );
+  return `  <div class="step js-only" id="who" role="group" aria-labelledby="q-who">
+    <h2 class="step-label" id="q-who">${esc(w.heading)}</h2>
+    <div class="choices counts">
+${buttons.join("\n")}
+    </div>
+  </div>`;
 }
 
 /** The manifest of the photo sheets, or one with no photograph (`base: null`) when there is none. */
@@ -290,13 +318,18 @@ function gridHead(plans) {
     .join("");
 }
 
-function familySection(plans, orderLinks = true) {
+/** The Family section (the panel the first question's Family answer shows). Since SPEC-ui-and-copy-pass § 2.1 (the Advisor,
+ *  2026-10-25: "Somewhere we should say that Family … serves a typical family of 3-4 people") the family it serves is a
+ *  line of its own, `plan_page.family_serves` with data/plans.json's `servings`, in place of the promise line's
+ *  "· serves 3–4". */
+function familySection(plans, words, orderLinks = true) {
   const f = plans.family;
   const cell = f.counts[0];
   const n = cell.meals_per_week;
   return `    <div class="family-card">
       <h2>${esc(f.name)}</h2>
-      <p>${esc(f.promise)} &middot; serves ${f.servings.min}–${f.servings.max}</p>
+      <p>${esc(f.promise)}</p>
+      <p>${esc(fillPhrase(words.family_serves, { min: f.servings.min, max: f.servings.max }))}</p>
       <dl class="figures">
         <div><dt>Per family meal</dt><dd>${money(cell.price_per_meal_cents)}</dd></div>
         <div><dt>Weekly total (${n} meal${n === 1 ? "" : "s"})</dt><dd>${money(weeklyTotalCents(cell))}</dd></div>
@@ -360,7 +393,8 @@ export { scriptJson };
  */
 export const PROD_SLOTS = {
   ASSET_PREFIX: "",
-  QUESTION_ONE: "What's your goal?",
+  // The goal's question, the last since SPEC-ui-and-copy-pass § 2 item 1 (it was question one).
+  GOAL_QUESTION: "What's your goal?",
   DEV_STYLE: "",
   DRAFT_BANNER: "",
   OFFER_BOX: "",
@@ -512,7 +546,7 @@ export async function devSlots(plans, inputs) {
   return {
     ...flowOne,
     ASSET_PREFIX: DEV_ASSET_PREFIX,
-    QUESTION_ONE: "Meal size",
+    GOAL_QUESTION: "Meal size",
     GOALS: plans.individual.map(sizeButton).join("\n"),
     DRAFT_BANNER: "\n" + fill(await read("banner.html")).trimEnd(),
     SHARE_PANEL: "\n" + (await read("share-panel.html")).trimEnd(),
@@ -597,10 +631,11 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
     PER_MEAL_UNIT: esc(words.per_meal_unit),
     FOOTNOTE: esc(fillPhrase(words.prices_as_of, { date: plans.read_on })),
     GOALS: plans.individual.map(goalButton).join("\n"),
+    WHO_QUESTION: whoQuestion(words),
     MEAL_QUESTIONS: mealQuestions(plans, words, offer),
     GRID_HEAD: gridHead(plans),
     GRID_ROWS: gridRows(plans, orderLinks),
-    FAMILY: familySection(plans, orderLinks),
+    FAMILY: familySection(plans, words, orderLinks),
     READ_FROM_TEXT: esc(plans.read_from.replace(/^https?:\/\//, "")),
     READ_ON: esc(plans.read_on),
     DATA: scriptJson(clientData(plans, words, offer, orderLinks)),
@@ -880,15 +915,15 @@ const PREVIEW_DATE = '<span id="preview-date"></span>';
  * SPEC-preview-sites § 8 (the orchestrator's ruling, 2026-10-22): a preview leaves out "Why Fit AF?", as it leaves out the
  * save step and /privacy/ (§ 7 item 3: no link holds an address; item 8: the preview Worker serves /fonts/ and /assets/
  * only). Each piece is cut from the preview page as rendered, by its own text: the button, its no-script link and its
- * dialog (src/template.html, SPEC-every-menu-and-nutrition § 11 item 5); their style (the template's block and its 720 px
- * rule); the lines of app.js that open the dialog and listen in its frame (SPEC-why-fit-af §§ 2 and 6), and the words
- * naming it in the comment over the shared modal(). A piece not found exactly once refuses the preview build, as does
+ * dialog (src/template.html, SPEC-every-menu-and-nutrition § 11 item 5); their style (the template's block; its 720 px
+ * rule, which centred the button on the tabs, went with the tabs, SPEC-ui-and-copy-pass § 2); the lines of app.js that
+ * open the dialog and listen in its frame (SPEC-why-fit-af §§ 2 and 6), and the words naming it in the comment over the
+ * shared modal(). A piece not found exactly once refuses the preview build, as does
  * any "/why/" left, so the page and this list cannot drift apart unseen. The production and development pages are
  * rendered without it and do not change (PV5); the preview build also writes no why/ (PREVIEW_STATIC_DIRS).
  */
 const PREVIEW_WITHOUT_WHY = [
   ["the Why style", /\/\* Why Fit AF\? \(SPEC-why-fit-af § 2\)[\s\S]*?\n\.why-frame \{[^}\n]*\}\n\n/g, ""],
-  ["the Why rule at 720 px", /\n  \.why-link \{[^}\n]*\}/g, ""],
   ["the Why button, its no-script link and its dialog", /\n  <button type="button" class="why-link[\s\S]*?\n  <\/dialog>/g, ""],
   ["the script's Why lines", /\n  modal\(\$\("#why"\), \$\("#why-link"\), \$\("#why-close"\)\);[\s\S]*?\n  whyFrame\.addEventListener\("load", function \(\) \{[\s\S]*?\n  \}\);/g, ""],
   ["the Why words over modal()", / and Why Fit AF\? \(the \/why\/ page in a frame, SPEC-why-fit-af § 2 item 3\)/g, ""],

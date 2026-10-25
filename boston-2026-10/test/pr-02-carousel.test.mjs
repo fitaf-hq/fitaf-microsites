@@ -14,7 +14,8 @@ const pct = (n) => `${Number(n.toFixed(4))}%`;
 test("PR-2: five cells from the manifest, alt=\"\"; a 4 s timer; none under reduced motion", async () => {
   const prod = await photoPage("prod");
   const { document } = parseHTML(prod);
-  assert.ok(prod.indexOf('id="carousel"') < prod.indexOf('class="tabs'), "above the tabs");
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the tabs are the first question (#who), in their place.
+  assert.ok(prod.indexOf('id="carousel"') < prod.indexOf('id="who"') && prod.includes('id="who"'), "above the first question");
   const sheet = photos.carousel;
   const cells = ["1", "2", "3", "4", "5"].map((n) => sheet.cells[n]);
   const imgs = [...document.querySelectorAll("#carousel .slide img")];

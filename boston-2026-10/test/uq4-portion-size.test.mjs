@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { parseHTML } from "linkedom";
-import { ROOT } from "../build.mjs";
+import { printedText, ROOT } from "../build.mjs";
 import { openVisit } from "./a-harness.mjs";
 import { hiddenInTree } from "./cc-harness.mjs";
 import { open } from "./ms-harness.mjs";
@@ -50,8 +50,9 @@ test("UQ4: directly below the goal's answers, the calculator, collapsed behind i
   assert.equal(heading.textContent.trim(), toggle.textContent.trim(), "the heading holds the button alone");
   const body = heading.nextElementSibling;
   assert.deepEqual([body?.id, body?.hasAttribute("hidden"), body?.nextElementSibling ?? null], ["share-body", true, null], "the rest of the calculator directly below, hidden: collapsed by default");
-  assert.equal(development.split(CALCULATOR_TITLE).length - 1, 1, "the calculator's heading printed once");
-  assert.ok(!development.includes(NOT_A_PHRASE), `"${NOT_A_PHRASE}" printed nowhere`);
+  // Printed: the page's words without its scripts (share.js's own comment names the panel by its heading).
+  assert.equal(printedText(development).split(CALCULATOR_TITLE).length - 1, 1, "the calculator's heading printed once");
+  assert.ok(!development.includes(NOT_A_PHRASE), `"${NOT_A_PHRASE}" nowhere in the page`);
 });
 
 test("UQ4: the calculator is in the page exactly once, moved: before the result, not after the save section; its words the contract's commit's", () => {
