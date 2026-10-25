@@ -9,7 +9,8 @@
 // (2026-10-25), as this case builds since SPEC-save-offer-production § 12 (production false and release (a)'s wording: the
 // recorder's new --release-a, which at c6dd3a5 reproduces e8fd524's record exactly): production's index.html (S20's pin)
 // and the development build's index.html, demo/, boston/ and seminar/ moved, by § 2's lines; every other file, privacy/
-// among them, byte-identical.
+// among them, byte-identical. Re-recorded at 077f472 (`--commit 077f472 --release-a`) for § 2.2: the same five pages moved,
+// by its lines; the recorder at 8bfe4f8 reproduces 8bfe4f8's record.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

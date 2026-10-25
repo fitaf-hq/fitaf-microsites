@@ -260,6 +260,23 @@ export const LATER = [
   // (the calculator's move is the development page's alone, src/save/), its hunk in the preview's Why cut list
   // (SPEC-preview-sites § 8, PREVIEW_WITHOUT_WHY, which the base never had; it cuts the preview page alone) left out.
   ["81a1199", "8bfe4f8", ["src/template.html", "src/app.js", "build.mjs", "data/messages.json", "data/plans.json"], { dropHunks: /^-\s*\["the Why rule at 720 px"/m }],
+  // § 2.2 (Family's own question, 2026-10-25) moves the result card's markup beside a line § 1 changed and the base never
+  // took (`{{SAVE_FAMILY}}`, empty on this page): so first § 1's own template change (ce6b54e over its contract, e875280:
+  // that slot gone, the empty DEV_SCRIPT after the card's script; no production-false page moves by it), then § 2.2, from
+  // 8bfe4f8 (§ 2's code) to 077f472 (its code, one commit), over the same files and the module build.mjs now imports,
+  // scripts/family.mjs (new; the content's and the block's files make no page). Its import line's hunk does not apply to
+  // the base, whose next import is not § 1's, so it is left out and the line put after the selection import the base has
+  // (`insertAfter`: [path, anchor found once, the text after it]).
+  ["e875280", "ce6b54e", ["src/template.html"]],
+  [
+    "8bfe4f8",
+    "077f472",
+    ["src/template.html", "src/app.js", "build.mjs", "data/messages.json", "data/plans.json", "scripts/family.mjs"],
+    {
+      dropHunks: /^\+import \{ checkFamily \} from "\.\/scripts\/family\.mjs";$/m,
+      insertAfter: [["build.mjs", 'import { checkSelection, legacyKey } from "./scripts/selection.mjs";\n', 'import { checkFamily } from "./scripts/family.mjs";\n']],
+    },
+  ],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
@@ -317,11 +334,18 @@ export async function basePackage() {
   run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", BASE, prefix]) });
   const pkg = join(scratch, "base", prefix);
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
-  for (const [from, to, paths = LATER_PATHS, { codeOnly = false, dropHunks = null } = {}] of LATER) {
+  for (const [from, to, paths = LATER_PATHS, { codeOnly = false, dropHunks = null, insertAfter = [] } = {}] of LATER) {
     const whole = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...paths.map((p) => `${prefix}/${p}`)]);
     const kept = codeOnly ? codeHunks(whole.toString("utf8")) : dropHunks ? withoutHunks(whole.toString("utf8"), dropHunks) : null;
     const diff = kept === null ? whole : Buffer.from(kept);
     if (diff.length) run("patch", ["-p1", "--forward", "--silent", "-d", join(scratch, "base")], { input: diff });
+    // SPEC-ui-and-copy-pass § 2.2: a line put after an anchor the base has, found exactly once, or the base is refused.
+    for (const [path, anchor, text] of insertAfter) {
+      const file = join(pkg, path);
+      const source = await readFile(file, "utf8");
+      if (source.split(anchor).length !== 2) throw new Error(`basePackage: ${path} holds its anchor ${source.split(anchor).length - 1} times, not once: ${anchor.trim()}`);
+      await writeFile(file, source.replace(anchor, () => anchor + text));
+    }
   }
   return { pkg, dispose: () => rm(scratch, { recursive: true, force: true }) };
 }

@@ -35,6 +35,9 @@
 // goal after the meal questions; #family's line). Recorded as WC-9c serves it since SPEC-save-offer-production § 12
 // (production false: the recorder's new --release-a, which at c6dd3a5 reproduces dbfcb62's record exactly);
 // picks_data, page_sha256 and the sheet unchanged (409b805's).
+// ⚠ RE-RECORDED by `--visible-at 077f472 --release-a` for § 2.2 (Family's own question; the result card shared by both
+// panels): `visible` at all 20 fragments (the result card's place in the markup; #family's card without its figures and
+// with its question); the recorder at 8bfe4f8 reproduces 8bfe4f8's record; picks_data, page_sha256 and the sheet 409b805's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -56,7 +59,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
-  assert.equal(golden.visible_at, "8bfe4f8", "the visible pages: 8bfe4f8's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8, § 1.2 item 1, § 2)");
+  assert.equal(golden.visible_at, "077f472", "the visible pages: 077f472's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8, § 1.2 item 1, §§ 2, 2.2)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {

@@ -2,7 +2,8 @@
 // from 914668de… by SPEC-rung2-progress-and-checkout §§ 17, 19, 21 and 23, from cbc6d1ec… by SPEC-rung2-fill-c, and
 // from 1e3802b8… by SPEC-rung2-progress-and-checkout § 25, the three-step checkout, and § 27, and from 76871ff9… by
 // SPEC-snacks-in-the-cart § 3 (snacks), and from ad25f93d… by SPEC-rung2-fill-c § 8 (the extra meal), and from efcbc570… by
-// SPEC-ui-and-copy-pass § 2 item 5 (data/plans.json's read_on, named in the plans table's comment),
+// SPEC-ui-and-copy-pass § 2 item 5 (data/plans.json's read_on, named in the plans table's comment), and from b68257d5… by
+// its § 2.2 (Family's mpid 35 taking 5 or 10),
 // which change the text; built
 // from the same data/messages.json and template the page now reads); the Worker as CC-8's golden records it; and the
 // mock-ups' build still carries the phrases the page stopped showing (the event line, the hero, the plans' promises).
@@ -16,7 +17,7 @@ import { loadInputs, MOCKUPS_DIR, renderMockups } from "../mockups/build-mockups
 import { buildStorefront } from "../scripts/build-storefront.mjs";
 import { MESSAGES, PLANS, workerFiles } from "./cc-harness.mjs";
 
-const FOOTER_TEXT_SHA256 = "b68257d5d0654013153e4501c0389ec89c48a1951c51a12fbe8f8a28ba791e63";
+const FOOTER_TEXT_SHA256 = "ef5697aabdbff7abf9124add984507f29f5cc7faeb2e5151f7a61e85dda9dbc0";
 const VERSION_LINE = /^\/\* fitaf-handoff \S+ sha256:[0-9a-f]{64} \*\/\n/;
 const golden = JSON.parse(await readFile(new URL("./cc-08-unchanged-golden.json", import.meta.url), "utf8"));
 

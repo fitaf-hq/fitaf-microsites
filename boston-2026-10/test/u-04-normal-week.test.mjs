@@ -128,7 +128,14 @@
 // exactly. Against it, all six contents byte-identical; the three production pages +97 bytes each and the three
 // development pages +1,738 bytes each, by § 2's lines alone (both trees' builds compared line by line: § 2.1 lists them),
 // and their visible page at every fragment (the first question at the top of each; #family's Family line).
-// From here the reference is 8bfe4f8's tree.
+// ⚠ RE-RECORDED at 077f472 (`node test/u-04-record.mjs --commit 077f472 --release-a`): SPEC-ui-and-copy-pass § 2.2
+// (Family's own question; the result card shared by both panels; a cart Family takes carries Family's link). The recorder
+// at 8bfe4f8 reproduces 8bfe4f8's record exactly. Against it: the v1 fixture's two contents byte-identical (no cart of 5
+// or 10); the v2 fixture's and the committed week's (2026-10-18) +100 and +267 bytes, by Family's link on and-5d alone
+// (MS-20 and W4 compare every other byte with older trees); the three production pages +2,661 to +2,928 bytes and the
+// development pages +2,627 to +2,894; the visible page at every fragment (visible() keeps the displayed markup, and the
+// result card now sits outside the individual panel).
+// From here the reference is 077f472's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -138,8 +145,8 @@ import { productionFalseSavePath, withReleaseAWording } from "./cc-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 8bfe4f8's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "8bfe4f8");
+test("U4: a normal week, the content and the page as served, byte-identical to 077f472's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "077f472");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   const options = { savePath: await productionFalseSavePath(), transform: withReleaseAWording };
   assert.deepEqual(await normalWeekRecord(ROOT, options), golden.record);

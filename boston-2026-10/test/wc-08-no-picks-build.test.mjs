@@ -30,8 +30,10 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  Re-recorded once more at dbfcb62 for SPEC-ui-and-copy-pass § 1.2 item 1 (the card's meals and its weekly total at the
  *  plan's price a meal: #plan-data's answers and app.js's lines): 9b1438c's tree reproduces 01270dca…, dbfcb62's gives
  *  f3cd8763…. Re-recorded once more at 8bfe4f8 for SPEC-ui-and-copy-pass § 2 (2026-10-25: who it is for first, the goal
- *  last, the Family line, the footnote's date): c6dd3a5's tree reproduces f3cd8763…, 8bfe4f8's gives this. */
-const TODAY_NO_PICKS_SHA256 = "b4a168dc33222a730265ef17066443f91834363890a1b0ad64326af8bcbc91ef";
+ *  last, the Family line, the footnote's date): c6dd3a5's tree reproduces f3cd8763…, 8bfe4f8's gives b4a168dc…. Re-recorded
+ *  once more at 077f472 for § 2.2 (Family's own question; the result card shared): 8bfe4f8's tree reproduces b4a168dc…,
+ *  077f472's gives this. */
+const TODAY_NO_PICKS_SHA256 = "72ed1f9dd43aedef42f8fba6c7d5e160266af329a18164cb7e73dd34e72b7fd5";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
