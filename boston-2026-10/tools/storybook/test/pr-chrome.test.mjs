@@ -103,8 +103,10 @@ test("PR-8: the link opens a modal dialog with the grid; Esc closes it and focus
 });
 
 /** Where `sel`'s text sits inside its own box: the gaps left and right of the text (a Range over its contents). */
+// ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 2.2 (2026-10-25): the drawn headings only (Family's own question is
+// in the markup, hidden on an individual page, and a hidden element has no box to measure).
 const textGaps = (sel) =>
-  [...document.querySelectorAll(sel)].map((el) => {
+  [...document.querySelectorAll(sel)].filter((el) => el.checkVisibility()).map((el) => {
     const box = el.getBoundingClientRect();
     const range = document.createRange();
     range.selectNodeContents(el);

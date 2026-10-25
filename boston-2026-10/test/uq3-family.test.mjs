@@ -6,6 +6,9 @@
 // which are the individual plan's); See all plans hides, as it did on the Family tab. Choosing Individual brings them back
 // with every answer kept: the same fragment, the same answers pressed, the same card and links. Both builds, the page
 // run as a browser runs it. ⬜ Family's own questions (item 7, ruled 2026-10-25) are § 2.2's contract, not built here.
+// ⚠ AMENDED by § 2.2 (2026-10-25): the Family section's price moved into the result card (UF2), shown once Family's own
+// question is answered (UF1), and its door is a visitor's without script (the script hides it; the result card's links
+// are Family's door, UF3); with no answer (here) the result stays hidden.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -17,7 +20,6 @@ import { choose, pages, readAfter, SERVES, whoOf } from "./uq-harness.mjs";
 
 const { production, development } = await pages();
 const BUILDS = { production, development };
-const money = (cents) => `$${(cents / 100).toFixed(2)}`;
 /** The individual plan's parts Family hides: the four meal questions, the goal, the result (and the step, the calculator). */
 const INDIVIDUAL = ["q-lunch_dinner", "q-weekends", "q-breakfast", "q-snacks", "q-goal", "result"];
 const cardOf = (page) => {
@@ -35,8 +37,10 @@ function assertFamilySection(page, where) {
   const cell = f.counts[0];
   assert.equal(fc?.querySelector("h2")?.textContent, f.name, `${where}: its name`);
   assert.deepEqual([...fc.children].filter((c) => c.localName === "p").map((p) => p.textContent.replace(/\s+/g, " ").trim()), [f.promise, SERVES(f.servings)], `${where}: its promise, then the family it serves`);
-  assert.deepEqual([...fc.querySelectorAll(".figures dd")].map((d) => d.textContent), [money(cell.price_per_meal_cents), money(cell.price_per_meal_cents * cell.meals_per_week)], `${where}: its price`);
-  assert.equal(fc.querySelector("a.cta").getAttribute("href"), `${PLANS.order_base_url}?mpid=${cell.mpid}`, `${where}: its door`);
+  assert.equal(fc.querySelectorAll(".figures").length, 0, `${where}: its price is the result card's (§ 2.2)`);
+  const door = fc.querySelector("a.cta");
+  assert.equal(door.getAttribute("href"), `${PLANS.order_base_url}?mpid=${cell.mpid}`, `${where}: its door, for a visitor without script`);
+  assert.equal(hiddenInTree(door), true, `${where}: hidden by the script (§ 2.2)`);
   // In place below the question: the first thing read after the question is the Family section's.
   const next = readAfter(page, page.el("who"));
   assert.ok(next && section.contains(next), `${where}: the Family section directly below the question (read next: ${next?.localName}#${next?.id} "${next?.textContent.trim().slice(0, 40)}")`);

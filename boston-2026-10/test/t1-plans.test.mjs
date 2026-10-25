@@ -17,7 +17,10 @@ test("T1: every plan x shown count has an integer mpid and integer cents; no mpi
       assert.ok(Number.isInteger(cell.mpid), `${plan.id} ${cell.meals_per_week}: mpid integer`);
       assert.ok(Number.isInteger(cell.meals_per_week), `${plan.id}: meals_per_week integer`);
       assert.ok(Number.isInteger(cell.price_per_meal_cents), `${plan.id} ${cell.meals_per_week}: cents integer`);
-      assert.ok(!seen.has(cell.mpid), `mpid ${cell.mpid} shared by ${seen.get(cell.mpid)} and ${plan.id}`);
+      // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's counts, 5 and 10, are the store's one Family
+      // product, so they share its mpid; no individual cell shares one.
+      const shared = seen.get(cell.mpid);
+      assert.ok(!shared || (plan.id === "family" && shared.startsWith("family-")), `mpid ${cell.mpid} shared by ${shared} and ${plan.id}`);
       seen.set(cell.mpid, `${plan.id}-${cell.meals_per_week}`);
     }
   }
@@ -26,5 +29,6 @@ test("T1: every plan x shown count has an integer mpid and integer cents; no mpi
       assert.ok(plan.counts.some((c) => c.meals_per_week === n), `${plan.id} lacks a ${n}-meal cell`);
     }
   }
-  assert.equal(seen.size, 16, "15 individual cells + 1 family");
+  assert.equal(seen.size, 16, "15 individual cells + Family's one product");
+  assert.deepEqual(plans.family.counts.map((c) => c.meals_per_week), [5, 10], "Family's two counts (§ 2.2)");
 });

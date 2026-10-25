@@ -174,6 +174,12 @@ export function statesProblems(results, { menus, defaultMeals, gridLinks, carts 
     if (r.story === "No picks this week" && (r.ccList || !r.chooseYourMeals)) fail("a Chef's Choice list, or no plain button");
     if (r.story === "All plans" && r.gridLinks !== gridLinks) fail(`${r.gridLinks} of the grid's ${gridLinks} links shown`);
     if (r.story === "Family" && (!r.family || r.individual)) fail("not the Family panel");
+    // The site's SPEC-ui-and-copy-pass § 2.2: Family's and, the fixture week's and-5d cart (ten meals) on the result card.
+    if (r.story === "and · 10 meals") {
+      if (!r.family || r.individual) fail("not the Family panel");
+      if (r.selection !== "and-5d") fail(`the card's answer set is ${r.selection}, not and-5d`);
+      if (!r.ccList || JSON.stringify(r.meals) !== JSON.stringify(carts["and-5d"])) fail(`shows ${JSON.stringify(r.meals)}, not and-5d's cart`);
+    }
     if (r.story === "Scroll" && !(r.frameHeight >= r.pageHeight)) fail(`frame ${r.frameHeight} tall, its page ${r.pageHeight}`);
     if (r.story === "Goal buttons" && r.facts !== 3) fail(`${r.facts} facts blocks shown, not one per goal`);
     if (r.answers) {

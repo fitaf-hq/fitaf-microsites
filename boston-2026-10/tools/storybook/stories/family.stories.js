@@ -13,3 +13,11 @@ export const Family = {
   name: "Family",
   render: (args, context) => showPage({ context, state: STATES.family, args }),
 };
+
+// The site's SPEC-ui-and-copy-pass § 2.2: Family's one question answered (*and*: ten family meals a week), its result card
+// and Chef's Choice, on the fixture week.
+export const FamilyAnd = {
+  name: "and · 10 meals",
+  args: { date: STATES.familyAnd.date },
+  render: (args, context) => showPage({ context, state: STATES.familyAnd, args }),
+};

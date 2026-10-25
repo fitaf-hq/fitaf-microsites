@@ -4,6 +4,9 @@
 // their answers and defaults unchanged; the result (the price, the card, Choose your meals) follows the goal, no
 // question between them. As run, the result still appears once the questions it needs (the goal and Q1) are answered,
 // in either order, and the same answers give the same card (its answer set, figures and links). Q2–Q4 still wait for Q1.
+// ⚠ AMENDED by § 2.2 (2026-10-25, Family's own question, in the Family panel after the individual's): the five headings
+// are the first question's and the individual panel's; the result card, shared with Family since § 2.2, follows the
+// goal as a visitor reads the page (the Family panel, hidden, between them in the markup).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { card, hiddenInTree, MESSAGES } from "./cc-harness.mjs";
@@ -22,7 +25,7 @@ const cardOf = (page) => {
 test("UQ1: the five headings in order — who it is for, the four meal questions, the goal last (both builds)", () => {
   for (const [build, html] of Object.entries(BUILDS)) {
     const { document } = open(html);
-    const labels = [...document.querySelectorAll(".step-label")];
+    const labels = [...document.querySelectorAll("#who .step-label, #panel-individual .step-label")];
     assert.deepEqual(labels.map((h) => h.id), ORDER, `${build}: the headings' order`);
     assert.deepEqual(
       labels.map((h) => h.textContent.trim()),
@@ -35,10 +38,12 @@ test("UQ1: the five headings in order — who it is for, the four meal questions
 
 test("UQ1: the result follows the goal, no question between them; every question before the goal", () => {
   for (const [build, html] of Object.entries(BUILDS)) {
-    const { document } = open(html);
-    const all = inOrder(document);
+    const page = open(html, "#lean-or-7d");
+    const { document } = page;
+    // As a visitor reads it: the displayed elements, in document order (the hidden Family panel not among them).
+    const all = inOrder(document).filter((n) => !hiddenInTree(n));
     const goal = document.getElementById("q-goal").closest(".step");
-    const lastOfGoal = all.indexOf([...goal.querySelectorAll("*")].at(-1));
+    const lastOfGoal = all.indexOf([...goal.querySelectorAll("*")].filter((n) => !hiddenInTree(n)).at(-1));
     const result = all.indexOf(document.getElementById("result"));
     assert.ok(result > lastOfGoal, `${build}: #result after the goal's group, whole`);
     const between = all.slice(lastOfGoal + 1, result).filter((n) => n.matches(".step-label, [data-q], [data-goal], [data-who]"));

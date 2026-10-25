@@ -61,10 +61,12 @@ test("R2-14c fill B: exactly 7 of 7 passes the rule (B fills the cart)", async (
   assert.equal(page.total(), 7);
 });
 
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's counts are 5 and 10 (its one product, mpid 35), so the
+// cells are 17, Family's 1 is refused now, and a refusal for it names 5 or 10.
 test("R2-14d: every plan's own count passes the rule, individual and Family, from data/plans.json", async () => {
   const plans = await loadPlans();
   const cells = [...plans.individual, plans.family].flatMap((plan) => plan.counts);
-  assert.equal(cells.length, 16);
+  assert.equal(cells.length, 17);
   for (const cell of cells) {
     const { h, page } = await outcome("B", payload(cell.mpid, [cell.meals_per_week]));
     assertCheckedOut(h, page, `/order?mpid=${cell.mpid}`);
@@ -72,14 +74,14 @@ test("R2-14d: every plan's own count passes the rule, individual and Family, fro
   }
 });
 
-test("R2-14e: a Family payload of 1 passes the rule", async () => {
-  const b = await outcome("B", payload(35, [1]));
+test("R2-14e: a Family payload of 5 passes the rule", async () => {
+  const b = await outcome("B", payload(35, [3, 2]));
   assertCheckedOut(b.h, b.page, "/order?mpid=35");
 });
 
-test("R2-14f: Family with 2 is refused by the count", async () => {
-  const { h, path, page } = await outcome("B", payload(35, [2]));
-  assertRefused(h, path, /the plan needs 1 meals; the link has 2/);
+test("R2-14f: Family with 1 (its count before § 2.2) is refused by the count", async () => {
+  const { h, path, page } = await outcome("B", payload(35, [1]));
+  assertRefused(h, path, /the plan takes 5 or 10 meals; the link has 1/);
   assert.equal(page.total(), 0);
 });
 

@@ -67,6 +67,8 @@ const STORY_DATES = {
   "Individual · No picks this week": "none",
   "Individual · All plans": "today",
   "Family · Family": "today",
+  // The site's SPEC-ui-and-copy-pass § 2.2: Family's and, on the fixture week (its and-5d cart holds ten).
+  "Family · and · 10 meals": "fixture",
   "Whole page · Scroll": "today",
   "Meal selection · Goal buttons": "today",
 };

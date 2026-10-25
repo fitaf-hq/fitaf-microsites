@@ -45,11 +45,16 @@ const contentOrder = (document) => readingOrder(document.body).filter((n) => !in
  * The button that leaves for the store, as the visitor reads it (flows/02-choose.md § 7): the last thing read on the
  * shown card, the Family card's *Choose your meals*, or the result card's (*Choose your meals*, or with a week the
  * Chef's Choice card's *Choose my own meals*). null before a plan is chosen. It must be a link to the store's order page.
+ * ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's result is the result card too, once its question is
+ * answered; the Family card's own door is a visitor's without script (the page's script hides it), so on Family with no
+ * answer there is no store button, as on an individual page before a plan.
  */
 export function storeButton(page) {
   const { document } = page;
   const family = document.getElementById("panel-family");
-  const card = hiddenInTree(family) ? document.getElementById("result") : family.querySelector(".family-card");
+  const result = document.getElementById("result");
+  const door = family.querySelector(".family-card a[data-plan]");
+  const card = !hiddenInTree(result) ? result : !hiddenInTree(family) && door && !hiddenInTree(door) ? family.querySelector(".family-card") : null;
   if (!card || hiddenInTree(card)) return null;
   const last = readingOrder(card).at(-1) ?? null;
   assert.ok(last && last.localName === "a", `the card's last item is a link (got ${label(last)})`);
