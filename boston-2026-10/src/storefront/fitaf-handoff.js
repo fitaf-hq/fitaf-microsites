@@ -589,29 +589,31 @@ guard(function poll() {
 // (No `<` in the shipped text: the field's place is compareDocumentPosition's FOLLOWING bit, 4.)
 // § 31.2 item 3 (ruled: the visible code field is the visitor's): a link that carries `~<code>` gets no zero at all
 // (§ 10 item 2 keeps the discounts displayed for it); its verdict is `zero: coded link`, nothing typed or pressed.
+// zero()'s body is not indented at all, a block inside it included (the orchestrator's ruling on § 31.2 item 2,
+// 2026-10-25: layout alone, 84 bytes, so the page's held scroll fits the 20,480-byte ceiling; § 31.2.1).
 var ZERO = "zero", ZERO_POLLS = 25;
 function zero(then) {
 var d = w.document, c = d.querySelector("app-checkout"), n = 0, t = 0, i, P, b, rows = c && c.querySelectorAll(".summary__row--discount").length;
 function sign() { return c.querySelectorAll(".summary__row--discount").length > rows || first(c, ".checkout-discounts,.summary__row--discount", function (e) { return /zero/i.test(e.textContent); }); }
 (function poll() {
-  var m;
-  try {
-    if (CODE) m = "coded link";
-    else if (!c) m = "not found";
-    else if (sign()) m = "applied";
-    else if (!i) {
-      if (i = first(c, ".checkout-discounts input", function (e) { return /discount|coupon|promo|code/i.test(e.outerHTML) && !/gift/i.test(e.outerHTML); })) {
-        P = i.closest(".checkout-discounts");
-        i.value = ZERO;
-        ["input", "change", "blur"].forEach(function (e) { i.dispatchEvent(new d.defaultView.Event(e, { bubbles: true })); });
-      } else if (++n > 4) m = "not found";
-    } else if (!b) {
-      if ((b = first(P, "button", function (e) { return i.compareDocumentPosition(e) & 4; })) && !b.disabled) b.click();
-      else if (b = 0, ++n > 4) m = "not found";
-    } else if (first(P, "[role=alert],[class*=error]", text)) m = "refused";
-    else if (++t >= ZERO_POLLS) m = "no sign";
-  } catch (e) { m = "not found"; }
-  m ? then(m) : w.setTimeout(poll, POLL_MS);
+var m;
+try {
+if (CODE) m = "coded link";
+else if (!c) m = "not found";
+else if (sign()) m = "applied";
+else if (!i) {
+if (i = first(c, ".checkout-discounts input", function (e) { return /discount|coupon|promo|code/i.test(e.outerHTML) && !/gift/i.test(e.outerHTML); })) {
+P = i.closest(".checkout-discounts");
+i.value = ZERO;
+["input", "change", "blur"].forEach(function (e) { i.dispatchEvent(new d.defaultView.Event(e, { bubbles: true })); });
+} else if (++n > 4) m = "not found";
+} else if (!b) {
+if ((b = first(P, "button", function (e) { return i.compareDocumentPosition(e) & 4; })) && !b.disabled) b.click();
+else if (b = 0, ++n > 4) m = "not found";
+} else if (first(P, "[role=alert],[class*=error]", text)) m = "refused";
+else if (++t >= ZERO_POLLS) m = "no sign";
+} catch (e) { m = "not found"; }
+m ? then(m) : w.setTimeout(poll, POLL_MS);
 })();
 }
 

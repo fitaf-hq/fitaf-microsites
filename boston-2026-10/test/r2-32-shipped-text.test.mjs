@@ -34,10 +34,11 @@ import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.
 
 /** Fill C's text SHA-256 with SPEC-rung2-progress-and-checkout §§ 30 (every slide's photograph box and its placeholder;
  *  nothing on the screen moves), 31 (the store's code `zero`, applied hidden before the screen goes) and 31.2 item 3 (a
- *  coded link gets no zero). Was 6d36d4bf… (§§ 30–31, f05d355, not pasted), efcbc570…
+ *  coded link gets no zero), its zero() un-indented (layout only, § 31.2.1). Was 0a6e9ef1… (the same text indented,
+ *  992739f, not pasted), 6d36d4bf… (§§ 30–31, f05d355, not pasted), efcbc570…
  *  (the extra meal, SPEC-rung2-fill-c § 8; pasted, 8b11e54), ad25f93d… (snacks, SPEC-snacks-in-the-cart § 3; pasted,
  *  17c5693), 76871ff9… (§ 27, pasted), b65fb47f… (§ 25), 1e3802b8… (fill C). */
-const SHIPPED_SHA256 = "0a6e9ef176320ac830530509260a919d27a634b5811bb6d08f85573f79eddf49";
+const SHIPPED_SHA256 = "a8a5970d50fc57bd03b832a2fe6c2f4f51c6a129cad712f7d91642e4a535e742";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -86,7 +87,7 @@ async function withCopy(edit, fn) {
   }
 }
 
-test("R2-32: both built files' text SHA-256 (the version line's own) is 0a6e9ef1…, fill C's with rung 2's two faces, the three steps, snacks, the extra meal, the photograph's box and the code zero", async () => {
+test("R2-32: both built files' text SHA-256 (the version line's own) is a8a5970d…, fill C's with rung 2's two faces, the three steps, snacks, the extra meal, the photograph's box and the code zero", async () => {
   await shippedTextCase(STOREFRONT_SOURCE);
 });
 
