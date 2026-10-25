@@ -65,19 +65,26 @@ export async function browserFor() {
 /**
  * Open the link in a new context of `browser`, at `width`, with `text` pasted once the cards are on the page (as the
  * smoke pastes) and `ready()` (a page function, if given) is true. `reducedMotion` emulates prefers-reduced-motion:
- * reduce. Returns the page, its console, and waits.
+ * reduce. Returns the page, its console, and waits. Since SPEC-rung2-progress-and-checkout §§ 30–31: `init`, a page
+ * function run in every document before its own scripts (a recorder); `onPage(page)`, run before the link is opened
+ * (request interception); `photoPart`, text appended to the link's fragment (§ 17.1's photo part, written by the case);
+ * `skipCards`, neither wait for the cards nor paste (the store's own Footer runs the block, before the cards).
  */
-export async function openDeep(browser, { origin, code, text, width = 1280, reducedMotion = false, meals, ready = null, offer = null }) {
+export async function openDeep(browser, { origin, code, text, width = 1280, reducedMotion = false, meals, ready = null, offer = null, init = null, onPage = null, photoPart = "", skipCards = false }) {
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
   await page.setViewport(VIEWPORTS[width]);
   if (reducedMotion) await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
   const lines = [];
   page.on("console", (m) => lines.push(m.text()));
-  await page.goto(linkFor(code, origin, meals, offer), { waitUntil: "load" });
-  await poll(page, () => document.querySelectorAll("app-product-card").length, null, (n) => n > 0, { timeoutMs: 15_000 });
-  if (ready) await poll(page, ready, null, (v) => Boolean(v), { timeoutMs: 15_000, everyMs: 100 });
-  await page.evaluate(text);
+  if (init) await page.evaluateOnNewDocument(init);
+  if (onPage) await onPage(page);
+  await page.goto(linkFor(code, origin, meals, offer) + photoPart, { waitUntil: "load" });
+  if (!skipCards) {
+    await poll(page, () => document.querySelectorAll("app-product-card").length, null, (n) => n > 0, { timeoutMs: 15_000 });
+    if (ready) await poll(page, ready, null, (v) => Boolean(v), { timeoutMs: 15_000, everyMs: 100 });
+    await page.evaluate(text);
+  }
   return {
     page,
     lines,
