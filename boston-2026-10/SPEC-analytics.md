@@ -505,3 +505,66 @@ hour before the Boston events); every visit of ours after that must not be count
    redirect dropping another parameter; `tracking` not clearing.
 7. **When**: built on `boston/no-tracking` (from `c6dd3a5`, release (b)'s commit), released to dev, then with the next
    production pin, before 2026-10-26 17:00 Eastern.
+
+### 12.1 Built (2026-10-25)
+
+§ 12 is unchanged. On `boston/no-tracking`: the cases and the code at `07133ed`, CC-8b's golden at `87fbc44`, this
+section after them.
+
+**What was built**: all of it in `src/worker/site.js`'s `serveSite`, through which both Workers reach the page (the
+development Worker after its own routes; production's directly, or as the development Worker's handler while
+`production` is true). A GET whose query names `no-tracking` or `tracking` (`trackingSwitch`) is answered by
+`switchTracking` with the 302 and the cookie, before the assets are asked or the bucket read; `POST /a` carrying the
+cookie at `1` (`carriesNoTracking`) is answered with a bare 204 before `serveBeacon`, so nothing reads the body, writes a
+data point or touches SALTS. `src/worker/beacon.js` is unchanged.
+
+**Cases, before and after** (`nice -n 15 node --test` over `test/n-01`…`n-06` and `test/n-mutants.test.mjs`, then the
+whole suite as `nice -n 15 npm --prefix boston-2026-10 test`):
+
+| | before the code (`8d21da2`'s code) | after (`07133ed`) |
+|---|---|---|
+| the seven N files | `# tests 18` `# pass 6` `# fail 12` | `# tests 18` `# pass 18` `# fail 0` |
+| N1 and N2 with the "//" case (added after the first code, run on it) | `# tests 5` `# pass 1` `# fail 4` | `# tests 5` `# pass 5` |
+| the whole suite | (1,157 of 1,157 at `c6dd3a5`) | at `07133ed`: 1,175 tests, 1,170 pass, 5 fail (CC-8b, CC-8c, MS-9 twice, PR-10: CC-8's golden alone); at `87fbc44`: 1,175 of 1,175 (its first run there: 1,174, Q28's print build failing on Chrome exiting 2, "Teardown watchdog expired", a test that builds the flyer and reaches no Worker; it passed at `07133ed` and on the re-run, unchanged) |
+
+Red for the right reasons: N1, N2 and N3 (each on both Workers and on the rollback) on the missing switch (`200, not
+302`, no Location, no Set-Cookie; a beacon with the cookie written, the salt read and made); the mutants' control on
+the same; the four mutants on their anchors, absent from `site.js` until the code. N4 (the control), N5 (three: today's
+answers, by construction equal before any code) and N6 (two: the page reads no cookie) passed before the code, as
+guards. The suite gains 18 tests: N1 three, N2 two, N3 two, N4 one, N5 three, N6 two, the mutants five.
+
+**The mutants** (`test/n-mutants.test.mjs`, each in a mirror through THE SAME check its case runs, `test/n-checks.mjs`):
+the control (the unchanged mirror) passes N1, N2 and N3; the beacon ignoring the cookie fails N3 on both Workers (a data
+point written, SALTS used); the cookie without `HttpOnly` fails N1 (its Set-Cookie named, on both); the redirect dropping
+another parameter fails N1 (`/?e=boston&no-tracking` goes to `/`), while a request with no other parameter stays right;
+`tracking` not clearing fails N2 (`?tracking` alone a 200, both at once setting the cookie).
+
+**CC-8's golden** moved by one entry, by construction (the development Worker reaches `site.js`): `src/worker/site.js`
+`8a07b89d…` → `a769b2eb…`, none added or removed, re-recorded once from `07133ed`'s own tree (`git archive`) on the
+orchestrator's approval. No other golden moved: S20, WC-9, U4 and PV5 pass unchanged.
+
+**What § 12 was silent on, and what was built** (stated, not ruled)
+
+1. **The Location is absolute**: the request's own origin, joined to its path and the kept query as text. A relative
+   Location (the first code's) named another host for a path beginning `//`: `//other.example/?no-tracking` resolved to
+   `https://other.example/` (measured red on N1 and N2). "The same URL" is on the same host; N1 and N2 hold it.
+2. **Which requests are switched**: every GET `serveSite` would answer as the page. In production that is `/` and
+   `/index.html` (`run_worker_first`) and also any path no asset matches (assets-first falls through to the script),
+   which gets the 302 and then the assets' 404; in development `/*/` sends every path ending `/` too. An asset is served
+   without the script and never switched (N1, as configured). HEAD, POST and PUT to a page route with either parameter
+   are the assets' as today (by the code; no case asks); `/week/` is never switched; `/o`, `/confirm` and `/api/save` are the development Worker's
+   own routes, before `serveSite`, and ignore both the parameters and the cookie (N5).
+3. **A parameter's name** is what precedes its `=`, decoded as `URLSearchParams` decodes it, so `no%2Dtracking` counts;
+   a value that is `no-tracking` (`?e=no-tracking`) or a longer name (`?no-trackings`) does not (N1's controls). Empty
+   pieces (`&&`) are dropped from the redirect's query; every other piece is kept as the request's URL holds it.
+4. **The cookie is counted out only at exactly `fitaf_no_tracking=1`**, one of the Cookie header's `;`-separated pairs
+   (spaces trimmed), alone or among others; `=0`, empty, `=true`, `=11`, and a cookie whose name ends in it are today's
+   path (N4).
+5. **No `Cache-Control` on the 302**: the contract named none and none was added (a 302 carrying no freshness is not
+   cacheable by default, RFC 9111 § 4.2.2).
+6. **N5's "today" is `c6dd3a5`**, read from the repository's objects (`git archive` of its `src/worker/`, `data/`,
+   `scripts/` and `package.json`): a later contract that changes one of those answers moves it, as SP3's base is moved,
+   and a clone without that commit fails it.
+
+**Not done here**: Storybook, the watch and contrast (the page is unchanged); nothing deployed, no merge; the release to
+dev and the production pin are the orchestrator's (§ 12 item 7).
