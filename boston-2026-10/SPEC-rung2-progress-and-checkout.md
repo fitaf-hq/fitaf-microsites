@@ -1522,3 +1522,36 @@ fragment SHA-256 `907c6ffadab5c8441a193875bb9d223ee8b313284d651e2bb26ffe54bc5527
 
 **Left**: item 2 (above); the live rehearsal of §§ 30, 31 and item 3 on this block (§ 31.1's list stands); and the next
 content run, which carries item 1's snack cells to visitors with the live block.
+
+**Item 2, built on the orchestrator's ruling (2026-10-25)**: *"build it in the form you measured (the rule in the
+screen's own <style>, the `html` form with !important, width held at 1,249 px), and make it fit by un-indenting
+zero()'s body — layout only, no behaviour change … Do NOT drop the header comment and do NOT raise the ceiling."*
+
+- **The layout step, alone, at `97a95fb`**: `zero()`'s body un-indented. Proven as asked: the shipped text differs from
+  `992739f`'s in exactly **18 lines, each only in its leading spaces, each inside `zero()`** (the two texts compared
+  line by line, both 323 lines), 84 bytes; `git diff -w` of the source shows only the two new `//` lines that say so.
+  The same cases pass: the rung-2, fill C and snack cases 347 of 349 with only R2-32's pin and its control moved (then
+  moved: R2-32, PR-10, CC-8 to `a8a5970d…`), the Chrome zero cases 13 of 13.
+- **The item, at `b672752`**: in `screen()`, the screen's own style gains
+  `html{overflow:hidden!important;padding-right:Npx}`, `N` = `innerWidth − documentElement.clientWidth` as the screen
+  appears; nothing else. **PS1, PS2 and the mutant un-skipped**: red on `992739f`'s text, 3 of 3 (PS1 and PS2: *"the
+  root's overflow hidden at every frame the screen is up"*; the mutant's site absent), green at `b672752`, 3 of 3, the
+  mutant (the rule in `document.head`, never removed) caught. P1–P3 and their mutants still 5 of 5.
+- **The bytes**: the Footer block **20,410**, the console file **20,391** (20,494 had the item been added indented): **70
+  bytes left** under the 20,480 ceiling. ⚠ **For the merge with Family** (SPEC-ui-and-copy-pass § 2.2, another branch):
+  today's plans table inlines `"35":[1]`; mpid 35 taking 5 and 10 costs **3 bytes** (`[5,10]` in place of `[1]`) or
+  **5** (`[1,5,10]`), leaving 65–67; anything else Family adds to the block's text comes out of the same 70.
+- **The text**: SHA-256 `04e43ac067528d1555310286647799e21938193d62fc4003e57b8dad956b7a76`; ASCII; two `<` in the
+  Footer block, none in the console file. R2-32, PR-10 and CC-8's `footer_text_sha256` moved to `04e43ac0…`; CC-8's
+  `replaces` still names the live `efcbc570…`. **The Footer block file**:
+  `storefront/footer-block/2026-10-25-fitaf-handoff-b672752.md` (*built, not pasted*; fragment SHA-256
+  `2651f31c02611db6eee8bef44aa99e609b976aad275b4188ad0510e5c21472dd`, 20,410 bytes, byte-identical to the build's
+  output); the `992739f` file marked *superseded, not pasted*.
+- **Gates at `c7b871a`** (each run alone, the tree quiet): the site suite (`npm --prefix boston-2026-10 test`) **1,166 of 1,166** (10 min 59 s);
+  the watch **234 of 234** (its first run lost W11b to a Chrome start that timed out under load, *"waiting for the WS
+  endpoint URL"*, as § 29 records; that file alone 18 of 18, then the whole suite again 234 of 234); Storybook **71 of
+  71**; contrast 94 of 94.
+- **Left for the live rehearsal**, beside § 31.1's list: the page's own scrollbar on the store at both widths (on a
+  phone, and on macOS by default, it is an overlay one: `N` = 0); and whether any rule of the store's sets `overflow` or
+  `padding-right` on `<html>` with an `!important` of its own, which would win over this one (none is known here: the
+  store's stylesheets were not read for this; the CDK's scroll-block class, as the CDK publishes it, has none).
