@@ -25,9 +25,10 @@ const BUILD_TIMEOUT_MS = 900_000;
 const FOOTER_FILE = "fitaf-handoff.html";
 /** The fixture's own options block in its page (browser-store.mjs's appHtml), its JSON with `<` escaped. */
 const OPTIONS = /<script type="application\/json" id="cfg">([\s\S]*?)<\/script>/;
-/** SM-9's mutant: one rule of the block (the screen's title), changed, in one store's page. */
-const RULE = "#fitaf-screen h2{margin:0 0 16px";
-const RULE_CHANGED = "#fitaf-screen h2{margin:0 0 17px";
+/** SM-9's mutant: one rule of the block (the screen's title), changed, in one store's page. Its top margin is 80px since
+ *  SPEC-rung2-progress-and-checkout § 30 (the logo's place, reserved above the title); 0 before. */
+const RULE = "#fitaf-screen h2{margin:80px 0 16px";
+const RULE_CHANGED = "#fitaf-screen h2{margin:80px 0 17px";
 const MUTANT_STORE = STORE.checkout;
 /** Every store page carries the whole block: a Footer text shorter than this was not read. */
 const MIN_BLOCK_BYTES = 10_000;

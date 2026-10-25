@@ -6,8 +6,9 @@
 // progress screen's words (data/messages.json, `handoff`) at the UI slot and its colours (the page's own tokens,
 // src/template.html) at the TOKENS slot, and the meal-key function at the KEY slot, and drops every FULL-LINE `//`
 // comment, like this one. SPEC-rung2 § 11 item 5: each built file should be at most 5,120 bytes (the build warns above)
-// and must be at most 15,360 (it refuses above; SPEC-rung2-progress-and-checkout § 17.3, for the 2026-10-01 meeting). `/* */` comments ship. The tests run the SHIPPED text, so what they
-// prove is what is pasted.
+// and must be at most 20,480 (it refuses above; SPEC-rung2-progress-and-checkout § 25.7, raised from § 17.3's 15,360,
+// which § 30 item 3 still names: the build's own constant is the limit, MAX_SHIPPED_BYTES). `/* */` comments ship. The
+// tests run the SHIPPED text, so what they prove is what is pasted.
 //
 // ⭐ SPEC-rung2-fill-c: fill C is the one fill. It is fill B (SPEC-rung2 § 12: fill A, which wrote the store's cart
 // storage, is retired) with fill B's press loop replaced: it presses one unit, then waits for the STORE's count on that
@@ -96,12 +97,22 @@ return function () {
 // § 15.3: the carousel's photos are `.c img` in the style, so the screen's Fit AF logo (below) is not one of them.
 // The page's colour tokens (TOK, the build's TOKENS slot: `--navy:#…;…`) are the screen's custom properties, and since
 // SPEC-rung2-progress-and-checkout § 25 also those of the checkout's step bar and buttons (stepper(), below).
+// § 30 (the Advisor, 2026-10-25: "because there's no placeholder image, the scrollbar bounces around"): nothing on the
+// screen changes size or place once it is up, because it centres its content and any height change moved the title and
+// the bar. Every slide's photograph box (.f) is made with the slide, first, min(220px, 32vh) high and square (a cell's
+// own ratio when it has one), and holds the photograph when there is one (the sheet's cell, or the card's loaded image,
+// .k, cropped to the box); its ::before is the placeholder: the Fit AF mark, read as the store's own logo (--m, set on
+// the screen when brand() places the logo: nothing requested), on a --white plate, centred on the screen's navy, under
+// any photograph. The empty carousel (before the first meal) shows the same plate in the same place, its height reserved
+// from the first frame; a name is at most two lines and the step line keeps two; and the screen's logo is placed over a
+// reserved 80 px above the title (the 48 px logo, its padding, its margin), so its arrival moves nothing either.
 var S, NOW, SLIDES = {}, CODE, L, SHEET, CELLS = {}, BAD, F;
 var TOK = "/*TOKENS*/", CSS = "#fitaf-screen{" + TOK + ";position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
-"#fitaf-screen>div{width:100%;max-width:420px}#fitaf-screen h2{margin:0 0 16px;font-size:24px;font-weight:700;color:inherit}" +
+"#fitaf-screen>div{position:relative;width:100%;max-width:420px}#fitaf-screen>div>img{position:absolute;inset:0 0 auto}#fitaf-screen h2{margin:80px 0 16px;font-size:24px;font-weight:700;color:inherit}" +
 "#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
-"#fitaf-screen .c{margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
-"#fitaf-screen .c img{display:block;width:100%;height:min(220px,32vh);object-fit:cover;border-radius:6px}#fitaf-screen .f{position:relative;overflow:hidden;height:min(220px,32vh);margin:0 auto;border-radius:6px}#fitaf-screen .f img{position:absolute;height:auto;max-width:none;border-radius:0}#fitaf-screen b{display:block;margin-top:10px;font-size:18px}#fitaf-screen p{margin:0;min-height:1.4em}" +
+"#fitaf-screen .c{position:relative;height:calc(min(220px,32vh) + 61px);margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
+"#fitaf-screen .f{position:relative;overflow:hidden;height:min(220px,32vh);aspect-ratio:1;margin:0 auto;border-radius:6px}#fitaf-screen :is(.f,.c:empty)::before{content:'';position:absolute;inset:calc(min(220px,32vh)/2 - 32px) 0 auto;margin:auto;width:calc(min(220px,32vh)*.7);height:64px;padding:8px 10px;box-sizing:border-box;border-radius:8px;background:var(--m) center/contain no-repeat content-box border-box var(--white)}" +
+"#fitaf-screen .f img{position:absolute;display:block;height:auto;max-width:none}#fitaf-screen .f .k{inset:0;width:100%;height:100%;object-fit:cover}#fitaf-screen b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:10px;font-size:18px;line-height:1.4}#fitaf-screen p{margin:0;min-height:2.8em}" +
 ".cdk-overlay-pane:has(app-extra-products-dialog),.cdk-overlay-backdrop:has(+* app-extra-products-dialog){visibility:hidden!important}" +
 "#fitaf-screen.z{animation:fitaf-z 4s!important}@keyframes fitaf-e{}@keyframes fitaf-z{}@keyframes fitaf-t{}@keyframes fitaf-in{from{opacity:0;transform:translateX(24px)}}@media (prefers-reduced-motion:reduce){#fitaf-screen *{animation:none!important;transition:none!important}}";
 // Everything the screen does runs inside ui(): a screen that cannot draw never stops fill B, whose presses cannot be
@@ -150,7 +161,7 @@ return i;
 // corners and background, the screen's --white token: a plate element around it measured 10,308 bytes, over the
 // Footer's 10,240. Tried at every poll of fill B's wait and at every press until it is placed (L), because the store's
 // header may load its logo after this block runs; placed once.
-function brand() { if (!L && (L = logo("0 auto 16px;height:48px;padding:8px 10px;border-radius:8px;background:var(--white)"))) $("h2").before(L); }
+function brand() { if (!L && (L = logo("0 auto 16px;height:48px;padding:8px 10px;border-radius:8px;background:var(--white)"))) $("h2").before(L), S.style.setProperty("--m", "url(" + JSON.stringify(L.src) + ")"); }
 // After press k of t: the meal's slide, made at its first press from its own card (§ 2 item 2: its name as the card
 // shows it, and its photograph only if the page has already loaded it: the card's img complete with a width, whose
 // currentSrc the slide reuses, so nothing new is requested), shown; the bar at k of t + 1; the step line.
@@ -158,27 +169,27 @@ function brand() { if (!L && (L = logo("0 auto 16px;height:48px;padding:8px 10px
 // own ratio at the slide's height, holding the whole sheet scaled so the cell fills the box (its width the sheet's in
 // cells, its left and top the cell's offset), the box clipping the rest. The store's card image is not waited for. If the
 // sheet fails (the img's error, or the early load's: BAD), the slide falls back to today's rule, pic(), and no later
-// slide asks for the sheet again.
+// slide asks for the sheet again. § 30: the box is every slide's, made first, cell or none, and pic() draws INTO it, so
+// a failed sheet removes its img and keeps the box (the placeholder shows again).
 function pic(el, c) {
 var im = c.querySelector("img"), i;
-if (im && im.complete && im.naturalWidth) { i = el.insertBefore(w.document.createElement("img"), el.firstChild); i.alt = ""; i.src = im.currentSrc; }
+if (im && im.complete && im.naturalWidth) { i = el.appendChild(w.document.createElement("img")); i.className = "k"; i.alt = ""; i.src = im.currentSrc; }
 }
 function added(meal, c, k, t) {
 var d = w.document, el = SLIDES[meal], x = CELLS[meal], f, g;
 brand();
 if (!el) {
   el = SLIDES[meal] = d.createElement("div");
+  (f = el.appendChild(d.createElement("div"))).className = "f";
   el.appendChild(d.createElement("b")).textContent = text(c.querySelector(".product__content-title"));
   if (x && !BAD) {
-    f = el.insertBefore(d.createElement("div"), el.firstChild);
-    f.className = "f";
     f.style.cssText = "aspect-ratio:" + x[2] / x[3];
     g = f.appendChild(d.createElement("img"));
     g.alt = "";
     g.style.cssText = "width:" + x[4] / x[2] * 100 + "%;left:" + -x[0] / x[2] * 100 + "%;top:" + -x[1] / x[3] * 100 + "%";
-    g.onerror = function () { BAD = 1; ui(function () { f.remove(); pic(el, c); }); };
+    g.onerror = function () { BAD = 1; ui(function () { g.remove(); pic(f, c); }); };
     g.src = SHEET;
-  } else pic(el, c);
+  } else pic(f, c);
   $(".c").appendChild(el);
 }
 show(el);
@@ -550,11 +561,54 @@ return first(w.document, "button", function (b) {
 function checkout(p) {
 var k = 0, polls = 0;
 guard(function poll() {
-  if (k && loc.pathname === "/checkout") { ui(mark); return end("done: /checkout"); }
+  if (k && loc.pathname === "/checkout") { ui(mark); return zero(function (m) { log("zero: " + m); end("done: /checkout"); }); }
   var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]), n = plan();
   if (b && (k || n[0] === (n[1] ? p.units : p.total))) { if (!k) { drop(); ui(function () { w.sessionStorage.setItem("ecc_additions_prompt_handled", "true"); }); F = 0; } b.click(); if (!k) ui(last); k++; polls = 0; }
   else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? end("stopped: /checkout not reached") : fail(said(p) + "; the plan shows " + n[0] + (b ? "" : "; no checkout control"));
   w.setTimeout(guard(poll), POLL_MS);
+})();
+}
+
+// SPEC-rung2-progress-and-checkout § 31 (the Advisor, 2026-10-25: "a 0% discount code that we can use to easily
+// segment these orders"): at done, after the mark and the style (§ 3, H7 hiding the discounts) and BEFORE the screen
+// goes, so the visitor never sees nor acts on any of it, the store's own code `zero` is applied: ZERO, a constant of
+// this block, never the link's `~<code>` (which stays checked and not applied). The store's discount field is the first
+// input inside a .checkout-discounts (whichever of its placements the page renders, H7's own selector) whose markup names
+// a discount, coupon, promo or code and not a gift card; it is given ZERO as a person's typing ends (its value, then the
+// input, change and blur events Angular's form control listens to); its Apply is the first button after it in that
+// placement, pressed once, at a later poll, once enabled. Then the store's sign is awaited: a discount row more than
+// before (.summary__row--discount, H9's name) or the code's own name in the discounts or a discount row (an
+// applied-code mark). ⚠ None of the field, the Apply or the sign is read from the store: no request to it here; they
+// are the contract's words and the stand-in's (browser-store.mjs), and the rehearsal (§ 31 item 4) shows the live one.
+// ⛔ It never blocks a sale (item 3): the verdict, logged as `zero: <it>` before the done line, is "applied", "not
+// found" (no checkout component, no field within 5 polls, or no enabled Apply within 5 more), "refused" (a role=alert
+// or error element with text in that placement after the press), or "no sign" (neither within ZERO_POLLS polls, 5 s,
+// of the press: the bound), and any fault is "not found"; every verdict goes on to done exactly as before. Applied once
+// per checkout: one press, never again, and a code the store already shows applied is not typed at all; a reload has
+// no link (the fragment went before CHECKOUT), so nothing runs. Its polls are POLL_MS, as every other wait (R2-82).
+// (No `<` in the shipped text: the field's place is compareDocumentPosition's FOLLOWING bit, 4.)
+var ZERO = "zero", ZERO_POLLS = 25;
+function zero(then) {
+var d = w.document, c = d.querySelector("app-checkout"), n = 0, t = 0, i, P, b, rows = c && c.querySelectorAll(".summary__row--discount").length;
+function sign() { return c.querySelectorAll(".summary__row--discount").length > rows || first(c, ".checkout-discounts,.summary__row--discount", function (e) { return /zero/i.test(e.textContent); }); }
+(function poll() {
+  var m;
+  try {
+    if (!c) m = "not found";
+    else if (sign()) m = "applied";
+    else if (!i) {
+      if (i = first(c, ".checkout-discounts input", function (e) { return /discount|coupon|promo|code/i.test(e.outerHTML) && !/gift/i.test(e.outerHTML); })) {
+        P = i.closest(".checkout-discounts");
+        i.value = ZERO;
+        ["input", "change", "blur"].forEach(function (e) { i.dispatchEvent(new d.defaultView.Event(e, { bubbles: true })); });
+      } else if (++n > 4) m = "not found";
+    } else if (!b) {
+      if ((b = first(P, "button", function (e) { return i.compareDocumentPosition(e) & 4; })) && !b.disabled) b.click();
+      else if (b = 0, ++n > 4) m = "not found";
+    } else if (first(P, "[role=alert],[class*=error]", text)) m = "refused";
+    else if (++t >= ZERO_POLLS) m = "no sign";
+  } catch (e) { m = "not found"; }
+  m ? then(m) : w.setTimeout(poll, POLL_MS);
 })();
 }
 

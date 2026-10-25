@@ -1,7 +1,8 @@
-// PR-10 (SPEC-plan-page-refinement ⛔, § 5): unchanged. The Footer block's text (SHA-256 efcbc570…, R2-32's pin, moved
+// PR-10 (SPEC-plan-page-refinement ⛔, § 5): unchanged. The Footer block's text (SHA-256 6d36d4bf…, R2-32's pin, moved
 // from 914668de… by SPEC-rung2-progress-and-checkout §§ 17, 19, 21 and 23, from cbc6d1ec… by SPEC-rung2-fill-c, and
 // from 1e3802b8… by SPEC-rung2-progress-and-checkout § 25, the three-step checkout, and § 27, and from 76871ff9… by
-// SPEC-snacks-in-the-cart § 3 (snacks), and from ad25f93d… by SPEC-rung2-fill-c § 8 (the extra meal),
+// SPEC-snacks-in-the-cart § 3 (snacks), and from ad25f93d… by SPEC-rung2-fill-c § 8 (the extra meal), and from
+// efcbc570… by SPEC-rung2-progress-and-checkout §§ 30 and 31 (the photograph's box; the code zero),
 // which change the text; built
 // from the same data/messages.json and template the page now reads); the Worker as CC-8's golden records it; and the
 // mock-ups' build still carries the phrases the page stopped showing (the event line, the hero, the plans' promises).
@@ -15,7 +16,7 @@ import { loadInputs, MOCKUPS_DIR, renderMockups } from "../mockups/build-mockups
 import { buildStorefront } from "../scripts/build-storefront.mjs";
 import { MESSAGES, PLANS, workerFiles } from "./cc-harness.mjs";
 
-const FOOTER_TEXT_SHA256 = "efcbc570f5f26273bf126438c19e9a8ba258332f5dcd4c5f22a24a1986a9680f";
+const FOOTER_TEXT_SHA256 = "6d36d4bf2f1a07f105bab56528e3c785dfbf760f19bc4ec813d1d372fe9e295d";
 const VERSION_LINE = /^\/\* fitaf-handoff \S+ sha256:[0-9a-f]{64} \*\/\n/;
 const golden = JSON.parse(await readFile(new URL("./cc-08-unchanged-golden.json", import.meta.url), "utf8"));
 
