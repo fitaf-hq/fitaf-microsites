@@ -37,11 +37,12 @@ test("MS-12: #meals-or-7d is the answers alone: Q2–Q4 shown at the fragment's 
   assert.equal(resultOf(page).shown, true);
 });
 
-test("MS-12: #individual is neither: nothing pressed; the Individual tab writes #individual again", async () => {
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the tabs are the first question's two answers (#who-*).
+test("MS-12: #individual is neither: nothing pressed; the first question's individual answer writes #individual again", async () => {
   const page = open(await pageOf(), "#individual");
   const q = questionsOf(page);
   assert.deepEqual([pressedGoals(page), q.lunch_dinner.pressed, q.weekends.shown, resultOf(page).shown], [[], null, false, false]);
-  page.el("tab-individual").click();
+  page.el("who-individual").click();
   assert.equal(page.hash(), "#individual", "round trip");
 });
 
@@ -56,10 +57,10 @@ test("MS-12: today's #meals-14 opens and, every day; #meals-7 or, every day", as
   }
 });
 
-test("MS-12: after the Family tab, the Individual tab returns to the state left", async () => {
+test("MS-12: after Family, the individual answer returns to the state left", async () => {
   const page = open(await pageOf(), "#lean-and-5d-b");
-  page.el("tab-family").click();
+  page.el("who-family").click();
   assert.equal(page.hash(), "#family");
-  page.el("tab-individual").click();
+  page.el("who-individual").click();
   assert.equal(page.hash(), "#lean-and-5d-b");
 });

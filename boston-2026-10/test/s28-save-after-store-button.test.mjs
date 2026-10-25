@@ -47,9 +47,10 @@ test("S28: as a visitor goes — absent, then after the card's Continue to check
   answer(page, "weekends", "yes");
   assertFlowOneDirectlyAfterStoreButton(page);
   page.el("save-email").value = "dummy-s28@example.com";
-  page.el("tab-family").click();
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the tabs are the first question's two answers.
+  page.el("who-family").click();
   assertFlowOneAbsent(page);
-  page.el("tab-individual").click();
+  page.el("who-individual").click();
   const { button } = assertFlowOneDirectlyAfterStoreButton(page);
   assert.equal(button.id, "cc-own");
   assert.equal(page.el("save-email").value, "dummy-s28@example.com", "back on the plan: what was typed is kept");

@@ -5,6 +5,8 @@
 // missing phrase: each new one removed in a copy fails the build, naming it. Copies only; no file in the repository is
 // edited. The two cases that read the four questions and the snack block build from their own data with snacks shown
 // (ms-harness SNACKS_SHOWN, § 11), never the committed flags.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the first question, who it is for (the tabs made a
+// question), is a question of `plan_page.questions` too (`who`), so the added parts are five questions, its words among them.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -36,11 +38,12 @@ function markAll(obj, markers, skip = ["status"]) {
   }
 }
 
-/** The text of the parts the meal selection adds: the four questions, the meals a week and the rounded line, the snacks. */
+/** The text of the parts the meal selection adds: the five questions (who it is for and the four meal questions), the
+ *  meals a week and the rounded line, the snacks. */
 function addedText(page) {
   const { document } = page;
-  const groups = [...document.querySelectorAll('.step[role="group"]')].filter((g) => g.querySelector("[data-q]"));
-  assert.equal(groups.length, 4, "the four questions");
+  const groups = [...document.querySelectorAll('.step[role="group"]')].filter((g) => g.querySelector("[data-q], [data-who]"));
+  assert.equal(groups.length, 5, "the five questions");
   // The snack block is the week's (the Chef's Choice card): a page without a week has none.
   const parts = [...groups, document.getElementById("result-meals").parentElement, document.getElementById("result-rounded"), document.getElementById("cc-snacks")];
   return parts.filter(Boolean).map((p) => p.textContent).join(" ");

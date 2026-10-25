@@ -5,6 +5,9 @@
 // chooser"*): the button is drawn directly above the tabs (nothing drawn between them), at least 64 CSS px tall, in the
 // page's quieter button style (See all plans': its colour, type, underline, background and border), and the footer
 // shows no *Why Fit AF?*; without script, the same place holds the link to /why/ and the footer none.
+// ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the Individual/Family chooser is now the first
+// question (#who), in the tabs' place, in the look of the other questions (the column's width): the
+// button is drawn directly above it and centred above it, as it was above the tabs.
 // ⚠ § 11.2 (2026-10-22, the Advisor through the orchestrator: *"in a button"*): an outline button in the look of the menu
 // chooser's UNSELECTED CHIP, not See all plans' underlined text: a white pill (its radius at least half its height) with
 // the chips' border and navy words, no underline and no orange, sized to its words and centred above the tabs. W2 reads
@@ -185,11 +188,11 @@ async function planLinkProblems(page) {
 }
 
 /** Runs in the page: where the button is drawn (§ 11 item 5) and how (§ 11.2): its box, its words' width and its look,
- *  the page's tokens as colours, the tabs' box, whether anything is drawn between the button and the tabs, and what of
- *  Why Fit AF? the footer draws. */
+ *  the page's tokens as colours, the chooser's box (since SPEC-ui-and-copy-pass § 2 the first question, #who), whether
+ *  anything is drawn between the button and it, and what of Why Fit AF? the footer draws. */
 function readPlace(look) {
   const button = document.getElementById("why-link");
-  const tabs = document.querySelector('[role="tablist"]');
+  const chooser = document.getElementById("who");
   const styleOf = (el) => (el ? Object.fromEntries(look.map((k) => [k, getComputedStyle(el)[k]])) : null);
   // A token's colour as the browser computes it (rgb(…)), by drawing it.
   const probe = document.createElement("span");
@@ -204,14 +207,14 @@ function readPlace(look) {
   if (button) range.selectNodeContents(button);
   const between = [];
   let next = button?.nextElementSibling;
-  for (; next && next !== tabs; next = next.nextElementSibling) if (next.checkVisibility()) between.push(next.tagName.toLowerCase());
+  for (; next && next !== chooser; next = next.nextElementSibling) if (next.checkVisibility()) between.push(next.tagName.toLowerCase());
   const label = button?.textContent.trim() ?? "";
   const footer = document.querySelector("footer");
   return {
     drawn: Boolean(button?.checkVisibility()),
     box: button?.getBoundingClientRect().toJSON() ?? null,
-    tabs: tabs?.checkVisibility() ? tabs.getBoundingClientRect().toJSON() : null,
-    sibling: next === tabs && Boolean(tabs),
+    chooser: chooser?.checkVisibility() ? chooser.getBoundingClientRect().toJSON() : null,
+    sibling: next === chooser && Boolean(chooser),
     between,
     look: styleOf(button),
     words: button ? range.getBoundingClientRect().width : null,
@@ -227,9 +230,9 @@ async function placeProblems(page) {
   const p = await page.evaluate(readPlace, LOOK);
   if (!p.drawn || !p.box) return ["the button is not drawn"];
   if (p.inFooter || p.footerWhy) problems.push(`the footer shows Why Fit AF? (the button in it: ${p.inFooter}; ${p.footerWhy} drawn there)`);
-  if (!p.sibling) problems.push("the button is not directly above the tabs (not their preceding sibling)");
-  if (p.between.length) problems.push(`drawn between the button and the tabs: ${p.between.join(", ")}`);
-  if (!p.tabs || p.box.bottom > p.tabs.top + 1) problems.push(`the button is not above the tabs (${JSON.stringify({ button: p.box, tabs: p.tabs })})`);
+  if (!p.sibling) problems.push("the button is not directly above the first question (not its preceding sibling)");
+  if (p.between.length) problems.push(`drawn between the button and the first question: ${p.between.join(", ")}`);
+  if (!p.chooser || p.box.bottom > p.chooser.top + 1) problems.push(`the button is not above the first question (${JSON.stringify({ button: p.box, chooser: p.chooser })})`);
   if (p.box.height < TARGET_PX) problems.push(`the button is ${p.box.height} px tall, under ${TARGET_PX}`);
   // § 11.2: an outline button, the unselected chip's (the chips themselves are compared on the two-menu page below).
   const { look, tokens } = p;
@@ -239,8 +242,8 @@ async function placeProblems(page) {
   if (parseFloat(look.borderTopLeftRadius) < p.box.height / 2 - 1) problems.push(`the button is not a pill (radius ${look.borderTopLeftRadius}, height ${p.box.height})`);
   if (look.textDecorationLine !== "none") problems.push(`the button's words are ${look.textDecorationLine}`);
   if (Object.values(look).includes(tokens["--cta"])) problems.push("the button is orange (--cta)");
-  if (p.box.width > p.words + 2 * SIDE_ALLOWANCE_PX || (p.tabs && p.box.width >= p.tabs.width)) problems.push(`the button is ${p.box.width} px wide for ${p.words} px of words: not sized to its text`);
-  if (p.tabs && Math.abs(p.box.left + p.box.width / 2 - (p.tabs.left + p.tabs.width / 2)) > 1) problems.push(`the button is not centred above the tabs (${p.box.left + p.box.width / 2} against ${p.tabs.left + p.tabs.width / 2})`);
+  if (p.box.width > p.words + 2 * SIDE_ALLOWANCE_PX || (p.chooser && p.box.width >= p.chooser.width)) problems.push(`the button is ${p.box.width} px wide for ${p.words} px of words: not sized to its text`);
+  if (p.chooser && Math.abs(p.box.left + p.box.width / 2 - (p.chooser.left + p.chooser.width / 2)) > 1) problems.push(`the button is not centred above the first question (${p.box.left + p.box.width / 2} against ${p.chooser.left + p.chooser.width / 2})`);
   return problems;
 }
 
@@ -306,17 +309,19 @@ for (const where of PLAN_LINK_PAGES) {
 }
 
 for (const where of PAGES) {
-  test(`W3 (${where.name}): without script, no button and no dialog; the link to /why/ in the button's place above the tabs, none in the footer; the plans still shown (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
+  test(`W3 (${where.name}): without script, no button and no dialog; the link to /why/ in the button's place above the first question, none in the footer; the plans still shown (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
     const read = await withPage({ ...where, script: false }, async (page, base) => {
       const seen = await page.evaluate((path) => {
         const button = document.getElementById("why-link");
-        const tabs = document.querySelector('[role="tablist"]');
+        const chooser = document.getElementById("who");
         const why = [...document.querySelectorAll("a")].filter((a) => a.checkVisibility() && new URL(a.href).pathname === path);
-        // The button's place: the elements from the button to the tabs (its no-script link among them), none drawn but it.
+        // The button's place: the elements from the button to the first question (its no-script link among them), none
+        // drawn but it.
         const place = [];
-        for (let el = button; el && el !== tabs; el = el.nextElementSibling) place.push(el);
+        for (let el = button; el && el !== chooser; el = el.nextElementSibling) place.push(el);
         const panel = document.getElementById("panel-individual");
         return {
+          chooser: Boolean(chooser),
           label: button?.textContent.trim() ?? null,
           button: button?.checkVisibility() ?? null,
           dialog: document.getElementById("why")?.checkVisibility() ?? null,
@@ -336,10 +341,11 @@ for (const where of PAGES) {
       return { ...seen, base, landed };
     });
     assert.ok(read.label, "control: the button is in the markup");
+    assert.equal(read.chooser, true, "control: the first question (#who) is in the markup, where the button's place ends");
     assert.equal(read.plans, true, "control: the page's no-script rule still shows the plans dialog");
     assert.deepEqual([read.button, read.dialog, read.frame], [false, false, false], "neither the button nor the dialog (nor its frame) shown");
     assert.deepEqual(read.links, [{ text: read.label, href: `${read.base}${WHY_PATH}` }], "one link, the button's label, to /why/");
-    assert.equal(read.inPlace, true, "the link in the button's place, between it and the tabs");
+    assert.equal(read.inPlace, true, "the link in the button's place, between it and the first question");
     assert.equal(read.above, true, "the link drawn above the plan's panel");
     assert.equal(read.footer, 0, "no link in the footer");
     assert.deepEqual(read.landed, { path: WHY_PATH, title: WHY_TITLE }, "the link opens the /why/ page");
@@ -399,7 +405,7 @@ test("W2 (mutant, SPEC-every-menu-and-nutrition § 11): the button left in the f
   await writeFile(index, html.replace(BUTTON_MARKUP, "").replace(PLANS_MARKUP, (plans) => plans + button));
   const problems = await withPage(where, (page, base, requested) => behaviourProblems(page, requested));
   t.diagnostic(problems.join("\n"));
-  assert.ok(problems.some((p) => /the footer shows Why Fit AF\?/.test(p)) && problems.some((p) => /not directly above the tabs/.test(p)), problems.join("\n"));
+  assert.ok(problems.some((p) => /the footer shows Why Fit AF\?/.test(p)) && problems.some((p) => /not directly above the first question/.test(p)), problems.join("\n"));
 });
 
 // § 11.2: on the two-menu fixture week (the site's test/fixtures/picks-menus/, invented names, its words), where the menu

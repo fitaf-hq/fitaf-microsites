@@ -11,6 +11,8 @@
 // ⚠ § 11.2 (the Advisor, 2026-10-22, through the orchestrator: "in a button"): the button is no longer in See all plans'
 // style (`all-link`) but an outline button in the look of the menu chooser's unselected chip (`why-link`), and so is its
 // no-script link; W2 compares the look as drawn.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the Individual/Family chooser the Advisor put the button
+// above is now the first question, "Who is this for?" (#who), in the tabs' place: the button sits directly above it.
 // The behaviour (opening, closing, focus, the frame loaded) is W2's and the page without script W3's, in Chrome:
 // tools/storybook/test/w-why-chrome.test.mjs.
 import test from "node:test";
@@ -50,16 +52,17 @@ function problemsOf(html, servedAt, out) {
   if (button.classList.contains("all-link")) fail("#why-link still carries See all plans' class (all-link): § 11.2 makes it an outline button");
   if (button.getAttribute("aria-haspopup") !== "dialog") fail(`#why-link aria-haspopup="${button.getAttribute("aria-haspopup")}"`);
   if (button.getAttribute("aria-controls") !== "why") fail(`#why-link aria-controls="${button.getAttribute("aria-controls")}"`);
-  // § 11 item 5: directly above the tabs, in the page's column; nothing of it in the footer.
-  const tabs = document.querySelector('[role="tablist"]');
-  if (!tabs || !tabs.querySelector("#tab-individual")) fail("fixture control: no tab list holding #tab-individual");
+  // § 11 item 5: directly above the Individual/Family chooser (since SPEC-ui-and-copy-pass § 2, the first question), in
+  // the page's column; nothing of it in the footer.
+  const chooser = document.getElementById("who");
+  if (!chooser || !chooser.querySelector("#who-individual")) fail("fixture control: no first question #who holding #who-individual");
   if (button.closest("footer")) fail("#why-link is in the footer");
   if (!button.closest("main")) fail("#why-link is not in the page's column (main)");
   const between = [];
   let next = button.nextElementSibling;
-  for (; next && next !== tabs; next = next.nextElementSibling) between.push(next);
-  if (next !== tabs) fail("#why-link is not directly above the tabs (they are not its following sibling)");
-  else if (between.some((el) => !(el.tagName === "NOSCRIPT" || el.id === "why"))) fail(`between #why-link and the tabs: ${between.map((el) => el.tagName.toLowerCase()).join(", ")}`);
+  for (; next && next !== chooser; next = next.nextElementSibling) between.push(next);
+  if (next !== chooser) fail("#why-link is not directly above the first question (it is not its following sibling)");
+  else if (between.some((el) => !(el.tagName === "NOSCRIPT" || el.id === "why"))) fail(`between #why-link and the first question: ${between.map((el) => el.tagName.toLowerCase()).join(", ")}`);
   const noscript = button.nextElementSibling;
   const fallback = noscript?.tagName === "NOSCRIPT" ? parseHTML(`<div>${noscript.innerHTML}</div>`).document.querySelector("a") : null;
   if (!fallback || fallback.textContent.trim() !== LABEL || new URL(fallback.getAttribute("href"), `${ORIGIN}${servedAt}`).pathname !== WHY_PATH) fail("no no-script link to /why/, reading the label, directly after #why-link");
@@ -95,7 +98,7 @@ function problemsOf(html, servedAt, out) {
 }
 
 for (const target of ["prod", "dev"]) {
-  test(`W1 (${target}): the button directly above the tabs, none in the footer, and its dialog, the frame's src the built /why/ page`, async () => {
+  test(`W1 (${target}): the button directly above the first question, none in the footer, and its dialog, the frame's src the built /why/ page`, async () => {
     const out = await mkdtemp(join(tmpdir(), `boston-w1-${target}-`));
     try {
       await build({ target, outDir: out });

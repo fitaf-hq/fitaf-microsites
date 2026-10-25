@@ -23,9 +23,10 @@ test("S30: #from-email — Flow 1 as the one-line link at the end; not on Family
   answer(page, "lunch_dinner", "or");
   answer(page, "weekends", "yes");
   assertFlowOneDirectlyAfterStoreButton(page, { form: false });
-  page.el("tab-family").click();
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the tabs are the first question's two answers.
+  page.el("who-family").click();
   assertFlowOneAbsent(page);
-  page.el("tab-individual").click();
+  page.el("who-individual").click();
   assertFlowOneDirectlyAfterStoreButton(page, { form: false });
   page.el("save-reopen").click();
   assertFlowOneDirectlyAfterStoreButton(page);

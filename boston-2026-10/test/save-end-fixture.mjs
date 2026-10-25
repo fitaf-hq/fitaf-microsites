@@ -64,6 +64,8 @@ export function storeButton(page) {
  * else its label), and "Your Boston offer" (#save-title, before it) is the box's accessible name, not drawn. As run, at `hash` and again
  * with a plan chosen and on Family: the offer box is read first, then Flow 2 (question 1 first, for an individual
  * visit), and nothing of Flow 1 is read before the store button.
+ * ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 items 1–2 (2026-10-25): Flow 2's question 1 is who it is for (#q-who, the tabs
+ * made a question), above both panels, so it is read first on Family too; the goal is the last question.
  */
 export function assertOfferBoxThenFlowTwo(html, { hash = "", now = NOW } = {}) {
   const { document } = parseHTML(html);
@@ -74,9 +76,9 @@ export function assertOfferBoxThenFlowTwo(html, { hash = "", now = NOW } = {}) {
     return i;
   };
   const headings = all.filter((n) => /^h[1-6]$/.test(n.localName)).map((h) => h.id);
-  assert.deepEqual(headings.slice(0, 2), ["save-offer-label", "q-goal"], "in the markup: the offer box's heading first, Flow 2's question 1 next");
+  assert.deepEqual(headings.slice(0, 2), ["save-offer-label", "q-who"], "in the markup: the offer box's heading first, Flow 2's question 1 next");
   assert.ok(at(OFFER_BOX) < at("save-title") && at("save-title") < at("save-offer-label"), "in the markup: the offer box holds the heading, then the label");
-  assert.ok(at("save-offer-label") < at("q-goal"), "in the markup: the offer box, then question 1");
+  assert.ok(at("save-offer-label") < at("q-who"), "in the markup: the offer box, then question 1");
   assert.ok(at(FLOW_ONE) > at("result-cta"), "in the markup: no Flow 1 above the store button");
 
   for (const h of [...new Set([hash, "#lean-or-7d", "#family"])]) {
@@ -87,11 +89,9 @@ export function assertOfferBoxThenFlowTwo(html, { hash = "", now = NOW } = {}) {
     const firstAfterBox = read.findIndex((n) => !inside(n, box));
     assert.ok(firstAfterBox > 0 && read[0].id === "save-offer-label", `${h || "(no fragment)"}: the offer box is read first, its heading first (got ${label(read[0])})`);
     assert.ok(inside(read[firstAfterBox], page.document.querySelector("main")), `${h || "(no fragment)"}: then Flow 2 (got ${label(read[firstAfterBox])})`);
-    if (hiddenInTree(page.el("panel-individual")) === false) {
-      const q = read.find((n) => n.classList.contains("step-label"));
-      assert.equal(q?.id, "q-goal", `${h || "(no fragment)"}: Flow 2's first question read is question 1`);
-      assert.ok(!read.slice(0, read.indexOf(q)).some((n) => inside(n, flowOne)), `${h || "(no fragment)"}: nothing of Flow 1 before question 1`);
-    }
+    const q = read.find((n) => n.classList.contains("step-label"));
+    assert.equal(q?.id, "q-who", `${h || "(no fragment)"}: Flow 2's first question read is question 1`);
+    assert.ok(!read.slice(0, read.indexOf(q)).some((n) => inside(n, flowOne)), `${h || "(no fragment)"}: nothing of Flow 1 before question 1`);
     const button = storeButton(page);
     const early = read.filter((n) => inside(n, flowOne) && (!button || read.indexOf(n) < read.indexOf(button)));
     assert.deepEqual(early.map(label), [], `${h || "(no fragment)"}: as run, no Flow 1 above the store button`);
