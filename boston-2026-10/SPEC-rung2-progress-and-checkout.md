@@ -1425,3 +1425,100 @@ loaded image, else the placeholder).
 2. **The store's page does not move under the screen**: while #fitaf-screen is up, the store page's own scrolling is suppressed (its scrollbar hidden, e.g. overflow hidden on the root, with whatever keeps the page's width from changing when the scrollbar goes), and restored exactly as it was when the screen goes or the block stops. Cases: the root's overflow while up and after; the page's width unchanged at the hide and the restore; a mutant that never restores is caught.
 3. **A coded link (`~<code>`) does not get `zero`** (ruled: the visible code field is the visitor's; no microsite link carries a code today). Case and log line (`zero: coded link`).
 4. The block stays within the 20,480-byte ceiling (state the bytes; if item 2 does not fit, stop and report the bytes before trimming anything). § 30 item 3's 15,360 is superseded by § 25.7: say so in the note.
+
+#### 31.2.1 Built — items 1 and 3; item 2 stopped at the ceiling, as item 4 says (2026-10-25)
+
+The contract above was committed alone at `f4315d4` (items 1–4 as the orchestrator wrote them). Item 1 at `66f5f1a`
+and `50c9949`, item 3 at `992739f`; the Footer block file `storefront/footer-block/2026-10-25-fitaf-handoff-992739f.md`
+(status *built, not pasted*, committed at `5457f53` with W4's amendment), and `…-f05d355.md` marked *superseded, not
+pasted*. **Item 2 is not built**: it does not fit the 20,480-byte ceiling beside item 3, and item 4 says to stop and
+report before trimming anything (below).
+
+**Item 1, every snack's photograph.**
+
+- **"Both link builders" are one function.** The page has no link code of its own: `scripts/chefs-choice.mjs` says *"No
+  key function and no encoder live here (CC-2)"*, and every link the page shows is made by `scripts/handoff-link.mjs`
+  through the content command (`week-content.mjs` → `checkPicks` → `cartOf` → `payloadFromArgs`, `handoffLink`). So one
+  change, `payloadFromArgs` giving `photoPart` the snacks after the meals, makes both, and the page's links and the
+  tool's stay byte-identical by construction (CC-2 and the rest unchanged and green).
+- **The block is unchanged** (item 1's last sentence): it already reads one cell per item, meals then snacks. ⭐ And so
+  **does the block live in the store** (`efcbc570…`, `8b11e54`): rebuilt as R2-71 rebuilds it and given a link with
+  snack cells, it showed each snack's cell on its slide (scratch, 2026-10-25). **Item 1 needs no paste**: it reaches
+  visitors when the week's content is next made (`npm run content`, the content job), with the block live today.
+- **Measured** (§ 31.1's program re-run on `66f5f1a`): every snack of every link now carries its cell, 19 of 19
+  (2026-10-18: 7, 2026-10-25: 7, 2026-11-01: 5); every meal as before, 0 without.
+- **Cases, red first** (on the old encoder, 2 of 2): **SN-6c** amended to the new rule (a snack the sheet has no cell
+  for carries `""` after the meals' cells; it pinned *"the photo part is the meals' alone"*), **SN-6d** new (a generated
+  manifest with cells for a meal and both snacks: the link's cells are the items' in order, and the shipped text shows
+  each snack's cell on its slide). Green after the change.
+- **Cases the change made stale, and how each now reads** (the content of committed weeks moved by exactly the snack
+  cells, by design): **MS-20** (and so its control MS-10), **EM5c**, **W4** (found by the first full run at `992739f`)
+  and **WC-9a** compare with the earlier commit's
+  content after `test/snack-cells.mjs`'s `withSnackCells` makes item 1's one change to it (written from the contract,
+  not from the encoder), every other byte as before; **U4** and **WC-9c**, whose goldens are hashes, read today's pages
+  and data with exactly those cells removed (`withoutSnackCells`), each with a control that cells were there. ⚠ **Not
+  re-recorded**, though both have recorders: the recorders build a commit's own tree, production true since
+  SPEC-save-offer-production § 12, while U4 and WC-9c read release (a)'s pages; a re-record at `66f5f1a` moved every
+  fragment for that reason, not this one. Before amending, WC-9c's 8 moved fragments of 20 each returned to the golden's
+  hash with the snack cells removed. **No golden re-recorded.**
+
+**Item 3, a coded link gets no `zero`.** In `zero()`, first: `if (CODE) m = "coded link"`; nothing typed or pressed, then
+done as every verdict. **R2-93b** and **Z1c** rewritten to it (red on `f05d355`'s text, 4 of 4: they then required
+`zero` on a coded link); their mutant is now the skip disabled (`if (0)`), which fails both; Z1c's control shows the
+discounts displayed for a coded link (§ 10 item 2). § 31's mutant *"the code read from the link"* has no run left to
+show in: a coded link types nothing, and an uncoded one has no code to read. Cost: 37 bytes.
+
+**Item 2, the store's page held still: its code built in scratch and measured, not committed; its cases committed,
+skipped.**
+
+- **The design found**: the rule lives in the screen's OWN `<style>`, so it goes with the screen at done, at every stop
+  and at either clock, and the root's own style is never touched (*"restored exactly as it was"* by construction):
+  `html{overflow:hidden!important;padding-right:Npx}` (or `:root{overflow:hidden;padding-right:Npx}`), `N` the page's
+  scrollbar width when the screen appears (`innerWidth - documentElement.clientWidth`; 0 with overlay scrollbars).
+  Measured in headless Chrome with a 15 px classic scrollbar (a page-styled `::-webkit-scrollbar`; headless Chrome on
+  macOS draws overlay scrollbars, and Puppeteer adds `--hide-scrollbars`): the body 1,249 px before, while hidden and
+  after; the scroll position kept (500); overflow back to `visible`. ⚠ `scrollbar-gutter: stable` was tried first and
+  does NOT hold the width there (1,265 → 1,280).
+- **The bytes** (each the build's own `storefrontFiles`, the Footer block): today's text with item 3 **20,378**; item 2
+  alone (on `f05d355`'s text) 20,457 (`html` form) or 20,448 (`:root`); **items 2 and 3 together 20,494 (`html`) or
+  20,485 (`:root`): 14 or 5 bytes over the 20,480 ceiling.** Item 2 costs 116 bytes (`html`) or 107 (`:root`); 102 are
+  left.
+- **What would make it fit** (not done; the choice is the Advisor's or the orchestrator's): (a) **layout only**, as § 16
+  recovered 200 bytes: `zero()`'s body un-indented (its leading spaces, 84 bytes) gives **20,410** (`html`) or
+  **20,401** (`:root`), no behaviour changed; the whole text holds 277 bytes of leading spaces; (b) the shipped header
+  comment (`/* Fit AF cart hand-off. … Kill switch: … */`, 198 bytes), which the Advisor reads in the admin; (c) the
+  ceiling raised (§ 25.7's ruling was *"we could be at 50 kb"*); (d) the `:root` form, which drops `!important` (a class
+  rule of the store's on `<html>` setting overflow, such as the CDK's `cdk-global-scrollblock`, would then win over it).
+- **Its cases are written and committed, skipped until the item is built**
+  (`tools/storefront-watch/test/r2-31-2-page-still.test.mjs`; Chrome launched without Puppeteer's `--hide-scrollbars`,
+  the page given a 15 px styled scrollbar and a tall spacer): **PS1** (done) and **PS2** (a stop, a meal not on the page):
+  the root's overflow `hidden` and no scrollbar at every frame the screen is up, the overflow the page's own from the
+  first frame after and its scrollbar back, and the body's width one value at every frame (the hide and the restore);
+  ⭐ the mutant that never restores (the rule put in `document.head`, which nothing removes) fails PS1. **Verified both
+  ways, outside the tree**: on `992739f`'s text PS1 and PS2 fail (*"the root's overflow hidden at every frame the screen
+  is up"*); on a build of the source with the item (20,494 bytes, refused by no check but the ceiling's) all three pass,
+  the mutant caught. Found there: the scrollbar's own reading (`innerWidth − clientWidth`) lags one frame at the
+  restore while the body's width holds, so PS1 reads the scrollbar back by the last frame, the width at every frame.
+
+**§ 30 item 3's 15,360 is superseded by § 25.7** (the build's ceiling, `MAX_SHIPPED_BYTES`, 20,480; the block was 18,423
+before §§ 30–31), as § 31.1 found and item 4 now says.
+
+**The size, the pins.** The Footer block **20,378** bytes, the console file **20,359**; every character ASCII; two `<`
+in the Footer block, none in the console file; text SHA-256 `0a6e9ef176320ac830530509260a919d27a634b5811bb6d08f85573f79eddf49`,
+fragment SHA-256 `907c6ffadab5c8441a193875bb9d223ee8b313284d651e2bb26ffe54bc5527f0`. R2-32, PR-10 and CC-8's
+`footer_text_sha256` moved from `6d36d4bf…` to `0a6e9ef1…`; CC-8's `replaces` still names the live `efcbc570…`.
+
+**Gates** (each run alone, at `5457f53`; the block's text is the one built from `992739f`, unchanged since):
+- **The site suite** (`npm --prefix boston-2026-10 test`, Node 22.18.0, `nice -n 15`): **1,166 of 1,166** (12 min 53 s).
+  The first full run at `992739f` was 1,163 of 1,166: W4 (both targets, amended since) and Q5, which compares `git
+  status` before and after a build and saw this builder's scratch file appear and go in the tree meanwhile (run again on
+  a quiet tree: passes).
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`): **231 passed, 3 skipped** (item 2's PS1, PS2
+  and its mutant), none failed (4 min 10 s).
+- **Storybook** (`npm --prefix boston-2026-10/tools/storybook test`): **71 of 71**.
+- **Contrast**: 94 of 94.
+- **The build**: the Footer block 20,378 bytes, the console file 20,359, text `0a6e9ef1…` (built from `992739f`, its file
+  in `storefront/footer-block/`).
+
+**Left**: item 2 (above); the live rehearsal of §§ 30, 31 and item 3 on this block (§ 31.1's list stands); and the next
+content run, which carries item 1's snack cells to visitors with the live block.
