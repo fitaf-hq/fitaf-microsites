@@ -69,11 +69,11 @@ export async function contentOf({ root = ROOT, week, picksDir, target } = {}) {
 
 /** The page a build writes, holding no week as every build does (§ 7's ruling): what the assets serve. `root` is the
  *  package. */
-export async function noWeekPage({ root = ROOT, target = "prod" } = {}) {
+export async function noWeekPage({ root = ROOT, target = "prod", savePath } = {}) {
   const { build } = await import(pathToFileURL(join(root, "build.mjs")).href);
   const outDir = await mkdtemp(join(tmpdir(), `boston-wc-${target}-`));
   try {
-    await build({ target, outDir });
+    await build({ target, outDir, ...(savePath ? { savePath } : {}) });
     return await readFile(join(outDir, "index.html"), "utf8");
   } finally {
     await rm(outDir, { recursive: true, force: true });

@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { analyticsSlot, build, NO_PICKS, PROD_SLOTS, renderPage } from "../build.mjs";
 import events from "../data/events.json" with { type: "json" };
-import { card, hiddenInTree, MESSAGES, openPlanPage, PLANS } from "./cc-harness.mjs";
+import { card, hiddenInTree, MESSAGES, openPlanPage, PLANS, productionFalseSavePath } from "./cc-harness.mjs";
 import { devPage } from "./dev-page.mjs";
 import { TABLE } from "./ms-harness.mjs";
 import { picksText, sha256, visible } from "./wc-harness.mjs";
@@ -42,7 +42,8 @@ const NOW = Date.parse("2026-10-11T16:00:00Z");
 async function built(target) {
   const outDir = await mkdtemp(join(tmpdir(), `boston-wc8-${target}-`));
   try {
-    await build({ target, outDir });
+    // SPEC-save-offer-production § 12: the production page as release (a) made it (production false), the rollback.
+    await build({ target, outDir, ...(target === "prod" ? { savePath: await productionFalseSavePath() } : {}) });
     return await readFile(join(outDir, "index.html"), "utf8");
   } finally {
     await rm(outDir, { recursive: true, force: true });

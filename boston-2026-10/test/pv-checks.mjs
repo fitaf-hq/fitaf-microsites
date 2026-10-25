@@ -60,19 +60,23 @@ async function filesUnder(dir) {
 }
 
 /** Every file under `dir` by path from it: SHA-256. */
-export async function hashesUnder(dir) {
+export async function hashesUnder(dir, transform) {
   const hashes = {};
-  for (const f of (await filesUnder(dir)).sort()) hashes[relative(dir, f)] = sha256(await readFile(f));
+  for (const f of (await filesUnder(dir)).sort()) {
+    const bytes = await readFile(f);
+    hashes[relative(dir, f)] = sha256(transform && f.endsWith(".html") ? Buffer.from(transform(bytes.toString("utf8")), "utf8") : bytes);
+  }
   return hashes;
 }
 
-/** PV5: the SHA-256 of every file `root`'s build() writes for `target`, into an empty temporary directory. */
-export async function buildHashes(root, target) {
+/** PV5: the SHA-256 of every file `root`'s build() writes for `target`, into an empty temporary directory; `transform`, a
+ *  page's text before its hash (withReleaseAWording), and every other option build()'s. */
+export async function buildHashes(root, target, { transform, ...options } = {}) {
   const { build } = await moduleOf(root, "build.mjs");
   const t = await tempDir(`build-${target}`);
   try {
-    await build({ target, outDir: t.dir });
-    return await hashesUnder(t.dir);
+    await build({ target, outDir: t.dir, ...options });
+    return await hashesUnder(t.dir, transform);
   } finally {
     await t.done();
   }

@@ -50,9 +50,12 @@ test("UC5: the development build's /privacy/ prints § 6 so — no section refer
   }
 });
 
-test("UC5: the wording stays a draft; the production gate finds no placeholder in DRAFT § 6", async () => {
-  assert.equal(saveConfig.wording_version, "v0.3-draft");
-  assert.match(/^\*\*Status\*\*:.*$/m.exec(draft)[0], /DRAFT/, "the status line still says DRAFT");
+// SPEC-save-offer-production § 12: release (b) approved the wording as v1 (the Advisor, 2026-10-25).
+test("UC5: the wording is v1, approved with its date; the production gate finds no placeholder in DRAFT § 6", async () => {
+  assert.equal(saveConfig.wording_version, "v1");
+  const status = /^\*\*Status\*\*:.*$/m.exec(draft)[0];
+  assert.match(status, /\bv1, approved 2026-10-25\b/, "the status line approves v1 with its date");
+  assert.doesNotMatch(status, /DRAFT/, "and no longer says DRAFT");
   const { dir, save, zips, vars, offers } = await productionInputs();
   try {
     const refusals = productionRefusals({ save, offers, zips, draftText: draft, vars, printed: [] });

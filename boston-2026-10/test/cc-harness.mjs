@@ -89,12 +89,13 @@ export function otherWeek(delivery, suffix = " (next week)") {
  * EVERY week in it, or of `week` alone (scripts/week-content.mjs's weekData, its refusals included: a broken file
  * rejects, naming it) put
  * into #picks-data by pageWithWeek, the Workers' rewrite done on a file. `messagesPath`, `plansPath`, `photosPath`,
- * `sheetsDir` replace those inputs for the build and the content alike. Returns the page and the build's result.
+ * `sheetsDir` replace those inputs for the build and the content alike; `savePath` replaces data/save.json for the build
+ * (productionFalseSavePath). Returns the page and the build's result.
  */
-export async function pageWithPicks({ root = ROOT, target = "prod", picks = null, week, messagesPath, plansPath, photosPath, sheetsDir } = {}) {
+export async function pageWithPicks({ root = ROOT, target = "prod", picks = null, week, messagesPath, plansPath, photosPath, sheetsDir, savePath } = {}) {
   const { build: buildOf } = await import(pathToFileURL(join(root, "build.mjs")).href);
   const { pageWithWeek, weekData } = await import(pathToFileURL(join(root, "scripts", "week-content.mjs")).href);
-  const inputs = Object.fromEntries(Object.entries({ messagesPath, plansPath, photosPath, sheetsDir }).filter(([, v]) => v !== undefined));
+  const inputs = Object.fromEntries(Object.entries({ messagesPath, plansPath, photosPath, sheetsDir, savePath }).filter(([, v]) => v !== undefined));
   const outDir = await mkdtemp(join(tmpdir(), `boston-cc-${target}-`));
   try {
     const result = await buildOf({ target, outDir, ...inputs });
@@ -107,7 +108,37 @@ export async function pageWithPicks({ root = ROOT, target = "prod", picks = null
 }
 
 /** pageWithPicks() of this package, the fixture week by default; `messagesPath` replaces data/messages.json (CC-7). */
-export const builtPage = ({ target = "prod", picks = FIXTURE_DIR, messagesPath } = {}) => pageWithPicks({ target, picks, messagesPath });
+export const builtPage = ({ target = "prod", picks = FIXTURE_DIR, messagesPath, savePath } = {}) =>
+  pageWithPicks({ target, picks, messagesPath, savePath });
+
+/**
+ * SPEC-save-offer-production § 12: data/save.json as release (a) had it, the rollback — the committed file with
+ * release (a)'s `production` false and wording (v0.3-draft, the one known version), written once to a temporary
+ * directory. A case whose subject is a page or Worker as release (a) made it builds with it (`savePath`); every other
+ * input stays as committed.
+ */
+let productionFalseSave;
+export function productionFalseSavePath() {
+  productionFalseSave ??= (async () => {
+    const save = JSON.parse(await readFile(join(ROOT, "data", "save.json"), "utf8"));
+    const path = join(await mkdtemp(join(tmpdir(), "boston-production-false-")), "save.json");
+    const releaseA = { ...save, production: false, wording_version: "v0.3-draft", known_wording_versions: ["v0.3-draft"] };
+    await writeFile(path, JSON.stringify(releaseA, null, 2) + "\n");
+    return path;
+  })();
+  return productionFalseSave;
+}
+
+/** § 12: a mirror (mirror()) whose data/save.json is productionFalseSavePath()'s. The Worker decides at import from that
+ *  file, so a case about production's Worker without the save step runs the mirror's. */
+/** § 12: a page as release (b) builds it, its wording version written as release (a)'s. The development build reads
+ *  data/save.json itself (no `savePath`) and prints the version three times (the banner, the draft marking, the save's
+ *  data); v1 for v0.3-draft is release (b)'s one change to its pages, measured 2026-10-25. */
+export const withReleaseAWording = (html) =>
+  html.replace(/\bwording v1\b/g, "wording v0.3-draft").replaceAll('"wording_version":"v1"', '"wording_version":"v0.3-draft"');
+
+export const productionFalseMirror = () =>
+  mirror(async (dir) => copyFile(await productionFalseSavePath(), join(dir, "data", "save.json")));
 
 /** The page's embedded picks (`<script type="application/json" id="picks-data">`), or null when it carries none. */
 export function picksData(html) {
@@ -280,14 +311,16 @@ export async function readWithFillB(link, names) {
   return { page, h, path: url.pathname + url.search };
 }
 
-/** A copy of this package's build inputs (build.mjs, package.json, data/, scripts/, src/) in a temporary directory,
+/** A copy of this package's build inputs (build.mjs, package.json, wrangler.jsonc, data/, scripts/, src/) in a temporary directory,
  *  with this package's node_modules linked in; `edit(dir)` changes the copy before it is used. */
 export async function mirror(edit = async () => {}) {
   const { cp, realpath, symlink } = await import("node:fs/promises");
   // The real path: a program's main-module check compares its own URL (resolved) with argv[1], and the system's
   // temporary directory may be reached through a link (/var -> /private/var).
   const dir = await realpath(await mkdtemp(join(tmpdir(), "boston-cc-mirror-")));
-  for (const name of ["build.mjs", "package.json"]) await copyFile(join(ROOT, name), join(dir, name));
+  // wrangler.jsonc: with data/save.json's `production` true (release (b), SPEC-save-offer-production § 12) the production
+  // build reads its vars (the sender, the site key).
+  for (const name of ["build.mjs", "package.json", "wrangler.jsonc"]) await copyFile(join(ROOT, name), join(dir, name));
   // consent/: since SPEC-save-offer-production § 9 item 1 the build reads DRAFT.md (the privacy notice's page, and the
   // production build's wording check).
   for (const name of ["data", "scripts", "src", "consent"]) await cp(join(ROOT, name), join(dir, name), { recursive: true });

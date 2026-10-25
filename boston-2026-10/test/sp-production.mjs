@@ -39,6 +39,11 @@ export const APPROVED_VARS = Object.freeze({
   SEND_WITHOUT_ALLOWLIST: "true",
 });
 export const APPROVED_VERSION = "v1";
+/** Release (b) (SPEC-save-offer-production § 12) committed the approved wording and offers, so a part left unapproved is
+ *  SET to what release (a) committed (its version, its status line's first line, its offers' status), not read from the tree. */
+export const DRAFT_VERSION = "v0.3-draft";
+export const DRAFT_STATUS_LINE =
+  "**Status**: ⛔ **DRAFT — not live.** v0.3 written 2026-09-27 for the Owner to route through legal; it replaces";
 export const APPROVED_STATUS = "**Status**: ✅ **Approved — v1, 2026-10-24** (the sp fixture's: no word below is changed by it).";
 export const PRIVACY_URL = "/privacy/";
 export const FIXTURE_CODE = "SPFIXTURE25"; // invented: no store has it
@@ -90,18 +95,19 @@ export async function productionInputs({ unfixed = null, production = true } = {
 
   const save = JSON.parse(await readFile(SAVE_FILE, "utf8"));
   save.production = production;
-  if (!leave("a draft wording version")) save.wording_version = APPROVED_VERSION;
-  if (!leave("v1 not a known version")) save.known_wording_versions = [...save.known_wording_versions, APPROVED_VERSION];
+  save.wording_version = leave("a draft wording version") ? DRAFT_VERSION : APPROVED_VERSION;
+  const others = save.known_wording_versions.filter((v) => v !== APPROVED_VERSION);
+  save.known_wording_versions = leave("v1 not a known version") ? others : [...others, APPROVED_VERSION];
   // Since § 9 item 1 the committed address is /privacy/; the case sets none, as before it was committed.
   save.privacy_notice_url = leave("no privacy notice to link") ? null : PRIVACY_URL;
 
   let draft = await readFile(DRAFT_FILE, "utf8");
-  if (!leave("the status line still a draft")) draft = draft.replace(/^\*\*Status\*\*:.*$/m, APPROVED_STATUS);
+  draft = draft.replace(/^\*\*Status\*\*:.*$/m, leave("the status line still a draft") ? DRAFT_STATUS_LINE : APPROVED_STATUS);
   for (const [placeholder, value] of Object.entries(DRAFT_FILLS)) draft = draft.replaceAll(placeholder, value);
   if (leave("a bracket left in DRAFT § 6")) draft = withBracketInSection6(draft);
 
   const offers = JSON.parse(await readFile(OFFERS_FILE, "utf8"));
-  if (!leave("offers a placeholder")) offers.status = "approved";
+  offers.status = leave("offers a placeholder") ? "placeholder" : "approved";
   for (const [i, o] of offers.offers.entries()) {
     o.label = `SP fixture offer ${i + 1}: 25% off every cart`;
     if ("shared_code" in o) o.shared_code = FIXTURE_CODE;

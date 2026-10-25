@@ -22,7 +22,7 @@ import saveConfig from "../data/save.json" with { type: "json" };
 import { build, ROOT } from "../build.mjs";
 import { isSameOrigin, loadedUrls } from "./helpers.mjs";
 import { DRAFT_FILE, pageText, productionBuild, section6Paragraphs, withBracketInSection6 } from "./sp-production.mjs";
-import { mirror } from "./cc-harness.mjs";
+import { mirror, productionFalseSavePath } from "./cc-harness.mjs";
 import { createHash } from "node:crypto";
 import { relative } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -81,7 +81,7 @@ test("SP9: the development build carries /privacy/, marked as the step is; every
 test("SP9: the production build with production false has no /privacy/ (and no link: no step)", async () => {
   const out = await mkdtemp(join(tmpdir(), "boston-sp9-prod-"));
   try {
-    await build({ target: "prod", outDir: out });
+    await build({ target: "prod", outDir: out, savePath: await productionFalseSavePath() });
     assert.equal(existsSync(join(out, "privacy")), false, "no privacy/");
     assert.doesNotMatch(await readFile(join(out, "index.html"), "utf8"), PRIVACY_LINK);
   } finally {
@@ -132,7 +132,7 @@ async function hashes(dir, top = dir) {
   return out;
 }
 
-/** The production build (production false, data/save.json as committed) of the package at `root` with DRAFT.md's text
+/** The production build (production false: productionFalseSavePath, since release (b) commits true) of the package at `root` with DRAFT.md's text
  *  `draftText` (a copy), into a new directory: its files' hashes and its privacy page, or the build's refusal. */
 async function productionWith(draftText, { root = ROOT } = {}) {
   const dir = await mkdtemp(join(tmpdir(), "boston-sp9-approved-"));
@@ -141,7 +141,8 @@ async function productionWith(draftText, { root = ROOT } = {}) {
     await writeFile(draftPath, draftText);
     const out = join(dir, "out");
     const { build: buildOf } = await import(pathToFileURL(join(root, "build.mjs")).href);
-    const error = await buildOf({ target: "prod", outDir: out, draftPath }).then(() => null, (e) => e);
+    const savePath = await productionFalseSavePath();
+    const error = await buildOf({ target: "prod", outDir: out, draftPath, savePath }).then(() => null, (e) => e);
     if (error) return { error, files: existsSync(out) ? await hashes(out) : {} };
     const page = existsSync(join(out, "privacy", "index.html")) ? await readFile(join(out, "privacy", "index.html"), "utf8") : null;
     return { error: null, files: await hashes(out), privacy: page };
@@ -153,7 +154,7 @@ async function productionWith(draftText, { root = ROOT } = {}) {
 /** § 1.3 items 1-2 on the package at `root`: without the marker no page; with it the page, and nothing else moved. */
 async function assertApprovalRule(root, where) {
   const draft = await readFile(DRAFT_FILE, "utf8");
-  assert.equal(saveConfig.production, false, "control: production false");
+  assert.equal(JSON.parse(await readFile(await productionFalseSavePath(), "utf8")).production, false, "control: production false");
   assert.doesNotMatch(draft, /<!--\s*approved/, "control: the committed § 6 carries no approval line");
   const without = await productionWith(draft, { root });
   assert.equal(without.error, null, `${where}: control: it builds`);

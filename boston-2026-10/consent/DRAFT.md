@@ -1,8 +1,9 @@
-# Save your offer — consent wording and contact capture. DRAFT v0.3, for legal review
+# Save your offer — consent wording and contact capture. v1
 
-**Status**: ⛔ **DRAFT — not live.** v0.3 written 2026-09-27 for the Owner to route through legal; it replaces
-v0.2 (git history) after the flows were inverted (`../flows/`). Nothing here is on the public page until it
-is approved; the approved text becomes `v1` with its date. **Email only** — texting is off for October.
+**Status**: ✅ **v1, approved 2026-10-25** by the Advisor (*"yes please ship it"*, `ts=2026-10-25T14:13:18.692Z`):
+v0.3's text as the copy pass left it, unchanged. v0.3 was written 2026-09-27 for the Owner to route through legal; it
+replaced v0.2 (git history) after the flows were inverted (`../flows/`). ⚠ § 7's two questions for legal are still
+open, and his tweaks to come are a later version, released the same way. **Email only** — texting is off for October.
 **The standard it is written to**: GDPR's principles as far as possible though Fit AF is US-based; the pending
 Massachusetts data privacy act's principles as if enacted; CAN-SPAM for email.
 

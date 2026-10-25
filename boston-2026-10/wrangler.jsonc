@@ -42,14 +42,14 @@
   // The scheduled Worker, as development's: send what is due, lapse, purge.
   "triggers": { "crons": ["*/5 * * * *"] },
   // SITE_URL: the address E1's and E-X's links use. MAIL_FROM: the decided sender (SPEC-save-offer-production § 10 item 4;
-  // the production build refuses an empty sender or one outside eatfitaf.com). TURNSTILE_SITE_KEY: the production widget's site key (public), ⬜ fitaf-infra's, empty
-  // until it exists (the production build refuses an empty or test key). SEND_WITHOUT_ALLOWLIST: production sends to
+  // the production build refuses an empty sender or one outside eatfitaf.com). TURNSTILE_SITE_KEY: the production widget's site key (public), fitaf-infra's,
+  // created by its release (a) on 2026-10-24 (the production build refuses an empty or test key). SEND_WITHOUT_ALLOWLIST: production sends to
   // anyone who saved (§ 4 item 4); development never sets it and keeps its allowlist.
   // ⛔ RESEND_API_KEY, CONFIRM_TOKEN_KEY and TURNSTILE_SECRET_KEY are Worker SECRETS, set by fitaf-infra, never here.
   "vars": {
     "SITE_URL": "https://eatfitaf.com",
     "MAIL_FROM": "Fit AF <offers@eatfitaf.com>",
-    "TURNSTILE_SITE_KEY": "",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFkrm8IuqXPyKDM7",
     "SEND_WITHOUT_ALLOWLIST": "true"
   },
   // Invocation logs would carry request metadata (rung 4 § 7: observability off), as development's.

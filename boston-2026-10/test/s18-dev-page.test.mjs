@@ -82,10 +82,11 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, offer.headline ?? offer.label, "offers.json's own words");
 });
 
-test("S18: marked `DRAFT — not for use · wording v0.3-draft`; the production page carries none of it", () => {
-  assert.equal(saveConfig.wording_version, "v0.3-draft");
+// SPEC-save-offer-production § 12: release (b) made the wording v1; the development page marks every version.
+test("S18: marked `DRAFT — not for use · wording v1`; the production page carries none of it", () => {
+  assert.equal(saveConfig.wording_version, "v1");
   assert.match(devHtml, /<div class="draft-banner" role="note"><strong>DRAFT — not for use\.<\/strong>/);
-  assert.ok(visibleText(devHtml).includes("DRAFT — not for use · wording v0.3-draft"));
+  assert.ok(visibleText(devHtml).includes("DRAFT — not for use · wording v1"));
   assert.ok(!prodHtml.includes("DRAFT"));
   assert.ok(!prodHtml.includes("/api/save") && !prodHtml.includes("save-data"));
 });
@@ -151,7 +152,7 @@ test("S18: Flow 1's states in the page — OFFER, ERROR keeps what was typed, SA
   const body = JSON.parse(page.record.fetches[0].init.body);
   assert.deepEqual(body, {
     kind: "offer", email: "dummy-s18@example.com", zip: "02118", consent_marketing: false,
-    event_id: events[0].id, wording_version: "v0.3-draft", turnstile_token: "XXXX.DUMMY.TOKEN.XXXX",
+    event_id: events[0].id, wording_version: saveConfig.wording_version, turnstile_token: "XXXX.DUMMY.TOKEN.XXXX",
   });
 
   // Since § 2b item 3 there is no skip link: PLAN (Flow 1 collapsed to one line) is reached from the email's link.

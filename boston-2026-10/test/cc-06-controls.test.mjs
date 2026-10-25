@@ -8,18 +8,7 @@ import { rm } from "node:fs/promises";
 import { parseHTML } from "linkedom";
 import { renderPage } from "../build.mjs";
 import { anchors, hrefs } from "./helpers.mjs";
-import {
-  builtPage,
-  card,
-  CELLS,
-  DAYS,
-  FIXTURE,
-  hiddenInTree,
-  midday,
-  openPlanPage,
-  PLANS,
-  picksDir,
-} from "./cc-harness.mjs";
+import { builtPage, card, CELLS, DAYS, FIXTURE, hiddenInTree, midday, openPlanPage, PLANS, picksDir, productionFalseSavePath } from "./cc-harness.mjs";
 
 const NOW = midday(DAYS["S-5"]);
 
@@ -106,8 +95,9 @@ test("CC-6d: a count with no picks keeps today's card; no JavaScript shows no ca
   }
 });
 
+// SPEC-save-offer-production § 12: the page without the save step (release (a)'s), whose links are rung 1's alone.
 test("CC-6e: the grid's links and the Family card are rung 1's, byte for byte", async () => {
-  const withPicks = (await builtPage()).html;
+  const withPicks = (await builtPage({ savePath: await productionFalseSavePath() })).html;
   const today = await renderPage(PLANS);
   assert.ok(withPicks.includes('id="cc-list"'), "control: the page carries the Chef's Choice card");
   assert.deepEqual(hrefs(withPicks), hrefs(today), "the same seven order links, no more (the card's are set by the script)");

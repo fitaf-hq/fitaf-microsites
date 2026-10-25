@@ -21,28 +21,20 @@ test("SP4: each input unapproved in turn — the build refuses, naming it, and w
   await assertEachRefusal();
 });
 
-test("SP4: the committed inputs with production true — refused, every unapproved input named at once", async () => {
+// SPEC-save-offer-production § 12: release (b) committed every input approved (v1, the offers, the production site key), so
+// the committed inputs no longer refuse: the case that named each unapproved one is "each input unapproved in turn", below.
+test("SP4: the committed inputs, as release (b) commits them (production true) — nothing refused; the save step on the page", async () => {
   const dir = await mkdtemp(join(tmpdir(), "boston-sp4-committed-"));
   try {
     const save = JSON.parse(await readFile(join(ROOT, "data", "save.json"), "utf8"));
-    await writeFile(join(dir, "save.json"), JSON.stringify({ ...save, production: true }));
+    assert.equal(save.production, true, "control: release (b) commits production true");
     const outDir = join(dir, "dist");
-    // The production vars as wrangler.jsonc's top level has them now (no productionVars given).
-    const err = await build({ target: "prod", outDir, savePath: join(dir, "save.json") }).then(() => null, (e) => e);
-    assert.ok(err, "refused");
-    for (const name of [
-      /wording_version v0\.3-draft is a draft/,
-      /data\/offers\.json: status is placeholder, not approved/,
-      /TURNSTILE_SITE_KEY is not set/,
-    ]) assert.match(err.message, name);
-    // § 10 item 5: the inputs as decided, committed — the contact address and the response days in DRAFT § 6, the official
-    // ZIP list; and § 10 item 4: the decided sender is not a placeholder. None of them is refused. Since
-    // SPEC-ui-and-copy-pass § 1 item 5 (2026-10-23) § 6 names Resend alone, so its [Mailchimp] is not refused either: the
-    // page links /privacy/ (§ 9 item 1), which prints § 6 with no placeholder left.
-    for (const name of [/\[email\]/, /\[30\]/, /delivery-zips/, /MAIL_FROM/, /§ 6 holds a placeholder/, /the privacy page prints a placeholder/]) {
-      assert.doesNotMatch(err.message, name);
-    }
-    assert.deepEqual(await readdir(dir), ["save.json"], "nothing written");
+    // The production vars as wrangler.jsonc's top level has them (no productionVars given), every input as committed.
+    await build({ target: "prod", outDir });
+    const html = await readFile(join(outDir, "index.html"), "utf8");
+    assert.ok(html.includes("0x4AAAAAAFkrm8IuqXPyKDM7"), "the production widget's site key (public), as committed");
+    assert.match(html, /"wording_version":"v1"/, "the wording v1");
+    assert.doesNotMatch(html, /DRAFT — not for use/, "no draft tag");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

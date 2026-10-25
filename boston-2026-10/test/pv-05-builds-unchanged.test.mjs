@@ -11,13 +11,16 @@ import { readFile } from "node:fs/promises";
 import { ROOT } from "../build.mjs";
 import { buildHashes } from "./pv-checks.mjs";
 import { committedSheets, sheetsLine, splitSheets } from "./production-sheets.mjs";
+import { productionFalseSavePath, withReleaseAWording } from "./cc-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./pv-05-golden.json", import.meta.url), "utf8"));
 
 for (const target of ["prod", "dev"]) {
   test(`PV5 (${target}): every file the ${target === "prod" ? "production" : "development"} build writes is byte-identical to ${golden.recorded_at}'s`, async (t) => {
     assert.ok(Object.keys(golden.files[target]).length > 0, "the golden names files (control)");
-    const { sheets, rest } = splitSheets(await buildHashes(ROOT, target));
+    // SPEC-save-offer-production § 12: both builds as release (a) made them (its data/save.json, its wording), the rollback.
+    const options = { savePath: await productionFalseSavePath(), transform: withReleaseAWording };
+    const { sheets, rest } = splitSheets(await buildHashes(ROOT, target, options));
     t.diagnostic(sheetsLine(sheets));
     assert.deepEqual(rest, splitSheets(golden.files[target]).rest, `every file but the sheets: ${golden.recorded_at}'s`);
     assert.deepEqual(sheets, await committedSheets(), `the sheets: ${sheetsLine(sheets)}`);

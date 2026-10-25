@@ -126,10 +126,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { ROOT } from "../build.mjs";
 import { normalWeekRecord } from "./u-checks.mjs";
+import { productionFalseSavePath, withReleaseAWording } from "./cc-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
 test("U4: a normal week, the content and the page as served, byte-identical to e8fd524's (the page's updating lines apart)", async () => {
   assert.equal(golden.recorded_at, "e8fd524");
-  assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
+  // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
+  const options = { savePath: await productionFalseSavePath(), transform: withReleaseAWording };
+  assert.deepEqual(await normalWeekRecord(ROOT, options), golden.record);
 });

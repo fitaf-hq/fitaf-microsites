@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
-import { builtPage, mirror, picksData, withFixtureInData } from "./cc-harness.mjs";
+import { builtPage, mirror, picksData, withFixtureInData, productionFalseSavePath } from "./cc-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./s20-production-golden.json", import.meta.url), "utf8"));
 const sha256 = (text) => createHash("sha256").update(text, "utf8").digest("hex");
@@ -24,7 +24,8 @@ async function pageOfPackage(root, target) {
   const { build } = await import(pathToFileURL(join(root, "build.mjs")).href);
   const outDir = await mkdtemp(join(tmpdir(), `boston-cc4-${target}-`));
   try {
-    await build({ target, outDir });
+    // SPEC-save-offer-production § 12: the production page as release (a) made it (production false), the rollback.
+    await build({ target, outDir, ...(target === "prod" ? { savePath: await productionFalseSavePath() } : {}) });
     return await readFile(join(outDir, "index.html"), "utf8");
   } finally {
     await rm(outDir, { recursive: true, force: true });

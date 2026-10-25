@@ -59,7 +59,8 @@ test("SP16: no placeholder offer — with its status approved (the switch-on's o
     const refusals = productionRefusals({ save, offers, zips, draftText, vars, printed: [] });
     assert.deepEqual(refusals.filter((r) => /offers\.json/.test(r)), [], "nothing about the offers");
     const committed = productionRefusals({ save, offers: offersFile, zips, draftText, vars, printed: [] }).filter((r) => /offers\.json/.test(r));
-    assert.deepEqual(committed, ["data/offers.json: status is placeholder, not approved"], "control: as committed, only the status (the switch-on's)");
+    // SPEC-save-offer-production § 12: release (b) made the switch-on's change, so the committed file is refused nothing.
+    assert.deepEqual(committed, [], "control: as committed since release (b), its status approved, nothing");
   } finally {
     const { rm } = await import("node:fs/promises");
     await rm(dir, { recursive: true, force: true });

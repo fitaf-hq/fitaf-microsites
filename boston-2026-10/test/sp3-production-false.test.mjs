@@ -31,7 +31,7 @@ import { join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import saveConfig from "../data/save.json" with { type: "json" };
 import { build, renderPage, ROOT } from "../build.mjs";
-import { workerFiles } from "./cc-harness.mjs";
+import { productionFalseMirror, productionFalseSavePath, workerFiles } from "./cc-harness.mjs";
 import { loadPlans } from "./helpers.mjs";
 import { committedSheets, sheetsLine, splitSheets } from "./production-sheets.mjs";
 import { assertProductionT5, basePackage, BASE } from "./sp-production.mjs";
@@ -106,15 +106,17 @@ async function hashesOf(dir, top = dir) {
   return out;
 }
 
-test("SP3: data/save.json's production is false (control)", () => {
-  assert.equal(saveConfig.production, false);
+// SPEC-save-offer-production § 12: release (b) commits production true; every case below about production false builds
+// with it false (productionFalseSavePath, or a mirror for the Worker, which reads the file at import): the rollback.
+test("SP3: data/save.json's production is true since release (b) (control)", () => {
+  assert.equal(saveConfig.production, true);
 });
 
 test("SP3 (S20): npm run build with production false is S20's golden, and the base tree's build (§ 9 item 2's reading apart), byte for byte", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "boston-sp3-"));
   try {
     const { build: baseBuild } = await import(pathToFileURL(join(base.pkg, "build.mjs")).href);
-    await build({ target: "prod", outDir: join(dir, "now") });
+    await build({ target: "prod", outDir: join(dir, "now"), savePath: await productionFalseSavePath() });
     await baseBuild({ target: "prod", outDir: join(dir, "base") });
     const [{ sheets, rest: now }, { rest: before }] = [splitSheets(await hashesOf(join(dir, "now"))), splitSheets(await hashesOf(join(dir, "base")))];
     t.diagnostic(sheetsLine(sheets));
@@ -181,7 +183,8 @@ test("SP3 (§ 4 item 1): the production Worker answers every request as the base
   const week = JSON.stringify({ weeks: [{ carts: {} }] });
   const assets = { "/": pageAsset(page), "/fonts/poppins-latin-700-normal.woff2": { status: 200, headers: { "content-type": "font/woff2" }, body: "font" } };
   const objects = { [WEEK_DATA_KEY]: week, "week/chefs-choice-2026-10-18.jpg": "jpeg bytes" };
-  const now = await startSite({ entry: "site", assets, objects });
+  const falseRoot = await productionFalseMirror();
+  const now = await startSite({ root: falseRoot, entry: "site", assets, objects });
   const before = await startSite({ root: base.pkg, entry: "site", assets, objects });
   try {
     for (const [method, path, body] of REQUESTS) {
@@ -196,7 +199,8 @@ test("SP3 (§ 4 item 1): the production Worker answers every request as the base
     await now.dispose();
     await before.dispose();
   }
-  const worker = (await import("../src/worker/site.js")).default;
+  const worker = (await import(pathToFileURL(join(falseRoot, "src", "worker", "site.js")).href)).default;
+  await rm(falseRoot, { recursive: true, force: true });
   assert.deepEqual(Object.keys(worker), ["fetch"], "production false: fetch only, no scheduled handler");
 });
 

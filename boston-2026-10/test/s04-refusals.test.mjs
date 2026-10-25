@@ -16,7 +16,7 @@ const REFUSALS = [
   ["email_invalid", [validSave({ email: "" }), validSave({ email: "   " }), validSave({ email: "not-an-email" }), without("email"), validSave({ email: 42 })]],
   ["zip_invalid", [validSave({ zip: "0211" }), validSave({ zip: "021180" }), validSave({ zip: "abcde" }), without("zip")]],
   ["event_unknown", [validSave({ event_id: "boston-2026-10" }), validSave({ event_id: "" }), without("event_id")]],
-  ["wording_version_unknown", [validSave({ wording_version: "v0.2-draft" }), validSave({ wording_version: "v1" }), validSave({ wording_version: "V0.3-DRAFT" }), without("wording_version")]],
+  ["wording_version_unknown", [validSave({ wording_version: "v0.2-draft" }), validSave({ wording_version: "v2" }), validSave({ wording_version: "V0.3-DRAFT" }), without("wording_version")]],
   ["consent_not_boolean", [undefined, null, "true", "false", "on", 1, 0, "", [], {}].map((v) => (v === undefined ? without("consent_marketing") : validSave({ consent_marketing: v })))],
   ["kind_invalid", [validSave({ kind: "claim" }), validSave({ kind: "reissue" }), without("kind")]],
   ["zip_out_of_area", [validSave({ zip: NEAR_ZIP }), validSave({ zip: FAR_ZIP })]],

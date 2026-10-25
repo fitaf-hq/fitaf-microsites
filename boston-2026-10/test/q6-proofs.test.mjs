@@ -52,7 +52,7 @@ test("Q6: the placeholder offer is a placeholder; a named one is not", async () 
   assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: namedOffersPath })), false);
   // Either sign keeps it a placeholder: the file's status, or a bracketed label
   const statusOnly = join(set.dir, "offers-status.json");
-  await writeFile(statusOnly, JSON.stringify({ ...committedOffers, offers: committedOffers.offers.map(({ label_approved: _approved, ...o }) => ({ ...o, label: "Named" })) }));
+  await writeFile(statusOnly, JSON.stringify({ ...committedOffers, status: "placeholder", offers: committedOffers.offers.map(({ label_approved: _approved, ...o }) => ({ ...o, label: "Named" })) }));
   assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20", offersPath: statusOnly })), true, "status placeholder");
   const labelOnly = join(set.dir, "offers-label.json");
   await writeFile(labelOnly, JSON.stringify({ ...JSON.parse(await readFile(placeholderOffersPath, "utf8")), status: "approved" }));
@@ -104,8 +104,9 @@ test("Q6: built with photos, a named offer and approved back words, the files ta
 });
 
 test("Q6 (§ 12.2): an offer whose words are approved is final for print; a bracketed one never is", async () => {
-  // The committed file: the Boston offer's words approved (2026-10-20, then 2026-10-21), the file's status still placeholder
-  assert.equal(committedOffers.status, "placeholder", "the file's codes and terms are still placeholders (control)");
+  // The committed file: the Boston offer's words approved (2026-10-20, then 2026-10-21), and since release (b)
+  // (SPEC-save-offer-production § 12) the file itself
+  assert.equal(committedOffers.status, "approved", "the file approved at the switch-on (control)");
   const boston = committedOffers.offers.find((o) => o.id === "event-boston-2026-10-placeholder" && o.label_approved);
   assert.ok(boston && !/^\[.*\]$/.test(boston.label.trim()), "the Boston offer carries label_approved and its words");
   assert.equal(offerIsPlaceholder(await loadInputs({ photosDir: noPhotos, today: "2026-10-20" })), false, "the committed offer on 2026-10-20");

@@ -37,7 +37,7 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
-import { rangeless } from "./cc-harness.mjs";
+import { rangeless, productionFalseMirror, productionFalseSavePath } from "./cc-harness.mjs";
 import { scriptJsonRef } from "./wc-checks.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW, sheetUrlCount, WEEK_SHEET_URL } from "./wc-regression.mjs";
 import { contentOf, noWeekPage, pageAsset, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
@@ -81,10 +81,12 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
   }
 });
 
+// SPEC-save-offer-production § 12: production's page and Worker as release (a) made them (production false), the rollback.
 test("WC-9c: the page production's Worker serves with that content is, visibly, visible_at's page at every fragment", async () => {
-  const asset = await noWeekPage();
+  const falseRoot = await productionFalseMirror();
+  const asset = await noWeekPage({ savePath: await productionFalseSavePath() });
   const { text, files } = await contentOf({ week: WEEK_1018 });
-  const site = await startSite({ assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheetKeyOf(SHEET_1018)]: files[sheetKeyOf(SHEET_1018)] } });
+  const site = await startSite({ root: falseRoot, assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheetKeyOf(SHEET_1018)]: files[sheetKeyOf(SHEET_1018)] } });
   try {
     const served = (await site.get("/")).text;
     assert.notEqual(served, asset, "control: the week reached the page");

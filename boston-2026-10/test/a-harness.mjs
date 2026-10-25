@@ -49,8 +49,8 @@ export const VALID = {
 
 /** The page `npm run build` (or `build:dev`, target "dev") writes, of the package at `root`; with `week`, the fixture
  *  week's content in its #picks-data as the Workers put it (cc-harness pageWithPicks). */
-export async function builtPage({ root = ROOT, target = "prod", week = false } = {}) {
-  return (await pageWithPicks({ root, target, picks: week ? FIXTURE_DIR : null })).html;
+export async function builtPage({ root = ROOT, target = "prod", week = false, savePath } = {}) {
+  return (await pageWithPicks({ root, target, picks: week ? FIXTURE_DIR : null, savePath })).html;
 }
 
 /** Every page the dev build writes (dist-dev/index.html and one per event), of the package at `root`. */

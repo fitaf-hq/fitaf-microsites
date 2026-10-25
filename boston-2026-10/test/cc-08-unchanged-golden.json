@@ -6,9 +6,9 @@
   "worker": {
     "data/delivery-zips.json": "973cdcc4b2bd471a2fd841fe50419c7417faf5fcbc26460afd419baccd67f9a3",
     "data/events.json": "99676fc91672cddb1b5af3302a2c751a5836c1a277292a695e395fdfaa0da69e",
-    "data/offers.json": "4c1d4fded00494d0bb217f19e0564575db5f46b6a77a3090e2ba724ac7ed4fa4",
+    "data/offers.json": "f2839028c3111dba60d90b2306bee5fa5233a8c2a7fbd02ab25c8ac8c1f5ba47",
     "data/plans.json": "46542b6f13a7ceb15d38a178adfa2f263562edc3812e5cc42195205a86ceccba",
-    "data/save.json": "873341273fde0e7e42236e24f94687506a632661bb9ab0f5e17877373292c236",
+    "data/save.json": "e9385f04f8f9d544b02e01569060063634e7cb844b8db3c67fa33ad039d7f9d4",
     "scripts/selection.mjs": "7aa1068504ae84107e0d3bbaa361e5fdd45212f4aadee4fa7f5d618fed3ab29f",
     "src/worker/allowlist.js": "75728f64b8765cfc251ec1ad446069bd0f452823f697e8e64ffaefa9e0868cc9",
     "src/worker/beacon.js": "2896b313e46973fe44dfed81d3bac8a738e30446dd4df23418e497afe0aa68f3",
