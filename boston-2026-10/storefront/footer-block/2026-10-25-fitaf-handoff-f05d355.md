@@ -3,7 +3,7 @@ type: storefront-footer-block
 title: "Fit AF cart hand-off: the Footer block built from f05d355"
 as_of: 2026-10-25
 target: "the store's admin, Custom Scripts, Footer (pasted by the Advisor; never by an agent)"
-status: built, not pasted
+status: superseded, not pasted
 clearance: public
 built_from:
   repository: fitaf-microsites
@@ -19,7 +19,8 @@ ceiling_bytes: 20480
 replaces:
   version_line: "fitaf-handoff 8b11e54 sha256:efcbc570f5f26273bf126438c19e9a8ba258332f5dcd4c5f22a24a1986a9680f"
 contract: boston-2026-10/SPEC-rung2-progress-and-checkout.md §§ 30 and 31
-proof: "not yet: the live rehearsal (§ 31 item 4, as § 29) is the orchestrator's, before the Advisor pastes; built and proven on the synthetic store only (§ 31.1)"
+proof: "none: superseded before any rehearsal or paste"
+superseded_by: "the block built from 992739f (storefront/footer-block/2026-10-25-fitaf-handoff-992739f.md), § 31.2"
 ---
 
 # The Footer block built from `f05d355`
@@ -30,8 +31,8 @@ and keeping it when there is none) and **the store's code `zero`** (§ 31: appli
 before the screen goes, never blocking a sale; the console's `zero:` line says how it went). Everything else behaves as
 the block it replaces.
 
-**Not yet to paste**: the live rehearsal (§ 31 item 4) comes first, by the orchestrator, then the Advisor's paste. **To
-paste**, then: copy everything between the two fence lines below, and nothing else (the fences are not part of it), into
+⛔ **Superseded, not pasted** (2026-10-25): § 31.2 changed the block before any rehearsal; paste the block built from
+`992739f` (or its successor) instead, never this one. As built, **to paste** would have been: copy everything between the two fence lines below, and nothing else (the fences are not part of it), into
 the store's admin, Custom Scripts, Footer, replacing the block there. The copied text is 20,341 bytes with
 SHA-256 `4d2381d4797f525a1e8fd5c8b615cd96fab7091189031ed77548d69a75e77b98`; its first comment line is the version line above. After the paste, the watch's live smoke runs
 against the store's own Footer (`--live`) and `storefront/watch-baseline.json`'s `expectedFooter` is accepted for this
