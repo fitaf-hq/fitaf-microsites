@@ -677,3 +677,126 @@ plans' pages, each at **$38.00**, and asks *"Please add at least 1 meals to cont
    named. Storybook's Family stories follow.
 7. **Rehearsed on the live store by the orchestrator** (a 5-meal Family Chef's Choice cart reaching the stripped
    checkout), before the block is pasted.
+
+#### 2.2.1 Built — found at the build, not ruled (2026-10-25)
+
+Built on `boston/round-2-questions` from `502669f` (this contract), 2026-10-25, as § 2.1 says: each case one file at a time
+at `nice -n 15`, beside other teams' gates (load average 6 to 110); the whole site suite and Storybook's alone at the tip.
+⛔ Item 7 (the live rehearsal) is the orchestrator's: nothing here opened the live store.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `e29c72a` | the cases first, run red on `502669f`'s code; the cases they amend |
+| `077f472` | items 1–5, the code; the cases it made stale |
+| `8b01f87` | the goldens, once each from `077f472`'s own tree; SP3's base |
+| `5eaad96` | found by Storybook's whole run at `8b01f87`: the Family door hidden in a browser too (below, 2); SM-2's list of stories |
+| `112215b` | the goldens that rule moves, once each from `5eaad96`'s own tree |
+| the next commit | this section; the README rows |
+
+**Cases, before and after** (`nice -n 15 node --test <file>`; red on `502669f`'s code, green from `077f472`)
+
+| case | file | red | green |
+|---|---|---|---|
+| UF1, the one question (item 1): Q1's heading and answers, nothing else asked, no goal, no calculator; `#family`, `#family-or`, `#family-and`; each side's answers kept | `test/uf1-family-question.test.mjs` | 3 of 3 | 3 of 3 |
+| UF2, the data (item 2) and the figures (item 3): 5 and 10 at mpid 35, 3800 cents; or → or-5d, and → and-5d; N × $38.00 from the data; six refusals | `test/uf2-family-data.test.mjs` | 9 of 9 | 9 of 9 |
+| UF3, the menu choice (item 3, and item 5's no macros): the checkout carrying the cart's meals to mpid 35 (the shipped fill); Choose my own meals the Family order page; no Family link where the cart does not hold the count; the content's Family links exactly there, never a snack link; no rings on Family | `test/uf3-family-chefs-choice.test.mjs` | 5 of 5 | 5 of 5 |
+| UF4, the block (item 4): 35 takes 5 or 10 in the table and the built block; 5 and 10 to /checkout, 7 and 1 refused; the link tool alike | `test/uf4-family-block.test.mjs` | 6 of 6 | 6 of 6 |
+| UF5, the save step on Family (item 3): beside a Family cart's checkout, never without one; a save from Family the same save | `test/uf5-family-save-step.test.mjs` | 2 of 2 (its second case's control, that the step is shown, added before the code: a hidden form still submits) | 2 of 2 |
+| Family as drawn, 390 and 1280, both builds | `tools/storybook/test/uf-chrome.test.mjs` | 4 of 4 | 4 of 4 (at `5eaad96`; 0 of 4 at `8b01f87`, below, 2) |
+| Storybook's Family story *and · 10 meals* | SM-5 (`sm-5-8-states-no-request.test.mjs`, `walk.mjs`) | 1 of 10 (the story at both widths and builds) | green |
+
+- **Amended with the cases, by what § 2.2 changes**: UQ1 (the five headings the first question's and the individual
+  panel's; the result after the goal as read; 0 of 4 red: a guard), UQ3 1 of 3 (the Family card's price is the result
+  card's; its door hidden by the script), PR-14 1 of 1 (Family's heading after the goal's) and its Chrome half (the drawn
+  headings only), MS-13 (the card's lines as § 2 made them; a guard), T1 1 of 1 (Family's two counts share its one
+  product's mpid), R2-14 3 of 8 (17 cells; 5 passes, 1 refused *"takes 5 or 10"*), FC-8 3 of 21 (its contract table: 35
+  takes 5 or 10; FC-8f's plans *§ 8 leaves as it was* without Family; FC-8g's 5-meal or-5d carrying Family's link too),
+  `save-end-fixture.mjs`'s store button (the result card, Family's too), and `r2-harness.mjs`'s synthetic store (a product
+  of two counts taken from the smaller to the larger, read from the data; the live store's measured *"at least 1"*).
+- **Made stale by the code, amended with it**: UC2's mutation site (`flow1.js`'s line), MS-10's anchor (the call passes
+  Family's row), FC-8's mutant (Family's totals its own, untouched by it), SP2 (Family's store button the result card's
+  once answered; none before), UQ5 (`plans.json` differs from `81a1199` by `read_on` and § 2.2's Family alone), CC-9b's
+  anchor (fixed in the code instead: `cartOf`'s `argvOf` builds every link's arguments once), and the content compared
+  with older trees, MS-20, W4, EM5c and WC-9a, each with the Family links taken out (`uf-harness.mjs`
+  `withoutFamilyLinks`), every other byte compared as before. Found by Storybook's whole run: SM-2's list of stories.
+
+**Goldens** (`8b01f87` from `077f472`'s tree, `112215b` from `5eaad96`'s; each recorder at the commit before reproduces
+its committed record exactly; the messages carry each line):
+
+- **S20** (CC-4): `index.html` alone, `841949a3…` → `5ad49f73…` → `04eb2bd2…`, 64,197 → 66,858 → 67,025 bytes.
+- **U4**: the v1 fixture's contents byte-identical; the v2 fixture's and the week of 10-18's +100 and +267 bytes, by
+  Family's link on and-5d alone; every page +2,661 to +2,928 (production) and +2,627 to +2,894 (development), then +167;
+  the visible page at every fragment (the result card's place in the markup), not moved by `5eaad96`.
+- **PV5**: production's `index.html` and development's four pages, twice; `privacy/` unchanged.
+- **WC-9**: `visible` at all 20 fragments (`077f472`); not moved by `5eaad96`.
+- **WC-8**: `b4a168dc…` → `72ed1f9d…` → `6447ecd8…`.
+- **CC-8** (CC-8a/b/c, MS-9, PR-10) and **R2-32**: `data/plans.json` in the Worker's reach (`3c1f8ed6…` → `144f74c1…`);
+  the Footer block's text `b68257d5…` → `ef5697aa…`, by the plans table's entry for mpid 35 alone (`[1]` → `[5,10]`).
+- **SP3's base**: § 1's own template change (`e875280..ce6b54e`, the empty `{{SAVE_FAMILY}}` gone; it moves no
+  production-false page), which § 2.2's markup sits beside, then § 2.2 (`8bfe4f8..5eaad96`, `scripts/family.mjs` with
+  it), its import line put after the selection import by a new `insertAfter` option (an anchor found once, else the base
+  is refused).
+
+Sizes, raw / gzip: production (production false) 67,025 / 19,961; development `/` 107,182 / 31,379; under SPEC.md § 1's 61,440
+gzip.
+
+**Where the contract left a choice, and what was chosen**
+
+1. **The data's shape** (item 2): `family.counts` two cells, 5 and 10, both mpid 35 at 3800 cents (so Family's counts
+   share its one product's mpid); `family.selection` one row per Q1 answer, shaped as `selection`'s rows (`lunch_dinner`,
+   `weekends`, `breakfast`, `meals`): the answers name the individual cart Family takes (weekdays, no breakfast: or-5d and
+   and-5d, the individual 5- and 10-meal carts) and `meals` what they come to, one of the counts. `scripts/family.mjs`
+   checks it (outside the Worker's reach, so the Worker's files move by `data/plans.json` alone).
+2. **One result card for both**: the result card, its Chef's Choice and the save step moved out of the individual panel,
+   below whichever panel shows, so Family's menu choice is the individual's card itself (one card, its ids once). The
+   Family panel is its card (its name, promise and line; its figures moved to the result card) and then its one question
+   (`#family-question`, `data-family`, Q1's words). The Family card's door, rung 1's, stays for a visitor without script,
+   whom no question can reach, and the script hides it: with script the result card's links are Family's door. ⚠ Found in
+   Chrome, not by a linkedom case: `.cta`'s `display: flex` outranks the browser's own `[hidden]`, so the hidden door was
+   still drawn beside the result card's link; `.family-card .cta[hidden] { display: none; }` (`5eaad96`), as the card's
+   stylesheet already keeps `.result .cta[hidden]`.
+3. **The fragment**: `#family` is Family with nothing answered, `#family-or` and `#family-and` its answers; each side's
+   answers are kept while the other shows. The result card's accent is Family's colour (`data-accent="family"`).
+4. **The content carries Family's link** (item 3): a cart Family takes carries a link to mpid 35, made by the link tool
+   from the same meals as every link is, when they come to Family's count; never a snack link. The page builds no link.
+5. **The synthetic store** (`r2-harness.mjs`, test only): a product of two counts is taken from the smaller to the larger;
+   `planCounts` gives an mpid's smaller count. What the live store takes above 10 for mpid 35 is item 7's.
+
+**Found at the build**
+
+1. ⚠ **Two committed weeks and both fixtures hold 4 meals in their or-5d cart** (made before the extra meal: the weeks
+   delivered 2026-10-18 and 2026-10-25, `test/fixtures/picks-v2/` and `picks-menus/`); only 2026-11-01's hold 5. So
+   Family's *or* has no Chef's Choice in those weeks and shows *Choose your meals* (to the Family order page) alone; *and*
+   (and-5d, 10 in every week) has one. The live week (2026-11-01) has both.
+2. ⚠ **The week's content moves**: every committed week whose and-5d (or or-5d) cart holds the family count gains a
+   Family link (U4's contents; MS-20, W4, EM5c and WC-9a show nothing else moved), so the next content run puts it in the
+   bucket. Fit AF's switch smokes take *the first of the cart's mpids sorted* (§ 12.1's reading of them, not run here): 35
+   sorts after 20–34, so they are unaffected.
+3. ⚠ **The analytics**: Family's question is not counted (`data-family` is outside the beacon's vocabulary, as the tabs
+   were), and a Family result's event (key and-5d, mpid 35) is refused by the Worker, whose `RESULT_MPIDS` are the
+   individual plans': the funnel sees a Family visit's open and its checkout click (mpid 35 is an order mpid) but not its
+   result. Whether to count Family is the Advisor's (SPEC-analytics § 3's vocabulary).
+4. ⚠ **The Footer block** (item 4): its `COUNTS` gains mpid 35's `[5,10]` (one entry), with § 2's `read_on` comment the
+   block's only change on this branch; it ships in the same paste as SPEC-rung2-progress-and-checkout §§ 30–31, built
+   from the merged line; CC-8's `replaces` still names the live text (`efcbc570…`).
+5. **No rings on Family** (item 5): a meal's numbers are an individual size's, so on Family its panel shows its
+   ingredients alone (UF3). The documentation lines: SPEC-meal-selection § 1, `data/README.md`, `data/messages.json`'s
+   `about`.
+6. **"(four portions)"** is not printed: the line is § 2.1's *"Serves a family of 3–4."*.
+7. **SP3's base** needed § 1's template change replayed and the `insertAfter` option (above).
+8. `pr-chrome.test.mjs` hung once in the red run, on a Chrome launch under load (the hang § 1.3.1 recorded for five
+   Chrome files): stopped by hand; whole, and green, in Storybook's run at `8b01f87`.
+
+**The gates at `112215b`** (each alone, `nice -n 15`):
+
+| gate | result |
+|---|---|
+| `npm --prefix boston-2026-10 test` (14:47–15:01 PDT) | **1,205 of 1,206**: QE13 failed in its temporary Chrome profile's cleanup (`ENOTEMPTY` on `rmdir`); alone at once, 4 of 4. Nothing on this branch reaches the print pieces. The whole run at `8b01f87` (before the door's rule and its goldens): 1,206 of 1,206 |
+| Storybook | the Family stories alone, by the Advisor's direction (*"we are burning cycles on repeated tests"*): `uf-chrome.test.mjs` 4 of 4 and SM-2 1 of 1 at `5eaad96`; SM-5, with the Family story, green in the whole run at `8b01f87` (80 of 85 there: SM-2 and uf-chrome, both `5eaad96`'s). Nothing they read changed after `5eaad96`. ⚠ A whole run begun at `112215b` was stopped during its static build, so its 12 failures are that stop's, not results |
+| `npm --prefix boston-2026-10 run contrast` | 94 pairs, 94 pass |
+
+The storefront watch was not run (its expectation is the live block's; the built block moves by `COUNTS`' Family entry).
+
+**Renders**: none made here (the orchestrator pins the branch to dev for the Advisor's look at once).
