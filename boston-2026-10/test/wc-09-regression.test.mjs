@@ -43,6 +43,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
 import { rangeless, productionFalseMirror, productionFalseSavePath } from "./cc-harness.mjs";
+import { withoutFamilyLinks } from "./uf-harness.mjs";
 import { scriptJsonRef } from "./wc-checks.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW, sheetUrlCount, WEEK_SHEET_URL } from "./wc-regression.mjs";
 import { contentOf, noWeekPage, pageAsset, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
@@ -64,7 +65,11 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
     execFileSync(process.execPath, [join(ROOT, "scripts", "week-content.mjs"), "--week", WEEK_1018, "--out", out], { stdio: "pipe" });
     const written = (await readdir(join(out, "week"))).sort();
     assert.deepEqual(written, ["chefs-choice-2026-10-18.jpg", "picks-data.json"], "the week's data and its one sheet");
-    const text = await readFile(join(out, WEEK_DATA_KEY), "utf8");
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): the week's carts Family takes that hold its count carry
+    // Family's link (and-5d here), taken out (uf-harness withoutFamilyLinks); every other byte compared as before.
+    const family = withoutFamilyLinks(await readFile(join(out, WEEK_DATA_KEY)));
+    assert.ok(family.taken > 0, "control: the week's and-5d carries Family's link");
+    const text = family.bytes.toString("utf8");
     const before = JSON.stringify(golden.picks_data);
     // ⚠ Amended for SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): each heading is the menu's name alone, a
     // phrase the content fills, so 409b805's is read with each heading's " (<range>)" removed (cc-harness rangeless),

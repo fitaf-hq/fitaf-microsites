@@ -68,7 +68,12 @@
     "promise": "Healthy meals the whole family will actually eat",
     "servings": { "min": 3, "max": 4 },
     "counts": [
-      { "meals_per_week": 1, "mpid": 35, "price_per_meal_cents": 3800 }
+      { "meals_per_week": 5, "mpid": 35, "price_per_meal_cents": 3800 },
+      { "meals_per_week": 10, "mpid": 35, "price_per_meal_cents": 3800 }
+    ],
+    "selection": [
+      { "lunch_dinner": "or", "weekends": false, "breakfast": false, "meals": 5 },
+      { "lunch_dinner": "and", "weekends": false, "breakfast": false, "meals": 10 }
     ]
   }
 }

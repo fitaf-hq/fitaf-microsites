@@ -12,6 +12,7 @@ import { ROOT } from "../build.mjs";
 import { expectedFragment, FIXTURE as V1, mealLine, MESSAGES, readWithFillB } from "./cc-harness.mjs";
 import { assertCheckedOut, LOG_PREFIX } from "./r2-harness.mjs";
 import { cardOf, centsOf, dollars, fragmentOf, GOALS, mpidOf, open, resultOf, TABLE, V2_CARTS } from "./ms-harness.mjs";
+import { runWithoutFamilyLinks } from "./uf-harness.mjs";
 
 export const ORDER = "https://fitafnutrition.com/order";
 const fill = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (whole, k) => (k in values ? String(values[k]) : whole));
@@ -189,7 +190,9 @@ export const weeksAlikeLine = ({ compared, left }) =>
  */
 export async function contentProblems(root, basePackage, week, args, scratch, base = MS20_BASE) {
   const before = await contentAt(basePackage, week, args, scratch);
-  const after = await contentAt(root, week, args, scratch);
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): a cart Family takes that holds its count carries Family's link,
+  // taken out here (uf-harness runWithoutFamilyLinks), every other byte compared as before.
+  const after = runWithoutFamilyLinks(await contentAt(root, week, args, scratch));
   const problems = [];
   if (before.status !== 0) problems.push(`control: ${base} does not make the week (${before.stderr.trim()})`);
   if (after.status !== before.status) problems.push(`the exit code ${after.status}, not ${base}'s ${before.status} (${after.stderr.trim()})`);

@@ -90,14 +90,21 @@ export const versionLine = (text, commit) => `/* fitaf-handoff ${commit} sha256:
 
 /** Every plan's counts, individual and Family. */
 const cellsOf = (plans) => [...plans.individual, plans.family].flatMap((plan) => plan.counts);
+/** mpid -> its counts, ascending: since SPEC-ui-and-copy-pass § 2.2 Family's one product carries two (5 and 10). */
+function countsByMpid(cells) {
+  const out = new Map();
+  for (const c of cells) out.set(c.mpid, [...new Set([...(out.get(c.mpid) ?? []), c.meals_per_week])].sort((a, b) => a - b));
+  return out;
+}
 
 /**
  * mpid -> the plan's own count, meals a week (SPEC-rung2 § 7's full-plan rule as it stood before SPEC-rung2-fill-c § 8).
  * What a source from before § 8 inlines (COUNTS_SLOT), and the store's own minimum ("Please add at least N meals"),
- * which the synthetic stores of the cases model. Never a link's check since § 8: that is countTable's.
+ * which the synthetic stores of the cases model. Never a link's check since § 8: that is countTable's. Since
+ * SPEC-ui-and-copy-pass § 2.2 an mpid of two counts (Family's) gives the smaller: the least the store takes for it.
  */
 export function planCounts(plans) {
-  return Object.fromEntries(cellsOf(plans).map((c) => [c.mpid, c.meals_per_week]));
+  return Object.fromEntries([...countsByMpid(cellsOf(plans))].map(([mpid, counts]) => [mpid, counts[0]]));
 }
 
 const isCount = (n) => Number.isInteger(n) && n > 0;
@@ -117,7 +124,11 @@ export function countTable(plans) {
     }
   });
   const totalsOf = (P) => [...new Set([P, ...rows.filter((row) => row.plan === P).map((row) => row.meals)])].sort((a, b) => a - b);
-  return Object.fromEntries(cellsOf(plans).map((c) => [c.mpid, totalsOf(c.meals_per_week)]));
+  // SPEC-ui-and-copy-pass § 2.2 item 4: Family's one product takes its own counts (5 or 10), from the data; the
+  // individual selection's extra meal is the individual plans' alone.
+  const family = countsByMpid(plans.family.counts);
+  const individual = plans.individual.flatMap((plan) => plan.counts).map((c) => [c.mpid, totalsOf(c.meals_per_week)]);
+  return Object.fromEntries([...individual, ...family]);
 }
 
 /** JSON with every character outside printable ASCII, and `<`, written as \u escapes: the text stays ASCII. */

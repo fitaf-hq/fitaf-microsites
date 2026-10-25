@@ -7,6 +7,10 @@ The committed INPUTS of the page and the Worker. All are public. Change these, t
   stored. `order_base_url` is the one place the doors point; re-point it for a future store.
   ⚠ `mpid`s are HMP configuration and are **not in order** (Signature 14 is `29`, 21 is `28`). Re-read
   them from the store; never infer one from its neighbours.
+  ⭐ Since `SPEC-ui-and-copy-pass.md` § 2.2 (2026-10-25) `family` carries two counts, 5 and 10, both the store's one Family
+  product (mpid 35, so they share its mpid), and `family.selection`, Family's one question (Q1's answers) mapped to them:
+  each row the answers whose individual cart Family takes (weekdays, no breakfast: or-5d, and-5d) and the meals they come
+  to (`scripts/family.mjs` checks it). ⛔ Family is a size, four portions: no goal, no macro targets.
 - **`save.json`** (rung 4): the save endpoint, the wording version the page sends (`v0.3-draft`) and the
   versions the Worker accepts, the send zone and hour (09:00 America/New_York), and the lapse periods
   (30 days after an offer ends; 7 days for an unconfirmed expansion request; `expansion_retention_days`, 365,

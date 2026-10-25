@@ -25,12 +25,17 @@ test("UQ5: the footnote reads \"Prices as of 2026-10-25.\" on both builds, the p
   }
 });
 
-test("UQ5: data/plans.json differs from the contract's commit by its read date alone (every price as it was)", () => {
+// ⚠ AMENDED by § 2.2 (2026-10-25): Family's counts (5 and 10) and its answer → count mapping (`family.selection`) are
+// § 2.2's, its price a meal unchanged (UF2); every other value as the contract's commit has it.
+test("UQ5: data/plans.json differs from the contract's commit by its read date alone (every price as it was), § 2.2's Family apart", () => {
   const r = spawnSync("git", ["-C", ROOT, "show", `${BEFORE}:./data/plans.json`], { encoding: "utf8" });
   assert.equal(r.status, 0, `git show ${BEFORE}: ${r.stderr}`);
   const was = JSON.parse(r.stdout);
   assert.equal(was.read_on, "2026-09-27", `control: ${BEFORE}'s read date`);
-  assert.deepEqual({ ...PLANS, read_on: was.read_on }, was, "every other value unchanged");
+  const { selection, ...family } = PLANS.family;
+  assert.ok(Array.isArray(selection), "control: § 2.2's family.selection");
+  assert.deepEqual(new Set(PLANS.family.counts.map((c) => c.price_per_meal_cents)), new Set(was.family.counts.map((c) => c.price_per_meal_cents)), "Family's price a meal as it was");
+  assert.deepEqual({ ...PLANS, read_on: was.read_on, family: { ...family, counts: was.family.counts } }, was, "every other value unchanged");
 });
 
 test("UQ5: the footnote follows read_on, and nothing else, in a copy of data/plans.json", async () => {

@@ -1,7 +1,8 @@
 // UC2 (SPEC-ui-and-copy-pass.md § 1 item 2, the Advisor's note f-save-after: "It should go away. Also "Not ready
 // today?" should only appear when the Checkout button appears. This is a UX evolution from the initial brief."): the
 // save step is shown only while the card's Continue to checkout (#cc-checkout, a week's cart for the answers) is shown,
-// in its place after the card as before (SPEC-rung4 § 2b); never with Choose your meals alone, never on Family, never on
+// in its place after the card as before (SPEC-rung4 § 2b); never with Choose your meals alone, never on Family with no
+// Family cart (since § 2.2 the step is beside a Family cart's checkout too: UF5), never on
 // a page with no week. After a save it goes away: the step's offer line, the lead and the form (its fine print with it)
 // hidden, the done line where the step was. Both builds that carry the step.
 // ⭐ Mutant (on a copy of the built page, in memory): the step placed by the result card alone, as it was before this
@@ -110,9 +111,11 @@ test("UC2: #from-email — the one-line Save my offer only beside checkout", () 
 
 test("UC2: mutant — the step placed by the result card alone (before this contract) -> UC2 fails", () => {
   assertStepOnlyBesideCheckout(dev, "control"); // the page as built passes
-  const site = '  return !!checkout && !el("panel-individual").hidden && !el("result").hidden && !el("cc-list").hidden && !checkout.hidden;';
+  // ⚠ AMENDED by § 2.2 (2026-10-25): the step reads the result card alone (an individual plan's or, since then, Family's),
+  // no longer the individual panel, so the mutation site is that line as it now reads.
+  const site = '  return !!checkout && !el("result").hidden && !el("cc-list").hidden && !checkout.hidden;';
   assert.equal(dev.split(site).length - 1, 1, "the mutation site occurs exactly once");
-  const mutant = dev.replace(site, '  return !el("panel-individual").hidden && !el("result").hidden;');
+  const mutant = dev.replace(site, '  return !el("result").hidden;');
   assert.throws(
     () => assertStepOnlyBesideCheckout(mutant, "mutant"),
     (err) => err instanceof assert.AssertionError && /mutant, #lean-or-5d: no Continue to checkout, so no step/.test(err.message),

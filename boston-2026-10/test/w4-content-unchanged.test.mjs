@@ -22,6 +22,7 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { ROOT } from "../build.mjs";
 import { rangeless, reportWith } from "./cc-harness.mjs";
+import { runWithoutFamilyLinks } from "./uf-harness.mjs";
 
 const BASE = "6e0f6bd";
 const DATA_FILE = "week/picks-data.json";
@@ -95,7 +96,8 @@ for (const week of COMPARED) {
     const target = args.length ? "dev" : "prod";
     test(`W4 (${week}, ${target}): npm run content byte-identical to ${BASE}'s`, async () => {
       const before = await contentAt(basePackage, week, args, scratch);
-      const after = await contentAt(ROOT, week, args, scratch);
+      // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's links taken out (uf-harness), every other byte as before.
+      const after = runWithoutFamilyLinks(await contentAt(ROOT, week, args, scratch));
       if (before.files[DATA_FILE]) {
         const read = rangeless(before.files[DATA_FILE], week);
         assert.ok(read.headings > 0, `control: ${BASE}'s headings name the week's range`);

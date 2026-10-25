@@ -54,7 +54,7 @@
   var ANCHOR = "save-end";
   function besideCheckout() {
     var checkout = el("cc-checkout");
-    return !!checkout && !el("panel-individual").hidden && !el("result").hidden && !el("cc-list").hidden && !checkout.hidden;
+    return !!checkout && !el("result").hidden && !el("cc-list").hidden && !checkout.hidden;
   }
 
   // name: OFFER · EDITING · CHECKING · OUT_OF_AREA · EXPANSION_SAVED · VERIFYING · SENDING · ERROR · SAVED

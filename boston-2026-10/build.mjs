@@ -26,6 +26,7 @@ import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
 import { scriptJson } from "./src/worker/script-json.js";
 import { checkSelection, legacyKey } from "./scripts/selection.mjs";
+import { checkFamily } from "./scripts/family.mjs";
 import { addDays, DAYS as MS_PER_DAY, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 import { e1, ex } from "./src/worker/messages.js";
 import { printedRefusals, productionRefusals } from "./scripts/production-inputs.mjs";
@@ -321,20 +322,30 @@ function gridHead(plans) {
 /** The Family section (the panel the first question's Family answer shows). Since SPEC-ui-and-copy-pass § 2.1 (the Advisor,
  *  2026-10-25: "Somewhere we should say that Family … serves a typical family of 3-4 people") the family it serves is a
  *  line of its own, `plan_page.family_serves` with data/plans.json's `servings`, in place of the promise line's
- *  "· serves 3–4". */
+ *  "· serves 3–4". Since § 2.2 (Family's own question): the card names Family, its promise and the family it serves; its
+ *  price is the result card's, once its one question (Q1's words, `data-family`) is answered; and its door, rung 1's
+ *  (the store's Family order page), is a visitor's without script: the page's script hides it (app.js), the result
+ *  card's links being Family's door. ⛔ Family is a size, four portions: no goal and no macro targets are asked or shown. */
 function familySection(plans, words, orderLinks = true) {
   const f = plans.family;
   const cell = f.counts[0];
-  const n = cell.meals_per_week;
+  const w = words.questions.lunch_dinner;
+  const buttons = answerOrder("lunch_dinner", plans.selection_defaults).map(
+    (a) =>
+      `        <button type="button" class="choice" data-family="${a}" aria-pressed="false">` +
+      `<span class="choice-name">${emphasised(w[a])}</span></button>`,
+  );
   return `    <div class="family-card">
       <h2>${esc(f.name)}</h2>
       <p>${esc(f.promise)}</p>
       <p>${esc(fillPhrase(words.family_serves, { min: f.servings.min, max: f.servings.max }))}</p>
-      <dl class="figures">
-        <div><dt>Per family meal</dt><dd>${money(cell.price_per_meal_cents)}</dd></div>
-        <div><dt>Weekly total (${n} meal${n === 1 ? "" : "s"})</dt><dd>${money(weeklyTotalCents(cell))}</dd></div>
-      </dl>
-      <a class="cta" ${orderLink(plans, cell.mpid, orderLinks)} data-plan="${esc(f.id)}">Choose your meals</a>
+      <a class="cta" id="family-door" ${orderLink(plans, cell.mpid, orderLinks)} data-plan="${esc(f.id)}">Choose your meals</a>
+    </div>
+    <div class="step js-only" id="family-question" role="group" aria-labelledby="q-family">
+      <h2 class="step-label" id="q-family">${esc(w.heading)}</h2>
+      <div class="choices counts">
+${buttons.join("\n")}
+      </div>
     </div>`;
 }
 
@@ -357,6 +368,11 @@ function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true)
       [...rows].map(([key, r]) => [key, { plan: r.plan, meals: r.meals, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
     ),
     defaults,
+    // SPEC-ui-and-copy-pass § 2.2: Family's answers (Q1's), each the answer set whose cart it takes, its meals a week, and
+    // its figures at its price a meal (money here, as every figure), its link the store's Family order page.
+    family: Object.fromEntries(
+      [...checkFamily(plans)].map(([ld, r]) => [ld, { key: r.key, meals: r.meals, mpid: r.mpid, per_meal: money(r.cents), total: money(r.cents * r.meals) }]),
+    ),
     legacy: Object.fromEntries(legacy),
     snacks: offer,
     plans: plans.individual.map((plan) => ({

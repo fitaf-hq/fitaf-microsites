@@ -25,7 +25,10 @@ test("SP2: as run, the store's button is the one --cta shown: on a plan, on Fami
   const cases = [
     ["#lean-or-7d", (page) => page, ["result-cta"]],
     ["#signature-14", (page) => page, ["result-cta"]],
-    ["#family", (page) => page, ["family"]],
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's store button is the result card's, once its one
+    // question is answered; before, none is shown (its card's own door is a visitor's without script).
+    ["#family", (page) => page, []],
+    ["#family-or", (page) => page, ["result-cta"]],
     ["#lean-or-7d", (page) => (submitSave(page, { zip: FAR_ZIP }), page), ["result-cta"]],
     ["#from-email", (page) => (page.go("#performance-and-7d-b"), page), ["result-cta"]],
   ];
@@ -64,7 +67,7 @@ test("SP2: the new pairs are declared and pass; no pair still draws a save butto
 test("SP2 (production true): the quieter buttons in See all plans' style; the store's button the one --cta shown", async () => {
   const { html: prod } = await approvedPage();
   assertQuietButtons(prod);
-  for (const [hash, expected] of [["#lean-or-7d", ["result-cta"]], ["#family", ["family"]]]) {
+  for (const [hash, expected] of [["#lean-or-7d", ["result-cta"]], ["#family", []], ["#family-and", ["result-cta"]]]) {
     assert.deepEqual(shownCtas(openPlanPage(prod, { hash, now: NOW })), expected, hash);
   }
   const out = openPlanPage(prod, { hash: "#lean-or-7d", now: NOW });

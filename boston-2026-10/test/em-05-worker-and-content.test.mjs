@@ -22,6 +22,7 @@ import { scriptJsonRef } from "./wc-checks.mjs";
 import { noWeekPage, pageAsset, startSite, WEEK_DATA_KEY, withPicksText } from "./wc-harness.mjs";
 import { chooserOf, FIXTURE_LIST, fixtureWords, messagesFile, MENUS_DIR, MENUS_WEEK, openMenus } from "./em-harness.mjs";
 import { rangeless, reportWith } from "./cc-harness.mjs";
+import { runWithoutFamilyLinks } from "./uf-harness.mjs";
 
 const BASE = "76ee36e";
 const WEEK = "2026-10-25";
@@ -97,7 +98,8 @@ test.after(() => rm(scratch, { recursive: true, force: true }));
 for (const args of [[], ["--env", "dev"]]) {
   test(`EM5c (${WEEK}, ${args.length ? "dev" : "prod"}): npm run content byte-identical to ${BASE}'s, a week without the additions`, async () => {
     const before = await contentAt(basePackage, args, scratch);
-    const after = await contentAt(ROOT, args, scratch);
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's links taken out (uf-harness), every other byte as before.
+    const after = runWithoutFamilyLinks(await contentAt(ROOT, args, scratch), WEEK_DATA_KEY);
     assert.equal(before.status, 0, `control: ${BASE} makes the week (${before.stderr.trim()})`);
     const read = rangeless(before.files[WEEK_DATA_KEY], WEEK);
     assert.ok(read.headings > 0, `control: ${BASE}'s headings name the week's range`);

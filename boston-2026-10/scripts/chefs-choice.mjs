@@ -32,6 +32,7 @@ import { addDays } from "../src/worker/zoned-time.js";
 import { countTable } from "./build-storefront.mjs";
 import { asShown, handoffLink, itemsFromArgs, payloadFromArgs } from "./handoff-link.mjs";
 import { answerKey, answerWords, checkSelection, daysOf, dayToken, legacyKey, LUNCH_DINNER, soldCounts } from "./selection.mjs";
+import { familyByCart } from "./family.mjs";
 
 export const CHEFS_CHOICE_SRC = join(ROOT, "src", "chefs-choice");
 /** § 2: delivery Sunday S is open to order from S − 9 (a Friday: the store's switch) through S − 3 (a Thursday). */
@@ -188,16 +189,21 @@ function mealsOf(menu, where) {
  * and `display` as the page shows it (§ 7.1); only `name` reaches the tool. `photo` ({ photos, host }) gives each link
  * the week's cells by the tool's own --photos (SPEC-rung2-progress-and-checkout § 17.1). `where` names it in a refusal.
  */
-function cartOf(meals, count, where, { plans, totals, photo, date, preview = false }, snacks = null) {
+function cartOf(meals, count, where, { plans, totals, photo, date, preview = false }, snacks = null, family = null) {
   const links = {};
   // SPEC-snacks-in-the-cart § 4.2: while snacks are carted, a second link per size, the cart's meals and then the week's
   // snack list for the cart's days as snack items (the tool's own --snack, so its refusals are the block's).
   const snackLinks = snacks ? {} : null;
   let items = null;
-  for (const plan of plans.individual) {
-    const { mpid } = plan.counts.find((c) => c.meals_per_week === count);
+  // The tool's arguments for a link of these meals on `mpid`: one --item each, by its `name`, and the week's cells.
+  const argvOf = (mpid) => {
     const argv = ["--mpid", String(mpid), ...meals.flatMap((m) => ["--item", `${m.name}:${m.qty}`])];
     if (photo?.photos?.chefs_choice?.[date]) argv.push("--photos", date, "--host", String(photo.host));
+    return argv;
+  };
+  for (const plan of plans.individual) {
+    const { mpid } = plan.counts.find((c) => c.meals_per_week === count);
+    const argv = argvOf(mpid);
     let payload;
     try {
       payload = payloadFromArgs(argv, totals, photo?.photos);
@@ -216,6 +222,18 @@ function cartOf(meals, count, where, { plans, totals, photo, date, preview = fal
     }
     // The tool's items are the list's meals in order (one --item each), so each takes its own display.
     items ??= payload.items.map(({ name, qty }, i) => ({ name, display: asShown(meals[i].display), qty }));
+  }
+  // SPEC-ui-and-copy-pass § 2.2 item 3: a cart Family takes (`family`: its row, by the answer set) carries a link to the
+  // store's Family product too, the same meals, when they come to Family's count (a cart made before the extra meal, 4 on
+  // the 4 plan, does not: Family shows Choose your meals for it). Never a snack link: Family is asked no snacks.
+  if (family && meals.reduce((sum, m) => sum + m.qty, 0) === family.meals) {
+    let payload;
+    try {
+      payload = payloadFromArgs(argvOf(family.mpid), totals, photo?.photos);
+    } catch (err) {
+      throw new Error(`${where}, for Family: ${err.message}`);
+    }
+    links[family.mpid] = preview ? NO_LINK : handoffLink(plans, payload);
   }
   return { meals: items, links, ...(snackLinks ? { snackLinks } : {}) };
 }
@@ -314,7 +332,7 @@ function listCarts(list, at, rows, ctx) {
     first[key] = i;
     if (!sold.includes(cart.plan)) throw new Error(`${where}: plan ${JSON.stringify(cart.plan)} is not a plan the store sells (${sold.join(", ")})`);
     if (cart.plan !== row.plan) throw new Error(`${where}: plan ${cart.plan} is not its row's plan (${row.plan})`);
-    carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null);
+    carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null, ctx.family.get(key) ?? null);
   });
   return { carts, snacks };
 }
@@ -418,7 +436,8 @@ export function checkPicks(json, fileName, plans, photo = null, { menus = ONLY_S
   const totals = new Map(Object.entries(countTable(plans)).map(([mpid, allowed]) => [Number(mpid), allowed]));
   // SPEC-every-menu-and-nutrition § 1 item 1: the lists the words name, in their order; § 2 item 2: the heading.
   // SPEC-preview-sites § 2: a preview's carts are checked as every cart is, and make no link.
-  const ctx = { plans, totals, photo, date, names: menus.map(([list]) => list), heading, preview: isPreview };
+  // SPEC-ui-and-copy-pass § 2.2: the carts Family takes, by answer set.
+  const ctx = { plans, totals, photo, date, names: menus.map(([list]) => list), heading, preview: isPreview, family: familyByCart(plans) };
   const week = { delivery: date, ...(version === 1 ? v1Carts(json, rows, ctx) : v2Carts(json, rows, ctx)) };
   return isPreview ? { ...week, preview: true, approved: json.approved } : week;
 }

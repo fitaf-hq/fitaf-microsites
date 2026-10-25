@@ -90,8 +90,9 @@ test("MS-10: rounding up (5 -> 7) fails MS-1 and MS-2", async () => {
 });
 
 // A cart's link built on what the answers come to instead of the row's plan (version 2's reader).
-const CART_ON_PLAN = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null);";
-const CART_ON_MEALS = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), row.meals, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null);";
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): the call passes the cart's Family row too (its last argument).
+const CART_ON_PLAN = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null, ctx.family.get(key) ?? null);";
+const CART_ON_MEALS = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), row.meals, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null, ctx.family.get(key) ?? null);";
 
 test("MS-10: a cart's link built on meals instead of plan fails MS-2", async (t) => {
   await withMirror(

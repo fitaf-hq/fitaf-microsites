@@ -87,6 +87,7 @@ main.wrap { padding-top: 20px; }
 [data-goal="lean"], [data-accent="lean"] { --accent: var(--lean); }
 [data-goal="signature"], [data-accent="signature"] { --accent: var(--signature); }
 [data-goal="performance"], [data-accent="performance"] { --accent: var(--performance); }
+[data-accent="family"] { --accent: var(--family); }
 .choice:hover { border-color: var(--field); }
 .choice[aria-pressed="true"] { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
 .choice[aria-pressed="true"]::before,
@@ -182,8 +183,8 @@ main.wrap { padding-top: 20px; }
 .why .all-box { display: flex; flex-direction: column; height: 100%; }
 .why-frame { flex: 1; display: block; width: 100%; min-height: 0; border: 0; }
 
-/* Family */
-.family-card { --accent: var(--family); }
+/* Family (since SPEC-ui-and-copy-pass § 2.2 its card, then its one question, then the result card) */
+.family-card { --accent: var(--family); margin: 0 0 28px; }
 .family-card h2 { margin-top: 0; margin-bottom: 4px; }
 .family-card p { margin: 0 0 16px; color: var(--muted); }
 
@@ -221,18 +222,6 @@ main.wrap { padding-top: 20px; }
 {{GOALS}}
         </div>{{SHARE_PANEL}}
       </div>
-
-      <div aria-live="polite">
-        <div class="result" id="result" hidden>
-          <p class="price">
-            <span class="fig-total"><span class="fig" id="result-total"></span><span class="unit">{{TOTAL_UNIT}}</span></span>
-            <span class="fig-per-meal"><span class="fig" id="result-per-meal"></span><span class="unit">{{PER_MEAL_UNIT}}</span></span>
-            <span class="fig-meals"><span class="fig" id="result-meals"></span> <span class="unit">{{MEALS_UNIT}}</span></span>
-          </p>
-          <p class="rounded" id="result-rounded" hidden></p>
-          <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CARD}}
-        </div>
-      </div>{{SAVE_SECTION}}
     </div>
 
     <dialog class="all" id="all" aria-labelledby="all-caption">
@@ -252,6 +241,20 @@ main.wrap { padding-top: 20px; }
   <section class="panel" id="panel-family" hidden>
 {{FAMILY}}
   </section>
+
+  <div class="js-only">
+      <div aria-live="polite">
+        <div class="result" id="result" hidden>
+          <p class="price">
+            <span class="fig-total"><span class="fig" id="result-total"></span><span class="unit">{{TOTAL_UNIT}}</span></span>
+            <span class="fig-per-meal"><span class="fig" id="result-per-meal"></span><span class="unit">{{PER_MEAL_UNIT}}</span></span>
+            <span class="fig-meals"><span class="fig" id="result-meals"></span> <span class="unit">{{MEALS_UNIT}}</span></span>
+          </p>
+          <p class="rounded" id="result-rounded" hidden></p>
+          <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CARD}}
+        </div>
+      </div>{{SAVE_SECTION}}
+  </div>
 </main>
 
 <footer class="foot">
