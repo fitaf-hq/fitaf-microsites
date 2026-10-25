@@ -120,7 +120,15 @@
 // offer's end (found in Chrome at the build). Against dbfcb62's record: contents and the production pages unchanged; the
 // three development pages +310 bytes each (the field's second help line and the two lines showing one), their visible
 // page where the step shows (on 2026-09-29, no offer live: the step's own help line).
-// From here the reference is e8fd524's tree.
+// ⚠ RE-RECORDED at 8bfe4f8 (`node test/u-04-record.mjs --commit 8bfe4f8 --release-a`): SPEC-ui-and-copy-pass § 2 (round 2
+// changeset 1, 2026-10-25: who it is for first, the goal last, the calculator below the goal's answers; the Family line;
+// read_on). Recorded as this case builds since SPEC-save-offer-production § 12 (production false and release (a)'s
+// wording, the recorder's new --release-a; without it the recorder built each commit's own data/save.json, production true
+// since c6dd3a5, which this case no longer compares): the recorder with --release-a at c6dd3a5 reproduces e8fd524's record
+// exactly. Against it, all six contents byte-identical; the three production pages +97 bytes each and the three
+// development pages +1,738 bytes each, by § 2's lines alone (both trees' builds compared line by line: § 2.1 lists them),
+// and their visible page at every fragment (the first question at the top of each; #family's Family line).
+// From here the reference is 8bfe4f8's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -130,8 +138,8 @@ import { productionFalseSavePath, withReleaseAWording } from "./cc-harness.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to e8fd524's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "e8fd524");
+test("U4: a normal week, the content and the page as served, byte-identical to 8bfe4f8's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "8bfe4f8");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   const options = { savePath: await productionFalseSavePath(), transform: withReleaseAWording };
   assert.deepEqual(await normalWeekRecord(ROOT, options), golden.record);

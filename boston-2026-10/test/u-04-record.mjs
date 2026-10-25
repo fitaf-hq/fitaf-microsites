@@ -8,9 +8,15 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { ROOT } from "../build.mjs";
 import { normalWeekRecord } from "./u-checks.mjs";
+import { productionFalseSavePath, withReleaseAWording } from "./cc-harness.mjs";
 
 const at = process.argv.indexOf("--commit");
 const COMMIT = at === -1 ? "d1dac5b" : process.argv[at + 1];
+// `--release-a` (SPEC-ui-and-copy-pass § 2.1, 2026-10-25): build as the case has since SPEC-save-offer-production § 12
+// (release (b) committed `production` true; the case compares the builds as release (a) made them, the rollback):
+// cc-harness productionFalseSavePath() as the build's data/save.json and withReleaseAWording over each page. Without it
+// the commit's own data/save.json, as before.
+const RELEASE_A = process.argv.includes("--release-a");
 
 function run(cmd, args, input) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 256 * 1024 * 1024 });
@@ -32,7 +38,8 @@ try {
       "served with that week once its lines naming `updating` are removed (recorded_at's page has none), and the visible " +
       "page per fragment. Re-record only by running the recorder; never by hand.",
     recorded_at: run("git", ["-C", top, "rev-parse", "--short", COMMIT]).toString("utf8").trim(),
-    record: await normalWeekRecord(pkg),
+    ...(RELEASE_A ? { built_as: "release (a): production false, its wording (--release-a)" } : {}),
+    record: await normalWeekRecord(pkg, RELEASE_A ? { savePath: await productionFalseSavePath(), transform: withReleaseAWording } : {}),
   };
   process.stdout.write(JSON.stringify(golden, null, 2) + "\n");
 } finally {

@@ -5,6 +5,11 @@
 // file under assets/photo-sheets/) are the emitter's weekly inputs, so they are compared as byte copies of the tree's own
 // src/assets/photo-sheets/ (test/production-sheets.mjs), and every other file against recorded_at's; the golden's own
 // sheet entries are left as the recorder wrote them (never edited by hand) and are not read.
+// ⚠ RE-RECORDED at 8bfe4f8 (`node test/pv-05-record.mjs --commit 8bfe4f8 --release-a`) for SPEC-ui-and-copy-pass § 2
+// (2026-10-25), as this case builds since SPEC-save-offer-production § 12 (production false and release (a)'s wording: the
+// recorder's new --release-a, which at c6dd3a5 reproduces e8fd524's record exactly): production's index.html (S20's pin)
+// and the development build's index.html, demo/, boston/ and seminar/ moved, by § 2's lines; every other file, privacy/
+// among them, byte-identical.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

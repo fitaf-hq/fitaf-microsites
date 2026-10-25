@@ -249,15 +249,40 @@ export const LATER = [
   // doc-comment hunk does not apply to the base (whose comment predates the preview build's), and a hunk that changes only
   // comments moves no page: `codeOnly` leaves such hunks out.
   ["bd80a41", "eae4d94", ["src/app.js", "build.mjs"], { codeOnly: true }],
+  // SPEC-ui-and-copy-pass § 2 (2026-10-25: who it is for first, the goal last; the Family line; read_on) changes lines the
+  // preview build added (renderPage's `orderLinks`, familySection's, the template's {{PREVIEW_STYLE}}, the preview's
+  // words), which no entry here carried, since the preview build moved no production or development page (PV5 at its
+  // merge). So first the preview build itself (SPEC-preview-sites §§ 1–7, the merge 4e73661 over its first parent
+  // 544e496), its one hunk in build()'s target branch left out (`dropHunks`): the base's build() predates its context, and
+  // no production page passes through that branch.
+  ["544e496", "4e73661", ["build.mjs", "src/template.html", "data/messages.json"], { dropHunks: /^\+\s*const preview = target === "preview"/m }],
+  // Then § 2, from 81a1199 (its contract) to 8bfe4f8 (its code, one commit), over the files that make the production page
+  // (the calculator's move is the development page's alone, src/save/), its hunk in the preview's Why cut list
+  // (SPEC-preview-sites § 8, PREVIEW_WITHOUT_WHY, which the base never had; it cuts the preview page alone) left out.
+  ["81a1199", "8bfe4f8", ["src/template.html", "src/app.js", "build.mjs", "data/messages.json", "data/plans.json"], { dropHunks: /^-\s*\["the Why rule at 720 px"/m }],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
-function codeHunks(diff) {
+const codeHunks = (diff) => {
   const comment = /^[+-]\s*(\*|\/\/|\/\*)/;
+  return keptHunks(diff, (hunk) => hunk.some((l) => /^[+-]/.test(l) && !comment.test(l)));
+};
+
+/** A unified diff without its hunks whose text matches `pattern` (SPEC-ui-and-copy-pass § 2.1); refused unless it drops
+ *  at least one, so an entry cannot outlive the hunk it names. */
+function withoutHunks(diff, pattern) {
+  let dropped = 0;
+  const out = keptHunks(diff, (hunk) => !(pattern.test(hunk.join("\n")) && ++dropped));
+  if (!dropped) throw new Error(`basePackage: no hunk matches ${pattern}`);
+  return out;
+}
+
+/** A unified diff keeping the hunks `keep` accepts (each hunk its lines, its @@ line first). */
+function keptHunks(diff, keep) {
   const out = [];
   let hunk = null;
   const flush = () => {
-    if (hunk && hunk.some((l) => /^[+-]/.test(l) && !comment.test(l))) out.push(...hunk);
+    if (hunk && keep(hunk)) out.push(...hunk);
     hunk = null;
   };
   for (const line of diff.split("\n")) {
@@ -292,9 +317,10 @@ export async function basePackage() {
   run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", BASE, prefix]) });
   const pkg = join(scratch, "base", prefix);
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
-  for (const [from, to, paths = LATER_PATHS, { codeOnly = false } = {}] of LATER) {
+  for (const [from, to, paths = LATER_PATHS, { codeOnly = false, dropHunks = null } = {}] of LATER) {
     const whole = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...paths.map((p) => `${prefix}/${p}`)]);
-    const diff = codeOnly ? Buffer.from(codeHunks(whole.toString("utf8"))) : whole;
+    const kept = codeOnly ? codeHunks(whole.toString("utf8")) : dropHunks ? withoutHunks(whole.toString("utf8"), dropHunks) : null;
+    const diff = kept === null ? whole : Buffer.from(kept);
     if (diff.length) run("patch", ["-p1", "--forward", "--silent", "-d", join(scratch, "base")], { input: diff });
   }
   return { pkg, dispose: () => rm(scratch, { recursive: true, force: true }) };
