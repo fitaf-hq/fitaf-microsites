@@ -460,3 +460,45 @@ average 60 to 560):
 - `uc13-privacy-390.png`: the development `/privacy/`, DRAFT-tagged, the drawing's paragraph after *What we collect
   and why*;
 - and § 1.1's, redrawn: `uc1-*`, `uc2-*`, `uc3-*`, `uc8-*`, `uc9-after-the-offer-top-390.png`.
+
+## 2. Round 2, changeset 1 (2026-10-25): who it is for first, the goal last, the portion-size helper beside it. CONTRACT, before any code
+
+**The Advisor, 2026-10-25** (verbatim): *"First, please move "What's your goal" to the *end* of the set of questions
+(after snacks). Then near "What's your goal", add a "Find my portion size" (or similar) that expands to include our
+calorie/protein calculator (which is currently arbitrarily placed near the bottom of the page). Then change "Invididual /
+Family" into a question (it will now be the first one). … If "Family" is selected, we should stay on this page and ask
+all of the same questions."* And: *"Update "Prices as of 2026-09-27." to "Prices as of 2026-10-25." please."*
+
+1. **The order of the questions** (SPEC-meal-selection § 1's questions, their answers and defaults unchanged): first
+   **who it is for** (item 2), then the four meal questions in today's order (lunch or dinner, weekends, breakfast,
+   snacks), then **What's your goal?** last. Every question still answers where it is; the result (the price, the card,
+   *Choose your meals*) still appears once the questions it needs are answered — which now means after the goal, the
+   last. The card and the cart are unchanged by the order (same answers, same cart).
+2. **Individual / Family becomes the first question**, in the look of the other questions (a heading and two answer
+   buttons), replacing the two tabs. Its heading is **"Who is this for?"** (the tabs' own accessible name today,
+   `aria-label="Who is this for?"`; ⚠ the Advisor's wording to rule, item 7) and its answers **Individual** and
+   **Family**, Individual the default on the left (§ 12's rule). Its phrases live in `data/messages.json` as every
+   question's. The fragment's `#family` and `#individual` still land on that answer.
+3. **Family, until item 7 is ruled**: choosing Family shows today's Family section (`familySection`: its promise, its
+   price, its door) in place below the question, and hides the four meal questions, the goal and the individual result;
+   choosing Individual brings them back with every answer kept. ⬜ *"stay on this page and ask all of the same
+   questions"* for Family is item 7's.
+4. **Find my portion size**: directly below *What's your goal?*'s answers, a disclosure button **"Find my portion size"**
+   (⚠ wording to rule, item 7), collapsed by default, that opens the existing calculator (`src/save/share-panel.html`,
+   *"What share of my day is that?"*, its fields, help line and arithmetic unchanged) **moved there** from its place below
+   the save section; nowhere else on the page. Opening it moves nothing above it; its state is not remembered (no storage).
+5. **The price date**: `data/plans.json` `read_on` becomes `2026-10-25` **only once the prices have been re-read off
+   `read_from` that day** (its rule, `data/README.md`: "read by a person off `read_from` on `read_on`"); the
+   orchestrator does the reading and gives the builder the result: unchanged prices change only the date; a changed price
+   is its own ruling.
+6. **Cases**, written first and run red: the order of the five headings on the page (who it is for, the four, the goal);
+   the result only after the goal; `#family`/`#individual` land on their answers; Family hides the rest and shows the
+   Family section, Individual restores every answer; the disclosure collapsed by default, opening the calculator, which
+   is in the page exactly once; no storage touched (T5); the footnote's date is `plans.json`'s. Goldens that pin the page
+   (S20, PV5, U4, WC-8/9, CC-4) move by exactly these changes and are re-recorded in their own commit, each named. The
+   Storybook stories of the page follow (SPEC-storybook-microsite).
+7. ⬜ **Open for the Advisor** (the builder builds items 1–6 and states these, never decides them): the first question's
+   wording; the disclosure's wording; and **Family with "all of the same questions"**: the store sells Family as one
+   product today (`plans.json` `family`: 1 meal a week, 3–4 servings, mpid 35, $38 a meal), so what the four meal
+   questions and the goal choose for a family (how many family meals, whether the goal applies, whether Chef's Choice
+   applies) is his to say before it is built.
