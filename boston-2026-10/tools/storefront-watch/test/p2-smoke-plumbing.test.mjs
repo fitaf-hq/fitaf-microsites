@@ -61,7 +61,8 @@ test("P2: fill B pasted at 1280 (CHECKOUT NOW) and at 390 ×3 (CHECKOUT): pass; 
     assert.equal(outcome.checkout.totalCents, 8750);
     assert.equal(outcome.checkout.totalFrom, "Plan Total");
     assert.ok(outcome.link.startsWith(`${store.origin}/order?mpid=21#fitaf=`));
-    assert.deepEqual(fitaf(outcome), ["[fitaf-handoff] fill C, mpid 21", "[fitaf-handoff] done: /checkout"]);
+    // SPEC-rung2-progress-and-checkout § 31: the store's code zero's verdict, just before done (the stand-in applies it).
+    assert.deepEqual(fitaf(outcome), ["[fitaf-handoff] fill C, mpid 21", "[fitaf-handoff] zero: applied", "[fitaf-handoff] done: /checkout"]);
     assert.ok(!outcome.console.includes("[fixture] ORDER PLACED"));
   }
 });

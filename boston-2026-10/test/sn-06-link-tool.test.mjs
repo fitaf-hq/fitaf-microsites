@@ -1,7 +1,10 @@
 // SN-6 (SPEC-snacks-in-the-cart § 2): `npm run handoff:link` with `--snack "NAME:QTY"`, run as a program as a person
 // runs it. The link carries each snack as the meal grammar with a leading "_", after every meal and before `~<code>`;
 // its legend shows each snack's token beside its name, marked as a snack; the shipped text accepts the link and carts
-// the snacks; with no --snack the link is byte-for-byte what it was; the photo part's cells stay one per meal. The tool
+// the snacks; with no --snack the link is byte-for-byte what it was; the photo part carries a cell for every item, meals
+// then snacks in the link's order (SPEC-rung2-progress-and-checkout § 31.2 item 1, amending § 2's "the photo part's cells
+// stay the meals'"), "" for an item the sheet has no cell for, and the shipped text shows a snack's cell on its slide
+// (SN-6d; the block unchanged by it). The tool
 // refuses what the block refuses: a name or key given twice across meals and snacks, a snack's count outside 1..21, an
 // empty snack name, and the full-plan rule reads the meals only.
 import test from "node:test";
@@ -9,10 +12,13 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { PHOTOS_PATH, ROOT } from "../build.mjs";
-import { FC_PATH, FC_PAYLOAD } from "./fc-harness.mjs";
-import { COLLIDING, LOG_PREFIX, refKey } from "./r2-harness.mjs";
-import { assertFullCart, DIRECT, snRun, SN_PAYLOAD, TOGGLED } from "./sn-harness.mjs";
+import { loadJson, PHOTOS_PATH, PLANS_PATH, ROOT } from "../build.mjs";
+import { countTable } from "../scripts/build-storefront.mjs";
+import { handoffLink, payloadFromArgs, PHOTO_HOSTS } from "../scripts/handoff-link.mjs";
+import { slidePhoto } from "./r2-photos.mjs";
+import { FC_PATH, FC_PAYLOAD, fcPage } from "./fc-harness.mjs";
+import { clockTimers, COLLIDING, fakeWindow, LOG_PREFIX, refKey, run, script, untouchableStorage } from "./r2-harness.mjs";
+import { assertFullCart, DIRECT, SNACK_CARDS, snRun, SN_PAYLOAD, TOGGLED } from "./sn-harness.mjs";
 
 const TOOL = join(ROOT, "scripts", "handoff-link.mjs");
 const output = (...args) => execFileSync(process.execPath, [TOOL, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -40,7 +46,7 @@ test("SN-6b: the shipped text accepts the tool's link and carts its snacks", asy
   assertFullCart(r.page);
 });
 
-test("SN-6c: with --photos, the photo part is the meals' alone: the same as the link's without snacks", async () => {
+test("SN-6c: with --photos, the photo part is the meals' cells, then one per snack: \"\" for a snack the sheet has no cell for", async () => {
   const photos = JSON.parse(await readFile(PHOTOS_PATH, "utf8"));
   const [week, sheet] = Object.entries(photos.chefs_choice ?? {}).find(([, s]) => Object.keys(s.cells ?? {}).length >= 2) ?? [];
   assert.ok(week, "control: a week's sheet with cells");
@@ -49,8 +55,44 @@ test("SN-6c: with --photos, the photo part is the meals' alone: the same as the 
   const without = output("--mpid", "21", ...meals, "--photos", week).split("\n")[0];
   const withSnack = output("--mpid", "21", ...meals, "--snack", `${TOGGLED}:1`, "--photos", week).split("\n")[0];
   assert.ok(without.includes("!"), "control: the link carries a photo part");
-  assert.equal(withSnack.split("!").slice(1).join("!"), without.split("!").slice(1).join("!"));
+  assert.ok(!sheet.cells[TOGGLED], "control: the sheet has no cell for the snack");
+  // § 31.2 item 1: the snack's cell after the meals', in the link's order; the sheet has none for it, so "".
+  assert.equal(withSnack.split("!").slice(1).join("!"), `${without.split("!").slice(1).join("!")}!`);
   assert.equal(withSnack.split("!")[0], `${without.split("!")[0]}._${refKey(TOGGLED)}`);
+});
+
+/** SN-6d's manifest: a generated sheet's cells for the first meal and BOTH snacks (none for the other meals). */
+const SN_SHEET = { file: "sn-6d.jpg", width: 16, height: 48, cells: { [FC_PAYLOAD.items[0].name]: { x: 0, y: 0, w: 16, h: 16 }, [TOGGLED]: { x: 0, y: 16, w: 16, h: 16 }, [DIRECT]: { x: 0, y: 32, w: 16, h: 16 } } };
+const SN_MANIFEST = { base: "assets/photo-sheets/", chefs_choice: { "2026-10-04": SN_SHEET } };
+const cellText = (c) => [c.x, c.y, c.w, c.h].map((n) => n.toString(36)).join(",");
+
+test("SN-6d: a snack the sheet has a cell for — the link carries it after the meals', and the shipped text shows it on the snack's slide", async () => {
+  const counts = new Map(Object.entries(countTable(await loadJson(PLANS_PATH))).map(([mpid, totals]) => [Number(mpid), totals]));
+  const args = ["--mpid", "23", ...mealArgs, ...snackArgs, "--photos", "2026-10-04", "--host", "0"];
+  const href = handoffLink(await loadJson(PLANS_PATH), payloadFromArgs(args, counts, SN_MANIFEST));
+  const cells = new URL(href).hash.split("!").slice(4);
+  const items = [...FC_PAYLOAD.items, ...SN_PAYLOAD.snacks].map((it) => it.name);
+  assert.deepEqual(cells, items.map((name) => (SN_SHEET.cells[name] ? cellText(SN_SHEET.cells[name]) : "")), "one cell per item, meals then snacks, \"\" where the sheet has none");
+  // The block, unchanged: each snack's slide shows its cell of the sheet on the listed host.
+  // (snStart runs its own payload, so the tool's link is started here as snStart starts one: the 14-meal page, its
+  // snack cards, on a clock.)
+  const timers = clockTimers();
+  const page = await fcPage({ snacks: SNACK_CARDS });
+  const h = fakeWindow({ path: FC_PATH, fragment: new URL(href).hash, page, timers, storage: untouchableStorage() });
+  run(await script(), h.window);
+  const seen = new Map();
+  for (let n = 0; n < 20_000 && timers.step(); n++) {
+    for (const slide of page.document.querySelectorAll("#fitaf-screen .c > *")) {
+      const name = slide.querySelector("b")?.textContent;
+      if (name && !seen.has(name)) seen.set(name, slidePhoto(slide).sheet);
+    }
+  }
+  assert.ok(h.info.includes(`${LOG_PREFIX} done: /checkout`), JSON.stringify(h.info));
+  for (const name of [FC_PAYLOAD.items[0].name, TOGGLED, DIRECT]) {
+    const c = SN_SHEET.cells[name];
+    assert.deepEqual(seen.get(name), { src: `${PHOTO_HOSTS[0]}/${SN_MANIFEST.base}${SN_SHEET.file}`, ratio: 1, width: 100, left: 0, top: (-c.y / c.h) * 100 || 0 }, `${name}: its cell on its slide`);
+  }
+  assert.equal(seen.get(FC_PAYLOAD.items[1].name), null, "control: a meal the sheet has no cell for, none");
 });
 
 const REFUSALS = [

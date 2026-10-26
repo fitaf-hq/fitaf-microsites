@@ -52,8 +52,20 @@ export function handoffProblems(results, { words, links }) {
       fail(`frame ${r.frameWidth} × ${r.frameHeight}, its page ${r.innerWidth} × ${r.innerHeight}, not ${r.width} × ${r.height}`);
     }
     const step = CHECKOUT_STEP[r.story];
+    // SPEC-rung2-progress-and-checkout § 30 (P4): every screen story shows the placeholder. Screen · A, the empty
+    // carousel's, holding the store's logo as its mark; B and C, the shown slide's box first, the photograph's size, the
+    // placeholder in it (under the tile a story's card image draws). placeholderPlaces() compares where.
+    const ph = r.placeholder;
     if (r.story === "Screen · A") {
       if (!r.screen || r.slides !== 0 || r.path !== "/order") fail(`screen ${r.screen}, ${r.slides} slides, at ${r.path}: not the screen with no meal`);
+      if (!ph?.empty || ph.empty.content === "none" || !/^url\(/.test(ph.empty.mark)) fail(`no placeholder on the empty carousel: ${JSON.stringify(ph)}`);
+    }
+    if (r.story === "Screen · B" || r.story === "Screen · C") {
+      const box = ph?.shown?.box;
+      if (ph?.first !== "f" || !box || box[0] !== ph.side || box[1] !== ph.side || ph.shown.content === "none") fail(`the shown slide's box is not the placeholder's at the photograph's size: ${JSON.stringify(ph)}`);
+    }
+    if (r.story === "Screen · A") {
+      // (read above)
     } else if (r.story === "Screen · B") {
       const [k, t] = [Number(r.extra.k), Number(r.extra.t)];
       const meal = asShown(pressOrder(links[t].items)[k - 1]);
@@ -72,6 +84,28 @@ export function handoffProblems(results, { words, links }) {
       if (!(lines.found > 0 && lines.displayed === lines.found) || !r.total) fail(`the store's checkout not whole: lines ${JSON.stringify(lines)}, Total ${r.total}`);
     } else {
       fail("a Hand-off story this case does not know");
+    }
+  }
+  return problems;
+}
+
+/**
+ * § 30 (P4): the screen never jumps between its states. At each width, the plate of Screen · A's empty carousel and the
+ * plate in every Screen · B and C's shown box are one size in one place. One line per difference; [] when none.
+ */
+export function placeholderPlaces(results) {
+  const problems = [];
+  const screens = results.filter((r) => r.handoff && /^Screen · [ABC]$/.test(r.story) && r.placeholder);
+  for (const width of new Set(screens.map((r) => r.width))) {
+    const at = screens.filter((r) => r.width === width);
+    const a = at.find((r) => r.story === "Screen · A")?.placeholder?.empty?.plate;
+    if (!a) {
+      problems.push(`${width}: no Screen · A placeholder to compare with`);
+      continue;
+    }
+    for (const r of at.filter((x) => x.story !== "Screen · A")) {
+      const p = r.placeholder?.shown?.plate;
+      if (JSON.stringify(p) !== JSON.stringify(a)) problems.push(`${r.story} · ${width}${r.extra?.k ? ` · k ${r.extra.k} of ${r.extra.t}` : ""}: its plate ${JSON.stringify(p)}, Screen · A's ${JSON.stringify(a)}`);
     }
   }
   return problems;

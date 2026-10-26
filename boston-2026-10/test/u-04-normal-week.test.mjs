@@ -145,12 +145,28 @@ import { readFile } from "node:fs/promises";
 import { ROOT } from "../build.mjs";
 import { normalWeekRecord } from "./u-checks.mjs";
 import { productionFalseSavePath, withReleaseAWording } from "./cc-harness.mjs";
+import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
 test("U4: a normal week, the content and the page as served, byte-identical to 5eaad96's (the page's updating lines apart)", async () => {
   assert.equal(golden.recorded_at, "5eaad96");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
-  const options = { savePath: await productionFalseSavePath(), transform: withReleaseAWording };
+  // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
+  // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs
+  // withoutSnackCells), every other byte as e8fd524's. (Its recorder builds a commit's own tree, production true since
+  // SPEC-save-offer-production § 12, where U4 reads release (a)'s pages, so it is not re-run for this.)
+  let cut = 0;
+  const undo = (text) => {
+    const read = withoutSnackCells(text);
+    cut += read.links;
+    return read.text;
+  };
+  const options = {
+    savePath: await productionFalseSavePath(),
+    transform: (html) => undo(withReleaseAWording(html)),
+    content: (bytes, key) => (key.endsWith(".json") ? Buffer.from(undo(bytes.toString("utf8")), "utf8") : bytes),
+  };
   assert.deepEqual(await normalWeekRecord(ROOT, options), golden.record);
+  assert.ok(cut > 0, "control: the snack links' cells were there to remove");
 });

@@ -6,7 +6,8 @@
 //         step its slide is made), the window § 17.2 names; a meal with no cell has today's slide (the name alone).
 //   R2-74 an old link (no photo part): the slides exactly as today — step for step what the LIVE block (914668de…, rebuilt
 //         as R2-71 rebuilds it) shows on the same page; and (R2-74b) what the live block does with a link that HAS the
-//         photo part (§ 17.1: the builder states it).
+//         photo part (§ 17.1: the builder states it). Since § 31 this text logs one line more, its `zero:` verdict
+//         before done, which R2-74 sets aside by name (§ 30's box changes no slide's photograph, so the slides compare).
 //   R2-75 ⛔ an unknown host code (out of the list, a URL, a word): no request at all, and today's slides; the fill as
 //         ever (done).
 //   R2-76 the sheet fails: per slide, today's fallback (the card's loaded image, else the name alone), and no sheet asked
@@ -39,7 +40,13 @@ test("R2-74: an old link (no photo part) — the slides exactly as the live bloc
   assert.deepEqual(ours.first[0], { name: NAMES[0], sheet: null, card: PIXEL }, "control: today's rule, the card's loaded photo");
   // The one line that differs is the fill's own name: the live block is fill B, this text fill C (SPEC-rung2-fill-c).
   assert.ok(theirs.info.includes("[fitaf-handoff] fill B, mpid 21"), "control: the live block names fill B");
-  assert.deepEqual(ours, { ...theirs, info: theirs.info.map((line) => line.replace("] fill B, mpid", "] fill C, mpid")) });
+  // And one line this text adds: SPEC-rung2-progress-and-checkout § 31's verdict on the store's code, just before done
+  // (this page draws no checkout component, so "not found"). Nothing else of the run, slides included, differs.
+  const ZERO_LINE = "[fitaf-handoff] zero: not found";
+  assert.equal(ours.info.at(-2), ZERO_LINE, "§ 31's line, just before done");
+  assert.equal(ours.info.filter((l) => l.startsWith("[fitaf-handoff] zero:")).length, 1, "once");
+  const withoutZero = { ...ours, info: ours.info.filter((line) => line !== ZERO_LINE) };
+  assert.deepEqual(withoutZero, { ...theirs, info: theirs.info.map((line) => line.replace("] fill B, mpid", "] fill C, mpid")) });
 });
 
 test("R2-74b: the LIVE block (914668de…) given a link with the photo part — refuses it whole: nothing pressed, no screen", async () => {

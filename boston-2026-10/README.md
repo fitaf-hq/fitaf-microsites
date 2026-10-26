@@ -223,7 +223,12 @@ exactly as rung 1 does. A visit without `#fitaf=` costs one read of `location.ha
   that finds a titled card, and with none for 30 s it stops, `no meal cards on this page`, pressing nothing (R2-67–R2-69);
   the Fit AF logo, the store's own loaded header image, is shown at the top of the screen on a white plate (ruled after
   the rehearsal) and at the top of the checkout
-  component (R2-70, W16); the text stays ASCII, within 10,240 bytes and names no new address (R2-71).
+  component (R2-70, W16); the text stays ASCII, within 10,240 bytes and names no new address (R2-71). **§§ 30–31**
+  (2026-10-25; the ceiling 20,480 since § 25.7): every slide keeps its photograph's box from its first frame, holding
+  the Fit AF mark (the store's logo on a white plate) until a photograph is drawn and keeping it when there is none, so
+  nothing on the screen moves (R2-92; P1–P3 in the watch, P4 in Storybook); and at `done`, before the screen goes, the
+  store's code `zero` is applied in its hidden discount field, its verdict logged as `zero: applied`, `not found`,
+  `refused` or `no sign` before the done line, never blocking the checkout (R2-93; Z1–Z5 in the watch).
 - ⛔ **Not yet run on the live store**: the full-plan rule, fill B's second presses of a meal (the
   2026-09-29 run pressed each of its two meals once), fill B's § 8 finish, and fill B's § 10 check. Nor any v2
   link (§ 11): matching by key, the two-card refusal and the 30 s wait are proven here on the synthetic page only.

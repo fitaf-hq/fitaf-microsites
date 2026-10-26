@@ -74,6 +74,26 @@ function inspectHandoff(sections) {
   const displayed = (el) => Boolean(el && el.getClientRects().length > 0);
   const clean = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : null);
   const screen = doc?.getElementById("fitaf-screen") ?? null;
+  // SPEC-rung2-progress-and-checkout § 30 (P4), in the frame: the screen's placeholder as the browser draws it. `empty`:
+  // the carousel with no slide (its ::before); `shown`: the shown slide's first element, its box and its ::before. A
+  // plate is [width, height, top on the page] and its mark the background image ("none" without one); `side` is the box
+  // a photograph takes, min(220px, 32vh). Defined here: this function runs in the page, whole.
+  const placeholderOf = (s) => {
+    const win = s.ownerDocument.defaultView;
+    const drawn = (el) => {
+      const r = el.getBoundingClientRect();
+      const b = win.getComputedStyle(el, "::before");
+      return { box: [Math.round(r.width), Math.round(r.height), Math.round(r.top)], content: b.content, plate: [Math.round(parseFloat(b.width)), Math.round(parseFloat(b.height)), Math.round(r.top + parseFloat(b.top))], mark: b.backgroundImage };
+    };
+    const c = s.querySelector(".c");
+    const on = c?.querySelector(":scope > .on");
+    return {
+      side: Math.round(Math.min(220, 0.32 * win.innerHeight)),
+      empty: c && !c.children.length ? drawn(c) : null,
+      first: on?.firstElementChild?.className ?? null,
+      shown: on?.firstElementChild ? drawn(on.firstElementChild) : null,
+    };
+  };
   const counts = {};
   for (const sel of sections) {
     const all = doc ? [...doc.querySelectorAll(sel)] : [];
@@ -92,6 +112,10 @@ function inspectHandoff(sections) {
     slide: clean(screen?.querySelector(".c > .on b")),
     line: clean(screen?.querySelector('[role="status"]')),
     bar: screen?.querySelector(".b i")?.style.width ?? null,
+    // SPEC-rung2-progress-and-checkout § 30 (P4): the placeholder. Before the first meal, the empty carousel's (its
+    // ::before); once a meal is shown, that slide's box (its first element, .f) and the placeholder in it (its ::before).
+    // Each with its place: the box's, and the plate's (its size, its top on the page, its mark).
+    placeholder: screen ? placeholderOf(screen) : null,
     steps: [1, 2, 3].filter((n) => doc?.documentElement.classList.contains(`fitaf-step-${n}`)),
     stepBar: Boolean(doc?.getElementById("fitaf-bar")),
     total: displayed(doc?.querySelector(".summary__total")),
