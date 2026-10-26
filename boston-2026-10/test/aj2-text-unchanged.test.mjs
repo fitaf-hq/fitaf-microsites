@@ -9,6 +9,10 @@
 // new code"), from 2ceb05a to f9273c0, § 13's code commit: the funnel's answer steps in the page's order since round 2,
 // and `answer: family`, a branch, printed with no change figure. 2ceb05a's text over the same fixture (which gained who and
 // family rows with § 13's cases, 133994b) is this tree's at 133994b, byte for byte, and lists neither question.
+// ⚠ AND AGAIN with SPEC-analytics.md § 14 item 3 ("AJ2's base moves with this section, recorded once from the new code"),
+// from f9273c0 to 1fb4831, § 14's code commit: each day's "saved an offer N" after the funnel. f9273c0's text over the same
+// fixture (which gained a save row a day with § 14's cases, 9cdf963) is this tree's at 9cdf963, byte for byte (AJ2 passed
+// there), and prints no saved line.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -19,7 +23,7 @@ import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { fixtureAnswers, runAt, runs } from "./aj-checks.mjs";
 
-const BASE = "f9273c0";
+const BASE = "1fb4831";
 
 function run(cmd, args, { input } = {}) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 64 * 1024 * 1024 });
