@@ -1555,3 +1555,51 @@ zero()'s body — layout only, no behaviour change … Do NOT drop the header co
   phone, and on macOS by default, it is an overlay one: `N` = 0); and whether any rule of the store's sets `overflow` or
   `padding-right` on `<html>` with an `!important` of its own, which would win over this one (none is known here: the
   store's stylesheets were not read for this; the CDK's scroll-block class, as the CDK publishes it, has none).
+
+## 32. Amendment, 2026-10-25: the ceiling is the store's cap, 50,000. CONTRACT, before any code
+
+**Why.** The Advisor, after he pasted `c31603d`'s block (`ts=2026-10-26T00:24:47.461Z`): *"FYI the cap is 50000
+characters"*. This is the store's own limit on the Footer's text. Until now the store's limit was unknown, so § 25.7's
+20,480 bytes was **our** ceiling, and it was an example: *"e.g. to 20,480 bytes"*, on his *"Frankly we could be at 50 kb
+and still be lighter than most of the elements on the page"* (§ 25.6, F1). Under that ceiling, § 31.2's item 2 was not
+built (it did not fit beside item 3). § 31.1's block came in 139 bytes under, and the pasted block `c31603d`
+67 under (20,413 bytes).
+
+1. **The ceiling becomes 50,000 bytes**, the store's cap. Each built file is held to it: the Footer block and the console
+   file. R2-77 already holds every character ASCII, so a file's bytes are its characters, and a byte ceiling of 50,000
+   is the store's character cap exactly.
+   - The 5,120-byte warning stays.
+   - Nothing else changes: the `<` rule, the ASCII rule, the hosts and the build's refusal (naming the file and
+     writing nothing).
+2. **Ruled by the orchestrator** as this contract's author, on his word about the store. The cap is the store's and
+   the store's figure is the authority. If the store says anything else at a paste, that is a finding, and the ceiling
+   follows it.
+3. **The pasted and built blocks keep their records.** The files under `storefront/footer-block/` say `ceiling_bytes:
+   20480` because that was the ceiling when each was built. A record is not re-written; the next block built says
+   50,000.
+4. **Cases.** R2-11a, R2-29 (its control, R2-29b and R2-29c's edges: 50,000 built, 50,001 refused) and R2-77 change to
+   name 50,000, with the history in their comments. R2-71 reads the constant and does not change. Run red on the
+   constant before it changes, then green.
+5. **Not here**: § 31.2 item 2, the one item the old ceiling blocked. It now fits, and building it is its own step,
+   never a side effect of raising a number.
+
+### 32.1 Built (2026-10-25, the orchestrator)
+
+§ 32 is unchanged. The cases are at `ff7b268`, red on `0b03cd4`'s code: 5 of 10 fail, each on the old ceiling. The code
+is `scripts/build-storefront.mjs`'s `MAX_SHIPPED_BYTES` at 50,000, plus the comments and the README row that named
+20,480 as the rule.
+
+Run as `nice -n 15 node --test` over R2-11, R2-29, R2-71, R2-77 and R2-32:
+
+| | count |
+|---|---|
+| before the code | 10 tests, 5 pass, 5 fail |
+| after the code | 12 tests, 12 pass (R2-32 added: the shipped text is unchanged) |
+
+**What § 32 was silent on** (stated, not ruled):
+
+1. **R2-11c names the ceiling too.** Its refusal pattern was `/bytes; the ceiling is 20,480/`. Item 4 did not list it.
+   It was green before the code and red after it, for that literal alone, so its pattern now names 50,000.
+2. **`src/storefront/fitaf-handoff.js` is not changed.** Three of its full-line comments name 20,480 (lines 9, 230 and
+   599). The build drops full-line comments, so none of them ships. Two are history, and line 9 restates the old rule.
+   Changing the source is outside § 32, and R2-32's pins hold the shipped text the same either way.
