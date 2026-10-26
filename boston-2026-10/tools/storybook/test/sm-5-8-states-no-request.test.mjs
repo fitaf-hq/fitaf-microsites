@@ -67,6 +67,9 @@ const STORY_DATES = {
   "Individual · Chef's Choice": "week",
   "Individual · No picks this week": "none",
   "Individual · All plans": "today",
+  // The site's SPEC-ui-and-copy-pass § 4: the questions' second step (§ 4 A), and the save step's dialog (§ 4 B).
+  "Individual · One answered": "today",
+  "Individual · Not ready?": "today",
   "Family · Family": "today",
   // The site's SPEC-ui-and-copy-pass § 2.2: Family's and, on the fixture week (its and-5d cart holds ten).
   "Family · and · 10 meals": "fixture",

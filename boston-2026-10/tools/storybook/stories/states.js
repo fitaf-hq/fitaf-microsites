@@ -35,6 +35,12 @@ const answerSet = (part, name, more = {}) => ({
 
 export const STATES = {
   start: { name: "Start", fragment: () => "", date: "today", waits: "#panel-individual" },
+  // The site's SPEC-ui-and-copy-pass § 4 A (2026-10-26, the questions revealed one by one): the start, then the first meal
+  // question's first answer pressed, as a visitor presses it: the next question drawn, with no answer pressed.
+  oneAnswered: { name: "One answered", fragment: () => "", date: "today", waits: "#panel-individual", press: '#panel-individual [data-q="lunch_dinner"]', opens: "#q-weekends" },
+  // § 4 B: the result card's Not ready? pressed (a week with the answers' cart: the card's checkout, so Not ready?): the
+  // save step in its dialog.
+  notReady: { name: "Not ready?", fragment: chosen, date: "today", waits: RESULT, needs: "#not-ready", press: "#not-ready", opens: "#save-dialog[open]" },
   chosen: { name: "Chosen", fragment: chosen, date: "today", waits: RESULT },
   // SPEC-plan-page-refinement § 4: the list is always open, so *closed* and *open* are one story; the grid is a modal.
   cc: { name: "Chef's Choice", fragment: chosen, date: "week", waits: RESULT, needs: "#cc-list" },
