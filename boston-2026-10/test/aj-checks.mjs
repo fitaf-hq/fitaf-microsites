@@ -173,7 +173,8 @@ export function parseText(text) {
 
 // ── AJ1 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** AJ1's document for the fixture, 2026-10-23..25, written by hand from test/fixtures/analytics/ (§ 11 item 1's shape). */
+/** AJ1's document for the fixture, 2026-10-23..25, written by hand from test/fixtures/analytics/ (§ 11 item 1's shape;
+ *  since § 13 item 3 the funnel's answer steps in the page's order since round 2, Family's own question last). */
 export const FIXTURE_DOCUMENT = {
   dataset: "fitaf_microsite_analytics_prod",
   from: "2026-10-23",
@@ -187,11 +188,13 @@ export const FIXTURE_DOCUMENT = {
       visits: 15,
       funnel: [
         { step: "open", visits: 15 },
-        { step: "answer: goal", visits: 11 },
+        { step: "answer: who", visits: 13 },
         { step: "answer: lunch_dinner", visits: 9 },
         { step: "answer: weekends", visits: 6 },
         { step: "answer: breakfast", visits: 5 },
         { step: "answer: snacks", visits: 2 },
+        { step: "answer: goal", visits: 11 },
+        { step: "answer: family", visits: 3 },
         { step: "result", visits: 8 },
         { step: "click", visits: 4 },
       ],
@@ -210,11 +213,13 @@ export const FIXTURE_DOCUMENT = {
       visits: 4,
       funnel: [
         { step: "open", visits: 4 },
-        { step: "answer: goal", visits: 2 },
+        { step: "answer: who", visits: 3 },
         { step: "answer: lunch_dinner", visits: 2 },
         { step: "answer: weekends", visits: 0 },
         { step: "answer: breakfast", visits: 0 },
         { step: "answer: snacks", visits: 0 },
+        { step: "answer: goal", visits: 2 },
+        { step: "answer: family", visits: 1 },
         { step: "result", visits: 2 },
         { step: "click", visits: 1 },
       ],
@@ -369,7 +374,8 @@ const DAY_KEYS = ["day", "data", "visitors", "visits", "funnel", "clicks", "visi
 const NO_DATA_KEYS = ["day", "data"];
 const STEP_KEYS = ["step", "visits"];
 const QUARTILE_KEYS = ["q1", "median", "q3", "n"];
-const STEP_NAMES = ["open", "answer: goal", "answer: lunch_dinner", "answer: weekends", "answer: breakfast", "answer: snacks", "result", "click"];
+// § 13 item 3: two more answer steps, who it is for and Family's own question.
+const STEP_NAMES = ["open", "answer: who", "answer: lunch_dinner", "answer: weekends", "answer: breakfast", "answer: snacks", "answer: goal", "answer: family", "result", "click"];
 const SPLIT_KEYS = {
   clicks: (k) => ["order", "chefs-choice", "all-plans"].includes(k),
   device: (k) => ["phone", "tablet", "desktop"].includes(k),

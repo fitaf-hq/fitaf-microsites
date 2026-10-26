@@ -2,7 +2,9 @@
 // only, its days America/New_York's (§ 2's day, ruled 2026-10-13: grouped and bounded in that zone by the SQL itself). The report (scripts/analytics.mjs) is run in this process with a stand-in for `fetch` that answers each of its
 // queries from test/fixtures/analytics/<query>.json (invented numbers, in the SQL API's JSON format: `meta`, `data`,
 // `rows`; counts as the strings ClickHouse writes UInt64 as). Nothing is requested. The expected report is written
-// here, by hand, from the fixture. Every query asks for aggregates only: a visit's id (`s`) and a visitor's (`v`) are
+// here, by hand, from the fixture (since SPEC-analytics § 13 item 3 the funnel in the page's order since round 2, who
+// first and the goal last, then Family's own question, which branches off who and has no change figure: the step after
+// it is compared with the goal's). Every query asks for aggregates only: a visit's id (`s`) and a visitor's (`v`) are
 // read only inside count(DISTINCT …). And the program's refusals, run as a program: no token, no account, a bad date,
 // --from after --to, an unknown argument; each exits 2 before any request.
 import test from "node:test";
@@ -23,12 +25,14 @@ const EXPECTED = `Fit AF microsite analytics: fitaf_microsite_analytics_prod, 20
   unique visitors 12 · visits 15
   funnel (visits)
     open                     15
-    answer: goal             11   -4 (27%)
-    answer: lunch_dinner      9   -2 (18%)
+    answer: who              13   -2 (13%)
+    answer: lunch_dinner      9   -4 (31%)
     answer: weekends          6   -3 (33%)
     answer: breakfast         5   -1 (17%)
     answer: snacks            2   -3 (60%)
-    result                    8   +6
+    answer: goal             11   +9
+    answer: family            3
+    result                    8   -3 (27%)
     click                     4   -4 (50%)
     click by link: order 3 · chefs-choice 1 · all-plans 2
   visit length: median 1 min 12 s · quartiles 25 s to 2 min 40 s (13 visits)
@@ -42,12 +46,14 @@ const EXPECTED = `Fit AF microsite analytics: fitaf_microsite_analytics_prod, 20
   unique visitors 3 · visits 4
   funnel (visits)
     open                      4
-    answer: goal              2   -2 (50%)
-    answer: lunch_dinner      2   0
+    answer: who               3   -1 (25%)
+    answer: lunch_dinner      2   -1 (33%)
     answer: weekends          0   -2 (100%)
     answer: breakfast         0   0
     answer: snacks            0   0
-    result                    2   +2
+    answer: goal              2   +2
+    answer: family            1
+    result                    2   0
     click                     1   -1 (50%)
     click by link: chefs-choice 1
   visit length: median 15.5 s · quartiles 8 s to 40 s (4 visits)
