@@ -95,13 +95,15 @@ test("MS-4: an unknown fragment opens the start; a known size with unknown answe
       individual: page.el("panel-individual").hasAttribute("hidden") === false,
     };
   };
-  const nothing = { goal: [], q1: null, more: false, result: false, individual: true };
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 4.2 item 1 (2026-10-26): the start is the first question alone, so no panel is
+  // shown there (the individual panel was the start's until then); a size's link shows the individual panel.
+  const nothing = { goal: [], q1: null, more: false, result: false, individual: false };
   for (const hash of ["#nope", "#nope-or-9d", "#meals", "#meals-both-7d", "#-or-7d", "#7", "#meals-or-7d-x", "#lean7"]) {
     assert.deepEqual(start(open(html, hash)), nothing, hash);
   }
   // ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 A item 5 (2026-10-26): a link carrying a size reveals every question, so with
   // the size alone the meal questions are shown (Q1 unanswered), no longer waiting for Q1.
   for (const hash of ["#lean-or-9d", "#lean-both-7d", "#lean-or-7d-s-b", "#lean-9", "#lean-or-7d-b-b"]) {
-    assert.deepEqual(start(open(html, hash)), { ...nothing, goal: ["lean"], more: true }, hash);
+    assert.deepEqual(start(open(html, hash)), { ...nothing, goal: ["lean"], more: true, individual: true }, hash);
   }
 });

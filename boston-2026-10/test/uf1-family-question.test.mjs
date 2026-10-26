@@ -46,8 +46,10 @@ test("UF1: #family lands on Family, nothing answered; #family-or and #family-and
       assert.deepEqual([whoOf(page).pressed, familyOf(page).pressed], [["family"], pressed], `${build}, ${hash}`);
       assert.equal(page.hash(), hash, `${build}, ${hash}: no fragment of its own on opening`);
     }
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 4.2 item 1 (2026-10-26): a fragment carrying no answer is the start, neither
+    // answer to the first question pressed (it was the individual page, the start's default until then).
     for (const hash of ["#family-both", "#family-or-5d", "#family-"]) {
-      assert.deepEqual([whoOf(open(html, hash)).pressed, familyOf(open(html, hash)).pressed], [["individual"], []], `${build}, ${hash}: not a Family fragment: the individual page`);
+      assert.deepEqual([whoOf(open(html, hash)).pressed, familyOf(open(html, hash)).pressed], [[], []], `${build}, ${hash}: not a Family fragment: the start`);
     }
     const page = open(html, "#family");
     answerFamily(page, "or");

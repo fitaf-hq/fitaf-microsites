@@ -48,8 +48,8 @@ function expected(page, cart, { snacks = undefined, note = false } = {}) {
     ...(note ? [["cc-snacks-note", words.snacks_not_carted]] : []),
     ["cc-checkout", words.checkout],
     ["cc-own", words.own],
-    // § 4 B: his words, the working label, written here from the contract.
-    ...(page.has("not-ready") ? [["not-ready", "Not ready?"]] : []),
+    // § 4 B: his words, ruled in § 4.2 item 6, written here from the contract.
+    ...(page.has("not-ready") ? [["not-ready", "Not ready to checkout? Save your offer now."]] : []),
   ];
 }
 

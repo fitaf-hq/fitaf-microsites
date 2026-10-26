@@ -34,10 +34,12 @@ const answerSet = (part, name, more = {}) => ({
 });
 
 export const STATES = {
-  start: { name: "Start", fragment: () => "", date: "today", waits: "#panel-individual" },
-  // The site's SPEC-ui-and-copy-pass § 4 A (2026-10-26, the questions revealed one by one): the start, then the first meal
-  // question's first answer pressed, as a visitor presses it: the next question drawn, with no answer pressed.
-  oneAnswered: { name: "One answered", fragment: () => "", date: "today", waits: "#panel-individual", press: '#panel-individual [data-q="lunch_dinner"]', opens: "#q-weekends" },
+  // The site's SPEC-ui-and-copy-pass § 4.2 item 1 (2026-10-26): the start is the first question alone, no panel drawn.
+  start: { name: "Start", fragment: () => "", date: "today", waits: "#who" },
+  // The site's SPEC-ui-and-copy-pass § 4 A (2026-10-26, the questions revealed one by one): Just me (since its § 4.2,
+  // #individual, its panel's first step shown), then the first meal question's first answer pressed, as a visitor presses
+  // it: the next question drawn, with no answer pressed.
+  oneAnswered: { name: "One answered", fragment: () => "#individual", date: "today", waits: "#panel-individual", press: '#panel-individual [data-q="lunch_dinner"]', opens: "#q-weekends" },
   // § 4 B: the result card's Not ready? pressed (a week with the answers' cart: the card's checkout, so Not ready?): the
   // save step in its dialog.
   notReady: { name: "Not ready?", fragment: chosen, date: "today", waits: RESULT, needs: "#not-ready", press: "#not-ready", opens: "#save-dialog[open]" },

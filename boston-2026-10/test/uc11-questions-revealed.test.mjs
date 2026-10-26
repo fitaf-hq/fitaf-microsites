@@ -13,6 +13,12 @@
 // ⚠ Q4 (snacks): while snacks are carted (data/plans.json, as committed) the Chef's Choice card shows Q4 beside a result
 // only (SPEC-snacks-in-the-cart § 4), so the sequence is uc11-harness CARTED (the builder's reading, § 4.1); with snacks
 // shown and not carted (ms-harness SNACKS_SHOWN) Q4 is in the sequence, between breakfast and the meal size.
+// ⚠ AMENDED by § 4.2 (the Advisor's rulings on § 4 E, 2026-10-26: "Yes, let's start with just the question"): the start (a
+// link carrying no answer) is *Who is this for?* alone, neither answer pressed, nothing of either panel (no meal question,
+// no Family card, no result), the foot shown (*Why Fit AF?*, *See all plans*, the footnote); *Just me* shows the first
+// meal question, *Me and my family* Family's card and its one question; `#individual` and `#family` press their answer
+// and show their panel's first step, as if tapped. Every walk below so starts with a tap on *Just me*, and the first
+// question's answer event is sent on its tap.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { hiddenInTree } from "./cc-harness.mjs";
@@ -28,15 +34,20 @@ const NOT_CARTED = await uqPages();
 /** Both builds as committed (snacks carted) with the version-2 fixture week, whose every-day carts have a snack list. */
 const CARTED_V2 = { development: await pageOf({ target: "dev", picks: V2_DIR }), production: await pageOf({ picks: V2_DIR }) };
 
-/** A item 2's links: no answer and no size. `#from-email` is the emails' /o link back (src/worker/redeem.js), which
- *  carries none either (⚠ found at the build: item 5 lists it among the links carrying answers). */
-const STARTS = ["", "#individual", "#from-email"];
+/** § 4.2 item 1's start: links carrying no answer. `#from-email` is the emails' /o link back (src/worker/redeem.js), which
+ *  carries none either (§ 4.1, Found 1); `#nope` a fragment the page does not know. */
+const STARTS = ["", "#from-email", "#nope"];
+/** § 4.2 item 2: the links carrying the first question's answer, and its panel's first step. */
+const FIRST_STEPS = { "#individual": ["individual", "q-lunch_dinner"], "#family": ["family", "q-family"] };
+/** What of the page a visitor sees at the start but the questions: each panel, Family's card, and the foot's three. */
+const PARTS = { panels: ["panel-individual", "panel-family"], foot: ["why-link", "all-link"] };
 
 /** The walk (items 1, 3, 4): from the start, each question of `sequence` tapped in turn (uc11-harness WALK's answers);
  *  before each tap the questions shown are exactly the first question and the sequence up to the newest, the newest
  *  with no answer pressed, every one above it its tapped answer, and no result; after the last, the result. */
 function assertWalk(html, sequence, where) {
   const page = open(html);
+  tap(page, WHO, "individual");
   for (let i = 0; i < sequence.length; i++) {
     const v = view(page);
     assert.deepEqual(v.shown, [WHO, ...sequence.slice(0, i + 1)], `${where}: before tapping ${sequence[i]}: the questions shown`);
@@ -54,18 +65,48 @@ function assertWalk(html, sequence, where) {
   return page;
 }
 
-test("UC11: the start — Who is this for? with its default pressed and the first question below it, nothing else (A item 2)", () => {
+test("UC11: the start — Who is this for? alone, neither answer pressed, nothing of either panel; the foot shown (§ 4.2 items 1, 4)", () => {
   for (const [build, html] of Object.entries(BUILDS)) {
     for (const hash of STARTS) {
-      const v = view(open(html, hash));
-      assert.deepEqual(v.shown, [WHO, "q-lunch_dinner"], `${build}, ${hash || "(no fragment)"}: the first question and the first meal question`);
-      assert.deepEqual(v.pressed, { [WHO]: "individual", "q-lunch_dinner": null }, `${build}, ${hash || "(no fragment)"}: Just me pressed, Q1 neither`);
-      assert.equal(v.result, false, `${build}, ${hash || "(no fragment)"}: no result`);
+      const where = `${build}, ${hash || "(no fragment)"}`;
+      const page = open(html, hash);
+      const v = view(page);
+      assert.deepEqual(v.shown, [WHO], `${where}: the first question alone`);
+      assert.deepEqual(v.pressed, { [WHO]: null }, `${where}: neither answer pressed`);
+      assert.equal(v.result, false, `${where}: no result`);
+      for (const id of PARTS.panels) assert.equal(hiddenInTree(page.el(id)), true, `${where}: #${id} not shown`);
+      assert.equal(hiddenInTree(page.document.querySelector(".family-card")), true, `${where}: no Family card`);
+      for (const id of PARTS.foot) assert.equal(hiddenInTree(page.el(id)), false, `${where}: the foot's #${id} shown`);
+      assert.equal(hiddenInTree(page.document.querySelector("footer .footnote")), false, `${where}: the footnote shown`);
+      assert.equal(page.hash(), hash, `${where}: no fragment written on opening`);
     }
-    const family = view(open(html, "#family"));
-    assert.deepEqual(family.shown, [WHO, ...FAMILY], `${build}, #family: the first question and Family's`);
-    assert.deepEqual(family.pressed, { [WHO]: "family", "q-family": null }, `${build}, #family: Me and my family pressed, Family's question neither`);
-    assert.equal(family.result, false, `${build}, #family: no result`);
+  }
+});
+
+test("UC11: #individual and #family press their answer and show their panel's first step, as if tapped (§ 4.2 item 2)", () => {
+  for (const [build, html] of Object.entries(BUILDS)) {
+    for (const [hash, [who, first]] of Object.entries(FIRST_STEPS)) {
+      const page = open(html, hash);
+      const v = view(page);
+      assert.deepEqual(v.shown, [WHO, first], `${build}, ${hash}: the first question and its panel's first step`);
+      assert.deepEqual(v.pressed, { [WHO]: who, [first]: null }, `${build}, ${hash}: its answer pressed, the step neither`);
+      assert.equal(v.result, false, `${build}, ${hash}: no result`);
+      assert.equal(hiddenInTree(page.el(`panel-${who}`)), false, `${build}, ${hash}: its panel shown`);
+    }
+    assert.equal(hiddenInTree(open(html, "#family").document.querySelector(".family-card")), false, `${build}, #family: Family's card shown`);
+  }
+});
+
+test("UC11: from the start, Just me shows the first meal question; Me and my family Family's card and its question (§ 4.2 item 1)", () => {
+  for (const [build, html] of Object.entries(BUILDS)) {
+    for (const [, [who, first]] of Object.entries(FIRST_STEPS)) {
+      const page = open(html);
+      tap(page, WHO, who);
+      const v = view(page);
+      assert.deepEqual([v.shown, v.pressed], [[WHO, first], { [WHO]: who, [first]: null }], `${build}: ${who} tapped at the start`);
+      assert.equal(page.hash(), `#${who}`, `${build}: ${who}'s fragment, as a press has always written it`);
+      if (who === "family") assert.equal(hiddenInTree(page.document.querySelector(".family-card")), false, `${build}: Family's card shown`);
+    }
   }
 });
 
@@ -77,6 +118,7 @@ test("UC11: one tap reveals one question, the meal size the result; the newest w
 test("UC11: while snacks are carted, Q4 is the card's — after breakfast the meal size; Q4 beside the result where the week has a list", () => {
   for (const [build, html] of Object.entries(CARTED_V2)) {
     const page = open(html);
+    tap(page, WHO, "individual");
     tap(page, "q-lunch_dinner", "or");
     tap(page, "q-weekends", "yes");
     tap(page, "q-breakfast", "no");
@@ -93,17 +135,18 @@ test("UC11: the fragment is the answers' alone — the revealed point is not in 
   for (const [build, html] of Object.entries(BUILDS)) {
     const page = open(html);
     const hashes = [];
-    for (const id of CARTED) {
-      tap(page, id, WALK[id]);
+    for (const [id, a] of [[WHO, "individual"], ...CARTED.map((id) => [id, WALK[id]])]) {
+      tap(page, id, a);
       hashes.push(page.hash());
     }
-    assert.deepEqual(hashes, ["#meals-or-5d", "#meals-or-5d", "#meals-or-5d-b", "#lean-or-5d-b"], `${build}: each tap's fragment, as before § 4`);
+    assert.deepEqual(hashes, ["#individual", "#meals-or-5d", "#meals-or-5d", "#meals-or-5d-b", "#lean-or-5d-b"], `${build}: each tap's fragment, as before § 4 (§ 4.2: Just me first)`);
   }
 });
 
 test("UC11: a shown question stays shown — a re-tap above it, back and forward (A item 3)", () => {
   for (const [build, html] of Object.entries(BUILDS)) {
     const page = open(html);
+    tap(page, WHO, "individual");
     for (const id of CARTED.slice(0, 3)) tap(page, id, WALK[id]);
     const shown = [WHO, ...CARTED];
     assert.deepEqual(view(page).shown, shown, `${build}: control: three answered, the meal size the newest`);
@@ -111,7 +154,7 @@ test("UC11: a shown question stays shown — a re-tap above it, back and forward
     assert.deepEqual(view(page).shown, shown, `${build}: Q1 answered again (the other answer): nothing hidden`);
     assert.equal(view(page).pressed["q-goal"], null, `${build}: the meal size still the newest`);
     page.go("#individual");
-    assert.deepEqual(view(page).shown, shown, `${build}: back to the start's fragment: nothing hidden`);
+    assert.deepEqual(view(page).shown, shown, `${build}: back to Just me's fragment: nothing hidden`);
     page.go("#meals-and-5d-b");
     assert.deepEqual(view(page).shown, shown, `${build}: forward: nothing hidden`);
     tap(page, "q-goal", "signature");
@@ -166,6 +209,7 @@ test("UC11: a fragment the page view never wrote, carrying answers or a size, re
 test("UC11: the fallback — an answer given, then the other answer to Who is this for? reveals every question of both panels (A item 6)", () => {
   for (const [build, html] of Object.entries(BUILDS)) {
     const page = open(html);
+    tap(page, WHO, "individual");
     tap(page, "q-lunch_dinner", "or");
     tap(page, WHO, "family");
     assert.deepEqual(view(page).shown, [WHO, ...FAMILY], `${build}: on Family, its question`);
@@ -194,6 +238,12 @@ test("UC11: a switch before any answer only changes the panel, its first questio
     tap(page, "q-lunch_dinner", "and");
     tap(page, WHO, "individual");
     assert.deepEqual(view(page).shown, [WHO, "q-lunch_dinner", "q-weekends"], `${build}: Just me pressed again after an answer: not a switch`);
+    // ⚠ The builder's reading (§ 4.2.1): back to the start (no answer pressed) after an answer, then the other answer is a
+    // flip from the answer last chosen, so every question of both panels shows.
+    page.go("");
+    assert.deepEqual(view(page).shown, [WHO], `${build}: back to the start: the first question alone`);
+    tap(page, WHO, "family");
+    assert.ok([...CARTED, ...FAMILY].every((id) => revealed(page, id)), `${build}: then Me and my family: every question revealed`);
   }
 });
 
@@ -215,6 +265,7 @@ test("UC11: a question not yet revealed is hidden; revealing moves neither focus
       for (const b of page.el(id).closest(".step").querySelectorAll("button")) assert.equal(hiddenInTree(b), true, `${build}: #${id}'s answers out of the tab order`);
     }
     const calls = browserParts(page);
+    tap(page, WHO, "individual");
     for (const id of CARTED) tap(page, id, WALK[id]);
     assert.equal(view(page).result, true, `${build}: control: the walk reached the result`);
     assert.deepEqual(calls, [], `${build}: no focus moved, nothing scrolled`);
@@ -226,18 +277,26 @@ test("UC11: every answer is sent as today, a reveal sends nothing; every button.
     assert.deepEqual(pageChoices(html).unread, [], `${build}: A3 reads every button.choice`);
     const visit = openVisit(html);
     const sent = () => visit.beacons.map((b) => b.body).filter((b) => b.event !== "open");
-    const press = (id, a) => visit.press(visit.document.querySelector(id === "q-goal" ? `[data-goal="${a}"]` : `[data-q="${id.slice(2)}"][data-a="${a}"]`));
+    const press = (id, a) =>
+      visit.press(visit.document.querySelector(id === WHO ? `[data-who="${a}"]` : id === "q-goal" ? `[data-goal="${a}"]` : `[data-q="${id.slice(2)}"][data-a="${a}"]`));
+    const named = (bodies) => bodies.map((b) => (b.event === "answer" ? `answer ${b.question} ${b.answer}` : b.event));
     const steps = [];
-    for (const id of CARTED) {
+    for (const [id, a] of [[WHO, "individual"], ...CARTED.map((id) => [id, WALK[id]])]) {
       const before = sent().length;
-      press(id, WALK[id]);
-      steps.push(sent().slice(before).map((b) => (b.event === "answer" ? `answer ${b.question} ${b.answer}` : b.event)));
+      press(id, a);
+      steps.push(named(sent().slice(before)));
     }
     assert.deepEqual(
       steps,
-      [["answer lunch_dinner or"], ["answer weekends no"], ["answer breakfast yes"], ["answer goal lean", "result"]],
-      `${build}: one answer event a tap, the result's after the meal size, nothing for a reveal`,
+      [["answer who individual"], ["answer lunch_dinner or"], ["answer weekends no"], ["answer breakfast yes"], ["answer goal lean", "result"]],
+      `${build}: one answer event a tap, the first question's included (§ 4.2 item 4), the result's after the meal size, nothing for a reveal`,
     );
+    // § 4.2.1, the builder's reading of "every answer event is sent on its tap as today": a tap on the answer a link
+    // already pressed is a tap, and sends its event, as a tap on any pressed answer always has.
+    const linked = openVisit(html, { hash: "#individual" });
+    const at = linked.beacons.length;
+    linked.press(linked.document.querySelector('[data-who="individual"]'));
+    assert.deepEqual(named(linked.beacons.slice(at).map((b) => b.body)), ["answer who individual"], `${build}: #individual, Just me tapped: its event`);
     assert.deepEqual(visit.touched, [], `${build}: nothing stored`);
     assert.equal(pressedOf(open(html, "#lean-or-7d"), "q-goal"), "lean", `${build}: control: the page's own reading`);
   }
