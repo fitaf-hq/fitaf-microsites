@@ -44,6 +44,9 @@
 // link's cells, which this case removes since SPEC-rung2-progress-and-checkout § 31.2 item 1, so it no longer reproduced
 // the record; with it, at 62b8627 (§ 4's cases, the code before) it reproduces 077f472's record (visible_at and
 // visible_built_as apart). picks_data, page_sha256 and the sheet 409b805's.
+// ⚠ RE-RECORDED by `--visible-at cb0980f --release-a --without-snack-cells` for § 4.2 (the start the first question
+// alone): `visible` at the empty fragment alone; at d03fafb (its cases, the code before) the recorder reproduces
+// d0f1a97's record (visible_at apart).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -66,7 +69,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
-  assert.equal(golden.visible_at, "d0f1a97", "the visible pages: d0f1a97's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8, § 1.2 item 1, §§ 2, 2.2, 4)");
+  assert.equal(golden.visible_at, "cb0980f", "the visible pages: cb0980f's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8, § 1.2 item 1, §§ 2, 2.2, 4, 4.2)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {

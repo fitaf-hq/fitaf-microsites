@@ -295,6 +295,10 @@ export const LATER = [
   // page is not), from 62b8627 (its cases, after its contract) to d0f1a97 (its code, one commit). build.mjs's
   // comment-only hunk (saveSlots' note) is left out (`codeOnly`).
   ["62b8627", "d0f1a97", ["src/template.html", "src/app.js", "build.mjs"], { codeOnly: true }],
+  // § 4.2 (2026-10-26, the Advisor's rulings on § 4 E: the start the first question alone) moves the production page with
+  // `production` false by app.js's start and the first question's markup (build.mjs), from d03fafb (its cases) to
+  // cb0980f (its code, one commit); its comments are app.js's, in the page, so every hunk is taken.
+  ["d03fafb", "cb0980f", ["src/app.js", "build.mjs"]],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */

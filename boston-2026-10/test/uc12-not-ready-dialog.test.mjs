@@ -28,8 +28,9 @@ import { browserParts, click, inOrder, inside, open, pages } from "./uc11-harnes
 
 const { development, production, productionFalse } = await pages();
 const BUILDS = { development, production };
-/** B item 1: his words, the working label (⬜ the copy his to edit). */
-const NOT_READY = "Not ready?";
+/** B item 1, as § 4.2 item 6 rules them (the Advisor, 2026-10-26: "Let's try: "Not ready to checkout? Save your offer
+ *  now.""): his words exactly, the link's text and its accessible name. */
+const NOT_READY = "Not ready to checkout? Save your offer now.";
 /** Every element id of the save step's markup (src/save/section.html as written), which item 2 moves into the dialog. */
 const STEP_IDS = [...(await readFile(join(ROOT, "src", "save", "section.html"), "utf8")).matchAll(/\bid="([^"{}]+)"/g)].map((m) => m[1]);
 /** The request a save makes, field by field (flow1.js's `body`; SPEC-save-offer-production): exactly these. */

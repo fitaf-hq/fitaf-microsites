@@ -62,11 +62,14 @@ test("UQ2: the first question is Who is this for?, in the look of the others: Ju
   }
 });
 
-test("UQ2: #family and #individual land on their answer; every other fragment on Individual", () => {
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 4.2 item 1 (2026-10-26, the Advisor: "let's start with just the question"): a
+// fragment carrying no answer (none, or one the page does not know) is the start, neither answer pressed and neither
+// panel shown; a meal answer or a size still lands on Individual.
+test("UQ2: #family and #individual land on their answer; a meal answer or a size on Individual; no answer, the start (neither)", () => {
   for (const [build, html] of Object.entries(BUILDS)) {
-    for (const [hash, pressed] of [["#family", "family"], ["#individual", "individual"], ["", "individual"], ["#lean", "individual"], ["#lean-or-7d", "individual"], ["#meals-and-5d-b", "individual"], ["#nope", "individual"]]) {
+    for (const [hash, pressed] of [["#family", "family"], ["#individual", "individual"], ["", null], ["#lean", "individual"], ["#lean-or-7d", "individual"], ["#meals-and-5d-b", "individual"], ["#nope", null]]) {
       const page = open(html, hash);
-      assert.deepEqual(whoOf(page), { shown: true, answers: WHO.answers, pressed: [pressed] }, `${build}, ${hash || "(no fragment)"}`);
+      assert.deepEqual(whoOf(page), { shown: true, answers: WHO.answers, pressed: pressed ? [pressed] : [] }, `${build}, ${hash || "(no fragment)"}`);
       assert.equal(page.el("panel-family").hasAttribute("hidden"), pressed !== "family", `${build}, ${hash || "(no fragment)"}: the Family panel`);
       assert.equal(page.el("panel-individual").hasAttribute("hidden"), pressed !== "individual", `${build}, ${hash || "(no fragment)"}: the Individual panel`);
       assert.equal(page.hash(), hash, `${build}, ${hash || "(no fragment)"}: no fragment of its own on opening`);

@@ -17,9 +17,11 @@
   function answerKey(s) { return s.ld + "-" + (s.weekends ? "7d" : "5d") + (s.breakfast ? "-b" : ""); }
   function answerPart(s) { return answerKey(s) + (s.snacks ? "-s" : ""); }
 
-  // Nothing chosen: the individual plan (the first question's default), no size, Q1 not answered, Q2–Q4 at their defaults
-  // (data/plans.json's selection_defaults). `who` is the first question's answer (SPEC-ui-and-copy-pass § 2 item 2: until
-  // it, the tab): "individual" or "family", the panel shown.
+  // The individual plan with nothing chosen: no size, Q1 not answered, Q2–Q4 at their defaults (data/plans.json's
+  // selection_defaults). `who` is the first question's answer (SPEC-ui-and-copy-pass § 2 item 2: until it, the tab):
+  // "individual" or "family", the panel shown. Since § 4.2 item 1 (the Advisor, 2026-10-26: "let's start with just the
+  // question") the page's start is NOBODY's: the first question with neither answer, no panel.
+  var NOBODY = { who: null };
   function start() {
     return { who: "individual", goal: null, ld: null, weekends: data.defaults.weekends, breakfast: data.defaults.breakfast, snacks: data.defaults.snacks };
   }
@@ -41,20 +43,24 @@
 
   // "#family" | "#family-or" | "#lean" | "#lean-or-5d-b" | "#meals-and-7d" | "#lean-7" (today's) | "#individual" | "" ->
   // state. A part the page does not know is dropped, as today's "#lean-9" kept the size alone. SPEC-ui-and-copy-pass
-  // § 2.2: Family's one answer (`fld`, Q1's: "or" or "and") follows "family-".
+  // § 2.2: Family's one answer (`fld`, Q1's: "or" or "and") follows "family-". § 4.2 items 1–2: "#individual" (or a size,
+  // or a meal answer) is the individual plan; a fragment carrying no answer ("", or one the page does not know) the start.
   function parse(hash) {
     var h = hash.replace(/^#/, "");
     if (h === "family") return { who: "family", fld: null };
     var fm = /^family-(or|and)$/.exec(h);
     if (fm && data.family[fm[1]]) return { who: "family", fld: fm[1] };
     var s = start();
+    if (h === "individual") return s;
     var m = /^([a-z]+)(?:-(.+))?$/.exec(h);
-    if (!m) return s;
+    if (!m) return NOBODY;
     if (findGoal(m[1])) s.goal = m[1];
     if (m[2]) readAnswers(m[2], s); // answers it does not know leave the size alone, if any
-    return s;
+    return s.goal || s.ld ? s : NOBODY;
   }
+  // The start writes no fragment of its own (no tap makes it: every press answers the first question or one below it).
   function serialise(s) {
+    if (!s.who) return "";
     if (s.who === "family") return s.fld ? "family-" + s.fld : "family";
     var a = s.ld ? answerPart(s) : null;
     if (s.goal && a) return s.goal + "-" + a;
@@ -92,6 +98,8 @@
   var steps = { individual: stepsOf("individual"), family: stepsOf("family") };
   var reached = { individual: 0, family: 0 };
   function carries(s) { return s.who === "family" ? !!s.fld : !!(s.goal || s.ld); }
+  // The first question's answer last chosen in this page view (§ 4.2: the start has none; a return to it keeps the last).
+  var chosen = state.who;
   var all = carries(state);
   // A fragment this page view never wrote nor opened at (a link followed within the page, the address bar) is a link
   // too (item 5): carrying answers or a size, it shows every question. Back and forward land on fragments it has been
@@ -130,7 +138,8 @@
   function render(s) {
     state = s;
     if (s.who === "individual") lastIndividual = s;
-    else lastFamily = s;
+    else if (s.who === "family") lastFamily = s;
+    if (s.who) chosen = s.who;
     // The first question (SPEC-ui-and-copy-pass § 2 item 2): its answer pressed, and its panel the one shown below it.
     $$("[data-who]").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-who") === s.who));
@@ -152,13 +161,13 @@
       b.setAttribute("aria-pressed", String(s.who === "family" && answeredAt("family", b) && s.fld === b.getAttribute("data-family")));
     });
     // The result card is the step after the last question (§ 4 A item 1).
-    var shown = !complete(s.who) ? null : s.who === "family" ? familyResult(s) : individualResult(s);
+    var shown = !s.who || !complete(s.who) ? null : s.who === "family" ? familyResult(s) : individualResult(s);
     var result = $("#result");
     result.hidden = !shown;
     var accent = s.who === "family" ? "family" : s.goal && findGoal(s.goal) ? s.goal : null;
     if (accent) result.setAttribute("data-accent", accent);
     result.setAttribute("data-selection", shown ? shown.selection : "");
-    $("#all-link").hidden = s.who !== "individual";
+    $("#all-link").hidden = s.who === "family"; // § 4.2 item 4: the foot shows at the start too
     if (shown) {
       $("#result-per-meal").textContent = shown.per_meal;
       $("#result-total").textContent = shown.total;
@@ -202,11 +211,12 @@
   });
   // Family shows its panel, the individual plan its own: each returns to the answers it was left with (every answer kept).
   // § 4 A item 6 (the Advisor's fallback): once a question below this one was answered, the other answer shows every
-  // question of both panels; before that, it changes the panel alone.
+  // question of both panels; before that, it changes the panel alone. "The other" is the other than the answer last chosen
+  // (`chosen`), so a return to the start keeps it; from a fresh start there is no other.
   $$("[data-who]").forEach(function (b) {
     b.addEventListener("click", function () {
       var to = b.getAttribute("data-who");
-      if (to !== state.who && (reached.individual > 0 || reached.family > 0)) all = true;
+      if (chosen && to !== chosen && (reached.individual > 0 || reached.family > 0)) all = true;
       go(to === "family" ? lastFamily : lastIndividual);
     });
   });
