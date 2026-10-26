@@ -22,12 +22,14 @@ const heading = (page) => page.document.getElementById("cc-heading")?.textConten
 /** One line per menu whose heading is not its name alone, on the page `html`, each menu chosen in turn. */
 function headingProblems(html, names, where) {
   const page = openMenus(html, HASH);
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): a week of one list shows its one chip beside *Choose my
+  // own meals*; one chip is no choice of menu, so the week's one list is Chef's Choice, as before.
   const { values } = chooserOf(page);
-  const lists = values.length ? values : ["chefs-choice"];
+  const lists = values.length > 1 ? values : ["chefs-choice"];
   const problems = [];
   if (JSON.stringify(lists) !== JSON.stringify(Object.keys(names))) problems.push(`${where}: fixture control: the menus offered ${JSON.stringify(lists)}`);
   for (const list of lists) {
-    if (values.length) chooseMenu(page, list);
+    if (values.length > 1) chooseMenu(page, list);
     const shown = heading(page);
     if (shown !== names[list]) problems.push(`${where} ${list}: the heading ${JSON.stringify(shown)}, not the menu's name ${JSON.stringify(names[list])}`);
     if (shown && shown.includes(weekOf(MENUS_WEEK))) problems.push(`${where} ${list}: the heading shows the week's range`);

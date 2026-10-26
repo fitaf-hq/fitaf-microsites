@@ -2,13 +2,16 @@
 // no button, the list shown with no press (CC-6a, updated); "Choose my own meals" is the rung 1 link, the plan's order
 // page with no fragment; both links are reachable by keyboard. And the rest of Flow 2 is rung 1's: a count without picks keeps the single Choose your
 // meals, no JavaScript shows no card, and the grid's and the Family card's links are unchanged.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): Continue to checkout follows the list and the price
+// (its own slot, after the list); *Choose my own meals* is the chips' last radio, which, pressed, sends the checkout to
+// the plan's order page (cc-harness ownLink), and is reached in the chips' group before the checkout.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { rm } from "node:fs/promises";
 import { parseHTML } from "linkedom";
 import { renderPage } from "../build.mjs";
 import { anchors, hrefs } from "./helpers.mjs";
-import { builtPage, card, CELLS, DAYS, FIXTURE, hiddenInTree, midday, openPlanPage, PLANS, picksDir, productionFalseSavePath } from "./cc-harness.mjs";
+import { builtPage, card, CELLS, DAYS, FIXTURE, hiddenInTree, midday, openPlanPage, ownChip, PLANS, picksDir, productionFalseSavePath } from "./cc-harness.mjs";
 
 const NOW = midday(DAYS["S-5"]);
 
@@ -29,7 +32,8 @@ test("CC-6a (updated, SPEC-plan-page-refinement § 2 item 5): the list is shown 
   assert.doesNotMatch(html, /aria-controls="cc-list"/, "nothing opens or closes the list");
   const s = card(page);
   assert.deepEqual([s.list, s.own], [true, true], "the list and Choose my own meals, on load");
-  assert.ok(page.el("cc-list").contains(page.el("cc-checkout")), "Continue to checkout is in the list");
+  const all = [...page.document.querySelectorAll("*")];
+  assert.ok(all.indexOf(page.el("cc-list")) < all.indexOf(page.el("cc-checkout")), "Continue to checkout follows the list (§ 5 item 1)");
 });
 
 test("CC-6b: Choose my own meals is the rung 1 link for every size and count; Choose your meals gives way to both", async () => {
@@ -48,13 +52,14 @@ test("CC-6b: Choose my own meals is the rung 1 link for every size and count; Ch
 test("CC-6c: both links are reachable by keyboard, in the card's order, nothing hiding them (no button since § 2 item 5)", async () => {
   const { html } = await builtPage();
   const page = openPlanPage(html, { hash: "#lean-7", now: NOW });
-  const own = page.el("cc-own");
+  const own = ownChip(page.document);
   assert.ok(tabbable(page.el("cc-checkout")), "Continue to checkout takes focus, with no press");
-  assert.ok(tabbable(own), "Choose my own meals takes focus");
+  // § 5 item 1: a radio of the chips' group, reached by Tab on the group's checked radio and by the arrow keys within it.
+  const group = [...page.document.querySelectorAll('#cc-menus input[type="radio"]')];
+  assert.ok(own && !own.disabled && !hiddenInTree(own) && group.includes(own) && group.some((r) => r.checked), "Choose my own meals is a radio of the chips' group, which takes focus");
   assert.equal(tabbable(page.el("result-cta")), false, "the single Choose your meals does not (it is hidden)");
-  const order = [...page.document.querySelectorAll("a, button")].filter(tabbable).map((n) => n.id);
-  const at = (id) => order.indexOf(id);
-  assert.ok(at("cc-checkout") >= 0 && at("cc-checkout") < at("cc-own"), `tab order: ${order.join(", ")}`);
+  const all = [...page.document.querySelectorAll("*")];
+  assert.ok(all.indexOf(own) < all.indexOf(page.el("cc-checkout")), "the chips, then the checkout");
   const style = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
   assert.match(style, /\.cta\[hidden\][^{]*\{[^}]*display:\s*none/, "a hidden .cta is not drawn (.cta sets display: flex)");
 });
@@ -83,7 +88,7 @@ test("CC-6d: a count with no picks keeps today's card; no JavaScript shows no ca
     assert.equal(back.ownHref, "https://fitafnutrition.com/order?mpid=31", "for the new size");
     // Without JavaScript the card's container is .js-only, which the page's <noscript> style hides.
     const { document } = parseHTML(html);
-    for (const id of ["cc-list", "cc-own"]) {
+    for (const id of ["cc-list", "cc-checkout"]) {
       const node = document.getElementById(id);
       assert.ok(node.closest("#result"), `#${id} is on the result card`);
       assert.ok(node.closest(".js-only"), `#${id} is inside .js-only, not shown without JavaScript`);

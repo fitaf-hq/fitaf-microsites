@@ -39,8 +39,11 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  at the foot, #plan-data's snacks_carted; Not ready? and the save step are not on this page): 62b8627's tree (its cases,
  *  the code before) reproduces 02fe24d1…, d0f1a97's gives fd75caac…. Re-recorded once more at cb0980f for § 4.2 (the
  *  start the first question alone, neither answer pressed in its markup): d03fafb's tree reproduces fd75caac…, cb0980f's
+ *  gives 3ad17ec1…. Re-recorded once more at 27cc0df for § 5 (the result card reordered: the price after the card, the
+ *  checkout its own slot, no rounded line, the card's rules): fb7b110's tree reproduces 3ad17ec1…, 27cc0df's gives
+ *  e2fea580…; and at 8f36711 for § 5 item 6 (the scroll stops' rules): 4578c46's tree reproduces e2fea580…, 8f36711's
  *  gives this. */
-const TODAY_NO_PICKS_SHA256 = "3ad17ec19cf79bc9d2cd0b06106510e09bcbb5905a6bb3a38fc612efec4c114a";
+const TODAY_NO_PICKS_SHA256 = "84f2f8f32e58c300e54996b5e8a183121536c69cfc4b4bd6e8eac061a0329ac2";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
@@ -75,12 +78,14 @@ for (const target of ["prod", "dev"]) {
     const html = await built(target);
     assert.notEqual(html, reference, "control: the page is not the old bytes (the card is carried)");
     assert.deepEqual(JSON.parse(picksText(html)).weeks, [], "#picks-data holds no week");
-    for (const id of ["cc-list", "cc-heading", "cc-meals", "cc-checkout", "cc-own"]) {
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): no #cc-own (Choose my own meals is a chip the
+    // script makes); Continue to checkout follows the list, hidden with it.
+    for (const id of ["cc-list", "cc-heading", "cc-meals", "cc-checkout"]) {
       assert.ok(html.includes(`id="${id}"`), `the card's #${id} is in the markup`);
     }
     for (const hash of HASHES) {
       const page = openPlanPage(html, { hash, now: NOW });
-      for (const id of ["cc-list", "cc-own"]) assert.ok(hiddenInTree(page.document.getElementById(id)), `${hash}: #${id} hidden`);
+      for (const id of ["cc-list", "cc-checkout"]) assert.ok(hiddenInTree(page.document.getElementById(id)), `${hash}: #${id} hidden`);
       assert.equal(card(page).list, false, `${hash}: no list`);
       assert.equal(visible(html, { hash, now: NOW }), visible(reference, { hash, now: NOW }), `${hash || "(none)"}: the visible page`);
     }

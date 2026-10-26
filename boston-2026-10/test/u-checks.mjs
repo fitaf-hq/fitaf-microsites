@@ -68,7 +68,11 @@ export function updatingCardProblems(html, noWeek, words, label = "") {
     else if (collapse(node.textContent) !== words) problems.push(at(`${fragment}: the card reads ${JSON.stringify(collapse(node.textContent))}, not ${JSON.stringify(words)}`));
     if (node.querySelector(CONTROLS)) problems.push(at(`${fragment}: the card holds a control (no form: § 8 item 3)`));
     if (!hiddenInTree(el("cc-list"))) problems.push(at(`${fragment}: a Chef's Choice cart is shown`));
-    if (!hiddenInTree(el("cc-own"))) problems.push(at(`${fragment}: Choose my own meals (the Chef's Choice card's) is shown`));
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): Choose my own meals is the chips' last radio, and
+    // Continue to checkout follows the list (hidden with it).
+    const own = page.document.querySelector('#cc-menus input[type="radio"][value="own"]');
+    if (own && !hiddenInTree(own)) problems.push(at(`${fragment}: Choose my own meals (the Chef's Choice card's) is shown`));
+    if (!hiddenInTree(el("cc-checkout"))) problems.push(at(`${fragment}: Continue to checkout is shown`));
     if (el("cc-checkout").hasAttribute("href")) problems.push(at(`${fragment}: Continue to checkout has a link`));
     const choose = el("result-cta");
     if (hiddenInTree(choose) || !RUNG1_LINK.test(choose.getAttribute("href") ?? "")) {

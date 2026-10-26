@@ -153,6 +153,18 @@ export async function walk({ base, visits, docs = [] }) {
       await page.goto(managerUrl(base, visit), { waitUntil: "load" });
       const preview = await (await page.waitForSelector("#storybook-preview-iframe")).contentFrame();
       await preview.waitForSelector('[data-story-state="ready"], [data-story-state="failed"]', { timeout: STORY_TIMEOUT_MS });
+      // ⚠ AMENDED for the site's SPEC-ui-and-copy-pass § 5 item 5 (2026-10-26): the meal list's box is at most 80 % of
+      // the screen's height (svh), and the Scroll story's frame is grown to its page, so the box grows with the frame and
+      // the page with the box, a step at a time, until the box is its own height: the frame is read once it has caught up
+      // (SM-5 still fails a frame that never does).
+      if (visit.story === "Scroll") {
+        await preview
+          .waitForFunction(() => {
+            const frame = document.querySelector("[data-story-state] iframe");
+            return Boolean(frame?.contentDocument) && frame.getBoundingClientRect().height >= frame.contentDocument.documentElement.scrollHeight;
+          }, { timeout: STORY_TIMEOUT_MS })
+          .catch(() => {});
+      }
       const read = visit.handoff ? await preview.evaluate(inspectHandoff, visit.sections ?? []) : await preview.evaluate(inspect);
       results.push({ ...visit, width: VIEWPORTS[visit.viewport].width, height: VIEWPORTS[visit.viewport].height, ...read, console: lines() });
     }

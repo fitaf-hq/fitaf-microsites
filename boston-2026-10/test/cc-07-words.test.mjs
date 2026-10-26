@@ -29,13 +29,16 @@ const LETTER = /\p{L}/u;
 const SENTINEL = /⟦\d+⟧/g;
 /** The phrases of § 3 in data/messages.json the card shows, and the placeholders each must keep. Since
  *  SPEC-plan-page-refinement §§ 1–2 the list is always open: `open` (its button) and `note` are no longer shown. */
-const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [] }; // heading: § 8 item 6
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): the card's heading (`explore`) and the note over the
+// week's full list (`own_note`, BRIDGE) are the card's words too.
+const PHRASES = { heading: ["{week}"], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], explore: [], own_note: [] }; // heading: § 8 item 6
 /** Since SPEC-meal-selection § 12 item 3 the snack block is INSIDE the list (`cc-list`), so its two phrases are the card's
  *  words too: CC-7b marks them. CC-7a's source check keeps PHRASES alone ("Snacks" is also part of the script's own
  *  function name, renderSnacks, not a phrase typed into it). */
 const SNACK_PHRASES = { snacks_heading: [], snacks_not_carted: [] };
-/** The card's parts a visitor reads (always open). */
-const PARTS = ["cc-list", "cc-own"];
+/** The card's parts a visitor reads (always open). ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1: *Choose my own meals*
+ *  is a chip inside the list; Continue to checkout follows the price, after the list. */
+const PARTS = ["cc-list", "cc-checkout"];
 
 /** The card's words at `hash`, as one string. */
 function cardText(html, hash) {
@@ -76,6 +79,7 @@ test("CC-7a: data/messages.json has each phrase of § 3, each with its placehold
     "src/template.html",
     "src/app.js",
     "src/chefs-choice/card.html",
+    "src/chefs-choice/checkout.html",
     "src/chefs-choice/chefs-choice.js",
     "src/chefs-choice/style.css",
     "build.mjs",
@@ -117,7 +121,9 @@ test("CC-7b: with every phrase and every meal name a letterless marker, the open
     for (const hash of ["#lean-7", "#lean-14"]) {
       const text = cardText(html, hash);
       for (const m of text.match(SENTINEL) ?? []) seen.add(m);
-      const left = text.replace(SENTINEL, "").replace(weekOf(S), "");
+      // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): a week of one list names its one chip by its heading,
+      // so the heading (and its date) is read twice.
+      const left = text.replace(SENTINEL, "").replaceAll(weekOf(S), "");
       assert.doesNotMatch(left, LETTER, `${hash}: letters not from data/: ${JSON.stringify(left.match(/\S*\p{L}\S*/gu))}`);
     }
     assert.deepEqual([...seen].sort(), [...markers].sort(), "every phrase and every name is shown");
@@ -129,7 +135,7 @@ test("CC-7b (control): a word typed into the card is caught", async () => {
   assert.ok(messages.chefs_choice, "data/messages.json has a chefs_choice key");
   for (const key of Object.keys(PHRASES)) messages.chefs_choice[key] = `⟦0⟧ ${PHRASES[key].join(" ")}`;
   await withCopies(messages, FIXTURE, async (html) => {
-    const tampered = html.replace('id="cc-own" hidden>', 'id="cc-own" hidden>Now open! ');
+    const tampered = html.replace('id="cc-explore">', 'id="cc-explore">Now open! '); // § 5 item 1: the card's heading
     assert.notEqual(tampered, html, "the mutation anchor is present");
     assert.match(cardText(tampered, "#lean-7").replace(SENTINEL, ""), /Now open!/, "the typed words are seen");
   });

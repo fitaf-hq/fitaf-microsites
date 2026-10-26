@@ -7,6 +7,8 @@
 // (ms-harness SNACKS_SHOWN, § 11), never the committed flags.
 // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the first question, who it is for (the tabs made a
 // question), is a question of `plan_page.questions` too (`who`), so the added parts are five questions, its words among them.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 2 (2026-10-26): the rounded line is never printed, so it is no added part
+// shown (its phrase stays in data/messages.json, and the build still refuses it without its placeholders).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -45,7 +47,7 @@ function addedText(page) {
   const groups = [...document.querySelectorAll('.step[role="group"]')].filter((g) => g.querySelector("[data-q], [data-who]"));
   assert.equal(groups.length, 5, "the five questions");
   // The snack block is the week's (the Chef's Choice card): a page without a week has none.
-  const parts = [...groups, document.getElementById("result-meals").parentElement, document.getElementById("result-rounded"), document.getElementById("cc-snacks")];
+  const parts = [...groups, document.getElementById("result-meals").parentElement, document.getElementById("cc-snacks")];
   return parts.filter(Boolean).map((p) => p.textContent).join(" ");
 }
 
@@ -74,7 +76,6 @@ test("MS-8: with every phrase and every shown name a letterless marker, the adde
     const want = [
       ...Object.values(messages.plan_page.questions).flatMap((q) => Object.values(q)),
       messages.plan_page.meals_unit,
-      messages.plan_page.rounded.split(" ")[0],
       messages.chefs_choice.snacks_heading,
       messages.chefs_choice.snacks_not_carted,
       ...list.snacks["7"].map((m) => m.display),

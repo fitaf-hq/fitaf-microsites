@@ -4,6 +4,8 @@
 // The expectations are the contract's table (ms-harness TABLE), not data/plans.json's: a page rounding 5 up fails here.
 // ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 1 (2026-10-23): the meals a week are the row's meals (5, 15), and the weekly
 // total those meals at the plan's price a meal (ms-checks rowProblems).
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 2 (2026-10-26): the rounded line is never printed, on no row (rowProblems);
+// the phrase stays in data/messages.json, and the rows 5 -> 4 and 15 -> 14 are still the plan's (their figures, their link).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MESSAGES } from "./cc-harness.mjs";

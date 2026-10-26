@@ -3,9 +3,18 @@
    snippets/fitaf-ring.liquid): the track, and each number's arc. Tokens of the card's own, here and not in the
    template's :root, which the other pages built from it (privacy/) carry too */
 :root { --ring-track: #eceef0; --ring-cal: #888888; --ring-protein: #ffad0d; --ring-carbs: #3ed3a3; --ring-fat: #ff5d5d; --ring-fiber: #303030; }
-.result .cta[hidden], .cc-list[hidden], .cc-own[hidden] { display: none; }
+.result .cta[hidden], .cc-list[hidden] { display: none; }
 button.cta { width: 100%; border: 0; cursor: pointer; }
-.cc-list { margin: 12px 0 0; padding: 16px 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
+/* SPEC-ui-and-copy-pass § 5 item 1 (the Advisor, 2026-10-26): the card's top, its heading (`explore`) in the questions'
+   heading style, the chips, the list; then the template's price, the checkout and Not ready?. Item 5 ("a scroll box
+   thats ~80% the height of the mobile screen"): the list's box at most 80 % of the screen's height, scrolling inside,
+   its edge the card's hairline; item 6: it and the checkout are two of the page's three scroll stops */
+.cc-list { margin: 0 0 18px; }
+.cc-box { max-height: 80vh; max-height: 80svh; overflow-y: auto; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); scroll-snap-align: center; }
+#cc-checkout { scroll-snap-align: center; }
+/* BRIDGE (SPEC-ui-and-copy-pass § 5 item 3): the note over the week's full list while the own chip is pressed */
+.cc-own-note { margin: 0 0 10px; color: var(--muted); font-size: 15px; } /* BRIDGE (SPEC-ui-and-copy-pass § 5 item 3) */
+.cc-own-note[hidden] { display: none; } /* BRIDGE (SPEC-ui-and-copy-pass § 5 item 3) */
 .cc-heading { margin: 0 0 10px; font: 600 17px/1.3 var(--head); color: var(--navy); }
 .cc-meals { list-style: none; margin: 0 0 16px; padding: 0; color: var(--ink); }
 .cc-meals li { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
@@ -17,7 +26,6 @@ button.cta { width: 100%; border: 0; cursor: pointer; }
    hidden from assistive technology (the count is in the meal's line). Two figures widen it to a pill */
 .cc-qty { position: absolute; top: -9px; right: -9px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 24px; height: 24px; padding: 0 5px; border: 2px solid var(--white); border-radius: 12px; background: var(--navy); color: var(--white); font: 700 13px/1 var(--head); }
 .cc-qty::before { content: attr(data-qty); }
-.cc-own { display: block; margin-top: 12px; padding: 10px 0; text-align: center; font: 600 16px/1.3 var(--head); color: var(--navy); }
 /* The week's snacks (SPEC-meal-selection § 9 item 3; § 12 item 3): with Add snacks, inside the card's one list, after the
    meals and before the list's checkout link, under a small heading; no box of their own */
 .cc-snacks { margin: 0 0 16px; }
@@ -53,6 +61,14 @@ button.cta { width: 100%; border: 0; cursor: pointer; }
 .cc-meals li.cc-control { display: block; }
 .cc-meal { display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--touch-target); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .cc-meal .cc-name { flex: 1; min-width: 0; }
+/* SPEC-ui-and-copy-pass § 5 item 4 (the Advisor: "increase the text weight on the meal names"): semi-bold, the loaded
+   600; item 7: a meal's description, when the week carries one, under its name in the muted line style, two lines at
+   most (its name and description then one column, the row's middle) */
+.cc-name { font-weight: 600; }
+.cc-words { display: flex; flex: 1; flex-direction: column; justify-content: center; min-width: 0; }
+.cc-words .cc-name { flex: none; }
+.cc-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 2px; color: var(--muted); font-size: 14px; font-weight: 400; line-height: 1.35; }
+.cc-box > .cc-meals { margin: 0; }
 .cc-mark { flex: none; display: block; width: 24px; height: 24px; margin-right: 4px; color: var(--navy); }
 .cc-more { margin: 4px 0 2px 68px; color: var(--ink); font-size: 14px; }
 .cc-more p { margin: 0 0 4px; }

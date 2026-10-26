@@ -25,10 +25,16 @@ test("A9: the Chef's Choice link: the beacon is queued and the href, with its fr
   assert.equal(press.after, press.before, "the href unchanged");
   assert.equal(press.prevented, false, "the press goes on to the store");
   assert.deepEqual(press.sent.map(({ link, mpid }) => [link, mpid]), [["chefs-choice", 21]]);
-  const own = pressLink(visit, visit.el("cc-own"));
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 3 (2026-10-26, BRIDGE): Choose my own meals is a chip that sends Continue
+  // to checkout to the plan's order page; the checkout's press is sent as it is (`chefs-choice`, the mpid its href names).
+  const chip = visit.document.querySelector('#cc-menus input[type="radio"][value="own"]');
+  for (const r of visit.document.querySelectorAll('#cc-menus input[type="radio"]')) r.checked = r === chip;
+  chip.dispatchEvent(new visit.document.defaultView.Event("change", { bubbles: true }));
+  const own = pressLink(visit, link);
   assert.equal(own.before, `${ORDER}?mpid=21`);
   assert.equal(own.after, own.before);
-  assert.deepEqual(own.sent.map(({ link, mpid }) => [link, mpid]), [["order", 21]]);
+  assert.equal(own.prevented, false);
+  assert.deepEqual(own.sent.map(({ link, mpid }) => [link, mpid]), [["chefs-choice", 21]]);
 });
 
 test("A9: Choose your meals, a grid cell, the Family button and See all plans", async () => {

@@ -312,3 +312,51 @@ production.)
 | `tools/storybook/test/w-why-chrome.test.mjs` (W2, W3, § 6's case and the mutants), three runs | 10 of 10, three times | none |
 
 Released by a dev pin, then the production pin (§ 5), the Advisor's go given 2026-10-21 (Fit AF's decision record § 7o item 6).
+
+## 7. Amendment, 2026-10-26: the Advisor's draft 3, before tonight's event. CONTRACT, before any code
+
+**The Advisor, 2026-10-26**, sending the page's new words (a Google Docs export) for review: *"Please review this for
+typos and general tone/errors/etc. It's not great (I plan to keep writing), but it's at least *something*."* On the
+review: *"yes that's for Boston"* (the kitchen *"outside Boston"*); *"The few that happen on Monday are all Boston. I will
+go reconfirm with the Owner."*; *"Please feel free to correct it as well as all the mechanical issues (which occur when
+this goes through Google Docs to Markdown export) as well as tone, etc (I agree with all of your changes)"*; *"The two
+underlined links are meant to go to the existing site's contact us page."*
+
+1. **The page's words become exactly these** (the export's escapes removed, straight apostrophes as the page's, the
+   reviewed changes in), replacing every word of draft 2 between the page's top and its *Find your plan* button: the
+   sections *What sets us apart*, *A note from the owner* and the four questions not below are gone.
+
+   - `h1`: **Why Fit AF?**
+   - lede: **Fresh, chef-prepared meals – made for your goals, delivered every week.**
+   - paragraph: **We cook all our meals from scratch in our own kitchen outside Boston. We've been delivering fresh meals
+     (never frozen!) across the Northeast since 2017.**
+   - `h2`: **Questions**
+   - `h3` **How does it work?** — **Set your goals and pick your menu – and we'll take it from there.**
+   - `h3` **When do I order, and when do my meals arrive?** — **Each week's menu opens on Friday morning, and you can
+     order until 11:59 PM Thursday. Your meals arrive together, in one bag, on Monday, at your home (you don't need to
+     be there when they arrive).**
+   - `h3` **Can I change a meal?** — **Yes! Our menus are just a starting point – swap any meal you like. If you need
+     help or have a complex request, please [contact us](https://fitafnutrition.com/contact).**
+   - `h3` **Can I skip a week, pause or cancel?** — **Yes! You can easily do this yourself – or [our customer service
+     team](https://fitafnutrition.com/contact) can handle it for you.**
+
+2. **The two links** go to `https://fitafnutrition.com/contact` (the store site's contact page; an unknown path there
+   redirects to its home, this one does not), opening at the top level (`target="_top"`, as § 6 made the plan link,
+   since the page is shown in the plan page's dialog frame), in the page's link style.
+3. **Unchanged**: the page's look, its *Find your plan* button and § 6's behaviour, its title and metadata, the dialog.
+   The en dashes are the Advisor's punctuation, kept.
+4. **Cases**: every case that reads draft 2's words amended to these, in the commit with the change, each named; one
+   case that the two links name the contact page and `_top`; the page's goldens re-recorded once each from the change's
+   own tree, controls first. ⬜ Monday and the kitchen's place are the Advisor's to reconfirm with the Owner; the words
+   are as he sent them.
+
+### 7.1 Built (2026-10-26)
+
+| commit | what |
+|---|---|
+| `4b77513` | the page's words, exactly § 7 item 1's (checked against this section character for character), the two links to the contact page with `target="_top"`; W5 added (§ 7 item 4), 2 of 2; no case read draft 2's words |
+| `b1e69d3` | the goldens from `4b77513`'s tree, control at `eec5c4c`: S20 and PV5, `why/index.html` alone (`43afc5ed…` → `35945d6a…`); SP3's `LATER` |
+
+Stated, not ruled: draft 2's line at the top (*"Draft for review: not yet final. …"*) is gone with its other words, since
+the page's words are exactly § 7's; its stylesheet is unchanged (the draft line's and the sections' rules stay, unused).
+The links take the page's own link style (the browser's, as draft 2 had no other link).

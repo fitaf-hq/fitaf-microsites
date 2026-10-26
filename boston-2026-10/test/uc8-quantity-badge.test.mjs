@@ -37,6 +37,13 @@ function drawnText(node) {
 
 /** Each meal row of the card at HASH: its words (the control's, when the row is a button: its name from its content;
  *  else the row's), its name as drawn, its badge and the words hidden. */
+/** An element's words without a meal's description (`.cc-desc`, SPEC-ui-and-copy-pass § 5 item 7). */
+function withoutDescription(el) {
+  const copy = el.cloneNode(true);
+  for (const d of copy.querySelectorAll(".cc-desc")) d.remove();
+  return copy.textContent;
+}
+
 function rows(html) {
   const page = openPlanPage(html, { hash: HASH, now: NOW });
   assert.equal(page.el("cc-list").hasAttribute("hidden"), false, "control: the week's list is shown");
@@ -44,7 +51,9 @@ function rows(html) {
     const badges = [...li.querySelectorAll(".cc-thumb .cc-qty")];
     const name = li.querySelector(".cc-name");
     return {
-      words: squash((li.querySelector("button.cc-meal") ?? li).textContent),
+      // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 7 (2026-10-26, the week of 2026-11-01 now carrying descriptions): a
+      // meal's description is read under its name, apart from its line.
+      words: squash(withoutDescription(li.querySelector("button.cc-meal") ?? li)),
       drawn: squash(drawnText(name)),
       hidden: [...name.querySelectorAll(".visually-hidden")].map((n) => n.textContent).join(""),
       badge: badges.map((b) => ({ qty: b.getAttribute("data-qty"), ariaHidden: b.getAttribute("aria-hidden"), text: b.textContent })),

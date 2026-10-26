@@ -36,7 +36,16 @@
 @font-face { font-family: Poppins; font-style: normal; font-weight: 700; font-display: swap; src: url("{{ASSET_PREFIX}}fonts/poppins-latin-700-normal.woff2") format("woff2"); }
 
 * { box-sizing: border-box; }
+/* SPEC-ui-and-copy-pass § 5 item 6 (the Advisor, 2026-10-26: "the screen should naturally settle on one of those stops
+   (unless the person is fine-scrolling the screen)"): the page snaps by proximity to three stops, the questions' top (the
+   first question's step, below), the meal list's box and the checkout (the card's style); no smooth scrolling added.
+   From the visitor's first scroll with the result shown, once it rests (app.js sets .snaps): the browser re-snaps after
+   every change of layout, so a stop live while a tap draws the next question or the result pulled the page to it (§ 4 A:
+   the scroll is left where it was). And the page's own top (its first box, a banner or the carousel) a resting place
+   too, so a page at its top is not pulled to the first question */
 html { -webkit-text-size-adjust: 100%; }
+html.snaps { scroll-snap-type: y proximity; }
+#who, body > :first-child { scroll-snap-align: start; }
 body { margin: 0; background: var(--white); color: var(--ink); font: 400 16px/1.55 var(--body); }
 b, strong { font-weight: 600; }
 a { color: inherit; }
@@ -136,9 +145,6 @@ main.wrap { padding-top: 20px; }
 .price .fig-total { order: 1; --figure-size: 34px; }
 .price .fig-per-meal { order: 2; --figure-size: 18px; }
 .price .fig-meals { order: 3; --figure-size: 18px; }
-/* The plan's meals a week (SPEC-meal-selection § 2), and when the answers go through a smaller plan, one line saying so */
-.rounded { margin: -10px 0 18px; color: var(--muted); font-size: 15px; }
-.rounded[hidden] { display: none; }
 /* The store's button — orange, square-ish, bold uppercase — darkened so white text passes APCA */
 .cta {
   display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -253,14 +259,13 @@ main.wrap { padding-top: 20px; }
 
   <div class="js-only">
       <div aria-live="polite">
-        <div class="result" id="result" hidden>
+        <div class="result" id="result" hidden>{{PICKS_CARD}}
           <p class="price">
             <span class="fig-total"><span class="fig" id="result-total"></span><span class="unit">{{TOTAL_UNIT}}</span></span>
             <span class="fig-per-meal"><span class="fig" id="result-per-meal"></span><span class="unit">{{PER_MEAL_UNIT}}</span></span>
             <span class="fig-meals"><span class="fig" id="result-meals"></span> <span class="unit">{{MEALS_UNIT}}</span></span>
           </p>
-          <p class="rounded" id="result-rounded" hidden></p>
-          <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CARD}}{{NOT_READY}}
+          <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CHECKOUT}}{{NOT_READY}}
         </div>
       </div>{{SAVE_SECTION}}
   </div>

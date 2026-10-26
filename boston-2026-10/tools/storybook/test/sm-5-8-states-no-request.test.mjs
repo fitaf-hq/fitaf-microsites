@@ -91,7 +91,7 @@ const MEAL_SELECTION = {
 for (const name of Object.keys(MEAL_SELECTION)) STORY_DATES[`Meal selection · ${name}`] = "fixture";
 // The site's SPEC-every-menu-and-nutrition: the Every menu stories, on the two-menu fixture week (each reaches its state
 // only there: the chooser shown, the other menu's radio checked, a meal's panel open).
-for (const name of ["Two menus", "Two menus · the other chosen", "Nutrition · a meal opened"]) STORY_DATES[`Every menu · ${name}`] = "menus";
+for (const name of ["Two menus", "Two menus · the other chosen", "Nutrition · a meal opened", "The own chip pressed"]) STORY_DATES[`Every menu · ${name}`] = "menus";
 const OPEN = "Individual · Chef's Choice";
 const MUTANT_DATE = ['cc: { name: "Chef\'s Choice", fragment: chosen, date: "week"', 'cc: { name: "Chef\'s Choice", fragment: chosen, date: "none"'];
 

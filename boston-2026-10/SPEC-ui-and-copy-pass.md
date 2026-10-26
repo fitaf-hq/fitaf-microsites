@@ -1255,3 +1255,110 @@ Storybook's whole run at `a828182` with `UC_RENDERS=<dir>`, never committed, han
 answered: the next question unpressed), `uc11-all-revealed-*`, `uc12-dialog-*`, `uc13-banner-*` (the result card with
 the link's words, to the foot), each `-production-` and `-development-`, `-390` and `-1280`. Storybook: *Individual ·
 Start* and *· One answered*.
+
+## 5. Round 2, changeset 3 (2026-10-26): the result card reordered, *Choose my own meals* a menu, the page's scroll stops. CONTRACT, before any code
+
+**The Advisor, 2026-10-26** (verbatim, the result card): *"move up "Choose my own meals" to under the 5 preset menu
+options. We might tweak this copy but for now we just need to join it in as an alternative option versus the preset
+menus."* *"Please drop "15 meals go through as our 14-meal plan for now." and other variants. That's internal site
+mechanics that doesn't affect customers."* *"Add a new call to action that's similar to "Explore our menus" (we'll
+tweak the copy) above Chef's Choice etc. I think we can use the same type treatment as the questions."* *"Make "Choose
+my own meals" effectively a toggle. *For tonight*, if someone selects it, please change the behavior of the checkout
+button to send them to the HMP catalog (where "choose my own meals" currently goes. In the future (likely for tomorrow
+night) we'll move this to a proper menu builder inside the microsite. So this is just some bridge code that will be
+removed shortly – my concern is not breaking the "choose my own meals" flow while also refactoring the overall microsite
+flow. This means that (for now) selecting "choose my own meals" should just show the full list of products with a note
+that says they will select which ones they want in the *next* step."* *"This moves all of the pricing information to
+above the checkout button (which makes more sense)."* *"Put the meal list into a scroll box thats ~80% the height of the
+mobile screen."* *"Please add a scroll anchors/stops/notches/etc for: the top of the questions, the meal list, the
+checkout button … the screen should naturally settle on one of those stops (unless the person is fine-scrolling the
+screen)."* *"Please increase the text weight on the meal names – either semi-bold or a stop lighter please."* *"Add meal
+descriptions to the compact/closed representation of the meals."*
+
+1. **The result card's order**, top to bottom: the heading **"Explore our menus"** (⬜ his words to edit; in the
+   questions' heading style, `.step-label`: Poppins 600 20 px, navy, centred); the menu chips (the five menus as today)
+   **and *Choose my own meals* joined to them** as a sixth chip in the same look, after the last menu; the meal list
+   (item 5); **the price** (the weekly total, the price a meal, the meals a week: today's block, unchanged in look),
+   moved from the card's top to here; **the checkout button**; then *Not ready to checkout? Save your offer now.* (§ 4
+   B). The old *Choose my own meals* link below the checkout button is gone.
+2. **The rounded line is gone**: `#result-rounded` (*"15 meals go through as our 14-meal plan for now."* and every
+   other text `answers[…].rounded` makes, Family's included) is never printed. The figures and the cart are unchanged
+   (internal: the store's plan, its mpid, the price a meal).
+3. **⛔ BRIDGE (for one day; removed by the menu builder): *Choose my own meals* as a menu.** Its chip is a toggle among
+   the menus: pressing it presses it and releases the menu; pressing a menu releases it. While it is pressed: the list
+   shows **the week's full list of meals** (every meal of every menu's cart for the answer set, each once, in the
+   order they first appear, then the week's snacks when snacks are carted), with its photo cells as today and **a note
+   above it** (⬜ his words to edit): *"You'll choose your meals in the next step."*; and **the checkout button's link is
+   the store's plan page** (today's *Choose my own meals* `href`, `cc-own`: the result's `data.base + "?mpid=…"`),
+   its words unchanged. Every line of this bridge carries the comment `BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)` so it
+   can be found and removed whole. Analytics: the checkout click is sent as today (its `href` and mpid as the link
+   carries); nothing new.
+4. **Meal names** in the closed row: weight **600** (semi-bold; the loaded face; no new font file).
+5. **The meal list in a scroll box**: the list (the meals and, when carted, the snacks; the note of item 3 inside it or
+   just above) in a box at most **80 % of the screen's height** (`max-height: 80svh`, falling back to `80vh`), scrolling
+   inside (`overflow-y: auto`), the box's edge visible (the card's hairline). A meal opened inside it (its panel) scrolls
+   with it.
+6. **Scroll stops** (CSS scroll snap, no library): the page snaps by **proximity** (`scroll-snap-type: y proximity` on
+   the root), so a slow scroll rests anywhere; three stops: **the top of the questions** (*Who is this for?*'s step,
+   `start`), **the meal list's box** (`center`), and **the checkout button** (`center`). Under `prefers-reduced-motion`
+   the snapping stays (it is not an animation) but no smooth scrolling is added. Stops exist only while their element
+   is shown.
+7. **Meal descriptions** in the closed row, under the name, in the muted line style (`--muted`, 14 px, two lines at most
+   with an ellipsis): **shown when the week's data carries one** (a new optional `description` per meal in the picks
+   file's `meals` map: `scripts/chefs-choice.mjs`'s `ENTRY_OPTIONAL_FIELDS` and its check, text, not blank). ⚠ **No
+   committed week carries one today** (the emitter writes none); the orchestrator finds the source separately. With
+   none, the row is as today. A fixture with descriptions proves the display.
+8. **Cases**, written first and run red, over both builds that carry the card: item 1's order; item 2's absence (no
+   `rounded` text anywhere, for every answer set with one); item 3: the chip toggles, the list is the union in order
+   with the note, the checkout link is the plan page's while pressed and the cart's when a menu is pressed again; item 4
+   the weight; item 5 the box's height at 390 and 1280 (Chrome); item 6 the three stops and proximity (Chrome); item 7
+   a description shown from a fixture and absent without one, and the schema's check refusing a blank one. Amended
+   cases named; the goldens re-recorded once each from the code commit's own tree, controls first; Storybook's stories of
+   the card re-rendered; the build note § 5.1.
+9. ⬜ **Open for the Advisor** (built as the defaults above, stated in § 5.1): the heading's and the note's words; the
+   chip's place (last) and its words (*Choose my own meals*, unchanged); the box at 80 % on the desktop column too.
+
+### 5.1 Built — found at the build, not ruled (2026-10-26)
+
+Built on `boston/round-2-changeset-2` from `b70ece4` (§ 5), each case one file at a time at `nice -n 15`.
+
+| commit | what |
+|---|---|
+| `fb7b110` | the cases, red on `b70ece4`'s code: UC14 3 of 3, UC15 3 of 3, UC16 3 of 4 (the fourth, no description no `.cc-desc`, a guard), `uc14-16-chrome` 4 of 4 |
+| `27cc0df` | the code, the stale cases amended and named in its message; all of the above green |
+| `62591ec` | the goldens, once each from `27cc0df`'s tree, each control first at `fb7b110` (S20 `241c4dbd…` → `566159e8…`; PV5, U4, WC-9, WC-8, SP3's `LATER`) |
+| `4578c46` | UC16's fixture descriptions in the form Fit AF's emitter writes (one plain line, the store's short description joined by ` | `, only on entries with nutrition or ingredients); UC8 in Chrome, six chips |
+| `8f36711` | item 6's stops live from the first rested scroll with the result shown (below, 9); Storybook's stale cases (EM6, PR-14, SM-4, the walk's Scroll frame) |
+| `4e954d5` | the goldens again from `8f36711`'s tree, control at `4578c46` (S20 `566159e8…` → `aa9e9ad1…`; PV5, U4, WC-8, SP3's `LATER`; WC-9 unmoved) |
+
+**Where § 5 was silent, and what was built** (stated, not ruled):
+
+1. **The words** (item 9): `chefs_choice.explore` *"Explore our menus"* and `chefs_choice.own_note` *"You'll choose your
+   meals in the next step."*, new in `data/messages.json`; the chip's words `chefs_choice.own`, unchanged; the chip last.
+2. **A week of one list** (every committed week before 2026-11-01), and an answer set only Chef's Choice has a cart for:
+   its one chip (named by its heading) is shown beside *Choose my own meals*, so the toggle exists there too. Before,
+   such a card had no chips.
+3. **While *Choose my own meals* is pressed**: the menu's heading is hidden, the note in its place above the box; the
+   price is the plan's, unchanged; snacks the week's (Chef's Choice's), as for any `-s` answer; each meal's photo cell
+   and nutrition its first appearance's. It stays pressed across answer changes.
+4. **The card's old outer box** (`.cc-list`'s border) is gone: the hairline is the list's scroll box's; the heading and
+   the chips sit above it. The box is `80svh` at 1280 too (item 9).
+5. **Continue to checkout** left the card's markup for a slot of its own after the price (`PICKS_CHECKOUT`,
+   `src/chefs-choice/checkout.html`), hidden with the list.
+6. **The rounded line**: `answers[].rounded` dropped from the page's data; the phrase `plan_page.rounded` stays in
+   `data/messages.json` (the build still checks its placeholders), printed nowhere.
+7. **A description** sits with the name in one column (`.cc-words`); an entry still needs nutrition or ingredients (a
+   description alone does not make one).
+8. **Retired**: Storybook's EM2 one-list case held the card's text and every box to `76ee36e`'s; § 5 reorders the card
+   for every week, so it now holds the two chips, the heading and the list. **A defect of my own case**: Chrome's
+   computed `scroll-snap-type` reads `y` for `y proximity` (the default left out); `uc14-16-chrome` accepts both.
+9. **⚠ Item 6 against § 4 A, found by Storybook's UC11**: the browser re-snaps after every change of layout, so with the
+   stops live from the start, a tap that drew the next question or the result pulled the page to a stop (41 to 151 px).
+   Built nearest: the stops are live from the visitor's first scroll with the result shown, once it rests 200 ms
+   (`app.js` adds `html.snaps`), and the page's first box (a banner or the carousel) is a resting place too, so a page at
+   its top is not pulled to the first question. Once live, a later change of layout (a menu pressed, an answer changed)
+   may settle the page on the stop it rests at. In Storybook the story is named *The own chip pressed* (SM-4: no page
+   phrase there).
+10. **The descriptions arrive** (2026-10-26): `data/picks/2026-11-01.json` replaced by Fit AF's emitter's output
+    (`85d8ed3`, 25 of 26 meals described); it moves UC8 alone (a row's words now hold the description under the name;
+    amended in `eec5c4c`) and no golden.

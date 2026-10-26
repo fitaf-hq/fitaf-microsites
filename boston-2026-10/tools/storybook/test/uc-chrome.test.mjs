@@ -262,7 +262,7 @@ function readRows() {
 /** The content's line of a meal, as the card's words write it (data/messages.json meal_qty), worked out here. */
 const lineOf = (m) => (m.qty > 1 ? messages.chefs_choice.meal_qty.replace("{meal}", m.display).replace("{n}", String(m.qty)) : m.display);
 
-test("UC8 (Chrome, 390 and 1280): the five chips sit evenly, no row of one; a meal twice is a circled count on its tile's corner", { timeout: TIMEOUT_MS }, async () => {
+test("UC8 (Chrome, 390 and 1280): the six chips (five menus and the own chip) sit evenly, no row of one; a meal twice is a circled count on its tile's corner", { timeout: TIMEOUT_MS }, async () => {
   const cart = picks.lists["chefs-choice"].carts.find((c) => c.lunch_dinner === "or" && !c.weekends && c.breakfast);
   assert.ok(Object.keys(picks.lists).length === 5 && cart.items.some((m) => m.qty > 1), "control: five menus, and a meal twice in the cart");
   await weekSite();
@@ -272,9 +272,12 @@ test("UC8 (Chrome, 390 and 1280): the five chips sit evenly, no row of one; a me
       await page.waitForSelector("#cc-list:not([hidden])");
       const { drawn, chips, group } = await page.evaluate(readChips);
       assert.equal(drawn, true, `${where}: the chooser is drawn`);
-      assert.equal(chips.length, 5, `${where}: five chips`);
+      // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): the own chip joins the five menus
+      // as the sixth chip, the last, in the same look: three, then three.
+      assert.equal(chips.length, 6, `${where}: six chips`);
+      assert.equal(chips.at(-1).text, messages.chefs_choice.own, `${where}: the own chip the last`);
       const rows = [...new Set(chips.map((c) => c.top))].sort((a, b) => a - b).map((top) => chips.filter((c) => c.top === top));
-      assert.deepEqual(rows.map((r) => r.length), [3, 2], `${where}: three, then two (${rows.map((r) => r.map((c) => c.text).join(" | ")).join(" / ")})`);
+      assert.deepEqual(rows.map((r) => r.length), [3, 3], `${where}: three, then three (${rows.map((r) => r.map((c) => c.text).join(" | ")).join(" / ")})`);
       for (const row of rows) {
         const widths = row.map((c) => c.width);
         assert.ok(Math.max(...widths) - Math.min(...widths) <= EVEN_PX, `${where}: a row's chips one width (${widths.map(Math.round)})`);
@@ -308,7 +311,10 @@ test("UC8 (Chrome, 390 and 1280): the five chips sit evenly, no row of one; a me
         if (row.button) {
           const handle = (await page.$$("#cc-meals > li"))[i];
           const name = (await page.accessibility.snapshot({ root: await handle.$("button.cc-meal") }))?.name;
-          assert.equal(name, lineOf(meal), `${at}: the count in the row's accessible name`);
+          // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 item 7 (2026-10-26, the week's descriptions arrived): the
+          // row's accessible name is its line, then its description when the week carries one (read from the week).
+          const description = picks.meals?.[meal.name]?.description;
+          assert.equal(name, description ? `${lineOf(meal)} ${description}` : lineOf(meal), `${at}: the count in the row's accessible name`);
           named++;
         }
       }
