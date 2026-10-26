@@ -26,9 +26,10 @@ import { EMAIL_RE } from "./src/worker/validate-save.js";
 import { classifyZip } from "./src/worker/zip-class.js";
 import { scriptJson } from "./src/worker/script-json.js";
 import { checkSelection, legacyKey } from "./scripts/selection.mjs";
+import { checkFamily } from "./scripts/family.mjs";
 import { addDays, DAYS as MS_PER_DAY, formatter, pad, zonedDate, zonedParts } from "./src/worker/zoned-time.js";
 import { e1, ex } from "./src/worker/messages.js";
-import { productionRefusals } from "./scripts/production-inputs.mjs";
+import { printedRefusals, productionRefusals } from "./scripts/production-inputs.mjs";
 import { qrEvent } from "./src/qr-event.js";
 
 export const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -174,6 +175,15 @@ export function answerOrder(q, defaults) {
   return [first, ...QUESTIONS[q].filter((a) => a !== first)];
 }
 
+/** SPEC-ui-and-copy-pass § 2 item 2: the first question, who the plan is for, which replaced the Individual/Family tabs:
+ *  its two answers, the button's `data-who` (and the fragment's `#individual` / `#family`), the individual plan first, the
+ *  default, on the left (SPEC-meal-selection § 12's rule; the page starts on it, so the order is this one). Its phrases are
+ *  `plan_page.questions.who.<answer>`, beside the meal questions'. Not in QUESTIONS: those are the meal selection's, and
+ *  this answer chooses a panel, not a cart. It IS in the analytics' vocabulary (SPEC-analytics.md § 13 item 1): the
+ *  question `who`, whose answers src/worker/beacon.js copies from this list (a Worker cannot import the build), as it
+ *  copies QUESTIONS'; F1 holds both equal to the built page's buttons. */
+export const WHO = ["individual", "family"];
+
 /** The plan page's own phrases (data/messages.json's `plan_page`), checked: a missing one refuses the build. */
 export function planPageWords(messages) {
   const words = messages.plan_page ?? {};
@@ -181,10 +191,12 @@ export function planPageWords(messages) {
   const need = (ok, what) => {
     if (!ok) throw new Error(`data/messages.json: plan_page.${what} is missing`);
   };
-  for (const [q, answers] of Object.entries(QUESTIONS)) {
+  for (const [q, answers] of [...Object.entries(QUESTIONS), ["who", WHO]]) {
     for (const key of ["heading", ...answers]) need(phrase(words.questions?.[q]?.[key]), `questions.${q}.${key}`);
   }
-  const PHRASES = [["meals_unit", []], ["rounded", ["{meals}", "{plan}"]], ["total_unit", []], ["per_meal_unit", []], ["prices_as_of", ["{date}"]]];
+  // SPEC-ui-and-copy-pass § 2.1 (the Advisor, 2026-10-25): `family_serves`, the Family section's line naming the family it
+  // serves, its numbers data/plans.json's `family.servings`.
+  const PHRASES = [["meals_unit", []], ["rounded", ["{meals}", "{plan}"]], ["total_unit", []], ["per_meal_unit", []], ["prices_as_of", ["{date}"]], ["family_serves", ["{min}", "{max}"]]];
   for (const [key, placeholders] of PHRASES) {
     need(phrase(words[key]) && placeholders.every((p) => words[key].includes(p)), `${key}${placeholders.length ? ` (with ${placeholders.join(" and ")})` : ""}`);
   }
@@ -218,6 +230,25 @@ function mealQuestions(plans, words, offer = plans.snacks.shown) {
       <div class="more" id="more" hidden>
 ${more.map((q) => question(q, words, defaults)).join("\n")}
       </div>`;
+}
+
+/** SPEC-ui-and-copy-pass § 2 item 2: the first question, "Who is this for?", in the tabs' place and in the look of the
+ *  other questions (question()'s markup: a group named by its heading, two answer buttons in the count buttons' style,
+ *  each its words alone), above both panels. Each answer controls its panel; app.js presses one from the fragment, as it
+ *  selected a tab. Like the tabs it needs the script (js-only): without it both panels show. */
+function whoQuestion(words) {
+  const w = words.questions.who;
+  const buttons = WHO.map(
+    (a, i) =>
+      `      <button type="button" class="choice" id="who-${a}" data-who="${a}" aria-controls="panel-${a}" aria-pressed="${i === 0}">` +
+      `<span class="choice-name">${emphasised(w[a])}</span></button>`,
+  );
+  return `  <div class="step js-only" id="who" role="group" aria-labelledby="q-who">
+    <h2 class="step-label" id="q-who">${esc(w.heading)}</h2>
+    <div class="choices counts">
+${buttons.join("\n")}
+    </div>
+  </div>`;
 }
 
 /** The manifest of the photo sheets, or one with no photograph (`base: null`) when there is none. */
@@ -290,18 +321,33 @@ function gridHead(plans) {
     .join("");
 }
 
-function familySection(plans, orderLinks = true) {
+/** The Family section (the panel the first question's Family answer shows). Since SPEC-ui-and-copy-pass § 2.1 (the Advisor,
+ *  2026-10-25: "Somewhere we should say that Family … serves a typical family of 3-4 people") the family it serves is a
+ *  line of its own, `plan_page.family_serves` with data/plans.json's `servings`, in place of the promise line's
+ *  "· serves 3–4". Since § 2.2 (Family's own question): the card names Family, its promise and the family it serves; its
+ *  price is the result card's, once its one question (Q1's words, `data-family`) is answered; and its door, rung 1's
+ *  (the store's Family order page), is a visitor's without script: the page's script hides it (app.js), the result
+ *  card's links being Family's door. ⛔ Family is a size, four portions: no goal and no macro targets are asked or shown. */
+function familySection(plans, words, orderLinks = true) {
   const f = plans.family;
   const cell = f.counts[0];
-  const n = cell.meals_per_week;
+  const w = words.questions.lunch_dinner;
+  const buttons = answerOrder("lunch_dinner", plans.selection_defaults).map(
+    (a) =>
+      `        <button type="button" class="choice" data-family="${a}" aria-pressed="false">` +
+      `<span class="choice-name">${emphasised(w[a])}</span></button>`,
+  );
   return `    <div class="family-card">
       <h2>${esc(f.name)}</h2>
-      <p>${esc(f.promise)} &middot; serves ${f.servings.min}–${f.servings.max}</p>
-      <dl class="figures">
-        <div><dt>Per family meal</dt><dd>${money(cell.price_per_meal_cents)}</dd></div>
-        <div><dt>Weekly total (${n} meal${n === 1 ? "" : "s"})</dt><dd>${money(weeklyTotalCents(cell))}</dd></div>
-      </dl>
-      <a class="cta" ${orderLink(plans, cell.mpid, orderLinks)} data-plan="${esc(f.id)}">Choose your meals</a>
+      <p>${esc(f.promise)}</p>
+      <p>${esc(fillPhrase(words.family_serves, { min: f.servings.min, max: f.servings.max }))}</p>
+      <a class="cta" id="family-door" ${orderLink(plans, cell.mpid, orderLinks)} data-plan="${esc(f.id)}">Choose your meals</a>
+    </div>
+    <div class="step js-only" id="family-question" role="group" aria-labelledby="q-family">
+      <h2 class="step-label" id="q-family">${esc(w.heading)}</h2>
+      <div class="choices counts">
+${buttons.join("\n")}
+      </div>
     </div>`;
 }
 
@@ -310,6 +356,9 @@ function familySection(plans, orderLinks = true) {
  * SPEC-meal-selection: per answer set (`or-5d`, § 8 item 2) the plan it goes through and the rounded line, or "" (§ 2);
  * each size's cells for every plan an answer set goes through; the defaults; today's two counts as answer sets (§ 3:
  * `#lean-7`, `#meals-14`); and whether Q4 is on the page. With `orderLinks` false (a preview) the order page's base is empty.
+ * SPEC-ui-and-copy-pass § 1.2 item 1 (the Advisor, 2026-10-23: "yes please fix this math"): an answer set's `meals`, the
+ * meals its card lists, and per size, for an answer set whose meals are more than its plan's (5 on the 4, 15 on the 14),
+ * `totals`: its weekly total, those meals at the plan's price a meal, as the store charges it (five on Lean 4, $65.00).
  */
 function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true) {
   const { rows, defaults } = checkSelection(plans);
@@ -318,9 +367,14 @@ function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true)
   return {
     base: orderLinks ? plans.order_base_url : PREVIEW_ORDER_BASE,
     answers: Object.fromEntries(
-      [...rows].map(([key, r]) => [key, { plan: r.plan, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
+      [...rows].map(([key, r]) => [key, { plan: r.plan, meals: r.meals, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
     ),
     defaults,
+    // SPEC-ui-and-copy-pass § 2.2: Family's answers (Q1's), each the answer set whose cart it takes, its meals a week, and
+    // its figures at its price a meal (money here, as every figure), its link the store's Family order page.
+    family: Object.fromEntries(
+      [...checkFamily(plans)].map(([ld, r]) => [ld, { key: r.key, meals: r.meals, mpid: r.mpid, per_meal: money(r.cents), total: money(r.cents * r.meals) }]),
+    ),
     legacy: Object.fromEntries(legacy),
     snacks: offer,
     plans: plans.individual.map((plan) => ({
@@ -339,6 +393,9 @@ function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true)
           ];
         }),
       ),
+      totals: Object.fromEntries(
+        [...rows].filter(([, r]) => r.meals !== r.plan).map(([key, r]) => [key, money(cellFor(plan, r.plan).price_per_meal_cents * r.meals)]),
+      ),
     })),
   };
 }
@@ -354,12 +411,12 @@ export { scriptJson };
  */
 export const PROD_SLOTS = {
   ASSET_PREFIX: "",
-  QUESTION_ONE: "What's your goal?",
+  // The goal's question, the last since SPEC-ui-and-copy-pass § 2 item 1 (it was question one).
+  GOAL_QUESTION: "What's your goal?",
   DEV_STYLE: "",
   DRAFT_BANNER: "",
   OFFER_BOX: "",
   SAVE_SECTION: "",
-  SAVE_FAMILY: "",
   SHARE_PANEL: "",
   DEV_SCRIPT: "",
 };
@@ -389,8 +446,32 @@ export const DEV_PHOTO_HOST = 1;
 const MENU_LINK =
   '\n            <p class="skips"><button type="button" class="skip" id="save-skip-menu">See this week&#39;s menu →</button></p>';
 
+/** SPEC-ui-and-copy-pass § 1.2 item 2: an offer's `percent_off`, its share, a whole number of percent (refused otherwise,
+ *  naming the offer), and the percentage its words may name ("save 25%"), which must be it. */
+const PERCENT_OFF = { least: 1, most: 99 };
+const PERCENT = 100;
+const NAMED_PERCENT = /(\d+)\s*%/;
+
+/** § 1 item 7, as § 1.2 item 2 corrects it (the Advisor, 2026-10-23: "The HMP storefront *effectively* has the discount
+ *  applied. The microsite shows the un-discounted price struck through"): for an offer with `percent_off`, each grid
+ *  cell's struck price, its weekly total as the store charges it ÷ (1 − the share), as the cell writes its total
+ *  (`$116.67/wk` for $87.50), by the cell's data-cell; rounded to the cent, never below the list. Money is the build's. */
+function pricesStruck(plans, offer) {
+  const p = offer.percent_off;
+  if (!Number.isInteger(p) || p < PERCENT_OFF.least || p > PERCENT_OFF.most) {
+    throw new Error(`data/offers.json: offer ${offer.id}'s percent_off must be a whole number from ${PERCENT_OFF.least} to ${PERCENT_OFF.most}, got ${JSON.stringify(p)}`);
+  }
+  for (const field of ["label", "headline"]) {
+    const named = NAMED_PERCENT.exec(offer[field] ?? "");
+    if (named && Number(named[1]) !== p) throw new Error(`data/offers.json: offer ${offer.id}'s ${field} names ${named[1]}%, its percent_off is ${p}`);
+  }
+  return Object.fromEntries(gridCells(plans).map((c) => [`${c.plan}-${c.count}`, `${money(Math.round((c.total_cents * PERCENT) / (PERCENT - p)))}/wk`]));
+}
+
 /** What the development page's scripts read: the save endpoint, the ZIP list (official; its near ring a mock), the sizes,
- *  and (§ 2a) what the offer box needs to choose as the Worker does. ⛔ Never a code: no shared_code, no code_mode. */
+ *  and (§ 2a) what the offer box needs to choose as the Worker does; since SPEC-ui-and-copy-pass § 1 item 1 an offer's
+ *  `headline`, the words the box prints, when it has one, and since its item 7 (as § 1.2 item 2 corrects it) `struck`,
+ *  See all plans' struck prices (pricesStruck), when it has a `percent_off`. ⛔ Never a code: no shared_code, no code_mode. */
 export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) {
   const prefixesOnly = (list) => (list ?? []).map((z) => (z.zip ? { zip: z.zip } : { prefix: z.prefix }));
   return {
@@ -405,9 +486,11 @@ export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) 
     offers: offers.offers.map((o) => ({
       id: o.id,
       label: o.label,
+      ...(o.headline !== undefined ? { headline: o.headline } : {}),
       applies_to: o.applies_to,
       valid_from: o.valid_from,
       valid_to: o.valid_to,
+      ...(o.percent_off !== undefined ? { struck: pricesStruck(plans, o) } : {}),
     })),
   };
 }
@@ -429,11 +512,12 @@ const DRAFT_TAG = '\n            <p class="draft-tag">DRAFT — not for use · w
 
 /**
  * Flow 1's slots, the save step, as both builds carry it (SPEC-rung4 § 2b; SPEC-save-offer-production §§ 1, 3): the
- * offer box at the top (§ 2a's heading and label) and Flow 1 after the button that leaves for the store: in the result
- * card's place (SAVE_SECTION, directly after the result card) and, on Family, the place src/save/flow1.js moves it to
- * (SAVE_FAMILY, directly after the Family panel, whose last thing is the Family card's button: outside it, so the panel's
- * bytes are unchanged, MS-13); its style and its scripts, Turnstile's last. `draft`: the step's DRAFT tag (the
- * development build's alone). `share`: the share panel's arithmetic and script (the development build's Flow 2).
+ * offer box at the top (§ 2a's label; since SPEC-ui-and-copy-pass § 1 item 1 the offer's headline as its heading) and
+ * Flow 1 after the button that leaves for the store, in the result card's place (SAVE_SECTION, directly after the result
+ * card); its style and its scripts, Turnstile's last. Since SPEC-ui-and-copy-pass § 1 item 2 the step is shown only
+ * beside the card's checkout button (#cc-checkout), so it has no place on Family (the template's SAVE_FAMILY went), and its
+ * scripts (DEV_SCRIPT) come after the card's (PICKS_SCRIPT), so it reads what the card drew. `draft`: the step's DRAFT
+ * tag (the development build's alone). `share`: the share panel's arithmetic and script (the development build's Flow 2).
  * `siteKey` is the environment's TURNSTILE_SITE_KEY. Also returns `read` and `fill` for the development build's extras.
  */
 export async function saveSlots(plans, { save, zips, siteKey, eventId, offers, menu = existsSync(MENU_PATH) }, { draft, share = false }) {
@@ -460,11 +544,11 @@ export async function saveSlots(plans, { save, zips, siteKey, eventId, offers, m
     DEV_STYLE: (await read("style.css")).trimEnd(),
     OFFER_BOX: "\n" + (await read("offer-box.html")).trimEnd(),
     SAVE_SECTION: "\n" + fill(await read("section.html")).trimEnd(),
-    SAVE_FAMILY: '\n  <div id="save-end-family"></div>',
     DEV_SCRIPT:
       `\n<script type="application/json" id="save-data">${scriptJson(client)}</script>` +
       `\n<script>\n${shared}\n</script>` +
       `\n<script>\n${(await read("flow1.js")).trim()}\n</script>` +
+      `\n<script>\n${(await read("plan-prices.js")).trim()}\n</script>` +
       (share ? `\n<script>\n${(await read("share.js")).trim()}\n</script>` : "") +
       `\n<script src="${TURNSTILE_SCRIPT_URL}" async defer></script>`,
   };
@@ -480,7 +564,7 @@ export async function devSlots(plans, inputs) {
   return {
     ...flowOne,
     ASSET_PREFIX: DEV_ASSET_PREFIX,
-    QUESTION_ONE: "Meal size",
+    GOAL_QUESTION: "Meal size",
     GOALS: plans.individual.map(sizeButton).join("\n"),
     DRAFT_BANNER: "\n" + fill(await read("banner.html")).trimEnd(),
     SHARE_PANEL: "\n" + (await read("share-panel.html")).trimEnd(),
@@ -565,10 +649,11 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
     PER_MEAL_UNIT: esc(words.per_meal_unit),
     FOOTNOTE: esc(fillPhrase(words.prices_as_of, { date: plans.read_on })),
     GOALS: plans.individual.map(goalButton).join("\n"),
+    WHO_QUESTION: whoQuestion(words),
     MEAL_QUESTIONS: mealQuestions(plans, words, offer),
     GRID_HEAD: gridHead(plans),
     GRID_ROWS: gridRows(plans, orderLinks),
-    FAMILY: familySection(plans, orderLinks),
+    FAMILY: familySection(plans, words, orderLinks),
     READ_FROM_TEXT: esc(plans.read_from.replace(/^https?:\/\//, "")),
     READ_ON: esc(plans.read_on),
     DATA: scriptJson(clientData(plans, words, offer, orderLinks)),
@@ -738,6 +823,42 @@ ${paragraphs.join("\n")}
 `;
 }
 
+/**
+ * SPEC-ui-and-copy-pass § 1.3 (2026-10-23; the entry cards printed for the Boston events name eatfitaf.com/privacy/): § 6
+ * approved is one line inside it, `<!-- approved YYYY-MM-DD -->`, written on the Advisor's word alone. Its date, or null
+ * when § 6 has no such line; a line that opens `<!-- approved` in any other form, or names no real date, or more than one
+ * such line, refuses the build, naming the page, before anything is written.
+ */
+const APPROVAL_OPENING = /<!--\s*approved\b/;
+const APPROVAL_LINE = /^<!-- approved (\d{4}-\d{2}-\d{2}) -->$/;
+/** A YYYY-MM-DD that names a day of the calendar (2026-02-30 does not). */
+function realDay(ymd) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+}
+export function privacyApproval(draftText) {
+  const section = draftText.split(/^## 6\. .*$/m)[1]?.split(/^## /m)[0] ?? "";
+  const lines = section.split("\n").filter((l) => APPROVAL_OPENING.test(l));
+  if (!lines.length) return null;
+  const date = lines.length === 1 ? APPROVAL_LINE.exec(lines[0].trim())?.[1] : undefined;
+  if (!date || !realDay(date)) {
+    throw new Error(
+      `build refused: consent/DRAFT.md § 6's approval line is not one "<!-- approved YYYY-MM-DD -->" with a real date (${lines.join(" | ")}), so the privacy page cannot be published`,
+    );
+  }
+  return date;
+}
+
+/** § 1.3: the production build's /privacy/ with `production` false and § 6 approved: the page `production` true writes,
+ *  refused, naming it, if it prints a placeholder or the draft tag (production-inputs' rule for printed words). */
+async function approvedPrivacy({ draftText, save }) {
+  const privacy = await privacyPage({ draftText, save, draft: false });
+  const refusals = printedRefusals([{ where: "the privacy page", text: printedText(privacy) }]);
+  if (refusals.length) throw new Error(`production build refused (consent/DRAFT.md § 6 approved):\n${refusals.map((r) => `- ${r}`).join("\n")}`);
+  return privacy;
+}
+
 /** Write /privacy/ beside the pages. */
 async function writePrivacy(outDir, html) {
   const path = join(outDir, PRIVACY_DIR, "index.html");
@@ -812,15 +933,15 @@ const PREVIEW_DATE = '<span id="preview-date"></span>';
  * SPEC-preview-sites § 8 (the orchestrator's ruling, 2026-10-22): a preview leaves out "Why Fit AF?", as it leaves out the
  * save step and /privacy/ (§ 7 item 3: no link holds an address; item 8: the preview Worker serves /fonts/ and /assets/
  * only). Each piece is cut from the preview page as rendered, by its own text: the button, its no-script link and its
- * dialog (src/template.html, SPEC-every-menu-and-nutrition § 11 item 5); their style (the template's block and its 720 px
- * rule); the lines of app.js that open the dialog and listen in its frame (SPEC-why-fit-af §§ 2 and 6), and the words
- * naming it in the comment over the shared modal(). A piece not found exactly once refuses the preview build, as does
+ * dialog (src/template.html, SPEC-every-menu-and-nutrition § 11 item 5); their style (the template's block; its 720 px
+ * rule, which centred the button on the tabs, went with the tabs, SPEC-ui-and-copy-pass § 2); the lines of app.js that
+ * open the dialog and listen in its frame (SPEC-why-fit-af §§ 2 and 6), and the words naming it in the comment over the
+ * shared modal(). A piece not found exactly once refuses the preview build, as does
  * any "/why/" left, so the page and this list cannot drift apart unseen. The production and development pages are
  * rendered without it and do not change (PV5); the preview build also writes no why/ (PREVIEW_STATIC_DIRS).
  */
 const PREVIEW_WITHOUT_WHY = [
   ["the Why style", /\/\* Why Fit AF\? \(SPEC-why-fit-af § 2\)[\s\S]*?\n\.why-frame \{[^}\n]*\}\n\n/g, ""],
-  ["the Why rule at 720 px", /\n  \.why-link \{[^}\n]*\}/g, ""],
   ["the Why button, its no-script link and its dialog", /\n  <button type="button" class="why-link[\s\S]*?\n  <\/dialog>/g, ""],
   ["the script's Why lines", /\n  modal\(\$\("#why"\), \$\("#why-link"\), \$\("#why-close"\)\);[\s\S]*?\n  whyFrame\.addEventListener\("load", function \(\) \{[\s\S]*?\n  \}\);/g, ""],
   ["the Why words over modal()", / and Why Fit AF\? \(the \/why\/ page in a frame, SPEC-why-fit-af § 2 item 3\)/g, ""],
@@ -903,12 +1024,17 @@ export async function build({
   // true, it carries Flow 1, and the build refuses here, writing nothing, until every input is approved.
   const save = await loadJson(savePath);
   const draftText = await readFile(draftPath, "utf8");
+  // SPEC-ui-and-copy-pass § 1.3: with § 6 approved, the production build carries /privacy/ whatever `production` says.
+  const privacyApproved = privacyApproval(draftText);
   const prod =
     target !== "prod"
       ? null
       : save.production === true
         ? await productionPage({ plans, events, messages, card, photos, save, offersPath, zipsPath, draftText, productionVars })
-        : { html: await renderPage(plans, PROD_SLOTS, messages, card, photos, events), privacy: null };
+        : {
+            html: await renderPage(plans, PROD_SLOTS, messages, card, photos, events),
+            privacy: privacyApproved ? await approvedPrivacy({ draftText, save }) : null,
+          };
   // SPEC-preview-sites § 3: the preview page is the production page's slots (PROD_SLOTS) with a preview's changes, never
   // productionPage's: a preview carries no save step (rung 4) whatever data/save.json's `production` says.
   const preview = target === "preview" ? await previewSlots(messages) : null; // the banner's words checked, too
@@ -928,7 +1054,8 @@ export async function build({
   }
   const files = await copyStatic(outDir, photos, sheetsDir, preview ? PREVIEW_STATIC_DIRS : STATIC_DIRS); // § 8: a preview, no why/
   // § 9 item 1: /privacy/, a static page beside the plan pages (as /why/): the development build always, marked as the
-  // step is; the production build only with `production` true; the preview build never (it has no save step).
+  // step is; the production build with `production` true, or with DRAFT § 6 approved (SPEC-ui-and-copy-pass § 1.3); the
+  // preview build never (it has no save step).
   const privacy = target === "dev" ? await privacyPage({ draftText, save, draft: true }) : target === "prod" ? prod.privacy : null;
   if (privacy) files.push((await writePrivacy(outDir, privacy)).path);
   // QR codes point at the production URL, so only the production build writes them.

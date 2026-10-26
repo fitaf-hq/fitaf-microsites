@@ -41,6 +41,9 @@ export const STATES = {
   noPicks: { name: "No picks this week", fragment: chosen, date: "none", waits: RESULT, lacks: "#cc-list" },
   allPlans: { name: "All plans", fragment: chosen, date: "today", waits: RESULT, press: "#all-link", opens: "#all" },
   family: { name: "Family", fragment: () => "#family", date: "today", waits: "#panel-family" },
+  // The site's SPEC-ui-and-copy-pass § 2.2 (Family's own question, 2026-10-25): Family's *and* answered, on the fixture
+  // week (its and-5d cart holds ten): the result card with Family's ten meals, scrolled to Family's question.
+  familyAnd: { name: "and · 10 meals", fragment: () => "#family-and", date: "fixture", waits: RESULT, needs: "#cc-list", scrollTo: "#family-question" },
   // SPEC-meal-selection § 9 item 1: the goal buttons, a size chosen (its facts one block each), Q1 waiting.
   goals: { name: "Goal buttons", fragment: (args) => `#${args.goal}`, date: "today", waits: "#panel-individual", scrollTo: "#q-goal" },
   ...Object.fromEntries(ANSWER_SETS.map(([part, name]) => [part, answerSet(part, name)])),

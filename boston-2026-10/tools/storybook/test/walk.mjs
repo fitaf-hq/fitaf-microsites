@@ -74,6 +74,26 @@ function inspectHandoff(sections) {
   const displayed = (el) => Boolean(el && el.getClientRects().length > 0);
   const clean = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : null);
   const screen = doc?.getElementById("fitaf-screen") ?? null;
+  // SPEC-rung2-progress-and-checkout § 30 (P4), in the frame: the screen's placeholder as the browser draws it. `empty`:
+  // the carousel with no slide (its ::before); `shown`: the shown slide's first element, its box and its ::before. A
+  // plate is [width, height, top on the page] and its mark the background image ("none" without one); `side` is the box
+  // a photograph takes, min(220px, 32vh). Defined here: this function runs in the page, whole.
+  const placeholderOf = (s) => {
+    const win = s.ownerDocument.defaultView;
+    const drawn = (el) => {
+      const r = el.getBoundingClientRect();
+      const b = win.getComputedStyle(el, "::before");
+      return { box: [Math.round(r.width), Math.round(r.height), Math.round(r.top)], content: b.content, plate: [Math.round(parseFloat(b.width)), Math.round(parseFloat(b.height)), Math.round(r.top + parseFloat(b.top))], mark: b.backgroundImage };
+    };
+    const c = s.querySelector(".c");
+    const on = c?.querySelector(":scope > .on");
+    return {
+      side: Math.round(Math.min(220, 0.32 * win.innerHeight)),
+      empty: c && !c.children.length ? drawn(c) : null,
+      first: on?.firstElementChild?.className ?? null,
+      shown: on?.firstElementChild ? drawn(on.firstElementChild) : null,
+    };
+  };
   const counts = {};
   for (const sel of sections) {
     const all = doc ? [...doc.querySelectorAll(sel)] : [];
@@ -92,6 +112,10 @@ function inspectHandoff(sections) {
     slide: clean(screen?.querySelector(".c > .on b")),
     line: clean(screen?.querySelector('[role="status"]')),
     bar: screen?.querySelector(".b i")?.style.width ?? null,
+    // SPEC-rung2-progress-and-checkout § 30 (P4): the placeholder. Before the first meal, the empty carousel's (its
+    // ::before); once a meal is shown, that slide's box (its first element, .f) and the placeholder in it (its ::before).
+    // Each with its place: the box's, and the plate's (its size, its top on the page, its mark).
+    placeholder: screen ? placeholderOf(screen) : null,
     steps: [1, 2, 3].filter((n) => doc?.documentElement.classList.contains(`fitaf-step-${n}`)),
     stepBar: Boolean(doc?.getElementById("fitaf-bar")),
     total: displayed(doc?.querySelector(".summary__total")),
@@ -174,6 +198,12 @@ export function statesProblems(results, { menus, defaultMeals, gridLinks, carts 
     if (r.story === "No picks this week" && (r.ccList || !r.chooseYourMeals)) fail("a Chef's Choice list, or no plain button");
     if (r.story === "All plans" && r.gridLinks !== gridLinks) fail(`${r.gridLinks} of the grid's ${gridLinks} links shown`);
     if (r.story === "Family" && (!r.family || r.individual)) fail("not the Family panel");
+    // The site's SPEC-ui-and-copy-pass § 2.2: Family's and, the fixture week's and-5d cart (ten meals) on the result card.
+    if (r.story === "and · 10 meals") {
+      if (!r.family || r.individual) fail("not the Family panel");
+      if (r.selection !== "and-5d") fail(`the card's answer set is ${r.selection}, not and-5d`);
+      if (!r.ccList || JSON.stringify(r.meals) !== JSON.stringify(carts["and-5d"])) fail(`shows ${JSON.stringify(r.meals)}, not and-5d's cart`);
+    }
     if (r.story === "Scroll" && !(r.frameHeight >= r.pageHeight)) fail(`frame ${r.frameHeight} tall, its page ${r.pageHeight}`);
     if (r.story === "Goal buttons" && r.facts !== 3) fail(`${r.facts} facts blocks shown, not one per goal`);
     if (r.answers) {

@@ -1185,3 +1185,373 @@ load, *"Target.setAutoAttach timed out"*, which passed alone and in a full re-ru
   microsite's, carried by its link, and this smoke builds its own link from the menu.
 - ⬜ The look of each step on the live page (spacing, the bar's type) is the Advisor's to judge after his paste; the
   report is text only (the smoke never takes a screenshot).
+
+## 30. Amendment, 2026-10-25: the screen never jumps, and every meal's photograph. CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-25: *"Cleaning up the interstitial – this has been a long-standing request. For some
+reason, not every photo loads (even though we should be using our own thumbnail sprite sheet). And because there's no
+placeholder image, the scrollbar bounces around making the page look broken/unprofessional."* Measured from the code
+(§ 17.1): a slide draws a photograph only for a meal whose cell the link carries (`CELLS`), and the link carries a cell
+only for a meal in that week's sheet (`data/photo-sheets.json` `chefs_choice.<week>`); every other meal's slide is its
+name alone, a different height.
+
+1. **The photo's box is always there**: every slide reserves the photograph's box at its final size from the first
+   frame, holding a placeholder (the Fit AF mark, centred on the screen's own background) until the photograph is
+   drawn, and keeping it when there is none (no cell, or the sheet failed: `BAD`). Nothing on the screen changes size or
+   position when a photograph arrives or does not; the screen never shows a scrollbar it did not show on its first frame.
+2. **Which meals have no cell — measured, not assumed**: for each week of `data/photo-sheets.json`, the meals a visitor
+   can put in a cart that week (every path: Chef's Choice, Choose my own meals, the plans) and whether the link would
+   carry a cell for each, by the program that builds the link. The builder reports the table. A meal missing from the
+   week's sheet is fixed **in the sheet's own pipeline** (the sheets are generated, never edited here), stated by the
+   builder as a finding with the meals named; nothing in the block invents a cell.
+3. **The block stays within § 17's limit** (15,360 bytes, the build refuses above), and every existing R2/§ 17 case
+   still passes.
+4. **Cases**, written first and run red: P1 a slide with no cell shows the placeholder box at the photograph's size;
+   P2 a photograph arriving changes no slide's height or the screen's scroll height (measured in the stand-in); P3 the
+   sheet failing (`BAD`) leaves every box as P1; P4 the Storybook stories of the screen (*Screen · A/B/C*, SPEC-storybook
+   § 8.3) show the placeholder. Mutant, caught: the box drawn only when the photograph loads.
+
+## 31. Amendment, 2026-10-25: every hand-off applies the store's code `zero`, hidden. CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-25: *"Add the "zero" discount code as a hidden submission to the cart's discount code. It
+applies a 0% discount code that we can use to easily segment these orders in the HMP system."* And: *"we hide the
+discount code on checkout. So it is impossible for the customer to enter multiple codes – though we need to make sure
+that we're able to find and fill the field."*
+
+1. **The code is a constant of the block**, `zero` (the store's own code, 0%; ⚠ its existence in the store is checked at
+   the rehearsal, item 4), never read from the link (the link's `~<code>` stays "not applied").
+2. **When**: at the checkout, before the first step the person sees is interactive: the block finds the store's
+   discount input (inside `.checkout-discounts`, whichever of its placements is in the page, the same selectors § 10's H7
+   hides), sets it to `zero` as a person's typing would (the events the store's form listens to), presses its apply
+   control, and waits for the store to show the code applied (its discount row or applied-code mark, as measured). The
+   discount UI stays hidden throughout (H7 unchanged); the person sees nothing of it.
+3. **It never blocks a sale**: no input found, the code refused, or no sign of it applied within a bound the builder
+   states — the checkout goes on exactly as today, and the block's log names which (`zero: not found` / `refused` /
+   `no sign`). Applied once per checkout; a reload does not apply it twice.
+4. **Rehearsed on the live store by the orchestrator before the Advisor pastes it** (as § 29): the code applies, the
+   order's total is unchanged, and the store's order shows `zero`. ⛔ No agent types into the store's admin; the paste is
+   the Advisor's.
+5. **Cases**, in the stand-in checkout (the watch package's fixture, as § 27's cases), written first and run red: Z1 the
+   input found in each placement, filled with `zero`, the apply pressed, the applied mark awaited; Z2 the discount UI
+   hidden throughout (H7's selectors still match); Z3 no input → the checkout unchanged and the log line; Z4 a refusal
+   → the same; Z5 applied once across a reload. Mutants, caught: the code read from the link; the UI shown while
+   filling; a failure that stops the checkout.
+6. **When**: built on `boston/handoff-zero-and-photos` with § 30 as ONE new Footer block
+   (`storefront/footer-block/YYYY-MM-DD-fitaf-handoff-<commit>.md`), rehearsed (item 4), then pasted by the Advisor
+   before 2026-10-26 17:00 Eastern.
+
+### 31.1 Built — found at the build, not ruled (2026-10-25)
+
+Both sections, one Footer block. Red at `9fff66d` (the cases alone, the block unchanged), built at `f05d355`, the Footer
+block file `storefront/footer-block/2026-10-25-fitaf-handoff-f05d355.md` (status *built, not pasted*). §§ 30 and 31 above
+are unchanged; this says what the build chose where they left a choice, what it measured, and what only the live
+rehearsal can show.
+
+**Red, then green.** Run red against the unchanged block (`9fff66d`): the site suite's new file
+(`test/r2-92-93-box-and-zero.test.mjs`) **8 of 8 failing**; the watch package's two new files
+(`tools/storefront-watch/test/r2-p30-placeholder.test.mjs`, `r2-z31-zero.test.mjs`, Chrome) **18 of 18 failing**, each
+for the block's reason (P2 on the old block: the shown box moved 344 → 384 px when the logo arrived, and a slide with no
+cell had no box); Storybook's SM-10 failing on **exactly P4's 8 readings** (Screens A, B twice, C, at both widths), no
+other. Green at `f05d355`: those files **8 of 8**, **18 of 18**, SM-10 passing; the gates in full below.
+
+#### § 30 item 2, measured: which meals a visitor can cart lack a cell, by the program that builds the link
+
+The program: `scripts/week-content.mjs`'s own chain (`readPicks` → `checkPicks` → `cartOf` → the link tool's
+`payloadFromArgs` and `handoffLink`, `--photos` from `data/photo-sheets.json`), run over `data/picks/` at this branch's
+base (`c6dd3a5`'s data), production host; every link of every list, answer set and size, meal links and snack links;
+each link's photo part decoded item by item. **"Every path"**: only the cart links (Chef's Choice and, for 1 November,
+the four other menus) carry `#fitaf=`; *Choose my own meals* and the plans' buttons open the plan's order page with no
+fragment (`src/app.js`: `base + "?mpid=" + mpid`; `chefs-choice.js`: `own.href = choose.href`), so no hand-off and no
+screen runs on them.
+
+| week (delivery) | picks file | lists | links | meals carted | meals with a cell, every link | snacks carted | snacks with a cell in the link | snacks with a cell in the week's sheet |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| 2026-10-04 | none in `data/picks/` | — | 0 | — | — | — | — | (sheet: 14 cells) |
+| 2026-10-11 | version 1 | chefs-choice | 6 | 14 | **14** | 0 | — | — |
+| 2026-10-18 | version 2 | chefs-choice | 48 | 17 | **17** | 7 | **0** | 7 |
+| 2026-10-25 | version 2 | chefs-choice | 48 | 17 | **17** | 7 | **0** | 7 |
+| 2026-11-01 | version 2 | chefs-choice + 4 menus | 216 | 26 | **26** | 5 | **0** | 5 |
+
+**Every item a link carries without a cell, by cause** (the coordinator's four):
+
+| cause | count | the items |
+|---|---:|---|
+| (a) a pick whose meal has no bound photograph | **0** | every meal of every carted list has its cell, in every link |
+| (b) a snack | **19** (7 + 7 + 5; 10 distinct names) | 10-18: 🟠NEW: Caramel Apple ProNuts, 🟠NEW: Cheesecake Brownie Bites, Cookies & Cream Protein Dirt, De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha, De-Stress Superfood Bites: Triple Chocolate & Ashwagandha, Golden Oreo Protein Sand, Performance Superfood Bites: Orange Creamsicle & Cordyceps · 10-25: the two 🟠NEW:, Cognition Superfood Bites: Blueberry Cream & Lion's Mane, Cookies & Cream Protein Dirt, Golden Oreo Protein Sand, Immunity Superfood Bites: Chocolate Peanut Butter & Chaga, Relaxation Superfood Bites: Apple Crisp & Reishi · 11-01: Cookies & Cream Protein Dirt, 🟠NEW: Caramel Apple ProNuts, De-Stress Superfood Bites: Chocolate S'mores & Ashwagandha, 🟠NEW: Cheesecake Brownie Bites, Golden Oreo Protein Sand |
+| (c) an item not one of that week's picks | **0** | every link item is a cart meal or the week's snack list |
+| (d) anything else | **0** | |
+
+⭐ **The finding: the missing photographs are the snacks, and not by the sheet.** Since `fitaf`
+`scripts/menus/emit_microsite_photos.spec.md` § 11 (2026-10-10) every snack has its cell in the week's sheet (19 of 19
+here); **the link tool drops it**: `scripts/handoff-link.mjs`'s `photoPart` maps the MEALS only (*"the photo part's cells
+stay the meals'"*, `SPEC-snacks-in-the-cart.md` § 2, written before § 11 of the emitter), so every snack slide of every
+snack link takes § 2's fallback: the store card's image if the page had already loaded it, else no photograph (on a slow
+store, most). The block already reads one cell per item in the link's order, meals then
+snacks (`photos()`: `f[k + 3]` over `p.items`), so carrying them is a change to the link tool alone (its `photoPart` given
+the snacks after the meals), no block change and no new sheet; not made here (§ 30 item 2: report; and it is
+`SPEC-snacks-in-the-cart`'s rule to amend). Until it is, a snack slide with no loaded card image shows § 30's placeholder.
+
+**Not measured here**, and so not in the table: whether the sheet loads at all on the store's page (the orchestrator's:
+§ 18's cache partitioning, a Content-Security-Policy or `Cross-Origin-Resource-Policy`; a failure there makes every
+slide fall back, now to the placeholder); the bucket's live objects (no request leaves this machine; the table is what
+this program makes from this commit's data); links built before § 17 still in circulation (no photo part: the card's
+loaded image, else the placeholder).
+
+#### § 30, as built
+
+- **Every slide's box first, always** (`div.f`, then the name, `b`): `min(220px, 32vh)` high, square (`aspect-ratio: 1`)
+  unless its cell gives its own ratio (every sheet's cells are 176 × 176, so square). The card's loaded photograph
+  (today's fallback, `pic()`) now goes INSIDE the box (`img.k`, `object-fit: cover`), so a slide's height never depends
+  on which photograph it has; ⚠ that photograph is cropped square where it was 420 wide (the build's choice: one box for
+  every slide). The sheet failing (`BAD`) removes the sheet's img and keeps the box.
+- **The placeholder**: the box's `::before`, a plate centred in the box, the screen's `--white` with **the store's own
+  logo** (§ 15.3's: `img.header__logo-image` once loaded, from its `currentSrc`, nothing requested) contained in it, as the
+  screen's top logo sits on its plate (*"Top, on a white plate"*); on the screen's own navy around it. The mark is a CSS
+  custom property, `--m`, set on the screen when the logo is placed; before that the plate is not drawn (an empty box
+  of the same size). ⚠ *"The Fit AF mark"* is read as that logo: the block may not request or carry an image (§ 1), and
+  the store's logo is the one Fit AF mark already on the page. No header logo: an empty box.
+- **The empty carousel** (before the first meal, Screen · A) shows the same plate in the same place (`.c:empty::before`),
+  and the carousel's height is reserved from the first frame (`min(220px, 32vh) + 61px`: the box, and two lines of the
+  name), so the first slide moves nothing.
+- **Nothing else moves either**, found at the build: the screen centres its content, so ANY height change moved the
+  title and the bar. Three more are now fixed in size: the name, at most two lines (`-webkit-line-clamp: 2`, a third cut
+  with an ellipsis); the step line, two lines reserved (`min-height: 2.8em`; a third, a long snack name at 390, still
+  grows it); and ⭐ **the screen's logo**, which § 16 recorded *"can appear after the screen does, pushing the title down
+  as it arrives"*: it is now positioned over a reserved 80 px above the title (the 48 px logo, its 8 px padding, its
+  16 px margin), so its arrival moves nothing (P2 holds the logo 1.5 s). ⚠ On a store whose stylesheet makes every box
+  `border-box`, the logo is 16 px shorter and the gap under it 16 px taller; with no header logo, the 80 px are empty.
+- **P2 measures it**: at every frame of a run whose sheet arrives 1.2 s and logo 1.5 s late, at 1280 and 390, the title,
+  the bar, the carousel and the step line in one place, one box, each slide one height, the screen's scroll height one.
+  P1 at both widths; P3 (the sheet refused, 404) at both. The mutant (the box's class given only when the sheet's img
+  loads) fails P1 and P2. **P4**: SM-10's walk reads the placeholder (Screen · A's empty carousel, its mark a `url(…)`;
+  Screens B and C, the shown box first, square at the photograph's size, its `::before` drawn) and `placeholderPlaces`
+  requires the plate one size in one place across A, B and C at each width.
+- ⚠ **Not changed**: the store's own page scrollbar, beside the screen on a browser that always shows one (the screen is
+  fixed over the viewport, not over the root's scrollbar), moves as the store's page grows under it; the screen does
+  not touch the store's page (§ 2 item 5). If that scrollbar is part of what the Advisor saw, § 30 does not reach it.
+
+#### § 31, as built
+
+- **The constant**: `ZERO = "zero"`, never the link's `~<code>` (R2-93b and Z1c, with a coded link; the mutant
+  `CODE || ZERO` fails both).
+- **When**: at done, after the mark and the style (so H7 already hides the discounts) and **before the screen goes**: the
+  verdict line `zero: <it>` comes just before `done: /checkout`, and the screen is removed with the done line, as always.
+  So the visitor sees nothing of it and the first step is not interactive until it is settled. ⚠ That holds the screen up
+  for the zero step's time (on the stand-in about 0.5 s; the bound below at most).
+- **The field** (selectors): the first `input` inside a `.checkout-discounts` (any of the three placements § 10 names;
+  `checkout-discounts` is H7's F2 literal, found in the store's release files since `main-2HXLHIG7.js`) whose markup
+  (`outerHTML`: its name, id, placeholder, aria-label, formcontrolname) matches `/discount|coupon|promo|code/i` and not
+  `/gift/i` (each placement also holds a gift-card field). **Events**: its `value` set to `zero`, then `input`, `change`
+  and `blur`, each bubbling (`input` is what Angular's `DefaultValueAccessor` reads; `blur` marks it touched). **Its
+  Apply**: the first `button` after the field (`compareDocumentPosition`'s FOLLOWING bit) in the same placement, pressed
+  with `click()` at a later poll, once not `disabled` (a form that enables Apply only once the field has a value), once.
+- **The sign**: a `.summary__row--discount` more than at done (H9's literal, F2-checked), or `zero` (any case) in the text
+  of a `.checkout-discounts` or a discount row (an applied-code mark beside the field). **A refusal**: an element with
+  text matching `[role=alert],[class*=error]` in that placement after the press.
+- ⛔ **What they rest on in the live store: only the two class names** (`checkout-discounts`, `summary__row--discount`),
+  read from its public code for H7 and H9. **The field's attributes, the Apply's place, the applied mark and the refusal's
+  element were never read from the store** (no request to it from here; no local copy of its code): they are the
+  contract's words and the stand-in's (`browser-store.mjs`, written from the contract, none of the store's code).
+- **The bound** (§ 31 item 3): `ZERO_POLLS = 25` polls of `POLL_MS` (200 ms), **5 s after the press**, then `zero: no
+  sign`; the field must appear within 5 polls (1 s) and an enabled Apply within 5 more, else `zero: not found`; any fault
+  is `not found`. Every verdict goes on to `done` exactly as before (Z3, Z4, Z4b: the screen gone, step 1, Continue to
+  step 2). Worst case it adds about 6 s before the checkout shows; it only waits when the store gives no sign at all.
+- **Once**: one press per run; a code the store already shows applied is neither typed nor pressed (`zero: applied`, Z5);
+  a reload of `/checkout` has no link (the fragment went before CHECKOUT), so the block does nothing (Z5, with the stand-in
+  placing the Footer on the reloaded checkout and keeping the code).
+- ⚠ **A coded link** (`~<code>`): § 10 item 2 DISPLAYS the discounts for it (`fitaf-code`), so there `zero` is typed into
+  a field the visitor can see, and the store may then refuse the visitor's own code (one code per order: the Advisor's
+  premise). No microsite link carries a code today (the Boston offer is a price promise, `SPEC-save-offer-production.md`
+  § 10; `chefs-choice.mjs` passes no `--code`). ⬜ The Advisor's: apply on a coded link or not.
+- ⚠ **The 15,360 bytes of § 30 item 3** are § 17.3's, raised to **20,480** by § 25.7 (the build's `MAX_SHIPPED_BYTES`);
+  the block was already 18,423 before these sections, so 15,360 could not be met by any build. Held to the build's
+  20,480.
+
+#### The size, the text, the pins
+
+- The Footer block **20,341** bytes and the console file **20,322** (18,423 and 18,404 before): § 30 costs
+  about 548, § 31 about 1,370; under the 20,480 ceiling by 139. Every character ASCII; two `<` in the Footer block
+  (its own) and none in the console file. Text SHA-256 `6d36d4bf2f1a07f105bab56528e3c785dfbf760f19bc4ec813d1d372fe9e295d`.
+- **Pins moved** (each because the shipped text changed, in the commit that changes it): R2-32's `SHIPPED_SHA256`,
+  PR-10's `FOOTER_TEXT_SHA256`, and CC-8's golden `footer_text_sha256`, from `efcbc570…` to `6d36d4bf…`; CC-8's
+  `replaces` names the live `efcbc570…` (the watch's `expectedFooter`, `8b11e54`) until the paste.
+  `storefront/watch-baseline.json` is untouched.
+- **Cases the contract made stale, amended in the green commit, each named**: **R2-74** (an old link, step for step as
+  the live block) compared the whole log, and § 31 adds exactly one line, `zero: not found` on that page (no checkout
+  component): it now requires that line once, just before done, and compares the rest as before (the slides
+  unchanged). The watch's **P2** (smoke plumbing) compared the block's exact lines: they are now `fill C`, `zero:
+  applied`, `done`. The watch's **P3b** (`routeHeld`) read the checkout as soon as the step bar appeared, which is now
+  before the screen goes (the zero step between them): it reads once the bar is up and the screen gone. Storybook's
+  **SM-9** mutant changed the title's rule by its text, `margin:0 0 16px`, now `margin:80px 0 16px`.
+- **No golden re-recorded** but CC-8's footer pin above (no §§ 30–31 case needs one); `storefront/dependencies.json`
+  unchanged: § 31's selectors use only F2's existing `checkout-discounts` and `summary__row--discount`.
+- **The stand-in's new default**: its code field's Apply accepts `zero` (300 ms later) and shows its mark beside the
+  field, not a summary row, so R2-55's rows are as before; every watch case that reaches the checkout now runs § 31's
+  step (about 0.5 s).
+
+#### Gates (each run alone, at `f05d355`)
+
+- **The site suite**, as the brief runs it (`npm --prefix boston-2026-10 test`, Node 22.18.0, `nice -n 15`): **1,165 of
+  1,165** (1,157 at `c6dd3a5`, and R2-92/R2-93's 8), 28 min 13 s on a machine whose load average was 35–137 from other
+  work.
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`): **231 of 231** (213, and P1–P3 and Z1–Z5's
+  18), 3 min 47 s. Its first full run, before P2 and P3b were amended, was 229 of 231, those two.
+- **Storybook** (`npm --prefix boston-2026-10/tools/storybook test`): **71 of 71**, run on this block's source before the
+  commit (the same files); SM-10 with P4, and SM-9 with its mutant's site moved.
+- **Contrast** (`npm --prefix boston-2026-10 run contrast`): 94 of 94.
+- **The build** (`npm --prefix boston-2026-10 run build:storefront`, clean tree): `fitaf-handoff f05d355
+  sha256:6d36d4bf…`, the Footer block 20,341 bytes (fragment SHA-256 `4d2381d4…`), the console file 20,322.
+
+#### Left for the live rehearsal (§ 31 item 4, the orchestrator's) and the Advisor
+
+- ⬜ `zero` exists in the store and applies: the field is found (which placement, at each width), Apply is enabled by
+  the events above, the store's sign is one the block reads (else the log says `no sign` after 5 s, the screen up that
+  long, and the selectors are amended from the live markup); **the order's total unchanged; the store's order shows
+  `zero`** (the admin, seen by a person; no agent types there). The console's `zero:` line is the block's own report.
+- ⬜ **"The store's order shows `zero`" needs an order**: the smoke never places one (§ 29: nothing submitted), so the
+  rehearsal as § 29 ran it shows the code applied in the cart and the total, not on an order; an order with `zero` is a
+  person's (a test order, or the first real one), and the admin is read by a person.
+- ⬜ After the paste, every hourly live smoke (`--live`) runs the store's own block, so each applies `zero` to its own
+  cart (never an order); its report prints the block's lines per width, the `zero:` verdict among them.
+- ⬜ The look: the placeholder's plate on the screen at both widths; the store's logo in it; the card's photograph cropped
+  square; the title 80 px down with the logo absolutely placed (and whether the store's stylesheet is `border-box`).
+- ⬜ Whether the sheet loads on the store's page at all (the orchestrator's: § 18's partitioned cache, CSP, CORP).
+- ⬜ The snacks' cells (the finding above): a link-tool amendment, if wanted.
+- ⬜ A coded link and `zero` (above): the Advisor's.
+
+### 31.2 Amendment, 2026-10-25 (the orchestrator, on § 31.1's findings). CONTRACT, before any code
+
+1. **Every snack's photograph** (amends SPEC-snacks-in-the-cart § 2's "the photo part's cells stay the meals'"): the link carries a cell for every item, meals and snacks, in the link's order, from the week's sheet (the snack cells the photos emitter writes since its § 11); an item with no cell in the sheet still carries "". Both link builders change together: the page's own link code and scripts/handoff-link.mjs (byte-identical links, as today's cases hold them). The block is unchanged by this item.
+2. **The store's page does not move under the screen**: while #fitaf-screen is up, the store page's own scrolling is suppressed (its scrollbar hidden, e.g. overflow hidden on the root, with whatever keeps the page's width from changing when the scrollbar goes), and restored exactly as it was when the screen goes or the block stops. Cases: the root's overflow while up and after; the page's width unchanged at the hide and the restore; a mutant that never restores is caught.
+3. **A coded link (`~<code>`) does not get `zero`** (ruled: the visible code field is the visitor's; no microsite link carries a code today). Case and log line (`zero: coded link`).
+4. The block stays within the 20,480-byte ceiling (state the bytes; if item 2 does not fit, stop and report the bytes before trimming anything). § 30 item 3's 15,360 is superseded by § 25.7: say so in the note.
+
+#### 31.2.1 Built — items 1 and 3; item 2 stopped at the ceiling, as item 4 says (2026-10-25)
+
+The contract above was committed alone at `f4315d4` (items 1–4 as the orchestrator wrote them). Item 1 at `66f5f1a`
+and `50c9949`, item 3 at `992739f`; the Footer block file `storefront/footer-block/2026-10-25-fitaf-handoff-992739f.md`
+(status *built, not pasted*, committed at `5457f53` with W4's amendment), and `…-f05d355.md` marked *superseded, not
+pasted*. **Item 2 is not built**: it does not fit the 20,480-byte ceiling beside item 3, and item 4 says to stop and
+report before trimming anything (below).
+
+**Item 1, every snack's photograph.**
+
+- **"Both link builders" are one function.** The page has no link code of its own: `scripts/chefs-choice.mjs` says *"No
+  key function and no encoder live here (CC-2)"*, and every link the page shows is made by `scripts/handoff-link.mjs`
+  through the content command (`week-content.mjs` → `checkPicks` → `cartOf` → `payloadFromArgs`, `handoffLink`). So one
+  change, `payloadFromArgs` giving `photoPart` the snacks after the meals, makes both, and the page's links and the
+  tool's stay byte-identical by construction (CC-2 and the rest unchanged and green).
+- **The block is unchanged** (item 1's last sentence): it already reads one cell per item, meals then snacks. ⭐ And so
+  **does the block live in the store** (`efcbc570…`, `8b11e54`): rebuilt as R2-71 rebuilds it and given a link with
+  snack cells, it showed each snack's cell on its slide (scratch, 2026-10-25). **Item 1 needs no paste**: it reaches
+  visitors when the week's content is next made (`npm run content`, the content job), with the block live today.
+- **Measured** (§ 31.1's program re-run on `66f5f1a`): every snack of every link now carries its cell, 19 of 19
+  (2026-10-18: 7, 2026-10-25: 7, 2026-11-01: 5); every meal as before, 0 without.
+- **Cases, red first** (on the old encoder, 2 of 2): **SN-6c** amended to the new rule (a snack the sheet has no cell
+  for carries `""` after the meals' cells; it pinned *"the photo part is the meals' alone"*), **SN-6d** new (a generated
+  manifest with cells for a meal and both snacks: the link's cells are the items' in order, and the shipped text shows
+  each snack's cell on its slide). Green after the change.
+- **Cases the change made stale, and how each now reads** (the content of committed weeks moved by exactly the snack
+  cells, by design): **MS-20** (and so its control MS-10), **EM5c**, **W4** (found by the first full run at `992739f`)
+  and **WC-9a** compare with the earlier commit's
+  content after `test/snack-cells.mjs`'s `withSnackCells` makes item 1's one change to it (written from the contract,
+  not from the encoder), every other byte as before; **U4** and **WC-9c**, whose goldens are hashes, read today's pages
+  and data with exactly those cells removed (`withoutSnackCells`), each with a control that cells were there. ⚠ **Not
+  re-recorded**, though both have recorders: the recorders build a commit's own tree, production true since
+  SPEC-save-offer-production § 12, while U4 and WC-9c read release (a)'s pages; a re-record at `66f5f1a` moved every
+  fragment for that reason, not this one. Before amending, WC-9c's 8 moved fragments of 20 each returned to the golden's
+  hash with the snack cells removed. **No golden re-recorded.**
+
+**Item 3, a coded link gets no `zero`.** In `zero()`, first: `if (CODE) m = "coded link"`; nothing typed or pressed, then
+done as every verdict. **R2-93b** and **Z1c** rewritten to it (red on `f05d355`'s text, 4 of 4: they then required
+`zero` on a coded link); their mutant is now the skip disabled (`if (0)`), which fails both; Z1c's control shows the
+discounts displayed for a coded link (§ 10 item 2). § 31's mutant *"the code read from the link"* has no run left to
+show in: a coded link types nothing, and an uncoded one has no code to read. Cost: 37 bytes.
+
+**Item 2, the store's page held still: its code built in scratch and measured, not committed; its cases committed,
+skipped.**
+
+- **The design found**: the rule lives in the screen's OWN `<style>`, so it goes with the screen at done, at every stop
+  and at either clock, and the root's own style is never touched (*"restored exactly as it was"* by construction):
+  `html{overflow:hidden!important;padding-right:Npx}` (or `:root{overflow:hidden;padding-right:Npx}`), `N` the page's
+  scrollbar width when the screen appears (`innerWidth - documentElement.clientWidth`; 0 with overlay scrollbars).
+  Measured in headless Chrome with a 15 px classic scrollbar (a page-styled `::-webkit-scrollbar`; headless Chrome on
+  macOS draws overlay scrollbars, and Puppeteer adds `--hide-scrollbars`): the body 1,249 px before, while hidden and
+  after; the scroll position kept (500); overflow back to `visible`. ⚠ `scrollbar-gutter: stable` was tried first and
+  does NOT hold the width there (1,265 → 1,280).
+- **The bytes** (each the build's own `storefrontFiles`, the Footer block): today's text with item 3 **20,378**; item 2
+  alone (on `f05d355`'s text) 20,457 (`html` form) or 20,448 (`:root`); **items 2 and 3 together 20,494 (`html`) or
+  20,485 (`:root`): 14 or 5 bytes over the 20,480 ceiling.** Item 2 costs 116 bytes (`html`) or 107 (`:root`); 102 are
+  left.
+- **What would make it fit** (not done; the choice is the Advisor's or the orchestrator's): (a) **layout only**, as § 16
+  recovered 200 bytes: `zero()`'s body un-indented (its leading spaces, 84 bytes) gives **20,410** (`html`) or
+  **20,401** (`:root`), no behaviour changed; the whole text holds 277 bytes of leading spaces; (b) the shipped header
+  comment (`/* Fit AF cart hand-off. … Kill switch: … */`, 198 bytes), which the Advisor reads in the admin; (c) the
+  ceiling raised (§ 25.7's ruling was *"we could be at 50 kb"*); (d) the `:root` form, which drops `!important` (a class
+  rule of the store's on `<html>` setting overflow, such as the CDK's `cdk-global-scrollblock`, would then win over it).
+- **Its cases are written and committed, skipped until the item is built**
+  (`tools/storefront-watch/test/r2-31-2-page-still.test.mjs`; Chrome launched without Puppeteer's `--hide-scrollbars`,
+  the page given a 15 px styled scrollbar and a tall spacer): **PS1** (done) and **PS2** (a stop, a meal not on the page):
+  the root's overflow `hidden` and no scrollbar at every frame the screen is up, the overflow the page's own from the
+  first frame after and its scrollbar back, and the body's width one value at every frame (the hide and the restore);
+  ⭐ the mutant that never restores (the rule put in `document.head`, which nothing removes) fails PS1. **Verified both
+  ways, outside the tree**: on `992739f`'s text PS1 and PS2 fail (*"the root's overflow hidden at every frame the screen
+  is up"*); on a build of the source with the item (20,494 bytes, refused by no check but the ceiling's) all three pass,
+  the mutant caught. Found there: the scrollbar's own reading (`innerWidth − clientWidth`) lags one frame at the
+  restore while the body's width holds, so PS1 reads the scrollbar back by the last frame, the width at every frame.
+
+**§ 30 item 3's 15,360 is superseded by § 25.7** (the build's ceiling, `MAX_SHIPPED_BYTES`, 20,480; the block was 18,423
+before §§ 30–31), as § 31.1 found and item 4 now says.
+
+**The size, the pins.** The Footer block **20,378** bytes, the console file **20,359**; every character ASCII; two `<`
+in the Footer block, none in the console file; text SHA-256 `0a6e9ef176320ac830530509260a919d27a634b5811bb6d08f85573f79eddf49`,
+fragment SHA-256 `907c6ffadab5c8441a193875bb9d223ee8b313284d651e2bb26ffe54bc5527f0`. R2-32, PR-10 and CC-8's
+`footer_text_sha256` moved from `6d36d4bf…` to `0a6e9ef1…`; CC-8's `replaces` still names the live `efcbc570…`.
+
+**Gates** (each run alone, at `5457f53`; the block's text is the one built from `992739f`, unchanged since):
+- **The site suite** (`npm --prefix boston-2026-10 test`, Node 22.18.0, `nice -n 15`): **1,166 of 1,166** (12 min 53 s).
+  The first full run at `992739f` was 1,163 of 1,166: W4 (both targets, amended since) and Q5, which compares `git
+  status` before and after a build and saw this builder's scratch file appear and go in the tree meanwhile (run again on
+  a quiet tree: passes).
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`): **231 passed, 3 skipped** (item 2's PS1, PS2
+  and its mutant), none failed (4 min 10 s).
+- **Storybook** (`npm --prefix boston-2026-10/tools/storybook test`): **71 of 71**.
+- **Contrast**: 94 of 94.
+- **The build**: the Footer block 20,378 bytes, the console file 20,359, text `0a6e9ef1…` (built from `992739f`, its file
+  in `storefront/footer-block/`).
+
+**Left**: item 2 (above); the live rehearsal of §§ 30, 31 and item 3 on this block (§ 31.1's list stands); and the next
+content run, which carries item 1's snack cells to visitors with the live block.
+
+**Item 2, built on the orchestrator's ruling (2026-10-25)**: *"build it in the form you measured (the rule in the
+screen's own <style>, the `html` form with !important, width held at 1,249 px), and make it fit by un-indenting
+zero()'s body — layout only, no behaviour change … Do NOT drop the header comment and do NOT raise the ceiling."*
+
+- **The layout step, alone, at `97a95fb`**: `zero()`'s body un-indented. Proven as asked: the shipped text differs from
+  `992739f`'s in exactly **18 lines, each only in its leading spaces, each inside `zero()`** (the two texts compared
+  line by line, both 323 lines), 84 bytes; `git diff -w` of the source shows only the two new `//` lines that say so.
+  The same cases pass: the rung-2, fill C and snack cases 347 of 349 with only R2-32's pin and its control moved (then
+  moved: R2-32, PR-10, CC-8 to `a8a5970d…`), the Chrome zero cases 13 of 13.
+- **The item, at `b672752`**: in `screen()`, the screen's own style gains
+  `html{overflow:hidden!important;padding-right:Npx}`, `N` = `innerWidth − documentElement.clientWidth` as the screen
+  appears; nothing else. **PS1, PS2 and the mutant un-skipped**: red on `992739f`'s text, 3 of 3 (PS1 and PS2: *"the
+  root's overflow hidden at every frame the screen is up"*; the mutant's site absent), green at `b672752`, 3 of 3, the
+  mutant (the rule in `document.head`, never removed) caught. P1–P3 and their mutants still 5 of 5.
+- **The bytes**: the Footer block **20,410**, the console file **20,391** (20,494 had the item been added indented): **70
+  bytes left** under the 20,480 ceiling. ⚠ **For the merge with Family** (SPEC-ui-and-copy-pass § 2.2, another branch):
+  today's plans table inlines `"35":[1]`; mpid 35 taking 5 and 10 costs **3 bytes** (`[5,10]` in place of `[1]`) or
+  **5** (`[1,5,10]`), leaving 65–67; anything else Family adds to the block's text comes out of the same 70.
+- **The text**: SHA-256 `04e43ac067528d1555310286647799e21938193d62fc4003e57b8dad956b7a76`; ASCII; two `<` in the
+  Footer block, none in the console file. R2-32, PR-10 and CC-8's `footer_text_sha256` moved to `04e43ac0…`; CC-8's
+  `replaces` still names the live `efcbc570…`. **The Footer block file**:
+  `storefront/footer-block/2026-10-25-fitaf-handoff-b672752.md` (*built, not pasted*; fragment SHA-256
+  `2651f31c02611db6eee8bef44aa99e609b976aad275b4188ad0510e5c21472dd`, 20,410 bytes, byte-identical to the build's
+  output); the `992739f` file marked *superseded, not pasted*.
+- **Gates at `c7b871a`** (each run alone, the tree quiet): the site suite (`npm --prefix boston-2026-10 test`) **1,166 of 1,166** (10 min 59 s);
+  the watch **234 of 234** (its first run lost W11b to a Chrome start that timed out under load, *"waiting for the WS
+  endpoint URL"*, as § 29 records; that file alone 18 of 18, then the whole suite again 234 of 234); Storybook **71 of
+  71**; contrast 94 of 94.
+- **Left for the live rehearsal**, beside § 31.1's list: the page's own scrollbar on the store at both widths (on a
+  phone, and on macOS by default, it is an overlay one: `N` = 0); and whether any rule of the store's sets `overflow` or
+  `padding-right` on `<html>` with an `!important` of its own, which would win over this one (none is known here: the
+  store's stylesheets were not read for this; the CDK's scroll-block class, as the CDK publishes it, has none).

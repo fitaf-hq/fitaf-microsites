@@ -17,9 +17,11 @@
   function answerKey(s) { return s.ld + "-" + (s.weekends ? "7d" : "5d") + (s.breakfast ? "-b" : ""); }
   function answerPart(s) { return answerKey(s) + (s.snacks ? "-s" : ""); }
 
-  // Nothing chosen: no size, Q1 not answered, Q2–Q4 at their defaults (data/plans.json's selection_defaults).
+  // Nothing chosen: the individual plan (the first question's default), no size, Q1 not answered, Q2–Q4 at their defaults
+  // (data/plans.json's selection_defaults). `who` is the first question's answer (SPEC-ui-and-copy-pass § 2 item 2: until
+  // it, the tab): "individual" or "family", the panel shown.
   function start() {
-    return { tab: "individual", goal: null, ld: null, weekends: data.defaults.weekends, breakfast: data.defaults.breakfast, snacks: data.defaults.snacks };
+    return { who: "individual", goal: null, ld: null, weekends: data.defaults.weekends, breakfast: data.defaults.breakfast, snacks: data.defaults.snacks };
   }
   function copy(s) {
     var next = {};
@@ -37,11 +39,14 @@
     return true;
   }
 
-  // "#family" | "#lean" | "#lean-or-5d-b" | "#meals-and-7d" | "#lean-7" (today's) | "#individual" | "" -> state. A part
-  // the page does not know is dropped, as today's "#lean-9" kept the size alone.
+  // "#family" | "#family-or" | "#lean" | "#lean-or-5d-b" | "#meals-and-7d" | "#lean-7" (today's) | "#individual" | "" ->
+  // state. A part the page does not know is dropped, as today's "#lean-9" kept the size alone. SPEC-ui-and-copy-pass
+  // § 2.2: Family's one answer (`fld`, Q1's: "or" or "and") follows "family-".
   function parse(hash) {
     var h = hash.replace(/^#/, "");
-    if (h === "family") return { tab: "family" };
+    if (h === "family") return { who: "family", fld: null };
+    var fm = /^family-(or|and)$/.exec(h);
+    if (fm && data.family[fm[1]]) return { who: "family", fld: fm[1] };
     var s = start();
     var m = /^([a-z]+)(?:-(.+))?$/.exec(h);
     if (!m) return s;
@@ -50,7 +55,7 @@
     return s;
   }
   function serialise(s) {
-    if (s.tab === "family") return "family";
+    if (s.who === "family") return s.fld ? "family-" + s.fld : "family";
     var a = s.ld ? answerPart(s) : null;
     if (s.goal && a) return s.goal + "-" + a;
     if (s.goal) return s.goal;
@@ -59,7 +64,8 @@
   }
 
   var state = parse(location.hash);
-  var lastIndividual = state.tab === "individual" ? state : start();
+  var lastIndividual = state.who === "individual" ? state : start();
+  var lastFamily = state.who === "family" ? state : { who: "family", fld: null };
   function go(next) {
     var h = "#" + serialise(next);
     if (h === location.hash) render(next);
@@ -80,64 +86,85 @@
 
   function render(s) {
     state = s;
-    if (s.tab === "individual") lastIndividual = s;
-    $$(".tab").forEach(function (t) {
-      var on = t.getAttribute("data-tab") === s.tab;
-      t.setAttribute("aria-selected", String(on));
-      t.tabIndex = on ? 0 : -1;
+    if (s.who === "individual") lastIndividual = s;
+    else lastFamily = s;
+    // The first question (SPEC-ui-and-copy-pass § 2 item 2): its answer pressed, and its panel the one shown below it.
+    $$("[data-who]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-who") === s.who));
     });
-    $("#panel-individual").hidden = s.tab !== "individual";
-    $("#panel-family").hidden = s.tab !== "family";
+    $("#panel-individual").hidden = s.who !== "individual";
+    $("#panel-family").hidden = s.who !== "family";
     $$("[data-goal]").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-goal") === s.goal));
     });
     $$("[data-q]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(s.tab === "individual" && pressed(s, b.getAttribute("data-q"), b.getAttribute("data-a"))));
+      b.setAttribute("aria-pressed", String(s.who === "individual" && pressed(s, b.getAttribute("data-q"), b.getAttribute("data-a"))));
+    });
+    $$("[data-family]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(s.who === "family" && s.fld === b.getAttribute("data-family")));
     });
     $("#more").hidden = !s.ld;
+    var shown = s.who === "family" ? familyResult(s) : individualResult(s);
+    var result = $("#result");
+    result.hidden = !shown;
+    var accent = s.who === "family" ? "family" : s.goal && findGoal(s.goal) ? s.goal : null;
+    if (accent) result.setAttribute("data-accent", accent);
+    result.setAttribute("data-selection", shown ? shown.selection : "");
+    $("#all-link").hidden = s.who !== "individual";
+    if (shown) {
+      $("#result-per-meal").textContent = shown.per_meal;
+      $("#result-total").textContent = shown.total;
+      $("#result-meals").textContent = String(shown.meals);
+      $("#result-rounded").textContent = shown.rounded;
+      $("#result-rounded").hidden = !shown.rounded;
+      $("#result-cta").href = data.base + "?mpid=" + shown.mpid;
+    }
+  }
+  // What the result card shows for an individual plan: SPEC-ui-and-copy-pass § 1.2 item 1, the meals the card lists and its
+  // weekly total those meals at the plan's price a meal (the build's, for an answer set above its plan); a set of the
+  // plan's own count shows the plan's total. null until the goal and Q1 are answered.
+  function individualResult(s) {
     var plan = s.goal && findGoal(s.goal);
     var row = plan && s.ld && data.answers[answerKey(s)];
     var cell = row && plan.cells[row.plan];
-    var result = $("#result");
-    result.hidden = !cell;
-    if (plan) result.setAttribute("data-accent", plan.id);
-    result.setAttribute("data-selection", cell ? answerPart(s) : "");
-    $("#all-link").hidden = s.tab !== "individual";
-    if (cell) {
-      $("#result-per-meal").textContent = cell.per_meal;
-      $("#result-total").textContent = cell.total;
-      $("#result-meals").textContent = String(row.plan);
-      $("#result-rounded").textContent = row.rounded;
-      $("#result-rounded").hidden = !row.rounded;
-      $("#result-cta").href = data.base + "?mpid=" + cell.mpid;
-    }
+    if (!cell) return null;
+    var total = row.meals === row.plan ? cell.total : plan.totals[answerKey(s)];
+    return { selection: answerPart(s), per_meal: cell.per_meal, total: total, meals: row.meals, rounded: row.rounded, mpid: cell.mpid };
+  }
+  // § 2.2: Family's, once its one question is answered: its meals a week at its price a meal, and the answer set whose cart
+  // the Chef's Choice card shows for it (the card's checkout link is that cart's to Family's mpid, when the week has one).
+  function familyResult(s) {
+    var f = s.fld && data.family[s.fld];
+    return f ? { selection: f.key, per_meal: f.per_meal, total: f.total, meals: f.meals, rounded: "", mpid: f.mpid } : null;
   }
 
   $$("[data-goal]").forEach(function (b) {
     b.addEventListener("click", function () {
-      var next = copy(state.tab === "individual" ? state : lastIndividual);
+      var next = copy(state.who === "individual" ? state : lastIndividual);
       next.goal = b.getAttribute("data-goal");
       go(next);
     });
   });
   $$("[data-q]").forEach(function (b) {
     b.addEventListener("click", function () {
-      go(answered(state.tab === "individual" ? state : lastIndividual, b.getAttribute("data-q"), b.getAttribute("data-a")));
+      go(answered(state.who === "individual" ? state : lastIndividual, b.getAttribute("data-q"), b.getAttribute("data-a")));
     });
   });
-  var tabs = $$(".tab");
-  tabs.forEach(function (t, i) {
-    t.addEventListener("click", function () {
-      go(t.getAttribute("data-tab") === "family" ? { tab: "family" } : lastIndividual);
-    });
-    t.addEventListener("keydown", function (e) {
-      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-      if (!d) return;
-      var n = tabs[(i + d + tabs.length) % tabs.length];
-      n.focus();
-      n.click();
+  // Family shows its panel, the individual plan its own: each returns to the answers it was left with (every answer kept).
+  $$("[data-who]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      go(b.getAttribute("data-who") === "family" ? lastFamily : lastIndividual);
     });
   });
+  // § 2.2: Family's one question.
+  $$("[data-family]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      go({ who: "family", fld: b.getAttribute("data-family") });
+    });
+  });
+  // § 2.2: the Family card's own door is a visitor's without script; with it, the result card's links are Family's door.
+  var familyDoor = $("#family-door");
+  if (familyDoor) familyDoor.hidden = true;
   // See all plans (the grid) and Why Fit AF? (the /why/ page in a frame, SPEC-why-fit-af § 2 item 3): each a modal dialog
   // its button opens. Esc closes it (the browser's own); so do its close button and a press on the backdrop (the dialog
   // itself, outside its box); focus goes back to the button.

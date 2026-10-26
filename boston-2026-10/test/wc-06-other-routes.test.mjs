@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { build, ROOT } from "../build.mjs";
 import { BUCKETS, configured, startSite, wranglerConfig } from "./wc-harness.mjs";
+import { productionFalseMirror, productionFalseSavePath } from "./cc-harness.mjs";
 
 const OTHER = [
   ["POST", "/api/save"],
@@ -23,12 +24,15 @@ const OTHER = [
   ["PUT", "/"],
 ];
 
+// SPEC-save-offer-production § 12: production's Worker as release (a) made it (production false), the rollback; with
+// production true its save-step routes are SP6's.
 test("WC-6a: production's Worker hands every other route to the assets and returns their answer unchanged; the bucket is never read", async () => {
+  const falseRoot = await productionFalseMirror();
   const answer = (request) => {
     const { pathname } = new URL(request.url);
     return new Response(`assets: ${request.method} ${pathname}`, { status: 404, headers: { "x-from": "assets", "content-type": "text/plain" } });
   };
-  const site = await startSite({ assets: answer, objects: { "week/picks-data.json": "{}" } });
+  const site = await startSite({ root: falseRoot, assets: answer, objects: { "week/picks-data.json": "{}" } });
   try {
     for (const [method, path] of OTHER) {
       const res = await site.get(path, { method, ...(method === "POST" || method === "PUT" ? { body: "{}" } : {}) });
@@ -78,8 +82,9 @@ test("WC-6c: as configured, production's page routes reach the script first; eve
   const outDir = await mkdtemp(join(tmpdir(), "boston-wc-dist-prod-"));
   let site;
   try {
-    await build({ target: "prod", outDir });
-    site = await configured({ env: undefined, distDir: outDir });
+    const falseRoot = await productionFalseMirror();
+    await build({ target: "prod", outDir, savePath: await productionFalseSavePath() });
+    site = await configured({ env: undefined, distDir: outDir, root: falseRoot });
     await site.log();
     const assetsFirst = ["/fonts/poppins-latin-700-normal.woff2", "/assets/fitaf-logo.png", "/qr/demo.png", "/assets/photo-sheets/carousel.jpg"];
     for (const path of assetsFirst) {

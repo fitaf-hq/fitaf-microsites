@@ -126,10 +126,15 @@ function subscriptionParts(state) {
   throw new Error(`subscription: ${state}`);
 }
 
-/** One placement of the discounts (§ 10, H7): a gift-card field and a discount-code field, each with its Apply. */
-const discounts = (where) =>
+/**
+ * One placement of the discounts (§ 10, H7): a gift-card field and a discount-code field, each with its Apply. Since
+ * SPEC-rung2-progress-and-checkout § 31, the code field only where `cfg.discounts` names the placement ("section",
+ * "payment", "summary"; all three by default), and its Apply disabled until the field's own value (what its `input`
+ * events gave it, as Angular's form control holds it) is not empty.
+ */
+const discounts = (where, cfg) =>
   `<input name="giftCard-${where}" aria-label="Gift card"><button type="button" class="discount__apply">Apply</button>` +
-  `<input name="coupon-${where}" aria-label="Discount code"><button type="button" class="discount__apply">Apply</button>`;
+  (cfg.discounts.includes(where) ? `<input name="coupon-${where}" aria-label="Discount code"><button type="button" class="discount__apply" disabled>Apply</button>` : "");
 
 /** The tip (§ 10, H10): in its section, or a bare app-tip-selector; with its remove button once a tip is chosen. */
 function tipHtml(cfg) {
@@ -161,9 +166,9 @@ ${pickup ? `<section class="checkout__section pickup-location"><h2>Pickup locati
 <section class="checkout__section schedule"><h2>${pickup ? "Pickup" : "Delivery"} schedule</h2><select name="date" aria-label="${pickup ? "Pickup" : "Delivery"} date"${ng("date")}><option>Sunday</option><option>Wednesday</option></select></section>
 <section class="checkout__section special-requests special-requests--food"><h2>Food Notes</h2><textarea name="specialRequests" aria-label="Special requests"${ng("specialRequests")}></textarea></section>
 ${tipHtml(cfg)}
-<section class="checkout__section checkout-discounts checkout-discounts--mobile">${discounts("section")}</section>
+<section class="checkout__section checkout-discounts checkout-discounts--mobile">${discounts("section", cfg)}</section>
 <section class="checkout__section payment"><h2>Payment</h2><iframe title="Card number (synthetic)" srcdoc="card field (synthetic)"></iframe>
-<div class="payment__discounts checkout-discounts checkout-discounts--mobile">${discounts("payment")}</div></section>
+<div class="payment__discounts checkout-discounts checkout-discounts--mobile">${discounts("payment", cfg)}</div></section>
 <section class="checkout__section checkout__consent"><label><input type="checkbox" name="agreeToTerms"> I agree to the <a href="/refund-and-return-policy">refund and return policy</a></label></section>
 <div class="checkout__submit"><span class="checkout__submit-target"><button type="button" class="checkout__pay"> Place order </button></span></div>
 </form>
@@ -171,7 +176,7 @@ ${tipHtml(cfg)}
 <div class="summary__plan-group"><div class="summary__plan-group-header"><div class="summary__plan-group-label">Lean Plan 7 Meals</div>
 <button type="button" aria-label="Remove plan">Remove plan</button><svg class="summary__plan-group-chevron" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></div>${sub.head}${sub.controls}
 <a class="summary__plan-return" href="/order?mpid=21">← Return to Lean Plan 7 Meals</a><div class="summary__items"></div></div>
-${sub.tail}<div class="summary__discounts"><div class="checkout-discounts">${discounts("summary")}</div></div>
+${sub.tail}<div class="summary__discounts"><div class="checkout-discounts">${discounts("summary", cfg)}</div></div>
 <div class="summary__row"><span>Subtotal</span><span>$87.50</span></div>
 <div class="summary__row"><span>Shipping</span><span>$0.00</span></div>
 <div class="summary__row"><span>Tax</span><span>$0.00</span></div>
@@ -216,6 +221,20 @@ function shellParts(cfg) {
  * release that renamed it would), extrasPopover ("manual", as the store's overlays open; or "auto").
  * The page notes the key's value at each Add to Cart and at CHECKOUT (window.__fixtureKey), and whether the extras
  * dialog opened (window.__fixtureExtras).
+ * SPEC-rung2-progress-and-checkout § 31 (the store's code `zero`, a stand-in written from the contract, NONE of the
+ * store's code or markup: the live store's discount field, its Apply and its sign of a code applied were never read
+ * here): discounts (the placements with a code field, by default all three), zero (what a press of a code field's Apply
+ * does, 300 ms later as a server's answer would: "apply", the default, accepts the code `zero`, any case, and refuses
+ * every other; "refuse" refuses every code; "silent" shows nothing), zeroRow (the sign of an accepted code is a summary
+ * row, `.summary__row--discount` "Discount (ZERO)", in place of the default's applied mark beside the field,
+ * `.discount__applied`), zeroApplied (the code already applied when the page starts, as a store that kept it), and
+ * footerOnCheckout (a /checkout loaded on its own, a reload, places the Footer text too, as the store's Custom Scripts
+ * do on every page). An Apply reads the field's own value as its `input` events gave it, not the DOM's, and is disabled
+ * while that is empty. Each press is logged ("[fixture] discount pressed: <value>"), then "[fixture] discount applied:
+ * <value>" or "[fixture] discount refused: <value>" (its message, `p.discount__error` role=alert, beside the field). An
+ * accepted code is kept in sessionStorage (fixture_code), so a reload of /checkout shows it applied.
+ * § 30: orderAfterMs (400 by default), when the order page draws its meal cards: a store slow to draw them, so a Footer
+ * block placed at 150 ms shows its screen with no meal yet (Screen · A's state) and keeps polling.
  */
 function appHtml(cfg) {
   const shell = shellParts(cfg);
@@ -345,6 +364,37 @@ function appHtml(cfg) {
     if (!c) return console.log("[fixture] ORDER PLACED");
     refused = true;
     setTimeout(function () { c.__refused = true; ngSync(); console.log("[fixture] pay pressed: the store refused " + cfg.payError); }, 300);
+  }
+  // § 31 (the stand-in for the store's discount code): each code field keeps the value its own input events gave it
+  // (as Angular's form control does: a value set without the event is not seen), its Apply disabled while that is
+  // empty; a press is answered 300 ms later by cfg.zero. An accepted code is kept (sessionStorage) and its sign shown.
+  function codeApplied(field) {
+    var at = field || root.querySelector("input[name^=coupon-]");
+    if (cfg.zeroRow) {
+      var row = el("div", "summary__row summary__row--discount"); row.appendChild(el("span", null, "Discount (ZERO)")); row.appendChild(el("span", null, "-$0.00"));
+      var total = root.querySelector(".summary__total"); total.parentNode.insertBefore(row, total);
+    } else if (at) at.closest(".checkout-discounts").appendChild(el("span", "discount__applied", "ZERO"));
+  }
+  function codeFields() {
+    root.querySelectorAll("input[name^=coupon-]").forEach(function (field) {
+      var apply = field.nextElementSibling, model = "";
+      field.addEventListener("input", function () { model = field.value; apply.disabled = !model.trim(); });
+      apply.onclick = function () {
+        var code = model;
+        console.log("[fixture] discount pressed: " + code);
+        if (cfg.zero === "silent") return;
+        setTimeout(function () {
+          if (cfg.zero === "apply" && code.trim().toLowerCase() === "zero") {
+            sessionStorage.setItem("fixture_code", "zero");
+            codeApplied(field);
+            return console.log("[fixture] discount applied: " + code);
+          }
+          var msg = el("p", "discount__error", "This code is not valid"); msg.setAttribute("role", "alert"); apply.after(msg);
+          console.log("[fixture] discount refused: " + code);
+        }, 300);
+      };
+    });
+    if (sessionStorage.getItem("fixture_code") === "zero") codeApplied(null);
   }
   function goCheckout() { history.pushState({}, "", "/checkout"); renderCheckout(); }
   function route() {
@@ -484,6 +534,7 @@ function appHtml(cfg) {
     totals.appendChild(sub);
     root.querySelector(".checkout__pay").onclick = pay;
     root.querySelector(".checkout__pay-mobile").onclick = pay;
+    codeFields();
     if (cfg.validity) {
       root.querySelectorAll("[formcontrolname]").forEach(function (c) {
         c.addEventListener(c.localName === "select" ? "change" : "input", function () { c.__dirty = true; c.__refused = false; ngSync(); });
@@ -519,7 +570,12 @@ function appHtml(cfg) {
     document.body.appendChild(pop);
     pop.showPopover();
   }
-  if (location.pathname === "/checkout") { renderCheckout(); return; }
+  if (cfg.zeroApplied) sessionStorage.setItem("fixture_code", "zero");
+  if (location.pathname === "/checkout") {
+    renderCheckout();
+    if (cfg.footerOnCheckout && cfg.footer !== null) { var f = document.createElement("script"); f.text = cfg.footer; document.body.appendChild(f); }
+    return;
+  }
   // § 12: the page's own request for its products, its body read as a page that uses it reads it (Chrome finishes
   // loading a fetch's body only once the page consumes it; the watch only ever reads the response).
   if (cfg.catalog) fetch(cfg.catalog, { credentials: "omit" }).then(function (r) { return r.json(); }).catch(function () {});
@@ -529,7 +585,7 @@ function appHtml(cfg) {
     if (cfg.hangAtStart) window.setTimeout = function () { return 0; };
     if (cfg.footer !== null) { var s = document.createElement("script"); s.text = cfg.footer; document.body.appendChild(s); }
   }, 150);
-  setTimeout(renderOrder, 400);
+  setTimeout(renderOrder, cfg.orderAfterMs);
 })();
 </script></body></html>
 `;
@@ -567,6 +623,12 @@ const DEFAULTS = {
   payError: null,
   orderType: "delivery",
   catalog: null,
+  discounts: ["section", "payment", "summary"],
+  zero: "apply",
+  zeroRow: false,
+  zeroApplied: false,
+  footerOnCheckout: false,
+  orderAfterMs: 400,
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */

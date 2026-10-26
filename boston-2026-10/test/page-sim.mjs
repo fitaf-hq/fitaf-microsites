@@ -58,6 +58,7 @@ export function simulatePage(html, { hash = "", search = "", turnstile = "pass",
       },
       setAttribute(k, v) { el.attributes[k] = String(v); },
       getAttribute(k) { return el.attributes[k] ?? null; },
+      removeAttribute(k) { delete el.attributes[k]; }, // SPEC-ui-and-copy-pass § 1 item 3: a field's error mark taken off
       // SPEC-rung4 § 2b: Flow 1 is moved after the store button. This stand-in records the parent only; document order
       // is not modelled here (S27-S31 run the page over linkedom's DOM for that).
       parentNode: null,

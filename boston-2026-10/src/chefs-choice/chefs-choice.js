@@ -18,6 +18,12 @@
 // its name, the whole row a button (§ 10) marked with a circled "i", opening beneath it the size's rings, then the
 // ingredients and Contains. What the Worker's shape check does not read (`menus`, `facts`, `rings`) is read here only in
 // the shape the content writes.
+// SPEC-ui-and-copy-pass § 1 item 8 (the Advisor's review, 2026-10-23: "a circled number overlayed on the top right corner
+// of the meal image (much like an unread message count on an app icon)"): a meal's count above 1 is a badge on its tile,
+// not in its line. The content writes the line with the words' meal_qty ("{meal} × {n}"), which the build puts on the
+// list (#cc-list's data-meal-qty); read back by that phrase, the line keeps all its words for assistive technology (the
+// count in the row's name), the rest of it visually hidden, and the badge (hidden from assistive technology) draws the
+// count from its data-qty. A line the phrase does not read is a meal of one, shown as it was.
 // SPEC-every-menu-and-nutrition § 11 item 4 (the Advisor's review, 2026-10-22): the store's own rings, as Fit AF's
 // Shopify theme copies them from the live order page's meal dialog (fitaf scripts/commerce/theme/snippets/
 // fitaf-ring.liquid; assets/fitaf.css .fam-macros). One ring per number, in this order; each arc is the number over its
@@ -89,6 +95,26 @@ function start(week) {
     return ok ? w : null;
   })(week.rings);
   var opened = {}; // the meals left open, by menu, answers and place: kept while only the size changes
+
+  // § 1 item 8: a line read back into the meal and its count, by the phrase the content wrote it with: { before, meal,
+  // after, n } (before and after the phrase's own words, the count among them), or the line itself as a meal of one.
+  var QTY = (function (phrase) {
+    var sides = phrase.split("{meal}");
+    if (sides.length !== 2 || (sides[0] + sides[1]).split("{n}").length !== 2) return null;
+    var side = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{n\\}", "\\d+"); };
+    return new RegExp("^(" + side(sides[0]) + ")([\\s\\S]+?)(" + side(sides[1]) + ")$");
+  })(list.getAttribute("data-meal-qty") || "");
+  function counted(line) {
+    var m = QTY && QTY.exec(line);
+    var n = m ? Number(/\d+/.exec(m[1] + m[3])[0]) : 1;
+    return m && n > 1 ? { before: m[1], meal: m[2], after: m[3], n: n } : { before: "", meal: line, after: "", n: 1 };
+  }
+  function hiddenText(text) {
+    var span = document.createElement("span");
+    span.className = "visually-hidden";
+    span.textContent = text;
+    return span;
+  }
 
   // The answer set the card shows ("" when it is hidden): the fragment's answer part, snacks mark and all.
   function selection() {
@@ -225,7 +251,19 @@ function start(week) {
       if (thumbs[j]) tile.setAttribute("style", thumbs[j]);
       var name = document.createElement("span");
       name.className = "cc-name";
-      name.textContent = lines[j];
+      var shown = counted(lines[j]);
+      if (shown.n > 1) {
+        if (shown.before) name.appendChild(hiddenText(shown.before));
+        name.appendChild(document.createTextNode(shown.meal));
+        if (shown.after) name.appendChild(hiddenText(shown.after));
+        var badge = document.createElement("span");
+        badge.className = "cc-qty";
+        badge.setAttribute("aria-hidden", "true");
+        badge.setAttribute("data-qty", String(shown.n));
+        tile.appendChild(badge);
+      } else {
+        name.textContent = lines[j];
+      }
       var at = isList(facts) && typeof facts[j] === "number" ? entries[facts[j]] : null;
       if (isMap(at)) detail(li, tile, name, at, id + "|" + j);
       else appendAll(li, [tile, name]);

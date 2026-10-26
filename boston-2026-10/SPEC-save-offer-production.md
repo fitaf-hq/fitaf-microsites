@@ -980,3 +980,34 @@ nothing here asked for it, so no commit of this repository has it, and the prod 
    as at `ef62757`. The commit is made from `ef62757` so the prod pin can move to it without the dev line's changes; it is
    then merged into the dev line, so every later pin carries it.
 3. The README's *"Deploys are not run from here"* names it beside `db:migrate:dev`.
+
+## 12. Release (b), 2026-10-25: the switch-on (§ 6 item 3), and what it changes in the cases
+
+**The Advisor's word.** *"yes please ship it"* (`ts=2026-10-25T14:13:18.692Z`): the wording as the copy pass left it is
+`v1`, his tweaks to come a later version released the same way; the offer approved as written (*"Yes"*,
+`ts=2026-10-25T05:21:27.471Z`). ⚠ DRAFT § 7's two questions for legal stay open.
+
+1. **The inputs** (§ 3 item 2's refusals, all four answered): `data/save.json` `production` true, `wording_version`
+   `v1`, `known_wording_versions` `["v0.3-draft", "v1"]` (development's saves carry the draft); `consent/DRAFT.md`'s
+   status line approving v1 with its date; `data/offers.json` `"status": "approved"`; `wrangler.jsonc`
+   `vars.TURNSTILE_SITE_KEY` the production widget's site key (public), which fitaf-infra's release (a) created.
+2. **The cases** — 51 of 1,157 failed on the inputs alone (2026-10-25, `npm test`, nice 15). None was a defect of the
+   page or the Worker; each is one of six kinds, and each is moved, never deleted:
+   - **A case about the page or Worker WITHOUT the save step** (S20, SP3, SP9, A1, CC-4, CC-6e, WC-6a, WC-6c, WC-8,
+     WC-9c, PV5, U4) keeps testing it, as release (a) made it: the rollback (`production` false) is a release this
+     package can still make. The build takes release (a)'s `data/save.json` (`cc-harness` `productionFalseSavePath`:
+     `production` false, wording v0.3-draft); a Worker, which reads the file at import, runs in a mirror holding it
+     (`productionFalseMirror`). The development build reads the file itself and prints the version three times, so PV5
+     and U4 write v1 back as v0.3-draft before they compare (`withReleaseAWording`), measured as its only change. **No
+     golden of these moved.**
+   - **A control that pinned the committed state** inverts to it: SP3's (`production` true), S11b, Q6 § 12.2 and SP16's
+     (the offers approved), UC5 and S18 (v1, its status line), SP4's committed build (nothing refused, the page carrying
+     the site key and v1).
+   - **A fixture that used the committed values as its unapproved case** sets release (a)'s values itself
+     (`sp-production` `DRAFT_VERSION`, `DRAFT_STATUS_LINE`, the offers' status; Q6's status-only file).
+   - **A fixture that named `v1` as an unknown version** names `v2` (S4, and SP6, which runs S4 against production).
+   - **A golden hashing the inputs**: CC-8's Worker files, `data/offers.json` and `data/save.json` only, re-recorded.
+     And the Worker's pages no longer print the draft marking under v1 (`pages.js`, one rule for both Workers): SP15
+     compares cc1d2bb's words with that marking removed.
+   - **The mirror** (`cc-harness` `mirror`) copies `wrangler.jsonc`, which the production build reads with `production`
+     true.

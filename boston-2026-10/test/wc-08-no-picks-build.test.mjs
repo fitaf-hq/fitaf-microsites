@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { analyticsSlot, build, NO_PICKS, PROD_SLOTS, renderPage } from "../build.mjs";
 import events from "../data/events.json" with { type: "json" };
-import { card, hiddenInTree, MESSAGES, openPlanPage, PLANS } from "./cc-harness.mjs";
+import { card, hiddenInTree, MESSAGES, openPlanPage, PLANS, productionFalseSavePath } from "./cc-harness.mjs";
 import { devPage } from "./dev-page.mjs";
 import { TABLE } from "./ms-harness.mjs";
 import { picksText, sha256, visible } from "./wc-harness.mjs";
@@ -26,8 +26,15 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  1c68a68b… until then. Re-recorded once more at 5231265 for SPEC-every-menu-and-nutrition § 11 (2026-10-22: Why Fit
  *  AF? above the tabs, the card's rings and circled i; its § 11.1 says which lines): renderPage at ce91cba's own tree
  *  reproduces 21abbe56…, at 5231265's gives 321da0a6…. Re-recorded once more at 773e597 for § 11.2 (Why Fit AF? an
- *  outline button in the unselected chip's look): 5231265's tree reproduces 321da0a6…, 773e597's gives this. */
-const TODAY_NO_PICKS_SHA256 = "01270dcad503c74efbf099de31267d0b8ea70a44ca1b1d7e9eddb1d7fb2ae3c1";
+ *  outline button in the unselected chip's look): 5231265's tree reproduces 321da0a6…, 773e597's gives 01270dca….
+ *  Re-recorded once more at dbfcb62 for SPEC-ui-and-copy-pass § 1.2 item 1 (the card's meals and its weekly total at the
+ *  plan's price a meal: #plan-data's answers and app.js's lines): 9b1438c's tree reproduces 01270dca…, dbfcb62's gives
+ *  f3cd8763…. Re-recorded once more at 8bfe4f8 for SPEC-ui-and-copy-pass § 2 (2026-10-25: who it is for first, the goal
+ *  last, the Family line, the footnote's date): c6dd3a5's tree reproduces f3cd8763…, 8bfe4f8's gives b4a168dc…. Re-recorded
+ *  once more at 077f472 for § 2.2 (Family's own question; the result card shared): 8bfe4f8's tree reproduces b4a168dc…,
+ *  077f472's gives 72ed1f9d…; and at 5eaad96 (the Family door's [hidden] rule), 077f472's tree reproducing 72ed1f9d…,
+ *  5eaad96's gives this. */
+const TODAY_NO_PICKS_SHA256 = "6447ecd8daffd3e8d7aa42af490076e14c3bb656d7f8b9321db37105515b7ef7";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
@@ -39,7 +46,8 @@ const NOW = Date.parse("2026-10-11T16:00:00Z");
 async function built(target) {
   const outDir = await mkdtemp(join(tmpdir(), `boston-wc8-${target}-`));
   try {
-    await build({ target, outDir });
+    // SPEC-save-offer-production § 12: the production page as release (a) made it (production false), the rollback.
+    await build({ target, outDir, ...(target === "prod" ? { savePath: await productionFalseSavePath() } : {}) });
     return await readFile(join(outDir, "index.html"), "utf8");
   } finally {
     await rm(outDir, { recursive: true, force: true });

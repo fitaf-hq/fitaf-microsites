@@ -39,12 +39,18 @@ export const APPROVED_VARS = Object.freeze({
   SEND_WITHOUT_ALLOWLIST: "true",
 });
 export const APPROVED_VERSION = "v1";
+/** Release (b) (SPEC-save-offer-production § 12) committed the approved wording and offers, so a part left unapproved is
+ *  SET to what release (a) committed (its version, its status line's first line, its offers' status), not read from the tree. */
+export const DRAFT_VERSION = "v0.3-draft";
+export const DRAFT_STATUS_LINE =
+  "**Status**: ⛔ **DRAFT — not live.** v0.3 written 2026-09-27 for the Owner to route through legal; it replaces";
 export const APPROVED_STATUS = "**Status**: ✅ **Approved — v1, 2026-10-24** (the sp fixture's: no word below is changed by it).";
 export const PRIVACY_URL = "/privacy/";
 export const FIXTURE_CODE = "SPFIXTURE25"; // invented: no store has it
 /** DRAFT § 6's Owner placeholders and what the fixture fills them with. Since § 10 item 5 the committed draft fills [email]
- *  and [30] itself (privacy@eatfitaf.com, 30), so only [Mailchimp] is left for the fixture to fill. */
-export const DRAFT_FILLS = { "[Mailchimp]": "Mailchimp" };
+ *  and [30] itself (privacy@eatfitaf.com, 30), and since SPEC-ui-and-copy-pass § 1 item 5 (2026-10-23) § 6 names Resend
+ *  alone, so its [Mailchimp] went: none is left for the fixture to fill. */
+export const DRAFT_FILLS = {};
 
 /** The parts a refusal case may leave unfixed, each with the words its refusal must name. */
 export const UNFIXED = {
@@ -67,6 +73,17 @@ export const UNFIXED = {
 
 const json = (v) => JSON.stringify(v, null, 2) + "\n";
 
+/** The part "a bracket left in DRAFT § 6", as the draft is now: SPEC-ui-and-copy-pass § 1 item 5 (2026-10-23) left the
+ *  committed § 6 no placeholder (its "[Mailchimp]" went), so the part puts that one back beside the email provider § 6
+ *  names, and the gate must refuse it as before. */
+export const SECTION_6_BRACKET = "[Mailchimp]";
+export function withBracketInSection6(draft) {
+  const [head, six] = draft.split(/^(?=## 6\. )/m);
+  const [section, ...rest] = six.split(/^(?=## 7\. )/m);
+  assert.ok(section.includes("Resend"), "DRAFT § 6 names Resend, where the part puts its bracket");
+  return head + section.replace("Resend", `Resend; ${SECTION_6_BRACKET}`) + rest.join("");
+}
+
 /**
  * The inputs of a production build in a new temporary directory: the approved set, with `unfixed` (a key of UNFIXED)
  * left as committed. Returns the build's options (paths and vars) and `dir`.
@@ -78,20 +95,19 @@ export async function productionInputs({ unfixed = null, production = true } = {
 
   const save = JSON.parse(await readFile(SAVE_FILE, "utf8"));
   save.production = production;
-  if (!leave("a draft wording version")) save.wording_version = APPROVED_VERSION;
-  if (!leave("v1 not a known version")) save.known_wording_versions = [...save.known_wording_versions, APPROVED_VERSION];
+  save.wording_version = leave("a draft wording version") ? DRAFT_VERSION : APPROVED_VERSION;
+  const others = save.known_wording_versions.filter((v) => v !== APPROVED_VERSION);
+  save.known_wording_versions = leave("v1 not a known version") ? others : [...others, APPROVED_VERSION];
   // Since § 9 item 1 the committed address is /privacy/; the case sets none, as before it was committed.
   save.privacy_notice_url = leave("no privacy notice to link") ? null : PRIVACY_URL;
 
   let draft = await readFile(DRAFT_FILE, "utf8");
-  if (!leave("the status line still a draft")) draft = draft.replace(/^\*\*Status\*\*:.*$/m, APPROVED_STATUS);
-  for (const [placeholder, value] of Object.entries(DRAFT_FILLS)) {
-    if (leave("a bracket left in DRAFT § 6") && placeholder === "[Mailchimp]") continue;
-    draft = draft.replaceAll(placeholder, value);
-  }
+  draft = draft.replace(/^\*\*Status\*\*:.*$/m, leave("the status line still a draft") ? DRAFT_STATUS_LINE : APPROVED_STATUS);
+  for (const [placeholder, value] of Object.entries(DRAFT_FILLS)) draft = draft.replaceAll(placeholder, value);
+  if (leave("a bracket left in DRAFT § 6")) draft = withBracketInSection6(draft);
 
   const offers = JSON.parse(await readFile(OFFERS_FILE, "utf8"));
-  if (!leave("offers a placeholder")) offers.status = "approved";
+  offers.status = leave("offers a placeholder") ? "placeholder" : "approved";
   for (const [i, o] of offers.offers.entries()) {
     o.label = `SP fixture offer ${i + 1}: 25% off every cart`;
     if ("shared_code" in o) o.shared_code = FIXTURE_CODE;
@@ -220,8 +236,93 @@ export const BASE = "768ca36";
  *  the Advisor's review of the live page), and SPEC-meal-selection § 13 (2026-10-20, built 2026-10-22: one comment of
  *  scripts/selection.mjs, a file the development Worker reaches, and no page), built together on boston/review-1022:
  *  ce91cba (§ 11's contract) to 773e597 (the last of their code, § 11.2's button; between them only tests, goldens and
- *  contract text outside LATER_PATHS). */
-export const LATER = [["ce91cba", "773e597"]];
+ *  contract text outside LATER_PATHS). A third element names the paths of an entry whose diff over LATER_PATHS would not
+ *  apply to the base: SPEC-ui-and-copy-pass § 1 (2026-10-23) moves the production page by item 8's card alone (the chips
+ *  and the count badge: src/chefs-choice/ and scripts/chefs-choice.mjs's one slot), from e875280 (its contract) to
+ *  ede2e07 (its last code); its other items change only the pages with an offer, which the production page with
+ *  `production` false is not (shown: both trees' production pages differ by the card's lines alone). */
+export const LATER = [
+  ["ce91cba", "773e597"],
+  ["e875280", "ede2e07", ["src/chefs-choice", "scripts/chefs-choice.mjs"]],
+  // SPEC-ui-and-copy-pass § 1.2 item 1 (the card's meals and its weekly total at the plan's price a meal), the one commit
+  // of the production page's change (clientData and app.js); its items 2–3 move only the pages with an offer. Its
+  // doc-comment hunk does not apply to the base (whose comment predates the preview build's), and a hunk that changes only
+  // comments moves no page: `codeOnly` leaves such hunks out.
+  ["bd80a41", "eae4d94", ["src/app.js", "build.mjs"], { codeOnly: true }],
+  // SPEC-ui-and-copy-pass § 2 (2026-10-25: who it is for first, the goal last; the Family line; read_on) changes lines the
+  // preview build added (renderPage's `orderLinks`, familySection's, the template's {{PREVIEW_STYLE}}, the preview's
+  // words), which no entry here carried, since the preview build moved no production or development page (PV5 at its
+  // merge). So first the preview build itself (SPEC-preview-sites §§ 1–7, the merge 4e73661 over its first parent
+  // 544e496), its one hunk in build()'s target branch left out (`dropHunks`): the base's build() predates its context, and
+  // no production page passes through that branch.
+  ["544e496", "4e73661", ["build.mjs", "src/template.html", "data/messages.json"], { dropHunks: /^\+\s*const preview = target === "preview"/m }],
+  // Then § 2, from 81a1199 (its contract) to 8bfe4f8 (its code, one commit), over the files that make the production page
+  // (the calculator's move is the development page's alone, src/save/), its hunk in the preview's Why cut list
+  // (SPEC-preview-sites § 8, PREVIEW_WITHOUT_WHY, which the base never had; it cuts the preview page alone) left out.
+  ["81a1199", "8bfe4f8", ["src/template.html", "src/app.js", "build.mjs", "data/messages.json", "data/plans.json"], { dropHunks: /^-\s*\["the Why rule at 720 px"/m }],
+  // § 2.2 (Family's own question, 2026-10-25) moves the result card's markup beside a line § 1 changed and the base never
+  // took (`{{SAVE_FAMILY}}`, empty on this page): so first § 1's own template change (ce6b54e over its contract, e875280:
+  // that slot gone, the empty DEV_SCRIPT after the card's script; no production-false page moves by it), then § 2.2, from
+  // 8bfe4f8 (§ 2's code) to 5eaad96 (its code, 077f472, and the Family door's [hidden] rule), over the same files and the
+  // module build.mjs now imports,
+  // scripts/family.mjs (new; the content's and the block's files make no page). Its import line's hunk does not apply to
+  // the base, whose next import is not § 1's, so it is left out and the line put after the selection import the base has
+  // (`insertAfter`: [path, anchor found once, the text after it]).
+  ["e875280", "ce6b54e", ["src/template.html"]],
+  [
+    "8bfe4f8",
+    "5eaad96",
+    ["src/template.html", "src/app.js", "build.mjs", "data/messages.json", "data/plans.json", "scripts/family.mjs"],
+    {
+      dropHunks: /^\+import \{ checkFamily \} from "\.\/scripts\/family\.mjs";$/m,
+      insertAfter: [["build.mjs", 'import { checkSelection, legacyKey } from "./scripts/selection.mjs";\n', 'import { checkFamily } from "./scripts/family.mjs";\n']],
+    },
+  ],
+  // SPEC-analytics.md § 13 (2026-10-25: Family counted, and the first question) moves the production page by the analytics
+  // script's three lines (src/analytics.js: its selector, an answer for data-who and one for data-family) and the Worker
+  // by its vocabulary (src/worker/beacon.js, which the base holds as 0fd55e3 does), from 0fd55e3 (its contract) to
+  // f9273c0 (its code, one commit). The base's src/analytics.js predates § 9 item 2's reading, two of whose lines sit in
+  // the context of the click listener's hunk: with git's three lines of context that hunk lands only with patch's fuzz,
+  // so the diff is taken with one (`context`), and every hunk lands with no fuzz (an offset only).
+  ["0fd55e3", "f9273c0", ["src/analytics.js", "src/worker/beacon.js"], { context: 1 }],
+];
+
+/** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
+const codeHunks = (diff) => {
+  const comment = /^[+-]\s*(\*|\/\/|\/\*)/;
+  return keptHunks(diff, (hunk) => hunk.some((l) => /^[+-]/.test(l) && !comment.test(l)));
+};
+
+/** A unified diff without its hunks whose text matches `pattern` (SPEC-ui-and-copy-pass § 2.1); refused unless it drops
+ *  at least one, so an entry cannot outlive the hunk it names. */
+function withoutHunks(diff, pattern) {
+  let dropped = 0;
+  const out = keptHunks(diff, (hunk) => !(pattern.test(hunk.join("\n")) && ++dropped));
+  if (!dropped) throw new Error(`basePackage: no hunk matches ${pattern}`);
+  return out;
+}
+
+/** A unified diff keeping the hunks `keep` accepts (each hunk its lines, its @@ line first). */
+function keptHunks(diff, keep) {
+  const out = [];
+  let hunk = null;
+  const flush = () => {
+    if (hunk && keep(hunk)) out.push(...hunk);
+    hunk = null;
+  };
+  for (const line of diff.split("\n")) {
+    if (line.startsWith("@@")) {
+      flush();
+      hunk = [line];
+    } else if (line.startsWith("diff --git")) {
+      flush();
+      out.push(line);
+    } else if (hunk) hunk.push(line);
+    else out.push(line);
+  }
+  flush();
+  return out.join("\n");
+}
 const LATER_PATHS = ["build.mjs", "data", "scripts", "src"];
 
 function run(cmd, args, { input } = {}) {
@@ -241,9 +342,19 @@ export async function basePackage() {
   run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", BASE, prefix]) });
   const pkg = join(scratch, "base", prefix);
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
-  for (const [from, to] of LATER) {
-    const diff = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...LATER_PATHS.map((p) => `${prefix}/${p}`)]);
+  for (const [from, to, paths = LATER_PATHS, { codeOnly = false, dropHunks = null, insertAfter = [], context = null } = {}] of LATER) {
+    const lines = context === null ? [] : [`--unified=${context}`];
+    const whole = run("git", ["-C", top, "diff", "--no-color", ...lines, from, to, "--", ...paths.map((p) => `${prefix}/${p}`)]);
+    const kept = codeOnly ? codeHunks(whole.toString("utf8")) : dropHunks ? withoutHunks(whole.toString("utf8"), dropHunks) : null;
+    const diff = kept === null ? whole : Buffer.from(kept);
     if (diff.length) run("patch", ["-p1", "--forward", "--silent", "-d", join(scratch, "base")], { input: diff });
+    // SPEC-ui-and-copy-pass § 2.2: a line put after an anchor the base has, found exactly once, or the base is refused.
+    for (const [path, anchor, text] of insertAfter) {
+      const file = join(pkg, path);
+      const source = await readFile(file, "utf8");
+      if (source.split(anchor).length !== 2) throw new Error(`basePackage: ${path} holds its anchor ${source.split(anchor).length - 1} times, not once: ${anchor.trim()}`);
+      await writeFile(file, source.replace(anchor, () => anchor + text));
+    }
   }
   return { pkg, dispose: () => rm(scratch, { recursive: true, force: true }) };
 }

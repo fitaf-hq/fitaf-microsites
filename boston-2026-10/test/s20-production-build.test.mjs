@@ -14,6 +14,7 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { build } from "../build.mjs";
+import { productionFalseSavePath } from "./cc-harness.mjs";
 import { committedSheets, sheetsLine, splitSheets } from "./production-sheets.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./s20-production-golden.json", import.meta.url), "utf8"));
@@ -28,10 +29,12 @@ async function filesUnder(dir) {
   return out;
 }
 
-test("S20: the production build is byte-identical to the build before rung 4", async (t) => {
+// SPEC-save-offer-production § 12: since release (b) commits production true, S20 holds for the build with production false
+// (release (a), the rollback): the committed build carries the save step, which SP4 checks.
+test("S20: the production build with production false is byte-identical to the build before rung 4", async (t) => {
   const out = await mkdtemp(join(tmpdir(), "boston-prod-"));
   try {
-    await build({ target: "prod", outDir: out });
+    await build({ target: "prod", outDir: out, savePath: await productionFalseSavePath() });
     const hashes = {};
     for (const f of (await filesUnder(out)).sort()) {
       hashes[relative(out, f)] = createHash("sha256").update(await readFile(f)).digest("hex");

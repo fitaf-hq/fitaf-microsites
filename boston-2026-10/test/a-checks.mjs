@@ -46,9 +46,13 @@ export function refusedBodies() {
     ["a question outside the page's", { ...VALID.answer, question: "email", answer: "yes" }],
     ["another question's answer", { ...VALID.answer, question: "goal", answer: "yes" }],
     ["a goal the page does not offer", { ...VALID.answer, answer: "keto" }],
+    // § 13 item 1: the first question's two answers and Family's own question's two, nothing else.
+    ["a who answer the page does not offer", { ...VALID.answer, question: "who", answer: "couple" }],
+    ["a family answer outside data/plans.json's family.selection", { ...VALID.answer, question: "family", answer: "yes" }],
     ["a question named __proto__", { ...VALID.answer, question: "__proto__", answer: "or" }],
     ["an answer set outside selection.mjs's", { ...VALID.result, key: "or-6d" }],
-    ["a result's mpid not an individual plan's", { ...VALID.result, mpid: 35 }],
+    // Since § 13 item 1 a result's mpids are every plan's, Family's 35 among them (it was the individual plans' alone).
+    ["a result's mpid no plan has", { ...VALID.result, mpid: 99 }],
     ["an mpid as text", { ...VALID.result, mpid: "21" }],
     ["a link outside § 3", { ...VALID.click, link: "instagram" }],
     ["an order link without its mpid", { event: "click", s: S1, link: "order" }],

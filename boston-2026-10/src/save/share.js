@@ -50,4 +50,14 @@
   el("share-calories").addEventListener("input", enterCalories);
   window.addEventListener("hashchange", choiceChanged);
   go(copy(chosen()));
+
+  // SPEC-ui-and-copy-pass § 2 item 4: the panel sits below the goal's answers, collapsed to its heading, which is the
+  // button that opens and closes the rest of it. Collapsed on every load: its state is kept nowhere (no storage, not in
+  // the URL or the fragment), and nothing above it moves when it opens.
+  var toggle = el("share-toggle");
+  toggle.addEventListener("click", function () {
+    var open = toggle.getAttribute("aria-expanded") !== "true";
+    toggle.setAttribute("aria-expanded", String(open));
+    el("share-body").hidden = !open;
+  });
 })();

@@ -9,14 +9,22 @@ import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, readFile, symlink } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { ROOT } from "../build.mjs";
-import { expectedFragment, FIXTURE as V1, mealLine, MESSAGES, readWithFillB } from "./cc-harness.mjs";
+import { expectedFragment, FIXTURE as V1, mealLine, MESSAGES, readWithFillB, reportWith } from "./cc-harness.mjs";
 import { assertCheckedOut, LOG_PREFIX } from "./r2-harness.mjs";
 import { cardOf, centsOf, dollars, fragmentOf, GOALS, mpidOf, open, resultOf, TABLE, V2_CARTS } from "./ms-harness.mjs";
+import { runWithoutFamilyLinks } from "./uf-harness.mjs";
+import { withSnackCells } from "./snack-cells.mjs";
+
+/** The content's data file, the one file whose links § 31.2 item 1 changes. */
+const WEEK_DATA = "week/picks-data.json";
 
 export const ORDER = "https://fitafnutrition.com/order";
 const fill = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (whole, k) => (k in values ? String(values[k]) : whole));
 
-/** MS-1: each answer set's card, at every size, shows its plan's meals, price and weekly total, and the rounded line. */
+/** MS-1: each answer set's card, at every size, shows its plan's meals, price and weekly total, and the rounded line.
+ *  ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 1 (the Advisor, 2026-10-23: "yes please fix this math"): the card's count
+ *  is the meals it lists (the row's `meals`) and its weekly total that count at the plan's price a meal, as the store
+ *  charges it (five on Lean 4 at $13.00, $65.00); the price a meal, the link and the rounded line its plan's, as before. */
 export function rowProblems(html) {
   const problems = [];
   for (const goal of GOALS) {
@@ -26,9 +34,9 @@ export function rowProblems(html) {
       const want = {
         shown: true,
         selection: row.key,
-        meals: String(row.plan),
+        meals: String(row.meals),
         perMeal: dollars(centsOf(goal, row.plan)),
-        total: dollars(row.plan * centsOf(goal, row.plan)),
+        total: dollars(row.meals * centsOf(goal, row.plan)),
         rounded: row.plan < row.meals ? fill(MESSAGES.plan_page.rounded, { meals: row.meals, plan: row.plan }) : null,
         cta: `${ORDER}?mpid=${mpidOf(goal, row.plan)}`,
       };
@@ -186,8 +194,18 @@ export const weeksAlikeLine = ({ compared, left }) =>
  */
 export async function contentProblems(root, basePackage, week, args, scratch, base = MS20_BASE) {
   const before = await contentAt(basePackage, week, args, scratch);
-  const after = await contentAt(root, week, args, scratch);
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): a cart Family takes that holds its count carries Family's link,
+  // taken out here (uf-harness runWithoutFamilyLinks), every other byte compared as before.
+  const after = runWithoutFamilyLinks(await contentAt(root, week, args, scratch));
   const problems = [];
+  // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): every snack link's photo part now carries
+  // its snacks' cells too (test/snack-cells.mjs), so the base's data is read with that one change made, and its report
+  // line with that file's new size and SHA-256; every other byte compares as before.
+  if (before.files[WEEK_DATA]) {
+    const sheet = JSON.parse(await readFile(join(root, "data", "photo-sheets.json"), "utf8")).chefs_choice?.[week];
+    before.files[WEEK_DATA] = withSnackCells(before.files[WEEK_DATA], sheet).bytes;
+    before.stdout = reportWith(before.stdout, WEEK_DATA, before.files[WEEK_DATA]);
+  }
   if (before.status !== 0) problems.push(`control: ${base} does not make the week (${before.stderr.trim()})`);
   if (after.status !== before.status) problems.push(`the exit code ${after.status}, not ${base}'s ${before.status} (${after.stderr.trim()})`);
   const [paths, basePaths] = [Object.keys(after.files), Object.keys(before.files)];

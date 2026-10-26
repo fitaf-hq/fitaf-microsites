@@ -6,9 +6,10 @@
 // ⛔ Nothing is stored on the device (§ 1.1): no cookie, no storage API. The visit id `s` is made here, in memory, at
 // load (crypto.getRandomValues), and is gone with the page; a reload is a new visit (§ 2).
 // ⛔ Every value sent is from § 3's vocabulary or a number: the page's own ids for the goal and Q1–Q4 (data-goal,
-// data-q, data-a), the answer set's key (#result's data-selection without its snacks mark), an mpid from the link's own
-// href (every link on the page with an `?mpid=` is the store's order page: the grid, Family, the result card's, the
-// Chef's Choice card's two). Never text the visitor typed, never an error's message or stack.
+// data-q, data-a) and, since § 13, for the first question and Family's own (data-who, data-family); the answer set's key
+// (#result's data-selection without its snacks mark); an mpid from the link's own href (every link on the page with an
+// `?mpid=` is the store's order page: the grid, Family, the result card's, the Chef's Choice card's two). Never text the
+// visitor typed, never an error's message or stack.
 // ⭐ ONE call site, navigator.sendBeacon("/a", …) (T5 amended, § 4); at most 20 events a visit, the last kept for the
 // leave. A browser without Web Crypto or performance.now sends nothing; one without the beacon's API throws inside the
 // try, and nothing is sent either.
@@ -60,13 +61,16 @@ var QR_IDS = /*QR_IDS*/[];
     load_ms: ms(),
     qr: qrEvent(w.location.search, QR_IDS)
   });
-  // `answer` and `click`, read off the pressed element (in the capture phase, before the page's own handlers).
+  // `answer` and `click`, read off the pressed element (in the capture phase, before the page's own handlers). Since § 13
+  // the first question (`who`, its data-who) and Family's own (`family`, its data-family) are answers as the others are.
   d.addEventListener("click", function (e) {
-    var t = e.target.closest && e.target.closest("[data-goal],[data-q],[href],#all-link");
+    var t = e.target.closest && e.target.closest("[data-goal],[data-q],[data-who],[data-family],[href],#all-link");
     if (!t) return;
     var a = function (n) { return t.getAttribute(n) || ""; }, m = /\?mpid=(\d+)(#|$)/.exec(a("href"));
     if (a("data-goal")) send("answer", { question: "goal", answer: a("data-goal") });
     else if (a("data-q")) send("answer", { question: a("data-q"), answer: a("data-a") });
+    else if (a("data-who")) send("answer", { question: "who", answer: a("data-who") });
+    else if (a("data-family")) send("answer", { question: "family", answer: a("data-family") });
     else if (t.id == "all-link") send("click", { link: "all-plans" });
     else if (m) send("click", { link: t.id == "cc-checkout" ? "chefs-choice" : "order", mpid: +m[1] });
   }, true);

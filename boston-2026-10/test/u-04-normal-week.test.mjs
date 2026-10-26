@@ -103,16 +103,78 @@
 // byte-identical (U4 reads them on 2026-09-29, where no step is drawn); the three development pages +997 bytes each: the
 // step's four reworded lines (section.html), heldUntil, longDate and addDays inlined with MS_PER_DAY, and flow1.js's lines
 // filling the date held. build:dev of both trees differs in index.html, demo/, boston/ and seminar/ by those lines alone.
-// From here the reference is a3897d8's tree.
+// ⚠ RE-RECORDED at ede2e07 (`node test/u-04-record.mjs --commit ede2e07`): SPEC-ui-and-copy-pass § 1 (2026-10-23).
+// Against a3897d8's record, all six contents byte-identical; the three production pages +3,909 bytes each, item 8's card
+// alone (the chips' grid, the count badge's rules, #cc-list's data-meal-qty and the script reading a line's count back),
+// their visible page at the answered fragments (the card's attribute, a counted meal's badge and hidden words); the three
+// development pages +9,720 bytes each (item 8's lines, items 1–3's box, step and messages, item 7's prices after the offer
+// and plan-prices.js), their visible page at every fragment (the Family anchor, SAVE_FAMILY, is gone). Both trees' builds
+// differ in index.html, demo/, boston/, seminar/ and privacy/ alone (§ 1 item 5's two paragraphs on the last).
+// ⚠ RE-RECORDED at dbfcb62 (`node test/u-04-record.mjs --commit dbfcb62`): SPEC-ui-and-copy-pass § 1.2. Against ede2e07's
+// record, all six contents byte-identical; the three production pages +531 bytes each (item 1: #plan-data's meals and
+// totals, app.js's lines), their visible page at the two answer sets above their plan; the three development pages +2,451
+// bytes each (item 1, item 2's struck prices, item 3's step with no offer), their visible page where a cart shows the step
+// (U4 reads it on 2026-09-29, when no offer is live, so the step shows with no offer). Both trees' builds differ in
+// index.html, demo/, boston/, seminar/ and privacy/ alone (DRAFT § 6's retention on the last).
+// ⚠ RE-RECORDED at e8fd524 (`node test/u-04-record.mjs --commit e8fd524`): § 1.2 item 3's email help line after the
+// offer's end (found in Chrome at the build). Against dbfcb62's record: contents and the production pages unchanged; the
+// three development pages +310 bytes each (the field's second help line and the two lines showing one), their visible
+// page where the step shows (on 2026-09-29, no offer live: the step's own help line).
+// ⚠ RE-RECORDED at 8bfe4f8 (`node test/u-04-record.mjs --commit 8bfe4f8 --release-a`): SPEC-ui-and-copy-pass § 2 (round 2
+// changeset 1, 2026-10-25: who it is for first, the goal last, the calculator below the goal's answers; the Family line;
+// read_on). Recorded as this case builds since SPEC-save-offer-production § 12 (production false and release (a)'s
+// wording, the recorder's new --release-a; without it the recorder built each commit's own data/save.json, production true
+// since c6dd3a5, which this case no longer compares): the recorder with --release-a at c6dd3a5 reproduces e8fd524's record
+// exactly. Against it, all six contents byte-identical; the three production pages +97 bytes each and the three
+// development pages +1,738 bytes each, by § 2's lines alone (both trees' builds compared line by line: § 2.1 lists them),
+// and their visible page at every fragment (the first question at the top of each; #family's Family line).
+// ⚠ RE-RECORDED at 077f472 (`node test/u-04-record.mjs --commit 077f472 --release-a`): SPEC-ui-and-copy-pass § 2.2
+// (Family's own question; the result card shared by both panels; a cart Family takes carries Family's link). The recorder
+// at 8bfe4f8 reproduces 8bfe4f8's record exactly. Against it: the v1 fixture's two contents byte-identical (no cart of 5
+// or 10); the v2 fixture's and the committed week's (2026-10-18) +100 and +267 bytes, by Family's link on and-5d alone
+// (MS-20 and W4 compare every other byte with older trees); the three production pages +2,661 to +2,928 bytes and the
+// development pages +2,627 to +2,894; the visible page at every fragment (visible() keeps the displayed markup, and the
+// result card now sits outside the individual panel).
+// ⚠ RE-RECORDED at 5eaad96 (`--commit 5eaad96 --release-a`): the Family door hidden in a browser too (§ 2.2, found by
+// Storybook's run). The recorder at 077f472 reproduces 077f472's record. Against it: all six contents and every visible
+// page byte-identical; every page +167 bytes, the template's one rule and its comment.
+// ⚠ RE-RECORDED at f9273c0 (`--commit f9273c0 --release-a --without-snack-cells`): SPEC-analytics.md § 13 item 2 (the
+// analytics script sends the first question's and Family's own question's answers). The first record of a tree after the
+// hand-off's merge (c31603d), whose snack cells this case removes before comparing (below), so the recorder reads them as
+// this case does (its new `--without-snack-cells`; without it the committed week's content and two visible pages would
+// move by those cells, which § 13 does not touch). Controls: the recorder with `--release-a` at 5eaad96 reproduces
+// 5eaad96's record byte for byte, and with both flags at 0fd55e3 its record is 5eaad96's. Against it: all six contents and
+// every visible page byte-identical; every page +202 bytes, the script's three lines.
+// From here the reference is f9273c0's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { ROOT } from "../build.mjs";
 import { normalWeekRecord } from "./u-checks.mjs";
+import { productionFalseSavePath, withReleaseAWording } from "./cc-harness.mjs";
+import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to a3897d8's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "a3897d8");
-  assert.deepEqual(await normalWeekRecord(ROOT), golden.record);
+test("U4: a normal week, the content and the page as served, byte-identical to f9273c0's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "f9273c0");
+  // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
+  // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
+  // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs
+  // withoutSnackCells), every other byte as e8fd524's. (Its recorder builds a commit's own tree, production true since
+  // SPEC-save-offer-production § 12, where U4 reads release (a)'s pages, so it is not re-run for this.) Since SPEC-analytics
+  // § 13 the recorder reads them so too, with `--release-a --without-snack-cells`: these options exactly.
+  let cut = 0;
+  const undo = (text) => {
+    const read = withoutSnackCells(text);
+    cut += read.links;
+    return read.text;
+  };
+  const options = {
+    savePath: await productionFalseSavePath(),
+    transform: (html) => undo(withReleaseAWording(html)),
+    content: (bytes, key) => (key.endsWith(".json") ? Buffer.from(undo(bytes.toString("utf8")), "utf8") : bytes),
+  };
+  assert.deepEqual(await normalWeekRecord(ROOT, options), golden.record);
+  assert.ok(cut > 0, "control: the snack links' cells were there to remove");
 });

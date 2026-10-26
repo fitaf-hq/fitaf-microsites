@@ -22,6 +22,8 @@ import { scriptJsonRef } from "./wc-checks.mjs";
 import { noWeekPage, pageAsset, startSite, WEEK_DATA_KEY, withPicksText } from "./wc-harness.mjs";
 import { chooserOf, FIXTURE_LIST, fixtureWords, messagesFile, MENUS_DIR, MENUS_WEEK, openMenus } from "./em-harness.mjs";
 import { rangeless, reportWith } from "./cc-harness.mjs";
+import { runWithoutFamilyLinks } from "./uf-harness.mjs";
+import { withSnackCells } from "./snack-cells.mjs";
 
 const BASE = "76ee36e";
 const WEEK = "2026-10-25";
@@ -97,12 +99,16 @@ test.after(() => rm(scratch, { recursive: true, force: true }));
 for (const args of [[], ["--env", "dev"]]) {
   test(`EM5c (${WEEK}, ${args.length ? "dev" : "prod"}): npm run content byte-identical to ${BASE}'s, a week without the additions`, async () => {
     const before = await contentAt(basePackage, args, scratch);
-    const after = await contentAt(ROOT, args, scratch);
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's links taken out (uf-harness), every other byte as before.
+    const after = runWithoutFamilyLinks(await contentAt(ROOT, args, scratch), WEEK_DATA_KEY);
     assert.equal(before.status, 0, `control: ${BASE} makes the week (${before.stderr.trim()})`);
     const read = rangeless(before.files[WEEK_DATA_KEY], WEEK);
     assert.ok(read.headings > 0, `control: ${BASE}'s headings name the week's range`);
-    before.files[WEEK_DATA_KEY] = read.bytes;
-    before.stdout = reportWith(before.stdout, WEEK_DATA_KEY, read.bytes);
+    // ⚠ And for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): every snack link's photo part now carries its
+    // snacks' cells (test/snack-cells.mjs), made to the base's data before it is compared; every other byte as before.
+    const sheet = JSON.parse(await readFile(join(ROOT, "data", "photo-sheets.json"), "utf8")).chefs_choice?.[WEEK];
+    before.files[WEEK_DATA_KEY] = withSnackCells(read.bytes, sheet).bytes;
+    before.stdout = reportWith(before.stdout, WEEK_DATA_KEY, before.files[WEEK_DATA_KEY]);
     assert.ok(Object.keys(before.files).length >= 2, `control: ${BASE} wrote the week's data and its sheet`);
     assert.equal(after.status, before.status, `the exit code (${after.stderr.trim()})`);
     assert.deepEqual(Object.keys(after.files), Object.keys(before.files), "the same files");

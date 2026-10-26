@@ -545,13 +545,20 @@ export async function orderPage({
   assert.ok(afterFirstPress === "counter" || afterFirstPress in AFTER_FIRST_PRESS, `afterFirstPress: ${afterFirstPress}`);
   const { document } = parseHTML(await readFile(FIXTURE, "utf8"));
   // The store's own minimum ("Please add at least N meals"): the plan's count, not the link's allowed totals
-  // (SPEC-rung2-fill-c § 8: those are the block's check; this is the store).
-  const counts = planCounts(await loadJson(PLANS_PATH));
+  // (SPEC-rung2-fill-c § 8: those are the block's check; this is the store). ⚠ SPEC-ui-and-copy-pass § 2.2 (2026-10-25):
+  // Family's one product carries two counts (5 and 10), and the store takes it from the smaller to the larger (`span`, the
+  // larger less the smaller, added to `above`; measured on the live store: "at least 1"; what it takes above 10 is the
+  // live rehearsal's, § 2.2 item 7). A product of one count, every individual plan's, is as it was.
+  const plansData = await loadJson(PLANS_PATH);
+  const counts = planCounts(plansData);
+  const span = {};
+  for (const c of [...plansData.individual, plansData.family].flatMap((plan) => plan.counts)) span[c.mpid] = Math.max(span[c.mpid] ?? 0, c.meals_per_week - counts[c.mpid]);
   const presses = new Map();
   const log = [];
   const controls = [];
   const all = [];
   let required = null;
+  let over = above;
   let bound = null;
   /** The store's own asynchrony: `fn` runs `n` store ticks from now, queued among the script's timers. */
   const tick = (n, fn) => (n > 0 ? bound.timers.later(() => tick(n - 1, fn)) : fn());
@@ -574,7 +581,7 @@ export async function orderPage({
     const held = store.pending.length;
     const units = held + store.cart.length;
     // Short of the plan's count, short; above the most the store takes (`above` more than it), over; else neither.
-    const short = held < required ? required - held : held > required + above ? required + above - held : 0;
+    const short = held < required ? required - held : held > required + over ? required + over - held : 0;
     const busy = short <= 0 && loadingTicks > 0;
     for (const summary of document.querySelectorAll(".summary")) {
       const layout = summary.getAttribute("data-layout");
@@ -757,6 +764,7 @@ export async function orderPage({
     bind(h) {
       bound = h;
       required = need ?? counts[h.url.searchParams.get("mpid")] ?? Infinity;
+      over = above + (need === undefined ? span[h.url.searchParams.get("mpid")] ?? 0 : 0);
       render();
     },
   };

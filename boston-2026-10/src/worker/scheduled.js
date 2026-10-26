@@ -9,7 +9,8 @@ import { purge } from "./purge.js";
 import { sendDue } from "./send-due.js";
 import { DAYS, daysBetween, zonedDate } from "./zoned-time.js";
 
-/** The lapse's plain inputs at `nowMs`: which offers are 30 days past their end, and the two cut-offs. */
+/** The lapse's plain inputs at `nowMs`: which offers are 30 days past their end, and the cut-offs (since
+ *  SPEC-ui-and-copy-pass § 1.2 item 3, three: a save with no offer is kept no_offer_save_days from the save). */
 export function lapseInputs(nowMs, offers = OFFERS, cfg = saveConfig) {
   const today = zonedDate(nowMs, cfg.send_time_zone);
   return {
@@ -17,6 +18,7 @@ export function lapseInputs(nowMs, offers = OFFERS, cfg = saveConfig) {
     lapsedOfferIds: offers.filter((o) => daysBetween(o.valid_to, today) > cfg.lapse_after_offer_days).map((o) => o.id),
     expansionCreatedBefore: new Date(nowMs - cfg.unconfirmed_expansion_days * DAYS).toISOString(),
     expansionConfirmedBefore: new Date(nowMs - cfg.expansion_retention_days * DAYS).toISOString(),
+    noOfferCreatedBefore: new Date(nowMs - cfg.no_offer_save_days * DAYS).toISOString(),
   };
 }
 

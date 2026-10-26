@@ -14,6 +14,9 @@
 // The vocabulary is the page's and data's, never invented here: data/plans.json's goals and mpids, selection.mjs's
 // answer sets, data/events.json's QR ids, and the four meal questions' answers as build.mjs's QUESTIONS names them
 // (copied below because a Worker cannot import the build; A3 holds the two equal and equal to the built page's buttons).
+// Since § 13 (2026-10-25: Family counted, and the first question) also the first question, `who`, its answers build.mjs's
+// WHO (copied too), and Family's own question, `family`, its answers data/plans.json's family.selection; and a result's
+// mpids Family's as well as the individual plans'. F1 holds every question of the page equal to this one's.
 import plans from "../../data/plans.json" with { type: "json" };
 import events from "../../data/events.json" with { type: "json" };
 import { ANSWER_SETS, answerKey } from "../../scripts/selection.mjs";
@@ -40,16 +43,26 @@ const COUNTRY = /^[A-Z][A-Z0-9]$/;
 /** § 3's vocabulary. */
 export const EVENTS = ["open", "answer", "result", "click", "leave", "error"];
 export const VIEWPORTS = ["<400", "400-767", "768-1199", ">=1200"];
+/** Each question by the page's own id for it, and its answers, in the page's order since SPEC-ui-and-copy-pass § 2 (who
+ *  it is for first, the goal last, then Family's own question, shown for Family alone): the report's funnel reads this
+ *  order (§ 13 item 3). `who` is the button's data-who (build.mjs's WHO), `family` its data-family. */
 export const QUESTIONS = {
-  goal: plans.individual.map((p) => p.id),
+  who: ["individual", "family"],
   lunch_dinner: ["or", "and"],
   weekends: ["yes", "no"],
   breakfast: ["yes", "no"],
   snacks: ["yes", "no"],
+  goal: plans.individual.map((p) => p.id),
+  family: plans.family.selection.map((row) => row.lunch_dinner),
 };
 export const ANSWER_KEYS = ANSWER_SETS.map(answerKey);
-export const RESULT_MPIDS = plans.individual.flatMap((p) => p.counts.map((c) => c.mpid));
-export const ORDER_MPIDS = [...RESULT_MPIDS, ...plans.family.counts.map((c) => c.mpid)];
+const INDIVIDUAL_MPIDS = plans.individual.flatMap((p) => p.counts.map((c) => c.mpid));
+/** Family's: one product at either size (data/plans.json's family.counts), once. */
+const FAMILY_MPIDS = [...new Set(plans.family.counts.map((c) => c.mpid))];
+/** A result's mpid: since § 13 Family's too, its result card's; its key is the answer set whose cart Family takes
+ *  (`or-5d`, `and-5d`: scripts/family.mjs checkFamily's), already one of ANSWER_KEYS. Checked apart, not as a pair. */
+export const RESULT_MPIDS = [...INDIVIDUAL_MPIDS, ...FAMILY_MPIDS];
+export const ORDER_MPIDS = [...INDIVIDUAL_MPIDS, ...FAMILY_MPIDS];
 export const LINKS = ["order", "chefs-choice", "all-plans"];
 export const STEPS = ["open", "answer", "result", "click"];
 export const QR_IDS = events.map((e) => e.id);

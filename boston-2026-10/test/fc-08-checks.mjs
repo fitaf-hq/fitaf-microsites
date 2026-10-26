@@ -69,12 +69,14 @@ export function fixtureTableProblems(table) {
 
 /**
  * § 8 item 1 over today's data/plans.json, as the contract words it: every individual plan's 4 takes 4 or 5, its 14 takes
- * 14 or 15, its 7, 10 and 21 their own count alone, and Family its 1. mpid -> allowed totals.
+ * 14 or 15, its 7, 10 and 21 their own count alone, and Family (since SPEC-ui-and-copy-pass § 2.2) its 5 or 10.
+ * mpid -> allowed totals.
  */
 export function contractTotals() {
   const extra = { 4: [4, 5], 14: [14, 15] };
   const out = {};
   for (const plan of PLANS.individual) for (const c of plan.counts) out[c.mpid] = extra[c.meals_per_week] ?? [c.meals_per_week];
-  for (const c of PLANS.family.counts) out[c.mpid] = [c.meals_per_week];
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 item 4 (2026-10-25): Family's one product takes its counts, 5 or 10.
+  for (const c of PLANS.family.counts) out[c.mpid] = [5, 10];
   return out;
 }

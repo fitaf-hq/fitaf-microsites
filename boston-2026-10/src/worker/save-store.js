@@ -27,9 +27,12 @@ export const UPDATE_CONTACT_SQL =
 
 export const UPDATE_RING_SQL = `UPDATE saves SET ring = ?1 WHERE save_id IN (${match(2, 3, 4)})`;
 
+// SPEC-ui-and-copy-pass § 1.2 item 3: a save with nothing due (send_at NULL: an offer save after the last offer's end) has
+// no message state, as a reissued code's row has none; every other save's message is scheduled.
 export const INSERT_SAVE_SQL =
   "INSERT INTO saves (save_id, event_id, kind, offer_code, offer_id, ring, reissued_from, created_at, send_at, " +
-  "message_state, state, state_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, NULL, ?7, ?8, 'scheduled', 'saved', ?7 " +
+  "message_state, state, state_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, NULL, ?7, ?8, " +
+  "CASE WHEN ?8 IS NULL THEN NULL ELSE 'scheduled' END, 'saved', ?7 " +
   `WHERE NOT EXISTS (${match(2, 3, 9)})`;
 
 export const INSERT_CONTACT_SQL =
@@ -38,7 +41,8 @@ export const INSERT_CONTACT_SQL =
 
 /**
  * The parameters of the four statements for one validated save. `now` is an ISO UTC string; `sendAt`
- * is the ISO UTC instant the message goes (next morning for an offer, now for an expansion).
+ * is the ISO UTC instant the message goes (next morning for an offer, now for an expansion), or null when nothing is due
+ * (an offer save after the last offer's end, `offerId` null: SPEC-ui-and-copy-pass § 1.2 item 3).
  */
 export function saveStatements(save, { saveId, offerCode, offerId, now, sendAt }) {
   const consent = save.consent_marketing ? 1 : 0;

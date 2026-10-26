@@ -13,11 +13,13 @@ import { readingOrder } from "./save-end-fixture.mjs";
 export const STEP_OFFER = "save-step-offer";
 export const STEP_OFFER_LABEL = "save-step-offer-label";
 
-/** The offer box at the top as SPEC-rung4 § 2a and § 2b left it: § 1 item 1 keeps it as it is. */
+/** The offer box at the top as SPEC-rung4 § 2a and § 2b left it: § 1 item 1 keeps it as it is. ⚠ AMENDED by
+ *  SPEC-ui-and-copy-pass § 1 item 1 (2026-10-23): the heading is the box's accessible name, not drawn, and the offer's
+ *  line is the box's heading (its headline, else its label); the step's line keeps the label. */
 export const OFFER_BOX_MARKUP = `<div class="wrap save-wrap">
   <section class="offer-box js-only" id="offer-box" aria-labelledby="save-title">
-    <h2 id="save-title">Your Boston offer</h2>
-    <p class="save-offer"><strong id="save-offer-label"></strong></p>
+    <span id="save-title" hidden>Your Boston offer</span>
+    <h2 class="offer-line" id="save-offer-label"></h2>
   </section>
 </div>`;
 
@@ -58,9 +60,11 @@ export function assertOfferLineAsRun(html, offers, { hash, now }) {
   const where = `${hash} at ${new Date(now).toISOString()}`;
   const label = page.el(STEP_OFFER_LABEL);
   assert.equal(hiddenInTree(label), false, `${where}: the step's offer line is shown`);
-  const expected = offerForSave(zonedDate(now, saveConfig.send_time_zone), offers).label;
+  const offer = offerForSave(zonedDate(now, saveConfig.send_time_zone), offers);
+  const expected = offer.label;
   assert.equal(label.textContent, expected, `${where}: the step's line is offerForSave's label`);
-  assert.equal(page.el("save-offer-label").textContent, expected, `${where}: the box at the top shows the same`);
+  // SPEC-ui-and-copy-pass § 1 item 1: the box at the top prints the same offer's headline, else the same label.
+  assert.equal(page.el("save-offer-label").textContent, offer.headline ?? expected, `${where}: the box at the top shows the same offer`);
   assert.equal(label.children.length, 0, `${where}: written as text, never as markup`);
   const read = readingOrder(page.document.body);
   const lead = page.document.querySelector("#save .save-lead");

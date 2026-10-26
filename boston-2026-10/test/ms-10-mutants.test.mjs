@@ -77,7 +77,9 @@ test("MS-10: rounding up (5 -> 7) fails MS-1 and MS-2", async () => {
       },
       async (dir) => {
         const ms1 = await problemsOn(dir, undefined, rowProblems);
-        assert.ok(ms1.some((p) => /^#lean-or-5d: meals "7", not "4"$/.test(p)), `MS-1 fails it:\n${ms1.join("\n")}`);
+        // Since SPEC-ui-and-copy-pass § 1.2 item 1 the card shows the row's meals (5 either way), so MS-1 sees the plan by
+        // its price a meal: the 7 plan's $12.50, not the 4 plan's $13.00.
+        assert.ok(ms1.some((p) => /^#lean-or-5d: perMeal "\$12\.50", not "\$13\.00"$/.test(p)), `MS-1 fails it:\n${ms1.join("\n")}`);
         const ms2 = await problemsOn(dir, picks, (html) => linkProblems(html, { decode: false }));
         assert.ok(ms2.some((p) => /^#lean-or-5d: https:\/\/fitafnutrition\.com\/order\?mpid=21#/.test(p)), `MS-2 fails it (the 7's mpid, 21):\n${ms2.join("\n")}`);
       },
@@ -88,8 +90,9 @@ test("MS-10: rounding up (5 -> 7) fails MS-1 and MS-2", async () => {
 });
 
 // A cart's link built on what the answers come to instead of the row's plan (version 2's reader).
-const CART_ON_PLAN = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null);";
-const CART_ON_MEALS = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), row.meals, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null);";
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): the call passes the cart's Family row too (its last argument).
+const CART_ON_PLAN = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), cart.plan, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null, ctx.family.get(key) ?? null);";
+const CART_ON_MEALS = "carts[key] = cartOf(mealsOf(cart.items, `${where}.items`), row.meals, where, ctx, (carted && snacks[dayToken(cart.weekends)]) || null, ctx.family.get(key) ?? null);";
 
 test("MS-10: a cart's link built on meals instead of plan fails MS-2", async (t) => {
   await withMirror(

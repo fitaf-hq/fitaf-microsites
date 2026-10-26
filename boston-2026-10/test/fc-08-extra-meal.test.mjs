@@ -126,10 +126,10 @@ for (const width of WIDTHS) {
 }
 
 // ── FC-8f ────────────────────────────────────────────────────────────────────────────────────────────────────────────
-/** Every plan § 8 leaves as it was: each individual plan's 7, 10 and 21, and Family. */
+/** Every plan § 8 leaves as it was: each individual plan's 7, 10 and 21. ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2
+ *  (2026-10-25): Family is no longer one count (its one product takes 5 or 10, UF4), so it is not among them. */
 const UNCHANGED = [
   ...PLANS.individual.flatMap((plan) => plan.counts.filter((c) => [7, 10, 21].includes(c.meals_per_week)).map((c) => [`${plan.id} ${c.meals_per_week}`, c])),
-  ...PLANS.family.counts.map((c) => [`family ${c.meals_per_week}`, c]),
 ];
 /** `n` units over the fixture's three meals and the eight extra cards, the first meals taking the rest. */
 const unitsLink = (mpid, n) => {
@@ -138,8 +138,8 @@ const unitsLink = (mpid, n) => {
   return linkOf(mpid, qtys);
 };
 
-test("FC-8f: Family and 7, 10, 21 unchanged — the plan's count fills; one more or one fewer refused in today's words", async () => {
-  assert.equal(UNCHANGED.length, 10, "fixture control: 3 plans x (7, 10, 21) + Family");
+test("FC-8f: 7, 10, 21 unchanged — the plan's count fills; one more or one fewer refused in today's words", async () => {
+  assert.equal(UNCHANGED.length, 9, "fixture control: 3 plans x (7, 10, 21)");
   for (const [what, c] of UNCHANGED) {
     const P = c.meals_per_week;
     const ok = await outcome(unitsLink(c.mpid, P));
@@ -218,7 +218,10 @@ test("FC-8g: the Chef's Choice cart check takes the same totals — 5 on the 4 p
   const fourOf = PLANS.individual.map((p) => p.counts.find((c) => c.meals_per_week === 4).mpid);
   const fourteenOf = PLANS.individual.map((p) => p.counts.find((c) => c.meals_per_week === 14).mpid);
   const five = checkPicks(weekWith("or", false, false, 1), "2026-10-04.json", plans);
-  assert.deepEqual(Object.keys(five.carts["or-5d"].links).map(Number).sort(), fourOf.sort(), "a link per size, on its 4 plan");
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): a 5-meal or-5d is the cart Family's *or* takes, so it also
+  // carries Family's link (its one product, mpid 35), the same five.
+  const family = plans.family.counts[0].mpid;
+  assert.deepEqual(Object.keys(five.carts["or-5d"].links).map(Number).sort((a, b) => a - b), [...fourOf, family].sort((a, b) => a - b), "a link per size, on its 4 plan, and Family's");
   for (const href of Object.values(five.carts["or-5d"].links)) assert.equal(linkUnits(href), 5, href);
   const fifteen = checkPicks(weekWith("and", false, true, 1), "2026-10-04.json", plans);
   assert.deepEqual(Object.keys(fifteen.carts["and-5d-b"].links).map(Number).sort(), fourteenOf.sort());

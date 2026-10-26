@@ -52,7 +52,9 @@ const isOfferLine = (piece) => /^\[The offer\b/.test(piece);
 
 test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as written; the offer line is the slot", async () => {
   const text = visibleText(devHtml);
-  const one = await draftParagraphs("## 1. What the visitor sees", "## 2.");
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 3 (2026-10-23): § 1 ends with the step after the offer's end, its own
+  // block (UC9 holds it on the page), so § 1's paragraphs here stop there.
+  const one = await draftParagraphs("## 1. What the visitor sees", "### After the offer ends");
   const two = await draftParagraphs("## 2. Out of area", "## 3.");
   assert.equal(one.length, 6, "§ 1's blockquote has 6 paragraphs");
   assert.equal(two.length, 3, "§ 2's blockquote has 3 paragraphs");
@@ -70,18 +72,21 @@ test("S18: every paragraph of DRAFT §§ 1–2 appears on the dev page as writte
   // the visitor has built the plan; the skip link is not on the page. (Its paragraphs above are checked as before.)
   assert.ok(!text.includes("Build my plan →"), "no skip link (§ 2b item 3)");
 
-  // The offer line (§ 2a): a slot under the heading, filled in the browser with offers.json's own label.
+  // The offer line (§ 2a): a slot, filled in the browser from offers.json. ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 item 1
+  // (2026-10-23): the heading is no longer drawn: its words are the box's accessible name (an element the box names it
+  // by, hidden), and the offer's line is the box's heading, printing the offer's headline, else its label.
   assert.ok(!text.includes(all[1]), "the draft's literal offer line is not on the page");
-  assert.match(devHtml, /<h2 id="save-title">Your Boston offer<\/h2>\s*<p class="save-offer"><strong id="save-offer-label"><\/strong><\/p>/);
+  assert.match(devHtml, /<section class="offer-box js-only" id="offer-box" aria-labelledby="save-title">\s*<span id="save-title" hidden>Your Boston offer<\/span>\s*<h2 class="offer-line" id="save-offer-label"><\/h2>/);
   const now = PAGE_NOW_MS; // a day of the offer (SPEC-save-offer-production § 10.7: after the last one, no step is drawn)
-  const label = offerForSave(zonedDate(now, saveConfig.send_time_zone)).label;
-  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, label, "offers.json's own label");
+  const offer = offerForSave(zonedDate(now, saveConfig.send_time_zone));
+  assert.equal(simulatePage(devHtml, { now }).el("save-offer-label").textContent, offer.headline ?? offer.label, "offers.json's own words");
 });
 
-test("S18: marked `DRAFT — not for use · wording v0.3-draft`; the production page carries none of it", () => {
-  assert.equal(saveConfig.wording_version, "v0.3-draft");
+// SPEC-save-offer-production § 12: release (b) made the wording v1; the development page marks every version.
+test("S18: marked `DRAFT — not for use · wording v1`; the production page carries none of it", () => {
+  assert.equal(saveConfig.wording_version, "v1");
   assert.match(devHtml, /<div class="draft-banner" role="note"><strong>DRAFT — not for use\.<\/strong>/);
-  assert.ok(visibleText(devHtml).includes("DRAFT — not for use · wording v0.3-draft"));
+  assert.ok(visibleText(devHtml).includes("DRAFT — not for use · wording v1"));
   assert.ok(!prodHtml.includes("DRAFT"));
   assert.ok(!prodHtml.includes("/api/save") && !prodHtml.includes("save-data"));
 });
@@ -121,20 +126,22 @@ test("S18 (dev T5): the only external script is Turnstile; the only fetch is the
 
 test("S18: Flow 1's states in the page — OFFER, ERROR keeps what was typed, SAVED; #from-email opens at Flow 2", async () => {
   const page = simulatePage(devHtml);
-  assert.deepEqual(page.missing(["save-skip-menu"]), [], "every id the scripts use exists in the page");
+  // SPEC-ui-and-copy-pass § 1 item 2: the step reads the card's Continue to checkout, which a page without the card lacks.
+  assert.deepEqual(page.missing(["save-skip-menu", "cc-checkout"]), [], "every id the scripts use exists in the page");
   assert.equal(page.el("save-open").hidden, false, "OFFER: the offer and the form");
   assert.equal(page.el("save-collapsed").hidden, true);
 
   page.type("save-email", "dummy-s18@example.com");
   page.type("save-zip", "0211");
   page.el("save-form").dispatch("submit");
-  assert.equal(page.el("save-error").hidden, false, "ERROR(zip_invalid)");
-  assert.equal(page.el("save-error").textContent, "Enter a five-digit ZIP code.");
+  // SPEC-ui-and-copy-pass § 1 item 3: a field's error is shown under that field (UC3 holds where).
+  assert.equal(page.el("save-zip-error").hidden, false, "ERROR(zip_invalid)");
+  assert.equal(page.el("save-zip-error").textContent, "Enter a five-digit ZIP code.");
   assert.equal(page.el("save-email").value, "dummy-s18@example.com", "what was typed is kept");
   assert.equal(page.record.fetches.length, 0);
 
   page.type("save-zip", "02118");
-  assert.equal(page.el("save-error").hidden, true, "editing leaves ERROR");
+  assert.equal(page.el("save-zip-error").hidden, true, "editing leaves ERROR");
   page.el("save-form").dispatch("submit");
   await page.settle();
   assert.equal(page.record.fetches.length, 1);
@@ -145,7 +152,7 @@ test("S18: Flow 1's states in the page — OFFER, ERROR keeps what was typed, SA
   const body = JSON.parse(page.record.fetches[0].init.body);
   assert.deepEqual(body, {
     kind: "offer", email: "dummy-s18@example.com", zip: "02118", consent_marketing: false,
-    event_id: events[0].id, wording_version: "v0.3-draft", turnstile_token: "XXXX.DUMMY.TOKEN.XXXX",
+    event_id: events[0].id, wording_version: saveConfig.wording_version, turnstile_token: "XXXX.DUMMY.TOKEN.XXXX",
   });
 
   // Since § 2b item 3 there is no skip link: PLAN (Flow 1 collapsed to one line) is reached from the email's link.

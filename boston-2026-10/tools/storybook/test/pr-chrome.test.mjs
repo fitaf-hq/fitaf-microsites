@@ -103,8 +103,10 @@ test("PR-8: the link opens a modal dialog with the grid; Esc closes it and focus
 });
 
 /** Where `sel`'s text sits inside its own box: the gaps left and right of the text (a Range over its contents). */
+// ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 2.2 (2026-10-25): the drawn headings only (Family's own question is
+// in the markup, hidden on an individual page, and a hidden element has no box to measure).
 const textGaps = (sel) =>
-  [...document.querySelectorAll(sel)].map((el) => {
+  [...document.querySelectorAll(sel)].filter((el) => el.checkVisibility()).map((el) => {
     const box = el.getBoundingClientRect();
     const range = document.createRange();
     range.selectNodeContents(el);
@@ -129,11 +131,12 @@ test("PR-13: the carousel spans the viewport's width with the logo inside it; no
 });
 
 // Updated (SPEC-meal-selection § 1): the page asks the goal and the four meal questions, five headings, all shown once Q1
-// is answered (#lean-7 answers it).
+// is answered (#lean-7 answers it). ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 2 items 1–2 (2026-10-25): the first
+// question, who it is for, is a sixth, in the tabs' place, and the goal is the last.
 test("PR-14: the question headings are centred (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
   for (const { width } of Object.values(VIEWPORTS)) {
     const gaps = await withPage({ width, hash: "#lean-7" }, (page) => page.evaluate(textGaps, ".step-label"));
-    assert.equal(gaps.length, 5, `${width}: the goal's heading and the four questions'`);
+    assert.equal(gaps.length, 6, `${width}: the first question's heading, the four meal questions' and the goal's`);
     for (const g of gaps) assert.ok(g.left > 4 && Math.abs(g.left - g.right) <= 2, `${width}: ${g.text} centred: ${JSON.stringify(g)}`);
   }
 });

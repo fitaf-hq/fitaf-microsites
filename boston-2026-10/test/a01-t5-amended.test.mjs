@@ -9,6 +9,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { DEV_ASSET_PREFIX, TURNSTILE_SCRIPT_URL } from "../build.mjs";
 import { builtPage, devPages } from "./a-harness.mjs";
+import { productionFalseSavePath } from "./cc-harness.mjs";
 import { assertOneWhyFrame, isSameOrigin, loadedUrls } from "./helpers.mjs";
 import { assertPageBudget } from "./page-budget.mjs";
 
@@ -19,8 +20,10 @@ function assertOneBeacon(html, where) {
   assert.match(html, /\bnavigator\.sendBeacon\(\s*(["'])\/a\1\s*,/, `${where}: navigator.sendBeacon("/a", …)`);
 }
 
-test("A1: the production build has exactly one sendBeacon, to /a, and nothing else T5 forbids", async (t) => {
-  const html = await builtPage();
+// SPEC-save-offer-production § 12: since release (b) the committed production page carries the save step (Turnstile's
+// script, the save's fetch), as the development pages below do; this case keeps T5 on the page without it, the rollback.
+test("A1: the production build with production false has exactly one sendBeacon, to /a, and nothing else T5 forbids", async (t) => {
+  const html = await builtPage({ savePath: await productionFalseSavePath() });
   assertOneBeacon(html, "production");
   assert.doesNotMatch(html, /<script\b[^>]*\bsrc\s*=/i, "no <script src>");
   assert.doesNotMatch(html, /<link\b/i, "no <link> of any kind");

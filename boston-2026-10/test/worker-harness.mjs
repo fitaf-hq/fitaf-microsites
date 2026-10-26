@@ -120,7 +120,10 @@ export async function applyMigrations(db, dir) {
  * would answer it ("/x/" serves the table's "/x/"; anything else 404), for either Worker; without it, production's
  * ASSETS answers 404 to everything and development's has none (its assets come first in wrangler's router).
  */
-export async function startWorker({ bindings = {}, resend, worker: which = process.env.BOSTON_SAVE_WORKER ?? "development", production = true, assets, now = TEST_NOW_MS, offers } = {}) {
+/** `main` (SPEC-ui-and-copy-pass § 1.2 item 4's mutant): the entry to bundle instead of wrangler.jsonc's, a COPY of the
+ *  Worker's tree with one line changed (its imports and data/ resolve inside the copy); the committed files are never
+ *  written. */
+export async function startWorker({ bindings = {}, resend, worker: which = process.env.BOSTON_SAVE_WORKER ?? "development", production = true, assets, now = TEST_NOW_MS, offers, main } = {}) {
   const isProduction = which === "production";
   const cfg = isProduction ? await productionWranglerConfig() : await devConfig();
   const [d1] = cfg.d1_databases;
@@ -130,7 +133,7 @@ export async function startWorker({ bindings = {}, resend, worker: which = proce
   const worker = {
     name: cfg.name,
     modules: true,
-    script: await bundleWorker(resolve(ROOT, cfg.main), { now, offers, ...(isProduction ? { save: { ...saveConfig, production } } : {}) }),
+    script: await bundleWorker(main ?? resolve(ROOT, cfg.main), { now, offers, ...(isProduction ? { save: { ...saveConfig, production } } : {}) }),
     compatibilityDate: cfg.compatibility_date,
     d1Databases: { [d1.binding]: "test-d1" },
     ratelimits: Object.fromEntries(

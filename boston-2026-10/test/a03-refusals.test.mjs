@@ -3,7 +3,9 @@
 // development Worker (src/worker/index.js). The vocabulary is the page's own (its buttons' ids) and selection.mjs's,
 // never invented; and as wrangler.jsonc configures them (wrangler's own translation, the real asset router), a POST to
 // /a reaches each Worker's script. The refusal check is a-checks.mjs's, which the mutant "the vocabulary check removed"
-// runs on a mirror.
+// runs on a mirror. Since § 13 item 4 the page's answers are read off every `button.choice` (a-harness pageChoices), the
+// first question's and Family's own question's among them; F1 (af1-every-question.test.mjs) holds them equal to the
+// Worker's vocabulary in both directions, on both targets.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";

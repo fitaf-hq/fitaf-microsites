@@ -95,13 +95,17 @@ test("P3b: routeHeld — CHECKOUT pressed, the store holds its route until windo
     assert.ok(lines.includes("[fixture] pressed CHECKOUT NOW"), "the store's CHECKOUT was pressed");
     assert.ok(!lines.includes(DONE), "no done while the route is held");
     await page.evaluate(() => window.__fixtureRoute());
-    await page.waitForFunction(() => document.getElementById("fitaf-bar"), { timeout: 15_000 });
+    // SPEC-rung2-progress-and-checkout § 31: the step bar is drawn at done, and the screen goes only once the store's
+    // code zero has its verdict, so the checkout is read once both have happened.
+    await page.waitForFunction(() => document.getElementById("fitaf-bar") && !document.getElementById("fitaf-screen"), { timeout: 15_000 });
     const released = await page.evaluate(read);
     assert.deepEqual([released.path, released.screen, released.steps, released.route], ["/checkout", false, true, "object"], `released: ${JSON.stringify(released)}`);
+    await sleep(200); // the done line reaches the console listener after the screen goes
     assert.ok(lines.includes(DONE), "the block's done line");
   });
   await withFooterRun({}, async ({ page, lines }) => {
-    await page.waitForFunction(() => document.getElementById("fitaf-bar"), { timeout: 30_000 });
+    await page.waitForFunction(() => document.getElementById("fitaf-bar") && !document.getElementById("fitaf-screen"), { timeout: 30_000 });
+    await sleep(200); // the done line reaches the console listener after the screen goes
     assert.ok(lines.includes(DONE), "control: done with no call");
     assert.equal(await page.evaluate(() => typeof window.__fixtureRoute), "undefined", "control: nothing held");
   });

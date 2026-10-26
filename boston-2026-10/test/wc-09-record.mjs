@@ -15,12 +15,13 @@
 // week in the bucket; its src/worker/site.js in Miniflare), opened at the same instant, and `visible_at` names the
 // commit. Everything else is still recorded from --commit's tree, so WC-9a's content stays 409b805's.
 import { spawnSync } from "node:child_process";
-import { mkdtemp, readFile, rm, symlink } from "node:fs/promises";
+import { copyFile, mkdtemp, readFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW } from "./wc-regression.mjs";
+import { productionFalseSavePath } from "./cc-harness.mjs";
 import { contentOf, noWeekPage, pageAsset, picksText, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
 
 const flag = (name, fallback) => {
@@ -30,6 +31,11 @@ const flag = (name, fallback) => {
 const COMMIT = flag("--commit", "409b805");
 const ON = flag("--on", "2026-10-11");
 const VISIBLE_AT = flag("--visible-at", null);
+// `--release-a` (SPEC-ui-and-copy-pass § 2.1, 2026-10-25), with --visible-at: the served page as WC-9c makes it since
+// SPEC-save-offer-production § 12 (release (b) committed `production` true; WC-9c serves release (a)'s, the rollback): the
+// build with cc-harness productionFalseSavePath() as its data/save.json, and the Worker over that file too (as WC-9c's
+// productionFalseMirror). Without it the commit's own data/save.json, as before.
+const RELEASE_A = process.argv.includes("--release-a");
 
 function run(cmd, args, input) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 256 * 1024 * 1024 });
@@ -49,7 +55,9 @@ async function servedVisible(commit) {
     run("tar", ["-x", "-C", dir], run("git", ["-C", top, "archive", "--format=tar", commit, prefix]));
     const pkg = join(dir, prefix);
     await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
-    const asset = await noWeekPage({ root: pkg });
+    const savePath = RELEASE_A ? await productionFalseSavePath() : undefined;
+    if (savePath) await copyFile(savePath, join(pkg, "data", "save.json"));
+    const asset = await noWeekPage({ root: pkg, savePath });
     const { text, files } = await contentOf({ root: pkg, week: WEEK_1018 });
     const sheet = sheetKeyOf(SHEET_1018);
     const site = await startSite({ root: pkg, assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheet]: files[sheet] } });
@@ -86,6 +94,7 @@ try {
         : ""),
     recorded_at: short(COMMIT),
     ...(VISIBLE_AT ? { visible_at: short(VISIBLE_AT) } : {}),
+    ...(VISIBLE_AT && RELEASE_A ? { visible_built_as: "release (a): production false (--release-a)" } : {}),
     on: ON,
     week: WEEK_1018,
     opened_at: new Date(REGRESSION_NOW).toISOString(),

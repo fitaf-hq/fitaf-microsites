@@ -16,7 +16,8 @@
 // carted, Q4 pressed in every answer set and the not-carted line with snacks chosen; carted, no not-carted line, and Q4
 // neither shown nor pressed on days the week has no snack list for (the fixture's weekdays).
 // SM-10: each Hand-off story of § 8.3 at 390 and 1280 (Screen · B at 2 of 7, its default, and at 10 of 14):
-// test/handoff-expect.mjs says what each must show.
+// test/handoff-expect.mjs says what each must show. With it, SPEC-rung2-progress-and-checkout § 30's P4: Screen · A
+// shows the placeholder on its empty carousel, Screen · B and C the box it sits in, and all three one size in one place.
 // SM-11: no visit's console carries the fixture's "[fixture] ORDER PLACED" (its control: every visit that ran the
 // hand-off carries the store's CHECKOUT line, so the frame's console is heard at all).
 // SM-8: during the walk (the manager, every story, the docs page), no request leaves 127.0.0.1.
@@ -39,7 +40,7 @@ import { pathToFileURL } from "node:url";
 import { TURNSTILE_SCRIPT_URL } from "../../../build.mjs";
 import { BUILDS, DEFAULT_VIEWPORT, VIEWPORTS } from "../microsite/layout.js";
 import { ORDER_PATH, STORE, storeUrl } from "../handoff/layout.js";
-import { handoffProblems, payProblems, SECTIONS, unheardCheckouts } from "./handoff-expect.mjs";
+import { handoffProblems, payProblems, placeholderPlaces, SECTIONS, unheardCheckouts } from "./handoff-expect.mjs";
 import { readJson, SITE, TOOL } from "./paths.mjs";
 import { serveStatic } from "./serve-static.mjs";
 import { buildStorybook, readManifest, readStoreManifest, removeStorybookStatic, storybookStatic } from "./storybook-static.mjs";
@@ -67,6 +68,8 @@ const STORY_DATES = {
   "Individual · No picks this week": "none",
   "Individual · All plans": "today",
   "Family · Family": "today",
+  // The site's SPEC-ui-and-copy-pass § 2.2: Family's and, on the fixture week (its and-5d cart holds ten).
+  "Family · and · 10 meals": "fixture",
   "Whole page · Scroll": "today",
   "Meal selection · Goal buttons": "today",
 };
@@ -253,6 +256,8 @@ test("SM-10: every Hand-off story shows its state at 390 and 1280", { timeout: W
   const handoff = results.filter((r) => r.handoff);
   assert.equal(handoff.length, Object.keys(VIEWPORTS).length * (7 + SCREEN_B.length - 1), "fixture control: § 8.3's seven stories, Screen · B twice, at each width");
   assert.deepEqual(handoffProblems(handoff, { words: await handoffWords(), links: store.links }), [], "SM-10");
+  // SPEC-rung2-progress-and-checkout § 30, P4: Screen · A, B and C show the placeholder, one size in one place.
+  assert.deepEqual(placeholderPlaces(handoff), [], "P4: the placeholder in one place across the screen's stories");
 });
 
 test("SM-11: no story's walk logs the fixture's ORDER PLACED", { timeout: WALK_TIMEOUT_MS }, async () => {

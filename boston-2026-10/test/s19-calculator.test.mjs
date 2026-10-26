@@ -35,7 +35,8 @@ test("S19 (page): the same lines on the page; nothing in the URL, the fragment, 
   const [targets, protein, calories] = await flowExample();
   const html = await devPage();
   const page = simulatePage(html, { hash: "#signature-14" });
-  assert.deepEqual(page.missing(["save-skip-menu"]), []);
+  // SPEC-ui-and-copy-pass § 1 item 2: the step reads the card's checkout button, which a page without the card lacks.
+  assert.deepEqual(page.missing(["save-skip-menu", "cc-checkout"]), []);
   assert.equal(page.el("share-out").hidden, true, "nothing to show before a target");
   page.type("share-protein", "150");
   page.type("share-calories", "2,600");

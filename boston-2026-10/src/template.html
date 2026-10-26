@@ -66,12 +66,9 @@ button { font: inherit; color: inherit; }
 
 main.wrap { padding-top: 20px; }
 
-/* Tabs */
-.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--ice); border-radius: var(--radius); }
-.tab { min-height: 46px; border: 0; border-radius: 4px; background: transparent; font: 600 15px var(--head); color: var(--muted); cursor: pointer; }
-.tab[aria-selected="true"] { background: var(--navy); color: var(--white); }
-
-section.panel { padding-top: 28px; }
+/* The questions (SPEC-ui-and-copy-pass § 2): who it is for first (the two tabs made a question, in the look of the
+   others), then the individual plan's panel, its meal questions and its goal last; or the Family panel. Each question's
+   own margin keeps them apart, the panels add none. */
 .step { margin: 0 0 28px; }
 .step-label { margin: 0 0 14px; text-align: center; font: 600 20px/1.3 var(--head); color: var(--navy); }
 
@@ -90,6 +87,7 @@ section.panel { padding-top: 28px; }
 [data-goal="lean"], [data-accent="lean"] { --accent: var(--lean); }
 [data-goal="signature"], [data-accent="signature"] { --accent: var(--signature); }
 [data-goal="performance"], [data-accent="performance"] { --accent: var(--performance); }
+[data-accent="family"] { --accent: var(--family); }
 .choice:hover { border-color: var(--field); }
 .choice[aria-pressed="true"] { border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
 .choice[aria-pressed="true"]::before,
@@ -173,10 +171,11 @@ section.panel { padding-top: 28px; }
 
 /* Why Fit AF? (SPEC-why-fit-af § 2): a button opening the /why/ page in a frame inside the plans dialog's box, as tall as
    the viewport allows; the page scrolls inside the frame. Since SPEC-every-menu-and-nutrition § 11 item 5 (the Advisor's
-   review, 2026-10-22) it sits directly above the tabs, its no-script link in the same place; since § 11.2 ("in a
-   button") it is an outline button in the look of the menu chooser's unselected chip: a white pill, the chips' border,
-   navy words in their type, at least the card's touch target tall (64 px, § 10), sized to its words, centred above the
-   tabs (the column's centre on a phone; from 720 px, where the tabs are 420 px at the column's left, their centre).
+   review, 2026-10-22) it sits directly above the Individual/Family chooser (since SPEC-ui-and-copy-pass § 2 the first
+   question, in the tabs' place), its no-script link in the same place; since § 11.2 ("in a button") it is an outline
+   button in the look of the menu chooser's unselected chip: a white pill, the chips' border, navy words in their type,
+   at least the card's touch target tall (64 px, § 10), sized to its words, centred above the first question, which spans
+   the column as every question does (the tabs, 420 px from 720 px, and their own centre went with them).
    Never orange: the store's button stays the page's one --cta button. Its focus ring is the page's (:focus-visible) */
 .why-link { display: flex; align-items: center; justify-content: center; width: fit-content; min-height: 64px; margin: 0 auto 12px; padding: 0 20px; border: 1px solid var(--line); border-radius: 32px; background: var(--white); color: var(--navy); font: 600 15px/1.3 var(--head); text-decoration: none; cursor: pointer; }
 .why-link:hover { border-color: var(--field); }
@@ -184,8 +183,10 @@ section.panel { padding-top: 28px; }
 .why .all-box { display: flex; flex-direction: column; height: 100%; }
 .why-frame { flex: 1; display: block; width: 100%; min-height: 0; border: 0; }
 
-/* Family */
-.family-card { --accent: var(--family); }
+/* Family (since SPEC-ui-and-copy-pass § 2.2 its card, then its one question, then the result card) */
+.family-card { --accent: var(--family); margin: 0 0 28px; }
+/* Its door is a visitor's without script; the script hides it, and the store's button's display must not outrank that */
+.family-card .cta[hidden] { display: none; }
 .family-card h2 { margin-top: 0; margin-bottom: 4px; }
 .family-card p { margin: 0 0 16px; color: var(--muted); }
 
@@ -194,10 +195,6 @@ section.panel { padding-top: 28px; }
 .foot .wrap { padding-bottom: 40px; text-align: center; color: var(--muted); font-size: 13px; }
 .footnote { margin: 2px 0 0; }
 
-@media (min-width: 720px) {
-  .tabs { max-width: 420px; }
-  .why-link { margin-left: 210px; transform: translateX(-50%); }
-}
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{DEV_STYLE}}{{PICKS_STYLE}}{{PREVIEW_STYLE}}
 </style>
 <noscript><style>.js-only { display: none !important; } .panel[hidden] { display: block; } .all:not([open]):not(.why) { display: block; position: static; width: auto; max-width: none; margin: 12px 0 0; }</style></noscript>
@@ -215,33 +212,18 @@ section.panel { padding-top: 28px; }
       <iframe class="why-frame" id="why-frame" src="{{ASSET_PREFIX}}why/" title="Why Fit AF?" loading="lazy"></iframe>
     </div>
   </dialog>
-  <div class="tabs js-only" role="tablist" aria-label="Who is this for?">
-    <button class="tab" role="tab" id="tab-individual" aria-controls="panel-individual" aria-selected="true" data-tab="individual">Individual</button>
-    <button class="tab" role="tab" id="tab-family" aria-controls="panel-family" aria-selected="false" data-tab="family" tabindex="-1">Family</button>
-  </div>
+{{WHO_QUESTION}}
 
-  <section class="panel" id="panel-individual" role="tabpanel" aria-labelledby="tab-individual">
+  <section class="panel" id="panel-individual">
     <div class="js-only">
-      <div class="step" role="group" aria-labelledby="q-goal">
-        <h2 class="step-label" id="q-goal">{{QUESTION_ONE}}</h2>
-        <div class="choices goals">
-{{GOALS}}
-        </div>
-      </div>
-
 {{MEAL_QUESTIONS}}
 
-      <div aria-live="polite">
-        <div class="result" id="result" hidden>
-          <p class="price">
-            <span class="fig-total"><span class="fig" id="result-total"></span><span class="unit">{{TOTAL_UNIT}}</span></span>
-            <span class="fig-per-meal"><span class="fig" id="result-per-meal"></span><span class="unit">{{PER_MEAL_UNIT}}</span></span>
-            <span class="fig-meals"><span class="fig" id="result-meals"></span> <span class="unit">{{MEALS_UNIT}}</span></span>
-          </p>
-          <p class="rounded" id="result-rounded" hidden></p>
-          <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CARD}}
-        </div>
-      </div>{{SAVE_SECTION}}{{SHARE_PANEL}}
+      <div class="step" role="group" aria-labelledby="q-goal">
+        <h2 class="step-label" id="q-goal">{{GOAL_QUESTION}}</h2>
+        <div class="choices goals">
+{{GOALS}}
+        </div>{{SHARE_PANEL}}
+      </div>
     </div>
 
     <dialog class="all" id="all" aria-labelledby="all-caption">
@@ -258,9 +240,23 @@ section.panel { padding-top: 28px; }
     </dialog>
   </section>
 
-  <section class="panel" id="panel-family" role="tabpanel" aria-labelledby="tab-family" hidden>
+  <section class="panel" id="panel-family" hidden>
 {{FAMILY}}
-  </section>{{SAVE_FAMILY}}
+  </section>
+
+  <div class="js-only">
+      <div aria-live="polite">
+        <div class="result" id="result" hidden>
+          <p class="price">
+            <span class="fig-total"><span class="fig" id="result-total"></span><span class="unit">{{TOTAL_UNIT}}</span></span>
+            <span class="fig-per-meal"><span class="fig" id="result-per-meal"></span><span class="unit">{{PER_MEAL_UNIT}}</span></span>
+            <span class="fig-meals"><span class="fig" id="result-meals"></span> <span class="unit">{{MEALS_UNIT}}</span></span>
+          </p>
+          <p class="rounded" id="result-rounded" hidden></p>
+          <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CARD}}
+        </div>
+      </div>{{SAVE_SECTION}}
+  </div>
 </main>
 
 <footer class="foot">
@@ -271,6 +267,6 @@ section.panel { padding-top: 28px; }
 <script type="application/json" id="plan-data">{{DATA}}</script>
 <script>
 {{SCRIPT}}
-</script>{{DEV_SCRIPT}}{{PICKS_SCRIPT}}{{PREVIEW_SCRIPT}}
+</script>{{PICKS_SCRIPT}}{{DEV_SCRIPT}}{{PREVIEW_SCRIPT}}
 </body>
 </html>

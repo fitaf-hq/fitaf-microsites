@@ -71,7 +71,8 @@ export async function assertLapseIsCorrect(lapseModule, db) {
 
   const inputs = lapseInputs(NOW_MS, LAPSE_OFFERS);
   const result = await lapseModule.lapse(d1Adapter(db), inputs, { dryRun: false });
-  assert.deepEqual(result, { dry_run: false, offer: 3, expansion_unconfirmed: 1, expansion_retention: 1 });
+  // SPEC-ui-and-copy-pass § 1.2 item 3: a fourth rule, a save with no offer 30 days after it was made (UC9); none here.
+  assert.deepEqual(result, { dry_run: false, offer: 3, expansion_unconfirmed: 1, expansion_retention: 1, no_offer: 0 });
 
   assert.equal(await count(db, "saves"), fixture.length, "every save row remains");
   for (const f of fixture) {

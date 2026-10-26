@@ -33,7 +33,9 @@ test("MS-4: today's fragments open as today (the result card and the week's link
   const family = open(html, "#family");
   assert.equal(family.el("panel-family").hasAttribute("hidden"), false, "#family: the Family panel");
   assert.equal(family.el("panel-individual").hasAttribute("hidden"), true, "#family: not the Individual panel");
-  assert.equal(family.el("tab-family").getAttribute("aria-selected"), "true");
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the tabs are the first question; #family presses Family.
+  assert.equal(family.el("who-family").getAttribute("aria-pressed"), "true");
+  assert.equal(family.el("who-individual").getAttribute("aria-pressed"), "false");
 });
 
 test("MS-4: every new fragment opens its answers, and round-trips", async () => {

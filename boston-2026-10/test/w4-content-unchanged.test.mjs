@@ -22,6 +22,8 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { ROOT } from "../build.mjs";
 import { rangeless, reportWith } from "./cc-harness.mjs";
+import { runWithoutFamilyLinks } from "./uf-harness.mjs";
+import { withSnackCells } from "./snack-cells.mjs";
 
 const BASE = "6e0f6bd";
 const DATA_FILE = "week/picks-data.json";
@@ -95,12 +97,16 @@ for (const week of COMPARED) {
     const target = args.length ? "dev" : "prod";
     test(`W4 (${week}, ${target}): npm run content byte-identical to ${BASE}'s`, async () => {
       const before = await contentAt(basePackage, week, args, scratch);
-      const after = await contentAt(ROOT, week, args, scratch);
+      // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's links taken out (uf-harness), every other byte as before.
+      const after = runWithoutFamilyLinks(await contentAt(ROOT, week, args, scratch));
       if (before.files[DATA_FILE]) {
         const read = rangeless(before.files[DATA_FILE], week);
         assert.ok(read.headings > 0, `control: ${BASE}'s headings name the week's range`);
-        before.files[DATA_FILE] = read.bytes;
-        before.stdout = reportWith(before.stdout, DATA_FILE, read.bytes);
+        // ⚠ And for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): every snack link's photo part now carries
+        // its snacks' cells (test/snack-cells.mjs), made to the base's data before it is compared; every other byte as before.
+        const sheet = JSON.parse(await readFile(join(ROOT, "data", "photo-sheets.json"), "utf8")).chefs_choice?.[week];
+        before.files[DATA_FILE] = withSnackCells(read.bytes, sheet).bytes;
+        before.stdout = reportWith(before.stdout, DATA_FILE, before.files[DATA_FILE]);
       }
       assert.equal(after.status, before.status, `the exit code (${BASE}: ${before.status}; ${before.stderr.trim()})`);
       assert.deepEqual(Object.keys(after.files), Object.keys(before.files), "the same files");

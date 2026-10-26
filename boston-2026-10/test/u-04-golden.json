@@ -1,97 +1,98 @@
 {
   "about": "U4's before (SPEC-week-content § 8 item 5): test/u-checks.mjs normalWeekRecord() over recorded_at's own tree (test/u-04-record.mjs, which wrote this file): per normal week and target, the content command's files, the page as served with that week once its lines naming `updating` are removed (recorded_at's page has none), and the visible page per fragment. Re-record only by running the recorder; never by hand.",
-  "recorded_at": "a3897d8",
+  "recorded_at": "f9273c0",
+  "built_as": "release (a): production false, its wording (--release-a); each link's snack cells removed, as U4 reads them (--without-snack-cells)",
   "record": {
     "the v1 fixture, 2026-10-04 · prod": {
       "content": {
         "week/picks-data.json": "1374 bytes sha256:e03fde2974b9c9b472013e281b40d4916eba6e1b1a3f08fcf97861c5332d0645"
       },
-      "page": "60172 bytes sha256:afad3c86fbe141df5abbf057d46a050224d68d458696550d2c758f3945e890f4",
+      "page": "67739 bytes sha256:21bba8352dd9f49208934034d3157b13f5640c22f916dd225739ec720018694c",
       "visible": {
-        "(no fragment)": "289a9db881c64d63b0b4948777d0ede2ac2688972c3199e65ed58ba4d8840960",
-        "#lean-7": "b3f5b78eb7b7ea64ad7e39b7f4c15cfe48be351cecb13c4c4cde1e244331ec07",
-        "#lean-or-7d": "b3f5b78eb7b7ea64ad7e39b7f4c15cfe48be351cecb13c4c4cde1e244331ec07",
-        "#lean-or-5d-s": "d03a45eee872fef4c093392ac58a8d6a74d0ffe1e4ec1c0789761b8acc09211d",
-        "#signature-and-5d-b-s": "94a6a80eec22deefe7179c5e27c480808e8ac81e21c5789bb13e74f7a47664d9",
-        "#performance-and-7d-b": "fb1089e660b63b2ba36cfc6134b79131a123d91f9fd2254e22cd99be122ef002",
-        "#family": "3f2821e667227dc19ce0f87109b5defc419f3f620164a11b640e11f203e7e5f2"
+        "(no fragment)": "48cd7a1e433acce526fc46ddc5452bfbecd18b3ae8aaec6c6a5a407a4d39b66f",
+        "#lean-7": "62c257c52ae3faef50795a937448b5c3cf69593f518982a7083ab89c6a03d276",
+        "#lean-or-7d": "62c257c52ae3faef50795a937448b5c3cf69593f518982a7083ab89c6a03d276",
+        "#lean-or-5d-s": "73fb13d6057670511afe042309f4e705051cc739617052eb43536d7687c316d3",
+        "#signature-and-5d-b-s": "1037a3081f6f78419036df69e71731ad20fb1b98f2605e8dbb71e416c744d51c",
+        "#performance-and-7d-b": "c929e265696bd3676bc039eacce3870b56cc085ed105332b37e9b70c09c13878",
+        "#family": "a38c1372642a8e98a358d3a429e5e0b595cd3969f5e7d1e922ae34fe0a4ab8da"
       }
     },
     "the v1 fixture, 2026-10-04 · dev": {
       "content": {
         "week/picks-data.json": "1374 bytes sha256:e03fde2974b9c9b472013e281b40d4916eba6e1b1a3f08fcf97861c5332d0645"
       },
-      "page": "90705 bytes sha256:d6b4657dd7afddfb9f5a2935a4b45d6a9009b548fa5c2a7e54321fbd36b0bae3",
+      "page": "107920 bytes sha256:683e12e4dc75bce7cbadb07fe18a5ed19b9a25d467bf04f5bfd19f0b1a88e79c",
       "visible": {
-        "(no fragment)": "e67af14f2424a0c378ae5bc3d995e32997d2406451d43a99d33ff751daf5ffe5",
-        "#lean-7": "4680950b1de58e82177638015f18b6f4b0bc2fbd2d85190b6c2f21a7c14e46f0",
-        "#lean-or-7d": "4680950b1de58e82177638015f18b6f4b0bc2fbd2d85190b6c2f21a7c14e46f0",
-        "#lean-or-5d-s": "491ac448072adfe6a95e34341840c5e9d025bc0f2e4645bbf3265ce542fbb291",
-        "#signature-and-5d-b-s": "b61267736251027484762e20a3c3c3a7d3a9b1f7ca8f8f62ef4fc77ecb6d9670",
-        "#performance-and-7d-b": "1adc30e65d10102ddb5d6ae0167b023f893bd3759247eaa68947c8f8629993bd",
-        "#family": "2698f32c4b44d900aba402f4c17d02b21d58681146b14e7471ec684eec62f702"
+        "(no fragment)": "19f402280ef71cbe494f3bc4066ad9c9e7eb95663d22e3381c0f2e54079c8126",
+        "#lean-7": "7019d69eef272990600a1cd208b0ebbabafc57fd30d24ee163650f1a3ca9bde0",
+        "#lean-or-7d": "7019d69eef272990600a1cd208b0ebbabafc57fd30d24ee163650f1a3ca9bde0",
+        "#lean-or-5d-s": "88cc8fcd8f4dc19f7a6960e8ba0924e9400e65b784409e62c6997c5de9fca84f",
+        "#signature-and-5d-b-s": "146d59e07ff1368922d7e7a0811489617166d54645fe1c93830f4a2b6c076773",
+        "#performance-and-7d-b": "148b106f33446951f1f0125f32ecf3b792b38bba9f5633a9d6cb9a04668905e5",
+        "#family": "6d9f356deeaad86dba5a2cf641f02f04fcb03fdbf70071e73968c9b5f3f6b2bf"
       }
     },
     "the v2 fixture, 2026-10-04 · prod": {
       "content": {
-        "week/picks-data.json": "7246 bytes sha256:ed14a2662d642fd651f5ab950794ef59b3e31d7bf04a5939cea3ed12b800f9ed"
+        "week/picks-data.json": "7346 bytes sha256:ce4454cf70dddd16f2fe5d0058b84bdaf50fb55a9cb03e3ed5588cb783040c1f"
       },
-      "page": "66044 bytes sha256:f4daa2aa1686f21d2bc68505b5cdbbfefbdc5f8859bfe8a1804f466b729112bf",
+      "page": "73711 bytes sha256:300b510bd306c0ad652a4457bff25b6335ffa2011c45361fbd31cbf55051635d",
       "visible": {
-        "(no fragment)": "289a9db881c64d63b0b4948777d0ede2ac2688972c3199e65ed58ba4d8840960",
-        "#lean-7": "d7858459b85ee20b049e1f3c7d1481075853af8e6b40b43ce9e4c875f9977e39",
-        "#lean-or-7d": "d7858459b85ee20b049e1f3c7d1481075853af8e6b40b43ce9e4c875f9977e39",
-        "#lean-or-5d-s": "8c806fce1022497fa9ecdffbd28dca4903fa51f2044ea68b7e44f2ef00e6752a",
-        "#signature-and-5d-b-s": "b9a557bd8848d1b53c1901b5fae24c46027aea63385295dbe3562243e5557584",
-        "#performance-and-7d-b": "a7365e0c68401c5c54bfc711d9985342b7ee990b8f4085e6ae0fcd008c509847",
-        "#family": "3f2821e667227dc19ce0f87109b5defc419f3f620164a11b640e11f203e7e5f2"
+        "(no fragment)": "48cd7a1e433acce526fc46ddc5452bfbecd18b3ae8aaec6c6a5a407a4d39b66f",
+        "#lean-7": "d9c00beecdec9c9c5ea2c774e93c46702323e368e7a69d11f48a68746cd29f62",
+        "#lean-or-7d": "d9c00beecdec9c9c5ea2c774e93c46702323e368e7a69d11f48a68746cd29f62",
+        "#lean-or-5d-s": "d5e1c3867b3d719fcb054ecfc343b617584a02b6bfba63ccaaeb39f5e13fe7e7",
+        "#signature-and-5d-b-s": "b27168f6471a5cfc9404937b7efde3b372467f31ffaba257275a9c2e9c79db1b",
+        "#performance-and-7d-b": "aba077c6ac758c7e41101597571b836932fe0e75ede29b1a5f1f77aec1fa740a",
+        "#family": "a38c1372642a8e98a358d3a429e5e0b595cd3969f5e7d1e922ae34fe0a4ab8da"
       }
     },
     "the v2 fixture, 2026-10-04 · dev": {
       "content": {
-        "week/picks-data.json": "7246 bytes sha256:ed14a2662d642fd651f5ab950794ef59b3e31d7bf04a5939cea3ed12b800f9ed"
+        "week/picks-data.json": "7346 bytes sha256:ce4454cf70dddd16f2fe5d0058b84bdaf50fb55a9cb03e3ed5588cb783040c1f"
       },
-      "page": "96577 bytes sha256:40bae0016f155a231b006159192cb37ab6e0fecf4ddbc4dc01fd87f8bf989962",
+      "page": "113892 bytes sha256:25f3a8c6b42a9b9af168c09c2193cfed3df83997487e61f4106e52bfed445fa4",
       "visible": {
-        "(no fragment)": "e67af14f2424a0c378ae5bc3d995e32997d2406451d43a99d33ff751daf5ffe5",
-        "#lean-7": "fbf024f9825f935bd4a6a59ab985c08dd006f072e17406424cab3e96c1cea510",
-        "#lean-or-7d": "fbf024f9825f935bd4a6a59ab985c08dd006f072e17406424cab3e96c1cea510",
-        "#lean-or-5d-s": "31af3ace033d3e5fc66abc39627dc97f85a02e32f0096978bbd728866bda6cf4",
-        "#signature-and-5d-b-s": "59378a5da8faaa9440f98c03800c59c23127299512fab488722ff2b6578216b9",
-        "#performance-and-7d-b": "ecbf68e5235339c24cfe53c8df0eb1cbd11931172c7d1cfe8244722a2b514070",
-        "#family": "2698f32c4b44d900aba402f4c17d02b21d58681146b14e7471ec684eec62f702"
+        "(no fragment)": "19f402280ef71cbe494f3bc4066ad9c9e7eb95663d22e3381c0f2e54079c8126",
+        "#lean-7": "08bd033243ba5ae69e36811c7c44ff9a16727a669f3a65f71bba1a0442dfaa12",
+        "#lean-or-7d": "08bd033243ba5ae69e36811c7c44ff9a16727a669f3a65f71bba1a0442dfaa12",
+        "#lean-or-5d-s": "a12db47eda50b6881aa526a6aa74277dcc1fa531e7a8ebc4ab58a6659314a889",
+        "#signature-and-5d-b-s": "7513e46d5576736f0455363743b4c6643f2d842283c63bb8c67c9f0b2570b5fd",
+        "#performance-and-7d-b": "1bb8432ccfedbb10facdb0c6de39b7154b3fdaa70a3f5e9f9244fc0d26ce85a8",
+        "#family": "6d9f356deeaad86dba5a2cf641f02f04fcb03fdbf70071e73968c9b5f3f6b2bf"
       }
     },
     "the committed week, 2026-10-18 · prod": {
       "content": {
-        "week/picks-data.json": "30990 bytes sha256:4e2fe5457505f5139837a8b4290b15004192a8e9dcfc76cd076d724c554465e4",
+        "week/picks-data.json": "31257 bytes sha256:2d89949c6a8281c545e954960338f5b236b22d105da49e340affd0347cc71dfa",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "89788 bytes sha256:db19e4d07552e9a4e25ff75f050577930b39f9447fb28d31ccb29b0c84a691b1",
+      "page": "97622 bytes sha256:0e2dfdd55b08164874b7aef5de471dbc8ac88b689e4d656b2967eeaf8514ebcd",
       "visible": {
-        "(no fragment)": "289a9db881c64d63b0b4948777d0ede2ac2688972c3199e65ed58ba4d8840960",
-        "#lean-7": "ab1ca93a2e9be539187f8f7ddc597ba0366876dfef74a8aa313e58c0327fd7de",
-        "#lean-or-7d": "ab1ca93a2e9be539187f8f7ddc597ba0366876dfef74a8aa313e58c0327fd7de",
-        "#lean-or-5d-s": "245f441136ac39301c446b591b2063e65a537cadaef53a7158dfc7c50afda6ce",
-        "#signature-and-5d-b-s": "1601d7064cc02922993ffa262bcc947de3160e0e1d756ec9bc544db3d9f1f9e1",
-        "#performance-and-7d-b": "d554af9e9c66b641d4b792cf4160c8f21ff1224f22bcfb8e3a552fbed002f5f8",
-        "#family": "3f2821e667227dc19ce0f87109b5defc419f3f620164a11b640e11f203e7e5f2"
+        "(no fragment)": "48cd7a1e433acce526fc46ddc5452bfbecd18b3ae8aaec6c6a5a407a4d39b66f",
+        "#lean-7": "c9ef5ca634699751930714727dbd6f4a683b7e3598077c59419eb45946ef1208",
+        "#lean-or-7d": "c9ef5ca634699751930714727dbd6f4a683b7e3598077c59419eb45946ef1208",
+        "#lean-or-5d-s": "99d6d86405124cc65fb8e4dd9acb5dfbd78cf2a82b4fdb4f9f21efab58b3c5e8",
+        "#signature-and-5d-b-s": "1c630671de164372dce0ba8b507175239a2050789d9f2aecd9f4e79fb0442754",
+        "#performance-and-7d-b": "200076c21038c3f3135336d3223a97242d9815191f8d4c756ff8ffd62e804d09",
+        "#family": "a38c1372642a8e98a358d3a429e5e0b595cd3969f5e7d1e922ae34fe0a4ab8da"
       }
     },
     "the committed week, 2026-10-18 · dev": {
       "content": {
-        "week/picks-data.json": "30990 bytes sha256:8177932d30aa04d7fa0cfd5d60872caf266b0ba1ec0c03c3ee2a31940e231a9b",
+        "week/picks-data.json": "31257 bytes sha256:e3fb1ed4570d295f92103f120793f41eb9a6d0faf731cd6b5713d03429bf33f1",
         "week/chefs-choice-2026-10-18.jpg": "118699 bytes sha256:57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4"
       },
-      "page": "120321 bytes sha256:ab20e362c2c99e2cbede7b156ab0e2564bba8e1f8efb4c25c9751265dec7ec65",
+      "page": "137803 bytes sha256:47bb9fa73a4ef8dcc33b30fc78394d4f33d14381f912ca5712de7b09f3936b51",
       "visible": {
-        "(no fragment)": "e67af14f2424a0c378ae5bc3d995e32997d2406451d43a99d33ff751daf5ffe5",
-        "#lean-7": "2f30889dc6be185cb9268b246786c431d590cea366094451a7f179f40850faee",
-        "#lean-or-7d": "2f30889dc6be185cb9268b246786c431d590cea366094451a7f179f40850faee",
-        "#lean-or-5d-s": "8b78aad87b02b91586f9a1856084b5cd670142a527ef3bf2869ea1c98b090507",
-        "#signature-and-5d-b-s": "80c414b2d29fe1c7873983bd56eaac490bbf58b7f9429376adb69e35cc122a8b",
-        "#performance-and-7d-b": "295a2e923e81760c6e04227f53b013380c76a68838d59da4d30339b5e9aa1f0f",
-        "#family": "2698f32c4b44d900aba402f4c17d02b21d58681146b14e7471ec684eec62f702"
+        "(no fragment)": "19f402280ef71cbe494f3bc4066ad9c9e7eb95663d22e3381c0f2e54079c8126",
+        "#lean-7": "c04689935934428e3c27b66de83d91890cd671402f23c5ad03e8b24ac8012064",
+        "#lean-or-7d": "c04689935934428e3c27b66de83d91890cd671402f23c5ad03e8b24ac8012064",
+        "#lean-or-5d-s": "d73885f8b07edece79e1015a975959e9537359fc9158f2c96cdb4f0814e4fc06",
+        "#signature-and-5d-b-s": "21b4d55e3c0a2e8cdaa5b677c458d27e395d90899a5e937c65b1ecc7e664ae16",
+        "#performance-and-7d-b": "9455424e1e62fc1e191359c963cf9e9047f5bda318028265b1701449a471c921",
+        "#family": "6d9f356deeaad86dba5a2cf641f02f04fcb03fdbf70071e73968c9b5f3f6b2bf"
       }
     }
   }

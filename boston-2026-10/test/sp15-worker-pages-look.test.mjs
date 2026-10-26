@@ -84,8 +84,13 @@ test("SP15: nothing the pages say changes — each page's words and status are c
   assert.match(pages.ended.html, /<h1>This offer has ended<\/h1>/, "the ended offer: § 10.7's lapse");
   for (const name of Object.keys(live)) {
     assert.equal(pages[name].status, baseLive[name].status, `${name}: its status`);
-    // § 10.9 rewords one phrase of the confirmation (weekly, for "about once a week"); every other word is cc1d2bb's.
-    const before = pageText(baseLive[name].html).replace("about once a week", "weekly");
+    // § 10.9 rewords one phrase of the confirmation (weekly, for "about once a week"), and SPEC-ui-and-copy-pass § 1 item 4
+    // (2026-10-23) one of the unknown code's page ("Held until", for "Good until"); every other word is cc1d2bb's.
+    // And since release (b) (SPEC-save-offer-production § 12) the wording is v1, which the pages mark no longer.
+    const before = pageText(baseLive[name].html)
+      .replace("about once a week", "weekly")
+      .replace("Good until", "Held until")
+      .replace("DRAFT — not for use · wording v0.3-draft ", "");
     assert.equal(pageText(pages[name].html), before, `${name}: its words`);
     assert.ok(pageText(baseLive[name].html).length > 10, `control: ${name} has words`);
   }

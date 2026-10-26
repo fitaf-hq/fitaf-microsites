@@ -2,30 +2,42 @@
         <section class="save js-only" id="save" aria-labelledby="save-title" hidden>
           <div id="save-open">{{DRAFT_TAG}}
             <p class="save-step-offer" id="save-step-offer"><strong id="save-step-offer-label"></strong></p>
-            <p class="save-lead">Not ready today? Save it — tomorrow morning we'll email you a link back here, with today's pricing held until <span id="save-held-date"></span>. We'll send it once.</p>
+            <p class="save-lead" id="save-lead">Not ready today? Save it — tomorrow morning we'll email you a link back here, with today's pricing held until <span id="save-held-date"></span>. We'll send it once.</p>
+            <p class="save-lead" id="save-lead-later" hidden>Not ready today? Save your plan, and we'll email you when our next offer opens.</p>
             <form id="save-form" novalidate>
               <label class="field"><span class="field-name">Email</span>
-                <span class="field-help">we'll send your link here tomorrow</span>
+                <span class="field-help" id="save-email-help">we'll send your link here tomorrow</span>
+                <span class="field-help" id="save-email-help-later" hidden>we'll email you here when our next offer opens</span>
                 <input id="save-email" type="email" autocomplete="email" maxlength="254"></label>
+              <p class="field-error" id="save-email-error" role="alert" hidden></p>
               <label class="field"><span class="field-name">Delivery ZIP code</span>
                 <span class="field-help">so we can check we deliver to you</span>
                 <input id="save-zip" type="text" autocomplete="postal-code" inputmode="numeric" maxlength="5"></label>
-              <label class="tick"><input id="save-marketing" type="checkbox">
-                <span><strong>Also email me</strong> Fit AF menus and offers. Weekly; unsubscribe anytime. We'll ask you to confirm.</span></label>
+              <p class="field-error" id="save-zip-error" role="alert" hidden></p>
               <div id="save-turnstile"></div>
-              <button class="skip save-submit" type="submit" id="save-submit">Save my offer</button>
-              <p class="save-notice">We'll use your email to send this once, tomorrow. Only if you tick the box and then confirm it will we
-                send you anything else. We delete your details 30 days after the offer ends unless you've confirmed. We
-                don't sell your information. {{PRIVACY_NOTICE}}</p>
+              <div id="save-offer-part">
+                <label class="tick"><input id="save-marketing" type="checkbox">
+                  <span><strong>Also email me</strong> Fit AF menus and offers. Weekly; unsubscribe anytime. We'll ask you to confirm.</span></label>
+                <p class="save-error" id="save-error" role="alert" hidden></p>
+                <button class="skip save-submit" type="submit" id="save-submit">Save my offer</button>
+                <button class="skip save-submit" type="submit" id="save-submit-later" hidden>Save my plan</button>
+                <p class="save-notice" id="save-notice">We'll use your email to send this once, tomorrow. Only if you tick the box and then confirm it will we
+                  send you anything else. We delete your details 30 days after the offer ends unless you've confirmed. We
+                  don't sell your information. {{PRIVACY_NOTICE}}</p>
+                <p class="save-notice" id="save-notice-later" hidden>We'll keep your email and ZIP code for 30 days, or until we email you about our next offer,
+                  whichever comes first, and then delete them unless you've confirmed. Only if you tick the box and then confirm it
+                  will we send you anything else. We don't sell your information. {{PRIVACY_NOTICE}}</p>
+              </div>
             </form>
             <div class="save-out" id="save-out-of-area" hidden>
               <p class="save-out-line">We don't deliver to <strong id="save-ooa-zip">[ZIP]</strong> yet.</p>
+              <p class="save-error" id="save-expansion-error" role="alert" hidden></p>
               <button class="skip save-submit" type="button" id="save-expansion">Tell me when you deliver here</button>
               <p class="save-notice">We'll email you once to confirm. After that, we'll only email you about delivery reaching your area. We keep
                 your email and ZIP for up to 12 months for this, then delete them.</p>
             </div>
-            <p class="save-error" id="save-error" role="alert" hidden></p>
             <p class="save-done" id="save-done" role="status" hidden>Saved — look for it tomorrow at <strong id="save-done-email"></strong></p>
+            <p class="save-done" id="save-done-later" role="status" hidden>Saved — we'll email you at <strong id="save-done-later-email"></strong> when our next offer opens.</p>
             <p class="save-done" id="save-expansion-done" role="status" hidden>Thanks — check your email to confirm, and we'll let you know.</p>{{MENU_LINK}}
           </div>
           <p class="save-collapsed" id="save-collapsed" hidden><button type="button" class="skip" id="save-reopen">Save my offer</button></p>

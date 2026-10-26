@@ -22,6 +22,13 @@
 //    above and nothing else, as before: `{ fetch: serveSite }`, no scheduled handler (SP3 compares it with the base's).
 //    index.js imports serveSite from here, and this module imports index.js's default: the two are read only when a
 //    request or the cron arrives, never while the modules load, so either can be the entry.
+// 5. A tester's browser sends no analytics (SPEC-analytics.md § 12, the Advisor, 2026-10-25), on both Workers, since
+//    both reach the page through serveSite: a GET of the page's routes whose query names `no-tracking` (any value, or
+//    none) is a 302 to the same URL without it, every other parameter kept as written and in order, setting a
+//    first-party cookie the page's script cannot read (NO_TRACKING_SET); `tracking` likewise clears it, and with both,
+//    cleared. POST /a carrying the cookie at "1" is the 204 every beacon gets, and nothing else: no data point, the salt
+//    neither read nor written. The page is unchanged; nothing else reads the cookie (the save step, /o, /confirm and the
+//    cron are index.js's, before serveSite).
 //
 // Freshness (§ 4.4): a write to the bucket is what the next request gets. The page is asked of the assets WITHOUT the
 // visitor's conditional headers (so the assets never answer 304 for a page whose week may have changed under the same
@@ -127,6 +134,55 @@ export async function servePage(request, env) {
 
 const notFound = () => new Response(null, { status: 404 });
 
+/** SPEC-analytics.md § 12: the cookie a tester's browser carries, and the parameters that set and clear it. */
+export const NO_TRACKING_COOKIE = "fitaf_no_tracking";
+const SET_PARAM = "no-tracking";
+const CLEAR_PARAM = "tracking";
+/** § 12 item 1: the cookie is kept a year (365 days, in seconds). */
+const NO_TRACKING_MAX_AGE_S = 31_536_000;
+const noTrackingCookie = (value, maxAgeS) => `${NO_TRACKING_COOKIE}=${value}; Path=/; Max-Age=${maxAgeS}; Secure; HttpOnly; SameSite=Lax`;
+export const NO_TRACKING_SET = noTrackingCookie("1", NO_TRACKING_MAX_AGE_S);
+export const NO_TRACKING_CLEAR = noTrackingCookie("", 0);
+
+/**
+ * § 12 items 1–2: the cookie a page request's query asks for (NO_TRACKING_CLEAR when it names `tracking`, whatever else
+ * it names: off wins; NO_TRACKING_SET when it names `no-tracking`; null when neither), and the query without either,
+ * every other parameter as written and in order ("" when none is left). A parameter's name is what precedes its "=",
+ * decoded as URLSearchParams decodes it; its value, if any, is not read.
+ */
+export function trackingSwitch(search) {
+  let set = false;
+  let clear = false;
+  const kept = [];
+  for (const part of search.replace(/^\?/, "").split("&")) {
+    const [name] = part ? new URLSearchParams(part).keys() : [];
+    if (name === SET_PARAM) set = true;
+    else if (name === CLEAR_PARAM) clear = true;
+    else if (part) kept.push(part);
+  }
+  return { cookie: clear ? NO_TRACKING_CLEAR : set ? NO_TRACKING_SET : null, search: kept.length ? `?${kept.join("&")}` : "" };
+}
+
+/** § 12 items 1–2: a GET naming either parameter, answered with a 302 to the same URL with the query without them (the
+ *  fragment is never sent, and a browser keeps it across a Location that names none) and the cookie it asks for;
+ *  null for any other request. The Location is absolute, the request's own origin joined to its path as text: a path
+ *  beginning "//", written alone, would name another host. */
+function switchTracking(request) {
+  const url = new URL(request.url);
+  const { cookie, search } = trackingSwitch(url.search);
+  if (!cookie) return null;
+  return new Response(null, { status: 302, headers: { location: url.origin + url.pathname + search, "set-cookie": cookie } });
+}
+
+/** § 12 item 3: whether the request carries the cookie at "1" (any other value, or none, is not). */
+export function carriesNoTracking(request) {
+  const sent = `${NO_TRACKING_COOKIE}=1`;
+  return (request.headers.get("cookie") ?? "").split(";").some((pair) => pair.trim() === sent);
+}
+
+/** § 12 item 3: the 204 serveBeacon answers every beacon with, for one that is not counted: nothing read or written. */
+const uncounted = () => new Response(null, { status: 204 });
+
 /** § 4.3: GET /week/<file>.jpg from the bucket, image/jpeg; anything else under /week/ a 404. */
 export async function serveSheet(request, env) {
   const key = request.method === "GET" ? sheetKey(new URL(request.url).pathname) : null;
@@ -143,13 +199,13 @@ export async function serveSheet(request, env) {
   return object.body ? new Response(object.body, { headers }) : new Response(null, { status: 304, headers });
 }
 
-/** The three behaviours, and the assets for everything else: production's whole script, and the development Worker's
- *  last step once its own routes have not matched. */
+/** The three behaviours (with § 12's switch, 5. above), and the assets for everything else: production's whole script,
+ *  and the development Worker's last step once its own routes have not matched. */
 export async function serveSite(request, env) {
   const { pathname } = new URL(request.url);
-  if (pathname === BEACON_PATH && request.method === "POST") return serveBeacon(request, env);
+  if (pathname === BEACON_PATH && request.method === "POST") return carriesNoTracking(request) ? uncounted() : serveBeacon(request, env);
   if (pathname.startsWith(SHEETS_PATH)) return serveSheet(request, env);
-  if (request.method === "GET") return servePage(request, env);
+  if (request.method === "GET") return switchTracking(request) ?? servePage(request, env);
   return env.ASSETS.fetch(request);
 }
 

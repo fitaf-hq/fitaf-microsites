@@ -35,6 +35,10 @@ style (`SPEC-plan-page-refinement.md` § 8 item 4):
 - Every word is a phrase in `data/messages.json` (new keys; ⚠ placeholders for the Advisor's copy review); the build
   refuses a missing phrase, as the page's other words.
 - The defaults are data (`data/plans.json`, § 2), so a different default is a data change.
+- ⛔ **Family is not a goal** (SPEC-ui-and-copy-pass § 2.2, the Advisor 2026-10-25: *"Family \*is\* effectively a goal
+  size"*): it is a size, four portions (it serves a family of 3–4), with no goal and no macro targets; its one question is
+  Q1 (5 family meals a week for *or*, 10 for *and*), so no later change reads a goal, a size's calories or protein, or
+  Q2–Q4 into it.
 
 ## 2. Meals, plans and snacks — `data/plans.json`
 

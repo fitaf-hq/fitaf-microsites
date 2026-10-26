@@ -20,8 +20,12 @@
 // 76871ff9… (pasted by the Advisor; the watch's expectedFooter on 2026-10-08), and, by SPEC-snacks-in-the-cart § 3 (snack
 // items after the meals, each pressed on its own card; CHECKOUT's count by the element the store displays), ad25f93d…
 // (17c5693, pasted by the Advisor), and, by SPEC-rung2-fill-c § 8 (a plan carries the extra meal its selection row
-// gives: the plans' allowed totals inlined, the decode taking them), the hash below. The block live in the store's
-// Footer is the old text until a new one is smoked and pasted.
+// gives: the plans' allowed totals inlined, the decode taking them), efcbc570… (pasted; the watch's expectedFooter), and,
+// by SPEC-ui-and-copy-pass § 2 item 5 (2026-10-25: data/plans.json's read_on 2026-10-25, every price re-read unchanged),
+// the hash below: the plans table's comment, "/* data/plans.json, read_on 2026-10-25 */", is the one byte range that
+// moved (both trees' built text compared), no code. The block live in the store's Footer is the old text until a new
+// one is smoked and pasted (SPEC-ui-and-copy-pass § 2.2 item 4's block, one paste). And by § 2.2 itself (Family's own
+// question: its one product takes 5 or 10 meals), the plans table's entry for mpid 35, [1] -> [5,10], the hash below.
 // ⭐ The mutant: a copy of the source with ONE byte of fill B's code changed builds a text R2-32 refuses. The copy is
 // made in a temporary directory; no file in the repository is edited. The control: an unmutated copy passes.
 import test from "node:test";
@@ -32,9 +36,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
 
-/** Fill C's text SHA-256 with the extra meal (SPEC-rung2-fill-c § 8). Was ad25f93d… (snacks, SPEC-snacks-in-the-cart § 3;
+/** Fill C's text SHA-256 on the release line (boston/release-c, 2026-10-25): SPEC-rung2-progress-and-checkout §§ 30–31.2
+ *  (the photograph's box, the code zero, a coded link without it, the store's page held still) and SPEC-ui-and-copy-pass
+ *  § 2 item 5 (the plans table's comment naming read_on 2026-10-25) and § 2.2 (Family's mpid 35 taking 5 or 10). Was
+ *  ef5697aa… (round 2 alone, not pasted), 04e43ac0… (the hand-off alone, not pasted), b68257d5…, a8a5970d…, 0a6e9ef1…,
+ *  6d36d4bf… (none pasted), efcbc570… (the extra meal, SPEC-rung2-fill-c § 8; pasted, 8b11e54), ad25f93d… (snacks;
  *  pasted, 17c5693), 76871ff9… (§ 27, pasted), b65fb47f… (§ 25), 1e3802b8… (fill C). */
-const SHIPPED_SHA256 = "efcbc570f5f26273bf126438c19e9a8ba258332f5dcd4c5f22a24a1986a9680f";
+const SHIPPED_SHA256 = "3efc8112909216d69c23254d1ebc81b06a0b378fb8b36ec1a4fab4ae7e2565fd";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -83,7 +91,7 @@ async function withCopy(edit, fn) {
   }
 }
 
-test("R2-32: both built files' text SHA-256 (the version line's own) is efcbc570…, fill C's with rung 2's two faces, the three steps, snacks and the extra meal", async () => {
+test("R2-32: both built files' text SHA-256 (the version line's own) is the release line's, fill C's with rung 2's two faces, the three steps, snacks, the extra meal, the photograph's box, the code zero, read_on 2026-10-25 and Family 5 or 10", async () => {
   await shippedTextCase(STOREFRONT_SOURCE);
 });
 

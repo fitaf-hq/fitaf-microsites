@@ -6,17 +6,26 @@
 .draft-banner { background: var(--draft); color: var(--white); padding: 10px 16px; font-size: 14px; text-align: center; }
 .draft-tag { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--draft); }
 .save-wrap { padding-top: 20px; }
-.offer-box, .save {
+.save {
   border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 18px 20px;
   background: linear-gradient(var(--orange), var(--orange)) top / 100% 6px no-repeat, var(--white);
 }
-.offer-box h2 { margin: 0; font: 700 24px/1.2 var(--head); color: var(--navy); }
-.save-offer { margin: 6px 0 0; color: var(--navy); }
+/* SPEC-ui-and-copy-pass § 1 item 1 (the Advisor, 2026-10-23: "Drop "Your Boston offer" and make the text … more
+   prominent"): the box's heading is the offer's line, with a touch of the printed pieces' treatment of the offer
+   (SPEC-print-pieces §§ 13–15): the orange field (--cta) and its white words (--on-cta, the store button's pair), the
+   heading font at 700, on a level ribbon with notched ends (the banner's clip-path, nothing turned), the words clear of
+   the notches. "Your Boston offer" stays the box's accessible name, not drawn */
+.offer-box { --notch: 16px; padding: 18px calc(var(--notch) + 14px); background: var(--cta); color: var(--on-cta); text-align: center;
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--notch)) 50%, 100% 100%, 0 100%, var(--notch) 50%); }
+.offer-line { margin: 0; font: 700 clamp(26px, 7vw, 34px)/1.15 var(--head); text-wrap: balance; }
 .save { margin: 20px 0 24px; }
 /* SPEC-save-offer-production § 1 item 1: the step names its offer where it asks, the box's label directly above the lead */
 .save-step-offer { margin: 0 0 6px; color: var(--navy); }
 .save-lead { margin: 0 0 14px; color: var(--ink); }
 .field { display: block; margin: 0 0 14px; }
+/* § 1 item 3 (the Advisor's note f-save-errors): a field's error directly under the field it is about, which carries
+   aria-invalid and names it with aria-describedby (flow1.js) */
+.field-error { margin: -8px 0 14px; font-size: 14px; color: var(--draft); font-weight: 600; }
 .field-name { display: block; font-weight: 600; color: var(--navy); }
 .field-help { display: block; font-size: 14px; font-style: italic; color: var(--muted); }
 .field input {
@@ -33,7 +42,8 @@
 .save-notice { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
 .save-out { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
 .save-out-line { margin: 0 0 12px; color: var(--ink); }
-.save-error { margin: 12px 0 0; color: var(--draft); font-weight: 600; }
+/* An error about the whole save (the check, the network, the offer): directly above the button that made it */
+.save-error { margin: 0 0 10px; color: var(--draft); font-weight: 600; }
 .save-done { margin: 12px 0 0; font: 600 18px/1.35 var(--head); color: var(--navy); }
 .placeholder { font-weight: 600; }
 .skips { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 16px 0 0; }
@@ -43,8 +53,25 @@
 }
 .save-collapsed { margin: 0; }
 .save #save-open[hidden], .save [hidden] { display: none; }
-.share { margin: 0 0 24px; padding: 16px; background: var(--ice); border-radius: var(--radius); }
-.share-title { margin: 0 0 4px; font: 600 18px/1.3 var(--head); color: var(--navy); }
+/* SPEC-ui-and-copy-pass § 1 item 7, as § 1.2 item 2 corrects it: See all plans as discounts, while an offer is current
+   (plan-prices.js): a cell's weekly price before the offer struck through, then the store's, the price paid, in the
+   cell's type */
+.cell small s { color: var(--muted); }
+.cell-now { color: var(--navy); font-weight: 700; }
+/* Flow 2's share panel, since SPEC-ui-and-copy-pass § 2 item 4 directly below the goal's answers (in the goal's group),
+   collapsed to its heading, the heading's words a disclosure button (its chevron turns when open); the rest below it */
+.share { margin: 12px 0 0; padding: 0 16px; background: var(--ice); border-radius: var(--radius); }
+.share-title { margin: 0; font: 600 18px/1.3 var(--head); color: var(--navy); }
+.share-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 48px;
+  padding: 10px 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+.share-toggle::after {
+  content: ""; flex: none; width: 9px; height: 9px; margin-right: 4px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg);
+}
+.share-toggle[aria-expanded="true"]::after { transform: translateY(2px) rotate(-135deg); }
+.share-body { padding: 0 0 16px; }
 .share-help, .share-hint { margin: 0 0 12px; font-size: 14px; color: var(--muted); }
 .share-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .share-out p { margin: 0 0 6px; color: var(--ink); }

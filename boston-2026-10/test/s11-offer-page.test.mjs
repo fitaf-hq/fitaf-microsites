@@ -87,15 +87,17 @@ test("S11: CURRENT — unknown and malformed codes get byte-identical pages, and
 // Since its § 10.2 (2026-10-22) the Boston offer's label is approved, with the same `label` and `label_approved` as
 // boston/print-final's (28e951a). Since its § 10.7 (the Advisor, 2026-10-22) it is every visitor's (the general offer)
 // and the file's one offer: "exactly one general offer is current on any date" became "AT MOST ONE", and after the
-// offer's valid_to none is (no offer is offered). The status stays placeholder until the switch-on approves the file.
+// offer's valid_to none is (no offer is offered). The switch-on approved the file (release (b), SPEC-save-offer-production § 12).
 const APPROVED_LABELS = { "event-boston-2026-10-placeholder": { label: "Sign up today to save 25%", label_approved: "2026-10-21" } };
 test("S11b: data/offers.json — approved labels only, and at most one general offer current on any date; none after the last offer", () => {
-  assert.equal(offersFile.status, "placeholder");
+  assert.equal(offersFile.status, "approved");
   const { offers } = offersFile;
   const ids = offers.map((o) => o.id);
   assert.equal(new Set(ids).size, ids.length, "ids unique");
   for (const o of offers) {
-    assert.deepEqual(Object.keys(o).filter((k) => !["id", "label", "label_approved", "applies_to", "valid_from", "valid_to", "code_mode", "shared_code"].includes(k)), []);
+    // SPEC-ui-and-copy-pass § 1 item 1 (2026-10-23): an offer may carry `headline`, the words the page's offer box prints;
+    // its § 1.2 item 2, `percent_off`, the offer's share, by which See all plans strikes the higher price beside the store's.
+    assert.deepEqual(Object.keys(o).filter((k) => !["id", "label", "label_approved", "headline", "percent_off", "applies_to", "valid_from", "valid_to", "code_mode", "shared_code"].includes(k)), []);
     assert.deepEqual({ label: o.label, label_approved: o.label_approved }, APPROVED_LABELS[o.id], `${o.id}: its approved label (no placeholder)`);
     assert.ok(["event", "general"].includes(o.applies_to));
     assert.ok(["unique", "shared", "none"].includes(o.code_mode));

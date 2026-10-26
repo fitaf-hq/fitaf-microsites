@@ -164,7 +164,8 @@ test("SP12: an ended offer's page whose current offer has no code — the curren
     assert.equal(res.status, 200);
     assert.match(html, /that offer ended/);
     assert.ok(words.includes(tree.edited.label), "the current offer");
-    assert.ok(words.includes(`Good until ${longDate(tree.edited.valid_to)}`), "and the date it is good until");
+    // SPEC-ui-and-copy-pass § 1 item 4 (2026-10-23): "held until", everywhere (it read "Good until").
+    assert.ok(words.includes(`Held until ${longDate(tree.edited.valid_to)}`), "and the date it is held until");
     assertNoCodeText(words, code, "the ended offer's page");
     assert.deepEqual(await rows(db, "SELECT save_id FROM saves WHERE kind = 'reissue'"), [], "no code reissued");
   } finally {

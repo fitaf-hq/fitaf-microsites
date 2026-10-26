@@ -3,34 +3,37 @@
 // directly above "Not ready today? Save it …"; the offer box at the top unchanged; the step still at the end. Both builds:
 // the development page here, on a plan, on Family and with a week; the production page with `production` true joins with
 // SP4 (§ 3 item 2), whose approved fixtures it needs.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 (2026-10-23): item 1, the box at the top prints the offer's headline, else its
+// label, and the step's line keeps the label; item 2, the step is shown only beside a week's Continue to checkout, so the
+// pages carry the fixture week (#lean-or-7d its cart) and there is no step on Family.
 import test from "node:test";
 import assert from "node:assert/strict";
 import offersFile from "../data/offers.json" with { type: "json" };
 import { offerForSave } from "../src/worker/offers.js";
-import { devPage } from "./dev-page.mjs";
 import { DAYS, FIXTURE_DIR, midday as ccMidday, openPlanPage, pageWithPicks } from "./cc-harness.mjs";
 import { FIXTURE_OFFERS, midday, S21_DATES } from "./offer-box-fixture.mjs";
 import { assertFlowOneDirectlyAfterStoreButton } from "./save-end-fixture.mjs";
 import { assertOfferLineAsRun, assertOfferLineInMarkup, STEP_OFFER_LABEL } from "./sp-fixture.mjs";
 import { approvedPage } from "./sp-production.mjs";
+import { approvedWeekPage, weekPage } from "./uc-harness.mjs";
 
-const html = await devPage({ card: true });
-const fixture = await devPage({ offers: FIXTURE_OFFERS, card: true });
+const html = await weekPage();
+const fixture = await weekPage({ offers: FIXTURE_OFFERS });
 
 test("SP1: in the markup, the step's offer line directly above the save lead; the offer box at the top as it was", () => {
   assertOfferLineInMarkup(html);
   assertOfferLineInMarkup(fixture);
 });
 
-test("SP1: as run, on a plan and on Family, the step's line is offerForSave's label for the date (S21's dates), as the box's", () => {
-  for (const hash of ["#lean-or-7d", "#family"]) {
+test("SP1: as run, on a plan, the step's line is offerForSave's label for the date (S21's dates), as the box's", () => {
+  for (const hash of ["#lean-or-7d"]) {
     const shown = Object.values(S21_DATES).map((ymd) => assertOfferLineAsRun(fixture, FIXTURE_OFFERS.offers, { hash, now: midday(ymd) }));
     assert.equal(new Set(shown).size, 2, `${hash}: control: the dates straddle the event offer, so two labels are shown`);
   }
 });
 
 test("SP1: the step stays at the end, the line inside it: Flow 1 whole, directly after the store button", () => {
-  for (const hash of ["#lean-or-7d", "#family"]) {
+  for (const hash of ["#lean-or-7d"]) {
     const page = openPlanPage(fixture, { hash, now: midday(S21_DATES.inside) });
     const { flowOne } = assertFlowOneDirectlyAfterStoreButton(page);
     assert.ok(flowOne.includes(page.el(STEP_OFFER_LABEL)), `${hash}: the offer's line is read as part of Flow 1`);
@@ -47,13 +50,13 @@ test("SP1: with a week's Chef's Choice, the line in the step after the card's la
 test("SP1: a label is written as text, never as markup; no offer to choose leaves the line empty and the page working", async () => {
   const marked = structuredClone(FIXTURE_OFFERS);
   for (const o of marked.offers) o.label = `<em>${o.id}</em> & "more"`;
-  const page = await devPage({ offers: marked, card: true });
+  const page = await weekPage({ offers: marked });
   assertOfferLineAsRun(page, marked.offers, { hash: "#lean-or-7d", now: midday(S21_DATES.inside) });
 
   const broken = structuredClone(FIXTURE_OFFERS);
   broken.offers.find((o) => o.id === "general-b-fixture").valid_from = "2026-09-01";
   assert.throws(() => offerForSave(S21_DATES.before, broken.offers), /at most one current general offer/, "control: no offer can be chosen");
-  const run = openPlanPage(await devPage({ offers: broken, card: true }), { hash: "#lean-or-7d", now: midday(S21_DATES.before) });
+  const run = openPlanPage(await weekPage({ offers: broken }), { hash: "#lean-or-7d", now: midday(S21_DATES.before) });
   assert.equal(run.el(STEP_OFFER_LABEL).textContent, "", "the step's line shows nothing in place of a label");
   assert.equal(run.el("save-offer-label").textContent, "", "as the box at the top does");
   assert.equal(run.el("save-form").hasAttribute("hidden"), false, "the form is still there");
@@ -62,13 +65,13 @@ test("SP1: a label is written as text, never as markup; no offer to choose leave
 // The production half (§ 3 item 2: the production page with `production` true carries Flow 1 with § 1's tweaks), on the
 // page sp-production.mjs builds from the approved fixtures.
 test("SP1 (production true): the step's offer line directly above the save lead, the box at the top as it was", async () => {
-  const { html, inputs } = await approvedPage();
-  assertOfferLineInMarkup(html);
+  const { html, inputs } = await approvedWeekPage();
+  assertOfferLineInMarkup((await approvedPage()).html);
   // Since § 10.7 the file has one offer, so the dates where it is live show its line; on the others (before it, after
   // it) no step is drawn (SP16).
   const live = Object.values(S21_DATES).filter((ymd) => offerForSave(ymd, inputs.offers.offers));
   assert.ok(live.length >= 2 && live.length < Object.values(S21_DATES).length, `control: S21's dates straddle the offer (${live})`);
-  for (const hash of ["#lean-or-7d", "#family"]) {
+  for (const hash of ["#lean-or-7d"]) {
     const shown = live.map((ymd) => assertOfferLineAsRun(html, inputs.offers.offers, { hash, now: midday(ymd) }));
     assert.equal(new Set(shown).size, 1, `${hash}: the one offer's label`);
   }

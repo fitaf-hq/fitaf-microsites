@@ -21,7 +21,11 @@
 // SPEC-snacks-in-the-cart § 2: `--snack "NAME:QTY"` (repeatable) adds a SNACK item, the meal grammar with a leading "_"
 // (`_<key>`, `_<key>*<n>`), written after every meal and before `~<code>`; a snack is never in the plan's count (the
 // full-plan rule reads the meals only), and a name or key given twice is refused across meals and snacks alike, as the
-// block refuses it. The photo part's cells stay the meals' (a snack has none). With no --snack, the link is as before.
+// block refuses it. With no --snack, the link is as before. SPEC-rung2-progress-and-checkout § 31.2 item 1 (amending
+// § 2's "the photo part's cells stay the meals'"): the photo part carries a cell for EVERY item, the meals' then the
+// snacks', in the link's order, from the week's sheet (whose snack cells the photos emitter writes since its § 11), ""
+// for an item the sheet has no cell for; the block already reads one cell per item, so it is unchanged by it. This is
+// the one encoder: the page's links are made by it too (scripts/chefs-choice.mjs, through the content command).
 //   https://fitafnutrition.com/order?mpid=21#fitaf=2.t1fkl*2.eh97u*5._a1b2c*2
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -173,7 +177,8 @@ export function payloadFromArgs(argv, counts, photos = null) {
     const [delivery] = flags["--photos"];
     if (!photos?.chefs_choice?.[delivery]) throw new Error(`--photos ${delivery}: no such week's sheet in data/photo-sheets.json`);
     const code = wholeNumber(flags["--host"][0] ?? "0", "--host", 0, PHOTO_HOSTS.length - 1);
-    const part = photoPart(photos, delivery, items, code);
+    // § 31.2 item 1: a cell for every item, meals then snacks, in the link's order.
+    const part = photoPart(photos, delivery, [...items, ...snacks], code);
     if (part) payload.photos = part;
   }
   return payload;
@@ -185,7 +190,7 @@ export const handoffLink = (plans, payload) => `${orderUrl(plans, payload.mpid)}
 export function legend(payload) {
   const rows = [...payload.items.map((it) => [token(it), it.name]), ...(payload.snacks ?? []).map((it) => [snackToken(it), `${it.name} (a snack)`])];
   if (payload.code !== undefined) rows.push([`~${payload.code}`, "the offer code (checked, not applied)"]);
-  if (payload.photos) rows.push([`!${payload.photos.host}`, `each meal's cell of ${PHOTO_HOSTS[payload.photos.host]}${payload.photos.path}`]);
+  if (payload.photos) rows.push([`!${payload.photos.host}`, `each item's cell of ${PHOTO_HOSTS[payload.photos.host]}${payload.photos.path}`]);
   const width = Math.max(...rows.map(([t]) => t.length));
   return rows.map(([t, what]) => `  ${t.padEnd(width)}  ${what}`);
 }

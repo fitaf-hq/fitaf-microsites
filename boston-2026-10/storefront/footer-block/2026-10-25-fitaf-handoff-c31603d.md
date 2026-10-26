@@ -1,0 +1,370 @@
+---
+type: storefront-footer-block
+title: "Fit AF cart hand-off: the Footer block built from c31603d"
+as_of: 2026-10-25
+target: "the store's admin, Custom Scripts, Footer (pasted by the Advisor; never by an agent)"
+status: pasted
+pasted: "2026-10-25 (Pacific) by the Advisor; first without its <script> and </script> lines (the code shown as text, the hand-off not running), then re-pasted whole; live check PASS 2026-10-26T02:23:28Z (the store's own block, a 5-meal Family link, 390 px: fill C, zero: applied, total $190.00, the sheet on 5 of 5 slides)"
+clearance: public
+built_from:
+  repository: fitaf-microsites
+  commit: c31603d8719c79ac5f353f8d7a4c54e5481022fc
+  source: boston-2026-10/src/storefront/fitaf-handoff.js
+  command: npm --prefix boston-2026-10 run build:storefront
+  output: boston-2026-10/dist-storefront/fitaf-handoff.html
+version_line: "fitaf-handoff c31603d sha256:3efc8112909216d69c23254d1ebc81b06a0b378fb8b36ec1a4fab4ae7e2565fd"
+text_sha256: 3efc8112909216d69c23254d1ebc81b06a0b378fb8b36ec1a4fab4ae7e2565fd
+fragment_sha256: 0d826cc452d3713ce6644885eaeddc3b5ae2b5ef2815f4d952581b6e534f7235
+fragment_bytes: 20413
+ceiling_bytes: 20480
+replaces:
+  version_line: "fitaf-handoff 8b11e54 sha256:efcbc570f5f26273bf126438c19e9a8ba258332f5dcd4c5f22a24a1986a9680f"
+supersedes: "the blocks built from b672752 (sha256:04e43ac0…), 992739f (sha256:0a6e9ef1…) and f05d355 (sha256:6d36d4bf…) on boston/handoff-zero-and-photos, and round 2's text (sha256:ef5697aa…); none pasted"
+contract: "boston-2026-10/SPEC-rung2-progress-and-checkout.md §§ 30, 31 and 31.2; SPEC-ui-and-copy-pass.md § 2 item 5 and § 2.2 (Family's mpid 35 taking 5 or 10)"
+proof: "rehearsed on the live store by the orchestrator, 2026-10-25, the console build of this text pasted in a headless page (no paste in the admin): the smoke's own 7-meal mpid 21 cart at b672752's text, and at this text a 5-meal Family Chef's Choice link for 2026-11-01 (mpid 35) at 390 and 1280 px, PASS each: fill C done, zero: applied, total $190.00, Fit AF's sheet on 5 of 5 slides"
+---
+
+# The Footer block built from `c31603d`
+
+The cart hand-off as the store's Footer block, from the release line `boston/release-c`: **the screen that never
+jumps** (`SPEC-rung2-progress-and-checkout.md` § 30: every slide keeps its photograph's box, holding the Fit AF mark until
+a photograph is drawn), **every snack's photograph** carried by the link (§ 31.2 item 1), **the store's page held still**
+under the screen (§ 31.2 item 2), and **the store's code `zero`** applied hidden on every hand-off's checkout, never
+blocking a sale, except on a link carrying an offer code (§§ 31, 31.2 item 3); and **Family** (`SPEC-ui-and-copy-pass.md`
+§ 2.2): the plans table takes 5 or 10 meals for mpid 35, so the page's Family Chef's Choice carts pass. Its plans table's
+comment names the prices' `read_on`, 2026-10-25. Everything else behaves as the block it replaces.
+
+⚠ **Paste this BEFORE the next content run**: the content that run writes carries Family links (5 or 10 meals for mpid
+35), which the block live today refuses (it takes 1).
+
+**To paste**: copy everything between the two fence lines below, and nothing else (the fences are not part of it), into
+the store's admin, Custom Scripts, Footer, replacing the block there. The copied text is 20413 bytes with SHA-256
+`0d826cc452d3713ce6644885eaeddc3b5ae2b5ef2815f4d952581b6e534f7235`; its first comment line is the version line above.
+
+````html
+<script>
+/* fitaf-handoff c31603d sha256:3efc8112909216d69c23254d1ebc81b06a0b378fb8b36ec1a4fab4ae7e2565fd */
+/* Fit AF cart hand-off. Source, comments and tests: fitaf-microsites, boston-2026-10/src/storefront.
+   Kill switch: delete this block (never "Inject these scripts": that stops every vendor's). */
+(function () {
+"use strict";
+var FILL = "C";
+var w = window, loc = w.location;
+if (loc.hash.slice(0, 7) !== "#fitaf=") return;
+if (w.__fitafHandoff) return;
+w.__fitafHandoff = true;
+var COUNTS = /* data/plans.json, read_on 2026-10-25 */ {"20":[4,5],"21":[7],"22":[10],"23":[14,15],"24":[21],"25":[4,5],"26":[7],"27":[10],"28":[21],"29":[14,15],"30":[4,5],"31":[7],"32":[10],"33":[14,15],"34":[21],"35":[5,10]};
+var UI = {"title":"Assembling your order","step":"{meal} \u00b7 {n} of {total} meals","checkout":"Taking you to checkout","stopped":"We couldn't add all your meals. The menu is next, so you can finish your order there.","steps":"Your meals \u00b7 Delivery \u00b7 Payment","to_delivery":"Continue to delivery","to_payment":"Continue to payment","back":"Back","recap":"{n} meals \u00b7","recap_snacks":"{n} meals \u00b7 {s} snacks \u00b7"};
+
+function log(m) { w.console.info("[fitaf-handoff] " + m); }
+function fail(m) { throw new Error(m); }
+function drop() { w.history.replaceState(w.history.state, "", loc.pathname + loc.search); }
+function guard(fn) {
+return function () {
+  try { fn(); } catch (e) {
+    try { drop(); } catch (e3) {}
+    end("stopped: " + e.message);
+  }
+};
+}
+
+var S, NOW, SLIDES = {}, CODE, L, SHEET, CELLS = {}, BAD, F;
+var TOK = "--navy:#1b2360;--cta:#d66400;--ice:#eaf8ff;--white:#ffffff;--muted:#5b5b5b", CSS = "#fitaf-screen{" + TOK + ";position:fixed;inset:0;width:auto;height:auto;margin:0;border:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy);color:var(--white);font:16px/1.4 system-ui,sans-serif;text-align:center;animation:fitaf-e 90s!important}" +
+"#fitaf-screen>div{position:relative;width:100%;max-width:420px}#fitaf-screen>div>img{position:absolute;inset:0 0 auto}#fitaf-screen h2{margin:80px 0 16px;font-size:24px;font-weight:700;color:inherit}" +
+"#fitaf-screen .b{height:8px;border-radius:4px;background:var(--ice);overflow:hidden}#fitaf-screen i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s}" +
+"#fitaf-screen .c{position:relative;height:calc(min(220px,32vh) + 61px);margin:24px 0 16px}#fitaf-screen .c>*{display:none}#fitaf-screen .c>.on{display:block;animation:fitaf-in .4s}#fitaf-screen .y{animation:fitaf-t 2.5s infinite}" +
+"#fitaf-screen .f{position:relative;overflow:hidden;height:min(220px,32vh);aspect-ratio:1;margin:0 auto;border-radius:6px}#fitaf-screen :is(.f,.c:empty)::before{content:'';position:absolute;inset:calc(min(220px,32vh)/2 - 32px) 0 auto;margin:auto;width:calc(min(220px,32vh)*.7);height:64px;padding:8px 10px;box-sizing:border-box;border-radius:8px;background:var(--m) center/contain no-repeat content-box border-box var(--white)}" +
+"#fitaf-screen .f img{position:absolute;display:block;height:auto;max-width:none}#fitaf-screen .f .k{inset:0;width:100%;height:100%;object-fit:cover}#fitaf-screen b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:10px;font-size:18px;line-height:1.4}#fitaf-screen p{margin:0;min-height:2.8em}" +
+".cdk-overlay-pane:has(app-extra-products-dialog),.cdk-overlay-backdrop:has(+* app-extra-products-dialog){visibility:hidden!important}" +
+"#fitaf-screen.z{animation:fitaf-z 4s!important}@keyframes fitaf-e{}@keyframes fitaf-z{}@keyframes fitaf-t{}@keyframes fitaf-in{from{opacity:0;transform:translateX(24px)}}@media (prefers-reduced-motion:reduce){#fitaf-screen *{animation:none!important;transition:none!important}}";
+function ui(f) { try { f(); } catch (e) {} }
+function end(m) { ui(function () { if (!F) return S.remove(); S.className = "z"; $("p").textContent = UI.stopped; }); log(m); }
+function $(q) { return S.querySelector(q); }
+function make(tag, parent, cls) { var e = w.document.createElement(tag); if (cls) e.className = cls; return parent.appendChild(e); }
+function screen() {
+S = w.document.createElement("div");
+S.id = "fitaf-screen";
+S.setAttribute("popover", "manual");
+make("style", S).textContent = CSS + "html{overflow:hidden!important;padding-right:" + (w.innerWidth - w.document.documentElement.clientWidth) + "px}";
+var box = make("div", S), line;
+make("h2", box).textContent = UI.title;
+make("i", make("div", box, "b"));
+make("div", box, "c").onanimationiteration = function () { show(NOW.nextElementSibling || this.firstElementChild); };
+line = make("p", box);
+line.setAttribute("role", "status");
+line.setAttribute("aria-live", "polite");
+S.onanimationend = function (e) { if (e.target === S) S.remove(); };
+w.document.body.appendChild(S);
+if (S.showPopover) S.showPopover();
+}
+function show(el) { if (NOW) NOW.className = ""; (NOW = el).className = "on"; }
+function logo(css) {
+var h = w.document.querySelector("img.header__logo-image"), i = h && h.complete && h.naturalWidth && w.document.createElement("img");
+if (i) i.src = h.currentSrc, i.alt = "Fit AF", i.style.cssText = "display:block;margin:" + css;
+return i;
+}
+function brand() { if (!L && (L = logo("0 auto 16px;height:48px;padding:8px 10px;border-radius:8px;background:var(--white)"))) $("h2").before(L), S.style.setProperty("--m", "url(" + JSON.stringify(L.src) + ")"); }
+function pic(el, c) {
+var im = c.querySelector("img"), i;
+if (im && im.complete && im.naturalWidth) { i = el.appendChild(w.document.createElement("img")); i.className = "k"; i.alt = ""; i.src = im.currentSrc; }
+}
+function added(meal, c, k, t) {
+var d = w.document, el = SLIDES[meal], x = CELLS[meal], f, g;
+brand();
+if (!el) {
+  el = SLIDES[meal] = d.createElement("div");
+  (f = el.appendChild(d.createElement("div"))).className = "f";
+  el.appendChild(d.createElement("b")).textContent = text(c.querySelector(".product__content-title"));
+  if (x && !BAD) {
+    f.style.cssText = "aspect-ratio:" + x[2] / x[3];
+    g = f.appendChild(d.createElement("img"));
+    g.alt = "";
+    g.style.cssText = "width:" + x[4] / x[2] * 100 + "%;left:" + -x[0] / x[2] * 100 + "%;top:" + -x[1] / x[3] * 100 + "%";
+    g.onerror = function () { BAD = 1; ui(function () { g.remove(); pic(f, c); }); };
+    g.src = SHEET;
+  } else pic(f, c);
+  $(".c").appendChild(el);
+}
+show(el);
+$("i").style.width = k / (t + 1) * 100 + "%";
+$("p").textContent = UI.step.replace("{meal}", el.lastChild.textContent).replace("{n}", k).replace("{total}", t);
+if (k === t) $(".c").className = "c y";
+}
+function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout; }
+var Q2 = ".checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests)", Q3 = ".checkout__section:is(.tip,.payment,.checkout__consent)", N, V, AT, PAID;
+var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
+".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
+".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return," +
+".fitaf-step-1:has(#fitaf-nav) .checkout__form,:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item,.fitaf-step-2:has(#fitaf-nav) :is(.checkout__form>:not(" + Q2 + ",:has(" + Q2 + "))," + Q3 + ",.checkout__submit)," +
+".fitaf-step-3:has(#fitaf-nav) " + Q2 + ",:is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) .summary__pay-button:has(+#fitaf-go)){display:none!important}" +
+"html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}" +
+"html.fitaf-deep:has(app-checkout) .summary__item{padding:3px 6px;margin:0 0 2px;gap:8px;align-items:center}html.fitaf-deep:has(app-checkout) .summary__item-image{width:48px;height:48px}" +
+"html.fitaf-deep:has(app-checkout) .summary__item-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}";
+function mark() {
+var d = w.document, s = d.createElement("style"), c, i;
+s.id = "fitaf-deep";
+s.textContent = DEEP + "html.fitaf-deep:has(app-checkout) :is(:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__total)::before{content:" + JSON.stringify((V ? UI.recap_snacks.replace("{s}", V) : UI.recap).replace("{n}", N)) + ";margin-right:.4em}";
+d.head.appendChild(s);
+d.documentElement.classList.add("fitaf-deep");
+if (CODE) d.documentElement.classList.add("fitaf-code");
+if ((c = d.querySelector("app-checkout")) && (i = logo("16px auto;height:40px"))) c.prepend(i);
+if (c) ui(function () { stepper(c, i); });
+}
+
+function own(tag, id, css, p) { var e = w.document.createElement(tag); e.id = id; e.style.cssText = TOK + ";" + css; return p ? p.appendChild(e) : e; }
+function stepper(c, i) {
+if (!w.CSS.supports("selector(:has(+*))")) return;
+var d = w.document, h = d.documentElement, BTN = "font-family:inherit;font-weight:700;line-height:1.2;border-radius:6px;cursor:pointer;",
+  bar = own("div", "fitaf-bar", "display:table;margin:8px auto 16px;padding:6px 14px;border-radius:6px;background:var(--white);color:var(--muted);font-family:inherit;font-size:15px;line-height:1.4"),
+  nav = own("div", "fitaf-nav", "display:flex;justify-content:center;gap:12px;margin:24px 0 16px;padding:0 16px", c),
+  back = own("button", "fitaf-back", BTN + "background:var(--white);color:var(--navy);border:2px solid var(--navy);padding:10px 18px;font-size:16px", nav),
+  go = own("button", "fitaf-go", BTN + "background:var(--cta);color:var(--white);border:0;padding:12px 20px;font-size:19px");
+function place() {
+  var p = c.querySelector(".summary__pay-button"), r = p && p.parentNode.getClientRects()[0];
+  if (r) p.after(go); else nav.append(go);
+  nav.style.marginBottom = (r ? Math.max(0, w.innerHeight - r.top) : 0) + 16 + "px";
+}
+function at(n) {
+  AT = n;
+  [1, 2, 3].forEach(function (k) { h.classList.toggle("fitaf-step-" + k, k === n); });
+  [].forEach.call(bar.children, function (s, k) {
+    s.style.cssText = k + 1 === n ? "color:var(--navy);font-weight:700" : "";
+    if (k + 1 === n) s.setAttribute("aria-current", "step"); else s.removeAttribute("aria-current");
+  });
+  go.textContent = n === 1 ? UI.to_delivery : UI.to_payment;
+  go.style.display = n > 2 ? "none" : "";
+  back.style.display = n > 1 ? "" : "none";
+  place();
+  w.scrollTo(0, 0);
+}
+function bad(q, shown) {
+  return [].filter.call(c.querySelectorAll(Q2 + q), function (e) { return !e.querySelector(".ng-invalid") && (!shown || e.getClientRects().length); })[0];
+}
+function fix(e) {
+  at(2);
+  e = e.matches("input,select,textarea") ? e : e.querySelector("input,select,textarea") || e;
+  e.scrollIntoView({ block: "center" });
+  e.focus({ preventScroll: true });
+}
+UI.steps.split(" \u00b7 ").forEach(function (t, k) { if (k) bar.append(" \u00b7 "); bar.appendChild(d.createElement("span")).textContent = k + 1 + " " + t; });
+if (i) i.after(bar); else c.prepend(bar);
+back.type = go.type = "button";
+back.textContent = UI.back;
+back.onclick = function () { at(AT - 1); };
+go.onclick = function () { var e = AT === 2 && bad(" .ng-invalid", 1); if (e) fix(e); else at(AT + 1); };
+at(1);
+w.addEventListener("resize", place);
+c.addEventListener("click", function (e) { if (e.target.closest(".checkout__submit,.summary__pay-button")) PAID = 1; }, true);
+new w.MutationObserver(function () { var e = PAID && AT !== 2 && bad(" .ng-invalid.ng-touched"); if (e) fix(e); }).observe(c, { subtree: true, attributes: true, attributeFilter: ["class"] });
+}
+
+var HOSTS = ["https://eatfitaf.com","https://fitaf-microsites-dev.fitaf-microsite-boston-2026-10.workers.dev"];
+function photos(f, items) {
+var h = /^\d$/.test(f[0]) && HOSTS[f[0]], W = parseInt(f[2], 36), g;
+if (!h || !/^\/[\w\/.-]{1,200}$/.test(f[1]) || !(W > 0)) return;
+SHEET = h + f[1];
+items.forEach(function (it, k) {
+  var c = /^[0-9a-z]{1,4}(,[0-9a-z]{1,4}){3}$/.test(f[k + 3]) && f[k + 3].split(",").map(function (n) { return parseInt(n, 36); });
+  if (c && c[2] && c[3] && W >= c[0] + c[2]) CELLS[it.key] = c.concat(W);
+});
+g = w.document.createElement("img");
+g.onerror = function () { BAD = 1; };
+g.src = SHEET;
+}
+
+function payload(s) {
+if (s.length > 2048) fail("payload over 2 KB");
+var parts = s.split("."), items = [], keys = [], total = 0, units = 0, code;
+if (parts.shift() !== "2") fail("unknown version");
+if (/^~/.test(parts[parts.length - 1])) code = parts.pop().slice(1);
+if (code !== undefined && !/^[A-Za-z0-9-]{1,40}$/.test(code)) fail("bad code");
+if (!parts.length) fail("no items");
+parts.forEach(function (part) {
+  var m = /^(_?)([0-9a-z]{5})(?:\*([2-9]|1\d|2[01]))?$/.exec(part) || fail("bad meal: " + part), n = +(m[3] || 1);
+  if (keys.indexOf(m[2]) >= 0) fail("named twice: " + m[2]);
+  if (units > total && !m[1]) fail("a meal after a snack: " + m[2]);
+  keys.push(m[2]);
+  items.push({ key: m[2], qty: n, s: m[1] });
+  units += n;
+  if (!m[1]) total += n;
+});
+return { items: items, total: total, units: units, code: code };
+}
+
+var POLL_MS = 200, MIN_GAP_MS = 300, ACK_MS = 5000, RETRIES = 2, SETTLE_MS = 1000, MAX_POLLS = 50, AFTER_CHECKOUT = 150, NO_CARDS = 150;
+var key = function mealKey(name) {
+  var s = unescape(encodeURIComponent(String(name).replace(/^\s*([\ud800-\udbff][\udc00-\udfff]|[\u2600-\u27bf])\s*[A-Z]{2,12}\s*:\s/, "").replace(/\s+/g, " ").trim())), h = 0x811c9dc5;
+  for (var i = 0; s.length > i; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return ("0000" + (h >>> 0).toString(36)).slice(-5);
+};
+function text(el) { return el.textContent.replace(/\s+/g, " ").trim(); }
+function first(el, sel, ok) { return [].filter.call(el.querySelectorAll(sel), ok)[0]; }
+function card(k) {
+var c = [].filter.call(w.document.querySelectorAll("app-product-card"), function (el) {
+  var t = el.querySelector(".product__content-title");
+  return t && key(text(t)) === k;
+});
+if (c[1]) fail("two meals share a key: " + k);
+return c[0];
+}
+function addButton(c) {
+return c && first(c, ".product__actions button", function (b) { return text(b).indexOf("Add to Cart") >= 0; });
+}
+function count(c) { var v = c && c.querySelector(".product__actions .counter__value"); return v ? +text(v) || 0 : 0; }
+function plus(c) { return c && c.querySelector('.product__actions .counter__button[aria-label="Increase value"]'); }
+function plan() {
+var e = first(w.document, ".cart__items-count,.mobile-cart-summary__stat-value", function (e) { return e.getClientRects().length && /^\d+( items?)?$/.test(text(e)); });
+return e ? [parseInt(text(e), 10), /items-c/.test(e.className)] : [0];
+}
+function said(p) {
+var k = 0, s = [], o = [];
+p.items.forEach(function (it) { var n = count(card(it.key)); k += n; if (it.qty > n) s.push(it.key); if (n > it.qty) o.push(it.key); });
+return "the store counted " + k + " of " + p.units + (s.length ? "; short: " + s : "") + (o.length ? "; over: " + o : "");
+}
+var HELD = /checkout|more meal|limit exceeded/i;
+function fillC(p) {
+var polls = 0, idle = 0;
+guard(function poll() {
+  ui(brand);
+  if (control(HELD, 1)) fail("the plan already holds meals");
+  var missing = p.items.filter(function (it) { var c = card(it.key); return !(addButton(c) || it.s && c && c.querySelector(".product__toggle")); });
+  if (!missing.length) return fill(p, steps(p.items), settle);
+  if (!polls && !first(w.document, "app-product-card .product__content-title", text)) { if (++idle >= NO_CARDS) fail("no meal cards on this page"); }
+  else if (++polls >= MAX_POLLS) fail("not on this page: " + missing.map(function (it) { return it.key; }));
+  w.setTimeout(guard(poll), POLL_MS);
+})();
+}
+function steps(items) {
+var list = [];
+items.forEach(function (it) { if (!it.s) list.push([it.key, 0, it.qty]); });
+items.forEach(function (it) { for (var n = it.s ? 0 : 1; it.qty > n; n++) list.push([it.key, n, it.qty]); });
+return list;
+}
+function fill(p, list, then) {
+var k = 0, tries = 0, waited = 0, x = 0;
+guard(function poll() {
+  var s = said(p), c, n, b, o;
+  if (/; over:/.test(s)) fail(s);
+  if (k === list.length) return then(p);
+  c = card(list[k][0]); n = count(c);
+  if (n > list[k][1]) { k++; tries = x = 0; return poll(); }
+  if (tries && ACK_MS > waited) { waited += POLL_MS; return w.setTimeout(guard(poll), POLL_MS); }
+  if (tries > RETRIES) fail(s);
+  b = addButton(c) || plus(c);
+  if (!b && c && (o = c.querySelector(".product__toggle"))) {
+    if (!x && o.getAttribute("aria-expanded") != "true") { o.click(); x = MIN_GAP_MS; return w.setTimeout(guard(poll), MIN_GAP_MS); }
+    if (ACK_MS > x) { x += POLL_MS; return w.setTimeout(guard(poll), POLL_MS); }
+  }
+  (b || fail(s + "; no control")).click();
+  F = 1; tries++; waited = MIN_GAP_MS;
+  ui(function () { added(list[k][0], c, p.units - list.length + k + 1, p.units); });
+  w.setTimeout(guard(poll), MIN_GAP_MS);
+})();
+}
+function settle(p) {
+w.setTimeout(guard(function () {
+  var list = [];
+  p.items.forEach(function (it) { for (var n = count(card(it.key)); it.qty > n; n++) list.push([it.key, n, it.qty]); });
+  fill(p, list, checkout);
+}), SETTLE_MS);
+}
+function control(re, any) {
+return first(w.document, "button", function (b) {
+  return (any || !b.disabled) && re.test(text(b)) && b.getClientRects().length && !b.closest("app-product-card,app-product-card-mobile");
+});
+}
+function checkout(p) {
+var k = 0, polls = 0;
+guard(function poll() {
+  if (k && loc.pathname === "/checkout") { ui(mark); return zero(function (m) { log("zero: " + m); end("done: /checkout"); }); }
+  var b = control([/^checkout( now)?$/i, /^continue to checkout$/i, /(?!)/][k]), n = plan();
+  if (b && (k || n[0] === (n[1] ? p.units : p.total))) { if (!k) { drop(); ui(function () { w.sessionStorage.setItem("ecc_additions_prompt_handled", "true"); }); F = 0; } b.click(); if (!k) ui(last); k++; polls = 0; }
+  else if (++polls >= (k ? AFTER_CHECKOUT : MAX_POLLS)) return k ? end("stopped: /checkout not reached") : fail(said(p) + "; the plan shows " + n[0] + (b ? "" : "; no checkout control"));
+  w.setTimeout(guard(poll), POLL_MS);
+})();
+}
+
+var ZERO = "zero", ZERO_POLLS = 25;
+function zero(then) {
+var d = w.document, c = d.querySelector("app-checkout"), n = 0, t = 0, i, P, b, rows = c && c.querySelectorAll(".summary__row--discount").length;
+function sign() { return c.querySelectorAll(".summary__row--discount").length > rows || first(c, ".checkout-discounts,.summary__row--discount", function (e) { return /zero/i.test(e.textContent); }); }
+(function poll() {
+var m;
+try {
+if (CODE) m = "coded link";
+else if (!c) m = "not found";
+else if (sign()) m = "applied";
+else if (!i) {
+if (i = first(c, ".checkout-discounts input", function (e) { return /discount|coupon|promo|code/i.test(e.outerHTML) && !/gift/i.test(e.outerHTML); })) {
+P = i.closest(".checkout-discounts");
+i.value = ZERO;
+["input", "change", "blur"].forEach(function (e) { i.dispatchEvent(new d.defaultView.Event(e, { bubbles: true })); });
+} else if (++n > 4) m = "not found";
+} else if (!b) {
+if ((b = first(P, "button", function (e) { return i.compareDocumentPosition(e) & 4; })) && !b.disabled) b.click();
+else if (b = 0, ++n > 4) m = "not found";
+} else if (first(P, "[role=alert],[class*=error]", text)) m = "refused";
+else if (++t >= ZERO_POLLS) m = "no sign";
+} catch (e) { m = "not found"; }
+m ? then(m) : w.setTimeout(poll, POLL_MS);
+})();
+}
+
+guard(function () {
+if (loc.pathname !== "/order") fail("not the order page");
+var f = loc.hash.slice(7).split("!"), p = payload(f.shift()), m = /[?&]mpid=([1-9]\d{0,8})(&|$)/.exec(loc.search) || fail("no mpid on this page");
+p.mpid = +m[1];
+var need = COUNTS[p.mpid] || fail("unknown mpid " + p.mpid);
+if (need.indexOf(p.total) === -1) fail("the plan " + (need[1] ? "takes " : "needs ") + need.join(" or ") + " meals; the link has " + p.total);
+log("fill " + FILL + ", mpid " + p.mpid + (p.code ? "; offer code not applied" : ""));
+CODE = p.code;
+N = p.total;
+V = p.units - p.total;
+if (f.length) ui(function () { photos(f, p.items); });
+ui(screen);
+if (FILL === "C") return fillC(p);
+fail("fill " + FILL + " is not in this text");
+})();
+})();
+</script>
+````

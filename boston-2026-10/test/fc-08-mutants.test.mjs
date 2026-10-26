@@ -82,13 +82,15 @@ test("FC-8 mutant: § 1.4 against the plan's count — FC-8e fails (CHECKOUT pre
   }
 });
 
-test("FC-8 mutant: the selection row's plan ignored — FC-8h fails (8 takes every row's meals, and so do 7 and Family)", async (t) => {
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): Family's totals are its own counts, never the individual rows', so the
+// mutant leaves Family's (103) as it was.
+test("FC-8 mutant: the selection row's plan ignored — FC-8h fails (8 takes every row's meals, and so does 7)", async (t) => {
   await withMirror(
     (dir) => edit(dir, BUILD, "rows.filter((row) => row.plan === P).map((row) => row.meals)", "rows.map((row) => row.meals)"),
     async (build) => {
       const problems = fixtureTableProblems(build.countTable(FIXTURE));
       t.diagnostic(`FC-8h on the mutant: ${JSON.stringify(problems)}`);
-      assert.deepEqual(problems, ['countTable over the fixture is {"101":[7,9],"102":[7,8,9],"103":[1,7,9]}, not {"101":[7],"102":[8,9],"103":[1]}']);
+      assert.deepEqual(problems, ['countTable over the fixture is {"101":[7,9],"102":[7,8,9],"103":[1]}, not {"101":[7],"102":[8,9],"103":[1]}']);
     },
   );
 });

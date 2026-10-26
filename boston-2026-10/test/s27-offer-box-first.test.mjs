@@ -7,9 +7,12 @@ import assert from "node:assert/strict";
 import { devPage } from "./dev-page.mjs";
 import { assertOfferBoxThenFlowTwo, NOW } from "./save-end-fixture.mjs";
 import { openPlanPage } from "./cc-harness.mjs";
+import { weekPage } from "./uc-harness.mjs";
 
 test("S27: the offer box (heading and label) first; Flow 2's question 1 next; no Flow 1 form above the store button", async () => {
-  for (const html of [await devPage(), await devPage({ card: true })]) assertOfferBoxThenFlowTwo(html);
+  // Since SPEC-ui-and-copy-pass § 1 item 2 the step is shown only beside a week's Continue to checkout, so the page with the
+  // fixture week is the one where Flow 1 is read at all (#lean-or-7d: its cart); the pages without a week as before.
+  for (const html of [await devPage(), await devPage({ card: true }), await weekPage()]) assertOfferBoxThenFlowTwo(html);
 });
 
 test("S27: the offer box holds § 2a's heading and offers.json's label, and nothing of Flow 1", async () => {

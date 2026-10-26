@@ -17,9 +17,9 @@ import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
 import { handleConfirm } from "../src/worker/confirm.js";
 import { validateSave } from "../src/worker/validate-save.js";
 import { zonedTimeToInstant } from "../src/worker/zoned-time.js";
-import { devPage } from "./dev-page.mjs";
-import { simulatePage } from "./page-sim.mjs";
-import { approvedPage, pageText } from "./sp-production.mjs";
+import { hiddenInTree, openPlanPage } from "./cc-harness.mjs";
+import { pageText } from "./sp-production.mjs";
+import { approvedWeekPage, weekPage } from "./uc-harness.mjs";
 import { FixedRedemptions, linkIn, postSave, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
 
 const ZONE = saveConfig.send_time_zone;
@@ -94,15 +94,17 @@ test("SP17: the 10-29 save's E1 link to /confirm works on 2026-10-30, and is gon
   }
 });
 
-/** The step's markup (section#save), as a visitor reads it, with the page's script having filled its slots at `now`. */
+/** The step's markup (section#save), as a visitor reads it, with the page's script having filled its slots at `now`.
+ *  ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 item 2 (2026-10-23): the step is shown only beside a week's Continue to
+ *  checkout, so the pages carry the fixture week (#lean-or-7d its cart) and run as a browser runs them (openPlanPage). */
 function stepAt(html, now) {
-  const page = simulatePage(html, { now, hash: "#lean-or-7d" });
+  const page = openPlanPage(html, { now, hash: "#lean-or-7d" });
   const section = /<section class="save js-only" id="save"[\s\S]*?<\/section>/.exec(html)[0];
-  return { date: page.el("save-held-date").textContent, text: pageText(section), shown: !page.el("save").hidden };
+  return { date: page.el("save-held-date").textContent, text: pageText(section), shown: !hiddenInTree(page.el("save")) };
 }
 
 test("SP17: the page's step says the date held (the offer's last day, or the next day on it) and no code but the ZIP code's label", async () => {
-  for (const [name, html] of [["the development page", await devPage()], ["the production page (production true)", (await approvedPage()).html]]) {
+  for (const [name, html] of [["the development page", await weekPage()], ["the production page (production true)", (await approvedWeekPage()).html]]) {
     for (const [day, date] of [["2026-10-24", "October 29, 2026"], ["2026-10-28", "October 29, 2026"], [LAST_DAY, "October 30, 2026"]]) {
       const step = stepAt(html, at(day, 12));
       assert.ok(step.shown, `${name} on ${day}: the step`);

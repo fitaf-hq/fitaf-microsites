@@ -205,15 +205,15 @@ const described = (bytes) => `${bytes.length} bytes sha256:${sha256(bytes)}`;
  * SHA-256), the page as served with that week (the build, the content in #picks-data) once its lines naming `updating`
  * are removed, and the visible page at each of U4_HASHES. Recorded from d1dac5b's tree by test/u-04-record.mjs.
  */
-export async function normalWeekRecord(root = ROOT) {
+export async function normalWeekRecord(root = ROOT, { savePath, transform = (html) => html, content = (bytes) => bytes } = {}) {
   const record = {};
   for (const { label, week, picks } of U4_WEEKS) {
     for (const target of ["prod", "dev"]) {
       const dir = join(root, ...picks);
       const { files } = await contentOf({ root, week, picksDir: dir, target });
-      const { html } = await pageWithPicks({ root, target, picks: dir, week });
+      const html = transform((await pageWithPicks({ root, target, picks: dir, week, savePath })).html);
       record[`${label} · ${target}`] = {
-        content: Object.fromEntries(Object.entries(files).map(([key, bytes]) => [key, described(bytes)])),
+        content: Object.fromEntries(Object.entries(files).map(([key, bytes]) => [key, described(content(bytes, key))])),
         page: described(Buffer.from(withoutUpdatingLines(html), "utf8")),
         visible: Object.fromEntries(U4_HASHES.map((hash) => [hash || "(no fragment)", sha256(visible(html, { hash, now: NOW }))])),
       };

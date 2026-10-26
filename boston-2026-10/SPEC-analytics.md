@@ -473,3 +473,284 @@ fixture files.
   the mutant and its control two; `aj-checks.mjs` is not a test file).
 - **Not done here**: the real report (no token here; the SQL API never reached), the whole suite, Storybook and the
   watch; nothing deployed, no merge.
+
+## 12. Amendment, 2026-10-25: a tester's browser sends no analytics (`?no-tracking`). CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-25: *"blacklisting my (and other) browsers from generating analytics while testing. I
+think *an* option is adding a "?no-tracking"-style URL parameter when testing … it feels relatively low effort to
+implement. That said, I am OK layering in multiple approach."* The analytics count from 2026-10-26 17:00 Eastern (one
+hour before the Boston events); every visit of ours after that must not be counted.
+
+1. **Switching it on.** A request that reaches either Worker's page routes (`assets.run_worker_first`: `/` and each event
+   page, production's and development's) whose query string holds the parameter **`no-tracking`** (any value, or none)
+   is answered **302** to the same URL **without that parameter** (every other parameter kept, in order; a browser keeps
+   the fragment), with
+   `Set-Cookie: fitaf_no_tracking=1; Path=/; Max-Age=31536000; Secure; HttpOnly; SameSite=Lax`. The page itself is
+   unchanged: its script reads no cookie and touches no storage (T5, A1).
+2. **Switching it off.** The parameter **`tracking`** the same way, its cookie `fitaf_no_tracking=; Path=/; Max-Age=0;
+   Secure; HttpOnly; SameSite=Lax`. Both parameters at once: off wins (the cookie cleared), so a mistaken link never
+   hides a real visitor.
+3. **The beacon.** `POST /a` carrying the cookie `fitaf_no_tracking=1` is answered **204**, as every beacon is, and
+   **nothing is done**: no data point, and the salt is neither read nor written (SALTS untouched). Any other value of the
+   cookie, or none, is today's path.
+4. **Nothing else changes**: every other request of SP3's and WC-6's lists answers as today, byte for byte; the save
+   step, `/o`, `/confirm` and the cron ignore the cookie (a tester's save is a real save).
+5. **Later layers, not built here**: an IP list held as a Worker secret (never in this public repository), and the
+   report's own exclusion; each is its own amendment.
+6. **Cases**, written first and run red: N1 `?no-tracking` → 302, `Location` without it (another parameter kept), the
+   cookie with exactly those attributes, on both Workers; N2 `?tracking` → 302 and the clearing cookie; both → cleared;
+   N3 `POST /a` with the cookie → 204, zero data points, no SALTS read or write; N4 the same beacon without it is
+   written (control); N5 a request without either parameter is unchanged (SP3's and WC-6's lists); N6 the page carries
+   no `cookie` read. **Mutants**, each caught: the beacon ignoring the cookie; the cookie without `HttpOnly`; the
+   redirect dropping another parameter; `tracking` not clearing.
+7. **When**: built on `boston/no-tracking` (from `c6dd3a5`, release (b)'s commit), released to dev, then with the next
+   production pin, before 2026-10-26 17:00 Eastern.
+
+### 12.1 Built (2026-10-25)
+
+§ 12 is unchanged. On `boston/no-tracking`: the cases and the code at `07133ed`, CC-8b's golden at `87fbc44`, this
+section after them.
+
+**What was built**: all of it in `src/worker/site.js`'s `serveSite`, through which both Workers reach the page (the
+development Worker after its own routes; production's directly, or as the development Worker's handler while
+`production` is true). A GET whose query names `no-tracking` or `tracking` (`trackingSwitch`) is answered by
+`switchTracking` with the 302 and the cookie, before the assets are asked or the bucket read; `POST /a` carrying the
+cookie at `1` (`carriesNoTracking`) is answered with a bare 204 before `serveBeacon`, so nothing reads the body, writes a
+data point or touches SALTS. `src/worker/beacon.js` is unchanged.
+
+**Cases, before and after** (`nice -n 15 node --test` over `test/n-01`…`n-06` and `test/n-mutants.test.mjs`, then the
+whole suite as `nice -n 15 npm --prefix boston-2026-10 test`):
+
+| | before the code (`8d21da2`'s code) | after (`07133ed`) |
+|---|---|---|
+| the seven N files | `# tests 18` `# pass 6` `# fail 12` | `# tests 18` `# pass 18` `# fail 0` |
+| N1 and N2 with the "//" case (added after the first code, run on it) | `# tests 5` `# pass 1` `# fail 4` | `# tests 5` `# pass 5` |
+| the whole suite | (1,157 of 1,157 at `c6dd3a5`) | at `07133ed`: 1,175 tests, 1,170 pass, 5 fail (CC-8b, CC-8c, MS-9 twice, PR-10: CC-8's golden alone); at `87fbc44`: 1,175 of 1,175 (its first run there: 1,174, Q28's print build failing on Chrome exiting 2, "Teardown watchdog expired", a test that builds the flyer and reaches no Worker; it passed at `07133ed` and on the re-run, unchanged) |
+
+Red for the right reasons: N1, N2 and N3 (each on both Workers and on the rollback) on the missing switch (`200, not
+302`, no Location, no Set-Cookie; a beacon with the cookie written, the salt read and made); the mutants' control on
+the same; the four mutants on their anchors, absent from `site.js` until the code. N4 (the control), N5 (three: today's
+answers, by construction equal before any code) and N6 (two: the page reads no cookie) passed before the code, as
+guards. The suite gains 18 tests: N1 three, N2 two, N3 two, N4 one, N5 three, N6 two, the mutants five.
+
+**The mutants** (`test/n-mutants.test.mjs`, each in a mirror through THE SAME check its case runs, `test/n-checks.mjs`):
+the control (the unchanged mirror) passes N1, N2 and N3; the beacon ignoring the cookie fails N3 on both Workers (a data
+point written, SALTS used); the cookie without `HttpOnly` fails N1 (its Set-Cookie named, on both); the redirect dropping
+another parameter fails N1 (`/?e=boston&no-tracking` goes to `/`), while a request with no other parameter stays right;
+`tracking` not clearing fails N2 (`?tracking` alone a 200, both at once setting the cookie).
+
+**CC-8's golden** moved by one entry, by construction (the development Worker reaches `site.js`): `src/worker/site.js`
+`8a07b89d…` → `a769b2eb…`, none added or removed, re-recorded once from `07133ed`'s own tree (`git archive`) on the
+orchestrator's approval. No other golden moved: S20, WC-9, U4 and PV5 pass unchanged.
+
+**What § 12 was silent on, and what was built** (stated, not ruled)
+
+1. **The Location is absolute**: the request's own origin, joined to its path and the kept query as text. A relative
+   Location (the first code's) named another host for a path beginning `//`: `//other.example/?no-tracking` resolved to
+   `https://other.example/` (measured red on N1 and N2). "The same URL" is on the same host; N1 and N2 hold it.
+2. **Which requests are switched**: every GET `serveSite` would answer as the page. In production that is `/` and
+   `/index.html` (`run_worker_first`) and also any path no asset matches (assets-first falls through to the script),
+   which gets the 302 and then the assets' 404; in development `/*/` sends every path ending `/` too. An asset is served
+   without the script and never switched (N1, as configured). HEAD, POST and PUT to a page route with either parameter
+   are the assets' as today (by the code; no case asks); `/week/` is never switched; `/o`, `/confirm` and `/api/save` are the development Worker's
+   own routes, before `serveSite`, and ignore both the parameters and the cookie (N5).
+3. **A parameter's name** is what precedes its `=`, decoded as `URLSearchParams` decodes it, so `no%2Dtracking` counts;
+   a value that is `no-tracking` (`?e=no-tracking`) or a longer name (`?no-trackings`) does not (N1's controls). Empty
+   pieces (`&&`) are dropped from the redirect's query; every other piece is kept as the request's URL holds it.
+4. **The cookie is counted out only at exactly `fitaf_no_tracking=1`**, one of the Cookie header's `;`-separated pairs
+   (spaces trimmed), alone or among others; `=0`, empty, `=true`, `=11`, and a cookie whose name ends in it are today's
+   path (N4).
+5. **No `Cache-Control` on the 302**: the contract named none and none was added (a 302 carrying no freshness is not
+   cacheable by default, RFC 9111 § 4.2.2).
+6. **N5's "today" is `c6dd3a5`**, read from the repository's objects (`git archive` of its `src/worker/`, `data/`,
+   `scripts/` and `package.json`): a later contract that changes one of those answers moves it, as SP3's base is moved,
+   and a clone without that commit fails it.
+
+**Not done here**: Storybook, the watch and contrast (the page is unchanged); nothing deployed, no merge; the release to
+dev and the production pin are the orchestrator's (§ 12 item 7).
+
+## 13. Amendment, 2026-10-25: Family counted, and the first question. CONTRACT, before any code
+
+**Why.** Round 2 (SPEC-ui-and-copy-pass §§ 2 and 2.2, the Advisor's rulings of 2026-10-25) made *Who is this for?* the
+first question, and gave Family a size and a question of its own. This file's vocabulary was written before either.
+Read at `da5f943` (the release line, production's `ad7c0b0` plus the record of the Footer paste):
+
+1. **A press of a `data-who` or `data-family` button sends nothing.** `src/analytics.js`'s click listener reads only
+   `[data-goal],[data-q],[href],#all-link`.
+2. **Family's result is refused.** The result card sends `result` with Family's mpid 35, but the Worker's `RESULT_MPIDS`
+   holds only the individual plans' mpids. § 10's table was written when Family's card had no result.
+3. **A3 saw neither gap.** Its reading of the built page (`test/a-harness.mjs` `pageAnswers`) reads only the
+   `data-goal` and `data-q` buttons. So *"nothing else is offered"* held over a page that offered two more questions.
+
+So a Family visit is recorded today as `open` → `click` → `leave`. It counts as a visit but is invisible in the funnel.
+Counting starts **2026-10-26 17:00 Eastern** (Fit AF's decision record `2026-10-17-…` § 7u item 11), and this lands
+before then. It was ruled by the orchestrator as this contract's author (session 259), not by the Advisor.
+
+1. **The vocabulary** (§ 3; § 10's table) gains two questions, each named by the page's own id for it:
+   - `who`, with answers `individual` and `family`: the button's `data-who`, build.mjs's `WHO`. The Worker cannot
+     import the build, so it holds a copy, as it does for the meal questions' answers.
+   - `family`, with answers `or` and `and`: the button's `data-family`. The Worker reads them from `data/plans.json`'s
+     `family.selection` (each row's `lunch_dinner`).
+
+   `result`'s mpids gain Family's: `family.counts`' mpids, de-duplicated, which today is 35. Nothing else in the
+   vocabulary changes:
+   - `answer` keeps its two fields, `question` and `answer`.
+   - Family's `result` key is the answer set whose cart Family takes (`or-5d` or `and-5d`, `checkFamily`'s), which is
+     already in `ANSWER_KEYS`. Its mpid is what tells it apart from an individual result.
+   - The key and the mpid are still checked separately, not as a pair.
+2. **The page** (`src/analytics.js`) sends an `answer` for each press of a `data-who` button (`question: "who"`, with its
+   `data-who`) and of a `data-family` button (`question: "family"`, with its `data-family`), as it already does for the
+   goal and the meal questions. A press of the answer already chosen is sent too. There is still one call site, under
+   T5 as amended. The built page stays within T5's size ceiling: state its bytes before and after, on both targets.
+3. **The report** (`scripts/analytics.mjs`, §§ 5 and 11) lists the funnel's answer steps in the page's order since
+   round 2: `who`, `lunch_dinner`, `weekends`, `breakfast`, `snacks`, `goal`, then `family`.
+   - `answer: family` branches off `who`; it is not a step after `goal`. The text prints it with no change figure.
+   - The JSON keeps § 11's shape, with one more step named `answer: <q>`.
+   - AJ1–AJ4 hold. Their fixture gains rows for `who` and `family`.
+   - AJ2's base text moves with this section. Record it once from the new code, and the commit says so.
+   - **The Analytics Worker's dashboard (fitaf `scripts/analytics-tool/`, a marked fork) is not changed here.** It
+     reads its steps by name, so it keeps working, and its *"Saw a plan"* now includes Family's results. Its own
+     funnel (a goal step first, no `who` or `family`) belongs to the Advisor's feedback on that page.
+4. **A3 sees every question the page offers.** Its reading of the built page takes **every `button.choice`**. Each must
+   carry exactly one of the attributes the page's script reads (`data-goal`, `data-q` with `data-a`, `data-who`,
+   `data-family`), and if one carries none, the case fails and names it.
+   - The set of (question, answer) pairs this yields equals the Worker's vocabulary in **both directions**: every pair
+     offered is accepted, and every pair accepted is offered.
+   - A future button of a kind the script does not read fails here before it ships.
+5. **Cases**, written first and run red:
+   - **F1**: A3 as item 4 says, on both targets' built pages.
+   - **F2**: a whole Family visit in the page's stub (`a-harness.mjs`'s `openVisit`): open, *Me and my family*, *lunch
+     or dinner*, the result shown, the result card's order link, leave. It sends `open`, `answer` who/family,
+     `answer` family/or, `result` (`or-5d`, 35), `click` (`order`, 35) and `leave` (step `click`), and **each is
+     accepted by `checkedEvent`**, the Worker's own check, not a copy of it.
+   - **F3**: the same for *lunch and dinner* (`and-5d`, 35), and *Just me* then a goal, which shows today's path is
+     unchanged apart from the added `who` answer.
+   - **F4**: the report over a fixture holding `who` and `family` rows lists them in item 3's order, and `answer:
+     family` has no change figure.
+
+   **Mutants**, each in a mirror and each killed by its own case:
+   - the page's selector without `[data-who]` (F2);
+   - `RESULT_MPIDS` without Family's (F2);
+   - A3's reading without `data-family`, so a Family button goes unread (F1, which must name the button).
+6. **When.** Build on `boston/analytics-family` (from the release line `da5f943`), then merge into `boston/release-c`.
+   Then the dev pin, and then the production pin on the Advisor's word, before 2026-10-26 17:00 Eastern.
+   - ⛔ No Footer block moves: the store's page gains nothing (§ 1 item 3).
+   - The week's content is in the bucket, not the pin, so it is not re-run.
+
+### 13.1 Built (2026-10-25)
+
+§ 13 is unchanged. On `boston/analytics-family`: the cases at `133994b` (on `da5f943`'s code, red), the code at
+`f9273c0`, the goldens it moves at `6ec12ac`, U4's apart at `5f58d3f` (its recorder needed a change), this section after
+them.
+
+**What was built**: `src/worker/beacon.js`'s `QUESTIONS` gains `who` (`individual`, `family`: build.mjs's `WHO`, copied)
+and `family` (data/plans.json's `family.selection`, each row's `lunch_dinner`), its keys now in the page's order since
+round 2; `RESULT_MPIDS` gains Family's mpids, de-duplicated (35). `src/analytics.js`'s click listener reads `[data-who]` and
+`[data-family]` too and sends each press as an `answer` (one call site still). `scripts/analytics.mjs` lists the funnel in
+`QUESTIONS`' order and prints `answer: family` with no change figure. `build.mjs`'s `WHO` comment says WHO is in the
+analytics' vocabulary. A3's reading (`test/a-harness.mjs` `pageChoices`, which `pageAnswers` now returns the answers of)
+takes every `button.choice`.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named; the whole suite was not run, as the
+orchestrator asked: it runs once on the merged release line):
+
+| | before | after |
+|---|---|---|
+| `test/af*.test.mjs` (F1–F4, the mutants and their control) | `133994b`: `# tests 9` `# pass 1` `# fail 8` | `f9273c0`: `# tests 9` `# pass 9` `# fail 0` |
+| `test/a*.test.mjs` and `test/n*.test.mjs` (with `af*` and `aj*`) | `0fd55e3`: `# tests 64` `# pass 64`; with the cases (`133994b` but for F2/F3's comparison, fixed before that commit, red either way): `# tests 73` `# pass 61` `# fail 12` | `f9273c0`: `# tests 73` `# pass 72` `# fail 1` (AJ2, against `2ceb05a`); `5f58d3f`: 73 of 73 |
+| the goldens' readers (CC-8, MS-9, PR-10, S20, CC-4, PV5, SP3, U4, and WC-8, WC-9, QE15, T5, S18, the budget) | `0fd55e3`: `# tests 39` `# pass 39` | `f9273c0`: `# tests 39` `# pass 26` `# fail 13` (every reader of S20, CC-8, PV5, U4 and SP3's base); `5f58d3f`: the eight that read a re-recorded golden, 19 of 19 |
+| the last run, once, at `5f58d3f` | | `test/a*.test.mjs test/n*.test.mjs` and CC-8, MS-9, PR-10, S20, CC-4, PV5, SP3, U4: `# tests 92` `# pass 92` `# fail 0` |
+
+Red for the right reasons. F1: `prod: offered, and refused by the Worker: who individual` (and `who family`, `family or`,
+`family and`; dev the same). F2: `a Family visit, or: refused by the Worker's own check: result or-5d 35`, and its events
+sent as `open · result or-5d 35 · click order 35 · leave click`, no answer. F3: the same for `and-5d`, and *Just me* with no
+`who` answer. F4: the document's funnel with `answer: goal` second. The control and the two code mutants: their anchors
+not yet in `src/analytics.js` and `src/worker/beacon.js`. The reading mutant passed red: it needs the reading alone. Of the
+existing cases, A3's third (`who individual` written by no data point), A11, AJ1 and the AJ mutant's control (the funnel's
+order) were red with them, each by § 13 items 3 and 4.
+
+**The mutants** (`test/af-mutants.test.mjs`, each in a mirror through THE SAME check its case runs, `test/af-checks.mjs`;
+the tracked tree untouched, `git status` clean after every run): the control (the unchanged mirror) passes F1 and F2, and
+the mirror's own copy of the reading passes F1, 0 problems. The page's selector without `[data-who]` fails F2, 1 problem:
+`a Family visit, or: sent open · answer family or · result or-5d 35 · click order 35 · leave click; the contract's: open ·
+answer who family · …`. `RESULT_MPIDS` without Family's fails F2, 1 problem: `a Family visit, or: refused by the Worker's own
+check: result or-5d 35`. A3's reading without `data-family` (over a mirror holding a copy of `test/`, its own `af-checks.mjs`
+run, which imports its mutated `a-harness.mjs`) fails F1, 10 problems, naming each Family button on both targets: `prod: a
+button.choice the page's script does not read (data-goal, data-q with data-a, data-who: it carries none of them): <button
+type="button" class="choice" data-family="or" aria-pressed="false">`, the same for `and`, then `control: the page offers no
+family answer` and `accepted by the Worker, and offered by no button: family or` (and `and`).
+
+**The goldens and bases moved** (each re-recorded once from `f9273c0`'s own tree, `git archive`, the package's
+`node_modules` linked in; each recorder's control first reproducing the committed record):
+
+- CC-8 (CC-8b, CC-8c, MS-9, PR-10): one entry, `src/worker/beacon.js` `2896b313…` → `b77377db…`; none added or removed.
+  `cc-harness` `workerFiles` over `133994b`'s tree reproduces the committed map (35 files).
+- S20 (and CC-4; SP3's S20 case): `index.html` alone, `04eb2bd2…` → `1e8317f2…`, 67,025 → 67,227 bytes (production false).
+  Built as S20 builds it, `133994b`'s tree reproduces `04eb2bd2…`.
+- PV5 (`pv-05-record.mjs --commit f9273c0 --release-a`; at `5eaad96` it reproduces `5eaad96`'s record byte for byte): the
+  same five pages as § 2.2's (production's `index.html`, development's `index.html`, `demo/`, `boston/`, `seminar/`).
+- U4 (`u-04-record.mjs --commit f9273c0 --release-a --without-snack-cells`): the six pages, +202 bytes each; all six
+  contents and every visible page byte-identical (item 11 below).
+- SP3's base (`sp-production.mjs` `LATER`): `0fd55e3`..`f9273c0` over `src/analytics.js` and `src/worker/beacon.js` (item
+  10 below).
+- AJ2's base: `2ceb05a` → `f9273c0`, as § 13 item 3 says. `2ceb05a`'s text over the fixture with its new rows was
+  `133994b`'s, byte for byte.
+- Not moved: WC-8 (its pin removes the analytics slot), WC-9 (its visible pages read the markup without its scripts),
+  QE15, T5, S18, the budget.
+
+**The page's bytes** (every page the builds write, `test/page-budget.mjs`'s gzip; `133994b` → `f9273c0`): each page that
+carries the analytics slot gains 202 bytes raw, by three lines of the script alone (its selector and the two `answer`
+lines; both trees' pages compared line by line, no visible text changed); privacy/ and why/ unchanged.
+
+| build | page | raw | gzip |
+|---|---|---|---|
+| production (as committed, `production` true) | `index.html` | 100,313 → 100,515 | 29,618 → 29,656 |
+| production with `production` false | `index.html` | 67,025 → 67,227 | 19,961 → 20,009 |
+| development | `index.html`, `demo/` | 107,182 → 107,384 | 31,455 → 31,487 |
+| development | `boston/` | 107,184 → 107,386 | 31,453 → 31,486 |
+| development | `seminar/` | 107,185 → 107,387 | 31,456 → 31,488 |
+
+T5's ceiling is 61,440 bytes gzip; the largest page is 31,488.
+
+**What § 13 was silent on, and what was built** (stated, not ruled)
+
+1. **The case files are `af1`–`af4`**, beside the analytics' `a*`: `test/f1-flow-renders.test.mjs` already holds an F1
+   (the flow renders'). Their titles say `F1 (analytics § 13)`. `test/a*.test.mjs` takes them.
+2. **F1 asks the Worker's check, not Miniflare**: every pair offered through `checkedEvent`, and "every pair accepted" read
+   as the Worker's `QUESTIONS`, each of its pairs on some button. A3's third case still posts each offered pair to the
+   Worker in Miniflare, and with the new reading it posts the `who` and `family` pairs too.
+3. **The reading names a button by its opening tag**, never its words; a button carrying two kinds, or a `data-q` without
+   its `data-a`, is unread as well as one carrying none. Each question's answers are listed once (the old reading listed
+   the goals once and the meal answers as found; the page has each once).
+4. **F2 and F3 run on the production page** (`builtPage`, no week), as A2 does; F1 on both targets.
+5. **F3's "today's path is unchanged"** is shown within the tree: the same visit without the *Just me* press is the
+   control (open, four answers, a result, the click, the leave, no `who`), and the visit with it is that visit with
+   `answer who/individual` after `open`. It is not compared with `da5f943`'s page.
+6. **A3's refusals**: *a result's mpid not an individual plan's* (35) became *a result's mpid no plan has* (99), since
+   § 13 item 1 accepts 35; added, a `who` answer and a `family` answer outside the vocabulary.
+7. **The report's order is `QUESTIONS`' key order** (beacon.js, now the page's), which the report already read; the branch
+   is `BRANCHES` in `scripts/analytics.mjs`. **The step after the branch (`result`) is compared with the step before it
+   (`goal`)**. The JSON marks no branch (AJ4's shape); a reader knows it by its name.
+8. **The fixture's new rows** (`steps.json`: `who` 13 and 3, `family` 3 and 1) are invented; A11's text and AJ1's
+   document are re-written by hand from the fixture, as they were written. The AJ mutant's step number is no longer
+   pinned (the funnel is ten steps; the mutant drops the last).
+9. **`ORDER_MPIDS`** is the same set as before, Family's 35 once where it was listed twice.
+10. **SP3's base takes the diff with one line of context** (a new `LATER` option, `context`). The base's
+    `src/analytics.js` predates § 9 item 2's reading, two of whose lines are in the context of the click listener's hunk;
+    with git's three lines that hunk lands with fuzz 2 (Apple's `patch` 2.0-12u11, exit 0 under `--silent`). With one,
+    every hunk lands with no fuzz, and the patched base's `analytics.js` is `f9273c0`'s but for § 9 item 2's lines.
+11. **U4's recorder reads as U4 does** (a new `--without-snack-cells`). Since the hand-off's merge (`c31603d`, SPEC-rung2-
+    progress-and-checkout § 31.2 item 1) U4 compares the week's content and the page with each link's snack cells removed,
+    and its note said the recorder was not re-run for that. This was the first record after that merge. The bare recorder
+    at `f9273c0` moves the committed week's content (31,257 → 32,985 bytes), its page by +1,930 and two visible pages by
+    those cells, which § 13 does not touch and U4 would fail on. Controls: the recorder with `--release-a` alone at
+    `5eaad96` reproduces the committed golden byte for byte; with both flags at `0fd55e3` its record is the committed one.
+
+**Found, not ruled**
+
+- **`basePackage`'s "`patch` refuses one that does not apply cleanly"** holds only up to fuzz 2 on this machine's `patch`;
+  whether an earlier `LATER` entry lands with fuzz was not measured.
+- **The Worker's dashboard** (fitaf `scripts/analytics-tool/`) was not changed, as § 13 item 3 says. Its *Saw a plan* now
+  counts Family's results.
+
+**Not done here**: the whole suite, Storybook, the watch and contrast; nothing deployed, no merge, no pin.

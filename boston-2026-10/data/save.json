@@ -1,7 +1,7 @@
 {
   "api_path": "/api/save",
-  "wording_version": "v0.3-draft",
-  "known_wording_versions": ["v0.3-draft"],
+  "wording_version": "v1",
+  "known_wording_versions": ["v0.3-draft", "v1"],
   "wording_source": "consent/DRAFT.md §§ 1-4",
   "send_time_zone": "America/New_York",
   "send_hour": 9,
@@ -9,6 +9,7 @@
   "unconfirmed_expansion_days": 7,
   "expansion_retention_days": 365,
   "expansion_retention_status": "proposed",
-  "production": false,
+  "no_offer_save_days": 30,
+  "production": true,
   "privacy_notice_url": "/privacy/"
 }

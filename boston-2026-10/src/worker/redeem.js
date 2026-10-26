@@ -40,8 +40,10 @@ const endedPage = (href) => page(ENDED, `<h1>${ENDED}</h1>\n${planLink(href)}`);
 /** The saved offer's one action (SPEC-save-offer-production § 10.3 item 2): the same link, drawn as the store button
  *  (page.css .action); the ended and unknown offers' link back stays the quieter style. */
 const actionLink = (href) => `<p class="action"><a href="${esc(href)}">Build my plan →</a></p>`;
+/** SPEC-ui-and-copy-pass § 1 item 4 (the Advisor, 2026-10-23: "Let's harmonize on "held until""): a code's line, and a
+ *  current offer's date, read "held until", as the saved offer's line and E1 do. */
 const codeLine = (code, offer) =>
-  `<p>Your code: <strong>${esc(displayCode(code))}</strong> · good until ${esc(longDate(offer.valid_to))}</p>`;
+  `<p>Your code: <strong>${esc(displayCode(code))}</strong> · held until ${esc(longDate(offer.valid_to))}</p>`;
 /** A saved offer's line: the date its pricing is held until (no code; § 10.9, the save's held date), or its code. */
 const savedLine = (code, offer, held) =>
   offer.code_mode === "none"
@@ -50,8 +52,8 @@ const savedLine = (code, offer, held) =>
 /** The current offer's line on WELCOME_BACK: its code (reissued, or shared), or, without one, its date. */
 function currentLine(current, newCode) {
   if (newCode) return codeLine(newCode, current);
-  if (current.code_mode === "none") return `<p>Good until ${esc(longDate(current.valid_to))}</p>`;
-  return `<p>Your code: <strong>${esc(current.shared_code)}</strong> · good until ${esc(longDate(current.valid_to))}</p>`;
+  if (current.code_mode === "none") return `<p>Held until ${esc(longDate(current.valid_to))}</p>`;
+  return `<p>Your code: <strong>${esc(current.shared_code)}</strong> · held until ${esc(longDate(current.valid_to))}</p>`;
 }
 
 function currentPage(today) {
@@ -60,7 +62,7 @@ function currentPage(today) {
   return page(
     "Our current offer",
     `<h1>Our current offer</h1>\n<p><strong>${esc(offer.label)}</strong></p>\n` +
-      `<p>Good until ${esc(longDate(offer.valid_to))}</p>\n${planLink("/")}`,
+      `<p>Held until ${esc(longDate(offer.valid_to))}</p>\n${planLink("/")}`,
   );
 }
 

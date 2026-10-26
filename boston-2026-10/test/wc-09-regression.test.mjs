@@ -25,6 +25,19 @@
 // with its content, which is 409b805's with the headings' range removed (WC-9a, amended); picks_data, page_sha256 and the
 // sheet still 409b805's. Re-recorded once more by `--visible-at 773e597` for § 11.2 (the button an outline button in the
 // unselected chip's look: its class): `visible` at all 20 fragments, nothing else.
+// ⚠ RE-RECORDED by `--visible-at ede2e07` for SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23: the chips in their grid, a
+// meal's count as a badge on its tile): `visible` at the 18 answered fragments (the card's list attribute, and a counted
+// meal's badge and hidden words); "" and #family, picks_data, page_sha256 and the sheet unchanged (409b805's).
+// ⚠ RE-RECORDED by `--visible-at dbfcb62` for SPEC-ui-and-copy-pass § 1.2 item 1 (the card's meals and weekly total):
+// `visible` at the four fragments of the two answer sets above their plan (or-5d and and-5d-b, with and without snacks).
+// ⚠ RE-RECORDED by `--visible-at 8bfe4f8 --release-a` for SPEC-ui-and-copy-pass § 2 (2026-10-25: who it is for first, the
+// goal last; the Family line): `visible` at all 20 fragments (the first question in the tabs' place on every one; the
+// goal after the meal questions; #family's line). Recorded as WC-9c serves it since SPEC-save-offer-production § 12
+// (production false: the recorder's new --release-a, which at c6dd3a5 reproduces dbfcb62's record exactly);
+// picks_data, page_sha256 and the sheet unchanged (409b805's).
+// ⚠ RE-RECORDED by `--visible-at 077f472 --release-a` for § 2.2 (Family's own question; the result card shared by both
+// panels): `visible` at all 20 fragments (the result card's place in the markup; #family's card without its figures and
+// with its question); the recorder at 8bfe4f8 reproduces 8bfe4f8's record; picks_data, page_sha256 and the sheet 409b805's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -32,7 +45,9 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PHOTO_SHEETS_DIR, ROOT } from "../build.mjs";
-import { rangeless } from "./cc-harness.mjs";
+import { rangeless, productionFalseMirror, productionFalseSavePath } from "./cc-harness.mjs";
+import { withoutFamilyLinks } from "./uf-harness.mjs";
+import { withoutSnackCells, withSnackCells } from "./snack-cells.mjs";
 import { scriptJsonRef } from "./wc-checks.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW, sheetUrlCount, WEEK_SHEET_URL } from "./wc-regression.mjs";
 import { contentOf, noWeekPage, pageAsset, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
@@ -45,7 +60,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
-  assert.equal(golden.visible_at, "773e597", "the visible pages: 773e597's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2)");
+  assert.equal(golden.visible_at, "077f472", "the visible pages: 077f472's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8, § 1.2 item 1, §§ 2, 2.2)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {
@@ -54,20 +69,29 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
     execFileSync(process.execPath, [join(ROOT, "scripts", "week-content.mjs"), "--week", WEEK_1018, "--out", out], { stdio: "pipe" });
     const written = (await readdir(join(out, "week"))).sort();
     assert.deepEqual(written, ["chefs-choice-2026-10-18.jpg", "picks-data.json"], "the week's data and its one sheet");
-    const text = await readFile(join(out, WEEK_DATA_KEY), "utf8");
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2.2 (2026-10-25): the week's carts Family takes that hold its count carry
+    // Family's link (and-5d here), taken out (uf-harness withoutFamilyLinks); every other byte compared as before.
+    const family = withoutFamilyLinks(await readFile(join(out, WEEK_DATA_KEY)));
+    assert.ok(family.taken > 0, "control: the week's and-5d carries Family's link");
+    const text = family.bytes.toString("utf8");
     const before = JSON.stringify(golden.picks_data);
     // ⚠ Amended for SPEC-every-menu-and-nutrition § 11 item 1 (2026-10-22): each heading is the menu's name alone, a
     // phrase the content fills, so 409b805's is read with each heading's " (<range>)" removed (cc-harness rangeless),
     // every other byte its own.
     const read = rangeless(Buffer.from(asWeekUrls(before), "utf8"), WEEK_1018);
     assert.ok(read.headings > 0, "control: 409b805's headings name the week's range");
-    const after = read.bytes.toString("utf8");
+    // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): every snack link's photo part now
+    // carries its snacks' cells, made to 409b805's data here (test/snack-cells.mjs) from the week's sheet; nothing else.
+    const manifestSheet = JSON.parse(await readFile(join(ROOT, "data", "photo-sheets.json"), "utf8")).chefs_choice[WEEK_1018];
+    const snacked = withSnackCells(read.bytes, manifestSheet);
+    assert.ok(snacked.links > 0 && snacked.cells > 0, `control: 409b805's snack links gain the sheet's snack cells (${snacked.links} links, ${snacked.cells} cells)`);
+    const after = snacked.bytes.toString("utf8");
     assert.ok(sheetUrlCount(before) > 0 && sheetUrlCount(after) === 0, "control: the URLs were rewritten");
     assert.equal(sheetUrlCount(text), 0, "no URL of the build's sheet path is left");
     assert.ok(text.includes(WEEK_SHEET_URL), `the sheet at ${WEEK_SHEET_URL}`);
     assert.deepEqual(JSON.parse(text), JSON.parse(after), "the JSON value, the sheet's URL apart");
     assert.equal(text, scriptJsonRef(JSON.parse(after)), "the bytes: the element's text as the build writes it, the URL apart");
-    assert.notDeepEqual(JSON.parse(text), golden.picks_data, "control: the URL and the headings' range are the differences");
+    assert.notDeepEqual(JSON.parse(text), golden.picks_data, "control: the URL, the headings' range and the snack cells are the differences");
     const sheet = await readFile(join(out, sheetKeyOf(SHEET_1018)));
     assert.ok(sheet.equals(SHEET), "the sheet byte-identical to src/assets/photo-sheets/");
     assert.equal(sha256(sheet), golden.sheet.sha256, "and to 409b805's");
@@ -76,16 +100,26 @@ test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with th
   }
 });
 
+// SPEC-save-offer-production § 12: production's page and Worker as release (a) made them (production false), the rollback.
 test("WC-9c: the page production's Worker serves with that content is, visibly, visible_at's page at every fragment", async () => {
-  const asset = await noWeekPage();
+  const falseRoot = await productionFalseMirror();
+  const asset = await noWeekPage({ savePath: await productionFalseSavePath() });
   const { text, files } = await contentOf({ week: WEEK_1018 });
-  const site = await startSite({ assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheetKeyOf(SHEET_1018)]: files[sheetKeyOf(SHEET_1018)] } });
+  const site = await startSite({ root: falseRoot, assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheetKeyOf(SHEET_1018)]: files[sheetKeyOf(SHEET_1018)] } });
   try {
     const served = (await site.get("/")).text;
     assert.notEqual(served, asset, "control: the week reached the page");
+    // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries
+    // its snacks' cells; each visible page is read with exactly those removed (test/snack-cells.mjs withoutSnackCells),
+    // every other byte as visible_at's. (The recorder builds visible_at's own tree, production true since § 12 of
+    // SPEC-save-offer-production, where this case reads release (a)'s page, so it is not re-run for this.)
+    let cut = 0;
     for (const hash of REGRESSION_HASHES) {
-      assert.equal(sha256(visible(served, { hash, now: REGRESSION_NOW })), golden.visible[hash], `${hash || "(none)"}: the visible page`);
+      const read = withoutSnackCells(visible(served, { hash, now: REGRESSION_NOW }));
+      cut += read.links;
+      assert.equal(sha256(read.text), golden.visible[hash], `${hash || "(none)"}: the visible page`);
     }
+    assert.ok(cut > 0, "control: the snack links' cells were there to remove");
     const tile = await site.get(WEEK_SHEET_URL);
     assert.ok(tile.body.equals(SHEET), "the tiles' sheet is served at its new URL");
   } finally {
