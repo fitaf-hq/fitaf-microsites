@@ -34,8 +34,11 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  once more at 077f472 for § 2.2 (Family's own question; the result card shared): 8bfe4f8's tree reproduces b4a168dc…,
  *  077f472's gives 72ed1f9d…; and at 5eaad96 (the Family door's [hidden] rule), 077f472's tree reproducing 72ed1f9d…,
  *  5eaad96's gives 6447ecd8…. Re-recorded once more at 0233dbe for SPEC-ui-and-copy-pass § 3 (2026-10-26, the desktop
- *  column: its one media block and comment): 2b409bb's tree reproduces 6447ecd8…, 0233dbe's gives this. */
-const TODAY_NO_PICKS_SHA256 = "02fe24d1de00574ea01b0377ea0b1a17817050abdc309c690d633644e7163c0d";
+ *  column: its one media block and comment): 2b409bb's tree reproduces 6447ecd8…, 0233dbe's gives 02fe24d1…. Re-recorded
+ *  once more at d0f1a97 for SPEC-ui-and-copy-pass § 4 (2026-10-26: the questions revealed one by one, Why Fit AF? a banner
+ *  at the foot, #plan-data's snacks_carted; Not ready? and the save step are not on this page): 62b8627's tree (its cases,
+ *  the code before) reproduces 02fe24d1…, d0f1a97's gives this. */
+const TODAY_NO_PICKS_SHA256 = "fd75caac0b33129c5108b30cf2093ab42668ff55c9de568936abd8257d1f76be";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
