@@ -29,7 +29,9 @@
     "snacks_heading": "Snacks",
     "snacks_not_carted": "Snacks aren't added to your cart yet.",
     "updating": "We're updating this week's menu.",
-    "menus_label": "Menu"
+    "menus_label": "Menu",
+    "explore": "Explore our menus",
+    "own_note": "You'll choose your meals in the next step."
   },
   "menus": {
     "status": "placeholder",

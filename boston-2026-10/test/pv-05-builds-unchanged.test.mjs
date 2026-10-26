@@ -24,6 +24,9 @@
 // the code before) reproduces 0233dbe's (recorded_at apart).
 // And at cb0980f (`--commit cb0980f --release-a`), § 4.2 (the start the first question alone; Not ready?'s words): the
 // same five pages; every other file byte-identical; the recorder at d03fafb reproduces d0f1a97's (recorded_at apart).
+// And at 27cc0df (`--commit 27cc0df --release-a`), § 5 (the result card reordered): the same five pages; every other
+// file byte-identical; the recorder at fb7b110 reproduces cb0980f's (recorded_at apart). And at 8f36711, § 5 item 6 (the
+// scroll stops' rules): the same five pages; the recorder at 4578c46 reproduces 27cc0df's (recorded_at apart).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

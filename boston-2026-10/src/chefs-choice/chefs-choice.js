@@ -58,7 +58,10 @@ else if (picks.carted && snackQuestion) snackQuestion.hidden = true;
 
 function start(week) {
   var $ = function (id) { return document.getElementById(id); };
-  var result = $("result"), choose = $("result-cta"), list = $("cc-list"), own = $("cc-own");
+  // SPEC-ui-and-copy-pass § 5 item 1: the checkout after the price (its own slot); the own chip (`own`) a chip, not a link.
+  var result = $("result"), choose = $("result-cta"), list = $("cc-list"), checkout = $("cc-checkout"), heading = $("cc-heading");
+  var OWN = "own"; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3): the chip's value, never a list's
+  var ownNote = $("cc-own-note"), ownWords = list.getAttribute("data-own") || ""; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
   var snackBox = $("cc-snacks"); // only while Q4 is on the page (§ 9 item 3)
   var group = $("cc-menus"); // SPEC-every-menu-and-nutrition § 2: the chooser
   var has = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
@@ -80,7 +83,7 @@ function start(week) {
     }
     return m;
   })(week.menus);
-  var picked = menus.length ? menus[0].list : null; // the menu chosen: Chef's Choice first (§ 2 item 2)
+  var picked = menus.length ? menus[0].list : ""; // the menu chosen: Chef's Choice first (§ 2 item 2); "" a one-list week's
   var cartsOf = function (menu) { return menu && menu.carts ? menu.carts : week.carts; };
   var snacksOf = function (menu) { return menu && menu.carts ? menu.snacks : week.snacks; };
   function menuNamed(id) {
@@ -201,9 +204,21 @@ function start(week) {
   // WHOLE ROW (its tile and its name) is the button opening the panel beneath it (aria-expanded, aria-controls), a second
   // press closing it, each meal on its own, its mark a circled "i"; the panel the size's rings, then the ingredients and
   // Contains (§ 11 item 4). A meal with neither keeps the row it always had: no panel, no mark.
+  // SPEC-ui-and-copy-pass § 5 item 7: a meal's description, when its entry carries one, under its name (one column).
+  function described(name, entry) {
+    if (!isText(entry.description) || !entry.description.trim()) return name;
+    var words = document.createElement("span");
+    words.className = "cc-words";
+    var desc = document.createElement("span");
+    desc.className = "cc-desc";
+    desc.textContent = entry.description;
+    appendAll(words, [name, desc]);
+    return words;
+  }
   function detail(li, tile, name, entry, place) {
     var numbers = ringWords ? numbersFor(entry.nutrition, result.getAttribute("data-accent")) : null;
     var more = isText(entry.ingredients) ? entry.ingredients : null;
+    name = described(name, entry);
     if (!numbers && !more) return appendAll(li, [tile, name]);
     li.className = "cc-control";
     var meal = document.createElement("button");
@@ -289,11 +304,14 @@ function start(week) {
   }
 
   // § 2 item 1: the radios of the menus offered, in their order, the chosen one checked; shown when there are two or
-  // more. Rebuilt only when the menus offered change, so a radio keeps the focus the arrow keys gave it. A week of one
-  // list never touches the group (item 4: the card as it was).
+  // more. Rebuilt only when the menus offered change, so a radio keeps the focus the arrow keys gave it.
+  // SPEC-ui-and-copy-pass § 5 item 1: the own chip (`own`) joined to the menus as the last chip (BRIDGE, item 3), so a week
+  // of one list shows its chip and that one (`one`, its list's own name, the cart's heading).
   var offeredShown = "", radios = [];
-  function renderMenus(offered) {
-    if (!group || !menus.length) return;
+  function renderMenus(offered, one) {
+    if (!group) return;
+    offered = offered.length || !one ? offered : [{ list: "", name: one }];
+    if (offered.length) offered = offered.concat([{ list: OWN, name: ownWords }]); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
     group.hidden = 2 > offered.length;
     var ids = offered.map(function (m) { return m.list; }).join("\n");
     if (ids !== offeredShown) {
@@ -316,7 +334,7 @@ function start(week) {
     }
     radios.forEach(function (radio) { radio.checked = radio.value === picked; });
   }
-  if (group && menus.length) {
+  if (group) {
     group.addEventListener("change", function (e) {
       if (!e.target || e.target.name !== "cc-menu") return;
       picked = e.target.value;
@@ -326,22 +344,49 @@ function start(week) {
 
   // The list is always open (SPEC-plan-page-refinement § 2 item 5): shown whenever the week has a cart for the answers.
   // § 2 item 3: an answer change keeps the chosen menu when it has a cart for the new answers, else Chef's Choice.
+  // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3): the own chip pressed shows every meal of every menu's cart for the answers,
+  // each once, in the order they first appear (its photo cell and its entry its first's), under its note, and the
+  // checkout goes to the store's plan page (#result-cta's address). Removed whole by the menu builder: every line marked.
+  function everyMeal(key, offered) { // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+    var out = { meals: [], thumbs: [], facts: [] }, seen = {}; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+    (offered.length ? offered : [null]).forEach(function (m) { // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+      var cart = has(cartsOf(m), key) ? cartsOf(m)[key] : null; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+      if (!cart) return; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+      cart.meals.forEach(function (line, j) { // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+        var meal = counted(line).meal; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+        if (has(seen, meal)) return; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+        seen[meal] = true; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+        out.meals.push(meal); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+        out.thumbs.push(cart.thumbs[j]); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+        out.facts.push(isList(cart.facts) ? cart.facts[j] : null); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+      }); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+    }); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+    return out; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+  } // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
   function render() {
     var sel = selection();
     var key = sel.replace(/-s$/, "");
     var offered = menus.filter(function (m) { return sel && has(cartsOf(m), key); });
-    if (sel && menus.length && !offered.some(function (m) { return m.list === picked; })) picked = menus[0].list;
-    var menu = menuNamed(picked);
+    var own = picked === OWN; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+    if (!own && sel && menus.length && !offered.some(function (m) { return m.list === picked; })) picked = menus[0].list;
+    var menu = own ? offered[0] || null : menuNamed(picked); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3): the cart that says the list shows
     var c = sel ? chosen(sel, menu) : null;
     choose.hidden = !!c;
-    list.hidden = own.hidden = !c;
-    renderMenus(c ? offered : []);
-    renderSnacks(sel, menu);
+    list.hidden = checkout.hidden = !c;
+    renderMenus(c ? offered : [], c ? c.menu.heading : "");
+    renderSnacks(sel, own ? null : menu); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3): the week's snacks
+    ownNote.hidden = !own || !c; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+    heading.hidden = own; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
     if (!c) return;
-    $("cc-heading").textContent = c.menu.heading;
+    if (own) { // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+      var whole = everyMeal(key, offered); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+      fill($("cc-meals"), whole.meals, whole.thumbs, whole.facts, OWN + "|" + key); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+      checkout.href = choose.getAttribute("href"); // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+      return; // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+    } // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)
+    heading.textContent = c.menu.heading;
     fill($("cc-meals"), c.menu.meals, c.menu.thumbs, c.menu.facts, picked + "|" + key);
-    $("cc-checkout").href = c.link;
-    own.href = choose.getAttribute("href");
+    checkout.href = c.link;
   }
   window.addEventListener("hashchange", render);
   render();

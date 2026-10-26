@@ -80,16 +80,21 @@ export async function menusPage({ root = ROOT, target = "prod", picks = MENUS_DI
 /** The plan page at `hash` (cc-harness openPlanPage; no date decides the week). */
 export const openMenus = (html, hash) => openPlanPage(html, { hash });
 
-/** What the chooser shows: whether it is shown, its radios' names (their labels), values, and which is checked. */
+/** What the chooser shows: whether it is shown, its menus' radios' names (their labels), values, and which is checked.
+ *  ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): *Choose my own meals* is the chips' last radio (its
+ *  value `own`, BRIDGE), not a menu: it is read apart, as `own` (its name, and whether it is checked), or null. */
 export function chooserOf(page) {
   const group = page.document.getElementById("cc-menus");
-  const radios = group ? [...group.querySelectorAll('input[type="radio"]')] : [];
+  const all = group ? [...group.querySelectorAll('input[type="radio"]')] : [];
+  const own = all.find((r) => r.value === "own") ?? null;
+  const radios = all.filter((r) => r !== own);
   return {
     exists: Boolean(group),
     shown: Boolean(group) && !hiddenInTree(group),
     names: radios.map((r) => shownText(r.parentElement.textContent)),
     values: radios.map((r) => r.value),
     checked: radios.filter((r) => r.checked).map((r) => r.value),
+    own: own && { name: shownText(own.parentElement.textContent), checked: own.checked },
   };
 }
 

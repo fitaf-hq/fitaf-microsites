@@ -31,7 +31,7 @@ const STORIES = {
     "or · weekdays · snacks, no list",
   ],
   // The site's SPEC-every-menu-and-nutrition: the chooser, the other menu chosen, a meal's nutrition opened.
-  "Every menu": ["Two menus", "Two menus · the other chosen", "Nutrition · a meal opened"],
+  "Every menu": ["Two menus", "Two menus · the other chosen", "Nutrition · a meal opened", "The own chip pressed"],
   // § 8.3: the hand-off's two faces.
   "Hand-off": [
     "Screen · A",

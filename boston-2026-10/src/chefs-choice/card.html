@@ -1,8 +1,10 @@
           <p class="cc-updating" id="cc-updating" hidden>{{UPDATING}}</p>
-          <div class="cc-list" id="cc-list" data-meal-qty="{{MEAL_QTY}}" hidden>
+          <div class="cc-list" id="cc-list" data-meal-qty="{{MEAL_QTY}}" data-own="{{OWN}}" hidden><!-- BRIDGE (SPEC-ui-and-copy-pass § 5 item 3): data-own, the chip's words -->
+            <h2 class="step-label cc-explore" id="cc-explore">{{EXPLORE}}</h2>
             <fieldset class="cc-menus" id="cc-menus" aria-label="{{MENUS_LABEL}}" hidden></fieldset>
             <h3 class="cc-heading" id="cc-heading"></h3>
-            <ul class="cc-meals" id="cc-meals"></ul>{{SNACKS}}
-            <a class="cta" id="cc-checkout">{{CHECKOUT}}</a>
+            <p class="cc-own-note" id="cc-own-note" hidden>{{OWN_NOTE}}</p><!-- BRIDGE (SPEC-ui-and-copy-pass § 5 item 3) -->
+            <div class="cc-box" id="cc-box">
+              <ul class="cc-meals" id="cc-meals"></ul>{{SNACKS}}
+            </div>
           </div>
-          <a class="cc-own" id="cc-own" hidden>{{OWN}}</a>

@@ -52,14 +52,16 @@ test("S28: as a visitor goes — absent, then after the card's Continue to check
   assertFlowOneAbsent(page);
   page.el("who-individual").click();
   const { button } = assertFlowOneDirectlyAfterStoreButton(page);
-  assert.equal(button.id, "cc-own");
+  assert.equal(button.id, "cc-checkout"); // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1: the card's last link
   assert.equal(page.el("save-email").value, "dummy-s28@example.com", "back on the plan: what was typed is kept");
   assert.equal(page.document.querySelectorAll("#save").length, 1, "one Flow 1, never copied");
 });
 
-test("S28: with a week's Chef's Choice, Flow 1 directly after the card's last link to the store (Choose my own meals)", () => {
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): the card's last link to the store is Continue to checkout
+// (Choose my own meals a chip above the list).
+test("S28: with a week's Chef's Choice, Flow 1 directly after the card's last link to the store (Continue to checkout)", () => {
   const page = openPlanPage(withWeek, { hash: CHECKOUT, now: NOW });
   assert.equal(page.el("cc-list").hasAttribute("hidden"), false, "control: the week's list is shown");
   const { button } = assertFlowOneDirectlyAfterStoreButton(page);
-  assert.equal(button.id, "cc-own");
+  assert.equal(button.id, "cc-checkout");
 });

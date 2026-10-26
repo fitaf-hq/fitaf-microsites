@@ -37,7 +37,9 @@ const APPROVED = [
 ];
 /** The chooser's own name (the ruling: "Menu"), a phrase of the card's words. */
 const GROUP = "menus_label";
-const PARTS = ["cc-list", "cc-own"];
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): *Choose my own meals* is a chip in the list; Continue to
+// checkout follows the price, after it.
+const PARTS = ["cc-list", "cc-checkout"];
 const HASH = "#lean-or-7d-s"; // both lists have a cart for it, and a snack list for every day
 
 test("EM4a: data/messages.json names the five approved menus in order, the chooser's own name, the heading's {menu}, and nutrition's phrases (the rings' labels in order, grams, ingredients, contains), each marked a placeholder", () => {

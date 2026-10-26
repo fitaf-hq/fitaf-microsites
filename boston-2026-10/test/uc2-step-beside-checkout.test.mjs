@@ -29,7 +29,9 @@ function assertStepOnlyBesideCheckout(html, where) {
   const at = openPlanPage(html, { hash: CHECKOUT, now: NOW });
   assert.deepEqual(cardAt(at), { checkout: true, choose: false }, `${where}, ${CHECKOUT}: control: the card shows Continue to checkout`);
   const { button } = assertFlowOneDirectlyAfterStoreButton(at);
-  assert.equal(button.id, "cc-own", `${where}, ${CHECKOUT}: the step directly after the card (its last link, Choose my own meals)`);
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): the card's last link is Continue to checkout (Choose my
+  // own meals a chip above the list).
+  assert.equal(button.id, "cc-checkout", `${where}, ${CHECKOUT}: the step directly after the card (its last link, Continue to checkout)`);
   for (const hash of [NO_CART, "#lean-or-5d-b", "", "#lean", "#family"]) {
     const page = openPlanPage(html, { hash, now: NOW });
     assert.equal(cardAt(page).checkout, false, `${where}, ${hash || "(no fragment)"}: control: no Continue to checkout`);
@@ -95,7 +97,7 @@ test("UC2: out of area, then Tell me when you deliver here — the step goes awa
   await settle();
   assert.deepEqual(stepRead(page), [".draft-tag", "save-expansion-done"], "EXPANSION_SAVED: its done line alone");
   for (const id of ["save-step-offer", "save-lead", "save-form", "save-out-of-area"]) assert.equal(shown(page, id), false, `#${id} hidden`);
-  assert.equal(storeButton(page).id, "cc-own", "control: still beside checkout");
+  assert.equal(storeButton(page).id, "cc-checkout", "control: still beside checkout"); // § 5 item 1: the card's last link
 });
 
 test("UC2: #from-email — the one-line Save my offer only beside checkout", () => {

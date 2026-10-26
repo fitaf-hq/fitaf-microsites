@@ -47,7 +47,8 @@ test("MS-3 (§ 12): Q1 alone gives or, weekdays and and, weekdays: their fragmen
         [String(meals), dollars(centsOf(goal, plan)), dollars(meals * centsOf(goal, plan)), `${PLANS.order_base_url}?mpid=${mpidOf(goal, plan)}`],
         `#${goal}, ${ld}: ${meals} meals through the ${plan}-meal plan`,
       );
-      assert.equal(r.rounded !== null, plan < meals, `#${goal}, ${ld}: the rounded line only where ${meals} goes through as ${plan}`);
+      // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 2 (2026-10-26): the rounded line is never printed.
+      assert.equal(r.rounded, null, `#${goal}, ${ld}: no rounded line (${meals} through the ${plan}-meal plan)`);
       assert.deepEqual(r, resultOf(open(html, `#${goal}-${key}`)), `#${goal}, ${ld}: the card as #${goal}-${key} opens it`);
     }
   }

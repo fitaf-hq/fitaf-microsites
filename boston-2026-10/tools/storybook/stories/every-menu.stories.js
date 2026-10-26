@@ -20,3 +20,5 @@ export default {
 export const TwoMenus = { ...story("menus"), name: "Two menus" };
 export const TwoMenusOtherChosen = { ...story("menusOther"), name: "Two menus · the other chosen" };
 export const NutritionOpened = { ...story("nutrition"), name: "Nutrition · a meal opened" };
+// The site's SPEC-ui-and-copy-pass § 5 item 3 (BRIDGE, one day): the own chip pressed.
+export const OwnChosen = { ...story("ownChosen"), name: "The own chip pressed" };
