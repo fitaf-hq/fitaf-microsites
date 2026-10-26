@@ -800,3 +800,33 @@ gzip.
 The storefront watch was not run (its expectation is the live block's; the built block moves by `COUNTS`' Family entry).
 
 **Renders**: none made here (the orchestrator pins the branch to dev for the Advisor's look at once).
+
+## 3. The desktop column (2026-10-26), the workaround for the giant header. CONTRACT, before any code
+
+**The Advisor, 2026-10-25** (verbatim): *"Deal with the fact that the microsite has a giant header on desktop. I don't
+like it, but for now I'm willing to force the entire site into a maximum width column (and put it on a matching or
+cooordinating background) as a workaround rather than fully figuring out responsivness for it today (we will need to
+come back to it – possibly as soon as Tuesday)."* And 2026-10-26, before the Owner's review at 07:30 PDT: *"I want to
+show as much as we can get done between now and then."*
+
+1. **The column**: on a screen wider than the column, the whole page (the top with its carousel and logo, the offer box,
+   the questions, the result, the save step, the foot) sits in one centred column **480 px** wide; nothing in the page
+   is wider than it. One token, `--column: 480px` in `:root`, and the media query's breakpoint (`min-width: 481px`, the
+   column plus one: CSS cannot read a token in a media query) are the only places the width is written.
+2. **The background**: outside the column, `--navy` (the page's `theme-color`, the store's bar). The column keeps the
+   page's white and fills the screen's height. No text sits on the navy, so no contrast pair is added.
+3. **The carousel in the column**: its 4:3 window at the column's width, `calc(var(--column) * 3 / 4)` tall (360 px), with
+   no band above or below; outside the media query its rule is unchanged (`min(75vw, 640px)`).
+4. **The phone is unchanged**: at 480 px and narrower nothing changes; every rule is inside the one media query.
+5. **Why 480** (the orchestrator's choice, renders at 1280×800 on 2026-10-26, his to change in one line): the page was
+   designed and reviewed at 390–430; at 480 the carousel is 360 px tall and the first question is above the fold on a
+   laptop, where 720 (the content's `.wrap`) leaves a 540 px carousel and 560 a 420 px one. `--ice` was the other
+   background considered.
+6. **Not in this section**: the dialogs (*See all plans*, *Why Fit AF?*) are modal and keep their own widths over the
+   backdrop; the /why/, /privacy/ and Worker pages already set their text in a 680 px column on white and are untouched
+   (⛔ the Why page changes only on his ruling); real responsiveness is later (his *"we will need to come back to it"*).
+7. **Cases**, written first and run red, on both builds that carry the page (development, and production with
+   `production` true): the media query exists once, at the column plus one; inside it `html`'s background is `--navy`,
+   `body`'s maximum width is the token, centred, at least the screen's height, `.slides`' height the token's 3/4; the
+   token is 480 px; outside it `.slides`' rule is unchanged; no raw colour in the block. Goldens that pin the page (S20,
+   PV5, U4, and whichever others read it) move by exactly this block and are re-recorded in their own commit, each named.
