@@ -568,3 +568,71 @@ orchestrator's approval. No other golden moved: S20, WC-9, U4 and PV5 pass uncha
 
 **Not done here**: Storybook, the watch and contrast (the page is unchanged); nothing deployed, no merge; the release to
 dev and the production pin are the orchestrator's (§ 12 item 7).
+
+## 13. Amendment, 2026-10-25: Family counted, and the first question. CONTRACT, before any code
+
+**Why.** Round 2 (SPEC-ui-and-copy-pass §§ 2 and 2.2, the Advisor's rulings of 2026-10-25) made *Who is this for?* the
+first question, and gave Family a size and a question of its own. This file's vocabulary was written before either.
+Read at `da5f943` (the release line, production's `ad7c0b0` plus the record of the Footer paste):
+
+1. **A press of a `data-who` or `data-family` button sends nothing.** `src/analytics.js`'s click listener reads only
+   `[data-goal],[data-q],[href],#all-link`.
+2. **Family's result is refused.** The result card sends `result` with Family's mpid 35, but the Worker's `RESULT_MPIDS`
+   holds only the individual plans' mpids. § 10's table was written when Family's card had no result.
+3. **A3 saw neither gap.** Its reading of the built page (`test/a-harness.mjs` `pageAnswers`) reads only the
+   `data-goal` and `data-q` buttons. So *"nothing else is offered"* held over a page that offered two more questions.
+
+So a Family visit is recorded today as `open` → `click` → `leave`. It counts as a visit but is invisible in the funnel.
+Counting starts **2026-10-26 17:00 Eastern** (Fit AF's decision record `2026-10-17-…` § 7u item 11), and this lands
+before then. It was ruled by the orchestrator as this contract's author (session 259), not by the Advisor.
+
+1. **The vocabulary** (§ 3; § 10's table) gains two questions, each named by the page's own id for it:
+   - `who`, with answers `individual` and `family`: the button's `data-who`, build.mjs's `WHO`. The Worker cannot
+     import the build, so it holds a copy, as it does for the meal questions' answers.
+   - `family`, with answers `or` and `and`: the button's `data-family`. The Worker reads them from `data/plans.json`'s
+     `family.selection` (each row's `lunch_dinner`).
+
+   `result`'s mpids gain Family's: `family.counts`' mpids, de-duplicated, which today is 35. Nothing else in the
+   vocabulary changes:
+   - `answer` keeps its two fields, `question` and `answer`.
+   - Family's `result` key is the answer set whose cart Family takes (`or-5d` or `and-5d`, `checkFamily`'s), which is
+     already in `ANSWER_KEYS`. Its mpid is what tells it apart from an individual result.
+   - The key and the mpid are still checked separately, not as a pair.
+2. **The page** (`src/analytics.js`) sends an `answer` for each press of a `data-who` button (`question: "who"`, with its
+   `data-who`) and of a `data-family` button (`question: "family"`, with its `data-family`), as it already does for the
+   goal and the meal questions. A press of the answer already chosen is sent too. There is still one call site, under
+   T5 as amended. The built page stays within T5's size ceiling: state its bytes before and after, on both targets.
+3. **The report** (`scripts/analytics.mjs`, §§ 5 and 11) lists the funnel's answer steps in the page's order since
+   round 2: `who`, `lunch_dinner`, `weekends`, `breakfast`, `snacks`, `goal`, then `family`.
+   - `answer: family` branches off `who`; it is not a step after `goal`. The text prints it with no change figure.
+   - The JSON keeps § 11's shape, with one more step named `answer: <q>`.
+   - AJ1–AJ4 hold. Their fixture gains rows for `who` and `family`.
+   - AJ2's base text moves with this section. Record it once from the new code, and the commit says so.
+   - **The Analytics Worker's dashboard (fitaf `scripts/analytics-tool/`, a marked fork) is not changed here.** It
+     reads its steps by name, so it keeps working, and its *"Saw a plan"* now includes Family's results. Its own
+     funnel (a goal step first, no `who` or `family`) belongs to the Advisor's feedback on that page.
+4. **A3 sees every question the page offers.** Its reading of the built page takes **every `button.choice`**. Each must
+   carry exactly one of the attributes the page's script reads (`data-goal`, `data-q` with `data-a`, `data-who`,
+   `data-family`), and if one carries none, the case fails and names it.
+   - The set of (question, answer) pairs this yields equals the Worker's vocabulary in **both directions**: every pair
+     offered is accepted, and every pair accepted is offered.
+   - A future button of a kind the script does not read fails here before it ships.
+5. **Cases**, written first and run red:
+   - **F1**: A3 as item 4 says, on both targets' built pages.
+   - **F2**: a whole Family visit in the page's stub (`a-harness.mjs`'s `openVisit`): open, *Me and my family*, *lunch
+     or dinner*, the result shown, the result card's order link, leave. It sends `open`, `answer` who/family,
+     `answer` family/or, `result` (`or-5d`, 35), `click` (`order`, 35) and `leave` (step `click`), and **each is
+     accepted by `checkedEvent`**, the Worker's own check, not a copy of it.
+   - **F3**: the same for *lunch and dinner* (`and-5d`, 35), and *Just me* then a goal, which shows today's path is
+     unchanged apart from the added `who` answer.
+   - **F4**: the report over a fixture holding `who` and `family` rows lists them in item 3's order, and `answer:
+     family` has no change figure.
+
+   **Mutants**, each in a mirror and each killed by its own case:
+   - the page's selector without `[data-who]` (F2);
+   - `RESULT_MPIDS` without Family's (F2);
+   - A3's reading without `data-family`, so a Family button goes unread (F1, which must name the button).
+6. **When.** Build on `boston/analytics-family` (from the release line `da5f943`), then merge into `boston/release-c`.
+   Then the dev pin, and then the production pin on the Advisor's word, before 2026-10-26 17:00 Eastern.
+   - ⛔ No Footer block moves: the store's page gains nothing (§ 1 item 3).
+   - The week's content is in the bucket, not the pin, so it is not re-run.
