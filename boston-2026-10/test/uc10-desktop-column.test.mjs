@@ -57,9 +57,15 @@ test("UC10a: the column's media query exists once, at the column plus one", asyn
   }
 });
 
-test("UC10b: the token is the column's width, 480 px", async () => {
+// § 3.1: the token is declared on html inside the block, never in :root, whose tokens are copied into the emails
+// (email-tokens.json, M17), the Worker's pages (page-style.json, SP15) and the privacy page.
+test("UC10b: the token is the column's width, 480 px, inside the block and not in :root", async () => {
   for (const [name, html] of await pages()) {
-    assert.equal(declarations(styleSheet(html), ":root")["--column"], `${COLUMN_PX}px`, name);
+    const css = styleSheet(html);
+    const [inside] = blocks(css, BREAKPOINT);
+    assert.ok(inside, `${name}: the block`);
+    assert.equal(declarations(inside, "html")["--column"], `${COLUMN_PX}px`, name);
+    assert.equal(declarations(css, ":root")["--column"], undefined, `${name}: :root carries no --column`);
   }
 });
 

@@ -27,7 +27,6 @@
   --performance: #f7941d;
   --family: #f5bb00;
   --radius: 6px;
-  --column: 480px;
   --head: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
@@ -198,9 +197,11 @@ main.wrap { padding-top: 20px; }
 
 /* The desktop column (SPEC-ui-and-copy-pass § 3, the Advisor's workaround for the giant header): above the column's
    width the whole page sits in one centred column on navy, the carousel's 4:3 window at the column's width. The
-   breakpoint is the column plus one (a media query cannot read --column). At 480 px and narrower nothing changes. */
+   breakpoint is the column plus one (a media query cannot read --column). At 480 px and narrower nothing changes.
+   The token is declared here, not in :root, whose tokens are copied into the emails, the Worker's pages and the
+   privacy page. */
 @media (min-width: 481px) {
-  html { background: var(--navy); }
+  html { --column: 480px; background: var(--navy); }
   body { max-width: var(--column); margin: 0 auto; min-height: 100vh; }
   .slides { height: calc(var(--column) * 3 / 4); }
 }

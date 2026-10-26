@@ -285,9 +285,10 @@ export const LATER = [
   // the context of the click listener's hunk: with git's three lines of context that hunk lands only with patch's fuzz,
   // so the diff is taken with one (`context`), and every hunk lands with no fuzz (an offset only).
   ["0fd55e3", "f9273c0", ["src/analytics.js", "src/worker/beacon.js"], { context: 1 }],
-  // SPEC-ui-and-copy-pass § 3 (2026-10-26, the desktop column) moves the production page by the template's token line and
-  // its one media block, from 2b409bb (its cases, after its contract) to 50515d9 (its code, one commit).
-  ["2b409bb", "50515d9", ["src/template.html"]],
+  // SPEC-ui-and-copy-pass § 3 (2026-10-26, the desktop column) moves the production page by the template's one media block
+  // and its comment, from 2b409bb (its cases, after its contract) to 0233dbe (its code, at its second commit: the token out
+  // of :root).
+  ["2b409bb", "0233dbe", ["src/template.html"]],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
