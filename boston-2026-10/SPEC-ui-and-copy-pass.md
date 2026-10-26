@@ -878,3 +878,105 @@ column), so the phone was read through a 390 px `<iframe>`, whose own viewport t
 **Not done here**: Storybook's stories of the page at 1280 (SPEC-storybook-microsite) are not re-rendered; the /why/,
 /privacy/ and Worker pages keep their 680 px text column on white over the whole screen (item 6), so on a desktop the
 site is two looks until real responsiveness is built.
+
+## 4. Round 2, changeset 2 (2026-10-26): the questions revealed one by one, *Not ready?* in a dialog, *Why Fit AF?* at the foot. CONTRACT, before any code
+
+**The Advisor, 2026-10-26** (verbatim): *"The questions should progressively reveal (we're ultimately going to add a
+progress bar). Once they're all revealed they should stay revealed, even as the user taps around. Since individual and
+family are the same, it is OK for us to have a fallback rule that says something like: If *any* question sequence has
+started and the user flips to the other individual/family choice, consider *all* questions revealed. … As part of this,
+count the meal size as the final "question""*. *"Add a "Not ready?" secondary call to action link/button (we can edit the
+copy) after the checkout button (they should both reveal at the same time). When tapped, that shows a modal with the
+contents of the "save offer form". I think that will cleanup the flow."* *"The "Why Fit AF?" button needs to look less
+like a transactional button and more of a … "actionable banner" or "non-intrusive ad-like unit" … It's also sitting
+awkwardly in the flow. For now, let's try putting it towards the bottom of the page (after checkout/save offer – and it
+should always be visible in the page flow, though it may scroll out of the viewport)."*
+
+### A. The questions, revealed one by one
+
+1. **The sequence**, top to bottom as today (§ 2): *Who is this for?*, then for the individual plan *lunch or dinner*,
+   *weekends*, *breakfast*, *snacks* (when `plans.json` `snacks.shown`), and **the meal size** (*What's your goal?*, the
+   last question, the portion-size disclosure beneath it as § 2 item 4); for Family, its one question (§ 2.2). The result
+   card (the price, *Choose your meals*, item B's *Not ready?*) is the step after the last question, as today.
+2. **What shows at the start** (a link carrying no answer and no size: `""`, `#individual`, `#family`): *Who is this for?*
+   with its default pressed (*Just me*, § 2 item 2; or *Me and my family* for `#family`) **and the first question below
+   it**: the first question has an answer by default, so the next is shown. Nothing else of the panel.
+3. **Revealing**: answering a question by a tap (either answer, the one already pressed included) shows the next one in
+   the sequence; answering the last (the meal size; Family's one question) shows the result card. **A question once shown
+   stays shown** for the page view, whatever is tapped after, the browser's back and forward included; the revealed
+   point never moves back up.
+4. ⚠ **The newest question has no answer pressed until it is tapped** (the orchestrator's default, ⬜ his to rule): the
+   meal questions' defaults (`selection_defaults`) still hold for the price and the cart, but a question the visitor has
+   not yet answered shows neither answer pressed, so a pressed default never reads as an answer given. Every question
+   above it was tapped and shows its answer. Once all are revealed (item 6), every question shows its answer, defaults
+   included, as today.
+5. **A link that carries answers or a size** (`#lean`, `#lean-or-5d-b`, `#meals-and-7d`, `#lean-7`, `#family-or`, the
+   QR codes', the emails' `/o` links back): **every question is revealed** at load (all answers it carries pressed; the
+   rest at their defaults, pressed, as today), and the result card when the answers make one.
+6. **The fallback** (his): once any question below *Who is this for?* has been answered by a tap in this page view,
+   switching *Who is this for?* to the other answer reveals **every question of both panels**, for the rest of the page
+   view. Switching before any such answer only changes the panel, its first question shown (item 2).
+7. **Kept out of the link**: the revealed point is the page view's own; it is not in the fragment, not stored, not sent.
+   The fragment stays the answers' (`serialise`, unchanged). Without JavaScript nothing changes (the questions are
+   script-only today; the no-script page is its table).
+8. **Hidden means hidden**: a question not yet revealed is `hidden` (out of the accessibility tree and the tab order);
+   revealing one does not move focus or scroll the page (the visitor's own scroll; the progress bar is later).
+
+### B. *Not ready?*: the save step in a dialog
+
+1. **The link**: a secondary call to action, **"Not ready?"** (his words, ⬜ the copy his to edit), directly below *Choose
+   your meals* in the result card, shown and hidden with it (A item 1). It is never orange (the store's button stays the
+   page's one `--cta`): a text button in the look of *See all plans* (navy, underlined), centred, at least 44 px tall.
+2. **The dialog**: tapping it opens a modal dialog holding **the save step's whole contents** (`src/save/section.html`:
+   the offer line, the lead, the form, Turnstile, the consent words, the out-of-area and expansion parts, every done and
+   error message, the menu link), moved there from the page; **nothing of the save step remains in the page's flow**.
+   The dialog behaves as *See all plans* and *Why Fit AF?* do (`modal()` in `app.js`): Esc, its close button (×) and a
+   press on the backdrop close it, and focus returns to *Not ready?*. Its accessible name is the save step's own.
+3. **The save step's behaviour is unchanged inside it** (`flow1.js`: the states, the requests, Turnstile, the done
+   messages, `?no-tracking`'s cookie untouched); only where it is shown moves. Its collapsed state (*save-collapsed*,
+   *Save my offer* to reopen) exists because the step sat beside checkout in the flow; inside a dialog it is not needed
+   unless the builder finds a state that relies on it (say which, do not decide).
+4. **Which pages**: the pages that carry the save step today (development, and production with `production` true). The
+   production page with `production` false (S20's, the rollback) has no save step, so no *Not ready?*.
+5. **The offer box at the top** (*"Today only: sign up to save 25%"*) is unchanged; if anything in it pointed into the save
+   step, it now opens the dialog (say what was found).
+
+### C. *Why Fit AF?* as a banner at the foot
+
+1. **Its place**: after the result card and the save step's link, **before the foot** (*See all plans* and the
+   footnote), in the page's flow, **always shown**: not hidden by A's revealing, not by the result being hidden, on both
+   panels. Its no-script link in the same place. It leaves its place above *Who is this for?*.
+2. **Its look, an actionable banner** (the orchestrator's reading of *"non-intrusive ad-like unit"*, ⬜ his to rule): a
+   card the column's width (inside `.wrap`), `--ice` background, the hairline `--line` border, the radius, at least
+   64 px tall, its words *Why Fit AF?* left-aligned in the heading type (Poppins 600, 17–19 px, navy) and a "→" at the
+   right edge; the whole card is the button (the same `#why-link` and dialog). Hover darkens its border as the cards'
+   do; the page's focus ring. Never orange, not a pill, not centred like a button.
+3. **Words**: unchanged (*Why Fit AF?*). No new copy (⛔ copy changes on his ruling).
+
+### D. Cases and goldens
+
+1. **Cases**, written first and run red (one file per part, in `test/uc11-*.test.mjs`, `uc12-*`, `uc13-*`, over both
+   builds that carry the page, the production page with `production` true and the development page, driven by the page's
+   own script as the UC cases are): A: the start (items 2, 5); one tap reveals one question; the result after the meal
+   size; a shown question stays shown through a re-tap above it and through back/forward (hashchange); item 4's no
+   pressed answer on the newest; item 6's fallback, and the switch before any answer that does not reveal; Family's
+   one question; hidden questions out of the tab order. B: *Not ready?* shown with the result and hidden with it; opening
+   it shows the dialog with every save-step element inside it and none outside; Esc, × and backdrop close it, focus back;
+   a save through the dialog reaches `/api/save` as today (the UC9 path); the production-false page has neither. C: the
+   banner after the result and the save link and before the foot, shown at the start and with no result, on both panels;
+   its look's rules (UC10d's no raw colour; contrast pairs declared for `--navy` on `--ice` if not already).
+2. **Cases amended**: every existing case that assumed all questions shown at once, the save step in the flow, or
+   *Why Fit AF?* above the first question, amended in the commit with the code, each named with what changed.
+3. **Goldens** that pin the page (S20, PV5, U4, WC-8, CC-4, SP3's base; and CC-8 if a Worker file moves) re-recorded once
+   each, in their own commit, from the code commit's own tree (`git archive`), each control first, as § 3.1 did.
+4. **The look**, at 390 and at 1280 (the § 3 column): the start, the middle of the sequence, all revealed with the result
+   and *Not ready?*, the dialog open, the banner: Storybook's stories of the page re-rendered (SPEC-storybook-microsite),
+   and the PNGs named in the build note.
+5. **Analytics** (SPEC-analytics): every answer event is sent as today (a reveal is not an event); A3 still reads every
+   `button.choice`. *Not ready?* and the banner send nothing new (⬜ whether to count them is his, later, with the progress
+   bar).
+
+### E. Open for the Advisor (the builder builds A–D and states these, never decides them)
+
+The start (A item 2: the first meal question shown with *Who is this for?*, or *Who is this for?* alone); A item 4 (the
+newest question shows no pressed answer); *Not ready?*'s words; the banner's look and whether it carries a second line.
