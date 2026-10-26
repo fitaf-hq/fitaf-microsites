@@ -1555,3 +1555,33 @@ zero()'s body — layout only, no behaviour change … Do NOT drop the header co
   phone, and on macOS by default, it is an overlay one: `N` = 0); and whether any rule of the store's sets `overflow` or
   `padding-right` on `<html>` with an `!important` of its own, which would win over this one (none is known here: the
   store's stylesheets were not read for this; the CDK's scroll-block class, as the CDK publishes it, has none).
+
+## 34. Amendment, 2026-10-26: the emergency block, deep carting only. CONTRACT, before any code
+
+**The Advisor, 2026-10-26, before the Boston event** (verbatim): *"please prepare a version of the footer script that
+*only* does deep carting but does not apply any visual treatments to the page and does not apply the "zero" code. If
+there are *any* problems reported during the event with customers checking out, I want to be prepared for an emergency
+deployment. HMP does not have way for us to test this (save for using a real credit card the manually gets refunded),
+so we are in the unenviable position of having to test this all live in production. So, better safe than sorry."*
+
+1. **From the live block's own code**: the block pasted 2026-10-25 was built from `c31603d`; this branch's
+   `src/storefront/` and `scripts/build-storefront.mjs` are byte-identical to it. The emergency block is that block
+   with **only the deep carting kept**: reading the link, filling the store's cart with the link's meals and counts
+   (every answer set, Family, snacks, every menu, as today), and reaching the store's next step as today.
+2. **Removed, all of it**: every style the block adds (the H-rules, the hidden discounts, rows, tip), the screen
+   (`#fitaf-screen`) and its animation, the progress/step UI, the photo boxes and anything else the block draws or
+   hides, and the code `zero` (never typed, never pressed). The visitor sees the store's own pages, unchanged, while
+   the cart fills.
+3. **The carting is the live block's, byte for byte** where it can be: the functions that read the link and fill the
+   cart are not rewritten; the build leaves out the rest. The way it does so (a build mode such as `--plain`, or
+   guards) is the builder's to choose and state, **as long as the default block's bytes do not change** (the live
+   block's file and its goldens stay as they are).
+4. **Its file**: `storefront/footer-block/2026-10-26-fitaf-handoff-PLAIN-EMERGENCY-<commit>.md`, its first lines saying
+   **"EMERGENCY ONLY: deep carting, no visual changes, no zero code. Paste only on the Advisor's word if checkout
+   breaks. To return, paste 2026-10-25-fitaf-handoff-c31603d.md."**, its bytes and SHA-256, within the cap.
+5. **Cases**, in the watch package's stand-in, written first and run red: E1 for every link shape the live block's cases
+   use, the emergency block fills the **same cart** as the live block; E2 no style element, no hidden element, no
+   screen, nothing typed into a discount field; E3 the store's next step reached as today; mutants caught: a style
+   left in; `zero` typed.
+6. **Rehearsed on the live store by the orchestrator** before anything is pasted (headless, the watch tool's visit,
+   nothing submitted): the same links give the same cart as the live block. ⛔ Never pasted without his word.
