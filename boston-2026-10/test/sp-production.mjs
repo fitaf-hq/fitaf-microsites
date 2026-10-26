@@ -306,6 +306,9 @@ export const LATER = [
   // § 5 item 6, found by Storybook's run (the stops live from the first rested scroll with the result shown): the
   // template's snap rules and app.js's listener, from 4578c46 to 8f36711; every hunk is taken.
   ["4578c46", "8f36711"],
+  // SPEC-why-fit-af § 7 (2026-10-26, the Advisor's draft 3): the Why page's words and its two contact links, which S20's
+  // golden carries as why/index.html, from eec5c4c to 4b77513 (src/why/index.html, one commit).
+  ["eec5c4c", "4b77513"],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
