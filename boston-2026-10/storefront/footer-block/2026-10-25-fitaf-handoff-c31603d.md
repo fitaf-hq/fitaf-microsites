@@ -3,7 +3,8 @@ type: storefront-footer-block
 title: "Fit AF cart hand-off: the Footer block built from c31603d"
 as_of: 2026-10-25
 target: "the store's admin, Custom Scripts, Footer (pasted by the Advisor; never by an agent)"
-status: built, not pasted
+status: pasted
+pasted: "2026-10-25 (Pacific) by the Advisor; first without its <script> and </script> lines (the code shown as text, the hand-off not running), then re-pasted whole; live check PASS 2026-10-26T02:23:28Z (the store's own block, a 5-meal Family link, 390 px: fill C, zero: applied, total $190.00, the sheet on 5 of 5 slides)"
 clearance: public
 built_from:
   repository: fitaf-microsites
