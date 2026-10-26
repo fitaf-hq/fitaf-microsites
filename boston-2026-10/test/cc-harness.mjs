@@ -185,8 +185,9 @@ export const mealLine = ({ display, qty }, messages = MESSAGES) => {
   return qty > 1 ? fill(words(messages).meal_qty, { meal: shown, n: qty }) : shown;
 };
 
-/** A Date whose clock reads `now` (ms since the epoch), as page-sim.mjs's. */
-function clockAt(now) {
+/** A Date whose clock reads `now` (ms since the epoch), as page-sim.mjs's. Exported for a-harness.mjs's openVisit
+ *  (SPEC-analytics.md § 14: the save step's offer is chosen on the page's clock). */
+export function clockAt(now) {
   return class extends Date {
     constructor(...args) {
       super(...(args.length ? args : [now]));

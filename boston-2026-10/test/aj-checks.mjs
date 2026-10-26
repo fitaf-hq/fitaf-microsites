@@ -158,6 +158,7 @@ export function parseText(text) {
       Object.assign(day, { data: true, visitors: Number(m[1]), visits: Number(m[2]), funnel: [], clicks: {} });
     } else if (line === "  funnel (visits)") continue;
     else if ((m = /^ {4}click by link: (.+)$/.exec(line))) day.clicks = splitOf(m[1]);
+    else if ((m = /^ {2}saved an offer (\d+)$/.exec(line))) day.saves = Number(m[1]);
     else if ((m = /^ {4}(\S.*?) +(\d+)(?: {3}\S.*)?$/.exec(line))) day.funnel.push({ step: m[1], visits: Number(m[2]) });
     else if ((m = /^ {2}(visit length|load time): (?:median (.+) · quartiles (.+) to (.+) \((\d+) visits\)|no (?:leave|open) recorded)$/.exec(line))) {
       day[m[1] === "visit length" ? "visit_length_ms" : "load_ms"] = m[2]
@@ -174,7 +175,8 @@ export function parseText(text) {
 // ── AJ1 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** AJ1's document for the fixture, 2026-10-23..25, written by hand from test/fixtures/analytics/ (§ 11 item 1's shape;
- *  since § 13 item 3 the funnel's answer steps in the page's order since round 2, Family's own question last). */
+ *  since § 13 item 3 the funnel's answer steps in the page's order since round 2, Family's own question last; since § 14
+ *  item 3 a day's `saves`, its visits with a save, from the fixture's save rows). */
 export const FIXTURE_DOCUMENT = {
   dataset: "fitaf_microsite_analytics_prod",
   from: "2026-10-23",
@@ -199,6 +201,7 @@ export const FIXTURE_DOCUMENT = {
         { step: "click", visits: 4 },
       ],
       clicks: { order: 3, "chefs-choice": 1, "all-plans": 2 },
+      saves: 2,
       visit_length_ms: { q1: 25000, median: 72000, q3: 160000, n: 13 },
       load_ms: { q1: 400, median: 820, q3: 1200, n: 15 },
       device: { phone: 10, desktop: 4, tablet: 1 },
@@ -224,6 +227,7 @@ export const FIXTURE_DOCUMENT = {
         { step: "click", visits: 1 },
       ],
       clicks: { "chefs-choice": 1 },
+      saves: 1,
       visit_length_ms: { q1: 8000, median: 15500, q3: 40000, n: 4 },
       load_ms: { q1: 510, median: 640, q3: 900, n: 4 },
       device: { phone: 4 },
@@ -254,7 +258,7 @@ function figureDifferences(label, t, doc) {
     if (!dd) continue;
     if (dd.data !== td.data) out.push(`${at}: data: the text's ${td.data}, the document's ${dd.data}`);
     if (!td.data) continue;
-    for (const key of ["visitors", "visits", "errors"]) {
+    for (const key of ["visitors", "visits", "errors", "saves"]) {
       if (dd[key] !== td[key]) out.push(`${at}: ${key}: the text's ${td[key]}, the document's ${JSON.stringify(dd[key])}`);
     }
     const funnel = Array.isArray(dd.funnel) ? dd.funnel : [];
@@ -370,7 +374,8 @@ export async function noDataProblems(root = ROOT) {
 
 /** § 11 item 1's shape, written from the contract (the vocabulary from § 10's table). */
 const TOP_KEYS = ["dataset", "from", "to", "zone", "days"];
-const DAY_KEYS = ["day", "data", "visitors", "visits", "funnel", "clicks", "visit_length_ms", "load_ms", "device", "viewport", "country", "errors"];
+// § 14 item 3: one more member of a day with data, `saves` (its visits with a save).
+const DAY_KEYS = ["day", "data", "visitors", "visits", "funnel", "clicks", "saves", "visit_length_ms", "load_ms", "device", "viewport", "country", "errors"];
 const NO_DATA_KEYS = ["day", "data"];
 const STEP_KEYS = ["step", "visits"];
 const QUARTILE_KEYS = ["q1", "median", "q3", "n"];
@@ -410,7 +415,7 @@ export function walkProblems(doc) {
     if (d.data === false) return out.push(...keysProblems(at, d, NO_DATA_KEYS));
     if (d.data !== true) return out.push(`${at}.data: ${JSON.stringify(d.data)}, not true or false`);
     out.push(...keysProblems(at, d, DAY_KEYS));
-    for (const k of ["visitors", "visits", "errors"]) if (!isCount(d[k])) out.push(`${at}.${k}: not a count: ${JSON.stringify(d[k])}`);
+    for (const k of ["visitors", "visits", "errors", "saves"]) if (!isCount(d[k])) out.push(`${at}.${k}: not a count: ${JSON.stringify(d[k])}`);
     if (!Array.isArray(d.funnel)) out.push(`${at}.funnel: not a list: ${JSON.stringify(d.funnel)}`);
     else {
       d.funnel.forEach((s, j) => {

@@ -309,6 +309,11 @@ export const LATER = [
   // SPEC-why-fit-af § 7 (2026-10-26, the Advisor's draft 3): the Why page's words and its two contact links, which S20's
   // golden carries as why/index.html, from eec5c4c to 4b77513 (src/why/index.html, one commit).
   ["eec5c4c", "4b77513"],
+  // SPEC-analytics.md § 14 (2026-10-26: a saved offer counted) moves the production page with `production` false by the
+  // analytics script's listener for `fitaf:saved` (src/analytics.js; the save step's dispatch, src/save/flow1.js, is the
+  // pages carrying the step, which this page is not) and the Worker by its vocabulary (src/worker/beacon.js: `save`), from
+  // e1dda21 (its contract) to 1fb4831 (its code, one commit); every hunk is taken.
+  ["e1dda21", "1fb4831", ["src/analytics.js", "src/worker/beacon.js"]],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */

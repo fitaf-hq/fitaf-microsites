@@ -29,6 +29,10 @@
 // scroll stops' rules): the same five pages; the recorder at 4578c46 reproduces 27cc0df's (recorded_at apart). And at
 // 4b77513, SPEC-why-fit-af § 7 (the Why page's draft 3): why/index.html alone, in both builds; the recorder at eec5c4c
 // reproduces 8f36711's (recorded_at apart).
+// And at 1fb4831 (`--commit 1fb4831 --release-a`), SPEC-analytics.md § 14 item 2 (a saved offer counted: the analytics
+// script's listener for fitaf:saved, and on the development pages the save step's dispatch of it): the same five pages
+// (production's +70 bytes, development's four +484); every other file byte-identical; the recorder at 9cdf963 (its cases,
+// the code before) reproduces 4b77513's (recorded_at apart), and at 4b77513 its record byte for byte.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

@@ -91,6 +91,12 @@
       "visits": "1"
     },
     {
+      "day": "2026-10-23",
+      "event": "save",
+      "question": "",
+      "visits": "2"
+    },
+    {
       "day": "2026-10-24",
       "event": "open",
       "question": "",
@@ -137,8 +143,14 @@
       "event": "leave",
       "question": "",
       "visits": "4"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "save",
+      "question": "",
+      "visits": "1"
     }
   ],
-  "rows": 20,
-  "rows_before_limit_at_least": 20
+  "rows": 22,
+  "rows_before_limit_at_least": 22
 }

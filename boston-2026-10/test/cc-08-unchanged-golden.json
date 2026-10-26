@@ -11,7 +11,7 @@
     "data/save.json": "e9385f04f8f9d544b02e01569060063634e7cb844b8db3c67fa33ad039d7f9d4",
     "scripts/selection.mjs": "7aa1068504ae84107e0d3bbaa361e5fdd45212f4aadee4fa7f5d618fed3ab29f",
     "src/worker/allowlist.js": "75728f64b8765cfc251ec1ad446069bd0f452823f697e8e64ffaefa9e0868cc9",
-    "src/worker/beacon.js": "b77377db3c6177f796609c16f3aefd13543a7de4b97ccf5c012802566d8439f7",
+    "src/worker/beacon.js": "a5331c5d594d5735905de8ab5a6db8f17e06d4a46fdec2bebd4b9872506cabea",
     "src/worker/choose-sender.js": "fe140f6691e64bd6b164755f4d75b59db4619515c5cfc3f1fa0a5446282d8178",
     "src/worker/confirm-token.js": "bbbf74932f610e3b1d21b17553027530605e0d94e1bbd799f49c9674639ebfef",
     "src/worker/confirm.js": "3a29c43d803351dd1d3f8e158909a5cbaa81f02fc165d333cbdaf7e5be18c868",

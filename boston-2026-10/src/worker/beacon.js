@@ -17,6 +17,8 @@
 // Since § 13 (2026-10-25: Family counted, and the first question) also the first question, `who`, its answers build.mjs's
 // WHO (copied too), and Family's own question, `family`, its answers data/plans.json's family.selection; and a result's
 // mpids Family's as well as the individual plans'. F1 holds every question of the page equal to this one's.
+// Since § 14 (2026-10-26: a saved offer counted) one more event, `save`, sent when the save step's Worker answered an offer
+// save as stored: `s` alone (nothing the visitor typed), the data point's layout unchanged, and not a step of STEPS.
 import plans from "../../data/plans.json" with { type: "json" };
 import events from "../../data/events.json" with { type: "json" };
 import { ANSWER_SETS, answerKey } from "../../scripts/selection.mjs";
@@ -41,7 +43,7 @@ const VISIT_ID = /^[0-9a-f]{16}$/;
 const COUNTRY = /^[A-Z][A-Z0-9]$/;
 
 /** § 3's vocabulary. */
-export const EVENTS = ["open", "answer", "result", "click", "leave", "error"];
+export const EVENTS = ["open", "answer", "result", "click", "leave", "error", "save"];
 export const VIEWPORTS = ["<400", "400-767", "768-1199", ">=1200"];
 /** Each question by the page's own id for it, and its answers, in the page's order since SPEC-ui-and-copy-pass § 2 (who
  *  it is for first, the goal last, then Family's own question, shown for Family alone): the report's funnel reads this
@@ -86,6 +88,7 @@ const FIELDS = {
   click: (b) => (b.link === "all-plans" ? { link: oneOf(LINKS) } : { link: oneOf(LINKS), mpid: oneOf(ORDER_MPIDS) }),
   leave: () => ({ length_ms: isMs, step: oneOf(STEPS) }),
   error: () => ({}),
+  save: () => ({}),
 };
 
 /** The body as one event of § 3, exactly its fields and each from its vocabulary, or null. */

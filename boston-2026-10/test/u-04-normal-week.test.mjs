@@ -166,7 +166,12 @@
 // And at 8f36711 (the same flags), § 5 item 6 (the scroll stops live from the first rested scroll with the result shown):
 // the recorder at 4578c46 reproduces 27cc0df's record (recorded_at apart); all six contents byte-identical; every page
 // +1,280 bytes (the template's rules, app.js's listener); no visible page moved.
-// From here the reference is 8f36711's tree.
+// ⚠ RE-RECORDED at 1fb4831 (`--commit 1fb4831 --release-a --without-snack-cells`): SPEC-analytics.md § 14 item 2 (a saved
+// offer counted: the analytics script's listener for fitaf:saved, and on the development pages the save step's dispatch
+// of it). Controls: the recorder with both flags at 8f36711 reproduces 8f36711's record byte for byte, and at 9cdf963 (its
+// cases, the code before) its record is 8f36711's (recorded_at apart). Against it: all six contents and every visible page
+// byte-identical; production's three pages +70 bytes each, development's three +484, by those lines alone.
+// From here the reference is 1fb4831's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -177,8 +182,8 @@ import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 8f36711's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "8f36711");
+test("U4: a normal week, the content and the page as served, byte-identical to 1fb4831's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "1fb4831");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
   // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs

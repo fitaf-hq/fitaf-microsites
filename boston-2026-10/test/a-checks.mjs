@@ -67,6 +67,12 @@ export function refusedBodies() {
     ["a load time as text", { ...VALID.open, load_ms: "812" }],
     ["an error carrying a message", { ...VALID.error, message: "TypeError: x is undefined" }],
     ["an error carrying a stack", { ...VALID.error, stack: "at app.js:1:1" }],
+    // § 14 item 1: a save carries `s` alone, nothing the visitor typed, no code, no ZIP, no consent.
+    ["a save carrying an address", { ...VALID.save, email: "dummy-sv@example.com" }],
+    ["a save carrying a ZIP code", { ...VALID.save, zip: "02118" }],
+    ["a save carrying its kind", { ...VALID.save, kind: "offer" }],
+    ["a save carrying a consent", { ...VALID.save, consent_marketing: true }],
+    ["a save without s", { event: "save" }],
     ["not JSON", "event=open"],
     ["JSON null", "null"],
     ["a JSON list of a valid event", JSON.stringify([VALID.open])],

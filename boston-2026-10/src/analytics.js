@@ -1,5 +1,5 @@
-// The page's analytics (SPEC-analytics.md §§ 1–4): six events from a closed list, each one beacon to the page's own
-// /a. The build inlines this text BEFORE app.js (so the error listener is there first), with its whole-line `//`
+// The page's analytics (SPEC-analytics.md §§ 1–4): seven events from a closed list (since § 14, `save`), each one beacon
+// to the page's own /a. The build inlines this text BEFORE app.js (so the error listener is there first), with its whole-line `//`
 // comments, its blank lines and each line's indentation removed (build.mjs analyticsSlot: the dev page is near T5's
 // 60 KB), and data/events.json's ids written into QR_IDS below.
 //
@@ -85,6 +85,11 @@ var QR_IDS = /*QR_IDS*/[];
   }
   w.addEventListener("hashchange", function () { w.setTimeout(result, 0); });
   w.setTimeout(result, 0);
+  // `save` (§ 14): the save step (src/save/flow1.js) tells this script, by `fitaf:saved` on document with no detail, that
+  // its Worker answered an offer save as stored. `s` only; not a step of the funnel, so `leave`'s deepest is unchanged.
+  d.addEventListener("fitaf:saved", function () {
+    send("save", {});
+  });
   // `leave`, once: the page hidden or left, whichever is first.
   function leave() {
     send("leave", { length_ms: ms(), step: STEPS[deepest] });
