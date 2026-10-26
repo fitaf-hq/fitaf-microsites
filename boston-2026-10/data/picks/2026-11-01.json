@@ -2632,7 +2632,8 @@
           "fiber": 6
         }
       },
-      "ingredients": "Zucchini, Green Beans, Antibiotic & Hormone-Free Ground Chicken, Ricotta Cheese (Milk), Vodka Sauce  (tomatoes, onion, garlic, cream, olive oil, vodka, parmesan cheese, organic grass-fed butter, oregano, basil, carrot, red pepper flakes, sea salt), Mozzarella Cheese, Eggs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Zucchini, Green Beans, Antibiotic & Hormone-Free Ground Chicken, Ricotta Cheese (Milk), Vodka Sauce  (tomatoes, onion, garlic, cream, olive oil, vodka, parmesan cheese, organic grass-fed butter, oregano, basil, carrot, red pepper flakes, sea salt), Mozzarella Cheese, Eggs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Zucchini lasagna | ground chicken | vodka sauce | mozzarella | whipped ricotta | roasted green beans"
     },
     "Sesame Chicken Teriyaki with Fried Rice": {
       "nutrition": {
@@ -2659,7 +2660,8 @@
         }
       },
       "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Vegetable Fried Rice (White Rice, Eggs, Carrots, Peas, Onions, Tamari (Water, Soybeans, Salt), Sesame Oil), Broccoli, Grilled Pineapple, Carrots, Scallions, House-Made Teriyaki Sauce (Wildflower Honey, Brown Sugar, Fresh Lime Juice, Fresh Ginger, Fresh Garlic), Sesame Seeds, Olive Oil.",
-      "contains": "Soy, Egg, Sesame."
+      "contains": "Soy, Egg, Sesame.",
+      "description": "Stir-Fried Teriyaki Chicken | Vegetable Fried Rice | Grilled Pineapple | Broccoli"
     },
     "Grass-Fed Steak & Parmesan Yukon Wedges": {
       "nutrition": {
@@ -2686,7 +2688,8 @@
         }
       },
       "ingredients": "Grass-Fed Beef Sirloin Flap, Yukon Gold Potatoes, Green Beans, Olive Oil, Fresh Garlic, Parmesan Cheese (Milk), Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion, Thyme, Rosemary, Smoked Paprika, Parsley, Coffee, Mustard Powder, Coriander.",
-      "contains": "Milk."
+      "contains": "Milk.",
+      "description": "Grass-Fed Grilled Steak | Parmesan Yukon Wedges | Green Beans"
     },
     "BBQ Pulled Pork Cauliflower Mac & Cheese": {
       "nutrition": {
@@ -2712,7 +2715,8 @@
           "fiber": 5
         }
       },
-      "ingredients": "Antibiotic & Hormone-Free Pork Shoulder, Cauliflower, Milk, Organic Grass-fed Butter (Milk), Cheddar Cheese, Parmesan Cheese, Fit AF Root Veggie BBQ Sauce (Tomato Sauce, Maple Syrup, Brown Sugar, Carrots, Beets, Onion, Worcestershire Sauce, Apple Cider Vinegar), Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Onion, Granulated Garlic"
+      "ingredients": "Antibiotic & Hormone-Free Pork Shoulder, Cauliflower, Milk, Organic Grass-fed Butter (Milk), Cheddar Cheese, Parmesan Cheese, Fit AF Root Veggie BBQ Sauce (Tomato Sauce, Maple Syrup, Brown Sugar, Carrots, Beets, Onion, Worcestershire Sauce, Apple Cider Vinegar), Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Onion, Granulated Garlic",
+      "description": "Slow-cooked pork shoulder | cauliflower mac & cheese | smoky house BBQ sauce"
     },
     "Coffee-Crusted Brisket & Smoked Gouda Mash": {
       "nutrition": {
@@ -2739,7 +2743,8 @@
         }
       },
       "ingredients": "Beef Brisket, Smoked Gouda Mashed Potatoes (Yukon Gold Potatoes, Smoked Gouda Cheese [Milk], Milk, Organic Grass-Fed Butter [Milk], Sea Salt, Black Pepper), Brussels Sprouts, Beef Bone Broth (Organic Beef Bones, Water, Carrots, Onions, Apple Cider Vinegar), Balsamic Glaze, Olive Oil, Brown Sugar, Coffee, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion, Paprika, Coriander, Chili Powder, Cayenne Pepper.",
-      "contains": "Milk."
+      "contains": "Milk.",
+      "description": "Coffee-Crusted beef brisket | smoked gouda mash | balsamic-roasted brussels sprouts | bone broth au jus"
     },
     "Free-Range BBQ Turkey Bowl": {
       "nutrition": {
@@ -2765,7 +2770,8 @@
           "fiber": 10
         }
       },
-      "ingredients": "Free-Range ABF 90% Lean Ground Turkey, Sweet Potatoes, Yukon Gold Potatoes, Brussels Sprouts, Fit AF Root Veggie BBQ Sauce (Tomato Sauce, Vermont Maple Syrup, Brown Sugar, Carrot, Beets, Onion, Apple Cider Vinegar, Cumin, Smoked Paprika, Chili Powder, Liquid Smoke), Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Free-Range ABF 90% Lean Ground Turkey, Sweet Potatoes, Yukon Gold Potatoes, Brussels Sprouts, Fit AF Root Veggie BBQ Sauce (Tomato Sauce, Vermont Maple Syrup, Brown Sugar, Carrot, Beets, Onion, Apple Cider Vinegar, Cumin, Smoked Paprika, Chili Powder, Liquid Smoke), Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "BBQ-glazed ground turkey | roasted sweet & Yukon gold potatoes | brussels sprouts"
     },
     "Blackened Chicken Caesar Salad": {
       "nutrition": {
@@ -2792,7 +2798,8 @@
         }
       },
       "ingredients": "Free-Range ABF Chicken, Romaine Lettuce, Olive Oil Caesar Dressing (Olive Oil, Parmesan Cheese (Milk), White Vinegar, Dijon Mustard, Pasteurized Egg (Egg), Garlic, Lemon Juice, Worcestershire Sauce (Fish), Black Pepper, Sea Salt), Croutons (Wheat Flour (Wheat), Canola and/or Sunflower Oil, Salt, Yeast, Sugar, Garlic Powder, Onion Powder, Spices), Grape Tomatoes, Bacon, Parmesan Cheese (Milk), Olive Oil, Blackening Seasoning (Paprika, Garlic Powder, Onion Powder, Dried Thyme, Dried Oregano, Cayenne Pepper, Black Pepper, Salt).",
-      "contains": "Milk, Egg, Wheat, Fish."
+      "contains": "Milk, Egg, Wheat, Fish.",
+      "description": "House-Made Olive Oil Caesar | Bacon | Parmesan | Croutons | Crisp Romaine"
     },
     "Chipotle Chicken Mac & Cheese": {
       "nutrition": {
@@ -2818,7 +2825,8 @@
           "fiber": 10
         }
       },
-      "ingredients": "Protein Rotini Pasta (Chickpeas, Pea Starch, Tapioca, Xanthan Gum), Antibiotic & Hormone-Free Chicken Breast, Cheese Sauce (Milk) (Milk, Organic Grass-fed Butter, White Cheddar Cheese, Tapioca Flour, White Rice Flour), Honey-Chipotle Sauce (Wild Flower Honey, Chipotle Peppers in Adobo, Olive Oil, Garlic, Lime Juice, White Vinegar, Smoked Paprika), Sea Salt, Black Pepper"
+      "ingredients": "Protein Rotini Pasta (Chickpeas, Pea Starch, Tapioca, Xanthan Gum), Antibiotic & Hormone-Free Chicken Breast, Cheese Sauce (Milk) (Milk, Organic Grass-fed Butter, White Cheddar Cheese, Tapioca Flour, White Rice Flour), Honey-Chipotle Sauce (Wild Flower Honey, Chipotle Peppers in Adobo, Olive Oil, Garlic, Lime Juice, White Vinegar, Smoked Paprika), Sea Salt, Black Pepper",
+      "description": "Protein pasta mac & cheese | braised chipotle chicken"
     },
     "Bison Chili": {
       "nutrition": {
@@ -2844,7 +2852,8 @@
           "fiber": 11
         }
       },
-      "ingredients": "Grass-fed Ground Bison, Jasmine Rice, Broccoli, Black Beans, Diced Tomatoes, Red Bell Peppers, Cacao Powder, Chipotle Peppers in Adobo, Fresh Garlic, Onions, Cumin, Cinnamon, Oregano, Coconut Oil (Tree Nut), Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Grass-fed Ground Bison, Jasmine Rice, Broccoli, Black Beans, Diced Tomatoes, Red Bell Peppers, Cacao Powder, Chipotle Peppers in Adobo, Fresh Garlic, Onions, Cumin, Cinnamon, Oregano, Coconut Oil (Tree Nut), Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Grass-fed bison | black & kidney beans | chipotle pepper | cacao | white rice | roasted broccoli"
     },
     "Grass-fed Steak Carnitas Burrito Bowl": {
       "nutrition": {
@@ -2870,7 +2879,8 @@
           "fiber": 4
         }
       },
-      "ingredients": "Grass-fed Chuck Steak, Jasmine Rice, Red Bell Peppers, Onions, Corn, Guacamole (Avocado, Lime Juice, Cilantro, Jalapeno Pepper, Onion, Salt, Garlic, Ascorbic Acid), Cheddar Cheese (Milk), Lime Juice, Red Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion, Cumin, Chipotle Powder, Smoked Paprika, Ancho Chile Powder"
+      "ingredients": "Grass-fed Chuck Steak, Jasmine Rice, Red Bell Peppers, Onions, Corn, Guacamole (Avocado, Lime Juice, Cilantro, Jalapeno Pepper, Onion, Salt, Garlic, Ascorbic Acid), Cheddar Cheese (Milk), Lime Juice, Red Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion, Cumin, Chipotle Powder, Smoked Paprika, Ancho Chile Powder",
+      "description": "Shredded grass-fed steak | Mexican rice | fire-roasted corn | sautéed peppers and onions | cheddar jack cheese | guacamole"
     },
     "Harissa Grilled Free-Range Chicken with Roasted Winter Veggies": {
       "nutrition": {
@@ -2896,7 +2906,8 @@
           "fiber": 8
         }
       },
-      "ingredients": "Free-Range ABF Chicken Breast, Couscous (Wheat), Carrots, Parsnips, Rutabaga, Turnip, Butternut Squash, Red Onion, Nonfat Plain Greek Yogurt (Milk), Harissa Sauce (Roasted Red Bell Pepper, Water, Vegetable Oil, Garlic, Tomato Paste, Spices), Fresh Mint, Olive Oil, Lemon Juice, Lemon Zest, Fresh Rosemary, Fresh Garlic, Parsley, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Free-Range ABF Chicken Breast, Couscous (Wheat), Carrots, Parsnips, Rutabaga, Turnip, Butternut Squash, Red Onion, Nonfat Plain Greek Yogurt (Milk), Harissa Sauce (Roasted Red Bell Pepper, Water, Vegetable Oil, Garlic, Tomato Paste, Spices), Fresh Mint, Olive Oil, Lemon Juice, Lemon Zest, Fresh Rosemary, Fresh Garlic, Parsley, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Grilled harissa chicken | pearled couscous | roasted root vegetables | Greek yogurt harissa sauce"
     },
     "Grass-Fed Beef Taco Salad": {
       "nutrition": {
@@ -2923,7 +2934,8 @@
         }
       },
       "ingredients": "Romaine Lettuce, 90% Lean Grass-fed Ground Beef, Catalina Dressing (Olive Oil, Red Wine Vinegar, Wild Flower Honey, Ketchup, Worcestershire Sauce (Fish), Smoked Paprika, Onion Powder, Italian Seasoning), Tri-Colored Tortilla Strips (whole grain corn masa flour, sunflower oil, salt, beet juice, black carrot juice, annatto extract), Corn, Black Beans, Grape Tomatoes, Cheddar Jack Cheese (Milk), Olive Oil, Sea Salt, Black Pepper, Cumin, Chili Powder, Cayenne Pepper, Granulated Onion, Granualted Garlic, Oregano",
-      "contains": "Milk, Fish"
+      "contains": "Milk, Fish",
+      "description": "Catalina dressing | romaine lettuce | cheddar jack cheese | tri-colored tortilla strips"
     },
     "Smokehouse BBQ Gouda Grass-Fed Burger": {
       "nutrition": {
@@ -2949,7 +2961,8 @@
           "fiber": 9
         }
       },
-      "ingredients": "85% Lean Grass-fed Ground Beef, Sandwich Thin (Lean) or Whole Grain Bun (Wheat), Green Beans, Carrots, Red Bell Peppers, Gouda Cheese (Milk), Fit AF Root Veggie BBQ Sauce, Romaine Lettuce, Red Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "85% Lean Grass-fed Ground Beef, Sandwich Thin (Lean) or Whole Grain Bun (Wheat), Green Beans, Carrots, Red Bell Peppers, Gouda Cheese (Milk), Fit AF Root Veggie BBQ Sauce, Romaine Lettuce, Red Onion, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Grass-fed beef burger | smoked gouda | whole grain bun | root veggie BBQ sauce | green beans | carrots | peppers"
     },
     "Thai Peanut Noodle Salad with Shrimp": {
       "nutrition": {
@@ -3001,7 +3014,8 @@
           "fiber": 9
         }
       },
-      "ingredients": "Organic Free-Range Eggs, Antibiotic & Hormone-Free 90% Lean Ground Turkey, Sweet Potatoes, Salsa (Tomatoes, Water, Jalapeno Peppers, Tomato Paste, Onions, Garlic, Salt), Onions, Tomatoes, Chorizo Blend (Chipotle Peppers in Adobo, Ancho Chili Powder, Cumin, Paprika, Oregano, Garlic, Coriander, Cinnamon, Brown Sugar, White Vinegar, Sea Salt), Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Organic Free-Range Eggs, Antibiotic & Hormone-Free 90% Lean Ground Turkey, Sweet Potatoes, Salsa (Tomatoes, Water, Jalapeno Peppers, Tomato Paste, Onions, Garlic, Salt), Onions, Tomatoes, Chorizo Blend (Chipotle Peppers in Adobo, Ancho Chili Powder, Cumin, Paprika, Oregano, Garlic, Coriander, Cinnamon, Brown Sugar, White Vinegar, Sea Salt), Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Organic scrambled eggs | smoky chipotle turkey chorizo | sweet potato hash | salsa"
     },
     "Superberry Greek Yogurt Parfait with Matcha Granola": {
       "nutrition": {
@@ -3027,7 +3041,8 @@
           "fiber": 17
         }
       },
-      "ingredients": "Elderberry & Blueberry Greek Yogurt (Milk)  (Nonfat Plain Greek Yogurt, Elderberries, Blueberries, Allulose, Stevia, Vanilla Extract), Strawberries, Matcha Granola (Tree Nut)  (oatmeal, flaked coconut, pepitas, coconut oil, Vermont maple syrup, organic matcha green tea powder, vanilla extract, sea salt), Dried Goji Berries, Chia Seeds"
+      "ingredients": "Elderberry & Blueberry Greek Yogurt (Milk)  (Nonfat Plain Greek Yogurt, Elderberries, Blueberries, Allulose, Stevia, Vanilla Extract), Strawberries, Matcha Granola (Tree Nut)  (oatmeal, flaked coconut, pepitas, coconut oil, Vermont maple syrup, organic matcha green tea powder, vanilla extract, sea salt), Dried Goji Berries, Chia Seeds",
+      "description": "Greek yogurt with elderberries & blueberries | matcha granola | chia seeds | strawberries | goji berries"
     },
     "Cinnamon Swirl Protein Waffles": {
       "nutrition": {
@@ -3053,7 +3068,8 @@
           "fiber": 6
         }
       },
-      "ingredients": "Whole Oat Flour, Whey Protein Isolate, Nonfat Plain Greek Yogurt (Milk), White Rice Flour, Brown Rice Flour, 2% Milk, Eggs, Cream Cheese, Potato Starch, Whole Sorghum Flour, Tapioca Flour, Cinnamon, Organic Grass-fed Butter, Allulose, Wild Flower Honey, Xanthan Gum, Buttermilk Powder, Olive Oil, Vanilla Extract, Stevia, Mint, Sea Salt"
+      "ingredients": "Whole Oat Flour, Whey Protein Isolate, Nonfat Plain Greek Yogurt (Milk), White Rice Flour, Brown Rice Flour, 2% Milk, Eggs, Cream Cheese, Potato Starch, Whole Sorghum Flour, Tapioca Flour, Cinnamon, Organic Grass-fed Butter, Allulose, Wild Flower Honey, Xanthan Gum, Buttermilk Powder, Olive Oil, Vanilla Extract, Stevia, Mint, Sea Salt",
+      "description": "Gluten-free protein waffles | cream cheese glaze | nonfat Greek yogurt"
     },
     "Thai Peanut Noodle Salad with Chicken": {
       "nutrition": {
@@ -3079,7 +3095,8 @@
           "fiber": 4
         }
       },
-      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Rice Noodles, Red Cabbage, Green Cabbage, Red Bell Peppers, Carrots, Thai Peanut Sauce (Peanut Butter (Peanuts), Sweet Thai Chili Sauce, Tamari Soy Sauce (Soy), Coconut Milk (Tree Nut), Lime Juice, Fresh Ginger, Fresh Garlic, Wildflower Honey, Sesame Oil), Peanuts, Scallions, Cilantro, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Rice Noodles, Red Cabbage, Green Cabbage, Red Bell Peppers, Carrots, Thai Peanut Sauce (Peanut Butter (Peanuts), Sweet Thai Chili Sauce, Tamari Soy Sauce (Soy), Coconut Milk (Tree Nut), Lime Juice, Fresh Ginger, Fresh Garlic, Wildflower Honey, Sesame Oil), Peanuts, Scallions, Cilantro, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Sautéed chicken breast, rice noodles, crunchy veggies, Thai peanut sauce"
     },
     "Free-Range Chicken Parm Over Protein Penne": {
       "nutrition": {
@@ -3105,7 +3122,8 @@
           "fiber": 15
         }
       },
-      "ingredients": "Free-Range ABF Chicken Breast, Protein Pasta (Chickpea,Tapioca, Xanthan Gum), Broccoli, Marinara Sauce (Tomato, Onion, Garlic, Olive Oil, Oregano, Basil, Carrot, Red Pepper Flakes, Sea Salt), Mozzarella Cheese (Milk), Parmesan Cheese, Eggs, Gluten Free Breadcrumbs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Free-Range ABF Chicken Breast, Protein Pasta (Chickpea,Tapioca, Xanthan Gum), Broccoli, Marinara Sauce (Tomato, Onion, Garlic, Olive Oil, Oregano, Basil, Carrot, Red Pepper Flakes, Sea Salt), Mozzarella Cheese (Milk), Parmesan Cheese, Eggs, Gluten Free Breadcrumbs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Gluten-free chicken cutlets | chickpea protein pasta | house-made marinara | mozzarella | roasted broccoli"
     },
     "Chipotle Chicken Carnitas Bowl": {
       "nutrition": {
@@ -3131,7 +3149,8 @@
           "fiber": 4
         }
       },
-      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Jasmine Rice, Red Bell Peppers, Onions, Cherry Tomatoes, Corn, Guacamole (Avocado, Lime Juice, Cilantro, Jalapeno Pepper, Onion, Salt, Garlic, Ascorbic Acid), Cheddar Cheese (Milk), Red Onion, Lime, Olive Oil, Wild Flower Honey, Chipotle Peppers in Adobo, Cumin, Chipotle Powder, Smoked Paprika, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Jasmine Rice, Red Bell Peppers, Onions, Cherry Tomatoes, Corn, Guacamole (Avocado, Lime Juice, Cilantro, Jalapeno Pepper, Onion, Salt, Garlic, Ascorbic Acid), Cheddar Cheese (Milk), Red Onion, Lime, Olive Oil, Wild Flower Honey, Chipotle Peppers in Adobo, Cumin, Chipotle Powder, Smoked Paprika, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Shredded chipotle spiced chicken, Mexican rice, fire-roasted corn, sautéed peppers and onions, cheddar jack cheese, guacamole"
     },
     "Pretzel Chicken with Fit-fil-A Sauce": {
       "nutrition": {
@@ -3157,7 +3176,8 @@
           "fiber": 9
         }
       },
-      "ingredients": "Free-Range ABF Chicken Breast, Tri-Color Potatoes, Broccoli, Gluten Free Pretzels, Fit AF Root Veggie BBQ Sauce (Tomato Paste, Vermont Maple Syrup, Brown Sugar, Carrot, Beets, Onion, Apple Cider Vinegar, Cumin, Smoked Paprika, Chili Powder, Liquid Smoke), Olive Oil Mayo, Wild Flower Honey, Stone Ground Mustard, Worcestershire Sauce (Shellfish), Eggs, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Free-Range ABF Chicken Breast, Tri-Color Potatoes, Broccoli, Gluten Free Pretzels, Fit AF Root Veggie BBQ Sauce (Tomato Paste, Vermont Maple Syrup, Brown Sugar, Carrot, Beets, Onion, Apple Cider Vinegar, Cumin, Smoked Paprika, Chili Powder, Liquid Smoke), Olive Oil Mayo, Wild Flower Honey, Stone Ground Mustard, Worcestershire Sauce (Fish), Eggs, Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Pretzel-crusted free-range chicken | roasted tri-color baby potatoes | broccoli | Fit-fil-A sauce"
     },
     "Sardinian Pesto Penne with Chicken": {
       "nutrition": {
@@ -3183,7 +3203,8 @@
           "fiber": 16
         }
       },
-      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Protein Penne Pasta (Chickpeas, Pea Starch, Tapioca, Xanthan Gum), Cauliflower, Sardinian Pesto (Basil, Spinach, Cashews, Olive Oil, Fresh Garlic, Parmesan Cheese (Milk), Lemon, Sea Salt, Black Pepper), Artichoke Hearts, Cherry Tomatoes, Parmesan Cheese, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Protein Penne Pasta (Chickpeas, Pea Starch, Tapioca, Xanthan Gum), Cauliflower, Sardinian Pesto (Basil, Spinach, Cashews, Olive Oil, Fresh Garlic, Parmesan Cheese (Milk), Lemon, Sea Salt, Black Pepper), Artichoke Hearts, Cherry Tomatoes, Parmesan Cheese, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Grilled chicken | protein penne pasta | roasted cherry tomatoes | artichokes | roasted cauliflower | Sardinian pesto"
     },
     "Maple Mustard Glazed Free-Range Chicken with BBQ Yukon Mash": {
       "nutrition": {
@@ -3209,7 +3230,8 @@
           "fiber": 7
         }
       },
-      "ingredients": "Free-Range ABF Chicken Breast, Yukon Gold Potatoes, Broccoli, Vermont Maple Syrup, Stone Ground Mustard, Dijon Mustard, BBQ Seasoning (brown sugar, smoked paprika, chili powder, cumin, granulated garlic, granulated onion, sea salt, black pepper), Olive Oil, Half & Half ((Milk)), Parmesan Cheese, Fresh Garlic"
+      "ingredients": "Free-Range ABF Chicken Breast, Yukon Gold Potatoes, Broccoli, Vermont Maple Syrup, Stone Ground Mustard, Dijon Mustard, BBQ Seasoning (brown sugar, smoked paprika, chili powder, cumin, granulated garlic, granulated onion, sea salt, black pepper), Olive Oil, Half & Half ((Milk)), Parmesan Cheese, Fresh Garlic",
+      "description": "Maple mustard-glazed grilled chicken | BBQ mashed Yukon potatoes | roasted broccoli"
     },
     "Free-Range Chicken Parm Over Spiralized Noodles": {
       "nutrition": {
@@ -3235,7 +3257,8 @@
           "fiber": 6
         }
       },
-      "ingredients": "Free-Range ABF Chicken Breast, Zucchini, Broccoli, Marinara Sauce (Tomato, Onion, Garlic, Olive Oil, Oregano, Basil, Carrot, Red Pepper Flakes, Sea Salt), Mozzarella Cheese (Milk), Parmesan Cheese, Eggs, Gluten Free Breadcrumbs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion"
+      "ingredients": "Free-Range ABF Chicken Breast, Zucchini, Broccoli, Marinara Sauce (Tomato, Onion, Garlic, Olive Oil, Oregano, Basil, Carrot, Red Pepper Flakes, Sea Salt), Mozzarella Cheese (Milk), Parmesan Cheese, Eggs, Gluten Free Breadcrumbs, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion",
+      "description": "Gluten-free chicken cutlets | zucchini noodles | house-made marinara | mozzarella | roasted broccoli"
     },
     "Blueberry BBQ Chicken Sliders with Chipotle-Lime Slaw": {
       "nutrition": {
@@ -3262,7 +3285,8 @@
         }
       },
       "ingredients": "Antibiotic & Hormone-Free Chicken Breast, Brioche Slider Buns (Enriched Wheat Flour, Water, Eggs, Butter, Sugar, Yeast, Salt, Milk, Whey, Natural Flavors, Monoglycerides, Ascorbic Acid, Enzymes, Calcium Propionate), Chipotle Lime Slaw (Green Cabbage, Red Cabbage, Carrot, Greek Yogurt (Milk), Olive Oil Mayo (Eggs), Chipotle Peppers in Adobo, Lime Juice, Cilantro, Scallions, Jalapeño, Wildflower Honey), Carrots, Fit AF Blueberry BBQ Sauce (Tomatoes, Vinegar, Wild Blueberries, Brown Sugar, Maple Syrup, Carrots, Beets, Red Onion, Worcestershire Sauce, Apple Cider Vinegar, Cinnamon, Cumin, Chili Powder), Olive Oil, Sea Salt, Black Pepper, Granulated Garlic, Granulated Onion.",
-      "contains": "Wheat, Milk, Eggs."
+      "contains": "Wheat, Milk, Eggs.",
+      "description": "Blueberry BBQ braised chicken | brioche sliders | roasted carrots | chipotle-lime coleslaw"
     },
     "🟠NEW: Thai Basil Beef (Pad Kra Pao) with Coconut Rice": {
       "nutrition": {
@@ -3289,7 +3313,8 @@
         }
       },
       "ingredients": "Flank Steak, Coconut Rice (White Rice, Coconut Milk, Sugar), Broccoli Rabe, Red Bell Peppers, Onions, Carrots, Scallions, Thai Basil Sauce (Gluten-Free Oyster Sauce [Shellfish], Tamari [Soy], Fish Sauce [Fish], Thai Basil, Garlic, Cilantro, Tapioca Starch), Olive Oil, Sea Salt, Black Pepper.",
-      "contains": "Fish, Soy, Shellfish (Oyster)"
+      "contains": "Fish, Soy, Shellfish (Oyster)",
+      "description": "Flank Steak | Thai Basil Sauce | Coconut Rice | Broccoli Rabe"
     }
   }
 }
