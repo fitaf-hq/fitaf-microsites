@@ -9,13 +9,17 @@ import { answer, chooseGoal, open, pageOf, questionsOf, resultOf, SNACKS_SHOWN }
 const pressedGoals = (page) =>
   [...page.document.querySelectorAll("[data-goal]")].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.getAttribute("data-goal"));
 
-test("MS-12: #lean is the size alone: Q1 waits, Q2–Q4 hidden, no card; pressing Lean again writes nothing", async () => {
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 A item 5 (2026-10-26): a link carrying a size reveals every question, its answers
+// pressed and the rest at their defaults, so #lean shows Q2–Q4 at their defaults; until § 4 they waited for Q1 (§ 7's
+// "After Q1", which § 4 A's one-by-one reveal replaces). Q1 still unanswered, still no card.
+test("MS-12: #lean is the size alone: Q1 unanswered, Q2–Q4 shown at their defaults (§ 4 A item 5), no card; pressing Lean again writes nothing", async () => {
   const page = open(await pageOf({ snacks: SNACKS_SHOWN }), "#lean");
   const q = questionsOf(page);
   assert.deepEqual(pressedGoals(page), ["lean"]);
   assert.equal(q.lunch_dinner.shown, true, "Q1 shown");
   assert.equal(q.lunch_dinner.pressed, null, "Q1 not answered");
-  assert.deepEqual([q.weekends.shown, q.breakfast.shown, q.snacks.shown], [false, false, false], "Q2–Q4 wait for Q1");
+  assert.deepEqual([q.weekends.shown, q.breakfast.shown, q.snacks.shown], [true, true, true], "Q2–Q4 shown: the link reveals every question");
+  assert.deepEqual([q.weekends.pressed, q.breakfast.pressed, q.snacks.pressed], ["no", "no", "no"], "at their defaults");
   assert.equal(resultOf(page).shown, false);
   chooseGoal(page, "lean");
   assert.equal(page.hash(), "#lean", "round trip");

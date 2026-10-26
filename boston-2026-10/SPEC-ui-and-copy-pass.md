@@ -878,3 +878,266 @@ column), so the phone was read through a 390 px `<iframe>`, whose own viewport t
 **Not done here**: Storybook's stories of the page at 1280 (SPEC-storybook-microsite) are not re-rendered; the /why/,
 /privacy/ and Worker pages keep their 680 px text column on white over the whole screen (item 6), so on a desktop the
 site is two looks until real responsiveness is built.
+
+## 4. Round 2, changeset 2 (2026-10-26): the questions revealed one by one, *Not ready?* in a dialog, *Why Fit AF?* at the foot. CONTRACT, before any code
+
+**The Advisor, 2026-10-26** (verbatim): *"The questions should progressively reveal (we're ultimately going to add a
+progress bar). Once they're all revealed they should stay revealed, even as the user taps around. Since individual and
+family are the same, it is OK for us to have a fallback rule that says something like: If *any* question sequence has
+started and the user flips to the other individual/family choice, consider *all* questions revealed. … As part of this,
+count the meal size as the final "question""*. *"Add a "Not ready?" secondary call to action link/button (we can edit the
+copy) after the checkout button (they should both reveal at the same time). When tapped, that shows a modal with the
+contents of the "save offer form". I think that will cleanup the flow."* *"The "Why Fit AF?" button needs to look less
+like a transactional button and more of a … "actionable banner" or "non-intrusive ad-like unit" … It's also sitting
+awkwardly in the flow. For now, let's try putting it towards the bottom of the page (after checkout/save offer – and it
+should always be visible in the page flow, though it may scroll out of the viewport)."*
+
+### A. The questions, revealed one by one
+
+1. **The sequence**, top to bottom as today (§ 2): *Who is this for?*, then for the individual plan *lunch or dinner*,
+   *weekends*, *breakfast*, *snacks* (when `plans.json` `snacks.shown`), and **the meal size** (*What's your goal?*, the
+   last question, the portion-size disclosure beneath it as § 2 item 4); for Family, its one question (§ 2.2). The result
+   card (the price, *Choose your meals*, item B's *Not ready?*) is the step after the last question, as today.
+2. **What shows at the start** (a link carrying no answer and no size: `""`, `#individual`, `#family`): *Who is this for?*
+   with its default pressed (*Just me*, § 2 item 2; or *Me and my family* for `#family`) **and the first question below
+   it**: the first question has an answer by default, so the next is shown. Nothing else of the panel.
+3. **Revealing**: answering a question by a tap (either answer, the one already pressed included) shows the next one in
+   the sequence; answering the last (the meal size; Family's one question) shows the result card. **A question once shown
+   stays shown** for the page view, whatever is tapped after, the browser's back and forward included; the revealed
+   point never moves back up.
+4. ⚠ **The newest question has no answer pressed until it is tapped** (the orchestrator's default, ⬜ his to rule): the
+   meal questions' defaults (`selection_defaults`) still hold for the price and the cart, but a question the visitor has
+   not yet answered shows neither answer pressed, so a pressed default never reads as an answer given. Every question
+   above it was tapped and shows its answer. Once all are revealed (item 6), every question shows its answer, defaults
+   included, as today.
+5. **A link that carries answers or a size** (`#lean`, `#lean-or-5d-b`, `#meals-and-7d`, `#lean-7`, `#family-or`, the
+   QR codes', the emails' `/o` links back): **every question is revealed** at load (all answers it carries pressed; the
+   rest at their defaults, pressed, as today), and the result card when the answers make one.
+6. **The fallback** (his): once any question below *Who is this for?* has been answered by a tap in this page view,
+   switching *Who is this for?* to the other answer reveals **every question of both panels**, for the rest of the page
+   view. Switching before any such answer only changes the panel, its first question shown (item 2).
+7. **Kept out of the link**: the revealed point is the page view's own; it is not in the fragment, not stored, not sent.
+   The fragment stays the answers' (`serialise`, unchanged). Without JavaScript nothing changes (the questions are
+   script-only today; the no-script page is its table).
+8. **Hidden means hidden**: a question not yet revealed is `hidden` (out of the accessibility tree and the tab order);
+   revealing one does not move focus or scroll the page (the visitor's own scroll; the progress bar is later).
+
+### B. *Not ready?*: the save step in a dialog
+
+1. **The link**: a secondary call to action, **"Not ready?"** (his words, ⬜ the copy his to edit), directly below *Choose
+   your meals* in the result card, shown and hidden with it (A item 1). It is never orange (the store's button stays the
+   page's one `--cta`): a text button in the look of *See all plans* (navy, underlined), centred, at least 44 px tall.
+2. **The dialog**: tapping it opens a modal dialog holding **the save step's whole contents** (`src/save/section.html`:
+   the offer line, the lead, the form, Turnstile, the consent words, the out-of-area and expansion parts, every done and
+   error message, the menu link), moved there from the page; **nothing of the save step remains in the page's flow**.
+   The dialog behaves as *See all plans* and *Why Fit AF?* do (`modal()` in `app.js`): Esc, its close button (×) and a
+   press on the backdrop close it, and focus returns to *Not ready?*. Its accessible name is the save step's own.
+3. **The save step's behaviour is unchanged inside it** (`flow1.js`: the states, the requests, Turnstile, the done
+   messages, `?no-tracking`'s cookie untouched); only where it is shown moves. Its collapsed state (*save-collapsed*,
+   *Save my offer* to reopen) exists because the step sat beside checkout in the flow; inside a dialog it is not needed
+   unless the builder finds a state that relies on it (say which, do not decide).
+4. **Which pages**: the pages that carry the save step today (development, and production with `production` true). The
+   production page with `production` false (S20's, the rollback) has no save step, so no *Not ready?*.
+5. **The offer box at the top** (*"Today only: sign up to save 25%"*) is unchanged; if anything in it pointed into the save
+   step, it now opens the dialog (say what was found).
+
+### C. *Why Fit AF?* as a banner at the foot
+
+1. **Its place**: after the result card and the save step's link, **before the foot** (*See all plans* and the
+   footnote), in the page's flow, **always shown**: not hidden by A's revealing, not by the result being hidden, on both
+   panels. Its no-script link in the same place. It leaves its place above *Who is this for?*.
+2. **Its look, an actionable banner** (the orchestrator's reading of *"non-intrusive ad-like unit"*, ⬜ his to rule): a
+   card the column's width (inside `.wrap`), `--ice` background, the hairline `--line` border, the radius, at least
+   64 px tall, its words *Why Fit AF?* left-aligned in the heading type (Poppins 600, 17–19 px, navy) and a "→" at the
+   right edge; the whole card is the button (the same `#why-link` and dialog). Hover darkens its border as the cards'
+   do; the page's focus ring. Never orange, not a pill, not centred like a button.
+3. **Words**: unchanged (*Why Fit AF?*). No new copy (⛔ copy changes on his ruling).
+
+### D. Cases and goldens
+
+1. **Cases**, written first and run red (one file per part, in `test/uc11-*.test.mjs`, `uc12-*`, `uc13-*`, over both
+   builds that carry the page, the production page with `production` true and the development page, driven by the page's
+   own script as the UC cases are): A: the start (items 2, 5); one tap reveals one question; the result after the meal
+   size; a shown question stays shown through a re-tap above it and through back/forward (hashchange); item 4's no
+   pressed answer on the newest; item 6's fallback, and the switch before any answer that does not reveal; Family's
+   one question; hidden questions out of the tab order. B: *Not ready?* shown with the result and hidden with it; opening
+   it shows the dialog with every save-step element inside it and none outside; Esc, × and backdrop close it, focus back;
+   a save through the dialog reaches `/api/save` as today (the UC9 path); the production-false page has neither. C: the
+   banner after the result and the save link and before the foot, shown at the start and with no result, on both panels;
+   its look's rules (UC10d's no raw colour; contrast pairs declared for `--navy` on `--ice` if not already).
+2. **Cases amended**: every existing case that assumed all questions shown at once, the save step in the flow, or
+   *Why Fit AF?* above the first question, amended in the commit with the code, each named with what changed.
+3. **Goldens** that pin the page (S20, PV5, U4, WC-8, CC-4, SP3's base; and CC-8 if a Worker file moves) re-recorded once
+   each, in their own commit, from the code commit's own tree (`git archive`), each control first, as § 3.1 did.
+4. **The look**, at 390 and at 1280 (the § 3 column): the start, the middle of the sequence, all revealed with the result
+   and *Not ready?*, the dialog open, the banner: Storybook's stories of the page re-rendered (SPEC-storybook-microsite),
+   and the PNGs named in the build note.
+5. **Analytics** (SPEC-analytics): every answer event is sent as today (a reveal is not an event); A3 still reads every
+   `button.choice`. *Not ready?* and the banner send nothing new (⬜ whether to count them is his, later, with the progress
+   bar).
+
+### E. Open for the Advisor (the builder builds A–D and states these, never decides them)
+
+The start (A item 2: the first meal question shown with *Who is this for?*, or *Who is this for?* alone); A item 4 (the
+newest question shows no pressed answer); *Not ready?*'s words; the banner's look and whether it carries a second line.
+
+### 4.1 Built — found at the build, not ruled (2026-10-26)
+
+Built on `boston/round-2-changeset-2` from `f69175d` (this contract, on the release line's `4699cad`), 2026-10-26. Each
+case run one file at a time at `nice -n 15`, beside other teams' gates (load average about 25); the whole site suite and
+Storybook's alone at the tip.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `62b8627` | D item 1, the cases first (UC11–UC13 and their Chrome half), run red on `f69175d`'s code |
+| `d0f1a97` | A, B and C, the code (one commit: the three share `app.js`, the template and the slots); the cases it made stale |
+| `6aa2728` | D item 3, the goldens, once each from `d0f1a97`'s own tree, each control first at `62b8627` |
+| `24d2e88` | found by Storybook's run, § 3's not § 4's: PR-13 in Chrome read against the page's column (below, Found 5) |
+| `3b923d4` | D item 4, Storybook's stories of the page: *One answered* and *Not ready?* |
+| `1462b05` | found by Storybook's whole run at `3b923d4`: EM2's text in Chrome, made stale by B and missed by `d0f1a97`; EM2's boxes and EM9 at 1280, § 3's (below, Found 9) |
+| the next commit | this section; the README rows |
+
+**Cases, before and after** (`nice -n 15 node --test <file>`; red on `f69175d`'s code, green from `d0f1a97`)
+
+| case | file | red | green |
+|---|---|---|---|
+| UC11, A: the start (`""`, `#individual`, `#from-email`; `#family`); one tap one question, the meal size the result, both builds with snacks carted and both with snacks shown and not carted (Q4 in the sequence); Q4 the card's while carted; the fragment the answers' alone; stays shown through a re-tap above and back and forward; a link with answers or a size shows every question; the fallback; a switch before an answer, and the same answer pressed again; Family's one question; hidden questions `hidden`, no focus moved, nothing scrolled; one answer event a tap, nothing for a reveal, nothing stored | `test/uc11-questions-revealed.test.mjs` | 7 of 11 (the four passing are guards: Q4 the card's, the fragment, Family's question, the events) | 12 of 12 (one case added with the code: a fragment the page view never wrote, Choices 6) |
+| UC12, B: *Not ready?* in the result card after its checkout, shown with *Continue to checkout* and hidden without it; every id of `src/save/section.html` in one `<dialog>`, none read in the page's flow, its name the step's; opened by *Not ready?*, closed by × and the backdrop, focus back; a save through it reaches `/api/save` with exactly the save's fields; none on the production page with `production` false; never orange, See all plans' look, centred, 44 px; the offer box pointing nowhere into the step; no event | `test/uc12-not-ready-dialog.test.mjs` | 7 of 9 (passing: a control on `section.html`'s parts, and production false's none) | 9 of 9 |
+| UC13, C: after the result card and *Not ready?*, before the foot, its no-script link directly after it, nothing drawn between it and the foot, no longer above the first question; always shown (eight fragments, both panels, after switching); the same button, dialog and words; its rules (`--ice`, the `--line` hairline, the radius, 100 %, at least 64 px, Poppins 600 18 px navy, left, the arrow, hover `--field`, never orange, not a pill, not centred); no raw colour, `--navy` on `--ice` declared at body text's role; no event. Three pages: both builds and S20's | `test/uc13-why-banner.test.mjs` | 2 of 6 (its place, its look; passing as guards: always shown, the same button, no raw colour, no event) | 6 of 6 |
+| UC11–UC13 in Chrome, 390 and 1280, both builds: the start drawn, a tap drawing the next question with the scroll and the focus left where they were, the result with *Not ready?*; *Not ready?* below the checkout, centred, 44 px, navy, underlined; the dialog modal (`:modal`), the form drawn in it, its accessible name the step's (Chrome's tree), Esc, × and the backdrop closing it with focus back; the banner the column's width, 64 px, `--ice`, Poppins 600 navy, words left and the arrow right, not a pill, hover `--field`, at the start, on Family and after *Not ready?* | `tools/storybook/test/uc11-13-chrome.test.mjs` | 12 of 12 (see Found 7) | 12 of 12 |
+
+- **Made stale by the code, amended with it** (`d0f1a97`), each by what § 4 changes: `save-end-fixture.mjs` (`storeButton` the
+  last thing read before *Not ready?*; *Flow 1 directly after the store button* is now *Not ready?* there and Flow 1
+  whole in its dialog, opened by the page's own button and closed again; *Flow 1 absent* includes its link; S29's helper
+  `assertFlowOneInItsDialog`, B reversing rung 4's § 2b item 1 *no modal* by his ruling: Flow 1 in exactly one modal
+  element, its own dialog), S29 (its mutants: Flow 1 out of its dialog, in a second dialog, an overlay; each fails), SP4
+  (the helper's name), `uc-harness.mjs` `neighbours` and `sp-fixture.mjs`'s offer line (read in the step's dialog), MS-4
+  and MS-12 (a size's link reveals every question: Q2–Q4 shown at their defaults, where § 7's *After Q1* hid them), MS-18
+  (*Not ready?* the card's last thing on the production page), UQ1 (a size's link shows every question), UQ4 (the calculator hidden with the meal
+  size at the start), W1 (the button at the foot of `main`, after the result and *Not ready?*); in Chrome W2/W3 (the
+  banner's place and look, W3's link at the foot below both panels, the footer mutant's message, § 11.2's chip-look case
+  now the banner's focus ring, a chip's) and `uc-chrome`'s save-step states (reached through *Not ready?*, Esc before See
+  all plans). Found by the first whole run, before the commit: 81 of 1,273, most of them `flow1.js` calling
+  `hasAttribute` on page-sim's stand-in elements (Found 4), fixed in the code. ⚠ Missed by that commit and found by
+  Storybook's whole run: EM2's text in Chrome (`em-chrome.test.mjs`: the result card's text against the base 76ee36e's,
+  where *Not ready?* is now the card's last line), amended at `1462b05` (its line and its box left out).
+- **My own cases, corrected at green**: `uc11-13-chrome`'s UC11 waited for the next heading's presence (the reveal lands
+  after the browser's `hashchange`, asynchronous) and measured puppeteer's own scroll to press: it now waits for the
+  question drawn and puts the answer in view first; its middle render spans the newest question's answers; the cases'
+  dialog stand-in sets `open`.
+
+**Goldens, each re-recorded once from `d0f1a97`'s own tree** (`6aa2728`; each control at `62b8627`, § 4's cases and the
+code before, reproducing the committed record):
+
+- **S20** (CC-4 reads it): `index.html` alone, `a52b4366…` → `cc3f2473…`, 67,913 → 72,282 bytes: A's script, the banner
+  and its place, `#plan-data`'s `snacks_carted`; nothing of B (production false has no save step). Both trees' production
+  pages compared line by line.
+- **PV5** (`pv-05-record.mjs --commit d0f1a97 --release-a`): production's `index.html` and development's four pages;
+  every other file byte-identical, `privacy/` included.
+- **U4** (`u-04-record.mjs --commit d0f1a97 --release-a --without-snack-cells`): all six contents byte-identical; every
+  page moves (production's +4,369 bytes, development's +6,291) and every visible page.
+- **WC-9** (`wc-09-record.mjs --visible-at d0f1a97 --release-a --without-snack-cells`): `visible` at all 20 fragments;
+  `picks_data`, `page_sha256` and the sheet 409b805's. The recorder's new flag: Found 3.
+- **WC-8**: `02fe24d1…` → `fd75caac…`.
+- **SP3's base**: `LATER` gains `62b8627..d0f1a97` over `src/template.html`, `src/app.js`, `build.mjs` (`codeOnly`: the
+  `saveSlots` note, a comment, left out).
+- Not moved: CC-8 and its readers (MS-9, PR-10), R2-32, MS-20; no Worker file and no content moved.
+
+Sizes, raw / gzip (Node's default level, as T5 measures): production (production false) 72,282 / 21,732 (from 67,913 /
+20,250); development `/` 114,361 / 33,533; under SPEC.md § 1's 61,440 gzip.
+
+**Where the contract left a choice, and what was chosen** (stated, not ruled)
+
+1. **Q4 while snacks are carted** (`data/plans.json` as committed): the Chef's Choice card shows Q4 only beside a result
+   (its answer set is empty until the result shows; SPEC-snacks-in-the-cart § 4), so in the sequence Q4 could never be
+   shown before the meal size, and revealing it there would have left the visitor stuck at a hidden question. Built: Q4
+   is out of the sequence while carted (breakfast reveals the meal size) and its `hidden` stays the card's; it shows above
+   the meal size once the result does, for days with a snack list, with its answer pressed, as today. With snacks shown
+   and not carted it is in the sequence, between breakfast and the meal size. The page reads the flag from `#plan-data`'s
+   new `snacks_carted`.
+2. **When *Not ready?* shows** (B item 1, *"shown and hidden with it"*): exactly while the save step showed since § 1
+   item 2 (the Advisor: *"only appear when the Checkout button appears"*): beside the card's *Continue to checkout*
+   (flow1.js's `beside`, unchanged), never beside *Choose your meals* alone; so on Family, beside a Family cart's checkout
+   (UF5's rule). Read so because his words for B are *"after the checkout button (they should both reveal at the same
+   time)"*.
+3. **Where *Not ready?* sits**: the result card's last thing, after *Choose my own meals* (the card's last link, where
+   the save step sat since § 1), centred. The other reading, directly under *Continue to checkout* inside the list's box,
+   would put it between the checkout and *Choose my own meals*.
+4. **The Family section at the start** (A item 2, *"Nothing else of the panel"*): read as nothing else of the panel's
+   questions and no result. Family's card (its name, promise and *Serves a family of 3–4.*) stays with its panel, above its
+   one question, as it says what Family is.
+5. **A link carrying a size alone** (`#lean`, A item 5): every question shown; Q1 with no answer (it has no default), Q2–Q4
+   at their defaults, pressed (*"the rest at their defaults, pressed"*); § 7's *After Q1* (Q2–Q4 hidden until Q1) gives
+   way to it. `pressed()` no longer requires Q1 for Q2–Q4.
+6. **A fragment the page view never wrote** (a link followed within the page, the address bar): a link too; carrying
+   answers or a size, it shows every question. Back and forward land on fragments the view wrote or opened at and change
+   nothing shown (A item 3). The revealed point is still not in the fragment, not stored (A item 7).
+7. **A tap on a question not yet shown** (possible only by a script) shows the questions up to and after it, as a tap in
+   order does (`Math.max`); no visitor can press a hidden button.
+8. **The same answer to *Who is this for?* pressed again** is no switch (A item 6's *"flips to the other"*).
+9. **The dialog's look**: the plans dialog's (`.all`: white, the radius, the navy backdrop at 60 %, × at its head), at most
+   the column's width (`min(var(--column, 100%), calc(100% - 24px))`: 480 px on a desktop, the screen less 24 px on a
+   phone), where See all plans takes 680; inside it the step's own box, its orange bar and border kept, its margin
+   dropped. Its accessible name is `#save-title` (*"Your Boston offer"*), the step's.
+10. **The collapsed state** (B item 3, say which, do not decide): two states rely on it and it is kept unchanged. PLAN,
+    from `#from-email` (the emails' `/o` link back, `src/worker/redeem.js`): there the dialog opens holding the one line
+    *Save my offer*, which opens the form in place; and MENU, after *See this week's menu* (`data/menu.json`; none today).
+11. **The dialog closes if the checkout goes while it is open** (a visitor's back): otherwise an open dialog would hold a
+    hidden step. One line in `flow1.js`'s render (where focus lands then, *Not ready?* being hidden, was not measured).
+12. **The banner's measures**: Poppins 600 18 px, padding 12 px 18 px, 8 px below it (the foot's own 12 px above *See all
+    plans*), the arrow 20 px, drawn by `::after` with an empty alternative (`content: "\2192" / ""`, the plain form first
+    for older browsers), so its accessible name stays *Why Fit AF?*; its no-script link the same look. Its card is the
+    column's width inside `main.wrap` (448 px in the 480 px column, 358 px at 390).
+13. **Analytics**: nothing new is sent (*Not ready?*, the banner, a reveal); `#not-ready` and `#why-link` are not
+    `button.choice`, so A3's reading is unchanged.
+
+**Found at the build**
+
+1. ⚠ **A item 5's examples carry no answers.** The QR codes are `https://eatfitaf.com/?e=boston` (and `?e=seminar`, `/`),
+   no fragment; the emails' `/o` link back is `/?e=<event>#from-email`. Neither carries an answer or a size, so by item
+   5's rule they open at the start (item 2), and UC11 holds `#from-email` among the starts. Built by the rule; that these
+   links should open with every question shown would be his ruling.
+2. ⚠ Snacks carted (Choices 1): the card hides Q4 whenever no result is shown, so the contract's sequence with Q4 in it
+   could not be built as written while carted.
+3. **The WC-9 recorder no longer reproduced its record**: WC-9c reads each visible page with a snack link's cells removed
+   (since SPEC-rung2-progress-and-checkout § 31.2), and the recorder did not, so re-run as it was it differed at
+   `62b8627` in `visible` alone. It gains `--without-snack-cells`, as `u-04-record.mjs` has it; with it, at `62b8627` it
+   reproduces the record.
+4. **page-sim's stand-in elements have no `hasAttribute`**: `flow1.js` reads the dialog's `open` property instead (81 of
+   1,273 in the first whole run, most of them this).
+5. ⚠ **PR-13 in Chrome was red at 1280** (the carousel at 400, 480 wide, not 0, 1280): § 3's column, which § 3.1 did not
+   run Storybook's cases for; inferred, not run, to be red since `0233dbe`. Amended in a commit of its own (`24d2e88`):
+   the carousel spans the page's column, the viewport at 390 and 480 px at 1280.
+6. The preview build's cut list (`PREVIEW_WITHOUT_WHY`) finds the moved button, its no-script link, its dialog, its
+   rules and the script's lines once each, unchanged: their text is the same and they stay together (PV1–PV8 green).
+7. The Chrome cases' red run was made while the code was being written; its failures are the pre-code build's (the meal
+   size drawn at the start, no `#not-ready`, the banner the 128 px pill).
+8. Storybook's `node_modules` in this worktree is a link to the dev-line's install, as the release-c worktree has it
+   (nothing installed); its static builds write their pages to temporary directories.
+9. ⚠ **Two more of § 3's, in Chrome** (found by Storybook's whole run at `3b923d4`; § 3 changes no card, so neither is
+   § 4's): EM2's boxes at 1280 (the card 410 px wide in the column, the base's 650: the base is now read at the column's
+   width, as the page draws the card there) and EM9's one row of rings at 1280 (in the column they wrap as on a phone,
+   § 11 item 4's own rule: one row is held wherever the panel holds the five rings and their gaps side by side, the gap
+   read from the page); EM9's two mutants failed at their controls by the same cause. Amended at `1462b05`;
+   `em-chrome.test.mjs` alone 9 of 9. Like PR-13 (Found 5), inferred, not run, to be red since `0233dbe`.
+
+**E, stated** (built as the contract's defaults, his to rule): the start, *Who is this for?* and the first meal question
+(A item 2, as built); the newest question with no answer pressed (A item 4, as built); *Not ready?*'s words (the
+working label, as built); the banner's look (C item 2, as built) and a second line (none built).
+
+**The gates at `3b923d4`** (each alone, `nice -n 15`):
+
+| gate | result |
+|---|---|
+| `nice -n 15 npm --prefix boston-2026-10 test` (08:07–08:15 PDT) | **1,273 of 1,274** (`# tests 1274`, `# pass 1273`, `# fail 1`): QC (`qc-chrome-stall.test.mjs`, the mock-ups' Chrome stall: under load it stalled twice where its case expects once); alone at once, 4 of 4. Nothing here reaches the mock-ups' Chrome runner, and nothing after `3b923d4` is read by this suite |
+| `npm --prefix boston-2026-10 run contrast` | 94 pairs, 94 pass, 0 fail |
+| `nice -n 15 npm --prefix boston-2026-10/tools/storybook test` (08:15–08:19 PDT) | **89 of 97** (`# tests 97`, `# pass 89`, `# fail 8`): EM2, EM9 and EM9's two mutants (amended at `1462b05`, Found 9; `em-chrome.test.mjs` alone there 9 of 9); and SM-5, SM-8, SM-10 and SM-11, which read one walk, which timed out (120 s) waiting on a story while the suite's other Chrome files ran beside it (load about 25): alone at once, `sm-5-8-states-no-request.test.mjs` 10 of 10 (08:22–08:24 PDT), the two new stories among those it walks. SM-2 lists them; UC11–UC13 in Chrome 12 of 12, W2/W3, `uc-chrome`, UQ, UF and PR-13 green |
+
+**Renders** (Chrome at 390 and 1280, the week delivered 2026-11-01, every photograph refused, the clock at noon in New
+York on 2026-10-24; written by Storybook's whole run at `3b923d4` with `UC_RENDERS=<dir>`, never committed, handed to
+the orchestrator), each `-production-` and `-development-`, `-390` and `-1280`: `uc11-start-*` (the start),
+`uc11-middle-*` (Q1 answered, the next question unanswered), `uc11-all-revealed-*` (every question, the result card,
+*Not ready?*), `uc12-dialog-*` (the dialog open, the viewport), `uc13-banner-*` (the result card to the foot). Storybook:
+*Individual · Start*, *· One answered*, *· Chosen*, *· Not ready?*, and *Whole page · Scroll* for the banner.

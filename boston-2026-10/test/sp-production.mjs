@@ -289,6 +289,12 @@ export const LATER = [
   // and its comment, from 2b409bb (its cases, after its contract) to 0233dbe (its code, at its second commit: the token out
   // of :root).
   ["2b409bb", "0233dbe", ["src/template.html"]],
+  // SPEC-ui-and-copy-pass § 4 (2026-10-26: the questions revealed one by one, Not ready? and the save step in a dialog, Why
+  // Fit AF? a banner at the foot) moves the production page with `production` false by app.js's reveal, the template's
+  // banner and its place, and #plan-data's snacks_carted (B's save step is the pages carrying it, src/save/, which this
+  // page is not), from 62b8627 (its cases, after its contract) to d0f1a97 (its code, one commit). build.mjs's
+  // comment-only hunk (saveSlots' note) is left out (`codeOnly`).
+  ["62b8627", "d0f1a97", ["src/template.html", "src/app.js", "build.mjs"], { codeOnly: true }],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */

@@ -149,7 +149,12 @@
 // desktop column: its one media block and comment). Control: the recorder with both flags at 2b409bb
 // reproduces f9273c0's record (recorded_at apart). Against it: all six contents and every visible page byte-identical;
 // every page +686 bytes.
-// From here the reference is 0233dbe's tree.
+// ⚠ RE-RECORDED at d0f1a97 (`--commit d0f1a97 --release-a --without-snack-cells`): SPEC-ui-and-copy-pass.md § 4 (round 2
+// changeset 2: the questions revealed one by one, Not ready? and the save step in a dialog, Why Fit AF? a banner at the
+// foot). Control: the recorder with both flags at 62b8627 (its cases, the code before) reproduces 0233dbe's record
+// (recorded_at apart). Against it: all six contents byte-identical; every page moves (production's +4,369 bytes,
+// development's +6,291) and every visible page, by § 4's lines alone.
+// From here the reference is d0f1a97's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -160,8 +165,8 @@ import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 0233dbe's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "0233dbe");
+test("U4: a normal week, the content and the page as served, byte-identical to d0f1a97's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "d0f1a97");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
   // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs
