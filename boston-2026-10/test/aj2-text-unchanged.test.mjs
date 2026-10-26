@@ -5,6 +5,10 @@
 // and two answer sets derived from it, production's and --env dev). For each: (1) this tree's text report is the
 // base's, byte for byte; (2) this tree's reportText over the document --json printed (read back from its JSON) is the
 // base's text too, so the two outputs cannot disagree. Nothing is requested.
+// ⚠ THE BASE MOVED with SPEC-analytics.md § 13 item 3 ("AJ2's base text moves with this section. Record it once from the
+// new code"), from 2ceb05a to f9273c0, § 13's code commit: the funnel's answer steps in the page's order since round 2,
+// and `answer: family`, a branch, printed with no change figure. 2ceb05a's text over the same fixture (which gained who and
+// family rows with § 13's cases, 133994b) is this tree's at 133994b, byte for byte, and lists neither question.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -15,7 +19,7 @@ import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { fixtureAnswers, runAt, runs } from "./aj-checks.mjs";
 
-const BASE = "2ceb05a";
+const BASE = "f9273c0";
 
 function run(cmd, args, { input } = {}) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 64 * 1024 * 1024 });

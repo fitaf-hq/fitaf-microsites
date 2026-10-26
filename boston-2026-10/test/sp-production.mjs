@@ -278,6 +278,13 @@ export const LATER = [
       insertAfter: [["build.mjs", 'import { checkSelection, legacyKey } from "./scripts/selection.mjs";\n', 'import { checkFamily } from "./scripts/family.mjs";\n']],
     },
   ],
+  // SPEC-analytics.md § 13 (2026-10-25: Family counted, and the first question) moves the production page by the analytics
+  // script's three lines (src/analytics.js: its selector, an answer for data-who and one for data-family) and the Worker
+  // by its vocabulary (src/worker/beacon.js, which the base holds as 0fd55e3 does), from 0fd55e3 (its contract) to
+  // f9273c0 (its code, one commit). The base's src/analytics.js predates § 9 item 2's reading, two of whose lines sit in
+  // the context of the click listener's hunk: with git's three lines of context that hunk lands only with patch's fuzz,
+  // so the diff is taken with one (`context`), and every hunk lands with no fuzz (an offset only).
+  ["0fd55e3", "f9273c0", ["src/analytics.js", "src/worker/beacon.js"], { context: 1 }],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
@@ -335,8 +342,9 @@ export async function basePackage() {
   run("tar", ["-x", "-C", join(scratch, "base")], { input: run("git", ["-C", top, "archive", "--format=tar", BASE, prefix]) });
   const pkg = join(scratch, "base", prefix);
   await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
-  for (const [from, to, paths = LATER_PATHS, { codeOnly = false, dropHunks = null, insertAfter = [] } = {}] of LATER) {
-    const whole = run("git", ["-C", top, "diff", "--no-color", from, to, "--", ...paths.map((p) => `${prefix}/${p}`)]);
+  for (const [from, to, paths = LATER_PATHS, { codeOnly = false, dropHunks = null, insertAfter = [], context = null } = {}] of LATER) {
+    const lines = context === null ? [] : [`--unified=${context}`];
+    const whole = run("git", ["-C", top, "diff", "--no-color", ...lines, from, to, "--", ...paths.map((p) => `${prefix}/${p}`)]);
     const kept = codeOnly ? codeHunks(whole.toString("utf8")) : dropHunks ? withoutHunks(whole.toString("utf8"), dropHunks) : null;
     const diff = kept === null ? whole : Buffer.from(kept);
     if (diff.length) run("patch", ["-p1", "--forward", "--silent", "-d", join(scratch, "base")], { input: diff });

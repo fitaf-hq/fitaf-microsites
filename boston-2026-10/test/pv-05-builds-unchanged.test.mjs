@@ -12,6 +12,9 @@
 // among them, byte-identical. Re-recorded at 077f472 (`--commit 077f472 --release-a`) for § 2.2: the same five pages moved,
 // by its lines; the recorder at 8bfe4f8 reproduces 8bfe4f8's record. And at 5eaad96 (`--commit 5eaad96 --release-a`), the
 // Family door's [hidden] rule: the same five pages, by that rule alone; the recorder at 077f472 reproduces 077f472's.
+// And at f9273c0 (`--commit f9273c0 --release-a`), SPEC-analytics.md § 13 item 2 (the analytics script sends the first
+// question's and Family's own question's answers): the same five pages, +202 bytes each, by the script's three lines
+// alone; every other file byte-identical; the recorder at 5eaad96 reproduces 5eaad96's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
