@@ -258,8 +258,33 @@ export function hiddenInTree(node) {
   return false;
 }
 
+/** SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): *Choose my own meals* is no longer a link below the checkout but
+ *  the chips' last radio (its value `own`, BRIDGE), which, pressed, sends Continue to checkout to the store's plan page. */
+export const ownChip = (document) => document.querySelector('#cc-menus input[type="radio"][value="own"]');
+
+/** Where *Choose my own meals* leads (⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 3): the checkout's address while its
+ *  chip is pressed, read by pressing it as a visitor does and then the chip pressed before it again (the card as it was);
+ *  null when the chip is not shown. */
+export function ownLink(page) {
+  const { document } = page;
+  const own = ownChip(document);
+  if (!own || hiddenInTree(own)) return null;
+  const radios = [...document.querySelectorAll('#cc-menus input[type="radio"]')];
+  const before = radios.find((r) => r.checked) ?? null;
+  const press = (radio) => {
+    for (const r of radios) r.checked = r === radio;
+    radio.dispatchEvent(new document.defaultView.Event("change", { bubbles: true }));
+  };
+  press(own);
+  const href = document.getElementById("cc-checkout")?.getAttribute("href") ?? null;
+  if (before && before !== own) press(before);
+  return href;
+}
+
 /** What the result card offers at this moment: which of its controls are shown, the list's words, and the links. Since
- *  SPEC-plan-page-refinement § 2 item 5 there is no button: the card offers the week's Chef's Choice when its list shows. */
+ *  SPEC-plan-page-refinement § 2 item 5 there is no button: the card offers the week's Chef's Choice when its list shows.
+ *  ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 items 1 and 3: `own` is *Choose my own meals*' chip shown, and `ownHref` where
+ *  it leads (ownLink, read first, so every other part is read from the card as it is left). */
 export function card(page) {
   const { document } = page;
   const shown = (id) => {
@@ -267,16 +292,18 @@ export function card(page) {
     return Boolean(node) && !hiddenInTree(node);
   };
   const text = (id) => document.getElementById(id)?.textContent.replace(/\s+/g, " ").trim() ?? null;
+  const ownHref = ownLink(page);
+  const chip = ownChip(document);
   return {
     result: shown("result"),
     choose: shown("result-cta"),
     list: shown("cc-list"),
-    own: shown("cc-own"),
+    own: Boolean(chip) && !hiddenInTree(chip),
     heading: text("cc-heading"),
     meals: [...(document.getElementById("cc-meals")?.querySelectorAll("li") ?? [])].map((li) => li.textContent),
     tiles: [...(document.getElementById("cc-meals")?.querySelectorAll("li") ?? [])].map((li) => li.querySelector(".cc-thumb")),
     checkout: document.getElementById("cc-checkout")?.getAttribute("href") ?? null,
-    ownHref: document.getElementById("cc-own")?.getAttribute("href") ?? null,
+    ownHref,
     chooseHref: document.getElementById("result-cta")?.getAttribute("href") ?? null,
   };
 }

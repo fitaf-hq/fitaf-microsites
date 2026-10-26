@@ -97,7 +97,8 @@ for (const width of WIDTHS) {
         assert.ok(c.boxHeight <= BOX_SHARE * c.screen + EVEN_PX, `the box ${c.boxHeight} px tall at most`);
         assert.equal(c.overflowY, "auto", "it scrolls inside");
         assert.equal(c.border, true, "its edge drawn");
-        assert.match(c.snapType, /^y proximity$/, `the root snaps by proximity (${c.snapType})`);
+        // Chrome's computed value leaves out the default strictness, so `y proximity` reads `y` (`y mandatory` would not).
+        assert.match(c.snapType, /^y( proximity)?$/, `the root snaps by proximity (${c.snapType})`);
         assert.deepEqual(c.stops, { "#who": "start", "#cc-box": "center", "#cc-checkout": "center" }, "the three stops");
         await render(page, "#result", `uc14-card-${build}-${width.width}`);
         await page.click("#cc-menus label:last-child");

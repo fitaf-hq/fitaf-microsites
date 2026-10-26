@@ -75,12 +75,14 @@ for (const target of ["prod", "dev"]) {
     const html = await built(target);
     assert.notEqual(html, reference, "control: the page is not the old bytes (the card is carried)");
     assert.deepEqual(JSON.parse(picksText(html)).weeks, [], "#picks-data holds no week");
-    for (const id of ["cc-list", "cc-heading", "cc-meals", "cc-checkout", "cc-own"]) {
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): no #cc-own (Choose my own meals is a chip the
+    // script makes); Continue to checkout follows the list, hidden with it.
+    for (const id of ["cc-list", "cc-heading", "cc-meals", "cc-checkout"]) {
       assert.ok(html.includes(`id="${id}"`), `the card's #${id} is in the markup`);
     }
     for (const hash of HASHES) {
       const page = openPlanPage(html, { hash, now: NOW });
-      for (const id of ["cc-list", "cc-own"]) assert.ok(hiddenInTree(page.document.getElementById(id)), `${hash}: #${id} hidden`);
+      for (const id of ["cc-list", "cc-checkout"]) assert.ok(hiddenInTree(page.document.getElementById(id)), `${hash}: #${id} hidden`);
       assert.equal(card(page).list, false, `${hash}: no list`);
       assert.equal(visible(html, { hash, now: NOW }), visible(reference, { hash, now: NOW }), `${hash || "(none)"}: the visible page`);
     }

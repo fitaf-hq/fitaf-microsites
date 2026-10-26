@@ -56,8 +56,9 @@ const SHOWN_LIST = "chefs-choice";
  *  lines; the line under a meal's name (`line`) has left them. */
 const V2_OPTIONAL_FIELDS = ["meals"];
 const ENTRY_FIELDS = [];
-const ENTRY_OPTIONAL_FIELDS = ["nutrition", "ingredients", "contains"];
-const ENTRY_TEXTS = ["ingredients", "contains"];
+// SPEC-ui-and-copy-pass § 5 item 7: `description`, the meal's line under its name in the closed row (text, not blank).
+const ENTRY_OPTIONAL_FIELDS = ["nutrition", "ingredients", "contains", "description"];
+const ENTRY_TEXTS = ["ingredients", "contains", "description"];
 const FACTS = ["cal", "protein", "carbs", "fat", "fiber"];
 const NUTRITION_PHRASES = { grams: ["{n}"], ingredients: ["{text}"], contains: ["{text}"] };
 const RING_LABELS = "rings";
@@ -74,7 +75,9 @@ const CART_FIELDS = ["lunch_dinner", "weekends", "breakfast", "plan", "items"];
  *  still filled when a phrase carries it, and no longer required.
  *  SPEC-meal-selection § 9 item 3: the snack block's heading and its not-carted line. SPEC-every-menu-and-nutrition § 2 (the
  *  Advisor's ruling of 2026-10-21): `menus_label`, the chooser's own name (its aria-label). */
-const PHRASES = { heading: [], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [], updating: [], menus_label: [] };
+// SPEC-ui-and-copy-pass § 5 items 1 and 3: `explore`, the card's heading; `own_note`, the note over the week's full list
+// while the own chip (`own`) is pressed (BRIDGE (SPEC-ui-and-copy-pass § 5 item 3)).
+const PHRASES = { heading: [], meal_qty: ["{meal}", "{n}"], checkout: [], own: [], snacks_heading: [], snacks_not_carted: [], updating: [], menus_label: [], explore: [], own_note: [] };
 /** SPEC-week-content § 8 item 1: an UPDATING week's file is exactly { delivery, version: 2, updating: true, lists: {} }
  *  (Fit AF's emitter, `--updating`: the store has switched and this week's carts are not made yet). */
 const UPDATING_FILE_FIELDS = [...V2_FILE_FIELDS, "updating"];
@@ -376,6 +379,7 @@ function mealEntries(meals, lists, plans) {
       ...(numbers ? { nutrition: entry.nutrition } : {}),
       ...(entry.ingredients !== undefined ? { ingredients: asShown(entry.ingredients) } : {}),
       ...(entry.contains !== undefined ? { contains: asShown(entry.contains) } : {}),
+      ...(entry.description !== undefined ? { description: asShown(entry.description) } : {}),
     };
   }
   return out;
@@ -502,6 +506,7 @@ function factsOf(meals, phrases) {
     ...(entry.nutrition ? { nutrition: Object.fromEntries(Object.entries(entry.nutrition).map(([size, facts]) => [size, numbers(facts)])) } : {}),
     ...(entry.ingredients !== undefined ? { ingredients: fill(phrases.ingredients, { text: entry.ingredients }) } : {}),
     ...(entry.contains !== undefined ? { contains: fill(phrases.contains, { text: entry.contains }) } : {}),
+    ...(entry.description !== undefined ? { description: entry.description } : {}),
   }));
   const rings = list.some((entry) => entry.nutrition) ? { labels: phrases[RING_LABELS], grams: phrases.grams } : null;
   return { list, at: new Map(Object.keys(meals).map((name, i) => [name, i])), rings };
@@ -587,6 +592,8 @@ function cardHtml(template, words, file = "card.html", markup = {}) {
     SNACKS_NOT_CARTED: words.snacks_not_carted,
     UPDATING: words.updating, // SPEC-week-content § 8 item 3: the updating card, hidden until a week says `updating`
     MENUS_LABEL: words.menus_label, // SPEC-every-menu-and-nutrition § 2: the chooser's own name
+    EXPLORE: words.explore, // SPEC-ui-and-copy-pass § 5 item 1: the card's heading
+    OWN_NOTE: words.own_note, // BRIDGE (SPEC-ui-and-copy-pass § 5 item 3): the note over the week's full list
     // SPEC-ui-and-copy-pass § 1 item 8: the phrase the content writes a meal's count with, which the card reads it back by
     MEAL_QTY: words.meal_qty,
   };
@@ -618,6 +625,8 @@ export async function chefsChoice({ plans, messages, zone }) {
     slots: {
       PICKS_STYLE: "\n" + (await read("style.css")).trim(),
       PICKS_CARD: "\n" + cardHtml(await read("card.html"), words, "card.html", { SNACKS: snackBlock }).trimEnd(),
+      // SPEC-ui-and-copy-pass § 5 item 1: the checkout after the price (the template's), so a slot of its own.
+      PICKS_CHECKOUT: "\n" + cardHtml(await read("checkout.html"), words, "checkout.html").trimEnd(),
       PICKS_SCRIPT:
         `\n<script type="application/json" id="picks-data">${scriptJson(pageData(weeks, { words, zone, snacks, carted }))}</script>` +
         `\n<script>\n(function () {\n"use strict";\n${(await read("chefs-choice.js")).trim()}\n})();\n</script>`,

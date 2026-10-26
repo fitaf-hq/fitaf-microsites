@@ -76,8 +76,21 @@ export const STATES = {
     date: "menus",
     waits: RESULT,
     needs: "#cc-menus",
+    // The site's SPEC-ui-and-copy-pass § 5 item 1: Choose my own meals is now the last chip, so the other menu is the one
+    // before it.
+    press: "#cc-menus label:nth-last-child(2) input",
+    opens: "#cc-menus label:nth-last-child(2) input:checked",
+  },
+  // The site's SPEC-ui-and-copy-pass § 5 item 3 (BRIDGE, one day): Choose my own meals pressed, the last chip, on the
+  // two-menu fixture week: the week's full list under its note, the checkout to the store's plan page.
+  ownChosen: {
+    name: "Choose my own meals",
+    fragment: answers("or-7d"),
+    date: "menus",
+    waits: RESULT,
+    needs: "#cc-menus",
     press: "#cc-menus label:last-child input",
-    opens: "#cc-menus label:last-child input:checked",
+    opens: "#cc-own-note",
   },
   nutrition: {
     name: "Nutrition · a meal opened",

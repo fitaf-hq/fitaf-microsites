@@ -37,7 +37,9 @@ export function rowProblems(html) {
         meals: String(row.meals),
         perMeal: dollars(centsOf(goal, row.plan)),
         total: dollars(row.meals * centsOf(goal, row.plan)),
-        rounded: row.plan < row.meals ? fill(MESSAGES.plan_page.rounded, { meals: row.meals, plan: row.plan }) : null,
+        // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 2 (2026-10-26: "Please drop "15 meals go through as our 14-meal plan
+        // for now." and other variants"): no row prints the rounded line.
+        rounded: null,
         cta: `${ORDER}?mpid=${mpidOf(goal, row.plan)}`,
       };
       for (const [k, v] of Object.entries(want)) if (r[k] !== v) problems.push(`${hash}: ${k} ${JSON.stringify(r[k])}, not ${JSON.stringify(v)}`);

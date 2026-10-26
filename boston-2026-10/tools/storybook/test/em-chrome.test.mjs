@@ -5,7 +5,9 @@
 //   second (pressed, and by the arrow keys) shows its meals, its snacks and its heading, and its checkout link decodes
 //   (the SHIPPED reader of #fitaf=, the site's cc-harness readWithFillB) to THAT list's cart and the size's mpid; an
 //   answer change the chosen menu has a cart for keeps it, one it has none for returns to Chef's Choice. A week of one
-//   list: no group, and the card as the base's (76ee36e, this contract's commit) shows it, text and boxes.
+//   list: no group, and the card as the base's (76ee36e, this contract's commit) shows it, text and boxes. ⚠ AMENDED by
+//   the site's SPEC-ui-and-copy-pass § 5 (2026-10-26): *Choose my own meals* the chips' last radio; a week of one list
+//   its one chip beside it, the base comparison retired (the card is reordered for every week).
 //   EM3, nutrition: the meal a button whose aria-expanded follows the panel it opens beneath it and a second press
 //   closes; each meal on its own. Since § 11 (the Advisor's review of 2026-10-22) there is no line under a meal's name at
 //   any size; a meal is a control when it has numbers for the chosen size or ingredients (§ 11 item 4.2: "a meal with
@@ -94,11 +96,16 @@ function readCard() {
   const drawn = (el) => Boolean(el) && el.checkVisibility();
   const text = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : null);
   const group = $("cc-menus");
-  const radios = group ? [...group.querySelectorAll('input[type="radio"]')] : [];
+  // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): *Choose my own meals* is the chips'
+  // last radio (its value `own`, BRIDGE), read apart from the menus.
+  const all = group ? [...group.querySelectorAll('input[type="radio"]')] : [];
+  const radios = all.filter((r) => r.value !== "own");
+  const own = all.find((r) => r.value === "own");
   return {
     list: drawn($("cc-list")),
     group: drawn(group),
     radios: radios.map((r) => ({ value: r.value, label: text(r.closest("label")), checked: r.checked, name: r.name })),
+    own: own ? { label: text(own.closest("label")), checked: own.checked, drawn: drawn(own.closest("label")) } : null,
     focused: document.activeElement?.type === "radio" ? document.activeElement.value : null,
     heading: text($("cc-heading")),
     meals: [...($("cc-meals")?.children ?? [])].map((li) => {
@@ -154,7 +161,8 @@ async function chooserProblems(dir = menusOut) {
     const walk = (n) => n && (n.role === "radio" && axRadios.push({ name: n.name, checked: Boolean(n.checked) }), (n.children ?? []).forEach(walk));
     walk(ax);
     if (ax?.role !== "group" || ax?.name !== WORDS.chefs_choice.menus_label) fail(`the group's own name: ${ax?.role} ${JSON.stringify(ax?.name)}, not the words' ${JSON.stringify(WORDS.chefs_choice.menus_label)}`);
-    if (JSON.stringify(axRadios) !== JSON.stringify([{ name: WORDS.menus[CC], checked: true }, { name: WORDS.menus[TWO], checked: false }])) fail(`the accessibility tree: ${JSON.stringify(axRadios)}`);
+    // § 5 item 1 (the site's SPEC-ui-and-copy-pass): Choose my own meals the group's last radio.
+    if (JSON.stringify(axRadios) !== JSON.stringify([{ name: WORDS.menus[CC], checked: true }, { name: WORDS.menus[TWO], checked: false }, { name: WORDS.chefs_choice.own, checked: false }])) fail(`the accessibility tree: ${JSON.stringify(axRadios)}`);
 
     await chooseMenu(page, TWO);
     s = await card(page);
@@ -205,7 +213,8 @@ async function chooserProblems(dir = menusOut) {
     await press(page, '[data-q="snacks"][data-a="no"]');
     await press(page, '[data-q="breakfast"][data-a="yes"]');
     s = await card(page);
-    if (s.group) fail("or-7d-b (Chef's Choice's alone): the chooser is shown");
+    // § 5 item 1 (the site's SPEC-ui-and-copy-pass): Chef's Choice's chip alone beside Choose my own meals.
+    if (!s.group || JSON.stringify(s.radios.map((r) => r.value)) !== JSON.stringify([CC]) || !s.own?.drawn) fail(`or-7d-b (Chef's Choice's alone): the chips ${JSON.stringify(s.radios.map((r) => r.value))}, Choose my own meals ${JSON.stringify(s.own)}`);
     if (s.heading !== em.headingOf(CC, WORDS) || JSON.stringify(s.meals.map((m) => m.name)) !== JSON.stringify(linesOf(CC, "or-7d-b"))) fail(`or-7d-b: not Chef's Choice's cart (${s.heading})`);
     await press(page, '[data-q="breakfast"][data-a="no"]');
     s = await card(page);
@@ -219,110 +228,26 @@ test("EM2: the chooser, Chef's Choice first; another menu's meals, snacks and li
   assert.deepEqual(await chooserProblems(), []);
 });
 
-// A week of one list: the base tree's page (76ee36e, git archive, its own build and content) and this tree's, the v2
-// fixture week in both, read in Chrome at three answer sets and both widths.
+// A week of one list: the v2 fixture week, read in Chrome at three answer sets and both widths.
 const ONE_HASHES = ["#lean-or-7d", "#signature-and-7d-b-s", "#performance-or-5d"];
-async function baseSite() {
-  const top = spawnSync("git", ["-C", SITE, "rev-parse", "--show-toplevel"], { encoding: "utf8" }).stdout.trim();
-  const prefix = relative(top, SITE);
-  await mkdir(join(scratch, "base"), { recursive: true });
-  const tar = spawnSync("git", ["-C", top, "archive", "--format=tar", BASE, prefix], { maxBuffer: 256 * 1024 * 1024 });
-  assert.equal(tar.status, 0, `git archive ${BASE}`);
-  assert.equal(spawnSync("tar", ["-x", "-C", join(scratch, "base")], { input: tar.stdout }).status, 0, "tar -x");
-  const pkg = join(scratch, "base", prefix);
-  await symlink(join(SITE, "node_modules"), join(pkg, "node_modules"));
-  const built = spawnSync(process.execPath, [join(pkg, "build.mjs"), "--out", baseOut], { cwd: pkg, encoding: "utf8" });
-  assert.equal(built.status, 0, `${BASE}'s build: ${built.stderr}`);
-  const base = await import(pathToFileURL(join(pkg, "scripts", "week-content.mjs")).href);
-  await weekSite(baseOut, { picks: ms.V2_DIR, week: em.MENUS_WEEK, messages: JSON.parse(await readFile(join(pkg, "data", "messages.json"), "utf8")), weekData: base.weekData, pageWithWeek: base.pageWithWeek });
-}
-
-/** ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23): a meal chosen more than once is drawn anew (its
- *  count a badge on its tile, the rest of its line visually hidden in its name), so EM2 holds those rows' name, badge and
- *  hidden words apart and every other box to the base's; such a row is known by its line matching the words' meal_qty
- *  (read from the site, never written here: SM-4), on either page. */
-/** The site's SPEC-ui-and-copy-pass § 3: the desktop column's width (its --column), the page's width above it. */
-const COLUMN_PX = 480;
-const COUNTED = (() => {
-  const [before, after] = WORDS.chefs_choice.meal_qty.split("{meal}");
-  const side = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{n\\}", "\\d+");
-  return `^${side(before)}[\\s\\S]+?${side(after)}$`;
-})();
-
-/** Runs in the page: the result card's drawn text, and each drawn box in it (its tag, id or class, and rectangle, from
- *  the card's own top left: since § 11 item 5 the Why Fit AF? button above the tabs (since the site's SPEC-ui-and-copy-pass
- *  § 2 the first question) moves the whole card down the page,
- *  and the card itself is what EM2 holds to the base's). Since SPEC-ui-and-copy-pass § 1 item 8 the text reads each meal's
- *  line whole (its visually hidden words, on their own line in innerText, joined back), and a counted meal's name, badge
- *  and hidden words are left out of the boxes (`counted`, COUNTED's source). ⚠ AMENDED by the site's
- *  SPEC-ui-and-copy-pass § 4 B (2026-10-26): on a page carrying the save step (the production build, `production` true)
- *  its link, *Not ready?* (#not-ready), is the card's last thing, which the base's page has not: it is left out of the
- *  text (its line at the end) and of the boxes; every other box is above it, so none moves. */
-function readResult(counted) {
-  const result = document.getElementById("result");
-  const at = result.getBoundingClientRect();
-  const twice = new RegExp(counted);
-  const isCounted = (el) => {
-    const name = el.closest("li")?.querySelector(".cc-name");
-    return Boolean(name) && twice.test(name.textContent.replace(/\s+/g, " ").trim()) && el.matches(".cc-name, .cc-qty, .visually-hidden");
-  };
-  let text = result.innerText;
-  for (const hidden of result.querySelectorAll(".cc-name .visually-hidden")) text = text.replace(`\n${hidden.textContent.trim()}\n`, ` ${hidden.textContent.trim()}\n`);
-  const notReady = document.getElementById("not-ready");
-  const itsLine = notReady?.checkVisibility() ? `\n${notReady.innerText}` : "";
-  if (itsLine && text.endsWith(itsLine)) text = text.slice(0, -itsLine.length);
-  const boxes = [...result.querySelectorAll("*")]
-    .filter((el) => el.checkVisibility() && !isCounted(el) && el !== notReady)
-    .map((el) => {
-      const r = el.getBoundingClientRect();
-      return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${el.className} ${[r.x - at.x, r.y - at.y, r.width, r.height].map((n) => Math.round(n * 10) / 10).join(",")}`;
-    });
-  return { text, boxes, group: Boolean(document.getElementById("cc-menus")?.checkVisibility()) };
-}
-
-test("EM2: a week of one list shows no chooser, and the card as the base's, its text (the heading by § 11 item 1) and every box (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
+// ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): the result card is reordered for every
+// week (its heading, its chips, the list in its box, the price, the checkout), so no box is the base's any more, and a
+// week of one list shows its one chip (its heading, the menu's name) beside *Choose my own meals*. Held here: those two
+// chips, Chef's Choice's pressed; the heading the menu's name alone (§ 11 item 1); the list the week's cart; at 390 and
+// 1280. The order as drawn is the site's UC14–UC16 in Chrome (uc14-16-chrome.test.mjs); the base comparison is retired.
+test("EM2: a week of one list shows its one chip and Choose my own meals, the heading its menu's name, the list its cart (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
   await siteBuild({ build: "production", out: oneOut });
   await weekSite(oneOut, { picks: ms.V2_DIR, week: em.MENUS_WEEK, messages: JSON.parse(await readFile(siteFile("data", "messages.json"), "utf8")) });
-  await baseSite();
   for (const { width } of Object.values(VIEWPORTS)) {
     for (const hash of ONE_HASHES) {
-      const after_ = await withPage({ dir: oneOut, hash, width }, (page) => page.evaluate(readResult, COUNTED));
-      // ⚠ AMENDED for the site's SPEC-ui-and-copy-pass § 3 (2026-10-26, the desktop column, 0233dbe; found by § 4's
-      // Storybook run, its § 4.1): above 480 px the page is drawn in one 480 px column, which the base predates, so at 1280
-      // the base is read at the column's width, as the page now draws the card there; at 390 as before.
-      const before = await withPage({ dir: baseOut, hash, width: Math.min(width, COLUMN_PX) }, (page) => page.evaluate(readResult, COUNTED));
-      const first = ms.V2_CARTS[hash.replace(/^#[a-z]+-/, "").replace(/-s$/, "")].items[0].display;
-      assert.ok(before.text.includes(first), `control: ${BASE}'s card at ${width} ${hash} shows the week (${first})`);
-      assert.equal(after_.group, false, `${width} ${hash}: no chooser`);
-      // § 11 item 1 (2026-10-22): the heading is the menu's name alone, the base's "<name> (<week>)" without its range.
-      const name = WORDS.menus[CC];
-      const dated = `${name} (${em.weekOf(em.MENUS_WEEK)})`;
-      assert.ok(before.text.includes(dated), `control: ${BASE}'s heading names the week`);
-      // The site's SPEC-ui-and-copy-pass § 1.2 item 1 (2026-10-23): an answer set above its plan (5 on the 4) shows its own
-      // meals, and its weekly total those meals at the plan's price a meal; read from the site's table and words (ms-harness).
+      const s = await withPage({ dir: oneOut, hash, width }, (page) => page.evaluate(readCard));
       const key = hash.replace(/^#[a-z]+-/, "").replace(/-s$/, "");
-      const goal = hash.slice(1).split("-")[0];
-      const row = ms.TABLE.find((r) => r.key === key);
-      const unit = WORDS.plan_page;
-      const figures = (text) =>
-        row.meals === row.plan
-          ? text
-          : text
-              .replace(`${ms.dollars(row.plan * ms.centsOf(goal, row.plan))}${unit.total_unit}`, `${ms.dollars(row.meals * ms.centsOf(goal, row.plan))}${unit.total_unit}`)
-              .replace(`\n${row.plan} ${unit.meals_unit}`, `\n${row.meals} ${unit.meals_unit}`);
-      assert.equal(after_.text, figures(before.text.replace(dated, name)), `${width} ${hash}: the card's text, the heading the menu's name alone`);
-      // § 1.2 item 1 redraws an answer set's total and meals when it is above its plan: those two figures and the unit
-      // beside each are held apart there; every other box as the base's.
-      const redrawn = (boxes) => {
-        if (row.meals === row.plan) return boxes;
-        const drop = new Set();
-        for (const id of ["result-total", "result-meals"]) {
-          const i = boxes.findIndex((b) => b.startsWith(`span#${id}.fig `));
-          if (i >= 0) [i, i + 1].forEach((j) => drop.add(j));
-        }
-        return boxes.filter((_, j) => !drop.has(j));
-      };
-      assert.deepEqual(redrawn(after_.boxes), redrawn(before.boxes), `${width} ${hash}: the card's boxes`);
+      const messages = JSON.parse(await readFile(siteFile("data", "messages.json"), "utf8"));
+      assert.equal(s.group, true, `${width} ${hash}: the chips drawn`);
+      assert.deepEqual(s.radios.map((r) => [r.label, r.checked]), [[messages.menus[CC], true]], `${width} ${hash}: the week's one chip, pressed`);
+      assert.deepEqual(s.own && [s.own.label, s.own.checked, s.own.drawn], [messages.chefs_choice.own, false, true], `${width} ${hash}: Choose my own meals beside it`);
+      assert.equal(s.heading, messages.menus[CC], `${width} ${hash}: the heading the menu's name alone`);
+      assert.deepEqual(s.meals.map((m) => m.name), ms.V2_CARTS[key].items.map((m) => em.displayOf(m, messages)), `${width} ${hash}: the week's cart`);
     }
   }
 });

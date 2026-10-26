@@ -7,6 +7,10 @@
 // (document order, skipping what is hidden). Each case builds from its own snack flags (ms-harness, § 11).
 // ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 B (2026-10-26): on a page carrying the save step (the production page, since
 // data/save.json's `production` is true), its link *Not ready?* is the card's last thing, after *Choose my own meals*.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): the card reads its heading and its chips (*Choose my own
+// meals* the last, no link below the checkout) before the list, and the price between the list and Continue to checkout
+// (UC14 holds that order): so the list is read here from its menu's heading, the price set aside, and the two buttons are
+// Continue to checkout (and *Not ready?*).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -28,9 +32,10 @@ const inside = (node, ancestor) => {
 /** The result card as a visitor reads it from the list on: [element id or tag, its words], in document order (a meal's
  *  or a snack's line is its name's span: its tile has no words). */
 function cardReading(page) {
-  const start = page.el("cc-list");
-  const nodes = readingOrder(page.el("result"));
-  const from = nodes.findIndex((n) => inside(n, start));
+  const start = page.el("cc-heading");
+  const price = page.document.querySelector("#result .price");
+  const nodes = readingOrder(page.el("result")).filter((n) => !inside(n, price));
+  const from = nodes.indexOf(start);
   assert.ok(from >= 0, "control: the list is shown");
   // SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23): a meal's count is a badge on its tile, the rest of its line visually
   // hidden inside its name's span, so it is read with the name (the span's words are the line, as before), not apart.
@@ -47,7 +52,6 @@ function expected(page, cart, { snacks = undefined, note = false } = {}) {
     ...(snacks ? [["cc-snacks-heading", SNACKS_HEADING], ...snacks.map((m) => ["span", mealLine(m)])] : []),
     ...(note ? [["cc-snacks-note", words.snacks_not_carted]] : []),
     ["cc-checkout", words.checkout],
-    ["cc-own", words.own],
     // § 4 B: his words, ruled in § 4.2 item 6, written here from the contract.
     ...(page.has("not-ready") ? [["not-ready", "Not ready to checkout? Save your offer now."]] : []),
   ];

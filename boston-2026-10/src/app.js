@@ -172,8 +172,6 @@
       $("#result-per-meal").textContent = shown.per_meal;
       $("#result-total").textContent = shown.total;
       $("#result-meals").textContent = String(shown.meals);
-      $("#result-rounded").textContent = shown.rounded;
-      $("#result-rounded").hidden = !shown.rounded;
       $("#result-cta").href = data.base + "?mpid=" + shown.mpid;
     }
   }
@@ -186,13 +184,13 @@
     var cell = row && plan.cells[row.plan];
     if (!cell) return null;
     var total = row.meals === row.plan ? cell.total : plan.totals[answerKey(s)];
-    return { selection: answerPart(s), per_meal: cell.per_meal, total: total, meals: row.meals, rounded: row.rounded, mpid: cell.mpid };
+    return { selection: answerPart(s), per_meal: cell.per_meal, total: total, meals: row.meals, mpid: cell.mpid };
   }
   // § 2.2: Family's, once its one question is answered: its meals a week at its price a meal, and the answer set whose cart
   // the Chef's Choice card shows for it (the card's checkout link is that cart's to Family's mpid, when the week has one).
   function familyResult(s) {
     var f = s.fld && data.family[s.fld];
-    return f ? { selection: f.key, per_meal: f.per_meal, total: f.total, meals: f.meals, rounded: "", mpid: f.mpid } : null;
+    return f ? { selection: f.key, per_meal: f.per_meal, total: f.total, meals: f.meals, mpid: f.mpid } : null;
   }
 
   $$("[data-goal]").forEach(function (b) {

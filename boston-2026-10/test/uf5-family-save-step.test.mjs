@@ -19,7 +19,8 @@ const BUILDS = { "the development page": development, "the production page (prod
 test("UF5: the save step beside a Family cart's checkout, directly after Choose my own meals; none without one", () => {
   for (const [where, html] of Object.entries(BUILDS)) {
     const { button } = assertFlowOneDirectlyAfterStoreButton(openStep(html, { hash: "#family-and" }));
-    assert.equal(button.id, "cc-own", `${where}, #family-and: after the card's last link`);
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): the card's last link is Continue to checkout.
+    assert.equal(button.id, "cc-checkout", `${where}, #family-and: after the card's last link`);
     for (const hash of ["#family", "#family-or"]) {
       try {
         assertFlowOneAbsent(openStep(html, { hash }));

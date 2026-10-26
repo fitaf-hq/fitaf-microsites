@@ -145,7 +145,10 @@ export async function linkProblems(root = ROOT) {
       problems.push(...linkLines(page.document, fragment));
       if (fragment === "#family") continue;
       if (!el("cc-list") || hiddenInTree(el("cc-list"))) problems.push(`${fragment}: the week's Chef's Choice is not shown (the card is not filled in)`);
-      for (const id of ["cc-checkout", "cc-own"]) if (!el(id) || hiddenInTree(el(id))) problems.push(`${fragment}: #${id} is not shown`);
+      if (!el("cc-checkout") || hiddenInTree(el("cc-checkout"))) problems.push(`${fragment}: #cc-checkout is not shown`);
+      // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): Choose my own meals is the chips' last radio.
+      const own = page.document.querySelector('#cc-menus input[type="radio"][value="own"]');
+      if (!own || hiddenInTree(own)) problems.push(`${fragment}: Choose my own meals' chip is not shown`);
     }
   } catch (err) {
     problems.push(`no page to check: ${message(err)}`);

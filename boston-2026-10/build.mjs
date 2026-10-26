@@ -368,7 +368,8 @@ function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true)
   return {
     base: orderLinks ? plans.order_base_url : PREVIEW_ORDER_BASE,
     answers: Object.fromEntries(
-      [...rows].map(([key, r]) => [key, { plan: r.plan, meals: r.meals, rounded: r.plan < r.meals ? fillPhrase(words.rounded, { meals: r.meals, plan: r.plan }) : "" }]),
+      // SPEC-ui-and-copy-pass § 5 item 2: the rounded line is never printed, so no answer set carries its text.
+      [...rows].map(([key, r]) => [key, { plan: r.plan, meals: r.meals }]),
     ),
     defaults,
     // SPEC-ui-and-copy-pass § 2.2: Family's answers (Q1's), each the answer set whose cart it takes, its meals a week, and
@@ -429,7 +430,7 @@ export const PROD_SLOTS = {
 /** The page without the Chef's Choice card at all: every slot empty, the page before the slots existed. Since
  *  SPEC-week-content § 2.1 the build never writes it (with no week it carries the card holding none); renderPage's
  *  default, the page the page cases read, whose visible page the build's equals (WC-8). */
-export const NO_PICKS = { PICKS_STYLE: "", PICKS_CARD: "", PICKS_SCRIPT: "" };
+export const NO_PICKS = { PICKS_STYLE: "", PICKS_CARD: "", PICKS_CHECKOUT: "", PICKS_SCRIPT: "" };
 
 /** Question 1 as a meal size (flows/02 § 2): what each size provides per meal, and no goal language. */
 function sizeButton(plan) {
