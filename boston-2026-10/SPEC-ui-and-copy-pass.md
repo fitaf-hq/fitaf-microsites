@@ -811,8 +811,10 @@ show as much as we can get done between now and then."*
 
 1. **The column**: on a screen wider than the column, the whole page (the top with its carousel and logo, the offer box,
    the questions, the result, the save step, the foot) sits in one centred column **480 px** wide; nothing in the page
-   is wider than it. One token, `--column: 480px` in `:root`, and the media query's breakpoint (`min-width: 481px`, the
-   column plus one: CSS cannot read a token in a media query) are the only places the width is written.
+   is wider than it. One token, `--column: 480px`, declared on `html` inside the media query (⚠ amended at the build,
+   § 3.1: not in `:root`, whose tokens are copied into the emails, the Worker's pages and the privacy page), and the media
+   query's breakpoint (`min-width: 481px`, the column plus one: CSS cannot read a token in a media query) are the only
+   places the width is written.
 2. **The background**: outside the column, `--navy` (the page's `theme-color`, the store's bar). The column keeps the
    page's white and fills the screen's height. No text sits on the navy, so no contrast pair is added.
 3. **The carousel in the column**: its 4:3 window at the column's width, `calc(var(--column) * 3 / 4)` tall (360 px), with
@@ -830,3 +832,49 @@ show as much as we can get done between now and then."*
    `body`'s maximum width is the token, centred, at least the screen's height, `.slides`' height the token's 3/4; the
    token is 480 px; outside it `.slides`' rule is unchanged; no raw colour in the block. Goldens that pin the page (S20,
    PV5, U4, and whichever others read it) move by exactly this block and are re-recorded in their own commit, each named.
+
+### 3.1 Built — found at the build, not ruled (2026-10-26)
+
+Built by the orchestrator on `boston/desktop-column` from `7b705a1` (the release line), 2026-10-26 06:08–06:36 PDT, for
+the Advisor's 07:30 PDT review with the Owner.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `cc23afd` | this contract |
+| `2b409bb` | the cases, `test/uc10-desktop-column.test.mjs` (UC10a–e), run red: 4 of 5 fail, UC10e (the carousel's own rule unchanged) passing before as after, as it must |
+| `50515d9` | the code, first: `--column: 480px` in `:root` and the one `@media (min-width: 481px)` block; UC10 5 of 5, contrast 94 of 94 |
+| `7e9abc3` | its goldens; merged into the release line as `8925271`, whose whole suite gave **1,245 of 1,247**: M17 and SP15 (below) |
+| `0233dbe` | the fix: the token declared on `html` inside the block, not in `:root`; UC10b reads it there and that `:root` carries none (item 1 amended) |
+| the next commit | the goldens again, from `0233dbe`'s own tree, and this section |
+
+**Found by the suite (item 1 amended)**: `:root`'s tokens are copied, whole, into three derived places: the emails'
+`src/worker/email-tokens.json` (M17), the Worker's pages' `src/worker/page-style.json` (SP15) and the privacy page
+(`build.mjs`); the storefront hand-off reads the page's tokens too (`scripts/build-storefront.mjs`). A token in `:root`
+moved all of them, a Worker file among them. Declared on `html` inside the block, the column moves none: M17, SP15 and
+the privacy page are unchanged, and CC-8's Worker map with them.
+
+**The goldens and bases moved** (each re-recorded once from `0233dbe`'s own tree, `git archive`, each control first
+reproducing the committed record; the readers with UC10, M17 and SP15: 52 of 52):
+
+- S20 (and CC-4; SP3's S20 case): `index.html` alone, `1e8317f2…` → `a52b4366…`, 67,227 → 67,913 bytes (+686, the block
+  and its comment). `2b409bb`'s tree, built as S20 builds it, reproduces `1e8317f2…`.
+- PV5 (`pv-05-record.mjs --commit 0233dbe --release-a`; at `2b409bb` it reproduces `f9273c0`'s record, `recorded_at`
+  apart): the same five pages, +686 bytes each; every other file byte-identical, the privacy page included.
+- U4 (`u-04-record.mjs --commit 0233dbe --release-a --without-snack-cells`; at `2b409bb` it reproduces `f9273c0`'s
+  record, `recorded_at` apart): the six pages +686 bytes each; all six contents and every visible page byte-identical.
+- WC-8's reference: `6447ecd8…` → `02fe24d1…`; its control at `2b409bb`'s tree passes against `6447ecd8…`.
+- SP3's base: `LATER` gains `2b409bb`..`0233dbe` over `src/template.html` (it applies with no fuzz).
+- Not moved: CC-8 and its readers (MS-9, PR-10), WC-9, QE15, T5, S18, M17, SP15.
+
+**Renders** (headless Chrome over a local build on `localhost`; never eatfitaf.com), from the first code, whose CSS
+reads the same token: at 1280×800 the carousel is 360 px tall and *Who is this for?* with its answers is above the fold;
+at 1280×2600 the white column runs to the bottom of the screen below the footnote. **The phone**: headless Chrome will
+not make a window narrower than about 500 px (a `--window-size=390,844` render is wider than 480, so it shows the
+column), so the phone was read through a 390 px `<iframe>`, whose own viewport the media query reads: before
+(`7b705a1`'s build) and after, the screenshots are byte-identical files.
+
+**Not done here**: Storybook's stories of the page at 1280 (SPEC-storybook-microsite) are not re-rendered; the /why/,
+/privacy/ and Worker pages keep their 680 px text column on white over the whole screen (item 6), so on a desktop the
+site is two looks until real responsiveness is built.

@@ -15,9 +15,9 @@
 // And at f9273c0 (`--commit f9273c0 --release-a`), SPEC-analytics.md § 13 item 2 (the analytics script sends the first
 // question's and Family's own question's answers): the same five pages, +202 bytes each, by the script's three lines
 // alone; every other file byte-identical; the recorder at 5eaad96 reproduces 5eaad96's.
-// And at 50515d9 (`--commit 50515d9 --release-a`), SPEC-ui-and-copy-pass.md § 3 (the desktop column): the same five pages,
-// +558 bytes each, and the development privacy page by its copy of the :root tokens (`--column`, unused there); every
-// other file byte-identical; the recorder at 2b409bb reproduces f9273c0's (recorded_at apart).
+// And at 0233dbe (`--commit 0233dbe --release-a`), SPEC-ui-and-copy-pass.md § 3 (the desktop column): the same five pages,
+// +686 bytes each; every other file byte-identical (the privacy page too: the token is not in :root); the recorder
+// at 2b409bb reproduces f9273c0's (recorded_at apart).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
