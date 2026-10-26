@@ -311,7 +311,10 @@ test("UC8 (Chrome, 390 and 1280): the six chips (five menus and the own chip) si
         if (row.button) {
           const handle = (await page.$$("#cc-meals > li"))[i];
           const name = (await page.accessibility.snapshot({ root: await handle.$("button.cc-meal") }))?.name;
-          assert.equal(name, lineOf(meal), `${at}: the count in the row's accessible name`);
+          // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 item 7 (2026-10-26, the week's descriptions arrived): the
+          // row's accessible name is its line, then its description when the week carries one (read from the week).
+          const description = picks.meals?.[meal.name]?.description;
+          assert.equal(name, description ? `${lineOf(meal)} ${description}` : lineOf(meal), `${at}: the count in the row's accessible name`);
           named++;
         }
       }
