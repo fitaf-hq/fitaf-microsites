@@ -40,8 +40,10 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  the code before) reproduces 02fe24d1…, d0f1a97's gives fd75caac…. Re-recorded once more at cb0980f for § 4.2 (the
  *  start the first question alone, neither answer pressed in its markup): d03fafb's tree reproduces fd75caac…, cb0980f's
  *  gives 3ad17ec1…. Re-recorded once more at 27cc0df for § 5 (the result card reordered: the price after the card, the
- *  checkout its own slot, no rounded line, the card's rules): fb7b110's tree reproduces 3ad17ec1…, 27cc0df's gives this. */
-const TODAY_NO_PICKS_SHA256 = "e2fea580a9f6dfa7c9818796e7dd8bff3bbeaf204a8a3921478a976714c6dba8";
+ *  checkout its own slot, no rounded line, the card's rules): fb7b110's tree reproduces 3ad17ec1…, 27cc0df's gives
+ *  e2fea580…; and at 8f36711 for § 5 item 6 (the scroll stops' rules): 4578c46's tree reproduces e2fea580…, 8f36711's
+ *  gives this. */
+const TODAY_NO_PICKS_SHA256 = "84f2f8f32e58c300e54996b5e8a183121536c69cfc4b4bd6e8eac061a0329ac2";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the

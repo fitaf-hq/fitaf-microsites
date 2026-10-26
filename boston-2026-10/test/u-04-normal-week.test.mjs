@@ -163,7 +163,10 @@
 // result card reordered, Explore our menus, Choose my own meals a chip, the list's box, no rounded line). Control: the
 // recorder with both flags at fb7b110 (its cases, the code before) reproduces cb0980f's record (recorded_at apart).
 // Against it: all six contents byte-identical; every page +5,444 bytes; the visible page at each fragment with a result.
-// From here the reference is 27cc0df's tree.
+// And at 8f36711 (the same flags), § 5 item 6 (the scroll stops live from the first rested scroll with the result shown):
+// the recorder at 4578c46 reproduces 27cc0df's record (recorded_at apart); all six contents byte-identical; every page
+// +1,280 bytes (the template's rules, app.js's listener); no visible page moved.
+// From here the reference is 8f36711's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -174,8 +177,8 @@ import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 27cc0df's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "27cc0df");
+test("U4: a normal week, the content and the page as served, byte-identical to 8f36711's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "8f36711");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
   // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs

@@ -303,6 +303,9 @@ export const LATER = [
   // production page with `production` false by the card's four files, the template, app.js, build.mjs and the card's
   // slots and words, from fb7b110 (its cases, after its contract) to 27cc0df (its code, one commit); every hunk is taken.
   ["fb7b110", "27cc0df"],
+  // § 5 item 6, found by Storybook's run (the stops live from the first rested scroll with the result shown): the
+  // template's snap rules and app.js's listener, from 4578c46 to 8f36711; every hunk is taken.
+  ["4578c46", "8f36711"],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
