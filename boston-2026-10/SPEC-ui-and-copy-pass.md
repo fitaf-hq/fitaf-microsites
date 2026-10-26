@@ -1327,6 +1327,9 @@ Built on `boston/round-2-changeset-2` from `b70ece4` (§ 5), each case one file 
 | `fb7b110` | the cases, red on `b70ece4`'s code: UC14 3 of 3, UC15 3 of 3, UC16 3 of 4 (the fourth, no description no `.cc-desc`, a guard), `uc14-16-chrome` 4 of 4 |
 | `27cc0df` | the code, the stale cases amended and named in its message; all of the above green |
 | `62591ec` | the goldens, once each from `27cc0df`'s tree, each control first at `fb7b110` (S20 `241c4dbd…` → `566159e8…`; PV5, U4, WC-9, WC-8, SP3's `LATER`) |
+| `4578c46` | UC16's fixture descriptions in the form Fit AF's emitter writes (one plain line, the store's short description joined by ` | `, only on entries with nutrition or ingredients); UC8 in Chrome, six chips |
+| `8f36711` | item 6's stops live from the first rested scroll with the result shown (below, 9); Storybook's stale cases (EM6, PR-14, SM-4, the walk's Scroll frame) |
+| `4e954d5` | the goldens again from `8f36711`'s tree, control at `4578c46` (S20 `566159e8…` → `aa9e9ad1…`; PV5, U4, WC-8, SP3's `LATER`; WC-9 unmoved) |
 
 **Where § 5 was silent, and what was built** (stated, not ruled):
 
@@ -1349,3 +1352,10 @@ Built on `boston/round-2-changeset-2` from `b70ece4` (§ 5), each case one file 
 8. **Retired**: Storybook's EM2 one-list case held the card's text and every box to `76ee36e`'s; § 5 reorders the card
    for every week, so it now holds the two chips, the heading and the list. **A defect of my own case**: Chrome's
    computed `scroll-snap-type` reads `y` for `y proximity` (the default left out); `uc14-16-chrome` accepts both.
+9. **⚠ Item 6 against § 4 A, found by Storybook's UC11**: the browser re-snaps after every change of layout, so with the
+   stops live from the start, a tap that drew the next question or the result pulled the page to a stop (41 to 151 px).
+   Built nearest: the stops are live from the visitor's first scroll with the result shown, once it rests 200 ms
+   (`app.js` adds `html.snaps`), and the page's first box (a banner or the carousel) is a resting place too, so a page at
+   its top is not pulled to the first question. Once live, a later change of layout (a menu pressed, an answer changed)
+   may settle the page on the stop it rests at. In Storybook the story is named *The own chip pressed* (SM-4: no page
+   phrase there).
