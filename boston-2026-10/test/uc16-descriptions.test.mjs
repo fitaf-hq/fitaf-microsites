@@ -2,7 +2,9 @@
 // representation of the meals."): a new optional `description` per meal in the picks file's `meals` map, shown under the
 // meal's name in its closed row when the week carries one, in the muted line style; with none, the row as today; a blank
 // one refused by the content's check. ⚠ No committed week carries one, so the two-menu fixture week is copied with
-// invented descriptions for this case (never committed as data), on both builds that carry the card.
+// invented descriptions for this case (never committed as data), on both builds that carry the card. Each in the form
+// Fit AF's emitter writes (its spec § 10, the coordinator 2026-10-26): one line of plain text, the store's short
+// description (its parts joined by " | "), only on an entry that carries nutrition or ingredients.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { hiddenInTree } from "./cc-harness.mjs";
@@ -12,11 +14,16 @@ import { weekData } from "../scripts/week-content.mjs";
 const KEY = BOTH[0];
 const HASH = `#lean-${KEY}`;
 const words = (n) => n.textContent.replace(/\s+/g, " ").trim();
-/** The fixture week with an invented description on the first two meals of its `meals` map (the case's own words). */
-const NAMED = Object.keys(MENUS.meals).slice(0, 2);
+/** The fixture week with an invented description on the first two meals of its `meals` map that carry nutrition or
+ *  ingredients (the case's own words, in the store's form). */
+const NAMED = Object.entries(MENUS.meals)
+  .filter(([, entry]) => entry.nutrition || entry.ingredients)
+  .slice(0, 2)
+  .map(([name]) => name);
+const DESCRIPTION = (i) => `Fixture base ${i + 1} | fixture protein | fixture sauce | fixture side`;
 const described = (text) => {
   const week = structuredClone(MENUS);
-  NAMED.forEach((name, i) => (week.meals[name].description = text ?? `Fixture description ${i + 1}.`));
+  NAMED.forEach((name, i) => (week.meals[name].description = text ?? DESCRIPTION(i)));
   return week;
 };
 /** The rows of the card's list: each meal's name and its description (null: none). */
@@ -27,6 +34,7 @@ const rows = (page) =>
   });
 
 test("UC16: a description the week carries is shown under its meal's name; the others none (§ 5 item 7)", async () => {
+  assert.equal(NAMED.length, 2, "control: two entries carrying nutrition or ingredients");
   const copy = await picksCopy(described());
   try {
     for (const target of ["prod", "dev"]) {
@@ -34,7 +42,7 @@ test("UC16: a description the week carries is shown under its meal's name; the o
       const read = rows(page);
       // A meal's row shows its display name (a cart item's `display`, by its `name`).
       const display = Object.fromEntries(Object.values(MENUS.lists).flatMap((l) => l.carts.flatMap((c) => c.items.map((m) => [m.name, m.display.replace(/\s+/g, " ").trim()]))));
-      const byName = Object.fromEntries(NAMED.map((name, i) => [display[name], `Fixture description ${i + 1}.`]));
+      const byName = Object.fromEntries(NAMED.map((name, i) => [display[name], DESCRIPTION(i)]));
       const shownWith = read.filter((r) => r.desc);
       assert.ok(shownWith.length > 0, `${target}: control: a described meal is in the list at ${HASH}`);
       for (const r of read) {
