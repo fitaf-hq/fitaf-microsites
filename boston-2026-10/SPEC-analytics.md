@@ -754,3 +754,45 @@ T5's ceiling is 61,440 bytes gzip; the largest page is 31,488.
   counts Family's results.
 
 **Not done here**: the whole suite, Storybook, the watch and contrast; nothing deployed, no merge, no pin.
+
+## 14. Amendment, 2026-10-26: a saved offer counted. CONTRACT, before any code
+
+**Why.** The Advisor, the evening of Boston's first event: *"I'd like to shape the visits into a funnel and add the
+"saved an offer" count"*, then *"Yes please deploy as needed"*. The analytics have never recorded a save: § 3's list
+was written before the save step, and a save lives only in the save step's database, beside the address it was saved
+for. The count belongs in this file's data, which identifies no one, read by the same read-only token as every other
+figure; ⛔ never by giving a reader a key to the database. The team's dashboard (Fit AF `scripts/analytics-tool/`,
+its contract § 8) counts a visit with a `save` as *Saved an offer*.
+
+1. **The vocabulary** (§ 3) gains one event:
+
+   | event | when | carries |
+   |---|---|---|
+   | `save` | the save step's Worker answered an **offer** save as stored (`src/save/flow1.js`: the answer `ok` and its JSON's `ok` `true`, the step going to `SAVED`) | `s` only |
+
+   - An **expansion** save (*tell me when you deliver*, `EXPANSION_SAVED`) sends nothing: it is not an offer.
+   - Nothing the visitor typed, no code, no ZIP, no address, no consent: `s` only, as `error`.
+   - A save that fails, is refused or is still being checked sends nothing.
+   - The Worker's `FIELDS` gains `save` with no fields beyond `event` and `s`; the data point's layout is unchanged
+     (`blob1` the event, `blob2` the visit). `leave`'s `step` vocabulary is unchanged: a save is not a step of the
+     funnel's `STEPS`.
+2. **The page.** There is still **one** call site (§ 4, T5 as amended): `src/analytics.js`'s `send`. The save step
+   tells it by a DOM event: `flow1.js` dispatches `fitaf:saved` on `document` once, when it goes to `SAVED` from a
+   stored answer, and `analytics.js` listens for it and sends `save`. ⛔ The event carries no detail. Pages without
+   the save step, or without `analytics.js`, are unchanged. The built page stays within T5's size ceiling: state its
+   bytes before and after, on both targets.
+3. **The report** (`scripts/analytics.mjs`, §§ 5 and 11): each day gains `saves`, the visits with a `save` (a tenth
+   line of the text, *"saved an offer N"*, after the funnel; one more member of the JSON's day). AJ1–AJ4 hold; AJ2's
+   base moves with this section, recorded once from the new code.
+4. **Cases**, written first and run red:
+   - **SV1**: a whole visit in the page's stub (`a-harness.mjs`'s `openVisit`), the save step answering a stored offer
+     save: it sends `open` … `save` (`s` only) … `leave`, and `save` is accepted by `checkedEvent`.
+   - **SV2**: the same visit answered with an error, with a refusal, and an expansion save stored: no `save`.
+   - **SV3**: the report over a fixture holding `save` rows prints and returns `saves`.
+   - A3's both-directions check still holds (no button is added).
+   **Mutants**, each in a mirror and killed by its own case: `flow1.js` dispatching on an error too (SV2); the
+   Worker's `FIELDS` without `save` (SV1).
+5. **When.** Built on `boston/analytics-save` (from the release line `79f03f8`) with § 14's item for the missing
+   `result` (stated below once diagnosed, before its code), merged into `boston/release-c`, then the dev pin, then the
+   production pin on the Advisor's word above. ⛔ No Footer block moves. The week's content is not re-run. Counting
+   saves starts at the production release; the dashboard says so.
