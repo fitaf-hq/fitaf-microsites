@@ -248,7 +248,7 @@ function last() { $("i").style.width = "100%"; $("p").textContent = UI.checkout;
 var Q2 = ".checkout__section:is(.contact,.order-type,.delivery-address,.delivery-method,.schedule,.pickup-location,.special-requests)", Q3 = ".checkout__section:is(.tip,.payment,.checkout__consent)", N, V, AT, PAID;
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
 ".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
-".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return," +
+".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return,.fitaf-zero:not(:has(.summary__total))," +
 ".fitaf-step-1:has(#fitaf-nav) .checkout__form,:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item,.fitaf-step-2:has(#fitaf-nav) :is(.checkout__form>:not(" + Q2 + ",:has(" + Q2 + "))," + Q3 + ",.checkout__submit)," +
 ".fitaf-step-3:has(#fitaf-nav) " + Q2 + ",:is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) .summary__pay-button:has(+#fitaf-go)){display:none!important}" +
 "html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}" +
@@ -259,6 +259,8 @@ var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.ap
 // only while the checkout is on the page, and only for a deep-carted visit (it is placed at done, never on a stop).
 // Last, so that nothing it does can keep the mark and the style from being set.
 // § 25: last, the steps (stepper), so that nothing they do can keep the mark, the style or the logo from being set.
+// § 33: then the link to customer service (help) and, unless the link carries a code, zero's sign hidden (hush), each in
+// its own ui(), after the steps, so neither can keep anything before it from being set.
 function mark() {
 var d = w.document, s = d.createElement("style"), c, i;
 s.id = "fitaf-deep";
@@ -268,6 +270,40 @@ d.documentElement.classList.add("fitaf-deep");
 if (CODE) d.documentElement.classList.add("fitaf-code");
 if ((c = d.querySelector("app-checkout")) && (i = logo("16px auto;height:40px"))) c.prepend(i);
 if (c) ui(function () { stepper(c, i); });
+if (c) ui(function () { help(c); });
+if (!CODE) ui(hush);
+}
+
+// § 33 item 2 (the Advisor, 2026-10-26: "please hide the confirmation that the "zero" discount code was applied on the
+// checkout page"): what the store shows for it, measured on the live store (§ 33.1, 1280 and 390), is ONE element, its
+// discount row, .summary__row--discount, its text "× Coupon ZERO -$0.00" (the remove control, the code's name, the
+// amount); no applied-code mark (the two .checkout-discounts placements, already hidden by H7, show none) and no message.
+// So: every .summary__row--discount whose text names zero (the word, any case) carries the class fitaf-zero, which the
+// checkout's style hides with the rest of the hide list (never a row holding the Total), and any other discount row
+// does not (H9 unchanged). The store is an Angular app that draws its rows again as its data changes, so the class is
+// set again by a MutationObserver on the whole body, for the rest of the page's life (a checkout drawn again included):
+// its callback runs before the browser paints, so a row drawn again is never shown. Set with toggle, so a row whose text
+// stops naming zero is shown again. Not on a coded link (§ 31.2 item 3: no zero there; nothing changes).
+function hush() {
+var d = w.document, o = function () { [].forEach.call(d.querySelectorAll(".summary__row--discount"), function (e) { e.classList.toggle("fitaf-zero", /\bzero\b/i.test(text(e))); }); };
+o();
+new w.MutationObserver(o).observe(d.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["class"] });
+}
+// § 33 item 3 (the Advisor: "add a link to contact customer service in the footer of the HMP cart. It can very small and
+// simple at the bottom of the page"): measured (§ 33.1), the store's own footer (app-footer, .footer) carries a Contact
+// link on the order page, where this block hides nothing, and H2 hides that footer on the checkout. So the link is the
+// checkout's: one <a> (#fitaf-help), made once at done, its words data/messages.json's handoff.contact, to HELP, the
+// store site's contact page; centred text in the store's own type (font-family inherit), 14 px, the page's --muted,
+// underlined: never a button, never orange. It is the last line of the block's own foot (#fitaf-nav, which wraps for it,
+// the link ordered after Back and Continue), so it is below everything of the checkout's, and on a phone above the
+// store's bar, which the foot's own margin keeps clear (place()). With no foot (no :has()), the checkout's last child.
+// Inside app-checkout, so it goes with the checkout, as the foot does.
+var HELP = "https://fitafnutrition.com/contact";
+function help(c) {
+var n = w.document.getElementById("fitaf-nav"), a = own("a", "fitaf-help", "display:block;flex-basis:100%;order:1;margin:8px 0 0;font-family:inherit;font-size:14px;font-weight:400;line-height:1.4;color:var(--muted);text-align:center;text-decoration:underline", n || c);
+if (n) n.style.flexWrap = "wrap";
+a.href = HELP;
+a.textContent = UI.contact;
 }
 
 // § 25, the three-step checkout's own elements, made with the DOM (§ 11: no markup), each with an id and its style

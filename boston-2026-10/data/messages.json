@@ -16,7 +16,8 @@
     "to_payment": "Continue to payment",
     "back": "Back",
     "recap": "{n} meals ·",
-    "recap_snacks": "{n} meals · {s} snacks ·"
+    "recap_snacks": "{n} meals · {s} snacks ·",
+    "contact": "Contact customer service"
   },
   "chefs_choice": {
     "status": "placeholder",
