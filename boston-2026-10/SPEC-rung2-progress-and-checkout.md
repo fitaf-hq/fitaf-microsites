@@ -1635,3 +1635,100 @@ hide the "zero" code, that's OK."*
 6. **The new Footer block** `storefront/footer-block/2026-10-26-fitaf-handoff-<commit>.md`, built from this branch, then
    **rehearsed on the live store by the orchestrator** (§ 29, headless; `zero: applied`, the sign hidden, the total
    unchanged, the link present), then pasted by the Advisor, then the live smoke at once.
+
+### 33.1 Built — found at the build, not ruled (2026-10-26)
+
+§ 33 above is unchanged. The cases at `2a5fb55`, red on the unchanged block; the code at `dbcf88d`; CC-8's `replaces` at
+`ef4bd21`; the Footer block file
+`storefront/footer-block/2026-10-26-fitaf-handoff-dbcf88d.md` (*built, not pasted*).
+
+**Measured first (item 1)**, 2026-10-26 between 14:23 and 14:32 PDT: the watch's own headless visit (`lib/smoke.mjs`'s
+`smokeRun`, the store's own Footer block `c31603d` run by the link alone, as `smoke --live` runs it), four runs (1280
+twice, 390 twice), with a read-only page hook in a scratch script (not committed): the markup at the done line, the
+store's footer on the order page and the checkout, and a MutationObserver from before the page's scripts noting every
+element added whose text names `zero`. Nothing typed by the hook, nothing submitted, no admin.
+
+- **`zero` applied in 3 of 4 runs** (1280 both, 390 the second). ⚠ **The first 390 run logged `zero: not found`**: at
+  its done line the checkout had drawn no `.checkout-discounts` and no price rows yet, so the field was not there within
+  § 31.1's 1 s bound. The smoke still passed (total $87.50). A finding for § 31's bound; not changed here.
+- **The sign is one element, the same at both widths**: a `div.summary__row.summary__row--discount` in
+  `div.summary__breakdown` (the summary drawer), right after Subtotal, holding
+  `<span><button type="button" class="summary__remove">×</button> Coupon ZERO </span><span>-$0.00</span>`. Displayed
+  today (H9 keeps discount rows). ⚠ Its `summary__remove` control would let the visitor remove the code; it is hidden
+  with the row.
+- **No applied-code mark and no message**: the two `.checkout-discounts` placements on the page
+  (`div.payment__discounts.checkout-discounts.checkout-discounts--mobile` in `section.checkout__section.payment`, and
+  `div.summary__discounts.checkout-discounts.checkout-discounts--desktop` in `div.summary__content`) read *"Discounts,
+  gift cards, and rewards Apply Apply"*, nothing naming `zero`, both hidden by H7. No `[role=alert]`, `[role=status]`,
+  toast, snackbar or overlay text. The observer saw the row (added, then its text) and nothing else naming `zero`.
+- **The Total**: `.summary__total`, *"Total $87.50"*, not inside any `.summary__row`; with `zero` applied the 7-meal
+  cart's total is $87.50, as § 29's.
+- **The store's own footer**: `app-footer > div.footer > div.footer__fit-af` (a newsletter form, two
+  `nav.footer__fit-af-nav`, the second ending in **Contact**, `href="/contact"`; social links, the logo, a copyright line
+  `p.footer__fit-af-copyright` at 12 px (1280) and 11 px (390), white). **Displayed on the order page at both widths;
+  hidden on the deep-carted checkout** (H2, this block's). The checkout's children at done: the logo, `#fitaf-bar`,
+  `div.checkout`, `#fitaf-nav`.
+
+**As built.**
+
+- **`zero`'s sign (item 2)**: `hush()`, from `mark()` at done (before `zero()` types anything), unless the link carries a
+  code: every `.summary__row--discount` whose text names `zero` (`/\bzero\b/i`, the word, any case) gets the class
+  `fitaf-zero`, and the checkout's hide list gains `.fitaf-zero:not(:has(.summary__total))` (a row holding the Total is
+  never hidden). Kept by a MutationObserver on `<body>` (child list, text, `class`), for the page's life: its callback
+  runs before the browser paints, so a row the store draws again is never shown (Z6: no frame). Set with `toggle`, so a
+  row whose text stops naming `zero` shows again. Any other discount row is untouched (Z7), the Total too (Z8), and a
+  coded link hides nothing (Z9).
+- **The link (item 3)**: `help()`, at done: one `a#fitaf-help`, its words data/messages.json's `handoff.contact`
+  (*"Contact customer service"*; R2-50's rule, no phrase in the source; the build's `UI_WORDS` gains `contact`), to
+  `https://fitafnutrition.com/contact`, made with `own()` (the page's tokens inline): `font-family: inherit`, 14 px,
+  weight 400, `--muted`, centred, underlined. It is the last line of the block's own foot (`#fitaf-nav`, given
+  `flex-wrap`, the link `order: 1` and the whole width), so it is below everything of the checkout's at every step, and on
+  a phone above the store's bar, which the foot's own margin keeps clear (`place()`). With no foot (no `:has()`), the
+  checkout's last child. Inside `app-checkout`, so it goes with the checkout. Made once; nothing re-adds it (L2).
+
+**What § 33 was silent on, and what was built** (stated, not ruled):
+
+1. **"The cart and checkout pages"**: the link is on the checkout only. Measured: on the order page (the plan's cart,
+   where the block runs only under its screen, or leaves the visitor at a stop) the store's own footer is displayed
+   with its own Contact link to the same page; the block hides that footer only on the checkout. A second link there
+   would duplicate the store's. ⬜ If the Advisor means the order page too, that is an amendment.
+2. **"Names `zero`"** is read as the word, any case. A code such as `ZEROSUGAR` would not be hidden.
+3. **14 px**, the top of the contract's 13–14, for `--muted` on a light page. The pair `--muted` on `--white` is B2b's
+   existing row (role *body*); `help()` is outside `stepper()`, which B2b reads, so no row was added. ⚠ The checkout's
+   own background behind the link was not measured (the foot sits on the store's page; white assumed).
+4. **Underlined, same tab** (no `target`), as the store's own Contact link opens.
+5. **The stand-in** gains `zeroRow: "live"` (the measured row; its remove control drawn `x`, ASCII, where the store's is
+   `×`) and `window.__fixtureRerender()` (every price row drawn again as a new element with the store's classes only).
+
+**Cases** (`tools/storefront-watch/test/r2-z33-sign-and-link.test.mjs`, Chrome): Z6 and Z6b (1280, 390), Z7, Z8, Z9,
+L1 and L1b (1280, 390; steps 1 and 2), L2, and the two mutants (every discount row hidden: Z7 fails; the link added
+twice: L1 fails). **Red on the unchanged block (`2a5fb55`): 10 run, 3 pass, 7 fail**: Z6 and Z6b (*"no element naming
+zero displayed at any frame of the checkout"*), L1, L1b and L2 (no link), and both mutants (their site absent). Z7, Z8
+and Z9 pass on the old text: they guard what must not change, and Z7's mutant shows it bites. **Green at `dbcf88d`: 10
+of 10**, and § 31's `r2-z31-zero` 13 of 13.
+
+**The case the contract made stale, amended in the code commit**: **R2-77** required the text's only new URLs to be
+§ 17.1's photo hosts; it now names § 33's contact page too, and requires it whole. **CC-8a** failed at `dbcf88d`
+(*"control: the watch expects the live text"*): the golden's `replaces`, which names the live text between a text change
+and its paste, was not set; set at `ef4bd21` to `3efc8112…`.
+
+**The size, the pins.** The Footer block **20,413 → 21,320** bytes (`c31603d`, live → `dbcf88d`), the console file
+**20,394 → 21,301**; the cap 50,000 (§ 32). Text SHA-256 `3efc8112…` → `86a835515a670cbc6e2d0ab68d497d980a9bf669b0aac61b2774e5d7979f45da`;
+the Footer block's SHA-256 `e16c90245715fb65d0453edfa6478a6e1a8883768f7944e56272ccd177ca0125`. R2-32, PR-10 and CC-8's
+`footer_text_sha256` moved to `86a83551…`; CC-8's `watch_expected_footer` still names the live `c31603d` text until the
+paste.
+
+**Gates** (each `nice -n 15`, beside another site suite running on this machine):
+
+- **The site suite NOT completed.** Its run at `dbcf88d` was stopped at 35 min with 513 results read, one failing, CC-8a
+  (fixed at `ef4bd21`: `cc-08-unchanged.test.mjs` 3 of 3). Before the code commit, the block's own site cases (R2-32,
+  PR-10, R2-42, R2-50, R2-81, R2-78/79, R2-58, R2-77, R2-29, R2-92/93, R2-54, B2): 38 of 39, R2-77 then amended, 1 of 1.
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`, at `ef4bd21`, 10 min 46 s): **244 tests,
+  238 pass, 2 fail, 4 cancelled**, every one a clock under load: FC-6c, P3b, PS2 and R2-45 timed out (60 or 90 s), P1
+  *"Timed out after 30000 ms while waiting for the WS endpoint URL"* (Chrome's start, as § 29 records), and FC2 (a
+  timing measure). Not re-run alone here. The § 33 and § 31 files: 23 of 23 at `dbcf88d`.
+- **Contrast** (`npm --prefix boston-2026-10 run contrast`): 94 pairs, 94 pass.
+
+**Left**: the rehearsal on the live store (item 6, the orchestrator's: `zero: applied`, the row hidden, the total
+unchanged, the link present), then the Advisor's paste and the live smoke; the 390 `zero: not found` above (§ 31's
+bound); ⬜ the order page's link, if wanted (1 above).
