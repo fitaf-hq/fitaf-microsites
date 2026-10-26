@@ -241,6 +241,8 @@ async function baseSite() {
  *  count a badge on its tile, the rest of its line visually hidden in its name), so EM2 holds those rows' name, badge and
  *  hidden words apart and every other box to the base's; such a row is known by its line matching the words' meal_qty
  *  (read from the site, never written here: SM-4), on either page. */
+/** The site's SPEC-ui-and-copy-pass § 3: the desktop column's width (its --column), the page's width above it. */
+const COLUMN_PX = 480;
 const COUNTED = (() => {
   const [before, after] = WORDS.chefs_choice.meal_qty.split("{meal}");
   const side = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{n\\}", "\\d+");
@@ -252,7 +254,10 @@ const COUNTED = (() => {
  *  § 2 the first question) moves the whole card down the page,
  *  and the card itself is what EM2 holds to the base's). Since SPEC-ui-and-copy-pass § 1 item 8 the text reads each meal's
  *  line whole (its visually hidden words, on their own line in innerText, joined back), and a counted meal's name, badge
- *  and hidden words are left out of the boxes (`counted`, COUNTED's source). */
+ *  and hidden words are left out of the boxes (`counted`, COUNTED's source). ⚠ AMENDED by the site's
+ *  SPEC-ui-and-copy-pass § 4 B (2026-10-26): on a page carrying the save step (the production build, `production` true)
+ *  its link, *Not ready?* (#not-ready), is the card's last thing, which the base's page has not: it is left out of the
+ *  text (its line at the end) and of the boxes; every other box is above it, so none moves. */
 function readResult(counted) {
   const result = document.getElementById("result");
   const at = result.getBoundingClientRect();
@@ -263,8 +268,11 @@ function readResult(counted) {
   };
   let text = result.innerText;
   for (const hidden of result.querySelectorAll(".cc-name .visually-hidden")) text = text.replace(`\n${hidden.textContent.trim()}\n`, ` ${hidden.textContent.trim()}\n`);
+  const notReady = document.getElementById("not-ready");
+  const itsLine = notReady?.checkVisibility() ? `\n${notReady.innerText}` : "";
+  if (itsLine && text.endsWith(itsLine)) text = text.slice(0, -itsLine.length);
   const boxes = [...result.querySelectorAll("*")]
-    .filter((el) => el.checkVisibility() && !isCounted(el))
+    .filter((el) => el.checkVisibility() && !isCounted(el) && el !== notReady)
     .map((el) => {
       const r = el.getBoundingClientRect();
       return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${el.className} ${[r.x - at.x, r.y - at.y, r.width, r.height].map((n) => Math.round(n * 10) / 10).join(",")}`;
@@ -279,7 +287,10 @@ test("EM2: a week of one list shows no chooser, and the card as the base's, its 
   for (const { width } of Object.values(VIEWPORTS)) {
     for (const hash of ONE_HASHES) {
       const after_ = await withPage({ dir: oneOut, hash, width }, (page) => page.evaluate(readResult, COUNTED));
-      const before = await withPage({ dir: baseOut, hash, width }, (page) => page.evaluate(readResult, COUNTED));
+      // ⚠ AMENDED for the site's SPEC-ui-and-copy-pass § 3 (2026-10-26, the desktop column, 0233dbe; found by § 4's
+      // Storybook run, its § 4.1): above 480 px the page is drawn in one 480 px column, which the base predates, so at 1280
+      // the base is read at the column's width, as the page now draws the card there; at 390 as before.
+      const before = await withPage({ dir: baseOut, hash, width: Math.min(width, COLUMN_PX) }, (page) => page.evaluate(readResult, COUNTED));
       const first = ms.V2_CARTS[hash.replace(/^#[a-z]+-/, "").replace(/-s$/, "")].items[0].display;
       assert.ok(before.text.includes(first), `control: ${BASE}'s card at ${width} ${hash} shows the week (${first})`);
       assert.equal(after_.group, false, `${width} ${hash}: no chooser`);
@@ -447,6 +458,11 @@ function readPanel(index) {
     svgs: panel.querySelectorAll("svg").length,
     lines: [...panel.querySelectorAll("p")].map((p) => p.textContent.replace(/\s+/g, " ").trim()),
     panelBox: box(panel),
+    // The rings' row's own gap between rings, as drawn (read from the page, never written here: SM-4).
+    rowGap: (() => {
+      const row = panel.querySelector(".cc-rings");
+      return row ? parseFloat(getComputedStyle(row).columnGap) || 0 : 0;
+    })(),
     rings,
   };
 }
@@ -523,7 +539,12 @@ async function ringProblems(dir = menusOut) {
                 if (r.ringBox.left < panel.panelBox.left - 1 || r.ringBox.right > panel.panelBox.right + 1) fail(`${at}: outside the panel (${r.ringBox.left}–${r.ringBox.right} in ${panel.panelBox.left}–${panel.panelBox.right})`);
                 tops.add(Math.round(r.ringBox.top));
               });
-              if (width === VIEWPORTS.w1280.width && tops.size !== 1) fail(`at 1280 the rings are not one row (${[...tops]})`);
+              // ⚠ AMENDED for the site's SPEC-ui-and-copy-pass § 3 (2026-10-26, the desktop column, 0233dbe; found by § 4's
+              // Storybook run, its § 4.1): at 1280 the page is one 480 px column, so the panel is a phone's and the rings
+              // wrap as on a phone (§ 11 item 4: "one row of five that wraps on a phone"). One row is held wherever the
+              // panel holds the five rings and their gaps side by side, as drawn.
+              const oneRow = panel.rings.reduce((sum, r) => sum + r.ringBox.width, 0) + panel.rowGap * (panel.rings.length - 1);
+              if (width === VIEWPORTS.w1280.width && panel.panelBox.width >= oneRow && tops.size !== 1) fail(`at 1280 the rings are not one row (${[...tops]})`);
             }
             await press(page, button);
           }

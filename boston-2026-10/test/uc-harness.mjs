@@ -106,9 +106,10 @@ export function stepRead(page) {
 /** Whether `id` is shown (it and every ancestor without `hidden`). */
 export const shown = (page, id) => !hiddenInTree(page.el(id));
 
-/** The element a visitor reads directly before / after `node` in the whole page. */
+/** The element a visitor reads directly before / after `node` in the whole page. ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 B
+ *  (2026-10-26): in its dialog, when it is in one (the save step's, read as a visitor reads it with the dialog open). */
 export function neighbours(page, node) {
-  const read = readingOrder(page.document.body);
+  const read = readingOrder(node.closest("dialog") ?? page.document.body);
   const i = read.indexOf(node);
   assert.ok(i >= 0, `#${node.id} is read`);
   return { before: read[i - 1] ?? null, after: read[i + 1] ?? null };

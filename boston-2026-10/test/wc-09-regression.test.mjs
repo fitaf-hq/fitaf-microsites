@@ -38,6 +38,12 @@
 // ⚠ RE-RECORDED by `--visible-at 077f472 --release-a` for § 2.2 (Family's own question; the result card shared by both
 // panels): `visible` at all 20 fragments (the result card's place in the markup; #family's card without its figures and
 // with its question); the recorder at 8bfe4f8 reproduces 8bfe4f8's record; picks_data, page_sha256 and the sheet 409b805's.
+// ⚠ RE-RECORDED by `--visible-at d0f1a97 --release-a --without-snack-cells` for SPEC-ui-and-copy-pass § 4 (2026-10-26: the
+// questions revealed one by one, Why Fit AF? a banner at the foot): `visible` at all 20 fragments. The recorder gains
+// `--without-snack-cells` (u-04-record.mjs's, since SPEC-analytics § 13): as it was, it read each visible page with a snack
+// link's cells, which this case removes since SPEC-rung2-progress-and-checkout § 31.2 item 1, so it no longer reproduced
+// the record; with it, at 62b8627 (§ 4's cases, the code before) it reproduces 077f472's record (visible_at and
+// visible_built_as apart). picks_data, page_sha256 and the sheet 409b805's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -60,7 +66,7 @@ test("WC-9 (control): the golden is 409b805's production build, --on 2026-10-11,
   assert.equal(golden.on, "2026-10-11");
   assert.deepEqual(golden.picks_data.weeks.map((w) => w.delivery), [WEEK_1018]);
   assert.ok(sheetUrlCount(JSON.stringify(golden.picks_data)) > 0, "the week's sheet is addressed in it");
-  assert.equal(golden.visible_at, "077f472", "the visible pages: 077f472's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8, § 1.2 item 1, §§ 2, 2.2)");
+  assert.equal(golden.visible_at, "d0f1a97", "the visible pages: d0f1a97's served page (SPEC-every-menu-and-nutrition §§ 11, 11.2; SPEC-ui-and-copy-pass § 1 item 8, § 1.2 item 1, §§ 2, 2.2, 4)");
 });
 
 test("WC-9a: the program's week/picks-data.json is 409b805's #picks-data with the sheet's URL at /week/, and nothing else changed", async () => {

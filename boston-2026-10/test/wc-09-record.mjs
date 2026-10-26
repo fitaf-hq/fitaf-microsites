@@ -22,6 +22,7 @@ import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { asWeekUrls, REGRESSION_HASHES, REGRESSION_NOW } from "./wc-regression.mjs";
 import { productionFalseSavePath } from "./cc-harness.mjs";
+import { withoutSnackCells } from "./snack-cells.mjs";
 import { contentOf, noWeekPage, pageAsset, picksText, sha256, SHEET_1018, sheetKeyOf, startSite, visible, WEEK_1018, WEEK_DATA_KEY } from "./wc-harness.mjs";
 
 const flag = (name, fallback) => {
@@ -36,6 +37,11 @@ const VISIBLE_AT = flag("--visible-at", null);
 // build with cc-harness productionFalseSavePath() as its data/save.json, and the Worker over that file too (as WC-9c's
 // productionFalseMirror). Without it the commit's own data/save.json, as before.
 const RELEASE_A = process.argv.includes("--release-a");
+// `--without-snack-cells` (SPEC-ui-and-copy-pass § 4.1, 2026-10-26, as u-04-record.mjs has had it since SPEC-analytics § 13),
+// with --visible-at: each visible page read as WC-9c has read it since SPEC-rung2-progress-and-checkout § 31.2 item 1, a
+// snack link's cells removed (test/snack-cells.mjs withoutSnackCells), so the record holds what WC-9c compares. Without
+// it, as before (the record before § 31.2's cells; re-run as it was, the recorder no longer reproduced WC-9's record).
+const WITHOUT_SNACK_CELLS = process.argv.includes("--without-snack-cells");
 
 function run(cmd, args, input) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 256 * 1024 * 1024 });
@@ -63,7 +69,8 @@ async function servedVisible(commit) {
     const site = await startSite({ root: pkg, assets: { "/": pageAsset(asset) }, objects: { [WEEK_DATA_KEY]: text, [sheet]: files[sheet] } });
     try {
       const served = (await site.get("/")).text;
-      return Object.fromEntries(REGRESSION_HASHES.map((hash) => [hash, sha256(visible(served, { hash, now: REGRESSION_NOW }))]));
+      const read = (hash) => (WITHOUT_SNACK_CELLS ? withoutSnackCells(visible(served, { hash, now: REGRESSION_NOW })).text : visible(served, { hash, now: REGRESSION_NOW }));
+      return Object.fromEntries(REGRESSION_HASHES.map((hash) => [hash, sha256(read(hash))]));
     } finally {
       await site.dispose();
     }
@@ -94,7 +101,9 @@ try {
         : ""),
     recorded_at: short(COMMIT),
     ...(VISIBLE_AT ? { visible_at: short(VISIBLE_AT) } : {}),
-    ...(VISIBLE_AT && RELEASE_A ? { visible_built_as: "release (a): production false (--release-a)" } : {}),
+    ...(VISIBLE_AT && RELEASE_A
+      ? { visible_built_as: `release (a): production false (--release-a)${WITHOUT_SNACK_CELLS ? "; each snack link's cells removed, as WC-9c reads them (--without-snack-cells)" : ""}` }
+      : {}),
     on: ON,
     week: WEEK_1018,
     opened_at: new Date(REGRESSION_NOW).toISOString(),

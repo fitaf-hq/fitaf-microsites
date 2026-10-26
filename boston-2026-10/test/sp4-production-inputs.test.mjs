@@ -13,7 +13,7 @@ import { build, ROOT } from "../build.mjs";
 import { openPlanPage } from "./cc-harness.mjs";
 import { simulatePage } from "./page-sim.mjs";
 import { assertPageBudget } from "./page-budget.mjs";
-import { assertFlowOneAbsent, assertFlowOneDirectlyAfterStoreButton, assertNoModalForFlowOne, NOW } from "./save-end-fixture.mjs";
+import { assertFlowOneAbsent, assertFlowOneDirectlyAfterStoreButton, assertFlowOneInItsDialog, NOW } from "./save-end-fixture.mjs";
 import { APPROVED_VARS, APPROVED_VERSION, approvedPage, assertEachRefusal, assertNoDraftMarking, PRIVACY_URL, saveData, UNFIXED } from "./sp-production.mjs";
 import { approvedWeekPage } from "./uc-harness.mjs";
 
@@ -53,7 +53,7 @@ test("SP4: all approved — Flow 1 at the end, as the development build has it; 
   const fromEmail = openPlanPage(html, { hash: "#from-email", now: NOW });
   fromEmail.go("#lean-or-7d");
   assertFlowOneDirectlyAfterStoreButton(fromEmail, { form: false });
-  assertNoModalForFlowOne(html);
+  assertFlowOneInItsDialog(html);
   assert.match(html, new RegExp(`<a class="save-privacy" href="${PRIVACY_URL}">Privacy notice</a>`), "the notice linked, not a placeholder");
 });
 

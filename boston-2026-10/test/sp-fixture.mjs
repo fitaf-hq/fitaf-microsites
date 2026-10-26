@@ -53,7 +53,8 @@ export function assertOfferLineInMarkup(html) {
 /**
  * SP1 as run, at `hash` with the browser's clock at `now`: the step's line shows the label offerForSave gives the Worker
  * for that date in the send time zone, the same as the box at the top, written as text, and read directly before the
- * save lead. Returns the label shown.
+ * save lead. Returns the label shown. ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 B (2026-10-26): the step is in its dialog, so
+ * "read" is what a visitor reads in the dialog *Not ready?* opens.
  */
 export function assertOfferLineAsRun(html, offers, { hash, now }) {
   const page = openPlanPage(html, { hash, now });
@@ -66,8 +67,8 @@ export function assertOfferLineAsRun(html, offers, { hash, now }) {
   // SPEC-ui-and-copy-pass § 1 item 1: the box at the top prints the same offer's headline, else the same label.
   assert.equal(page.el("save-offer-label").textContent, offer.headline ?? expected, `${where}: the box at the top shows the same offer`);
   assert.equal(label.children.length, 0, `${where}: written as text, never as markup`);
-  const read = readingOrder(page.document.body);
   const lead = page.document.querySelector("#save .save-lead");
+  const read = readingOrder(lead.closest("dialog") ?? page.document.body);
   assert.ok(read.indexOf(lead) > 0, `${where}: the save lead is read`);
   assert.equal(read[read.indexOf(lead) - 1], label, `${where}: the offer's line is read directly before "Not ready today? Save it"`);
   return label.textContent;

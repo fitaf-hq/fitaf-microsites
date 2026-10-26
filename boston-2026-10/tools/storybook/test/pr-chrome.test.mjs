@@ -119,11 +119,15 @@ test("PR-13: the carousel spans the viewport's width with the logo inside it; no
     const read = await withPage({ width, hash: "#lean-7" }, (page) =>
       page.evaluate(() => {
         const r = (el) => el && el.getBoundingClientRect().toJSON();
-        return { viewport: document.documentElement.clientWidth, carousel: r(document.getElementById("carousel")), logo: r(document.querySelector("#top .logo-plate img")), header: document.querySelectorAll("header, .site-head").length };
+        return { viewport: document.documentElement.clientWidth, column: r(document.body), carousel: r(document.getElementById("carousel")), logo: r(document.querySelector("#top .logo-plate img")), header: document.querySelectorAll("header, .site-head").length };
       }),
     );
     assert.ok(read.carousel, `${width}: control: the committed sheets give a carousel`);
-    assert.deepEqual([read.carousel.left, read.carousel.width], [0, read.viewport], `${width}: edge to edge`);
+    // ⚠ AMENDED for the site's SPEC-ui-and-copy-pass § 3 (2026-10-26, the desktop column, 0233dbe; found by the Storybook
+    // run of its § 4, § 4.1): above 480 px the whole page is one 480 px column, so the carousel spans the page's column
+    // (body) edge to edge: the viewport at 390, the column at 1280.
+    assert.equal(read.column.width, Math.min(read.viewport, 480), `${width}: control: the page's column`);
+    assert.deepEqual([read.carousel.left, read.carousel.width], [read.column.left, read.column.width], `${width}: edge to edge of the page's column`);
     const inside = read.logo && read.logo.left >= read.carousel.left && read.logo.right <= read.carousel.right && read.logo.top >= read.carousel.top && read.logo.bottom <= read.carousel.bottom;
     assert.ok(inside, `${width}: the logo inside the carousel: ${JSON.stringify(read)}`);
     assert.equal(read.header, 0, `${width}: no separate header`);

@@ -16,6 +16,9 @@
 //   item 3) no box, and the step with no offer, its own lead, beside the card. And See all plans while the offer is
 //   current (item 7, as § 1.2 item 2 corrects it: the store's price, the higher one struck through beside it), and the
 //   card of a 5-meal row (§ 1.2 item 1: its meals at the plan's price a meal). Turnstile and /api/save are stood in for.
+//   ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 4 B (2026-10-26): the step is in a modal dialog that *Not ready?*
+//   (beside the card's checkout) opens, so each of its states is reached by pressing it, and drawn in the dialog; the
+//   dialog is closed (Esc) before See all plans is pressed.
 //   The development /privacy/ at 390 (§ 1.3, what the Advisor looks at before § 6's approval line): § 6's paragraphs drawn
 //   in their order, the drawing's after "What we collect and why", no sideways scroll; its PNG with UC_RENDERS.
 // The page is the site's own development build (`node build.mjs --env dev --out`, as the stories' pages are built), its
@@ -322,10 +325,14 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
   const drawn = (page, id) => page.evaluate((x) => Boolean(document.getElementById(x)?.checkVisibility()), id);
   await withPage({ dir: devWeekOut, hash: plan, width }, async (page) => {
     await page.waitForSelector("#cc-list:not([hidden])");
-    assert.equal(await drawn(page, "save"), true, "open: the step, beside the card's checkout button");
-    assert.equal(await drawn(page, "save-form"), true, "open: its form");
+    assert.equal(await drawn(page, "save"), false, "the step not drawn in the page (§ 4 B)");
+    assert.equal(await drawn(page, "not-ready"), true, "its link, Not ready?, beside the card's checkout button");
     await render(page, "#offer-box", "uc1-offer-box-in-page-390");
-    await renderSpan(page, "#result", "#save", 8, "uc2-step-open-390");
+    await page.click("#not-ready");
+    await page.waitForSelector("#save-dialog[open]");
+    assert.equal(await drawn(page, "save"), true, "open: the step, in its dialog");
+    assert.equal(await drawn(page, "save-form"), true, "open: its form");
+    await render(page, "#save-dialog", "uc2-step-open-390");
     await page.type("#save-email", "not-an-address");
     await page.click("#save-submit");
     const under = await page.evaluate(() => {
@@ -344,6 +351,8 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
     const left = await page.evaluate(() => [...document.querySelectorAll("#save *")].filter((n) => n.checkVisibility() && [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())).map((n) => n.id || n.className));
     assert.deepEqual(left.filter((n) => n !== "draft-tag"), ["save-done", "save-done-email"], "saved: only the done line drawn (the DRAFT tag apart)");
     await render(page, "#save", "uc2-step-saved-390");
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => !document.getElementById("save-dialog").open);
     await page.click("#all-link");
     await page.waitForSelector("#all[open]");
     const prices = await page.evaluate(() => [...document.querySelectorAll("#all .cell small")].map((small) => ({
@@ -358,15 +367,17 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
   await withPage({ dir: devWeekOut, hash: plan, width, now: Date.parse("2026-10-30T16:00:00.000Z") }, async (page) => {
     await page.waitForSelector("#cc-list:not([hidden])");
     assert.equal(await drawn(page, "offer-box"), false, "after the offer's end: no box");
-    assert.equal(await drawn(page, "save"), true, "the step, with no offer (§ 1.2 item 3)");
+    // The site's SPEC-ui-and-copy-pass § 2 item 2: the tabs are the first question (#who), in their place.
+    await renderSpan(page, "#top", "#who", 40, "uc9-after-the-offer-top-390");
+    await page.click("#not-ready");
+    await page.waitForSelector("#save-dialog[open]");
+    assert.equal(await drawn(page, "save"), true, "the step, with no offer (§ 1.2 item 3), in its dialog");
     assert.deepEqual(
       await page.evaluate(() => ["save-step-offer", "save-lead", "save-email-help", "save-lead-later", "save-email-help-later", "save-submit-later"].map((id) => document.getElementById(id).checkVisibility())),
       [false, false, false, true, true, true],
       "no offer line, its own lead, email help line and button",
     );
-    // The site's SPEC-ui-and-copy-pass § 2 item 2: the tabs are the first question (#who), in their place.
-    await renderSpan(page, "#top", "#who", 40, "uc9-after-the-offer-top-390");
-    await renderSpan(page, "#result", "#save", 8, "uc9-step-after-the-offer-390");
+    await render(page, "#save-dialog", "uc9-step-after-the-offer-390");
   });
   await withPage({ dir: devWeekOut, hash: "#lean-or-5d", width }, async (page) => {
     await page.waitForSelector("#cc-list:not([hidden])");

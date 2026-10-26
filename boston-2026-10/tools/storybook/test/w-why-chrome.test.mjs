@@ -27,6 +27,14 @@
 //   plan page (found in the frame by where it goes, its URL resolved against the frame's document: this origin, path
 //   "/"; never by its words, SM-4) closes the dialog, focus back on the button, the top page's URL unchanged, nothing
 //   navigated (the frame's document still /why/). On the production page at 390 and the development page /demo/ at 390.
+// ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 4 C (2026-10-26, the Advisor: "more of a … "actionable banner" … towards
+// the bottom of the page (after checkout/save offer – and it should always be visible in the page flow"): the button is a
+// banner at the foot, after the result card and Not ready? and before the footer (nothing drawn between it and the
+// footer), always shown, at least 64 CSS px tall, on --ice with the cards' hairline (--line) border and radius (not a
+// pill), its words navy, not underlined, never orange; without script its link in the same place, below both panels, and
+// none in the footer. § 11 item 5's place (directly above the first question) and § 11.2's look (the unselected chip's)
+// are retired by it: the banner's own look is the site's UC13 and uc11-13-chrome's; its focus ring is still a chip's (the
+// page's :focus-visible), read with the focus from the keyboard. The § 11 mutant (the button left in the footer) still fails.
 // ⭐ Mutant: a copy of the production build without the one line of its script that wires the button (the button wired
 // to nothing) fails W2; the copy left as built (its control) passes. ⭐ And § 11's: a copy with the button left in the
 // footer, beside See all plans (moved there in the copy's markup), fails W2; the copy as built passes. ⭐ And § 6's: a copy without the one line that
@@ -62,15 +70,11 @@ const PLAN_PATH = "/";
 const SETTLE_MS = 750;
 /** SPEC-every-menu-and-nutrition § 11 item 5: "at least 64 CSS px tall" (the card's touch target, § 10). */
 const TARGET_PX = 64;
-/** § 11.2: the chip's look, as drawn (computed), compared property by property with an unselected chip's. ⚠ AMENDED by
- *  the site's SPEC-ui-and-copy-pass § 1 item 8 (2026-10-23): the chips are sized by their grid (three or two to a row,
- *  their words wrapping inside them), so their side padding is the grid's fit, not their look; the button keeps its own,
- *  sized to its words (SIDE_ALLOWANCE_PX holds that), and every other property of the look is compared as before. */
+/** The banner's look as drawn (computed), which placeProblems reads (until the site's SPEC-ui-and-copy-pass § 4 C, the chip's
+ *  look, compared property by property with an unselected chip's). */
 const LOOK = ["color", "backgroundColor", "borderTopWidth", "borderTopStyle", "borderTopColor", "borderBottomColor", "borderTopLeftRadius", "fontFamily", "fontSize", "fontWeight", "lineHeight", "textDecorationLine", "cursor"];
 /** § 11.2: its focus ring, as the chips have it (read with the focus from the keyboard). */
 const RING = ["outlineStyle", "outlineWidth", "outlineColor", "outlineOffset"];
-/** "Sized to its text with horizontal padding": the button no wider than its words and this much on each side. */
-const SIDE_ALLOWANCE_PX = 48;
 
 /** The /why/ page's title, read from the site's source (the frame's document is that page). */
 const WHY_TITLE = /<title>([^<]+)<\/title>/.exec(await readFile(siteFile("src", "why", "index.html"), "utf8"))[1];
@@ -187,12 +191,12 @@ async function planLinkProblems(page) {
   return problems;
 }
 
-/** Runs in the page: where the button is drawn (§ 11 item 5) and how (§ 11.2): its box, its words' width and its look,
- *  the page's tokens as colours, the chooser's box (since SPEC-ui-and-copy-pass § 2 the first question, #who), whether
- *  anything is drawn between the button and it, and what of Why Fit AF? the footer draws. */
+/** Runs in the page: where the banner is drawn (the site's SPEC-ui-and-copy-pass § 4 C) and how: its box; the result card's,
+ *  Not ready?'s, the first question's and the footer's boxes (null when not drawn); what is drawn after it in the page's
+ *  column (between it and the footer); its look and the page's tokens as colours; and what of Why Fit AF? the footer draws. */
 function readPlace(look) {
   const button = document.getElementById("why-link");
-  const chooser = document.getElementById("who");
+  const footer = document.querySelector("footer");
   const styleOf = (el) => (el ? Object.fromEntries(look.map((k) => [k, getComputedStyle(el)[k]])) : null);
   // A token's colour as the browser computes it (rgb(…)), by drawing it.
   const probe = document.createElement("span");
@@ -201,49 +205,46 @@ function readPlace(look) {
     probe.style.color = `var(${name})`;
     return getComputedStyle(probe).color;
   };
-  const tokens = Object.fromEntries(["--white", "--navy", "--line", "--cta"].map((t) => [t, token(t)]));
+  const tokens = Object.fromEntries(["--ice", "--navy", "--line", "--cta"].map((t) => [t, token(t)]));
   probe.remove();
-  const range = document.createRange();
-  if (button) range.selectNodeContents(button);
+  const boxOf = (el) => (el?.checkVisibility() ? el.getBoundingClientRect().toJSON() : null);
   const between = [];
-  let next = button?.nextElementSibling;
-  for (; next && next !== chooser; next = next.nextElementSibling) if (next.checkVisibility()) between.push(next.tagName.toLowerCase());
+  for (let next = button?.nextElementSibling; next; next = next.nextElementSibling) if (next.checkVisibility()) between.push(next.tagName.toLowerCase());
   const label = button?.textContent.trim() ?? "";
-  const footer = document.querySelector("footer");
   return {
     drawn: Boolean(button?.checkVisibility()),
-    box: button?.getBoundingClientRect().toJSON() ?? null,
-    chooser: chooser?.checkVisibility() ? chooser.getBoundingClientRect().toJSON() : null,
-    sibling: next === chooser && Boolean(chooser),
+    box: boxOf(button),
+    chooser: boxOf(document.getElementById("who")),
+    result: boxOf(document.getElementById("result")),
+    notReady: boxOf(document.getElementById("not-ready")),
+    footer: boxOf(footer),
     between,
     look: styleOf(button),
-    words: button ? range.getBoundingClientRect().width : null,
     tokens,
     inFooter: Boolean(footer?.contains(button)),
     footerWhy: footer ? [...footer.querySelectorAll("button, a")].filter((el) => el.checkVisibility() && el.textContent.trim() === label).length : null,
   };
 }
 
-/** § 11 item 5: one line per thing the button's place does not hold on `page`; [] when all do. */
+/** § 4 C: one line per thing the banner's place and look do not hold on `page`; [] when all do. */
 async function placeProblems(page) {
   const problems = [];
   const p = await page.evaluate(readPlace, LOOK);
   if (!p.drawn || !p.box) return ["the button is not drawn"];
   if (p.inFooter || p.footerWhy) problems.push(`the footer shows Why Fit AF? (the button in it: ${p.inFooter}; ${p.footerWhy} drawn there)`);
-  if (!p.sibling) problems.push("the button is not directly above the first question (not its preceding sibling)");
-  if (p.between.length) problems.push(`drawn between the button and the first question: ${p.between.join(", ")}`);
-  if (!p.chooser || p.box.bottom > p.chooser.top + 1) problems.push(`the button is not above the first question (${JSON.stringify({ button: p.box, chooser: p.chooser })})`);
+  if (p.between.length) problems.push(`drawn between the banner and the foot: ${p.between.join(", ")}`);
+  if (!p.footer || p.box.bottom > p.footer.top + 1) problems.push(`the banner is not directly above the foot (${JSON.stringify({ banner: p.box, footer: p.footer })})`);
+  for (const [what, box] of [["the first question", p.chooser], ["the result card", p.result], ["Not ready?", p.notReady]]) {
+    if (box && p.box.top < box.bottom - 1) problems.push(`the banner is not below ${what} (${JSON.stringify({ banner: p.box, [what]: box })})`);
+  }
   if (p.box.height < TARGET_PX) problems.push(`the button is ${p.box.height} px tall, under ${TARGET_PX}`);
-  // § 11.2: an outline button, the unselected chip's (the chips themselves are compared on the two-menu page below).
   const { look, tokens } = p;
-  if (look.backgroundColor !== tokens["--white"]) problems.push(`the button's fill ${look.backgroundColor}, not --white`);
-  if (look.color !== tokens["--navy"]) problems.push(`the button's words ${look.color}, not --navy`);
-  if (look.borderTopStyle !== "solid" || look.borderTopWidth === "0px" || look.borderTopColor !== tokens["--line"]) problems.push(`the button's border ${look.borderTopWidth} ${look.borderTopStyle} ${look.borderTopColor}, not the chips' (--line)`);
-  if (parseFloat(look.borderTopLeftRadius) < p.box.height / 2 - 1) problems.push(`the button is not a pill (radius ${look.borderTopLeftRadius}, height ${p.box.height})`);
-  if (look.textDecorationLine !== "none") problems.push(`the button's words are ${look.textDecorationLine}`);
-  if (Object.values(look).includes(tokens["--cta"])) problems.push("the button is orange (--cta)");
-  if (p.box.width > p.words + 2 * SIDE_ALLOWANCE_PX || (p.chooser && p.box.width >= p.chooser.width)) problems.push(`the button is ${p.box.width} px wide for ${p.words} px of words: not sized to its text`);
-  if (p.chooser && Math.abs(p.box.left + p.box.width / 2 - (p.chooser.left + p.chooser.width / 2)) > 1) problems.push(`the button is not centred above the first question (${p.box.left + p.box.width / 2} against ${p.chooser.left + p.chooser.width / 2})`);
+  if (look.backgroundColor !== tokens["--ice"]) problems.push(`the banner's fill ${look.backgroundColor}, not --ice`);
+  if (look.color !== tokens["--navy"]) problems.push(`the banner's words ${look.color}, not --navy`);
+  if (look.borderTopStyle !== "solid" || look.borderTopWidth === "0px" || look.borderTopColor !== tokens["--line"]) problems.push(`the banner's border ${look.borderTopWidth} ${look.borderTopStyle} ${look.borderTopColor}, not the cards' (--line)`);
+  if (parseFloat(look.borderTopLeftRadius) >= p.box.height / 2 - 1) problems.push(`the banner is a pill (radius ${look.borderTopLeftRadius}, height ${p.box.height})`);
+  if (look.textDecorationLine !== "none") problems.push(`the banner's words are ${look.textDecorationLine}`);
+  if (Object.values(look).includes(tokens["--cta"])) problems.push("the banner is orange (--cta)");
   return problems;
 }
 
@@ -309,17 +310,17 @@ for (const where of PLAN_LINK_PAGES) {
 }
 
 for (const where of PAGES) {
-  test(`W3 (${where.name}): without script, no button and no dialog; the link to /why/ in the button's place above the first question, none in the footer; the plans still shown (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
+  test(`W3 (${where.name}): without script, no button and no dialog; the link to /why/ in the button's place at the foot, below both panels, none in the footer; the plans still shown (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
     const read = await withPage({ ...where, script: false }, async (page, base) => {
       const seen = await page.evaluate((path) => {
         const button = document.getElementById("why-link");
         const chooser = document.getElementById("who");
         const why = [...document.querySelectorAll("a")].filter((a) => a.checkVisibility() && new URL(a.href).pathname === path);
-        // The button's place: the elements from the button to the first question (its no-script link among them), none
-        // drawn but it.
+        // The button's place (the site's SPEC-ui-and-copy-pass § 4 C): the elements from the button to the end of the page's
+        // column (its no-script link among them), none drawn but it; both panels above it (without script both are shown).
         const place = [];
-        for (let el = button; el && el !== chooser; el = el.nextElementSibling) place.push(el);
-        const panel = document.getElementById("panel-individual");
+        for (let el = button; el; el = el.nextElementSibling) place.push(el);
+        const panels = ["panel-individual", "panel-family"].map((id) => document.getElementById(id));
         return {
           chooser: Boolean(chooser),
           label: button?.textContent.trim() ?? null,
@@ -329,7 +330,7 @@ for (const where of PAGES) {
           plans: document.getElementById("all")?.checkVisibility() ?? null,
           links: why.map((a) => ({ text: a.textContent.trim(), href: a.href })),
           inPlace: why.length === 1 && place.some((el) => el.contains(why[0])),
-          above: why.length === 1 && panel ? why[0].getBoundingClientRect().bottom <= panel.getBoundingClientRect().top + 1 : null,
+          below: why.length === 1 && panels.every(Boolean) ? panels.every((p) => why[0].getBoundingClientRect().top >= p.getBoundingClientRect().bottom - 1) : null,
           footer: [...document.querySelectorAll("footer a")].filter((a) => a.checkVisibility()).length,
         };
       }, WHY_PATH);
@@ -341,12 +342,12 @@ for (const where of PAGES) {
       return { ...seen, base, landed };
     });
     assert.ok(read.label, "control: the button is in the markup");
-    assert.equal(read.chooser, true, "control: the first question (#who) is in the markup, where the button's place ends");
+    assert.equal(read.chooser, true, "control: the first question (#who) is in the markup");
     assert.equal(read.plans, true, "control: the page's no-script rule still shows the plans dialog");
     assert.deepEqual([read.button, read.dialog, read.frame], [false, false, false], "neither the button nor the dialog (nor its frame) shown");
     assert.deepEqual(read.links, [{ text: read.label, href: `${read.base}${WHY_PATH}` }], "one link, the button's label, to /why/");
-    assert.equal(read.inPlace, true, "the link in the button's place, between it and the first question");
-    assert.equal(read.above, true, "the link drawn above the plan's panel");
+    assert.equal(read.inPlace, true, "the link in the button's place, after it in the page's column");
+    assert.equal(read.below, true, "the link drawn below both panels");
     assert.equal(read.footer, 0, "no link in the footer");
     assert.deepEqual(read.landed, { path: WHY_PATH, title: WHY_TITLE }, "the link opens the /why/ page");
   });
@@ -405,22 +406,17 @@ test("W2 (mutant, SPEC-every-menu-and-nutrition § 11): the button left in the f
   await writeFile(index, html.replace(BUTTON_MARKUP, "").replace(PLANS_MARKUP, (plans) => plans + button));
   const problems = await withPage(where, (page, base, requested) => behaviourProblems(page, requested));
   t.diagnostic(problems.join("\n"));
-  assert.ok(problems.some((p) => /the footer shows Why Fit AF\?/.test(p)) && problems.some((p) => /not directly above the first question/.test(p)), problems.join("\n"));
+  assert.ok(problems.some((p) => /the footer shows Why Fit AF\?/.test(p)) && problems.some((p) => /not directly above the foot/.test(p)), problems.join("\n"));
 });
 
-// § 11.2: on the two-menu fixture week (the site's test/fixtures/picks-menus/, invented names, its words), where the menu
-// chooser's chips are drawn, the button's look is an unselected chip's, and its focus ring a chip's, at 390 and 1280.
+// § 11.2 as the site's SPEC-ui-and-copy-pass § 4 C amends it: on the two-menu fixture week (the site's
+// test/fixtures/picks-menus/, invented names, its words), where the menu chooser's chips are drawn, the banner's focus ring
+// is a chip's (the page's :focus-visible), each focused from the keyboard, at 390 and 1280. Its look is no longer the
+// chip's (§ 4 C: an actionable banner; the site's UC13 and uc11-13-chrome read it).
 const em = await import(pathToFileURL(siteFile("test", "em-harness.mjs")).href);
 const content = await import(pathToFileURL(siteFile("scripts", "week-content.mjs")).href);
 
-/** Runs in the page: `look`'s properties of the button and of the first unselected chip (its radio's label's span). */
-function readChipLook(look) {
-  const chip = [...document.querySelectorAll('#cc-menus input[type="radio"]')].find((r) => !r.checked)?.nextElementSibling;
-  const styleOf = (el) => (el ? Object.fromEntries(look.map((k) => [k, getComputedStyle(el)[k]])) : null);
-  return { button: styleOf(document.getElementById("why-link")), chip: styleOf(chip) };
-}
-
-test("W2 (SPEC-every-menu-and-nutrition § 11.2): the button looks as the menu chooser's unselected chip, and its focus ring is a chip's (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async (t) => {
+test("W2 (SPEC-every-menu-and-nutrition § 11.2, as SPEC-ui-and-copy-pass § 4 C amends it): the banner's focus ring is a chip's (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "fitaf-storybook-why-chips-"));
   t.after(() => rm(dir, { recursive: true, force: true }));
   await siteBuild({ build: "production", out: dir });
@@ -436,13 +432,12 @@ test("W2 (SPEC-every-menu-and-nutrition § 11.2): the button looks as the menu c
   for (const width of [VIEWPORTS.w390.width, VIEWPORTS.w1280.width]) {
     await withPage({ dir, path: "/index.html", hash: "#lean-or-7d", width }, async (page) => {
       await page.waitForSelector("#cc-menus:not([hidden])");
-      const look = await page.evaluate(readChipLook, LOOK);
-      if (!look.chip) return problems.push(`${width}: fixture control: no unselected chip`);
-      for (const k of LOOK) if (look.button[k] !== look.chip[k]) problems.push(`${width}: ${k}: the button's ${look.button[k]}, the chip's ${look.chip[k]}`);
-      // The focus ring, each focused from the keyboard: the button by Tab from the page's top, a chip by the arrow keys.
-      await page.evaluate(() => document.activeElement?.blur());
+      // The banner by Shift+Tab from See all plans, the next control after it (the foot's); a chip by the arrow keys.
+      await page.focus("#all-link");
+      await page.keyboard.down("Shift");
       await page.keyboard.press("Tab");
-      if ((await page.evaluate(() => document.activeElement?.id)) !== "why-link") return problems.push(`${width}: fixture control: Tab did not reach the button first`);
+      await page.keyboard.up("Shift");
+      if ((await page.evaluate(() => document.activeElement?.id)) !== "why-link") return problems.push(`${width}: fixture control: Shift+Tab from See all plans did not reach the banner`);
       const buttonRing = await page.evaluate((ring) => Object.fromEntries(ring.map((k) => [k, getComputedStyle(document.activeElement)[k]])), RING);
       await page.focus('#cc-menus input[type="radio"]:checked');
       await page.keyboard.press("ArrowRight");
@@ -451,7 +446,7 @@ test("W2 (SPEC-every-menu-and-nutrition § 11.2): the button looks as the menu c
         return span ? Object.fromEntries(ring.map((k) => [k, getComputedStyle(span)[k]])) : null;
       }, RING);
       if (!chipRing || chipRing.outlineStyle === "none") return problems.push(`${width}: fixture control: no chip's focus ring read (${JSON.stringify(chipRing)})`);
-      for (const k of RING) if (buttonRing[k] !== chipRing[k]) problems.push(`${width}: focus ${k}: the button's ${buttonRing[k]}, a chip's ${chipRing[k]}`);
+      for (const k of RING) if (buttonRing[k] !== chipRing[k]) problems.push(`${width}: focus ${k}: the banner's ${buttonRing[k]}, a chip's ${chipRing[k]}`);
     });
   }
   assert.deepEqual(problems, []);

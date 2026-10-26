@@ -52,7 +52,7 @@ test("UQ1: the result follows the goal, no question between them; every question
   }
 });
 
-test("UQ1: as run, the result waits for the goal and Q1 — in either order — and Q2–Q4 still wait for Q1", () => {
+test("UQ1: as run, the result waits for the goal and Q1 — in either order; a size's link shows every question (§ 4 A item 5)", () => {
   for (const [build, html] of Object.entries(BUILDS)) {
     const meals = open(html, "#meals-or-7d");
     assert.equal(resultOf(meals).shown, false, `${build}: Q1 answered, no goal: no result`);
@@ -61,7 +61,9 @@ test("UQ1: as run, the result waits for the goal and Q1 — in either order — 
 
     const size = open(html, "#lean");
     assert.equal(resultOf(size).shown, false, `${build}: the goal alone: no result`);
-    assert.equal(questionsOf(size).weekends.shown, false, `${build}: Q2–Q4 wait for Q1`);
+    // ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 A item 5 (2026-10-26): a link carrying a size reveals every question, so Q2–Q4
+    // no longer wait for Q1 there (UC11 holds the reveal).
+    assert.equal(questionsOf(size).weekends.shown, true, `${build}: a size's link: every question shown`);
     answer(size, "lunch_dinner", "and");
     assert.deepEqual([resultOf(size).shown, resultOf(size).selection], [true, "and-5d"], `${build}: the goal first still works`);
 

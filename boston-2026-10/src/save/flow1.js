@@ -51,6 +51,9 @@
   // brief"): shown only while the card's checkout button is shown (#cc-checkout, a week's cart for the answers),
   // never beside Choose your meals alone, never on Family. Read off what app.js and the card's script drew (both run
   // before this script, on the page and on each hashchange, so this reads them after they have drawn); never written here.
+  // Since SPEC-ui-and-copy-pass § 4 B the flow is in a modal dialog (#save-dialog, app.js's modal()), and what shows
+  // beside the checkout is its link, Not ready? (the card's last thing); the dialog closes if the checkout goes (a
+  // visitor's back, the dialog open), so no empty dialog stays open.
   var ANCHOR = "save-end";
   function besideCheckout() {
     var checkout = el("cc-checkout");
@@ -81,6 +84,8 @@
     var section = el("save");
     var later = !offer.live; // § 1.2 item 3: after the last offer's end, the step with no offer
     section.hidden = !s.beside;
+    el("not-ready").hidden = !s.beside;
+    if (!s.beside && el("save-dialog").open) el("save-dialog").close();
     el("offer-box").hidden = !offer.live;
     if (s.beside && section.parentNode !== el(ANCHOR)) el(ANCHOR).appendChild(section);
     var collapsed = s.name === "PLAN" || s.name === "MENU";

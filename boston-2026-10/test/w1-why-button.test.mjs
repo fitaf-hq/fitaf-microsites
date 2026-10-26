@@ -13,6 +13,10 @@
 // no-script link; W2 compares the look as drawn.
 // ⚠ AMENDED by SPEC-ui-and-copy-pass § 2 item 2 (2026-10-25): the Individual/Family chooser the Advisor put the button
 // above is now the first question, "Who is this for?" (#who), in the tabs' place: the button sits directly above it.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 C (2026-10-26, the Advisor: "towards the bottom of the page (after checkout/save
+// offer – and it should always be visible in the page flow"): the button is a banner at the foot of the page's column,
+// after the result card (and *Not ready?*, where the page carries it) and before the footer: main's last child but its
+// no-script link and its dialog, which follow it; still nothing of it in the footer. Its look is UC13's.
 // The behaviour (opening, closing, focus, the frame loaded) is W2's and the page without script W3's, in Chrome:
 // tools/storybook/test/w-why-chrome.test.mjs.
 import test from "node:test";
@@ -52,17 +56,20 @@ function problemsOf(html, servedAt, out) {
   if (button.classList.contains("all-link")) fail("#why-link still carries See all plans' class (all-link): § 11.2 makes it an outline button");
   if (button.getAttribute("aria-haspopup") !== "dialog") fail(`#why-link aria-haspopup="${button.getAttribute("aria-haspopup")}"`);
   if (button.getAttribute("aria-controls") !== "why") fail(`#why-link aria-controls="${button.getAttribute("aria-controls")}"`);
-  // § 11 item 5: directly above the Individual/Family chooser (since SPEC-ui-and-copy-pass § 2, the first question), in
-  // the page's column; nothing of it in the footer.
+  // SPEC-ui-and-copy-pass § 4 C: at the foot of the page's column (main), after the first question, the result card and
+  // Not ready?; nothing after it in main but its no-script link and its dialog; nothing of it in the footer.
   const chooser = document.getElementById("who");
   if (!chooser || !chooser.querySelector("#who-individual")) fail("fixture control: no first question #who holding #who-individual");
   if (button.closest("footer")) fail("#why-link is in the footer");
-  if (!button.closest("main")) fail("#why-link is not in the page's column (main)");
-  const between = [];
-  let next = button.nextElementSibling;
-  for (; next && next !== chooser; next = next.nextElementSibling) between.push(next);
-  if (next !== chooser) fail("#why-link is not directly above the first question (it is not its following sibling)");
-  else if (between.some((el) => !(el.tagName === "NOSCRIPT" || el.id === "why"))) fail(`between #why-link and the first question: ${between.map((el) => el.tagName.toLowerCase()).join(", ")}`);
+  if (button.parentElement?.tagName !== "MAIN") fail("#why-link is not in the page's column (a child of main)");
+  const all = [...document.querySelectorAll("*")];
+  for (const id of ["who", "result", "not-ready"]) {
+    const node = document.getElementById(id);
+    if ((node || id !== "not-ready") && !(node && all.indexOf(node) < all.indexOf(button))) fail(`#why-link is not after #${id}`);
+  }
+  const after = [];
+  for (let next = button.nextElementSibling; next; next = next.nextElementSibling) after.push(next);
+  if (after.some((el) => !(el.tagName === "NOSCRIPT" || el.id === "why"))) fail(`after #why-link in main: ${after.map((el) => el.tagName.toLowerCase()).join(", ")}`);
   const noscript = button.nextElementSibling;
   const fallback = noscript?.tagName === "NOSCRIPT" ? parseHTML(`<div>${noscript.innerHTML}</div>`).document.querySelector("a") : null;
   if (!fallback || fallback.textContent.trim() !== LABEL || new URL(fallback.getAttribute("href"), `${ORIGIN}${servedAt}`).pathname !== WHY_PATH) fail("no no-script link to /why/, reading the label, directly after #why-link");

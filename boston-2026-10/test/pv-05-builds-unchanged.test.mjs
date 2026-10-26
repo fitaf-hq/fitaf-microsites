@@ -18,6 +18,10 @@
 // And at 0233dbe (`--commit 0233dbe --release-a`), SPEC-ui-and-copy-pass.md § 3 (the desktop column): the same five pages,
 // +686 bytes each; every other file byte-identical (the privacy page too: the token is not in :root); the recorder
 // at 2b409bb reproduces f9273c0's (recorded_at apart).
+// And at d0f1a97 (`--commit d0f1a97 --release-a`), SPEC-ui-and-copy-pass.md § 4 (the questions revealed one by one, Not
+// ready? and the save step in a dialog, Why Fit AF? at the foot): production's index.html and development's index.html,
+// demo/, boston/ and seminar/; every other file byte-identical, the privacy page too; the recorder at 62b8627 (its cases,
+// the code before) reproduces 0233dbe's (recorded_at apart).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

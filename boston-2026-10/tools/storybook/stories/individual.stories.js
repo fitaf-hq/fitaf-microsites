@@ -20,3 +20,6 @@ export const Chosen = { ...story("chosen"), name: "Chosen" };
 export const ChefsChoice = { ...story("cc"), name: "Chef's Choice" };
 export const NoPicksThisWeek = { ...story("noPicks"), name: "No picks this week" };
 export const AllPlans = { ...story("allPlans"), name: "All plans" };
+// The site's SPEC-ui-and-copy-pass § 4 (2026-10-26): the questions' second step, and the save step in its dialog.
+export const OneAnswered = { ...story("oneAnswered", { plan: false }), name: "One answered" };
+export const NotReady = { ...story("notReady"), name: "Not ready?" };

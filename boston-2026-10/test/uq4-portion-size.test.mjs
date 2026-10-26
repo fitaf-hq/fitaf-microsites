@@ -72,7 +72,10 @@ test("UQ4: the calculator is in the page exactly once, moved: before the result,
 });
 
 test("UQ4: as run, collapsed at every fragment; a press opens it, a second closes it; nothing above it changes; no fragment written", () => {
-  for (const hash of ["", "#lean", "#lean-7", "#lean-or-5d-b"]) {
+  // ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 A (2026-10-26): at the start the meal size is not yet revealed, and the
+  // calculator, in its group, is hidden with it; at a link carrying answers or a size every question is shown.
+  assert.equal(hiddenInTree(open(development, "").el("share")), true, "(no fragment): the meal size not yet revealed, the calculator with it");
+  for (const hash of ["#lean", "#lean-7", "#lean-or-5d-b"]) {
     const page = open(development, hash);
     assert.deepEqual([page.el("share-toggle").getAttribute("aria-expanded"), hiddenInTree(page.el("share-body")), hiddenInTree(page.el("share-toggle"))], ["false", true, false], `${hash || "(no fragment)"}: collapsed, its button shown`);
   }
