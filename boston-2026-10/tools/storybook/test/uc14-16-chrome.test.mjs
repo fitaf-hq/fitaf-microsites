@@ -3,7 +3,8 @@
 // 2026-11-01 (its five menus): the card drawn top to bottom as item 1 orders it (the heading, the chips, the list's box,
 // the price, the checkout, Not ready?); the meal names at weight 600 (item 4); the list's box at most 80 % of the
 // screen's height, scrolling inside (item 5); the root snapping by proximity with three stops, the questions' top
-// (start), the list's box (center) and the checkout (center) (item 6); and Choose my own meals pressed, the box holding
+// (start), the list's box (center) and the checkout (center), live from the first scroll with the result shown (item 6);
+// and the own chip pressed, the box holding
 // its note and the week's full list (item 3). The site's UC14–UC16 hold the markup and the behaviour. No word or rule of
 // the page is written here (SM-4). With UC_RENDERS=<directory> the cases write their PNGs there (never committed).
 import test, { after } from "node:test";
@@ -85,10 +86,15 @@ function readCard() {
 
 for (const width of WIDTHS) {
   for (const [build, dir] of BUILDS) {
-    test(`UC14–UC16 (${build}, ${width.width}): the card drawn in order; names at 600; the list's box at most 80 % of the screen, scrolling; the three stops by proximity; Choose my own meals pressed (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
+    test(`UC14–UC16 (${build}, ${width.width}): the card drawn in order; names at 600; the list's box at most 80 % of the screen, scrolling; the three stops by proximity; the own chip pressed (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
       await sites();
       await withPage({ dir, hash: CHECKOUT, width }, async (page) => {
         await page.waitForSelector("#cc-box", { visible: true });
+        // The stops are live from the visitor's first scroll with the result shown, once it rests (app.js, .snaps): before
+        // it none, so no tap that draws a question or the result moves the page (§ 4 A).
+        assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).scrollSnapType), "none", "no stops before a scroll");
+        await page.evaluate(() => window.scrollBy(0, 1));
+        await page.waitForFunction(() => document.documentElement.classList.contains("snaps"));
         const c = await page.evaluate(readCard);
         assert.ok(c.tops.every((t) => t !== null), `every part drawn: ${JSON.stringify(c.tops)}`);
         assert.deepEqual([...c.tops].sort((a, b) => a - b), c.tops, `heading, chips, list, price, checkout, Not ready? top to bottom: ${JSON.stringify(c.tops)}`);
@@ -108,7 +114,7 @@ for (const width of WIDTHS) {
           checkout: document.querySelector("#cc-checkout").getAttribute("href"),
           plan: document.querySelector("#result-cta").getAttribute("href"),
         }));
-        assert.deepEqual([own.note, own.checkout], [true, own.plan], "Choose my own meals pressed: its note above the list, the checkout to the plan page");
+        assert.deepEqual([own.note, own.checkout], [true, own.plan], "the own chip pressed: its note above the list, the checkout to the plan page");
         await render(page, "#result", `uc15-own-${build}-${width.width}`);
       });
     });

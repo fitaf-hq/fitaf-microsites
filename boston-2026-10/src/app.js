@@ -4,6 +4,7 @@
   var $ = function (sel) { return document.querySelector(sel); };
   var $$ = function (sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); };
   var CAROUSEL_MS = 4000; // one photo every 4 s (SPEC-plan-page-refinement § 2 item 1)
+  var SNAP_REST_MS = 200; // a scroll at rest this long (SPEC-ui-and-copy-pass § 5 item 6, below)
   // The fragment's answer part (SPEC-meal-selection § 3): Q1, Q2's days, then breakfast and snacks, in that order.
   var ANSWERS = /^(or|and)-(7d|5d)(-b)?(-s)?$/;
 
@@ -266,5 +267,16 @@
   }
 
   window.addEventListener("hashchange", function () { render(arrived(parse(location.hash))); });
+  // SPEC-ui-and-copy-pass § 5 item 6: the page's scroll stops (the template's html.snaps) from the visitor's first scroll
+  // with the result shown, once it rests. Live from the start, the browser's re-snap after a change of layout pulled the
+  // page to a stop as a tap drew the next question or the result (§ 4 A: the scroll is left where it was).
+  var snapWait = null;
+  window.addEventListener("scroll", function () {
+    if ($("#result").hidden || document.documentElement.classList.contains("snaps")) return;
+    clearTimeout(snapWait);
+    snapWait = setTimeout(function () {
+      if (!$("#result").hidden) document.documentElement.classList.add("snaps");
+    }, SNAP_REST_MS);
+  }, { passive: true });
   render(state);
 })();

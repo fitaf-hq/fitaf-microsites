@@ -6,7 +6,7 @@
 //   (the SHIPPED reader of #fitaf=, the site's cc-harness readWithFillB) to THAT list's cart and the size's mpid; an
 //   answer change the chosen menu has a cart for keeps it, one it has none for returns to Chef's Choice. A week of one
 //   list: no group, and the card as the base's (76ee36e, this contract's commit) shows it, text and boxes. ⚠ AMENDED by
-//   the site's SPEC-ui-and-copy-pass § 5 (2026-10-26): *Choose my own meals* the chips' last radio; a week of one list
+//   the site's SPEC-ui-and-copy-pass § 5 (2026-10-26): the own chip the chips' last radio; a week of one list
 //   its one chip beside it, the base comparison retired (the card is reordered for every week).
 //   EM3, nutrition: the meal a button whose aria-expanded follows the panel it opens beneath it and a second press
 //   closes; each meal on its own. Since § 11 (the Advisor's review of 2026-10-22) there is no line under a meal's name at
@@ -96,7 +96,7 @@ function readCard() {
   const drawn = (el) => Boolean(el) && el.checkVisibility();
   const text = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : null);
   const group = $("cc-menus");
-  // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): *Choose my own meals* is the chips'
+  // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): the own chip is the chips'
   // last radio (its value `own`, BRIDGE), read apart from the menus.
   const all = group ? [...group.querySelectorAll('input[type="radio"]')] : [];
   const radios = all.filter((r) => r.value !== "own");
@@ -161,7 +161,7 @@ async function chooserProblems(dir = menusOut) {
     const walk = (n) => n && (n.role === "radio" && axRadios.push({ name: n.name, checked: Boolean(n.checked) }), (n.children ?? []).forEach(walk));
     walk(ax);
     if (ax?.role !== "group" || ax?.name !== WORDS.chefs_choice.menus_label) fail(`the group's own name: ${ax?.role} ${JSON.stringify(ax?.name)}, not the words' ${JSON.stringify(WORDS.chefs_choice.menus_label)}`);
-    // § 5 item 1 (the site's SPEC-ui-and-copy-pass): Choose my own meals the group's last radio.
+    // § 5 item 1 (the site's SPEC-ui-and-copy-pass): the own chip the group's last radio.
     if (JSON.stringify(axRadios) !== JSON.stringify([{ name: WORDS.menus[CC], checked: true }, { name: WORDS.menus[TWO], checked: false }, { name: WORDS.chefs_choice.own, checked: false }])) fail(`the accessibility tree: ${JSON.stringify(axRadios)}`);
 
     await chooseMenu(page, TWO);
@@ -213,8 +213,8 @@ async function chooserProblems(dir = menusOut) {
     await press(page, '[data-q="snacks"][data-a="no"]');
     await press(page, '[data-q="breakfast"][data-a="yes"]');
     s = await card(page);
-    // § 5 item 1 (the site's SPEC-ui-and-copy-pass): Chef's Choice's chip alone beside Choose my own meals.
-    if (!s.group || JSON.stringify(s.radios.map((r) => r.value)) !== JSON.stringify([CC]) || !s.own?.drawn) fail(`or-7d-b (Chef's Choice's alone): the chips ${JSON.stringify(s.radios.map((r) => r.value))}, Choose my own meals ${JSON.stringify(s.own)}`);
+    // § 5 item 1 (the site's SPEC-ui-and-copy-pass): Chef's Choice's chip alone beside the own chip.
+    if (!s.group || JSON.stringify(s.radios.map((r) => r.value)) !== JSON.stringify([CC]) || !s.own?.drawn) fail(`or-7d-b (Chef's Choice's alone): the chips ${JSON.stringify(s.radios.map((r) => r.value))}, the own chip ${JSON.stringify(s.own)}`);
     if (s.heading !== em.headingOf(CC, WORDS) || JSON.stringify(s.meals.map((m) => m.name)) !== JSON.stringify(linesOf(CC, "or-7d-b"))) fail(`or-7d-b: not Chef's Choice's cart (${s.heading})`);
     await press(page, '[data-q="breakfast"][data-a="no"]');
     s = await card(page);
@@ -232,10 +232,10 @@ test("EM2: the chooser, Chef's Choice first; another menu's meals, snacks and li
 const ONE_HASHES = ["#lean-or-7d", "#signature-and-7d-b-s", "#performance-or-5d"];
 // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 items 1 and 3 (2026-10-26): the result card is reordered for every
 // week (its heading, its chips, the list in its box, the price, the checkout), so no box is the base's any more, and a
-// week of one list shows its one chip (its heading, the menu's name) beside *Choose my own meals*. Held here: those two
+// week of one list shows its one chip (its heading, the menu's name) beside the own chip. Held here: those two
 // chips, Chef's Choice's pressed; the heading the menu's name alone (§ 11 item 1); the list the week's cart; at 390 and
 // 1280. The order as drawn is the site's UC14–UC16 in Chrome (uc14-16-chrome.test.mjs); the base comparison is retired.
-test("EM2: a week of one list shows its one chip and Choose my own meals, the heading its menu's name, the list its cart (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
+test("EM2: a week of one list shows its one chip and the own chip, the heading its menu's name, the list its cart (Chrome, 390 and 1280)", { timeout: TIMEOUT_MS }, async () => {
   await siteBuild({ build: "production", out: oneOut });
   await weekSite(oneOut, { picks: ms.V2_DIR, week: em.MENUS_WEEK, messages: JSON.parse(await readFile(siteFile("data", "messages.json"), "utf8")) });
   for (const { width } of Object.values(VIEWPORTS)) {
@@ -245,7 +245,7 @@ test("EM2: a week of one list shows its one chip and Choose my own meals, the he
       const messages = JSON.parse(await readFile(siteFile("data", "messages.json"), "utf8"));
       assert.equal(s.group, true, `${width} ${hash}: the chips drawn`);
       assert.deepEqual(s.radios.map((r) => [r.label, r.checked]), [[messages.menus[CC], true]], `${width} ${hash}: the week's one chip, pressed`);
-      assert.deepEqual(s.own && [s.own.label, s.own.checked, s.own.drawn], [messages.chefs_choice.own, false, true], `${width} ${hash}: Choose my own meals beside it`);
+      assert.deepEqual(s.own && [s.own.label, s.own.checked, s.own.drawn], [messages.chefs_choice.own, false, true], `${width} ${hash}: the own chip beside it`);
       assert.equal(s.heading, messages.menus[CC], `${width} ${hash}: the heading the menu's name alone`);
       assert.deepEqual(s.meals.map((m) => m.name), ms.V2_CARTS[key].items.map((m) => em.displayOf(m, messages)), `${width} ${hash}: the week's cart`);
     }
@@ -574,7 +574,8 @@ async function targetProblems(dir = menusOut) {
       for (const menu of [CC, TWO]) {
         if (menu === TWO) await chooseMenu(page, TWO);
         const t = await page.evaluate(readTargets);
-        if (t.chips.length !== 2 || !t.controls.length) fail(`${menu}: fixture control: ${t.chips.length} chips, ${t.controls.length} meal controls`);
+        // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 5 item 1 (2026-10-26): the own chip the third, held to the target too.
+        if (t.chips.length !== 3 || !t.controls.length) fail(`${menu}: fixture control: ${t.chips.length} chips, ${t.controls.length} meal controls`);
         for (const c of t.chips) if (Math.min(c.w, c.h) < TARGET_PX) fail(`${menu}: the chip "${c.text}" is ${c.w} × ${c.h}`);
         for (const c of t.controls) {
           const what = `${menu}: the control "${c.text.replace(/\s+/g, " ").trim().slice(0, 40)}"`;

@@ -38,9 +38,14 @@
 * { box-sizing: border-box; }
 /* SPEC-ui-and-copy-pass § 5 item 6 (the Advisor, 2026-10-26: "the screen should naturally settle on one of those stops
    (unless the person is fine-scrolling the screen)"): the page snaps by proximity to three stops, the questions' top (the
-   first question's step, below), the meal list's box and the checkout (the card's style); no smooth scrolling added */
-html { -webkit-text-size-adjust: 100%; scroll-snap-type: y proximity; }
-#who { scroll-snap-align: start; }
+   first question's step, below), the meal list's box and the checkout (the card's style); no smooth scrolling added.
+   From the visitor's first scroll with the result shown, once it rests (app.js sets .snaps): the browser re-snaps after
+   every change of layout, so a stop live while a tap draws the next question or the result pulled the page to it (§ 4 A:
+   the scroll is left where it was). And the page's own top (its first box, a banner or the carousel) a resting place
+   too, so a page at its top is not pulled to the first question */
+html { -webkit-text-size-adjust: 100%; }
+html.snaps { scroll-snap-type: y proximity; }
+#who, body > :first-child { scroll-snap-align: start; }
 body { margin: 0; background: var(--white); color: var(--ink); font: 400 16px/1.55 var(--body); }
 b, strong { font-weight: 600; }
 a { color: inherit; }
