@@ -138,7 +138,14 @@
 // ⚠ RE-RECORDED at 5eaad96 (`--commit 5eaad96 --release-a`): the Family door hidden in a browser too (§ 2.2, found by
 // Storybook's run). The recorder at 077f472 reproduces 077f472's record. Against it: all six contents and every visible
 // page byte-identical; every page +167 bytes, the template's one rule and its comment.
-// From here the reference is 5eaad96's tree.
+// ⚠ RE-RECORDED at f9273c0 (`--commit f9273c0 --release-a --without-snack-cells`): SPEC-analytics.md § 13 item 2 (the
+// analytics script sends the first question's and Family's own question's answers). The first record of a tree after the
+// hand-off's merge (c31603d), whose snack cells this case removes before comparing (below), so the recorder reads them as
+// this case does (its new `--without-snack-cells`; without it the committed week's content and two visible pages would
+// move by those cells, which § 13 does not touch). Controls: the recorder with `--release-a` at 5eaad96 reproduces
+// 5eaad96's record byte for byte, and with both flags at 0fd55e3 its record is 5eaad96's. Against it: all six contents and
+// every visible page byte-identical; every page +202 bytes, the script's three lines.
+// From here the reference is f9273c0's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -149,13 +156,14 @@ import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 5eaad96's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "5eaad96");
+test("U4: a normal week, the content and the page as served, byte-identical to f9273c0's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "f9273c0");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
   // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs
   // withoutSnackCells), every other byte as e8fd524's. (Its recorder builds a commit's own tree, production true since
-  // SPEC-save-offer-production § 12, where U4 reads release (a)'s pages, so it is not re-run for this.)
+  // SPEC-save-offer-production § 12, where U4 reads release (a)'s pages, so it is not re-run for this.) Since SPEC-analytics
+  // § 13 the recorder reads them so too, with `--release-a --without-snack-cells`: these options exactly.
   let cut = 0;
   const undo = (text) => {
     const read = withoutSnackCells(text);

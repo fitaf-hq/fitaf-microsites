@@ -204,13 +204,44 @@ export function openVisit(html, { hash = "", search = "", width = 390, clock = 0
   };
 }
 
-/** The goal and meal-question buttons of a page: { goal: [...data-goal], <q>: [...data-a] } as its markup has them. */
-export function pageAnswers(html) {
+/** What the page's script reads off a pressed answer button (src/analytics.js; SPEC-analytics.md § 13 item 4), written from
+ *  the contract: the attributes of each kind, the question it names and the answer. */
+export const CHOICE_READINGS = [
+  { attributes: ["data-goal"], question: () => "goal", answer: (b) => b.getAttribute("data-goal") },
+  { attributes: ["data-q", "data-a"], question: (b) => b.getAttribute("data-q"), answer: (b) => b.getAttribute("data-a") },
+  { attributes: ["data-who"], question: () => "who", answer: (b) => b.getAttribute("data-who") },
+  { attributes: ["data-family"], question: () => "family", answer: (b) => b.getAttribute("data-family") },
+];
+
+/** A button by its opening tag (its attributes, never its words). */
+const openingTag = (el) => el.outerHTML.slice(0, el.outerHTML.indexOf(">") + 1);
+
+/**
+ * Every answer button of a page (§ 13 item 4: every `button.choice`), read as the page's script reads it: `answers`,
+ * { <question>: [answer, …] } in the page's order, each pair once; and `unread`, one line per button that carries none of
+ * CHOICE_READINGS' kinds, more than one, or only part of one (a `data-q` without its `data-a`), naming it by its tag.
+ */
+export function pageChoices(html) {
   const { document } = parseHTML(html);
-  const out = { goal: [...new Set([...document.querySelectorAll("[data-goal]")].map((b) => b.getAttribute("data-goal")))] };
-  for (const b of document.querySelectorAll("[data-q]")) (out[b.getAttribute("data-q")] ??= []).push(b.getAttribute("data-a"));
-  return out;
+  const answers = {};
+  const unread = [];
+  const kinds = CHOICE_READINGS.map((r) => r.attributes.join(" with ")).join(", ");
+  for (const b of document.querySelectorAll("button.choice")) {
+    const readings = CHOICE_READINGS.filter((r) => r.attributes.some((a) => b.hasAttribute(a)));
+    if (readings.length !== 1 || !readings[0].attributes.every((a) => b.hasAttribute(a))) {
+      const what = readings.length ? `${readings.length} of its kinds at once, or one in part` : "none of them";
+      unread.push(`a button.choice the page's script does not read (${kinds}: it carries ${what}): ${openingTag(b)}`);
+      continue;
+    }
+    const [reading] = readings;
+    const list = (answers[reading.question(b)] ??= []);
+    if (!list.includes(reading.answer(b))) list.push(reading.answer(b));
+  }
+  return { answers, unread };
 }
+
+/** The questions the page offers and their answers, { <question>: [answer, …] } (pageChoices' `answers`). */
+export const pageAnswers = (html) => pageChoices(html).answers;
 
 /**
  * A whole visit (§ 7 A2): open, the goal and Q1–Q3 answered (four answers), the result shown, the order link pressed,

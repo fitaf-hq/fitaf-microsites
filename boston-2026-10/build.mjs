@@ -178,8 +178,10 @@ export function answerOrder(q, defaults) {
 /** SPEC-ui-and-copy-pass § 2 item 2: the first question, who the plan is for, which replaced the Individual/Family tabs:
  *  its two answers, the button's `data-who` (and the fragment's `#individual` / `#family`), the individual plan first, the
  *  default, on the left (SPEC-meal-selection § 12's rule; the page starts on it, so the order is this one). Its phrases are
- *  `plan_page.questions.who.<answer>`, beside the meal questions'. Not in QUESTIONS: those are the meal selection's (the
- *  analytics' vocabulary, A3), and this answer chooses a panel, not a cart. */
+ *  `plan_page.questions.who.<answer>`, beside the meal questions'. Not in QUESTIONS: those are the meal selection's, and
+ *  this answer chooses a panel, not a cart. It IS in the analytics' vocabulary (SPEC-analytics.md § 13 item 1): the
+ *  question `who`, whose answers src/worker/beacon.js copies from this list (a Worker cannot import the build), as it
+ *  copies QUESTIONS'; F1 holds both equal to the built page's buttons. */
 export const WHO = ["individual", "family"];
 
 /** The plan page's own phrases (data/messages.json's `plan_page`), checked: a missing one refuses the build. */

@@ -50,7 +50,8 @@ test("AJ mutant: the JSON computed by a second path that drops the funnel's last
     async (dir) => {
       const problems = await figureProblems(dir);
       assert.ok(
-        problems.some((p) => /the funnel's step 8: the text's click \d+, the document's none/.test(p)),
+        // The last step's number is the funnel's length (10 since § 13 item 3's two answer steps), not the mutant's subject.
+        problems.some((p) => /the funnel's step \d+: the text's click \d+, the document's none/.test(p)),
         `AJ1 fails it on the funnel's last step:\n${problems.join("\n")}`,
       );
     },

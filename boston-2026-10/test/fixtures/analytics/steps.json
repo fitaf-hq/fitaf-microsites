@@ -27,6 +27,12 @@
     {
       "day": "2026-10-23",
       "event": "answer",
+      "question": "who",
+      "visits": "13"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "answer",
       "question": "goal",
       "visits": "11"
     },
@@ -53,6 +59,12 @@
       "event": "answer",
       "question": "snacks",
       "visits": "2"
+    },
+    {
+      "day": "2026-10-23",
+      "event": "answer",
+      "question": "family",
+      "visits": "3"
     },
     {
       "day": "2026-10-23",
@@ -87,6 +99,12 @@
     {
       "day": "2026-10-24",
       "event": "answer",
+      "question": "who",
+      "visits": "3"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "answer",
       "question": "goal",
       "visits": "2"
     },
@@ -95,6 +113,12 @@
       "event": "answer",
       "question": "lunch_dinner",
       "visits": "2"
+    },
+    {
+      "day": "2026-10-24",
+      "event": "answer",
+      "question": "family",
+      "visits": "1"
     },
     {
       "day": "2026-10-24",
@@ -115,6 +139,6 @@
       "visits": "4"
     }
   ],
-  "rows": 16,
-  "rows_before_limit_at_least": 16
+  "rows": 20,
+  "rows_before_limit_at_least": 20
 }
