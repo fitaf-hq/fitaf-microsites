@@ -34,7 +34,7 @@
     "src/worker/script-json.js": "8ce54b28f5b3362b2edfccd1d59e1dc8b3de0933f694fda708702a0efbc68680",
     "src/worker/send-due.js": "4d09edf31881bbfe158f46a327ec4fffaa52814ef4fde8d33ac2ca9176c287d5",
     "src/worker/senders.js": "abe625faf5cf0b72876efc108137a299d03ececa2e17fe408a79a280a6d174f9",
-    "src/worker/site.js": "8a07b89d4fdbcdf8250659da9ba62001565dba7d6da05454aa73df5c309aeee5",
+    "src/worker/site.js": "a769b2eb6f0dafba8838690ff3b81bcbc23ff65775db575bc9a701fad3aaa125",
     "src/worker/token.js": "f827360bc91955ae27b02ea29d2f6a918857f957826b4c843d72db927e5e2dcf",
     "src/worker/turnstile.js": "c6efad5cdc895a717c7d6280f7237b410e87b627de08ff71ee0a6afcf4f263d8",
     "src/worker/validate-save.js": "eff3a5cf3fae82f5edc260f065159b3d280a16d6c50129561bcb9f4dcb2f4fd5",
