@@ -1582,3 +1582,24 @@ built (it did not fit beside item 3). § 31.1's block came in 139 bytes under, a
    constant before it changes, then green.
 5. **Not here**: § 31.2 item 2, the one item the old ceiling blocked. It now fits, and building it is its own step,
    never a side effect of raising a number.
+
+### 32.1 Built (2026-10-25, the orchestrator)
+
+§ 32 is unchanged. The cases are at `ff7b268`, red on `0b03cd4`'s code: 5 of 10 fail, each on the old ceiling. The code
+is `scripts/build-storefront.mjs`'s `MAX_SHIPPED_BYTES` at 50,000, plus the comments and the README row that named
+20,480 as the rule.
+
+Run as `nice -n 15 node --test` over R2-11, R2-29, R2-71, R2-77 and R2-32:
+
+| | count |
+|---|---|
+| before the code | 10 tests, 5 pass, 5 fail |
+| after the code | 12 tests, 12 pass (R2-32 added: the shipped text is unchanged) |
+
+**What § 32 was silent on** (stated, not ruled):
+
+1. **R2-11c names the ceiling too.** Its refusal pattern was `/bytes; the ceiling is 20,480/`. Item 4 did not list it.
+   It was green before the code and red after it, for that literal alone, so its pattern now names 50,000.
+2. **`src/storefront/fitaf-handoff.js` is not changed.** Three of its full-line comments name 20,480 (lines 9, 230 and
+   599). The build drops full-line comments, so none of them ships. Two are history, and line 9 restates the old rule.
+   Changing the source is outside § 32, and R2-32's pins hold the shipped text the same either way.

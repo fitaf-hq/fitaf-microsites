@@ -1,6 +1,6 @@
 // R2-11: the size rule, enforced BY THE BUILD on every file it writes: the Footer block and fill B's console file for
 // the one-browser run (fill B is the one fill: SPEC-rung2 § 12). § 3's "under 5 KB" became, by the Advisor's ruling
-// (§ 11 item 5), a TARGET of 5,120 bytes the build warns above and a CEILING of 20,480 it refuses above (§ 25.7; 15,360 by § 17.3, 10,240 before), over each whole
+// (§ 11 item 5), a TARGET of 5,120 bytes the build warns above and a CEILING of 50,000 it refuses above (§ 32, the store's cap; 20,480 by § 25.7, 15,360 by § 17.3, 10,240 before), over each whole
 // file. Each file is self-contained and carries none of retired fill A's code (R2-31 names the set). The ceiling is
 // shown to fire (R2-11c); R2-29 pins both limits at their edges.
 import test from "node:test";
@@ -78,7 +78,7 @@ test("R2-11c: the ceiling fires — a source padded past it is refused, and noth
     const pad = `/* ${"x".repeat(MAX_SHIPPED_BYTES)} */\n`;
     await writeFile(padded, pad + (await readFile(STOREFRONT_SOURCE, "utf8")));
     const out = join(dir, "never-written");
-    await assert.rejects(buildStorefront({ outDir: out, sourcePath: padded }), /bytes; the ceiling is 20,480/);
+    await assert.rejects(buildStorefront({ outDir: out, sourcePath: padded }), /bytes; the ceiling is 50,000/);
     assert.equal(existsSync(out), false, "nothing written");
   } finally {
     await rm(dir, { recursive: true, force: true });

@@ -5,7 +5,7 @@
 //   fitaf-handoff.fill-B.console.js  version line and text, for a browser console (the one-browser run; the name is
 //                                    kept, so a runbook that names it still works)
 // The size (SPEC-rung2 § 11 item 5, the Advisor's ruling), over each whole file: the build WARNS above 5,120 bytes (the
-// target) and REFUSES above the ceiling (20,480 since SPEC-rung2-progress-and-checkout § 25.7), writing nothing. And it REFUSES, writing nothing, any `<` in a file
+// target) and REFUSES above the ceiling (50,000, the store's cap, since SPEC-rung2-progress-and-checkout § 32), writing nothing. And it REFUSES, writing nothing, any `<` in a file
 // but the Footer block's own opening <script> and closing </script> (SPEC-rung2-progress-and-checkout § 11, amended:
 // the store's admin reads the text inside the block as HTML, and `<` before a letter, even across a space, as a tag).
 // Its own directory and its own npm script, NOT `npm run build`: the production build stays byte-identical (S20).
@@ -34,12 +34,13 @@ export const DIST_STOREFRONT = join(ROOT, "dist-storefront");
  */
 export const TARGET_SHIPPED_BYTES = 5120;
 /**
- * SPEC-rung2 § 11 item 5: the CEILING; a file above it refuses the build, and nothing is written. 20,480 since
- * SPEC-rung2-progress-and-checkout § 25.7 (the Advisor, 2026-10-02, for the three-step checkout: "Raise the ceiling";
- * the block stays inline in the Footer); 15,360 since its § 17.3 (2026-10-01: "bumping the script limit to 15 kb just to
- * get through this meeting"); 10,240 before.
+ * SPEC-rung2 § 11 item 5: the CEILING; a file above it refuses the build, and nothing is written. 50,000 since
+ * SPEC-rung2-progress-and-checkout § 32: the store's own cap on the Footer's text (the Advisor, 2026-10-25: "the cap is
+ * 50000 characters"; every character is ASCII, R2-77, so bytes are characters). 20,480 by its § 25.7 (2026-10-02, for
+ * the three-step checkout: "Raise the ceiling"; the block stays inline in the Footer); 15,360 by its § 17.3
+ * (2026-10-01: "bumping the script limit to 15 kb just to get through this meeting"); 10,240 before.
  */
-export const MAX_SHIPPED_BYTES = 20480;
+export const MAX_SHIPPED_BYTES = 50000;
 /** The Footer block, and the same text for a browser console. */
 const FOOTER_FILE = "fitaf-handoff.html";
 const CONSOLE_FILE = "fitaf-handoff.fill-B.console.js";
