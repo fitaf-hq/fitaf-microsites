@@ -24,7 +24,7 @@ import { build as esbuild } from "esbuild";
 import { parseHTML } from "linkedom";
 import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { ROOT } from "../build.mjs";
-import { FIXTURE_DIR, pageWithPicks } from "./cc-harness.mjs";
+import { clockAt, FIXTURE_DIR, pageWithPicks } from "./cc-harness.mjs";
 
 /** A documentation address (RFC 5737, TEST-NET-3) and an invented user agent: what A4 must find in no written field. */
 export const TEST_IP = "203.0.113.7";
@@ -36,7 +36,8 @@ export const ORDER = "https://fitafnutrition.com/order";
 /** A visit id as § 2 makes it: 16 hex digits. */
 export const VISIT_ID = /^[0-9a-f]{16}$/;
 
-/** One valid body of each § 3 event, written from the contract's table (the vocabulary of data/plans.json and app.js). */
+/** One valid body of each § 3 event, written from the contract's table (the vocabulary of data/plans.json and app.js);
+ *  since § 14 (a saved offer counted) also `save`, which carries `s` alone. */
 export const S1 = "0123456789abcdef";
 export const VALID = {
   open: { event: "open", s: S1, viewport: "<400", load_ms: 812, qr: "" },
@@ -45,6 +46,7 @@ export const VALID = {
   click: { event: "click", s: S1, link: "chefs-choice", mpid: 21 },
   leave: { event: "leave", s: S1, length_ms: 64000, step: "click" },
   error: { event: "error", s: S1 },
+  save: { event: "save", s: S1 },
 };
 
 /** The page `npm run build` (or `build:dev`, target "dev") writes, of the package at `root`; with `week`, the fixture
@@ -72,8 +74,12 @@ const STORAGE = ["localStorage", "sessionStorage", "indexedDB"];
  * `beacons` (each { url, data, body }), `touched` (storage APIs touched), `errors` (scripts that threw), `press(id or
  * element)`, `go(hash)`, `at(ms)` (the clock), `hide()` (visibilitychange to hidden), `pagehide()`, `fail(error)` (an
  * uncaught error reported to the window), `el(id)`, `document`.
+ * Since SPEC-analytics.md § 14 (a saved offer counted), for a visit through the save step: `date`, the browser's clock
+ * (Date.now and new Date, cc-harness clockAt; omitted, the real one), on which the step chooses its offer; `globals`, the
+ * browser's own objects a case stands in for (uc-harness saveStubs' Turnstile and fetch), as cc-harness openPlanPage
+ * takes them; and the window's `Event`, linkedom's, as a browser's window has one.
  */
-export function openVisit(html, { hash = "", search = "", width = 390, clock = 0 } = {}) {
+export function openVisit(html, { hash = "", search = "", width = 390, clock = 0, date, globals = {} } = {}) {
   const { document, Event } = parseHTML(html);
   const beacons = [];
   const touched = [];
@@ -125,8 +131,11 @@ export function openVisit(html, { hash = "", search = "", width = 390, clock = 0
       return timers.length;
     },
     clearTimeout() {},
+    Event,
   };
+  Object.assign(g, globals);
   g.window = g;
+  if (date !== undefined) g.Date = clockAt(date);
   for (const name of STORAGE) {
     Object.defineProperty(g, name, {
       get() {

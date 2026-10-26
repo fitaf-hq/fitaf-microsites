@@ -29,6 +29,10 @@ test("AJ4 (control): the walk passes the shape and refuses what breaks it", () =
     ["a split key outside its vocabulary", doc((d) => (d.days[0].device["Mozilla/5.0"] = 1))],
     ["a country that is an address", doc((d) => (d.days[0].country["203.0.113.7"] = 1))],
     ["a count as text", doc((d) => (d.days[0].visitors = "12"))],
+    // § 14 item 3: `saves` a count, as every count.
+    ["saves as text", doc((d) => (d.days[0].saves = "2"))],
+    ["saves a visit id", doc((d) => (d.days[0].saves = "0123456789abcdef"))],
+    ["a day without saves", doc((d) => delete d.days[0].saves)],
     ["a length over no visits not null", doc((d) => (d.days[0].visit_length_ms = { q1: 0, median: 0, q3: 0, n: 0 }))],
     ["a quartile field outside the shape", doc((d) => (d.days[0].load_ms.mean = 800))],
     ["a day missing a field", doc((d) => delete d.days[1].errors)],
