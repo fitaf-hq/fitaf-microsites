@@ -1585,3 +1585,38 @@ so we are in the unenviable position of having to test this all live in producti
    left in; `zero` typed.
 6. **Rehearsed on the live store by the orchestrator** before anything is pasted (headless, the watch tool's visit,
    nothing submitted): the same links give the same cart as the live block. ⛔ Never pasted without his word.
+
+## 34.1 Built — found at the build, not ruled
+
+1. **Commits**: `4f8a428` the cases alone; `1460823` the code (and one fix to the cases' recorder, item 4); the block's
+   file and this section after them.
+2. **How the block is cut**: a build mode. `npm --prefix boston-2026-10 run build:storefront -- --plain` writes
+   `dist-storefront/plain/` (`buildStorefront` and `storefrontFiles` take `plain`, default false). `plainText()` cuts the
+   SHIPPED text, after every slot is filled, at 22 declarations (`PLAIN_CUTS`), each found exactly once at a line's start
+   or the build refuses; a declaration ends at the fewest whole lines that parse on their own; the result must parse.
+   Removed: the screen's style (`TOK`, `CSS`), the checkout's style (`DEEP`, `Q2`, `Q3`), the words (`UI`), `make`, `$`,
+   `show`, `logo`, `pic`, `own`, `stepper`, `HOSTS`, `ZERO`. Stubbed, so the carting's own calls do nothing visible:
+   `screen`, `brand`, `added`, `last`, `mark`, `photos` (empty), `end` (its log line alone), `zero` (`then("off")`).
+   **Not rewritten, byte for byte the live block's**: `payload`, `card`, `addButton`, `count`, `plus`, `plan`, `said`,
+   `fillC`, `steps`, `fill`, `settle`, `control`, `checkout`, `guard`, `ui`, `log`, `fail`, `drop`, the one storage write
+   (`ecc_additions_prompt_handled`, kept: it is how the store skips its extras pop-up, not a visual) and the guard at the
+   bottom. Nothing in the carting waited on the screen or the UI: every call into them was already inside `ui()` or was
+   `end`/`zero`, so no carting line changed. Two declarations shrink: `var S, NOW, …` to `var CODE, F;` and `var Q2 …` to
+   `var N, V;` (the guard assigns `CODE`, `N`, `V` under "use strict"; removing them would stop every link).
+3. **The default block's bytes**: the default build never runs `plainText`. Rebuilt at `1460823` with commit `c31603d`,
+   it is the fragment of `storefront/footer-block/2026-10-25-fitaf-handoff-c31603d.md` byte for byte (20,413 bytes,
+   SHA-256 `0d826cc4…7f235`). `src/storefront/` is untouched.
+4. **Cases** (`tools/storefront-watch/test/e34-plain.test.mjs`): red at `4f8a428`, 7 of 12 pass, 5 fail (E2 ×3, both
+   mutants; E1/E3 pass because the default text, the build then ignoring `plain`, fills the same cart). At the build E2
+   with the extras dialog failed on the stand-in's OWN extras dialog, a manual popover: the recorder no longer counts a
+   popover as ours by itself (the screen is caught by its id). Green after: E1/E3 7 of 7, E2 and both mutants 5 of 5.
+5. **The file**: `storefront/footer-block/2026-10-26-fitaf-handoff-PLAIN-EMERGENCY-1460823.md`; version line
+   `fitaf-handoff 1460823-plain sha256:9ffbd249…`; the fragment 7,892 bytes (characters), SHA-256
+   `d583f8da33993bafc608c037835cbb77588763e6df17fc2a7df036273e623421`. Its first lines carry item 4's words as the front
+   matter's first key (`warning:`, so the file stays front matter first, as the directory's README has it) and again as
+   the body's first paragraph.
+6. **Silent in § 34, the build's reading**: the console still says `zero: off` before `done: /checkout` (the checkout's
+   own line is kept whole); a stop says only its log line (no screen to say `UI.stopped`); the version line's commit
+   carries `-plain`; a link's photo part is read and ignored (nothing requested). **Not covered by the stand-in**: snacks
+   and Family (the watch stand-in has neither, mpid 21 alone); a scratch run on the site's own harnesses (not committed)
+   gave the same presses and cart for Family 3+2 and 5+5, fill C's 14-meal counts link and the snacks link.
