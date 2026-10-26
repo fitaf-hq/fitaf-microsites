@@ -195,6 +195,17 @@ main.wrap { padding-top: 20px; }
 .foot .wrap { padding-bottom: 40px; text-align: center; color: var(--muted); font-size: 13px; }
 .footnote { margin: 2px 0 0; }
 
+/* The desktop column (SPEC-ui-and-copy-pass § 3, the Advisor's workaround for the giant header): above the column's
+   width the whole page sits in one centred column on navy, the carousel's 4:3 window at the column's width. The
+   breakpoint is the column plus one (a media query cannot read --column). At 480 px and narrower nothing changes.
+   The token is declared here, not in :root, whose tokens are copied into the emails, the Worker's pages and the
+   privacy page. */
+@media (min-width: 481px) {
+  html { --column: 480px; background: var(--navy); }
+  body { max-width: var(--column); margin: 0 auto; min-height: 100vh; }
+  .slides { height: calc(var(--column) * 3 / 4); }
+}
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }{{DEV_STYLE}}{{PICKS_STYLE}}{{PREVIEW_STYLE}}
 </style>
 <noscript><style>.js-only { display: none !important; } .panel[hidden] { display: block; } .all:not([open]):not(.why) { display: block; position: static; width: auto; max-width: none; margin: 12px 0 0; }</style></noscript>
