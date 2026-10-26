@@ -148,6 +148,21 @@ test("UC11: a link carrying answers or a size reveals every question at load, it
   }
 });
 
+// ⚠ Added with the code (the builder's reading, stated in § 4.1): a fragment this page view never wrote nor opened at (a
+// link followed within the page, the address bar) is a link too; back and forward land on fragments the view has been at.
+test("UC11: a fragment the page view never wrote, carrying answers or a size, reveals every question, as a link does (A item 5)", () => {
+  for (const [build, html] of Object.entries(BUILDS)) {
+    const page = open(html);
+    page.go("#lean-or-7d");
+    assert.deepEqual([view(page).shown, view(page).result], [[WHO, ...CARTED], true], `${build}: every question and the result`);
+    const plain = open(html);
+    plain.go("#family");
+    assert.deepEqual(view(plain).shown, [WHO, ...FAMILY], `${build}: a fragment carrying neither changes the panel alone`);
+    plain.go("#individual");
+    assert.deepEqual(view(plain).shown, [WHO, "q-lunch_dinner"], `${build}: and back`);
+  }
+});
+
 test("UC11: the fallback — an answer given, then the other answer to Who is this for? reveals every question of both panels (A item 6)", () => {
   for (const [build, html] of Object.entries(BUILDS)) {
     const page = open(html);

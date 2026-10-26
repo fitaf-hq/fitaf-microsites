@@ -5,6 +5,8 @@
 // buttons); while carted it is not on the page, as today. With *No snacks* the list reads as today: its heading, the
 // meals, *Continue to checkout*, then *Choose my own meals*. "What a visitor reads" is save-end-fixture's readingOrder
 // (document order, skipping what is hidden). Each case builds from its own snack flags (ms-harness, § 11).
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 4 B (2026-10-26): on a page carrying the save step (the production page, since
+// data/save.json's `production` is true), its link *Not ready?* is the card's last thing, after *Choose my own meals*.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -46,6 +48,8 @@ function expected(page, cart, { snacks = undefined, note = false } = {}) {
     ...(note ? [["cc-snacks-note", words.snacks_not_carted]] : []),
     ["cc-checkout", words.checkout],
     ["cc-own", words.own],
+    // § 4 B: his words, the working label, written here from the contract.
+    ...(page.has("not-ready") ? [["not-ready", "Not ready?"]] : []),
   ];
 }
 

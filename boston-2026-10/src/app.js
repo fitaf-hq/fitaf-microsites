@@ -66,16 +66,59 @@
   var state = parse(location.hash);
   var lastIndividual = state.who === "individual" ? state : start();
   var lastFamily = state.who === "family" ? state : { who: "family", fld: null };
+  // The fragments this page view has been at (§ 4 A, below): its own, written by go(), and the one it opened at.
+  var written = {};
+  written[location.hash] = true;
   function go(next) {
     var h = "#" + serialise(next);
+    written[h] = true;
     if (h === location.hash) render(next);
     else location.hash = h; // pushes a history entry; hashchange renders
   }
 
-  // Whether an answer button is the state's answer (Q1 "or"/"and"; Q2–Q4 "yes"/"no").
+  // SPEC-ui-and-copy-pass § 4 A (the Advisor, 2026-10-26: "The questions should progressively reveal"): each panel's
+  // questions are shown one at a time, in the page's order: the individual plan's (lunch or dinner, weekends, breakfast,
+  // snacks, the meal size last) and Family's one. `reached` counts a panel's questions answered by a tap in this page
+  // view: the questions up to the next one are shown, the next with no answer pressed (item 4), and once all are
+  // answered the result card. It only grows (item 3: whatever is tapped after, back and forward too). `all`: every
+  // question of both panels shown, each with its answer (item 5, a link carrying answers or a size; item 6, the other
+  // answer to the first question once a question below it was answered). The page view's own (item 7): not in the
+  // fragment, not stored. While snacks are carted, Q4 is the Chef's Choice card's to show, beside a result alone
+  // (SPEC-snacks-in-the-cart § 4), so it is no step of the sequence and its `hidden` is the card's.
+  var cardSnacks = data.snacks && data.snacks_carted;
+  function stepsOf(panel) {
+    return $$("#panel-" + panel + " .step").filter(function (step) { return !(cardSnacks && step.querySelector("#q-snacks")); });
+  }
+  var steps = { individual: stepsOf("individual"), family: stepsOf("family") };
+  var reached = { individual: 0, family: 0 };
+  function carries(s) { return s.who === "family" ? !!s.fld : !!(s.goal || s.ld); }
+  var all = carries(state);
+  // A fragment this page view never wrote nor opened at (a link followed within the page, the address bar) is a link
+  // too (item 5): carrying answers or a size, it shows every question. Back and forward land on fragments it has been
+  // at, and change nothing shown (item 3).
+  function arrived(s) {
+    if (!written[location.hash] && carries(s)) all = true;
+    written[location.hash] = true;
+    return s;
+  }
+  function complete(panel) { return all || reached[panel] >= steps[panel].length; }
+  // Whether a question shows its answer: one above the newest (answered by a tap), or every question revealed. Q4 out of
+  // the sequence (the card's) shows it once the panel is complete, as every question does.
+  function answeredAt(panel, button) {
+    var i = steps[panel].indexOf(button.closest(".step"));
+    return i < 0 ? complete(panel) : all || i < reached[panel];
+  }
+  // A tap answers its question (either answer, the one already pressed included: item 3), so the next one shows.
+  function tapped(panel, button) {
+    var i = steps[panel].indexOf(button.closest(".step"));
+    if (i >= 0) reached[panel] = Math.max(reached[panel], i + 1);
+  }
+
+  // Whether an answer button is the state's answer (Q1 "or"/"and"; Q2–Q4 "yes"/"no"; since § 4 A item 5, a question
+  // with no answer given shows its default, as a revealed question does).
   function pressed(s, q, a) {
     if (q === "lunch_dinner") return s.ld === a;
-    return s.ld !== null && (s[q] ? "yes" : "no") === a;
+    return (s[q] ? "yes" : "no") === a;
   }
   function answered(s, q, a) {
     var next = copy(s);
@@ -94,17 +137,22 @@
     });
     $("#panel-individual").hidden = s.who !== "individual";
     $("#panel-family").hidden = s.who !== "family";
+    // § 4 A: the questions shown so far, each panel's; the newest with no answer pressed.
+    ["individual", "family"].forEach(function (panel) {
+      steps[panel].forEach(function (step, i) { step.hidden = !(all || i <= reached[panel]); });
+    });
+    $("#more").hidden = !(all || reached.individual > 0);
     $$("[data-goal]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(b.getAttribute("data-goal") === s.goal));
+      b.setAttribute("aria-pressed", String(answeredAt("individual", b) && b.getAttribute("data-goal") === s.goal));
     });
     $$("[data-q]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(s.who === "individual" && pressed(s, b.getAttribute("data-q"), b.getAttribute("data-a"))));
+      b.setAttribute("aria-pressed", String(s.who === "individual" && answeredAt("individual", b) && pressed(s, b.getAttribute("data-q"), b.getAttribute("data-a"))));
     });
     $$("[data-family]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(s.who === "family" && s.fld === b.getAttribute("data-family")));
+      b.setAttribute("aria-pressed", String(s.who === "family" && answeredAt("family", b) && s.fld === b.getAttribute("data-family")));
     });
-    $("#more").hidden = !s.ld;
-    var shown = s.who === "family" ? familyResult(s) : individualResult(s);
+    // The result card is the step after the last question (§ 4 A item 1).
+    var shown = !complete(s.who) ? null : s.who === "family" ? familyResult(s) : individualResult(s);
     var result = $("#result");
     result.hidden = !shown;
     var accent = s.who === "family" ? "family" : s.goal && findGoal(s.goal) ? s.goal : null;
@@ -140,6 +188,7 @@
 
   $$("[data-goal]").forEach(function (b) {
     b.addEventListener("click", function () {
+      tapped("individual", b);
       var next = copy(state.who === "individual" ? state : lastIndividual);
       next.goal = b.getAttribute("data-goal");
       go(next);
@@ -147,18 +196,24 @@
   });
   $$("[data-q]").forEach(function (b) {
     b.addEventListener("click", function () {
+      tapped("individual", b);
       go(answered(state.who === "individual" ? state : lastIndividual, b.getAttribute("data-q"), b.getAttribute("data-a")));
     });
   });
   // Family shows its panel, the individual plan its own: each returns to the answers it was left with (every answer kept).
+  // § 4 A item 6 (the Advisor's fallback): once a question below this one was answered, the other answer shows every
+  // question of both panels; before that, it changes the panel alone.
   $$("[data-who]").forEach(function (b) {
     b.addEventListener("click", function () {
-      go(b.getAttribute("data-who") === "family" ? lastFamily : lastIndividual);
+      var to = b.getAttribute("data-who");
+      if (to !== state.who && (reached.individual > 0 || reached.family > 0)) all = true;
+      go(to === "family" ? lastFamily : lastIndividual);
     });
   });
   // § 2.2: Family's one question.
   $$("[data-family]").forEach(function (b) {
     b.addEventListener("click", function () {
+      tapped("family", b);
       go({ who: "family", fld: b.getAttribute("data-family") });
     });
   });
@@ -175,6 +230,8 @@
     dialog.addEventListener("close", function () { button.focus(); });
   }
   modal($("#all"), $("#all-link"), $("#all-close"));
+  // SPEC-ui-and-copy-pass § 4 B: Not ready? opens the save step in a modal dialog of its own, on the pages carrying it.
+  if ($("#not-ready")) modal($("#save-dialog"), $("#not-ready"), $("#save-close"));
   modal($("#why"), $("#why-link"), $("#why-close"));
   // A key pressed with focus inside the frame (after a click or a scroll in it) goes to the frame's document, not the
   // dialog's, so Esc there would not close it: the /why/ page is this site's own, and its Esc closes the dialog too.
@@ -200,6 +257,6 @@
     }, CAROUSEL_MS);
   }
 
-  window.addEventListener("hashchange", function () { render(parse(location.hash)); });
+  window.addEventListener("hashchange", function () { render(arrived(parse(location.hash))); });
   render(state);
 })();

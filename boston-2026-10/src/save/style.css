@@ -53,6 +53,14 @@
 }
 .save-collapsed { margin: 0; }
 .save #save-open[hidden], .save [hidden] { display: none; }
+/* SPEC-ui-and-copy-pass § 4 B (the Advisor, 2026-10-26: "a "Not ready?" secondary call to action link/button … after the
+   checkout button … When tapped, that shows a modal with the contents of the "save offer form""): the step's link, the
+   result card's last thing, in See all plans' look (navy, underlined), centred, at least 44 px tall, never orange; and
+   the step in a modal dialog in the plans dialog's look (.all), at most the column's width, its box without its margin */
+.not-ready { display: block; width: fit-content; min-height: 44px; margin: 8px auto 0; padding: 10px 12px; border: 0; background: none; color: var(--navy); font: 600 16px var(--head); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.not-ready[hidden] { display: none; }
+.save-dialog { width: min(var(--column, 100%), calc(100% - 24px)); }
+.save-dialog .save { margin: 0; }
 /* SPEC-ui-and-copy-pass § 1 item 7, as § 1.2 item 2 corrects it: See all plans as discounts, while an offer is current
    (plan-prices.js): a cell's weekly price before the offer struck through, then the store's, the price paid, in the
    cell's type */

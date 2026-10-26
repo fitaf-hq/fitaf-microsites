@@ -164,14 +164,17 @@ for (const width of WIDTHS) {
         for (const sel of ["#q-weekends", "#q-breakfast", "#q-goal", "#result", "#not-ready"]) assert.equal(start[sel], null, `${sel} not drawn at the start`);
         await renderSpan(page, "#top", "#q-lunch_dinner", 120, `uc11-start-${build}-${width.width}`);
         for (const [i, [press, next]] of WALK.entries()) {
+          // The answer in view first, so the press itself scrolls nothing (puppeteer scrolls a control into view to press
+          // it); the next question drawn after the browser's hashchange (asynchronous), hence the wait for it visible.
+          await page.$eval(press, (el) => el.scrollIntoView({ block: "center" }));
           const scrolled = await page.evaluate(() => window.scrollY);
           await page.click(press);
-          await page.waitForSelector(`${next}:not([hidden])`);
+          await page.waitForSelector(next, { visible: true });
           const drawn = await page.evaluate(boxes, [next]);
           assert.ok(drawn[next], `after ${press}: ${next} drawn`);
           assert.equal(await page.evaluate(() => window.scrollY), scrolled, `after ${press}: the page did not scroll`);
           assert.equal(await page.evaluate((sel) => document.activeElement === document.querySelector(sel), press), true, `after ${press}: the focus is still on the tapped answer`);
-          if (i === 0) await renderSpan(page, "#q-who", "#q-weekends", 24, `uc11-middle-${build}-${width.width}`);
+          if (i === 0) await renderSpan(page, "#q-who", "#q-weekends + .choices", 16, `uc11-middle-${build}-${width.width}`);
         }
         const end = await page.evaluate(boxes, ["#result", "#not-ready", "#cc-checkout"]);
         assert.ok(end["#result"] && end["#cc-checkout"] && end["#not-ready"], "the result card, its checkout and Not ready? drawn");

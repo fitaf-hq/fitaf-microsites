@@ -92,10 +92,12 @@ export function browserParts(page) {
     d.showModal = () => {
       calls.push(`showModal #${d.id}`);
       d.setAttribute("open", "");
+      d.open = true;
     };
     d.close = () => {
       if (!d.hasAttribute("open")) return;
       d.removeAttribute("open");
+      d.open = false;
       calls.push(`close #${d.id}`);
       const e = page.document.createEvent("Event");
       e.initEvent("close", false, false);

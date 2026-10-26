@@ -377,6 +377,9 @@ function clientData(plans, words, offer = plans.snacks.shown, orderLinks = true)
     ),
     legacy: Object.fromEntries(legacy),
     snacks: offer,
+    // SPEC-ui-and-copy-pass § 4 A: while snacks are carted Q4 is the Chef's Choice card's to show (beside a result), so
+    // the page's script leaves it out of the questions it reveals one by one.
+    snacks_carted: plans.snacks.carted === true,
     plans: plans.individual.map((plan) => ({
       id: plan.id,
       name: plan.name,
@@ -416,6 +419,7 @@ export const PROD_SLOTS = {
   DEV_STYLE: "",
   DRAFT_BANNER: "",
   OFFER_BOX: "",
+  NOT_READY: "",
   SAVE_SECTION: "",
   SHARE_PANEL: "",
   DEV_SCRIPT: "",
@@ -516,7 +520,10 @@ const DRAFT_TAG = '\n            <p class="draft-tag">DRAFT — not for use · w
  * Flow 1 after the button that leaves for the store, in the result card's place (SAVE_SECTION, directly after the result
  * card); its style and its scripts, Turnstile's last. Since SPEC-ui-and-copy-pass § 1 item 2 the step is shown only
  * beside the card's checkout button (#cc-checkout), so it has no place on Family (the template's SAVE_FAMILY went), and its
- * scripts (DEV_SCRIPT) come after the card's (PICKS_SCRIPT), so it reads what the card drew. `draft`: the step's DRAFT
+ * scripts (DEV_SCRIPT) come after the card's (PICKS_SCRIPT), so it reads what the card drew. Since SPEC-ui-and-copy-pass
+ * § 4 B the step's whole contents are in a modal dialog (SAVE_SECTION, closed: nothing of it in the page's flow), which
+ * *Not ready?* opens (NOT_READY, the result card's last thing, after its checkout), shown while the step would be.
+ * `draft`: the step's DRAFT
  * tag (the development build's alone). `share`: the share panel's arithmetic and script (the development build's Flow 2).
  * `siteKey` is the environment's TURNSTILE_SITE_KEY. Also returns `read` and `fill` for the development build's extras.
  */
@@ -543,6 +550,7 @@ export async function saveSlots(plans, { save, zips, siteKey, eventId, offers, m
     fill,
     DEV_STYLE: (await read("style.css")).trimEnd(),
     OFFER_BOX: "\n" + (await read("offer-box.html")).trimEnd(),
+    NOT_READY: "\n" + (await read("not-ready.html")).trimEnd(),
     SAVE_SECTION: "\n" + fill(await read("section.html")).trimEnd(),
     DEV_SCRIPT:
       `\n<script type="application/json" id="save-data">${scriptJson(client)}</script>` +
