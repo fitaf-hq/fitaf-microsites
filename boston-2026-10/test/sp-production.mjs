@@ -299,6 +299,10 @@ export const LATER = [
   // `production` false by app.js's start and the first question's markup (build.mjs), from d03fafb (its cases) to
   // cb0980f (its code, one commit); its comments are app.js's, in the page, so every hunk is taken.
   ["d03fafb", "cb0980f", ["src/app.js", "build.mjs"]],
+  // § 5 (2026-10-26, round 2 changeset 3: the result card reordered, Choose my own meals a chip, no rounded line) moves the
+  // production page with `production` false by the card's four files, the template, app.js, build.mjs and the card's
+  // slots and words, from fb7b110 (its cases, after its contract) to 27cc0df (its code, one commit); every hunk is taken.
+  ["fb7b110", "27cc0df"],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */

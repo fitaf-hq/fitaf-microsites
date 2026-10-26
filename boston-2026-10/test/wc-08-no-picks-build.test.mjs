@@ -39,8 +39,9 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  at the foot, #plan-data's snacks_carted; Not ready? and the save step are not on this page): 62b8627's tree (its cases,
  *  the code before) reproduces 02fe24d1…, d0f1a97's gives fd75caac…. Re-recorded once more at cb0980f for § 4.2 (the
  *  start the first question alone, neither answer pressed in its markup): d03fafb's tree reproduces fd75caac…, cb0980f's
- *  gives this. */
-const TODAY_NO_PICKS_SHA256 = "3ad17ec19cf79bc9d2cd0b06106510e09bcbb5905a6bb3a38fc612efec4c114a";
+ *  gives 3ad17ec1…. Re-recorded once more at 27cc0df for § 5 (the result card reordered: the price after the card, the
+ *  checkout its own slot, no rounded line, the card's rules): fb7b110's tree reproduces 3ad17ec1…, 27cc0df's gives this. */
+const TODAY_NO_PICKS_SHA256 = "e2fea580a9f6dfa7c9818796e7dd8bff3bbeaf204a8a3921478a976714c6dba8";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the
