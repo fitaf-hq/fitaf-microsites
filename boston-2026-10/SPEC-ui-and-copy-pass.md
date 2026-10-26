@@ -1317,3 +1317,35 @@ descriptions to the compact/closed representation of the meals."*
    the card re-rendered; the build note § 5.1.
 9. ⬜ **Open for the Advisor** (built as the defaults above, stated in § 5.1): the heading's and the note's words; the
    chip's place (last) and its words (*Choose my own meals*, unchanged); the box at 80 % on the desktop column too.
+
+### 5.1 Built — found at the build, not ruled (2026-10-26)
+
+Built on `boston/round-2-changeset-2` from `b70ece4` (§ 5), each case one file at a time at `nice -n 15`.
+
+| commit | what |
+|---|---|
+| `fb7b110` | the cases, red on `b70ece4`'s code: UC14 3 of 3, UC15 3 of 3, UC16 3 of 4 (the fourth, no description no `.cc-desc`, a guard), `uc14-16-chrome` 4 of 4 |
+| `27cc0df` | the code, the stale cases amended and named in its message; all of the above green |
+| `62591ec` | the goldens, once each from `27cc0df`'s tree, each control first at `fb7b110` (S20 `241c4dbd…` → `566159e8…`; PV5, U4, WC-9, WC-8, SP3's `LATER`) |
+
+**Where § 5 was silent, and what was built** (stated, not ruled):
+
+1. **The words** (item 9): `chefs_choice.explore` *"Explore our menus"* and `chefs_choice.own_note` *"You'll choose your
+   meals in the next step."*, new in `data/messages.json`; the chip's words `chefs_choice.own`, unchanged; the chip last.
+2. **A week of one list** (every committed week before 2026-11-01), and an answer set only Chef's Choice has a cart for:
+   its one chip (named by its heading) is shown beside *Choose my own meals*, so the toggle exists there too. Before,
+   such a card had no chips.
+3. **While *Choose my own meals* is pressed**: the menu's heading is hidden, the note in its place above the box; the
+   price is the plan's, unchanged; snacks the week's (Chef's Choice's), as for any `-s` answer; each meal's photo cell
+   and nutrition its first appearance's. It stays pressed across answer changes.
+4. **The card's old outer box** (`.cc-list`'s border) is gone: the hairline is the list's scroll box's; the heading and
+   the chips sit above it. The box is `80svh` at 1280 too (item 9).
+5. **Continue to checkout** left the card's markup for a slot of its own after the price (`PICKS_CHECKOUT`,
+   `src/chefs-choice/checkout.html`), hidden with the list.
+6. **The rounded line**: `answers[].rounded` dropped from the page's data; the phrase `plan_page.rounded` stays in
+   `data/messages.json` (the build still checks its placeholders), printed nowhere.
+7. **A description** sits with the name in one column (`.cc-words`); an entry still needs nutrition or ingredients (a
+   description alone does not make one).
+8. **Retired**: Storybook's EM2 one-list case held the card's text and every box to `76ee36e`'s; § 5 reorders the card
+   for every week, so it now holds the two chips, the heading and the list. **A defect of my own case**: Chrome's
+   computed `scroll-snap-type` reads `y` for `y proximity` (the default left out); `uc14-16-chrome` accepts both.
