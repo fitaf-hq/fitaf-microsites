@@ -9,7 +9,8 @@
 //
 // Per day: unique visitors and visits; the funnel (open → each answer → result → click), each step's visits and the
 // change from the step before (since § 13 the answers in the page's order since round 2, who it is for first and the
-// goal last, then Family's own question, a branch off `who` with no change figure); the click-through by link; the
+// goal last, then Family's own question, a branch off `who` with no change figure); the click-through by link; since
+// § 14 the visits with a `save` (a stored offer save), the line after the funnel, from the funnel's own query; the
 // visit's length (median and quartiles, from `leave`) and the load time (from `open`); the device, viewport band and
 // country splits (from `open`); the visits with an error.
 // A day with nothing recorded says so. `--json` (§ 11) prints the same figures as one JSON document instead of the text:
@@ -170,6 +171,7 @@ export function reportData({ dataset, from, to }, rows) {
         { step: "click", visits: visitsOf("click") },
       ],
       clicks: splitCounts(days.clicks.get(day), "link", LINKS),
+      saves: visitsOf("save"),
       visit_length_ms: quartilesOf(days.length.get(day)?.[0]),
       load_ms: quartilesOf(days.load.get(day)?.[0]),
       device: splitCounts(days.devices.get(day), "value"),
@@ -208,6 +210,7 @@ export function reportText(doc) {
     }
     const clicks = splitLine(d.clicks, LINKS);
     if (clicks) lines.push(`    click by link: ${clicks}`);
+    lines.push(`  saved an offer ${d.saves}`);
     for (const [q, label, what] of [[d.visit_length_ms, "visit length", "leave"], [d.load_ms, "load time", "open"]]) {
       lines.push(
         q

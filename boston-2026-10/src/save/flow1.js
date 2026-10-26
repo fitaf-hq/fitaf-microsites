@@ -194,6 +194,14 @@
     window.turnstile.execute(widget);
   }
 
+  // SPEC-analytics § 14: a stored offer save, and nothing else, told to the page's analytics (analytics.js sends `save`)
+  // by one event on document with no detail. A browser that cannot dispatch it still shows the save as saved.
+  function tellSaved() {
+    try {
+      document.dispatchEvent(new Event("fitaf:saved"));
+    } catch (e) {}
+  }
+
   function botCheckPassed(token) {
     go(withName("SENDING"));
     // ⛔ Exactly these fields. Nothing from Flow 2 or the share calculator is sent.
@@ -209,8 +217,10 @@
     fetch(cfg.api, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
       .then(function (res) { return res.json().then(function (j) { return { ok: res.ok, j: j }; }); })
       .then(function (r) {
-        if (r.ok && r.j.ok === true) go(withName(state.kind === "expansion" ? "EXPANSION_SAVED" : "SAVED"));
-        else go(withName("ERROR", { error: r.j.error }));
+        if (r.ok && r.j.ok === true) {
+          go(withName(state.kind === "expansion" ? "EXPANSION_SAVED" : "SAVED"));
+          if (state.name === "SAVED") tellSaved();
+        } else go(withName("ERROR", { error: r.j.error }));
       })
       .catch(function () { go(withName("ERROR", { error: "network" })); });
   }
