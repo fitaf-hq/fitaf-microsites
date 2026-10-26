@@ -8,8 +8,10 @@
 //   CLOUDFLARE_ACCOUNT_ID        the account (as for wrangler); never committed
 //
 // Per day: unique visitors and visits; the funnel (open → each answer → result → click), each step's visits and the
-// change from the step before; the click-through by link; the visit's length (median and quartiles, from `leave`) and
-// the load time (from `open`); the device, viewport band and country splits (from `open`); the visits with an error.
+// change from the step before (since § 13 the answers in the page's order since round 2, who it is for first and the
+// goal last, then Family's own question, a branch off `who` with no change figure); the click-through by link; the
+// visit's length (median and quartiles, from `leave`) and the load time (from `open`); the device, viewport band and
+// country splits (from `open`); the visits with an error.
 // A day with nothing recorded says so. `--json` (§ 11) prints the same figures as one JSON document instead of the text:
 // reportData computes them, once, and the text (reportText) is a formatting of that document, so the two cannot
 // disagree. Exit 0; 1 when the SQL API refuses or answers what this cannot read; 2 for a refused command line or a
@@ -25,6 +27,9 @@ export const ACCOUNT_VAR = "CLOUDFLARE_ACCOUNT_ID";
 export const sqlUrl = (account) => `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/analytics_engine/sql`;
 
 const DAY_MS = 86_400_000;
+/** § 13 item 3: Family's own question branches off `who` (the page asks it after *Me and my family* alone); it is not a
+ *  step after `goal`. Its line has no change figure, and the step after it is compared with the step before it. */
+const BRANCHES = ["answer: family"];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** A field's column (beacon.js's layout): blobN, doubleN. */
@@ -194,10 +199,13 @@ export function reportText(doc) {
     }
     lines.push(`  unique visitors ${d.visitors} · visits ${d.visits}`);
     lines.push("  funnel (visits)");
-    d.funnel.forEach(({ step, visits }, i) => {
-      const tail = i ? `   ${change(visits, d.funnel[i - 1].visits)}` : "";
+    let before = null;
+    for (const { step, visits } of d.funnel) {
+      const branch = BRANCHES.includes(step);
+      const tail = before === null || branch ? "" : `   ${change(visits, before)}`;
       lines.push(`    ${step.padEnd(22)}${String(visits).padStart(5)}${tail}`);
-    });
+      if (!branch) before = visits;
+    }
     const clicks = splitLine(d.clicks, LINKS);
     if (clicks) lines.push(`    click by link: ${clicks}`);
     for (const [q, label, what] of [[d.visit_length_ms, "visit length", "leave"], [d.load_ms, "load time", "open"]]) {
