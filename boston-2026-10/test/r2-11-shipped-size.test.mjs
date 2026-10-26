@@ -30,9 +30,9 @@ async function withBuild(fn, options = {}) {
   }
 }
 
-test("R2-11a: build:storefront writes exactly two files, each within the ceiling (20,480 bytes); a warning for each over 5,120", async () => {
+test("R2-11a: build:storefront writes exactly two files, each within the ceiling (50,000 bytes); a warning for each over 5,120", async () => {
   assert.equal(TARGET_SHIPPED_BYTES, 5120);
-  assert.equal(MAX_SHIPPED_BYTES, 20480); // SPEC-rung2-progress-and-checkout § 25.7 (15,360 by § 17.3; 10,240 before)
+  assert.equal(MAX_SHIPPED_BYTES, 50000); // SPEC-rung2-progress-and-checkout § 32, the store's cap (20,480 by § 25.7; 15,360 by § 17.3; 10,240 before)
   await withBuild(async ({ built, out }) => {
     assert.deepEqual(built.files.map((f) => f.name).sort(), FILES);
     const over = [];
