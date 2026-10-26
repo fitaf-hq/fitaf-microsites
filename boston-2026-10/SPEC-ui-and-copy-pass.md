@@ -1141,3 +1141,27 @@ the orchestrator), each `-production-` and `-development-`, `-390` and `-1280`: 
 `uc11-middle-*` (Q1 answered, the next question unanswered), `uc11-all-revealed-*` (every question, the result card,
 *Not ready?*), `uc12-dialog-*` (the dialog open, the viewport), `uc13-banner-*` (the result card to the foot). Storybook:
 *Individual · Start*, *· One answered*, *· Chosen*, *· Not ready?*, and *Whole page · Scroll* for the banner.
+
+### 4.2 The Advisor's rulings on E (2026-10-26). CONTRACT, before any code
+
+**The Advisor, 2026-10-26** (verbatim): *"Yes, let's start with just the question. We're ultimately going to add a "let's
+get started" call to action at the top of the flow (making the choice between going down the selection funnel or
+learning more about Fit AF)."* *"Let's try: "Not ready to checkout? Save your offer now.""* *"I'm open to either banner
+treatment – we can keep whatever you have now and I can give feedback."*
+
+1. **The start is *Who is this for?* alone** (A item 2 amended): at the start (a link carrying no answer: `""`), the
+   first question shows with **neither answer pressed** (A item 4's rule now holds for it too), and nothing of either
+   panel shows: no meal question, no Family card, no result. Tapping *Just me* shows the first meal question; tapping *Me
+   and my family* shows Family's card and its one question. Each is then revealed as § 4 A says.
+2. **`#individual` and `#family`** carry the first question's answer: that answer pressed, and its panel's first step
+   shown (as if tapped). A link carrying a meal answer or a size still reveals every question (A item 5, unchanged).
+3. **The fallback** (A item 6) is unchanged: it starts with an answer below *Who is this for?*.
+4. **What the start does not change**: the foot (*Why Fit AF?*'s banner, *See all plans*, the footnote) shows at the
+   start; the price and the cart are still made only from answered questions (the result needs the last); every answer
+   event is sent on its tap as today (the first question's included).
+5. **A item 4 is kept** as built (the newest question shows no pressed answer until tapped; not objected to).
+6. ***Not ready?*'s words** (B item 1): **"Not ready to checkout? Save your offer now."**, his words exactly, the link's
+   text and its accessible name. Nothing else of B changes.
+7. **The banner** (C item 2): kept as built (§ 4.1 item 10); his feedback to follow.
+8. **Cases**: UC11's start and link cases, and every case or story the start moves, amended first and run red; UC12's
+   words; the goldens re-recorded once each from the code commit's own tree, as § 4.1 did; § 4.2.1, the build note.
