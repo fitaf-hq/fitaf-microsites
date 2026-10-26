@@ -1359,3 +1359,6 @@ Built on `boston/round-2-changeset-2` from `b70ece4` (§ 5), each case one file 
    its top is not pulled to the first question. Once live, a later change of layout (a menu pressed, an answer changed)
    may settle the page on the stop it rests at. In Storybook the story is named *The own chip pressed* (SM-4: no page
    phrase there).
+10. **The descriptions arrive** (2026-10-26): `data/picks/2026-11-01.json` replaced by Fit AF's emitter's output
+    (`85d8ed3`, 25 of 26 meals described); it moves UC8 alone (a row's words now hold the description under the name;
+    amended in `eec5c4c`) and no golden.
