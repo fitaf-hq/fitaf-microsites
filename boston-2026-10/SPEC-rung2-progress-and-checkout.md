@@ -1603,3 +1603,35 @@ Run as `nice -n 15 node --test` over R2-11, R2-29, R2-71, R2-77 and R2-32:
 2. **`src/storefront/fitaf-handoff.js` is not changed.** Three of its full-line comments name 20,480 (lines 9, 230 and
    599). The build drops full-line comments, so none of them ships. Two are history, and line 9 restates the old rule.
    Changing the source is outside § 32, and R2-32's pins hold the shipped text the same either way.
+
+## 33. Amendment, 2026-10-26: `zero`'s sign hidden, and a link to customer service. CONTRACT, before any code
+
+**The Advisor, 2026-10-26** (verbatim): *"please hide the confirmation that the "zero" discount code was applied on the
+checkout page. I can upload the new footer when ready."* And: *"add a link to contact customer service in the footer of
+the HMP cart. It can very small and simple at the bottom of the page. If we can't get it in tonight with the change to
+hide the "zero" code, that's OK."*
+
+1. **Measured first, on the live store** (the watch tool's own headless visit and § 29's rehearsal, never the store's
+   admin, nothing submitted): the markup the store shows once `zero` is applied (the discount row
+   `.summary__row--discount` whose text names it, and any applied-code mark or message), at 390 and 1280; and what the
+   store's own footer is on the cart and checkout pages the block runs on (whether the block hides it today). Recorded
+   in § 33.1 with the selectors and texts read.
+2. **`zero`'s sign hidden**: every element the store shows for the applied `zero` (its discount row, its applied-code
+   mark, any message naming it) is hidden for the rest of the page's life, re-renders included (the store is an
+   Angular app: a class the block sets on what names `zero`, kept by an observer, or a rule that needs no text, as
+   measured), **and nothing else**: a discount row or mark not naming `zero` stays exactly as today (H9), the Total row
+   is never hidden, and the price the visitor pays is unchanged. On a coded link (`~<code>`, where no `zero` is applied,
+   § 31.2 item 3) nothing changes.
+3. **The link**: at the very bottom of the cart and checkout pages the block runs on, one small centred text link, its
+   words **"Contact customer service"** (the Advisor's, ⬜ his to edit), to `https://fitafnutrition.com/contact` (the
+   store site's contact page; an unknown path there redirects home, this one does not), in the store's small muted
+   footer type (13–14 px), never a button, never orange, never over the store's own controls or the checkout's pay
+   button; one per page, not duplicated by re-renders.
+4. **Bytes**: the block within the 50,000-character cap (§ 32); its size before and after in § 33.1.
+5. **Cases**, in the watch package's stand-in checkout, written first and run red: Z6 `zero`'s row and mark hidden after
+   `applied` and after a re-render; Z7 a second discount row not naming `zero` shown; Z8 the Total row shown; Z9 a coded
+   link: nothing hidden; L1 the link once at the bottom, its words, its address, its size; L2 not duplicated by a
+   re-render. Mutants, caught: every discount row hidden; the link added twice.
+6. **The new Footer block** `storefront/footer-block/2026-10-26-fitaf-handoff-<commit>.md`, built from this branch, then
+   **rehearsed on the live store by the orchestrator** (§ 29, headless; `zero: applied`, the sign hidden, the total
+   unchanged, the link present), then pasted by the Advisor, then the live smoke at once.
