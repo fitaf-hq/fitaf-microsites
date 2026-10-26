@@ -154,7 +154,12 @@
 // foot). Control: the recorder with both flags at 62b8627 (its cases, the code before) reproduces 0233dbe's record
 // (recorded_at apart). Against it: all six contents byte-identical; every page moves (production's +4,369 bytes,
 // development's +6,291) and every visible page, by § 4's lines alone.
-// From here the reference is d0f1a97's tree.
+// ⚠ RE-RECORDED at cb0980f (`--commit cb0980f --release-a --without-snack-cells`): SPEC-ui-and-copy-pass.md § 4.2 (the
+// start the first question alone, neither answer pressed; Not ready?'s words). Control: the recorder with both flags at
+// d03fafb (its cases, the code before) reproduces d0f1a97's record (recorded_at apart). Against it: all six contents
+// byte-identical; production's pages +970 bytes, the visible page at no fragment alone; development's +1,003 bytes, the
+// visible page at no fragment and, by the link's words, at each fragment with the card's checkout.
+// From here the reference is cb0980f's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -165,8 +170,8 @@ import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to d0f1a97's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "d0f1a97");
+test("U4: a normal week, the content and the page as served, byte-identical to cb0980f's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "cb0980f");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
   // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs

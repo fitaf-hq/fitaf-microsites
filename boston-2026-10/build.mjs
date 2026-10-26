@@ -238,9 +238,10 @@ ${more.map((q) => question(q, words, defaults)).join("\n")}
  *  selected a tab. Like the tabs it needs the script (js-only): without it both panels show. */
 function whoQuestion(words) {
   const w = words.questions.who;
+  // § 4.2 item 1 (2026-10-26): the page starts with neither answer pressed; app.js presses the one a link carries.
   const buttons = WHO.map(
-    (a, i) =>
-      `      <button type="button" class="choice" id="who-${a}" data-who="${a}" aria-controls="panel-${a}" aria-pressed="${i === 0}">` +
+    (a) =>
+      `      <button type="button" class="choice" id="who-${a}" data-who="${a}" aria-controls="panel-${a}" aria-pressed="false">` +
       `<span class="choice-name">${emphasised(w[a])}</span></button>`,
   );
   return `  <div class="step js-only" id="who" role="group" aria-labelledby="q-who">

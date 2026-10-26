@@ -16,6 +16,7 @@
 // page's own tokens. With UC_RENDERS=<directory> the cases also write their PNGs there, for the Advisor's look (never
 // committed): § 4 D item 4's states, the start, the middle of the sequence, all revealed with the result and Not ready?,
 // the dialog open and the banner, at both widths.
+// ⚠ AMENDED by § 4.2 item 1 (2026-10-26): the start is the first question alone, so UC11's walk begins with Just me.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
@@ -35,8 +36,10 @@ const WIDTHS = [VIEWPORTS.w390, VIEWPORTS.w1280];
 const RENDERS = process.env.UC_RENDERS ?? null;
 /** Answers with the week's cart (lunch or dinner, every day): the card's checkout, so Not ready?. */
 const CHECKOUT = "#lean-or-7d";
-/** The sequence a visitor taps (A item 1, snacks carted as committed: the meal size after breakfast), each answer. */
+/** The sequence a visitor taps (A item 1, snacks carted as committed: the meal size after breakfast), each answer, from
+ *  the start's first question (§ 4.2 item 1). */
 const WALK = [
+  ["#who-individual", "#q-lunch_dinner"],
   ['[data-q="lunch_dinner"][data-a="or"]', "#q-weekends"],
   ['[data-q="weekends"][data-a="yes"]', "#q-breakfast"],
   ['[data-q="breakfast"][data-a="no"]', "#q-goal"],
@@ -158,11 +161,12 @@ for (const width of WIDTHS) {
     test(`UC11 (${build}, ${width.width}): the start drawn, a tap drawing the next question, the scroll and focus left where they were; the meal size the result (Chrome)`, { timeout: TIMEOUT_MS }, async () => {
       await sites();
       await withPage({ dir, width }, async (page) => {
-        await page.waitForSelector("#q-lunch_dinner");
-        const start = await page.evaluate(boxes, ["#q-who", "#q-lunch_dinner", "#q-weekends", "#q-breakfast", "#q-goal", "#result", "#not-ready"]);
-        assert.ok(start["#q-who"] && start["#q-lunch_dinner"], "the first question and the first meal question drawn");
-        for (const sel of ["#q-weekends", "#q-breakfast", "#q-goal", "#result", "#not-ready"]) assert.equal(start[sel], null, `${sel} not drawn at the start`);
-        await renderSpan(page, "#top", "#q-lunch_dinner", 120, `uc11-start-${build}-${width.width}`);
+        await page.waitForSelector("#q-who", { visible: true });
+        const start = await page.evaluate(boxes, ["#q-who", "#q-lunch_dinner", "#panel-family .family-card", "#q-weekends", "#q-breakfast", "#q-goal", "#result", "#not-ready", "#why-link", "footer"]);
+        assert.ok(start["#q-who"], "the first question drawn");
+        for (const sel of ["#q-lunch_dinner", "#panel-family .family-card", "#q-weekends", "#q-breakfast", "#q-goal", "#result", "#not-ready"]) assert.equal(start[sel], null, `${sel} not drawn at the start`);
+        assert.ok(start["#why-link"] && start.footer, "the foot drawn at the start (§ 4.2 item 4)");
+        await renderSpan(page, "#top", "footer", 0, `uc11-start-${build}-${width.width}`);
         for (const [i, [press, next]] of WALK.entries()) {
           // The answer in view first, so the press itself scrolls nothing (puppeteer scrolls a control into view to press
           // it); the next question drawn after the browser's hashchange (asynchronous), hence the wait for it visible.
@@ -174,7 +178,7 @@ for (const width of WIDTHS) {
           assert.ok(drawn[next], `after ${press}: ${next} drawn`);
           assert.equal(await page.evaluate(() => window.scrollY), scrolled, `after ${press}: the page did not scroll`);
           assert.equal(await page.evaluate((sel) => document.activeElement === document.querySelector(sel), press), true, `after ${press}: the focus is still on the tapped answer`);
-          if (i === 0) await renderSpan(page, "#q-who", "#q-weekends + .choices", 16, `uc11-middle-${build}-${width.width}`);
+          if (i === 1) await renderSpan(page, "#q-who", "#q-weekends + .choices", 16, `uc11-middle-${build}-${width.width}`);
         }
         const end = await page.evaluate(boxes, ["#result", "#not-ready", "#cc-checkout"]);
         assert.ok(end["#result"] && end["#cc-checkout"] && end["#not-ready"], "the result card, its checkout and Not ready? drawn");

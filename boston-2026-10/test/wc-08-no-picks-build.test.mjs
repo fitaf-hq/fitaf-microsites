@@ -37,8 +37,10 @@ import { picksText, sha256, visible } from "./wc-harness.mjs";
  *  column: its one media block and comment): 2b409bb's tree reproduces 6447ecd8…, 0233dbe's gives 02fe24d1…. Re-recorded
  *  once more at d0f1a97 for SPEC-ui-and-copy-pass § 4 (2026-10-26: the questions revealed one by one, Why Fit AF? a banner
  *  at the foot, #plan-data's snacks_carted; Not ready? and the save step are not on this page): 62b8627's tree (its cases,
- *  the code before) reproduces 02fe24d1…, d0f1a97's gives this. */
-const TODAY_NO_PICKS_SHA256 = "fd75caac0b33129c5108b30cf2093ab42668ff55c9de568936abd8257d1f76be";
+ *  the code before) reproduces 02fe24d1…, d0f1a97's gives fd75caac…. Re-recorded once more at cb0980f for § 4.2 (the
+ *  start the first question alone, neither answer pressed in its markup): d03fafb's tree reproduces fd75caac…, cb0980f's
+ *  gives this. */
+const TODAY_NO_PICKS_SHA256 = "3ad17ec19cf79bc9d2cd0b06106510e09bcbb5905a6bb3a38fc612efec4c114a";
 
 /** Every answer set (§ 8 item 2 of SPEC-meal-selection) at one size, today's fragments, the Family tab, and none.
  *  ⚠ Not a `-s` fragment (snacks chosen): with snacks carted, today's no-picks page has no Q4 and takes `-s` as the

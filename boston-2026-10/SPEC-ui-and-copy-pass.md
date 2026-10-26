@@ -1141,3 +1141,117 @@ the orchestrator), each `-production-` and `-development-`, `-390` and `-1280`: 
 `uc11-middle-*` (Q1 answered, the next question unanswered), `uc11-all-revealed-*` (every question, the result card,
 *Not ready?*), `uc12-dialog-*` (the dialog open, the viewport), `uc13-banner-*` (the result card to the foot). Storybook:
 *Individual · Start*, *· One answered*, *· Chosen*, *· Not ready?*, and *Whole page · Scroll* for the banner.
+
+### 4.2 The Advisor's rulings on E (2026-10-26). CONTRACT, before any code
+
+**The Advisor, 2026-10-26** (verbatim): *"Yes, let's start with just the question. We're ultimately going to add a "let's
+get started" call to action at the top of the flow (making the choice between going down the selection funnel or
+learning more about Fit AF)."* *"Let's try: "Not ready to checkout? Save your offer now.""* *"I'm open to either banner
+treatment – we can keep whatever you have now and I can give feedback."*
+
+1. **The start is *Who is this for?* alone** (A item 2 amended): at the start (a link carrying no answer: `""`), the
+   first question shows with **neither answer pressed** (A item 4's rule now holds for it too), and nothing of either
+   panel shows: no meal question, no Family card, no result. Tapping *Just me* shows the first meal question; tapping *Me
+   and my family* shows Family's card and its one question. Each is then revealed as § 4 A says.
+2. **`#individual` and `#family`** carry the first question's answer: that answer pressed, and its panel's first step
+   shown (as if tapped). A link carrying a meal answer or a size still reveals every question (A item 5, unchanged).
+3. **The fallback** (A item 6) is unchanged: it starts with an answer below *Who is this for?*.
+4. **What the start does not change**: the foot (*Why Fit AF?*'s banner, *See all plans*, the footnote) shows at the
+   start; the price and the cart are still made only from answered questions (the result needs the last); every answer
+   event is sent on its tap as today (the first question's included).
+5. **A item 4 is kept** as built (the newest question shows no pressed answer until tapped; not objected to).
+6. ***Not ready?*'s words** (B item 1): **"Not ready to checkout? Save your offer now."**, his words exactly, the link's
+   text and its accessible name. Nothing else of B changes.
+7. **The banner** (C item 2): kept as built (§ 4.1 item 10); his feedback to follow.
+8. **Cases**: UC11's start and link cases, and every case or story the start moves, amended first and run red; UC12's
+   words; the goldens re-recorded once each from the code commit's own tree, as § 4.1 did; § 4.2.1, the build note.
+
+#### 4.2.1 Built — found at the build, not ruled (2026-10-26)
+
+Built on `boston/round-2-changeset-2` from `ae68171` (§ 4.2), 2026-10-26, as § 4.1: each case one file at a time at
+`nice -n 15`; the whole site suite and Storybook's alone at the tip.
+
+**Commits**
+
+| commit | what |
+|---|---|
+| `ae68171` | § 4.2, the contract (the orchestrator's) |
+| `d03fafb` | the cases first, amended and run red on `ae68171`'s code |
+| `cb0980f` | the code; UF1's amendment corrected (below) |
+| `a828182` | the goldens, once each from `cb0980f`'s own tree, each control first at `d03fafb` |
+| the next commit | this section |
+
+**Cases, before and after** (`nice -n 15 node --test <file>`; red on `ae68171`'s code, green from `cb0980f`)
+
+| case | file | red | green |
+|---|---|---|---|
+| UC11: the start (`""`, `#from-email`, `#nope`): *Who is this for?* alone, neither answer pressed, neither panel, no Family card, no result, the foot (*Why Fit AF?*, *See all plans*, the footnote) shown, no fragment written; `#individual` and `#family` press their answer and show their panel's first step (and Family's card); from the start *Just me* shows the first meal question, *Me and my family* Family's card and its question, each writing its fragment; every walk now begins with *Just me*; the first question's answer event sent on its tap, and on a tap of the answer `#individual` already pressed (Choices 2); back to the start after an answer, then the other answer, every question shown (Choices 4) | `test/uc11-questions-revealed.test.mjs` | 2 of 14 (the start; the return to it): the rest are guards, true on either code, or walks that begin with *Just me* | 14 of 14 |
+| UC12: the link's words, *"Not ready to checkout? Save your offer now."*, its text and its accessible name | `test/uc12-not-ready-dialog.test.mjs` | 1 of 9 | 9 of 9 |
+| UC11 in Chrome, 390 and 1280, both builds: the start drawn as the first question alone with the foot, no meal question, no Family card; the walk from *Just me* | `tools/storybook/test/uc11-13-chrome.test.mjs` | 4 of 12 (UC11's four; UC12 and UC13 guards) | 12 of 12 |
+
+- **Moved by the start or the words, amended with the cases** (`d03fafb`, red first): UQ2 1 of 8 (`""` and `#nope` the
+  start, neither pressed, neither panel), UF1 1 of 3 (`#family-both` and `#family-` the start), MS-4 1 of 4 (the start
+  shows no panel; a size's link the individual panel), MS-18 3 of 4 (the words); Storybook's *Start* (it waits for the
+  first question, not the individual panel) and *One answered* (it opens at `#individual`, its panel's first step), both
+  reachable on either code.
+- **A defect of my own case, corrected with the code**: UF1's amendment had `#family-or-5d` the start; its `or-5d` is a
+  meal answer (every fragment's answer part is read so), so it is the individual page, as before.
+- Nothing else moved: the whole site suite on the code before its commit failed only the goldens below and QC (load).
+
+**Goldens, each re-recorded once from `cb0980f`'s own tree** (`a828182`; each control at `d03fafb`, the cases and
+the code before, reproducing the committed record):
+
+- **S20** (CC-4 reads it): `index.html` alone, `cc3f2473…` → `241c4dbd…`, 72,282 → 73,252 bytes, by `app.js`'s start and the
+  first question's markup; both trees' production pages compared line by line.
+- **PV5** (`pv-05-record.mjs --commit cb0980f --release-a`): the same five pages; every other file byte-identical.
+- **U4** (`u-04-record.mjs --commit cb0980f --release-a --without-snack-cells`): all six contents byte-identical; production's
+  pages +970 bytes, the visible page at no fragment alone; development's +1,003 (the link's words +33), the visible page at
+  no fragment and at each fragment with the card's checkout.
+- **WC-9** (`wc-09-record.mjs --visible-at cb0980f --release-a --without-snack-cells`): `visible` at the empty fragment alone.
+- **WC-8**: `fd75caac…` → `3ad17ec1…`.
+- **SP3's base**: `LATER` gains `d03fafb..cb0980f` over `src/app.js` and `build.mjs`, every hunk (`app.js`'s comments are in
+  the page).
+- Not moved: CC-8 and its readers (MS-9, PR-10), R2-32, MS-20. The readers, 40 of 40.
+
+Sizes, raw / gzip: production (production false) 73,252 / 22,018.
+
+**Where § 4.2 was silent, and what was built** (stated, not ruled)
+
+1. **What `serialise` writes for the start**: nothing. The start is no answer, and no tap makes it (every press answers
+   the first question or one below it), so no fragment is ever written for it; a visitor's back to the page's first
+   entry (no fragment) returns to the start, the revealed point kept as § 4 A item 3 has it. `serialise` returns `""` for
+   it, which no tap reaches.
+2. **The first question's answer event on a tap of the answer a link already pressed**: sent. § 4.2 item 4's *"every
+   answer event is sent on its tap as today"* read as a tap being an answer, as a tap on any pressed answer has always
+   been (A3's reading, unchanged); at `#individual`, *Just me* tapped sends `answer who individual`. Nothing is sent for the
+   start itself (no tap).
+3. **"A link carrying no answer"** is any fragment the page does not read as an answer: none, `#from-email` (the `/o`
+   link back), the QR codes' (no fragment), and one it does not know (`#nope`, `#family-both`, `#family-`, `#7`,
+   `#meals`). A fragment whose answer part is a meal answer is the individual page with every question shown, whatever
+   its first word (`#family-or-5d`, `#meals-or-7d`), as before.
+4. **The fallback after a return to the start** (§ 4.2 item 3, *"unchanged"*): *"the other"* answer is the other than the
+   one last chosen in the page view, so after an answer below it, back to the start (neither pressed), then the other
+   answer shows every question of both panels; from a fresh start there is no other, and either answer shows its panel's
+   first step.
+5. **The first question's markup has neither answer pressed** (`build.mjs`: `aria-pressed="false"` on both, where *Just
+   me* was `"true"`), so the page before its script runs matches the start; the script presses the answer a link carries.
+6. ***See all plans* at the start**: shown (§ 4.2 item 4, the foot), hidden on Family as before.
+7. **The link's look** is § 4's (B item 1): the longer words wrap inside the card where they must: two centred lines at
+   390, one line at 1280 (in the column).
+8. **Storybook**: *Start* waits for the first question (the panel is no longer drawn there), and *One answered* opens at
+   `#individual`, its panel's first step, then presses the first meal question's first answer.
+
+**Gates at `a828182`** (each alone, `nice -n 15`)
+
+| gate | result |
+|---|---|
+| `nice -n 15 npm --prefix boston-2026-10 test` (09:33–09:42 PDT; the machine's load average rising to about 240) | **1,276 of 1,276** (`# tests 1276`, `# pass 1276`, `# fail 0`). On the code before its commit (09:23–09:31 PDT) the whole run had failed only the nine golden cases and QC's two timing cases; QC alone then 2 of 4 at load about 30 and 4 of 4 straight after at about 17 (the mock-ups' Chrome stall, which nothing here reaches) |
+| `npm --prefix boston-2026-10 run contrast` | 94 pairs, 94 pass, 0 fail |
+| `nice -n 15 npm --prefix boston-2026-10/tools/storybook test` (09:42–09:45 PDT, with `UC_RENDERS`) | **97 of 97** (`# tests 97`, `# pass 97`, `# fail 0`): the walk (SM-5, SM-8, SM-10, SM-11) green in the whole run, so not run alone |
+
+**Renders** (Chrome at 390 and 1280, both builds, the week delivered 2026-11-01, every photograph refused; written by
+Storybook's whole run at `a828182` with `UC_RENDERS=<dir>`, never committed, handed to the orchestrator):
+`uc11-start-*` (the start: the first question alone, neither pressed, and the foot), `uc11-middle-*` (*Just me*, then Q1
+answered: the next question unpressed), `uc11-all-revealed-*`, `uc12-dialog-*`, `uc13-banner-*` (the result card with
+the link's words, to the foot), each `-production-` and `-development-`, `-390` and `-1280`. Storybook: *Individual ·
+Start* and *· One answered*.

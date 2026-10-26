@@ -22,6 +22,8 @@
 // ready? and the save step in a dialog, Why Fit AF? at the foot): production's index.html and development's index.html,
 // demo/, boston/ and seminar/; every other file byte-identical, the privacy page too; the recorder at 62b8627 (its cases,
 // the code before) reproduces 0233dbe's (recorded_at apart).
+// And at cb0980f (`--commit cb0980f --release-a`), § 4.2 (the start the first question alone; Not ready?'s words): the
+// same five pages; every other file byte-identical; the recorder at d03fafb reproduces d0f1a97's (recorded_at apart).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
