@@ -5,7 +5,7 @@
 //   E1  for every link shape the live block's cases here use (seven meals at 1280 and at 390, a link with counts, an
 //       offer code, a photo part, the store's extras dialog with and without its key honoured), the emergency block fills
 //       the SAME cart as the live block: the store's pending list, in the same order, and the same route.
-//   E2  nothing drawn, hidden, styled or typed: no element of ours added (no style, no #fitaf-*, no popover), no class on
+//   E2  nothing drawn, hidden, styled or typed: no element of ours added (no style, no #fitaf-*: the screen is #fitaf-screen), no class on
 //       <html>, the store's shell and discounts displayed after done, nothing typed into or pressed in a discount field.
 //       Control: the live block, on the same link, fails the same check (the recorder sees what it does).
 //   E3  the store's next step reached as today: done: /checkout, the checkout on the page, no stop, nothing paid.
@@ -73,7 +73,7 @@ const SHAPES = [
 
 /**
  * In every document, before its own scripts: what anything other than the store's own first render does to the page —
- * elements added that are a style, a link, carry an id `fitaf…` or a popover; a class `fitaf…` on <html>; and every input,
+ * elements added that are a style, a link, carry an id `fitaf…` (the store's own extras dialog is a popover, so a popover is not ours by itself); a class `fitaf…` on <html>; and every input,
  * change and click inside a .checkout-discounts.
  */
 function recorder() {
@@ -88,7 +88,7 @@ function recorder() {
           if (!(n instanceof Element)) continue;
           const all = [n, ...n.querySelectorAll("*")];
           for (const e of all) {
-            if (e.localName === "style" || e.localName === "link" || /^fitaf/.test(e.id) || e.hasAttribute("popover")) {
+            if (e.localName === "style" || e.localName === "link" || /^fitaf/.test(e.id)) {
               window.__e.added.push(`${e.localName}${e.id ? `#${e.id}` : ""}`);
             }
           }
@@ -141,7 +141,7 @@ async function handoff(text, shape) {
 
 /** E2 over one run: nothing drawn, hidden, styled or typed. */
 function assertNothingVisual(r) {
-  assert.deepEqual(r.recorded.added, [], "no element of ours added: no style, no #fitaf-*, no popover");
+  assert.deepEqual(r.recorded.added, [], "no element of ours added: no style, no #fitaf-*");
   assert.deepEqual(r.recorded.html, [], "no class of ours on <html>");
   assert.deepEqual(r.recorded.typed, [], "nothing typed into or pressed in a discount field");
   assert.ok(r.discountValues.every((v) => v === ""), `every discount field empty: ${JSON.stringify(r.discountValues)}`);

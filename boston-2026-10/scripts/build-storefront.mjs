@@ -201,6 +201,74 @@ export async function storefrontText({
     .replace(KEY_SLOT, () => mealKey.toString());
 }
 
+/**
+ * SPEC-rung2-progress-and-checkout § 34, the EMERGENCY block (deep carting only): `plain` cuts the shipped text, after
+ * every slot is filled, at these declarations of its one function, each found exactly once at a line's start or the
+ * build refuses. A declaration runs from its line's start to the end of the first line that closes it: the fewest whole
+ * lines that parse as JavaScript on their own (the source's bodies are not indented, so a `}` at a line's start can close
+ * an inner block). Each is removed, or replaced by the stub given. Every other line ships as the default block's, byte
+ * for byte: the link's reading and the cart's filling (payload, card, addButton, count, plus, plan, said, fillC, steps,
+ * fill, settle, control, checkout, the guard at the bottom, ui, the one storage write) are not rewritten. The stubs keep
+ * the carting's own calls (ui(brand), ui(added), ui(last), ui(mark), ui(screen), ui(photos), zero, end) doing nothing
+ * but end's log line; zero's verdict is `zero: off`, nothing typed. The default build never runs this.
+ */
+const PLAIN_CUTS = [
+  ["var UI = ", ""],
+  ["var S, NOW, ", "var CODE, F;"],
+  ["var TOK = ", ""],
+  ["function end(", "function end(m) { log(m); }"],
+  ["function $(", ""],
+  ["function make(", ""],
+  ["function screen(", "function screen() {}"],
+  ["function show(", ""],
+  ["function logo(", ""],
+  ["function brand(", "function brand() {}"],
+  ["function pic(", ""],
+  ["function added(", "function added() {}"],
+  ["function last(", "function last() {}"],
+  ["var Q2 = ", "var N, V;"],
+  ["var DEEP = ", ""],
+  ["function mark(", "function mark() {}"],
+  ["function own(", ""],
+  ["function stepper(", ""],
+  ["var HOSTS = ", ""],
+  ["function photos(", "function photos() {}"],
+  ["var ZERO = ", ""],
+  ["function zero(", 'function zero(then) { then("off"); }'],
+];
+/** § 34: the version line's commit for the emergency block, so what is live says which block it is. */
+const PLAIN_SUFFIX = "-plain";
+
+/** Whether `code` parses as a function body. */
+function parses(code) {
+  try {
+    new Function(code);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The end of the declaration that starts at `at` (PLAIN_CUTS's rule), its last newline included. */
+function declarationEnd(text, at, start) {
+  for (let end = text.indexOf("\n", at); end >= 0; end = text.indexOf("\n", end + 1)) {
+    if (parses(text.slice(at, end))) return end + 1;
+  }
+  throw new Error(`plain: no end for ${start}`);
+}
+
+/** § 34: the shipped text cut to the deep carting alone (PLAIN_CUTS), or the build refuses. */
+export function plainText(text) {
+  let out = text;
+  for (const [start, stub] of PLAIN_CUTS) {
+    const at = out.startsWith(start) ? [0] : [...out.matchAll(new RegExp(`\\n${start.replace(/[$()]/g, "\\$&")}`, "g"))].map((m) => m.index + 1);
+    if (at.length !== 1) throw new Error(`plain: expected one declaration starting ${JSON.stringify(start)} at a line's start, found ${at.length}`);
+    out = out.slice(0, at[0]) + (stub ? `${stub}\n` : "") + out.slice(declarationEnd(out, at[0], start));
+  }
+  new Function(out);
+  return out;
+}
+
 /** The commit the texts are built from, "-dirty" if any input differs from it: the line never overstates. */
 export function gitCommit() {
   const git = (...args) => execFileSync("git", ["-C", ROOT, ...args], { encoding: "utf8" }).trim();
@@ -209,9 +277,10 @@ export function gitCommit() {
 }
 
 /** The two files of one text, as the build writes them, not yet checked or written (R2-58 scans them). */
-export async function storefrontFiles({ sourcePath = STOREFRONT_SOURCE, commit = gitCommit() } = {}) {
-  const text = await storefrontText({ sourcePath });
-  const consoleFile = versionLine(text, commit) + text;
+export async function storefrontFiles({ sourcePath = STOREFRONT_SOURCE, commit = gitCommit(), plain = false } = {}) {
+  const built = await storefrontText({ sourcePath });
+  const text = plain ? plainText(built) : built;
+  const consoleFile = versionLine(text, plain ? commit + PLAIN_SUFFIX : commit) + text;
   return [
     [FOOTER_FILE, `<script>\n${consoleFile}</script>\n`],
     [CONSOLE_FILE, consoleFile],
@@ -221,8 +290,8 @@ export async function storefrontFiles({ sourcePath = STOREFRONT_SOURCE, commit =
 /** A file's text without the Footer block's own wrapper: what must hold no `<` at all. */
 const unwrapped = (f) => (f.name === FOOTER_FILE ? f.content.slice("<script>\n".length, -"</script>\n".length) : f.content);
 
-export async function buildStorefront({ outDir = DIST_STOREFRONT, sourcePath = STOREFRONT_SOURCE, commit = gitCommit() } = {}) {
-  const files = await storefrontFiles({ sourcePath, commit });
+export async function buildStorefront({ outDir = DIST_STOREFRONT, sourcePath = STOREFRONT_SOURCE, commit = gitCommit(), plain = false } = {}) {
+  const files = await storefrontFiles({ sourcePath, commit, plain });
   // Refuse before writing anything: a `<` in the text (the store's admin would read a tag in it; nor can the text then
   // close its own <script> early), or a file over the limit.
   for (const f of files) {
@@ -252,7 +321,10 @@ export async function buildStorefront({ outDir = DIST_STOREFRONT, sourcePath = S
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const out = await buildStorefront();
+  // § 34: `--plain` builds the EMERGENCY block (deep carting only) into dist-storefront/plain/; nothing else changes.
+  const plain = process.argv.slice(2).includes("--plain");
+  const out = await buildStorefront(plain ? { outDir: join(DIST_STOREFRONT, "plain"), plain } : {});
+  if (plain) console.log("EMERGENCY ONLY (SPEC-rung2-progress-and-checkout § 34): deep carting, no visual changes, no zero code");
   console.log("the Footer block and the console file carry fill C, the one fill (SPEC-rung2-fill-c; the file names are fill B's, kept)");
   for (const f of out.files) console.log(`wrote ${join(out.outDir, f.name)} (${f.bytes} bytes)  /* ${f.versionLine} */`);
   for (const w of out.warnings) console.warn(`warning: ${w}`);
