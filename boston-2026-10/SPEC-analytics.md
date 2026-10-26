@@ -796,3 +796,143 @@ its contract § 8) counts a visit with a `save` as *Saved an offer*.
    `result` (stated below once diagnosed, before its code), merged into `boston/release-c`, then the dev pin, then the
    production pin on the Advisor's word above. ⛔ No Footer block moves. The week's content is not re-run. Counting
    saves starts at the production release; the dashboard says so.
+
+### 14.1 Built (2026-10-26)
+
+§ 14 is unchanged. On `boston/analytics-save`: the cases at `9cdf963` (on `e1dda21`'s code, red), the code at `1fb4831`,
+the goldens and bases it moves at `67bc48c`, this section after them. § 14 item 5's item for the missing `result` is not
+in this branch.
+
+**What was built**: `src/save/flow1.js`, when `/api/save` answers ok with its JSON's `ok` `true` and the step goes to
+`SAVED`, calls `tellSaved`, which dispatches `fitaf:saved` on `document` with no detail, inside a `try`; an expansion's
+`EXPANSION_SAVED`, an error, a refusal and an answer not yet come dispatch nothing. `src/analytics.js` listens for it and
+sends `save` through its one `send` (one call site still), `s` only. `src/worker/beacon.js`'s `EVENTS` and `FIELDS` gain
+`save`, with no field beyond `event` and `s`. `scripts/analytics.mjs`'s `reportData` gains each day's `saves`, the visits
+with a `save`, and `reportText` prints `saved an offer N` after the funnel.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named; the whole suite was not run, as the
+orchestrator asked: it runs once on the merged release line):
+
+| | before | after |
+|---|---|---|
+| `test/sv*.test.mjs` (SV1 twice, SV2, SV3, the mutants and their control) | `9cdf963`: `# tests 7` `# pass 0` `# fail 7` | `1fb4831`: the seven pass, within the next row's run; `67bc48c`: `# tests 7` `# pass 7` `# fail 0` |
+| `test/a*.test.mjs test/n*.test.mjs test/sv*.test.mjs` | `e1dda21` (without `sv*`): `# tests 73` `# pass 73` `# fail 0`; `9cdf963`: `# tests 80` `# pass 64` `# fail 16` | `1fb4831`: `# tests 80` `# pass 79` `# fail 1` (AJ2, against `f9273c0`); `67bc48c`: `# tests 80` `# pass 80` `# fail 0` |
+| the goldens' readers (CC-8, MS-9, PR-10, S20, CC-4, PV5, SP3, U4, and WC-8, WC-9, QE15, T5, S18, the budget, UC3, UC12, SP5) | `e1dda21`: `# tests 58` `# pass 58` `# fail 0` | `1fb4831`: `# tests 58` `# pass 45` `# fail 13` (every reader of S20, CC-8, PV5, U4 and SP3's base); `67bc48c`: `# tests 58` `# pass 58` `# fail 0` |
+| the last run, once, on the tree committed as `67bc48c` | | 126 files (`test/a*`, `n*`, `sv*`, `s[0-9]*`, `sp*`, `uc*`, `uf*`, `uq*`, and CC-4, CC-8, EM5, MS-9, MS-10, MS-20, PR-10, PV5, U4, W4, WC-8, WC-9, QE15, T5, the budget): `# tests 432` `# pass 432` `# fail 0` |
+
+Red for the right reasons. SV1: `prod, an offer save stored: sent 0 save(s), not 1` (dev the same), its events sent as
+`open · answer goal lean · answer lunch_dinner or · result or-5d 20 · answer weekends yes · result or-7d 21 · answer
+breakfast no · leave result`, the contract's with `save` before the `leave`; its Worker half `site: 0 data point(s)
+written for a save, not 1` (`index` the same). SV2 on its control alone: `prod: control: the same visit answered as stored
+sent 0 save(s), not 1` (dev the same); its twelve visits each reached their state and sent no save, as guards. SV3: `the
+fixture 2026-10-23: the document's saves`, `undefined` for 2. The mutants' control on SV1 and SV2, and the two mutants on
+their anchors, not yet in `src/save/flow1.js` and `src/worker/beacon.js`. Of the existing cases, by `VALID`'s `save`: A3
+twice and the A mutants' control (`control save: 0 data points written, not 1`), A4 (`control: 6 data points, not 7`) and
+N4 (`site POST /a save, no Cookie: 0 data point(s), not 1`); by the fixture's save rows: A11 (no saved line), AJ1 and the AJ
+mutant's control (the document's `saves`) and AJ4 (`days[0]: no "saves"`). AJ2 passed there by construction (this tree's
+text, as `f9273c0`'s, prints no saved line), the control for its base's move.
+
+**The mutants** (`test/sv-mutants.test.mjs`, each in a mirror through THE SAME check its case runs, `test/sv-checks.mjs`;
+the tracked tree untouched, `git status` clean after every run): the control (the unchanged mirror) passes SV1's visit and
+SV2, 0 problems (and SV1's Worker half, 0, measured in the same mirror by a scratch run, not asserted by the file). `flow1.js` dispatching on an error too (the answer's error branch calls `tellSaved`) fails SV2, 12
+problems, the six visits whose answer reaches that branch on both targets: `prod, an error (500, store_failed): sent 1
+save(s), not none`, and the same for `a refusal (429, rate_limited)`, `(403, turnstile_failed)`, `(400, email_invalid)`, `an
+answer ok whose JSON's ok is not true` and `an answer not ok whose JSON's ok is true`. The Worker's `FIELDS` without `save`
+fails SV1, 2 problems: `prod, an offer save stored: refused by the Worker's own check: save` (dev the same); and, measured
+by the same scratch run, SV1's Worker half, `site: 0 data point(s) written for a save, not 1` (`index` the same).
+
+**The goldens and bases moved** (each re-recorded once from `1fb4831`'s own tree, `git archive`, the package's
+`node_modules` linked in; each recorder's control first reproducing the committed record):
+
+- CC-8 (CC-8b, CC-8c, MS-9, PR-10): one entry, `src/worker/beacon.js` `b77377db…` → `a5331c5d…`; none added or removed.
+  `cc-harness` `workerFiles` over `9cdf963`'s tree reproduces the committed map (35 files).
+- S20 (and CC-4; SP3's S20 case): `index.html` alone, `aa9e9ad1…` → `5270858d…`, 79,976 → 80,046 bytes (production
+  false), by the listener's three lines. Built as S20 builds it, `9cdf963`'s tree reproduces `aa9e9ad1…`.
+- PV5 (`pv-05-record.mjs --commit 1fb4831 --release-a`; at `4b77513` it reproduces the committed record byte for byte, at
+  `9cdf963` the same record but `recorded_at`): the same five pages as § 13.1's, production's +70 bytes, development's four
+  +484.
+- U4 (`u-04-record.mjs --commit 1fb4831 --release-a --without-snack-cells`; with both flags at `8f36711` it reproduces the
+  committed record byte for byte, at `9cdf963` the same record but `recorded_at`): the six pages, production's +70 bytes,
+  development's +484; all six contents and every visible page byte-identical.
+- SP3's base (`sp-production.mjs` `LATER`): `e1dda21`..`1fb4831` over `src/analytics.js` and `src/worker/beacon.js`; every
+  hunk lands with no fuzz (a `patch --dry-run` over the base before the entry: exit 0, none reported), and the patched base's
+  `analytics.js` is `1fb4831`'s but for § 9 item 2's lines (as § 13.1 item 10 found), its `beacon.js` `1fb4831`'s.
+- AJ2's base: `f9273c0` → `1fb4831`, as § 14 item 3 says. `f9273c0`'s text over the fixture with its save rows was
+  `9cdf963`'s, byte for byte.
+- Not moved: WC-8 (its pin removes the analytics slot), WC-9 (its visible pages read the markup without its scripts),
+  QE15, T5, S18, the budget, MS-20, W4, EM5; the preview build (built at both trees: byte-identical, it carries neither
+  script).
+
+**The page's bytes** (every page the builds write, `test/page-budget.mjs`'s gzip; `9cdf963`, `e1dda21`'s code → `1fb4831`):
+each page that carries the analytics slot gains 70 bytes raw, the listener's three lines once the build has removed its
+comments and indentation; each page that carries the save step gains 414 more, `flow1.js`'s lines, which the build inlines
+with their comments (both trees' pages compared line by line: script lines alone, no visible word); privacy/ and why/
+unchanged.
+
+| build | page | raw | gzip |
+|---|---|---|---|
+| production (as committed, `production` true) | `index.html` | 115,219 → 115,703 | 33,812 → 33,971 |
+| production with `production` false | `index.html` | 79,976 → 80,046 | 23,819 → 23,836 |
+| development | `index.html`, `demo/` | 122,088 → 122,572 | 35,691 → 35,855 |
+| development | `boston/` | 122,090 → 122,574 | 35,689 → 35,852 |
+| development | `seminar/` | 122,091 → 122,575 | 35,693 → 35,857 |
+
+T5's ceiling is 61,440 bytes gzip; the largest page is 35,857.
+
+**What § 14 was silent on, and what was built** (stated, not ruled)
+
+1. **The case files are `sv1`–`sv3`**, with `sv-checks.mjs` and `sv-mutants.test.mjs`; `test/a*.test.mjs` does not take
+   them, so the brief's set names `test/sv*.test.mjs` beside it. SV1 is two tests: the visit, and a `save` posted to both
+   Workers written as one data point in § 10's layout (blob1 `save`, blob2 the visit, the country and device, every other
+   blob `""`, every double 0), since item 1's *"the data point's layout is unchanged"* had no case in item 4.
+2. **SV1's whole visit**, on both targets with the fixture week (the step is drawn only beside a week's checkout,
+   SPEC-ui-and-copy-pass § 1 item 2): Lean, lunch or dinner, every day, no breakfast (`or-7d`, 21), *Not ready?*, the form
+   submitted, the page left. It sends no `click` (the save is the visitor's other way out). Its events are compared with the
+   same visit with no save (the control), `save` added before the `leave`, not written out from § 3; the `leave`'s step
+   (`result`) is the same, a save not being a step.
+3. **`openVisit` gained `date`** (the browser's clock, on which the step chooses its offer: page-sim's `PAGE_NOW_MS`, so no
+   case depends on the day it runs; `cc-harness`'s `clockAt`, now exported) and **`globals`** (`uc-harness`'s `saveStubs`:
+   Turnstile and `/api/save`), and the window's `Event` (linkedom's), as a browser's window has one.
+4. **The dispatch is `new Event("fitaf:saved")`**, neither bubbling nor cancelable, after the step has rendered `SAVED`, in
+   a `try`: the promise chain's `catch` (which would show a stored save as a network error) is never reached from it. The
+   other page harnesses have no `Event` (`cc-harness` `openPlanPage`) or no `dispatchEvent` (`page-sim`'s document): there it
+   throws inside the `try` and the save still shows as saved; their pages run with the analytics off (no Web Crypto) anyway.
+   S18 and the UC, SP and UF save cases pass unchanged (the 126 files above).
+5. **"Once"** is read as once per going to `SAVED`, in the answer's handler and never in `render`: a later render of
+   `SAVED` (a hashchange, the step following the card) dispatches nothing (measured, not a case: after the save and two
+   answers, one `save`). A second stored save in one visit could come only through `#save-reopen`, which is hidden at
+   `SAVED`; pressed anyway, it sends a second `save` (measured, not a case). The report counts visits (`count(DISTINCT
+   blob2)`), so its figure is the same.
+6. **SV2's errors and refusals**, twelve: the Worker's 500 (`store_failed`) and the network failing; its refusals, 429
+   (`rate_limited`), 403 (`turnstile_failed`), 400 (`email_invalid`); an answer ok whose JSON's `ok` is not `true`, and one
+   not ok whose JSON's `ok` is `true` (each half of item 1's condition); the page's own refusal of an address (no request),
+   Turnstile failing and Turnstile not loaded (no request); still being checked (the request never answered, the step
+   busy); and an expansion save stored. Each has a control that it reached that state. SV2's own control, the same visit
+   answered as stored sending one `save`, keeps "no save" from holding of a page that never sends one; it is what made SV2
+   red at `9cdf963`.
+7. **The first mutant** adds the dispatch to the answer's error branch, so the six visits whose answer reaches that branch
+   kill it; the network failing (the promise's `catch`) and the page's and Turnstile's refusals do not reach it.
+8. **`VALID` gains `save`** (`a-harness.mjs`), so A3's and A4's controls and N4's post one too; A3's refusals gain a save
+   carrying an address, a ZIP code, its kind, a consent, and one without `s`. `EVENTS` gains `save` beside `FIELDS` (nothing
+   reads it; it is § 3's list).
+9. **The report's `saves`** comes from the funnel's own query (`event` `save`, no question), so no SELECT is added (A11's
+   eight requests). Its text line is the day's tenth at the day's own level (two spaces in), after the funnel's steps and its
+   click-by-link line and before the visit length, with no change figure (not a step); the JSON member follows `clicks` (its
+   key order carries no meaning, § 11.1 item 2). A day with data and no save row is `saved an offer 0` and `0`; a day of no
+   data has neither.
+10. **The fixture's save rows** (`steps.json`: 2 on 2026-10-23, 1 on 2026-10-24) are invented; A11's text and AJ1's
+    document are re-written by hand from the fixture, as they were written; AJ4's shape holds `saves` as a count and its
+    control refuses three broken ones.
+11. **"Pages without the save step … are unchanged"** is read as their behaviour: every page carries the analytics slot, so
+    the production page with `production` false gains the listener's 70 bytes (S20 moved) and has nothing that dispatches
+    to it. The preview page carries neither script and is byte-identical.
+
+**Found, not ruled**
+
+- `flow1.js` is inlined with its comments (`analytics.js`'s are removed), so the step's two comment lines cost each page
+  carrying it about 230 raw bytes; well within the budget.
+- **The Worker's dashboard** (Fit AF `scripts/analytics-tool/`) was not touched here; its contract § 8 reads a visit with a
+  `save` as *Saved an offer*.
+
+**Not done here**: the whole suite, Storybook, the watch and contrast (no colour or style changed); nothing deployed, no
+merge, no pin.
