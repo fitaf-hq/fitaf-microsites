@@ -47,12 +47,16 @@ test("SP15: every Worker page carries the same head (its title apart): the site'
   }
 });
 
-test("SP15: every Worker page opens its one column with Fit AF's logo, linking to /", () => {
+// SPEC-the-redirect.md § 10 item 1 (2026-10-27): on the offer page (/o/<code>: original, ended, current) the logo links to
+// /?via=email, as the page's other links to the home page do; every other Worker page's to /.
+const OFFER_PAGES = ["original", "ended", "current"];
+test("SP15: every Worker page opens its one column with Fit AF's logo, linking to / (the offer page's to /?via=email)", () => {
   for (const [name, { html }] of Object.entries(pages)) {
     const main = /<body>\n<main class="worker-page">([\s\S]*)<\/main>\n<\/body>/.exec(html)?.[1];
     assert.ok(main, `${name}: the body is one <main class="worker-page">`);
-    const logo = /<a class="logo" href="\/"><img src="\/assets\/fitaf-logo\.png" alt="Fit AF" width="88" height="56"><\/a>/;
-    assert.match(main, logo, `${name}: the logo, a link to /`);
+    const href = OFFER_PAGES.includes(name) ? "\\/\\?via=email" : "\\/";
+    const logo = new RegExp(`<a class="logo" href="${href}"><img src="\\/assets\\/fitaf-logo\\.png" alt="Fit AF" width="88" height="56"><\\/a>`);
+    assert.match(main, logo, `${name}: the logo, a link to ${OFFER_PAGES.includes(name) ? "/?via=email" : "/"}`);
     const beforeLogo = main.slice(0, main.search(logo)).replace(/<p class="draft">[^<]*<\/p>/, "").trim();
     assert.equal(beforeLogo, "", `${name}: nothing before the logo but the DRAFT line`);
   }

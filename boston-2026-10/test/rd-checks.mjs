@@ -18,6 +18,7 @@ import { builtPage, configuredSite, openVisit, S1, startBeacon, TEST_IP, TEST_UA
 import { parseText, runAt, runs, fixtureAnswers, walkProblems } from "./aj-checks.mjs";
 import { evaluate, offerPages } from "./em-a-checks.mjs";
 import { CARRYING, NO_TRACKING_CLEAR, NO_TRACKING_SET, NO_TRACKING_SENT } from "./n-checks.mjs";
+import { workerPages } from "./sp-worker-pages.mjs";
 
 /** § 1 item 1: production's and development's value, the store's front page (ruled ts=2026-10-27T16:03:46.679Z). */
 export const STORE = "https://fitafnutrition.com/";
@@ -683,5 +684,91 @@ export async function reportProblems(root = ROOT, base) {
     if (mine.code !== 0 || theirs.code !== 0) problems.push(`AJ's ${label}: exit ${mine.code}, the base's ${theirs.code}: ${(mine.err + theirs.err).trim()}`);
     else if (mine.out !== theirs.out) problems.push(`AJ's ${label}: the text is not the base's byte for byte (a window with no redirect row)`);
   }
+  return problems;
+}
+
+// ── § 10: RD4b and RD7b ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/** § 10 item 2: two real-shaped user agents of a Cubot phone (a phone maker whose name holds the letters "bot"), each
+ *  counted, a phone. */
+export const CUBOT_AGENTS = [
+  "Mozilla/5.0 (Linux; Android 11; CUBOT X30) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.111 Mobile Safari/537.36",
+  "Mozilla/5.0 (Linux; Android 13; CUBOT KINGKONG 9 Build/TP1A.220624.014) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.144 Mobile Safari/537.36",
+];
+/** § 10 item 3: the programs the list names that must still not be counted, one sample each. */
+export const NAMED_PROGRAMS = [
+  ["Googlebot", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"],
+  ["bingbot", "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"],
+  ["Slackbot", "Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)"],
+  ["Twitterbot", "Twitterbot/1.0"],
+  ["facebookexternalhit", "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"],
+  ["curl", "curl/8.4.0"],
+  ["a headless Chrome", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.0.0 Safari/537.36"],
+];
+
+/**
+ * RD4b (§ 10 items 2 and 3): with the var set, on each Worker, a GET "/" from each Cubot phone's user agent is the 302 and
+ * one data point, its device a phone; from each named program (NAMED_PROGRAMS, and RD4's one sample of each kind,
+ * PROGRAM_AGENTS) the same 302 and no data point, SALTS untouched.
+ */
+export async function cubotProblems(root = ROOT, entries = ENTRIES) {
+  const problems = [];
+  await eachWorker(root, entries, { vars: { [VAR]: STORE } }, async (site, entry) => {
+    for (const ua of CUBOT_AGENTS) {
+      const where = `${entry} a Cubot phone (${ua.slice(0, 60)}…)`;
+      const r = await ask(site, "/?e=boston", { ua });
+      const log = await site.log();
+      if (r.status !== 302 || r.location !== LOCATIONS[1][1]) problems.push(`${where}: ${r.status} to ${r.location}, not the 302 to ${LOCATIONS[1][1]}`);
+      if (log.points.length !== 1) problems.push(`${where}: ${log.points.length} data point(s), not 1 (a person's phone, counted)`);
+      else problems.push(...pointProblems(where, log.points[0], { qr: "boston", via: "", device: "phone" }));
+    }
+    for (const [name, ua] of [...NAMED_PROGRAMS, ...PROGRAM_AGENTS]) {
+      const where = `${entry} ${name}`;
+      const r = await ask(site, "/?e=boston", { ua });
+      const log = await site.log();
+      if (r.status !== 302 || r.location !== LOCATIONS[1][1]) problems.push(`${where}: ${r.status} to ${r.location}, not the 302 to ${LOCATIONS[1][1]}`);
+      if (log.points.length) problems.push(`${where}: written (${log.points.length} data point(s)), not a program's, uncounted`);
+      if (log.gets.length || log.puts.length) problems.push(`${where}: SALTS used`);
+    }
+  });
+  return problems;
+}
+
+/** § 10 item 1: the logo, the image, size and alt text as before, linking to `href`. */
+const logoOf = (href) => `<a class="logo" href="${href}"><img src="/assets/fitaf-logo.png" alt="Fit AF" width="88" height="56"></a>`;
+const logosIn = (html) => [...html.matchAll(/<a\b[^>]*\bclass="logo"[^>]*>[\s\S]*?<\/a>/g)].map((m) => m[0]);
+/** The offer page's link for the logo (§ 10 item 1) and every other Worker page's. */
+export const OFFER_LOGO_HREF = "/?via=email";
+export const PAGE_LOGO_HREF = "/";
+/** sp-worker-pages's pages that are the offer page (/o/<code>); the rest are the confirmation's, GONE and TOO_MANY. */
+const OFFER_PAGE_NAMES = ["original", "ended", "current"];
+
+/**
+ * RD7b (§ 10 item 1): on the offer page of each kind (EM-A1's pages from the development Worker: saved, welcome,
+ * current, ended, known and unknown codes; and SP15's offer pages drawn by redeem.js) the one logo is
+ * `<a class="logo" href="/?via=email">` with the image, size and alt text as before, first in the column; on every other
+ * Worker page (the confirmation's landing pages, confirmed, declined, GONE, TOO_MANY) it is `/`, as before.
+ */
+export async function logoProblems(root = ROOT) {
+  const problems = [];
+  const check = (where, html, href) => {
+    const logos = logosIn(html);
+    if (!isDeepStrictEqual(logos, [logoOf(href)])) problems.push(`${where}: logo ${JSON.stringify(logos)}, not ${JSON.stringify([logoOf(href)])}`);
+    const main = /<main class="worker-page">\n(?:<p class="draft">[^<]*<\/p>\n)?([\s\S]*)<\/main>/.exec(html)?.[1] ?? "";
+    if (!main.startsWith(logoOf(href))) problems.push(`${where}: the logo is not first in the column`);
+  };
+  const kinds = new Set();
+  for (const p of await offerPages(root)) {
+    if (p.problem || p.status !== 200) {
+      problems.push(`${p.label}: control: ${p.problem ?? p.status}`);
+      continue;
+    }
+    kinds.add(p.kind);
+    check(`${p.label} (${p.kind})`, p.html, OFFER_LOGO_HREF);
+  }
+  for (const kind of ["saved", "welcome", "current", "ended"]) if (!kinds.has(kind)) problems.push(`control: no offer page of kind ${kind}`);
+  const pages = await workerPages(root);
+  for (const [name, { html }] of Object.entries(pages)) check(`the Worker page ${name}`, html, OFFER_PAGE_NAMES.includes(name) ? OFFER_LOGO_HREF : PAGE_LOGO_HREF);
+  for (const name of ["landing_offer", "confirmed", "gone", "too_many"]) if (!pages[name]) problems.push(`control: no Worker page ${name}`);
   return problems;
 }
