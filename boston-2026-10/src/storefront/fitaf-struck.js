@@ -50,13 +50,29 @@ d = w.document;
 // without thousands commas), a point and two digits, and not zero; anything else (a sign before it, a range, "From",
 // "Free", empty) gets nothing. Its price x 100 / (100 - the share), rounded to the cent, in integer cents ($87.50 ->
 // $116.67; $12.50 -> $16.67), written as the store writes its own: "$", commas every three digits, two decimals.
-function fig(t) {
-  var m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)$/.exec(t), c;
-  if (!m) return "";
-  c = +m[1].replace(/,/g, "") * 100 + +m[2];
-  if (!c) return "";
-  c = Math.round(c * 100 / (100 - share));
-  return "$" + String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",") + "." + String(c % 100 + 100).slice(1);
+// § 37 item 1: the size picker's "$14.25/meal" is that price per meal: its "$X" struck. cents() reads one plain price
+// (or "$X/meal"), 0 for anything else or zero; up() is item 3's rule in cents; money() writes cents as the store does.
+function cents(t) {
+  var m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)(\/meal)?$/.exec(t);
+  return m ? +m[1].replace(/,/g, "") * 100 + +m[2] : 0;
+}
+function up(c) { return Math.round(c * 100 / (100 - share)); }
+function money(c) { return "$" + String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",") + "." + String(c % 100 + 100).slice(1); }
+function fig(t) { var c = cents(t); return c ? money(up(c)) : ""; }
+// § 37 item 3: a line's unit price, "N x $X" (one text node, measured: so its figure is the line above it, as the line's
+// own price's is): its $X struck.
+function unit(t) { var m = /^\d+ \u00d7 (\$\S+)$/.exec(t); return m ? fig(m[1]) : ""; }
+// § 37 item 4 (the orchestrator's rule, so that no fee is overstated): a total that may hold shipping, tax, a tip or a
+// discount (the summary's header total and its Total row) is struck as the total + (the struck Subtotal - the
+// Subtotal), the Subtotal read from the same summary (the closest .summary) at this moment; with no Subtotal there, or
+// one that is not one plain price, nothing. With no fee it is item 3's rule on the total.
+function sub(p) {
+  var r = p.closest(".summary"), row = r && [].filter.call(r.querySelectorAll(".summary__row"), function (x) { return x.firstElementChild && /^subtotal\b/i.test(text(x.firstElementChild)); })[0];
+  return row && row.lastElementChild !== row.firstElementChild ? row.lastElementChild : null;
+}
+function tot(p) {
+  var e = sub(p), b = e && cents(text(e)), t = cents(text(p));
+  return b && t ? money(t + up(b) - b) : "";
 }
 function text(e) { return e.textContent.replace(/\s+/g, " ").trim(); }
 // § 36 item 4, the Advisor's four, by the store's own names as the probe measured them (storefront/probe-prices/
@@ -70,24 +86,36 @@ function text(e) { return e.textContent.replace(/\s+/g, " ").trim(); }
 // checkout's Plan Total, span.summary__plan-total-value. ⛔ Never a fee, tax, tip, discount, gift card, the checkout's
 // Total, a line's price, the pay button, an add-on's or an upcharge's figure: none of them is named here, and an add-on's
 // "+$2.00" is no plain price. The Add to Cart button's own price is not struck (the card's price is).
+// § 37 widens them: (1) the size picker's per-meal prices, each a span in a size's button of
+// div.meal-plan__fit-af-meal-options (beside its count, which is no price); (2) extras: every section's card prices,
+// the Additions' too (a "From $9.00" or an add-on's "+$10.00" is no plain price and gets nothing), and the extras pop-up's
+// span.popular-card__price (app-extra-products-dialog); (3) the order summary: each line's price (the checkout's
+// span.summary__item-price-current, the cart's span.product__price-original) and its unit price
+// (span.summary__item-price-unit, `unit`), the Subtotal (`sub`); (4) the header's total (span.summary__total-preview) and
+// the Total (span.summary__total-value), by `tot`. ⛔ Still never shipping, tax, a tip, a discount, a gift card or the pay
+// button: no row but the Subtotal's is read. The Add to Cart button's own price is still not struck.
+// Each [element, its figure's function]; never one of ours.
+var PLAIN = ".meal-plan__fit-af-price>strong,.meal-plan__fit-af-meal-options button>:not(.fitaf-was),.product__content-price,.product-card-mobile__price,app-cart .segment-price,app-cart-product-card .product__price-original,.mobile-cart-summary__stat-value,app-extra-products-dialog .popular-card__price,.summary__item-price-current,.summary__plan-total-value";
 function prices() {
-  var out = [].slice.call(d.querySelectorAll(".meal-plan__fit-af-price>strong,app-cart .segment-price,.mobile-cart-summary__stat-value,.summary__plan-total-value"));
-  [].forEach.call(d.querySelectorAll(".products__section"), function (s) {
-    var h = s.querySelector(".products__section-title");
-    if (h && /\bmeals\b/i.test(text(h))) out = out.concat([].slice.call(s.querySelectorAll(".product__content-price,.product-card-mobile__price")));
-  });
+  var out = [];
+  [].forEach.call(d.querySelectorAll(PLAIN), function (p) { out.push([p, fig]); });
+  [].forEach.call(d.querySelectorAll(".summary"), function (r) { var e = sub(r.firstElementChild || r); if (e) out.push([e, fig]); });
+  [].forEach.call(d.querySelectorAll(".summary__item-price-unit"), function (p) { out.push([p, unit]); });
+  [].forEach.call(d.querySelectorAll(".summary__total-preview,.summary__total-value"), function (p) { out.push([p, tot]); });
   return out;
 }
 // § 36 item 5: one s.fitaf-was, aria-hidden, per price, right before it (on its line in a row; in a column, the store's
 // cart figures at both widths, the line above it), smaller than the price (0.8 of its own size), muted (the page's
 // --muted token, inlined by the build), the browser's line-through, and no words. The store's own elements are never
 // changed, moved, hidden or restyled: only this one is inserted. In the desktop card's meta row the price sits at the
-// row's end, so the figure takes the free width and sits against it (flex-grow, right-aligned).
+// row's end, so the figure takes the free width and sits against it (flex-grow, right-aligned); since § 37 so in any
+// row whose items are spread (justify-content: space-between: the summary's Subtotal and Total rows).
 function was(p) {
   var s = d.createElement("s");
   s.className = "fitaf-was";
   s.setAttribute("aria-hidden", "true");
-  s.style.cssText = "color:" + MUTED + ";font-size:" + parseFloat(w.getComputedStyle(p).fontSize) * 0.8 + "px;font-weight:400;line-height:1.2;text-decoration:line-through;white-space:nowrap;margin-right:.3em" + (p.parentNode.classList.contains("product__content-meta") ? ";flex-grow:1;text-align:right" : "");
+  var c = w.getComputedStyle(p.parentNode);
+  s.style.cssText = "color:" + MUTED + ";font-size:" + parseFloat(w.getComputedStyle(p).fontSize) * 0.8 + "px;font-weight:400;line-height:1.2;text-decoration:line-through;white-space:nowrap;margin-right:.3em" + (/flex/.test(c.display) && !/column/.test(c.flexDirection) && c.justifyContent === "space-between" ? ";flex-grow:1;text-align:right" : "");
   return s;
 }
 // § 36 item 6, kept true: the store redraws itself. sync() makes the page what it should be at this moment: for each
@@ -101,8 +129,8 @@ function sync() {
   O.disconnect();
   try {
     share = current();
-    if (share) prices().forEach(function (p) {
-      var f = fig(text(p)), s;
+    if (share) prices().forEach(function (x) {
+      var p = x[0], f = x[1] === tot ? tot(p) : x[1](text(p)), s;
       if (!f) return;
       s = M.get(p);
       if (!s) M.set(p, s = was(p));

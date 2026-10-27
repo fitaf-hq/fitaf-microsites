@@ -149,7 +149,9 @@ function read({ targets, units, totals }) {
     path: location.pathname,
     prices: kinds.map(([p, kind]) => {
       const prev = p.previousElementSibling;
-      const before = [...p.parentNode.children].filter((c) => c.matches(".fitaf-was"));
+      // The run of struck figures right before it (§ 37: a line's price and its unit price share one column).
+      const before = [];
+      for (let e = p.previousElementSibling; e && e.matches(".fitaf-was"); e = e.previousElementSibling) before.push(e);
       const sub = kind === "total" ? subOf(p.closest(".summary"))?.lastElementChild : null;
       return { kind, cls: p.className || p.localName, text: norm(p.textContent), sub: sub ? norm(sub.textContent) : null, struck: prev && prev.matches(".fitaf-was") ? prev.textContent : null, siblings: before.length, shown: shown(p) };
     }),
@@ -359,7 +361,7 @@ test("ST7: each struck figure aria-hidden, no words, an s smaller than its price
   const v = await open({ path: "/meal-plans" });
   try {
     const r = await v.at();
-    assert.equal(r.was.length, 4);
+    assert.equal(r.was.length, 9, "the four plans' prices and (§ 37) Lean's five sizes");
     for (const s of r.was) {
       assert.equal(s.tag, "s");
       assert.equal(s.aria, "true");
@@ -502,7 +504,8 @@ test("ST14: shipping, tax, tip, a discount and the pay buttons never struck", { 
 /** In the page, from before its scripts: after every paint, each target price shown and whether its figure is beside it, and the store's leaves' boxes. */
 function frames({ targets, meals }) {
   const leaves = () =>
-    [...document.querySelectorAll("main *, .bar *, .side *")].filter((e) => !e.closest(".fitaf-was") && !e.matches(".fitaf-was") && e.getClientRects().length && (!e.children.length || e.matches("img,button,input,select")));
+    [...document.querySelectorAll("main *, .bar *, .side *")].filter((e) => !e.closest(".fitaf-was") && !e.matches(".fitaf-was") && !e.querySelector(".fitaf-was") && e.getClientRects().length && (!e.children.length || e.matches("img,button,input,select")));
+  // (§ 37: a store element that HOLDS a figure, the size's button, is its container, not something it overlaps.)
   window.__frames = [];
   window.__leaves = leaves;
   const tick = () => {
