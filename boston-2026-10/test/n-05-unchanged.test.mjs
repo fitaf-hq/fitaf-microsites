@@ -80,6 +80,20 @@ const WORKERS = [
 
 const CLOCK_HEADER = "date";
 
+/** ⚠ SPEC-analytics.md § 16 item 1 (2026-10-27) changes one answer of these lists by design: the offer page (/o/…, a 200)
+ *  carries at the end of its column its data (#offer-data, its kind and the save's event id) and the page's analytics
+ *  script, which today's page did not. Those two elements are removed from this tree's page (and must be there, the
+ *  control), and the rest is today's byte for byte: the narrowest change to N5, rather than moving TODAY. */
+const OFFER_ANALYTICS = /<script type="application\/json" id="offer-data">[^<]*<\/script>\n<script>\n[\s\S]*?\n<\/script>\n(?=<\/main>)/;
+function withoutOfferAnalytics(response, where) {
+  const text = response.body.toString("utf8");
+  assert.match(text, OFFER_ANALYTICS, `${where}: the offer page carries its data and the analytics script (§ 16 item 1)`);
+  const body = Buffer.from(text.replace(OFFER_ANALYTICS, ""));
+  const headers = { ...response.headers };
+  if ("content-length" in headers) headers["content-length"] = String(body.length);
+  return { ...response, headers, body };
+}
+
 /** A response, read whole: status, headers but `date`'s value (and whether it has one), every Set-Cookie, body. */
 async function readAll(res) {
   const headers = Object.fromEntries(res.headers);
@@ -104,7 +118,8 @@ for (const [label, options, entry] of WORKERS) {
       for (const cookie of [undefined, NO_TRACKING_SENT]) {
         for (const [i, request] of REQUESTS.entries()) {
           const where = `${request[0]} ${request[1]}${cookie ? ", carrying the cookie" : ""}`;
-          const a = await readAll(await now.mf.dispatchFetch(HOST + request[1], init(i, request, cookie)));
+          const got = await readAll(await now.mf.dispatchFetch(HOST + request[1], init(i, request, cookie)));
+          const a = request[1].startsWith("/o/") && got.status === 200 ? withoutOfferAnalytics(got, where) : got;
           const b = await readAll(await before.mf.dispatchFetch(HOST + request[1], init(i, request, cookie)));
           assert.equal(a.status, b.status, `${where}: status`);
           assert.equal(a.dated, b.dated, `${where}: a ${CLOCK_HEADER} header on both or neither`);

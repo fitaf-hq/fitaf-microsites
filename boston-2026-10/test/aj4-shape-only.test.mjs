@@ -33,6 +33,12 @@ test("AJ4 (control): the walk passes the shape and refuses what breaks it", () =
     ["saves as text", doc((d) => (d.days[0].saves = "2"))],
     ["saves a visit id", doc((d) => (d.days[0].saves = "0123456789abcdef"))],
     ["a day without saves", doc((d) => delete d.days[0].saves)],
+    // § 16 item 3: `email_visits` a count; `offer_pages` a split by the offer page's four kinds.
+    ["email_visits as text", doc((d) => (d.days[0].email_visits = "2"))],
+    ["a day without email_visits", doc((d) => delete d.days[0].email_visits)],
+    ["an offer page's kind outside § 16's", doc((d) => (d.days[0].offer_pages.ABCD2345 = 1))],
+    ["an offer page's count as text", doc((d) => (d.days[0].offer_pages.saved = "3"))],
+    ["a day without offer_pages", doc((d) => delete d.days[1].offer_pages)],
     ["a length over no visits not null", doc((d) => (d.days[0].visit_length_ms = { q1: 0, median: 0, q3: 0, n: 0 }))],
     ["a quartile field outside the shape", doc((d) => (d.days[0].load_ms.mean = 800))],
     ["a day missing a field", doc((d) => delete d.days[1].errors)],

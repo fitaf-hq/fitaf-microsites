@@ -4,7 +4,9 @@
 // `rows`; counts as the strings ClickHouse writes UInt64 as). Nothing is requested. The expected report is written
 // here, by hand, from the fixture (since SPEC-analytics § 13 item 3 the funnel in the page's order since round 2, who
 // first and the goal last, then Family's own question, which branches off who and has no change figure: the step after
-// it is compared with the goal's; since § 14 item 3 a day's visits with a save, "saved an offer N", after the funnel).
+// it is compared with the goal's; since § 14 item 3 a day's visits with a save, "saved an offer N", after the funnel; since
+// § 16 item 3 two lines after it, the day's visits from the offer email and its offer pages by kind, from two queries of
+// their own, offers.json and email.json, a repeat opening of an offer page counted again).
 // Every query asks for aggregates only: a visit's id (`s`) and a visitor's (`v`) are
 // read only inside count(DISTINCT …). And the program's refusals, run as a program: no token, no account, a bad date,
 // --from after --to, an unknown argument; each exits 2 before any request.
@@ -16,7 +18,7 @@ import { join } from "node:path";
 import { ROOT } from "../build.mjs";
 
 const FIXTURES = join(ROOT, "test", "fixtures", "analytics");
-const NAMES = ["visitors", "steps", "clicks", "length", "load", "devices", "viewports", "countries"];
+const NAMES = ["visitors", "steps", "clicks", "length", "load", "devices", "viewports", "countries", "offers", "email"];
 const ENV = { CLOUDFLARE_ANALYTICS_TOKEN: "test-token", CLOUDFLARE_ACCOUNT_ID: "test-account" };
 const SQL_URL = "https://api.cloudflare.com/client/v4/accounts/test-account/analytics_engine/sql";
 
@@ -37,6 +39,8 @@ const EXPECTED = `Fit AF microsite analytics: fitaf_microsite_analytics_prod, 20
     click                     4   -4 (50%)
     click by link: order 3 · chefs-choice 1 · all-plans 2
   saved an offer 2
+  visits from the offer email 2
+  offer pages opened (a repeat opening counted again): saved 3 · welcome 1
   visit length: median 1 min 12 s · quartiles 25 s to 2 min 40 s (13 visits)
   load time: median 820 ms · quartiles 400 ms to 1.2 s (15 visits)
   device: phone 10 · desktop 4 · tablet 1
@@ -59,6 +63,8 @@ const EXPECTED = `Fit AF microsite analytics: fitaf_microsite_analytics_prod, 20
     click                     1   -1 (50%)
     click by link: chefs-choice 1
   saved an offer 1
+  visits from the offer email 0
+  offer pages opened (a repeat opening counted again): ended 1
   visit length: median 15.5 s · quartiles 8 s to 40 s (4 visits)
   load time: median 640 ms · quartiles 510 ms to 900 ms (4 visits)
   device: phone 4
