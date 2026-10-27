@@ -33,6 +33,22 @@ export function urlsIn(text) {
 /** A file of `commit`, by its path in this package. */
 const atCommit = (commit, path) => execFileSync("git", ["-C", ROOT, "show", `${commit}:./${path}`], { encoding: "utf8", maxBuffer: 1 << 24 });
 
+/** Whether `commit` has a file, by its path in this package. */
+function hasAtCommit(commit, path) {
+  try {
+    execFileSync("git", ["-C", ROOT, "cat-file", "-e", `${commit}:./${path}`], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** SPEC-rung2-progress-and-checkout § 36 item 9: the struck prices' source, which a block built since § 36 carries after
+ *  the hand-off's text. § 37.3 (2026-10-27): the live block is one of those since the baseline accepted ab1d4d7
+ *  (c7edd18), so a commit that has this source is rebuilt with it and its own data/offers.json; a commit without it
+ *  built the hand-off alone, and is rebuilt so, as before. */
+const STRUCK_PATH = "src/storefront/fitaf-struck.js";
+
 /** The block live before rung 2 § 17's paste (2026-10-01): R2-74b and R2-77 are about it, not about whatever block the
  * watch's baseline names after a later accept (the same reason CC-8 kept `replaces` until the paste). */
 export const PREVIOUS_FOOTER = "fitaf-handoff a984fb5 sha256:914668ded95f6a8913e7ae0010661d26780700bd7443cbf93f9e4e8a875b41f6";
@@ -61,6 +77,7 @@ export async function liveText(versionLine = undefined) {
       plansPath: "data/plans.json",
       messagesPath: "data/messages.json",
       templatePath: "src/template.html",
+      ...(hasAtCommit(commit, STRUCK_PATH) ? { struckPath: STRUCK_PATH, offersPath: "data/offers.json" } : {}),
     };
     const options = {};
     for (const [option, path] of Object.entries(paths)) {

@@ -2370,3 +2370,29 @@ five mutants still killed). The whole watch suite and Storybook were not re-run 
 line `fitaf-handoff ab1d4d7 sha256:0e259ec17206722b308dff3f7f34fae916c14cf8eff03e1f0a8a28250447b23d`, fragment 25,678
 bytes, SHA-256 `7db1dd2149b431ebbfcd1bd78fb87c93e74c61bc8f2a84a3ee8571c652488fec`, the admin's measure on it 0. Pins
 (R2-32, PR-10, CC-8) `d278789f…` → `0e259ec1…`. `10833c1`'s block file is kept as the record of the refused build.
+
+### 37.3 Built — found at the build, not ruled (2026-10-27, at the merge of the release line into the dev line)
+
+The merge of `boston/release-c` (`2bbc066`, production) into this line for Friday's switch (`boston/merge-release-1027`,
+`ac2c1c6`). **The block's text does not move**: `npm run build:storefront` on `ac2c1c6` writes the version line
+`fitaf-handoff ac2c1c6 sha256:0e259ec1…`, 25,678 bytes, byte-identical to `ab1d4d7`'s block file's fragment but for the
+version line's commit.
+
+1. **The merge's one conflict** is CC-8's golden's `about`, extended by both lines from the merge-base's (`79f03f8`) text:
+   resolved as that text, then this line's addition, then the release line's, byte for byte. Every other field of it, and
+   every other file, merged without one.
+2. **Two cases stale since the baseline accepted `ab1d4d7` (`c7edd18`)**, as § 36.1 item 11 found two after `0eb98fe`'s
+   accept: red on `c7edd18` itself (the whole site suite there: `# tests 1325`, `# pass 1321`, `# fail 4`, these four) and
+   on `ac2c1c6` (`# tests 1428`, `# pass 1423`, `# fail 5`, these four and Q15, item 3), not because of the merge.
+   - **CC-8a and MS-9**: CC-8's `watch_expected_footer` still named `0eb98fe`, and `replaces` its text. CC-8 is re-recorded
+     from `ac2c1c6`'s own tree (`5158df2`): `ab1d4d7`'s line, `replaces` removed; the text and the Worker's map unmoved.
+   - **R2-71 and R2-71b**: their fixture control rebuilds the live block from its commit, and § 36.1 item 8 had a copy of
+     another commit's source build the hand-off alone, which was right while the live block was `0eb98fe`. `ab1d4d7`'s
+     block carries the struck prices, so the rebuild was `2ca026dc…`, not `0e259ec1…`. `test/r2-live.mjs` now rebuilds a
+     commit that has `src/storefront/fitaf-struck.js` with it and that commit's own `data/offers.json`; the older blocks
+     R2-73 to R2-77 and SN-5 rebuild (`a984fb5`, `5d5fb72`, `42f4cb1`) have no such source and are rebuilt as before. The
+     four files that rebuild a block (R2-71, R2-73–R2-76, R2-77, SN-5), `nice -n 15`: `# tests 10`, `# pass 10`,
+     `# fail 0`.
+3. **Q15 under load**: in the whole suite on `ac2c1c6`, headless Chrome exited 2 measuring `flyer-4.html` (*"Teardown
+   watchdog expired"*, after 559 s); Q15 alone on the same tree: `# tests 4`, `# pass 4`, `# fail 0`. The merge changed no
+   file under `print/` or `mockups/`.

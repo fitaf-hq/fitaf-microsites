@@ -16,6 +16,11 @@
 // ⚠ Since the live block is 0eb98fe it carries § 33's contact page, so its host, fitafnutrition.com, is a URL the live
 // block HAS: R2-71b's planted host name is now one the live block lacks (found 2026-10-27 at § 36's build; the case had
 // failed since the baseline's accept, 3ab6b76, not because of § 36).
+// ⚠ § 37.3 (2026-10-27, found at the merge of the release line into the dev line): since the baseline accepted ab1d4d7
+// (c7edd18) the live block carries § 36's struck prices after the hand-off's text, and its rebuild here built the
+// hand-off alone (2ca026dc…, not 0e259ec1…), so both cases failed their fixture control since that accept, not because
+// of the merge. r2-live.mjs now rebuilds a commit that has src/storefront/fitaf-struck.js with it and its own
+// data/offers.json; the older blocks R2-73 to R2-77 and SN-5 rebuild have none and are rebuilt as before.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MAX_SHIPPED_BYTES, storefrontFiles } from "../scripts/build-storefront.mjs";
