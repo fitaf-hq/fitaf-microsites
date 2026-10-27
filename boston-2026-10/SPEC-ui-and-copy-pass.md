@@ -1504,3 +1504,113 @@ T5's ceiling is 61,440 bytes gzip; the largest page is 36,217.
 
 **Not done here**: the whole suite, Storybook (the dialog opened at load in Chrome: its top layer, the focus, Esc), the
 watch and contrast; nothing deployed, no merge, no pin.
+
+## 7. The result's price: the week's price alone, its full value struck above it (2026-10-26). CONTRACT, before any code
+
+**Why.** The Advisor, `ts=2026-10-27T04:21:18.535Z`: *"For the price, we \*just\* want to show price per week (with the
+strikethrough showing the full retail value) with the number of meals per week. We \*might\* try something like "X
+meals for $YY.YY" as a single line."* Shown three layouts (the orchestrator's discussion mock: A, the struck price beside
+the week's, then the meal count; B, one line, *"5 meals for ~~$95.00~~ $71.25/week"*; B2, the struck price on a line of
+its own above *"5 meals for $71.25/week"*), `ts=2026-10-27T05:08:30.647Z`: *"Let's do B2 and drop the meal count
+please. I think that will really clean it up."* B2 without its meal count is the struck price above the week's price.
+
+1. **The result card's price** (`.price`, in both panels' results: an individual plan's and Family's) shows, in order:
+   1. while an offer with `percent_off` is current (the offer *See all plans* uses, chosen the same way:
+      `offerForSave` on today's date in `send_time_zone`), **the weekly total before the offer's share, struck
+      through, with its unit**: `$95.00/week` for $71.25 at 25 percent (the total ÷ (1 − the share), rounded to the
+      cent: § 1.2 item 2's rule, the one `pricesStruck` applies to the grid);
+   2. **the weekly total as the store charges it, with its unit**: `$71.25/week`, the lead figure at `.fig-total`'s
+      size and weight.
+
+   **Nothing else**: no price a meal, no meal count, no other words. With no such offer current (after its `valid_to`,
+   or an offer without `percent_off`), the first line is absent and the price is the second alone.
+2. **The struck line** is smaller than the lead and muted, as the grid's (`.cell small s`): `--muted`, the browser's
+   line-through, on a line of its own directly above the lead; the mock had it at 17px beside a 30px lead, and the lead
+   keeps its 34px here, so the builder states the size chosen. Its colour pair is declared in `src/contrast-pairs.json`
+   and measured by `npm run contrast`. Neither line wraps at 390 or 1280.
+3. **Money in one place.** Every struck figure the result can show is the build's, as the grid's are, for **every total
+   the result can show**: each plan at its own count (the grid's cells), each answer set above its plan's count (the
+   plans' `totals`) and each Family answer. The page's script only chooses whether to show it. The result and *See all
+   plans* show the same struck figure for the same plan and count.
+4. **Removed**: `#result-per-meal`, `#result-meals` and the units only they use; any case that reads them changes in the
+   same commit, named.
+5. **Unchanged**: *See all plans*, the card's meal list, the call to action and every link, the analytics, the save
+   step, `#from-email`, `#save`.
+6. **Cases**, written first and run red: **RP1** an individual answer set at its plan's count, one above it (5 meals on
+   the 4-meal plan) and a Family answer each show exactly the struck `$X/week` then `$Y/week` on a clock inside the
+   offer's dates, `Y` the store's total and `X` = round(`Y` ÷ (1 − the share)); **RP2** on a clock after `valid_to`,
+   `$Y/week` alone; **RP3** no price a meal and no meal count in `.price`; **RP4** the result's struck figure equals the
+   grid's for the same plan and count; **RP5** in Chrome at 390 and 1280, the struck line above the lead and neither
+   wrapped. **Mutant**: the struck figure from the price a meal × the plan's count (wrong for an answer set above its
+   count) fails RP1.
+7. **When.** Built on `boston/result-price` from the release line `3b275fa`; a preview for the Advisor (the result at
+   390 and 1280, an individual plan's and Family's, while the offer is current); merged into the release line; the site
+   suite, Storybook and contrast on the merged line; dev; production on his word.
+
+## 8. E1 in the flyers' language (2026-10-26). CONTRACT, before any code
+
+**Why.** The Advisor, `ts=2026-10-27T04:21:18.535Z`: *"For the email, we want to add some of the graphic design and
+photography (pick a new photo from the approved set please) based on the flyer / raffle tout / table tent."* Shown the
+orchestrator's discussion mock (the flyer front's dark band, headline and lede with the reversed logo; one photograph
+from the glam set's rung 1 used on no printed piece and not in the page's carousel; an orange offer panel; a dark
+footer), `ts=2026-10-27T05:08:30.647Z`: *"This is great! The top part of the email is approved."* Then, of the rest:
+*"Drop "You saved this offer at eatfitaf.com" line · Make the entire orange thing area (basically) a giant button to
+"Claim my offer". · Make "Pricing held until" text underneath the offer claim button · Drop "You asked to hear" line ·
+Drop "eatfitaf.com" as a standalone line in the footer. · Change the footer to "You're getting this email because you
+saved an offer at \_eatfitaf.com\_" (which can be a link) · Put the business name and address on its own line"*; and
+*"Can [you] generate an animated slideshow image for the email?"*
+
+**E1's HTML part, top to bottom** (600 px wide as now, `LAYOUT_WIDTH_PX`; fluid below it, down to 320 px):
+
+1. **The band** (approved): `--ink` with the flyer's halftone, drawn the email-safe way (a small committed PNG tile, a
+   graphic and not a photograph, as the cell's background image, with the solid `--ink` wherever a client draws none).
+   In it **the flyer front's headline and lede, read from `data/flyer-front.json`** (the one source; never copied; its
+   asterisked words in their accents: the headline's `--signature`, the lede's its `ledeAccent`, `blue` being
+   `--lean`), the headline uppercase in the heading stack at 700, the lede in the body stack at 600; and **the reversed
+   logo** (`print/assets/fitaf-logo-reversed.png`'s drawing, served as a site asset at twice its displayed width) at the
+   top right.
+2. **The slideshow**: one animated GIF, 600 × 400 (3:2), its first frame the approved photograph, the band's jagged
+   edge baked into the top of every frame in `--ink`, then four more photographs (the glam set's approved rung-5
+   array that holds no photograph used elsewhere, its fish photograph replaced by the approved one, which is of the same
+   meal-format group), 2.5 s a frame, looping. `alt=""` (decorative: no new words). A client that does not animate
+   (Outlook on Windows) shows the first frame. It is served from the Worker's assets as the page's photo sheets are,
+   **written by Fit AF's own emitter and never by hand here** (`data/photo-sheets.json` names it; Fit AF's
+   `emit_microsite_photos.spec.md` holds its rule). **With no slideshow in the manifest** (every photograph removed,
+   README's rule) E1 has no photo row.
+3. **The offer button**: the whole orange panel is one link, **`Claim my offer`** (his words), to `SITE_URL/o/<code>`:
+   `--cta` with the halftone, white heading-stack type at 700, uppercase, large and centred; the colour on the cell
+   (`bgcolor`, for Outlook) and the padding on the link, so the panel's whole area is the link.
+4. **Under it, centred, the save's line as now** (`savedLine`: *"Your pricing is held until **October 29, 2026**"*; a
+   coded offer's *"Your code: … · held until …"*). ⬜ **An E1 sent after its offer's last day** keeps *"This offer has
+   ended"* there, and its button reads *`See my offer`* (the draft's words), since *Claim* would be false: the
+   orchestrator's default, put to the Advisor.
+5. *"Already ordered? Enjoy your meals!"*, centred (unchanged; he did not name it).
+6. **The footer**: `--ink` with the halftone; *"You're getting this email because you saved an offer at
+   eatfitaf.com"*, `eatfitaf.com` a link to `SITE_URL/` (its label the literal `eatfitaf.com`), then on a line of its
+   own *"Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407."* (`POSTAL_ADDRESS`); the reversed logo at the right.
+   No standalone `eatfitaf.com` line.
+7. **Removed**: *"You saved this offer at [event] yesterday — here it is."* and *"You asked to hear about Fit AF menus and
+   offers. Yes, keep me posted"*. ⚠ **The second is the only link that confirms a ticked marketing box**
+   (`consent/DRAFT.md` §§ 3–5: unconfirmed, a save is kept 30 days after its offer ends; no other page builds a save's
+   `/confirm/<token>`). Built as he wrote; ⬜ the consequence put to him, and **not released until he answers**. The
+   `/confirm/` route and the stored tick are untouched.
+
+**The text part** carries every word the HTML part shows, in the same order, from the same list (`messages.js`'s rule:
+the two parts cannot say different things), the links as *"label: href"*. **Unchanged**: the subject, E-X (its HTML and
+text byte-identical), the send path, the `/o/` page. **`consent/DRAFT.md` § 3** is rewritten to E1's new words and
+order, citing this section, since the cases read it.
+
+**Email-safe**: inline styles only, layout tables, `bgcolor` on coloured cells, every image with its width and height,
+the page's font stacks with no web font loaded, `color-scheme: light` as now; the HTML part under Gmail's 102 KB clip;
+the GIF at most 800 KB (measured on the orchestrator's prototype: 724 KB at 600 px, 1.57 MB at 900 px, so 1× only).
+Every colour pair is declared with `"build": "email"` and measured by `npm run contrast`.
+
+**Cases**, written first and run red: the E1 goldens (HTML and text) moved, named; the order of rows; the button's one
+link and its words; the ended form; no photo row without the manifest's slideshow; a word changed in a mirror of
+`data/flyer-front.json` changes E1's band; E-X byte-identical; no line removed above anywhere in either part; the colour
+pairs. **A render for the Advisor**: `npm run preview:emails`, E1 at 600 and 390 in Chrome, with the GIF.
+
+**When.** Built on `boston/e1-look` from the release line `3b275fa`, beside Fit AF's emitter change (the slideshow);
+merged into the release line; the site suite, Storybook and contrast on the merged line; dev (a test E1 only on his
+word); production on his word, after item 7's answer. E1 is rendered when it is sent, so every E1 sent after the release
+has the new look, those already waiting too.
