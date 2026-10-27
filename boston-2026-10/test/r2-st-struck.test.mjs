@@ -16,6 +16,10 @@
 //         location.href where there is no entry; the mark written; a storage that throws: this page load only.
 //   ST4   a date outside valid_from..valid_to in New York: no observer and nothing struck.
 //   ST8   § 36 item 8: no save link at done, no https://eatfitaf.com/#save and no handoff.save in the text or the data.
+// § 37 (2026-10-27) widens § 36: the Additions' plain prices are struck too (ST1, ST4's count), and ST12/ST13 hold the
+// order summary to the contract's own figures: Subtotal $98.00 -> $130.67, a line's "7 x $14.00" -> $18.67 before it, the
+// header total and the Total with shipping $5.00 ($103.00 -> $135.67) and without ($98.00 -> $130.67), none without a
+// Subtotal; shipping, tax and the pay button never.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -66,8 +70,8 @@ const PAGE = `<!doctype html><html><head></head><body>
 </body></html>`;
 
 /** A window for the vm: the address, the navigation entry (or none), a storage that counts, an observer and frame that count. */
-function windowFor({ href = "https://fitafnutrition.com/meal-plans", entry = href, storage = {}, throwing = false } = {}) {
-  const { document } = parseHTML(PAGE);
+function windowFor({ href = "https://fitafnutrition.com/meal-plans", entry = href, storage = {}, throwing = false, page = PAGE } = {}) {
+  const { document } = parseHTML(page);
   const c = { reads: [], writes: [], observers: 0, frames: [], timers: 0, logs: 0, observed: null };
   const map = new Map(Object.entries(storage));
   const sessionStorage = throwing
@@ -149,15 +153,15 @@ test("ST1: marked and current, each surface's price struck once, item 3's figure
   assert.deepEqual(struck(".mobile-cart-summary__stat-value"), [null, "$116.67"], "the count none, the Cart Total struck");
   assert.deepEqual(struck(".summary__plan-total-value"), ["$116.67"]);
   assert.deepEqual(struck(".summary__row span, .summary__total-value, .product__actions-add_price, .dropdown__value-text"), [null, null, null, null, null]);
-  assert.deepEqual(struck(".product__content-price, .product-card-mobile__price", additions), [null, null], "the Additions none, their $12.50 included");
-  assert.equal(document.querySelectorAll(".fitaf-was").length, 6);
+  assert.deepEqual(struck(".product__content-price, .product-card-mobile__price", additions), ["$16.67", null], "§ 37: the Additions' plain price struck, a From price not");
+  assert.equal(document.querySelectorAll(".fitaf-was").length, 7);
   for (const s of document.querySelectorAll(".fitaf-was")) {
     assert.equal(s.localName, "s");
     assert.equal(s.getAttribute("aria-hidden"), "true");
   }
   c.instance.cb([]);
   frames(c);
-  assert.equal(document.querySelectorAll(".fitaf-was").length, 6, "the observer's next frame adds nothing");
+  assert.equal(document.querySelectorAll(".fitaf-was").length, 7, "the observer's next frame adds nothing");
 });
 
 test("ST2: unmarked, one read of the mark, no write, no observer, no frame, no timer, no log; a throwing storage too", async () => {
@@ -204,8 +208,8 @@ test("ST4: a date outside valid_from..valid_to in New York, no observer and noth
     return [v.c.observers, v.document.querySelectorAll(".fitaf-was").length];
   };
   assert.deepEqual(at(`${OFFER.valid_from}T03:59:00Z`), [0, 0], "valid_from's eve in New York (its 23:59)");
-  assert.deepEqual(at(`${OFFER.valid_from}T04:01:00Z`), [1, 6], "valid_from's first minute in New York");
-  assert.deepEqual(at(`${OFFER.valid_to}T23:59:00-04:00`), [1, 6], "valid_to's last minute in New York");
+  assert.deepEqual(at(`${OFFER.valid_from}T04:01:00Z`), [1, 7], "valid_from's first minute in New York");
+  assert.deepEqual(at(`${OFFER.valid_to}T23:59:00-04:00`), [1, 7], "valid_to's last minute in New York");
   const end = new Date(Date.parse(`${OFFER.valid_to}T23:59:00-04:00`) + 120_000).toISOString();
   assert.deepEqual(at(end), [0, 0], "after valid_to");
 });
@@ -232,4 +236,34 @@ test("ST8: no save link at done, and no save link's address or words in the text
   assert.ok(page.document.getElementById("fitaf-nav"), "fixture control: the steps' foot drawn");
   assert.ok(page.document.getElementById("fitaf-help"), "fixture control: § 33's contact link made");
   assert.equal(page.document.querySelectorAll("#fitaf-save").length, 0, "no save link");
+});
+
+/** § 37: the checkout's summary as the probe measured it (storefront/probe-prices/2026-10-27/), with the contract's figures. */
+const SUMMARY = (shipping) => `<!doctype html><html><head></head><body><div class="summary">
+<div class="summary__header"><h3 class="summary__title">Order Summary</h3><div class="summary__header-right"><span class="summary__total-preview">${shipping ? "$103.00" : "$98.00"}</span></div></div>
+<div class="summary__item"><div class="summary__item-price"><span class="summary__item-price-current">$98.00</span><span class="summary__item-price-unit">7 \u00d7 $14.00</span></div></div>
+<div class="summary__breakdown"><div class="summary__row"><span>Subtotal | 7 items</span><span>$98.00</span></div>
+<div class="summary__row"><span>Shipping</span><span>${shipping ? "$5.00" : "\u2014"}</span></div><div class="summary__row"><span>Tax</span><span>$0.00</span></div></div>
+<div class="summary__total"><span class="summary__total-label">Total</span><span class="summary__total-value">${shipping ? "$103.00" : "$98.00"}</span></div>
+<div class="checkout__submit"><button type="button"><span class="button__content">Pay now - ${shipping ? "$103.00" : "$98.00"}</span></button></div>
+</div></body></html>`;
+
+test("ST12 and ST13: the summary's Subtotal, line, unit price and totals at the contract's figures; fees and the pay button never; no Subtotal, no total", async () => {
+  const text = await shipped();
+  const struckOf = (document, sel) => [...document.querySelectorAll(sel)].map((p) => (p.previousElementSibling?.matches(".fitaf-was") ? p.previousElementSibling.textContent : null));
+  for (const [shipping, total] of [[true, "$135.67"], [false, "$130.67"]]) {
+    const v = windowFor({ storage: { [KEY]: "1" }, page: SUMMARY(shipping) });
+    runAt(text, v.window);
+    frames(v.c);
+    const d = v.document;
+    assert.deepEqual(struckOf(d, ".summary__row span:last-child"), ["$130.67", null, null], "the Subtotal struck; shipping and tax never");
+    assert.deepEqual(struckOf(d, ".summary__item-price-current"), ["$130.67"], "the line's price");
+    assert.deepEqual(struckOf(d, ".summary__item-price-unit"), ["$18.67"], "the unit's $X: 7 x $14.00 -> $18.67, before it");
+    assert.deepEqual(struckOf(d, ".summary__total-preview, .summary__total-value"), [total, total], `the header total and the Total, shipping ${shipping ? "$5.00" : "none"}: ${total}`);
+    assert.equal(d.querySelectorAll(".checkout__submit .fitaf-was").length, 0, "the pay button never");
+    d.querySelector(".summary__breakdown .summary__row").remove();
+    v.c.instance.cb([]);
+    frames(v.c);
+    assert.deepEqual(struckOf(d, ".summary__total-preview, .summary__total-value"), [null, null], "no Subtotal: no struck total");
+  }
 });
