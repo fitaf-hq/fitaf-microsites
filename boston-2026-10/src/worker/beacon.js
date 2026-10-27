@@ -19,6 +19,9 @@
 // mpids Family's as well as the individual plans'. F1 holds every question of the page equal to this one's.
 // Since § 14 (2026-10-26: a saved offer counted) one more event, `save`, sent when the save step's Worker answered an offer
 // save as stored: `s` alone (nothing the visitor typed), the data point's layout unchanged, and not a step of STEPS.
+// Since § 15 (2026-10-26: no data point thinned) each data point is written with its own index, random and new for each
+// point, so Analytics Engine's write-time sampling (of points written too quickly into one index) has nothing to thin; the
+// visitor `v` is appended as blob12, blobs 1–11 in their places. The index identifies nothing and nothing reads it.
 import plans from "../../data/plans.json" with { type: "json" };
 import events from "../../data/events.json" with { type: "json" };
 import { ANSWER_SETS, answerKey } from "../../scripts/selection.mjs";
@@ -70,9 +73,10 @@ export const STEPS = ["open", "answer", "result", "click"];
 export const QR_IDS = events.map((e) => e.id);
 export const DEVICES = ["phone", "tablet", "desktop"];
 
-/** The data point's layout (§ 4): blob N is BLOBS[N - 1], double N is DOUBLES[N - 1], index1 is `v`. A field an event
- *  does not carry is "" (a blob) or 0 (a double). The report (scripts/analytics.mjs) reads its columns from these. */
-export const BLOBS = ["event", "s", "country", "device", "viewport", "qr", "question", "answer", "key", "link", "step"];
+/** The data point's layout (§ 4): blob N is BLOBS[N - 1], double N is DOUBLES[N - 1]; index1 the point's own (§ 15
+ *  item 1; it was `v`, which is blob12 since § 15 item 2). A field an event does not carry is "" (a blob) or 0 (a double).
+ *  The report (scripts/analytics.mjs) reads its columns from these. */
+export const BLOBS = ["event", "s", "country", "device", "viewport", "qr", "question", "answer", "key", "link", "step", "v"];
 export const DOUBLES = ["load_ms", "length_ms", "mpid"];
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -116,13 +120,18 @@ export function countryOf(request) {
   return typeof country === "string" && COUNTRY.test(country) ? country : "";
 }
 
-/** The data point for a checked event (§ 4). */
+/** § 15 item 1: a data point's own index, 16 random hex digits, new for each point. */
+const INDEX_BYTES = 8;
+const pointIndex = () => hex(crypto.getRandomValues(new Uint8Array(INDEX_BYTES)));
+
+/** The data point for a checked event (§ 4): its fields, the country, the device and (§ 15 item 2) the visitor `v` as
+ *  blobs; its numbers as doubles; its own index (§ 15 item 1). */
 export function dataPoint(event, { v, country, device }) {
-  const all = { ...event, country, device };
+  const all = { ...event, country, device, v };
   return {
     blobs: BLOBS.map((n) => (has(all, n) ? String(all[n]) : "")),
     doubles: DOUBLES.map((n) => (has(all, n) ? all[n] : 0)),
-    indexes: [v],
+    indexes: [pointIndex()],
   };
 }
 
