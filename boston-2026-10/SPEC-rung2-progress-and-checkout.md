@@ -1826,3 +1826,33 @@ which fails the comparison. `r2-11-shipped-size`, `r2-71-text` and `r2-77-text`:
 **Left**: the Advisor's paste, then the live smoke at once (§ 33 item 6), and after it CC-8's `watch_expected_footer`
 and the watch's baseline, as at every paste; the 390 `zero: not found` of § 33.1 (§ 31's bound), not seen in the four
 runs here; ⬜ the order page's link, if wanted (§ 33.1 item 1).
+
+## 35. Amendment, 2026-10-26: *Save my offer* on the Payment step. CONTRACT, before any code
+
+**The Advisor, 2026-10-26**: *"add a "save my offer" call to action on the final step of the HMP checkout (where
+customers enter their credit card), but that's definitely something for tomorrow"*; then *"let's do the slate for
+tomorrow evening first"*. Built on § 33's block (`boston/footer-zero-and-contact`, `5389d66`), so one paste carries both
+if § 33's has not been pasted first. Its page half, the save dialog opened by `#save`, is SPEC-ui-and-copy-pass § 6, and
+it is **in production before this block is pasted**.
+
+1. **The link**: one text link, its words data/messages.json's `handoff.save`, **"Not ready to checkout? Save your
+   offer now."** (the plan page's *Not ready?* words, the Advisor's; ⬜ his to edit), to `https://eatfitaf.com/#save`,
+   opening in a new tab (`target="_blank"`, `rel="noopener"`), so the checkout stays where the visitor left it.
+2. **Where**: in **step 3, Payment** (§ 25.2) alone, the block's own foot (`#fitaf-nav`) as § 33's link is placed, on a
+   line of its own **above** *Contact customer service*; hidden in steps 1 and 2. Never a button, never orange, never
+   over the store's controls, the card field or the pay button (`.checkout__submit`; on a phone `.summary__pay-button`
+   and the store's bottom bar); the same type as § 33's link (14 px, `--muted`, underlined, centred). One per page,
+   not duplicated by re-renders or by moving between steps.
+3. **Nothing else changes**: the steps, Continue, § 33's hidden row and its link, the order, the total.
+4. **Bytes**: within the 50,000-character cap (§ 32); before and after in § 35.1.
+5. **Cases**, in the watch package's stand-in checkout and the site's, written first and run red: **SO1** at step 3,
+   the link once, its words, its address, `target` and `rel`, above the contact link; **SO2** at steps 1 and 2 not
+   displayed; **SO3** moving 3 → 2 → 3 and a re-render leave one link; **SO4** the link's box overlaps neither the pay
+   button nor the card field at 1280 and 390. The site's address rules (R2-11b, R2-71, R2-71b, R2-77, as § 33.2
+   amended them for the contact page) admit `https://eatfitaf.com/#save` as the whole URL alone; R2-71b's mutant plants
+   another eatfitaf.com address and still fails. The watch: W28's report gains the save link (`once`, words, address,
+   size, step). **Mutants**: the link shown in every step (SO2); added twice (SO3).
+6. **The block** `storefront/footer-block/2026-10-27-fitaf-handoff-<commit>.md`, built from this branch; rehearsed live
+   by the orchestrator (§ 29, headless, nothing submitted; step 3 entered by the block's class as § 33.2's rehearsal
+   did, the save link reported); then pasted by the Advisor once the page half is live; then the live smoke at once.
+   Merged into the dev line before the paste (the CI watch runs that line's watch code).
