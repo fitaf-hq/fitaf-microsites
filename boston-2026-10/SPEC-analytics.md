@@ -1098,3 +1098,57 @@ T5's ceiling is 61,440 bytes gzip; the largest page is 35,873.
 
 **Not done here**: the whole suite, Storybook, the watch and contrast (no colour or style changed); nothing deployed, no
 merge, no pin.
+
+## 16. Amendment, 2026-10-27: the offer email's clicks, and its visitors as their own source. CONTRACT, before any code
+
+**Why.** The Advisor, the morning after Boston's first event, `ts=2026-10-27T13:57:48.438Z`: *"I also want to try to
+understand the behavior of the people who got the offer email. I know we can't track open rates, but can we track their
+initial click? And can we put them into their own segment so we can compare funnel dynamics?"*; told it would be an
+anonymous count (a repeat open counted again), not each person's first click, which would tie a click to a saved email
+the privacy notice does not cover, `ts=2026-10-27T14:20:58.576Z`: *"Please start building this – I'd like to get it
+deployed as soon as we can."*
+
+Today E1's one button opens the offer page `/o/<code>` (`src/worker/redeem.js`), which sends nothing; its *Build my
+plan* link opens the plan page at `/?e=<the save's event>#from-email`, so an email visitor is counted as a visit from
+that event's QR code (`boston`), mixed with the flyer's.
+
+1. **The offer page counts its own opening.** The vocabulary (§ 3) gains one event:
+
+   | event | when | carries |
+   |---|---|---|
+   | `offer` | the offer page's script starts, once per page load | `s`; `qr`, the save's event id (`demo` · `boston` · `seminar`, as the page's own link names it; `""` for an unknown code); `kind`, which page it is: `saved` (the save's offer live), `welcome` (ended, the current offer shown), `current` (an unknown code), `ended` (no offer current) |
+
+   - ⛔ **Never the code, the path, the query, the referrer or anything from the save's row but its event id.** The
+     page's script is given `kind` and `qr` by the Worker as data; it does not read `location`.
+   - Sent by the page's script in the browser (as every event is), so a link scanner or mail proxy that fetches the
+     page without running it sends nothing. The same transport (§ 4: `POST /a`, the same `s` rule) and § 12's tester
+     cookie (`fitaf_no_tracking`, a tester's browser sends nothing) hold; ⛔ no second transport.
+   - The page sends nothing else: no `leave`, no `error`. A visit of the offer page is one data point.
+   - The Worker's `FIELDS` gains `offer` with `qr` and `kind`; `kind` is a new blob, **`blob13`**, appended (blobs
+     1–12 keep their places); its vocabulary is the four words above, anything else refused.
+2. **The plan page names an email visit.** `open` (§ 3) gains `via`: `email` when the page's script starts at the
+   fragment `#from-email` exactly (the offer page's link), else `""`. It is **`blob14`**, appended. ⛔ Read once, at
+   the start, from the fragment only; the fragment is not rewritten by it.
+3. **The report** (`scripts/analytics.mjs`, §§ 5 and 11): a visit whose only event is `offer` is **not a plan-page
+   visit**: the visits, visitors, funnel and every figure before this section are counted without them, exactly as
+   before. Each day gains `offer_pages` (the visits with an `offer`, by `kind`) and `email_visits` (the plan-page visits
+   whose `open` has `via` `email`), a text line each and members of the JSON's day. AJ1–AJ4 hold; AJ2's base moves once.
+   The team's dashboard (Fit AF `analytics-worker.spec.md` § 12) reads the same two fields.
+4. **Privacy.** Nothing new identifies anyone: no code, no address, no click tied to a save. § 1's bar holds; the
+   privacy notice is unchanged. A repeat opening of the offer page is counted again, and the report says so.
+5. **Cases**, written first and run red:
+   - **EM-A1**: the offer page in Miniflare for each `kind` (a stored save with its offer live, ended, an unknown
+     code, no offer current): its script sends exactly one `offer` with that `kind` and the save's event id, and the
+     payload holds neither the code (with and without its hyphen) nor `/o/`.
+   - **EM-A2**: the plan page opened at `#from-email` sends `open` with `via` `email`; at no fragment, `#save` and
+     `#lean-or-7d`, `via` `""`.
+   - **EM-A3**: the Worker accepts `offer` with each `kind` and refuses another `kind`, an `offer` with a `via`, and an
+     `open` with `via` other than `email` or `""`; the data point's blob13 and blob14 as stated, blobs 1–12 unchanged.
+   - **EM-A4**: with the tester cookie, the offer page's beacon is not written (§ 12's case, for the new page).
+   - **EM-A5**: the report over a fixture with offer-only visits and email visits: every earlier figure as without
+     them, `offer_pages` by kind and `email_visits` as stated.
+   **Mutants**, each in a mirror and killed by its own case: the offer page's script reading `location` (EM-A1); `via`
+   read from the query instead of the fragment (EM-A2); the report counting offer-only visits as visits (EM-A5).
+6. **When.** Built on `boston/analytics-email` from the release line; merged into it; the full suites; dev, where a
+   test of each event is read back from the dataset (a 204 from `/a` proves nothing); production on the Advisor's word,
+   **after** the dashboard's § 12 is live, so no card counts an offer page as a visit.
