@@ -1614,3 +1614,109 @@ pairs. **A render for the Advisor**: `npm run preview:emails`, E1 at 600 and 390
 merged into the release line; the site suite, Storybook and contrast on the merged line; dev (a test E1 only on his
 word); production on his word, after item 7's answer. E1 is rendered when it is sent, so every E1 sent after the release
 has the new look, those already waiting too.
+
+### 8.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 8 is unchanged. On `boston/e1-look`: the cases at `3f0643c` (on `6e0d86f`'s code, red), three corrections to them found at
+the code at `7961725` (red there too), the code and DRAFT § 3 at `ac0ec8c`, the goldens it moves at `5d40e48`, this
+section after them.
+
+**What was built**
+- `src/worker/messages.js`: E1 from one list of lines, both parts. The band, the slideshow when the photo manifest has one,
+  the panel's one link, the save's line under it, *Already ordered?*, the footer's two lines. E-X's renderer is unchanged
+  and shares the document function; its bytes are EL1's.
+- `src/worker/email-band.js` reads `data/flyer-front.json` (a JSON import, as `data/offers.json` is).
+- `src/worker/email-photos.json`, written by `npm run email:photos`: the manifest's `base` and `email_slideshow` alone.
+- `src/assets/email/`, written by `npm run email:images`: two halftone tiles and the reversed logo.
+- `build.mjs`: the slideshow is among the sheets every build copies. E1's own images go to `assets/email/` of the
+  development build, and of the production build with `production` true.
+- `src/contrast-pairs.json`: E1's pairs; the consent link's pair removed; the halftone's dots declared.
+- `consent/DRAFT.md` § 3: E1's words and order. The band is named and not copied, and item 7's removal is stated with its
+  open question.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, each named as its literal path, run from the
+package; the whole suite and Storybook were not run, as the orchestrator asked):
+
+| | before | after |
+|---|---|---|
+| `test/el*.test.mjs` (EL1–EL10) | `6e0d86f`'s code (`3f0643c`): `# tests 31` `# pass 4` `# fail 27` | `5d40e48`: all 31 pass, within the next row's run |
+| `el*` and every case reading E1 (M1–M21, S3, S13, SP10, SP11, SP12, SP16, SP17, UC4, the SP mutants) | `3f0643c`, without `el*`: `# tests 73` `# pass 55` `# fail 18` | `5d40e48`: `# tests 104` `# pass 103` `# fail 1` (M20: item 1's lede accent, below) |
+| the corrections of `7961725` (EL9, M7, M17), laid over `git archive 3f0643c` | `# tests 9` `# pass 2` `# fail 7` | within the rows above |
+| the goldens' and builds' readers (B1, CC-8, CC-9, EM5, MS-9, P3, P4, PR-3, PR-10, PV5, QE14, S20, SP3, W4, WC-6, WC-9, WC-10) | `3f0643c` (SP3, CC-8, PV5, S20 alone): `# tests 12` `# pass 11` `# fail 1` (SP3's list); `ac0ec8c`: `# tests 61` `# pass 55` `# fail 6` (CC-8b, CC-8c, MS-9 twice, PR-10: CC-8's map; PV5 dev) | `5d40e48`: `# tests 61` `# pass 61` `# fail 0` |
+| `npm run contrast` | `6e0d86f`'s pairs: `94 pairs, 94 pass, 0 fail; 0 problem(s).` | `97 pairs, 96 pass, 1 fail; 0 problem(s).` (the same pair) |
+
+Red for the right reasons: E1 had none of the band, the panel, the footer or the photo row; it still said item 7's two
+lines and carried `/confirm`; the images, `npm run email:photos` and `npm run email:images` did not exist. EL1's E-X
+half, EL5's GIF rule, EL8's first case and EL10's clip passed there, as guards.
+
+**The goldens moved** (each re-recorded once from `ac0ec8c`'s own tree, `git archive`, the package's `node_modules` linked
+in; each recorder's control first reproducing the committed record):
+- EL (`test/el-golden.json`, new): `before` recorded at `6e0d86f` in the cases commit, and reproduced there byte for byte
+  at the goldens. `after` recorded at `ac0ec8c`.
+- M14: every E1 entry moved and two were added; `ex` is byte-identical. `7961725`'s tree reproduces the five committed
+  entries.
+- CC-8's Worker map (MS-9 and PR-10 read it too): `data/flyer-front.json`, `src/worker/email-band.js` and
+  `src/worker/email-photos.json` are new; `email-style.js` and `messages.js` changed. `7961725` reproduces the committed map.
+- PV5: the development build gains the three images. Production's build (`production` false) and every other file are
+  byte-identical. The recorder at `7961725` reproduces `63e243b`'s, `recorded_at` apart.
+- Not moved: S20, SP3's base, U4, WC-9.
+
+**The preview** (`npm run build:dev`, then `npm run preview:emails`; rendered in headless Chrome from a scratch copy whose
+images are the dev build's local files, nothing loaded from a host). E1's HTML part is 4,409 bytes, and 4,673 with a slideshow
+entry; E-X's is 2,560. Gmail clips at 104,448. The slideshow in the render is the orchestrator's prototype, in the
+git-ignored `dist-dev/email-preview/`. ⚠ Chrome's desktop window is never narrower than 500 px, so `--window-size=390`
+lays the page out at 500 and crops it. The 390 renders are a 390 px frame's.
+
+**What § 8 was silent on, and what was built** (stated, not ruled)
+
+1. **The case files are `el1`–`el10`**, with `el-fixtures.mjs`, the recorder `el-record.mjs` and `el-golden.json`. Every
+   GIF in them is generated, flat colours.
+2. **The halftone is drawn as a cell's `background` attribute**, beside its `bgcolor`. It is not a CSS `url()`, which M15
+   refuses.
+   - The tile is the flyer's grid: 9 px, one dot of the flyer's own colour (`--muted`, print.css `.fb-dots`) at 1 px
+     radius, about the approved mock's weight.
+   - It is 1×, so a high-density screen draws the dots soft.
+   - The panel's dot is `--cta-hover`, not the flyer foot's `--orange`. The white label crosses the dots, and white on
+     `--orange` is Lc −48.1, under large text's 60.
+3. ⚠ **The words over the halftone are measured on its ground.** The mock draws dots behind them. The dots are declared as
+   a texture (`not_measured`, with the figures). Over a dot's core: `--white` −88.5, the headline's `--signature` −43.2
+   (under its 45), the lede's `--lean` −34.7, the footer's `--line` −69.9.
+4. **The logo**: `print/assets/fitaf-logo-reversed.png`'s drawing on the band's own `--ink`, as print.css's `.fb-logo-rev`
+   draws it. Its file is 240 × 104 (1600 × 690 area-averaged; 0.5 % taller than true). It is drawn at 120 × 52 in the band
+   and 90 × 39 in the footer, with `alt=""` there.
+5. **Sizes**: the headline 34/37 px, the mock's, at the flyer's −0.01em. The file's `size` (36) is the printed piece's and
+   is not used. The lede is 16/22 at 600; the label 34/38 at 700; the footer 13/20.
+6. **Narrow widths**: the band's top is a right-to-left row of two inline blocks.
+   - At 600 the logo's column (120) and the headline's (432) fill the 552 between the gutters exactly.
+   - Narrower, the headline drops under the logo with its lines as given (390 shown).
+   - A client without inline blocks (Outlook on Windows) stacks them the same way. Not seen.
+7. **The footer's words are `--line`** on `--ink`; the mock's grey is no token. Its link is `--white`, underlined.
+8. **The slideshow's address** is the manifest's `base` + file, as every sheet's; an absolute base is used as written.
+   The Worker reads the derived copy, since importing the manifest would move the Worker's files every week (CC-8b) and
+   fail its bundle once the manifest is deleted (the README's way to remove the photographs).
+   - ⚠ **After the emitter writes the slideshow here, run `npm run email:photos` and commit the copy**: EL5 fails until then.
+9. **The GIF is copied by every build**, since S20, SP3 and PV5 hold the sheets' directory whole. E1's own images go only
+   to the builds whose Worker sends E1.
+10. **A ticked save's token is still derived, and its hash stored**, at the send (`send-due.js` unchanged). The cases that
+    reached `/confirm` through E1's link derive the token from the save id: M1, M7, M11, S3, S13, SP11, SP12, SP17. M10
+    holds E1's two attempts identical without it (the token's half is E-X's, through which M12's mutant still fails it).
+    SP10's E1 half now holds the stored event, since E1 names none.
+11. **DRAFT's status line and `wording_version` are untouched** (v1, approved 2026-10-25) though § 3's words changed:
+    the Advisor's to move.
+12. **The production gate** prints E1's text, the band's words with it, and finds no bracket. It does not read
+    `data/flyer-front.json`'s `approved`. Not built.
+
+**Open, built as § 8 says** (⬜ put to the Advisor): item 4's *See my offer* once the offer has ended; item 7's removal of
+*Yes, keep me posted*, after which no visitor can confirm a ticked box (unconfirmed, a save lapses 30 days after its
+offer). § 8 is not released until he answers.
+
+**Found, not ruled: the contract asks for two things that cannot both hold.**
+- ⚠ The lede's accent, `--lean` on `--ink` at 16px/600, is Lc −51.3: under body's 75, and under large text's 60 too.
+- No token passes body on `--ink` but `--white`, `--line` and `--ice`; `--teal` is −66.8.
+- The pair is declared as what it is, so `npm run contrast` exits 1 and M20 fails on that one pair alone.
+- The flyer has the same pair at 17px, unmeasured (`npm run contrast` does not read print.css).
+- His to rule, among: the accent drawn white; a pair he accepts below its role, stated; or the lede at 30px/700, a large
+  heading.
+
+**Not done here**: the whole suite, Storybook, the watch; no test email; no client but Chrome; nothing deployed, merged or
+pinned.
