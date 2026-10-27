@@ -6,7 +6,10 @@
 //   1. a pair whose |Lc| is under its role's minimum;
 //   2. a raw colour (#hex, rgb(), hsl()) in the CSS outside a :root block — it would bypass this check;
 //   3. a colour token that no pair measures and no `not_measured` entry explains, or a pair naming a
-//      token that does not exist.
+//      token that does not exist;
+//   4. (SPEC-ui-and-copy-pass § 8.2 item 3) an `exception` on a pair without a ruling's ts. A pair the Advisor approved
+//      under its role's minimum carries `exception: { ts, ruled }`, the ts of the ruling's own record: that pair alone
+//      passes, marked `pass*` and listed under the table; the same colours declared again are measured strictly.
 //
 // Options (for the mutant cases; the committed files are never written):
 //   --template <path>  --save-style <path>  --mockup-style <path>  --picks-style <path>  --privacy-style <path>
@@ -32,6 +35,8 @@ export const DEFAULTS = {
 const HEX_TOKEN = /(--[a-z0-9-]+)\s*:\s*(#[0-9a-f]{6})\s*;/gi;
 const ROOT_BLOCK = /:root\s*\{([^{}]*)\}/g;
 const RAW_COLOUR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(/i;
+/** A ruling's ts, as the session archive records one: an instant in UTC (2026-10-27T15:04:57.804Z). */
+const RULING_TS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 
 /** The CSS drawn: the template's <style> blocks, the dev build's stylesheet, the mock-ups' stylesheet and the Chef's
  *  Choice card's (SPEC-chefs-choice § 3, inlined by the build when a week is open). */
@@ -86,7 +91,11 @@ export async function measure(paths = {}) {
       return { ...pair, min: role.min_lc, lc: NaN, pass: false };
     }
     const value = lc(tokens[pair.fg], tokens[pair.bg]);
-    return { ...pair, fgHex: tokens[pair.fg], bgHex: tokens[pair.bg], min: role.min_lc, lc: value, pass: Math.abs(value) >= role.min_lc };
+    const exception = pair.exception ?? null;
+    const ruled = exception !== null && RULING_TS.test(exception.ts ?? "");
+    if (exception !== null && !ruled) problems.push(`pair ${pair.fg} on ${pair.bg} carries an exception without a ruling's ts (${pair.where})`);
+    const meets = Math.abs(value) >= role.min_lc;
+    return { ...pair, fgHex: tokens[pair.fg], bgHex: tokens[pair.bg], min: role.min_lc, lc: value, pass: meets || ruled, exception: ruled ? exception : null };
   });
 
   const accounted = new Set([...spec.pairs.flatMap((x) => [x.fg, x.bg]), ...spec.not_measured.map((x) => x.token)]);
@@ -109,7 +118,7 @@ function table(rows) {
     r.role + (r.build ? ` (${r.build})` : ""),
     String(r.min),
     Number.isNaN(r.lc) ? "—" : r.lc.toFixed(1),
-    r.pass ? "pass" : "FAIL",
+    r.pass ? (r.exception ? "pass*" : "pass") : "FAIL",
     r.where,
   ]);
   const widths = head.map((_, c) => Math.max(...[head, ...body].map((row) => row[c].length)));
@@ -138,6 +147,13 @@ function argsOf(argv) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { rows, problems, considered, notMeasured } = await measure(argsOf(process.argv.slice(2)));
   console.log(table(rows));
+  const excepted = rows.filter((r) => r.exception);
+  if (excepted.length) {
+    console.log("\n* Approved exceptions, each by a ruling (its ts), passing under its role's minimum:");
+    for (const r of excepted) {
+      console.log(`  ${r.fg} on ${r.bg}  ${r.role} min ${r.min}  Lc ${r.lc.toFixed(1)}  ts=${r.exception.ts}  ${r.exception.ruled ?? ""}`);
+    }
+  }
   console.log("\nConsidered for the button, not drawn (reported, not gating):");
   for (const c of considered) {
     console.log(`  ${c.fg} on ${c.bg}  ${c.role} min ${c.min}  Lc ${c.lc.toFixed(1)}  ${c.pass ? "would pass" : "would FAIL"}  ${c.why}`);

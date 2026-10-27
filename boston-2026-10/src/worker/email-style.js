@@ -62,7 +62,7 @@ const SHAPES = {
  * the flyer front's (email-band.js), its accents in the flyer's colours; the headline, at 34px/700, is a large heading.
  */
 const E1_TEXT = {
-  band: { fg: "--white", bg: "--ink", role: "body" }, // the headline and the lede; the footer's link
+  band: { fg: "--white", bg: "--ink", role: "body" }, // the headline and the lede; the footer's links
   headlineAccent: { fg: HEADLINE_ACCENT, bg: "--ink", role: "ui-or-heading" },
   ledeAccent: { fg: ledeAccentOf(FLYER_FRONT), bg: "--ink", role: "body" },
   footer: { fg: "--line", bg: "--ink", role: "body" },
@@ -152,7 +152,7 @@ export const HEADLINE_COLUMN_PX = LAYOUT_WIDTH_PX - 2 * GUTTER_PX - E1_IMAGES.ba
 const PANEL = { topPx: 28, pad: "34px 24px", sizePx: 34, lineHeightPx: 38, tracking: "0.01em" };
 const SAVED_TOP_PX = 14;
 const ALREADY_PAD = { top: 20, bottom: 32 };
-const E1_FOOT = { top: 20, bottom: 22, sizePx: 13, lineHeightPx: 20, logoGapPx: 16 };
+const E1_FOOT = { top: 20, bottom: 22, sizePx: 13, lineHeightPx: 20, logoGapPx: 16, consentGapPx: 8 };
 
 /** The colours E1 puts on a cell as bgcolor too (Outlook draws the cell's, not a background image). */
 export const E1_BGCOLOR = { ground: token("--ink"), panel: token("--cta") };
@@ -209,7 +209,13 @@ export const E1_STYLE = {
   footTable: css({ "border-collapse": "collapse" }),
   footWords: css({ padding: "0", "vertical-align": "middle" }),
   footText: css({ margin: "0", ...e1Font(TEXT.line.font, E1_FOOT.sizePx, E1_FOOT.lineHeightPx, 400), color: token(E1_TEXT.footer.fg) }),
-  /** The footer's eatfitaf.com: a quiet link in its sentence (its font, size and weight), white, underlined. */
+  /** § 8.2 item 1: the consent's line, one small line of the footer's own type above its words, a little apart. */
+  footConsent: css({
+    margin: `0 0 ${px(E1_FOOT.consentGapPx)}`,
+    ...e1Font(TEXT.line.font, E1_FOOT.sizePx, E1_FOOT.lineHeightPx, 400),
+    color: token(E1_TEXT.footer.fg),
+  }),
+  /** The footer's links (the consent's Yes, keep me posted; eatfitaf.com): quiet, in their sentences, white, underlined. */
   footLink: css({ color: token(E1_TEXT.band.fg), "text-decoration": "underline" }),
   footLogoCell: css({ "padding-left": px(E1_FOOT.logoGapPx), "vertical-align": "middle" }),
   footLogo: css({ display: "block", width: px(E1_IMAGES.footLogo.widthPx), height: px(E1_IMAGES.footLogo.heightPx), border: "0" }),

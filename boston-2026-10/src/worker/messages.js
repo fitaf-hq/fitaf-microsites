@@ -10,7 +10,8 @@
 // ⭐ Since SPEC-ui-and-copy-pass § 8 (2026-10-26) E1 is in the printed flyers' language (e1Html below): the band (the flyer
 // front's headline and lede, read from data/flyer-front.json by email-band.js), the slideshow when the photo manifest has
 // one (email-photos.json, `npm run email:photos`), the whole orange panel one link, the line under it, Already ordered?, and
-// a dark footer. Its text part is the same lines from the same list. E-X is renderHtml's, byte for byte as before.
+// a dark footer (since § 8.2 item 1 a ticked save's consent line first in it). Its text part is the same lines from the same
+// list. E-X is renderHtml's, byte for byte as before.
 import { bandLines } from "./email-band.js";
 import photos from "./email-photos.json" with { type: "json" };
 import { BUTTON_BGCOLOR, E1_BGCOLOR, E1_IMAGES, E1_STYLE, FOOT_LOGO_CELL_PX, LAYOUT_WIDTH_PX, LOGO, STYLE } from "./email-style.js";
@@ -25,8 +26,8 @@ export const displayCode = (code) => `${code.slice(0, 4)}-${code.slice(4)}`;
 
 const strong = (text) => ({ strong: text });
 const button = (label, href) => ({ label, href });
-/** A quiet link, in its sentence (the marketing consent's kind, SPEC-rung5 § 9; since SPEC-ui-and-copy-pass § 8 item 7 E1's
- *  one is its footer's eatfitaf.com). */
+/** A quiet link, in its sentence: the marketing consent's (SPEC-rung5 § 9), and since SPEC-ui-and-copy-pass § 8 the footer's
+ *  eatfitaf.com; both in E1's footer since its § 8.2 item 1. */
 const textLink = (label, href) => ({ label, href, plain: true });
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -122,7 +123,7 @@ const linesHtml = (lines, linkStyle) => lines.map((line) => line.map((s) => segm
  * the padding), the line under it, Already ordered?, and the footer (--ink with the halftone; its words, the logo at the
  * right). Inline styles only, every coloured cell's colour also its bgcolor.
  */
-function e1Html(subject, { band, slideshow, cta, saved, after, footer, siteUrl }) {
+function e1Html(subject, { band, slideshow, cta, saved, after, consent, footer, siteUrl }) {
   const at = (path) => esc(`${siteUrl}${path}`);
   const halftone = (path, colour) => `bgcolor="${colour}" background="${at(path)}"`;
   const rows = [
@@ -145,7 +146,9 @@ function e1Html(subject, { band, slideshow, cta, saved, after, footer, siteUrl }
     ...after.map((line) => `<tr><td style="${E1_STYLE.alreadyRow}"><p style="${E1_STYLE.centred}">${linesHtml([line])}</p></td></tr>`),
     `<tr><td ${halftone(E1_IMAGES.halftoneInk, E1_BGCOLOR.ground)} style="${E1_STYLE.foot}">` +
       `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="${E1_STYLE.footTable}"><tr>` +
-      `<td style="${E1_STYLE.footWords}"><p style="${E1_STYLE.footText}">${linesHtml(footer, E1_STYLE.footLink)}</p></td>` +
+      `<td style="${E1_STYLE.footWords}">` +
+      consent.map((line) => `<p style="${E1_STYLE.footConsent}">${linesHtml([line], E1_STYLE.footLink)}</p>${LINE_GAP}`).join("") +
+      `<p style="${E1_STYLE.footText}">${linesHtml(footer, E1_STYLE.footLink)}</p></td>` +
       `<td align="right" width="${FOOT_LOGO_CELL_PX}" style="${E1_STYLE.footLogoCell}">` +
       `${img(`${siteUrl}${E1_IMAGES.footLogo.path}`, E1_IMAGES.footLogo, E1_STYLE.footLogo)}</td></tr></table></td></tr>`,
   ];
@@ -178,6 +181,10 @@ const ENDED_LINE = ["This offer has ended"];
  *  See my offer, since Claim would be false (⬜ the orchestrator's default, put to the Advisor). */
 const CLAIM = "Claim my offer";
 const SEE = "See my offer";
+/** § 8.2 item 1 (ruled ts=2026-10-27T15:04:57.804Z): the marketing consent's line, its words and link exactly as before
+ *  § 8, in the footer above its words, only when the box was ticked (a token). */
+const CONSENT_WORDS = "You asked to hear about Fit AF menus and offers. ";
+const CONSENT_LINK_LABEL = "Yes, keep me posted";
 /** Item 6: the footer's first line, its link the literal eatfitaf.com to SITE_URL/; the address on a line of its own. */
 const FOOTER_WORDS = "You're getting this email because you saved an offer at ";
 const FOOTER_LINK_LABEL = "eatfitaf.com";
@@ -185,20 +192,22 @@ const FOOTER_LINK_LABEL = "eatfitaf.com";
 /**
  * E1 (SPEC-ui-and-copy-pass § 8), top to bottom: the band (the flyer front's headline, a line each, and its lede), the
  * slideshow when `photos` (the photo manifest's copy) has one, the panel's one link, the save's line under it, Already
- * ordered?, and the footer's two lines. `held` is the save's held date (SPEC-save-offer-production § 10.9; its offer's
- * valid_to unless later); `ended` when it goes after that date. `front` is the flyer front's words. ⚠ Item 7 removed
- * "You saved this offer at [event] yesterday" and the marketing consent's line, so `event` and `token` are no longer
- * drawn (the send path still passes them: a ticked save's token is still derived and its hash stored).
+ * ordered?, and the footer: since § 8.2 item 1 the consent line when `token` is present (the marketing box was ticked),
+ * then its two lines. `held` is the save's held date (SPEC-save-offer-production § 10.9; its offer's valid_to unless
+ * later); `ended` when it goes after that date. `front` is the flyer front's words. ⚠ Item 7 removed "You saved this offer
+ * at [event] yesterday", so `event` is no longer drawn (the send path still passes it).
  */
-export function e1({ to, code, offer, siteUrl, held = offer.valid_to, ended = false, front, photos: manifest = photos }) {
+export function e1({ to, code, offer, siteUrl, token, held = offer.valid_to, ended = false, front, photos: manifest = photos }) {
   const band = bandLines(front);
   const cta = button(ended ? SEE : CLAIM, `${siteUrl}/o/${code}`);
   const saved = ended ? ENDED_LINE : savedLine(offer, code, held);
   const after = [["Already ordered? Enjoy your meals!"]];
+  const consent = token ? [[CONSENT_WORDS, textLink(CONSENT_LINK_LABEL, `${siteUrl}/confirm/${token}`)]] : [];
   const footer = [[FOOTER_WORDS, textLink(FOOTER_LINK_LABEL, `${siteUrl}/`)], [POSTAL_ADDRESS]];
-  const lines = [...band.headline, ...band.lede, [cta], saved, ...after, ...footer];
+  const lines = [...band.headline, ...band.lede, [cta], saved, ...after, ...consent, ...footer];
   const slideshow = slideshowOf(manifest, siteUrl);
-  return { template: "E1", to, subject: E1_SUBJECT, text: renderText(lines), html: e1Html(E1_SUBJECT, { band, slideshow, cta, saved, after, footer, siteUrl }) };
+  const html = e1Html(E1_SUBJECT, { band, slideshow, cta, saved, after, consent, footer, siteUrl });
+  return { template: "E1", to, subject: E1_SUBJECT, text: renderText(lines), html };
 }
 
 /** E-X: one confirmation, at once. */
