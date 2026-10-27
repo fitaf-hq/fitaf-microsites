@@ -1720,3 +1720,22 @@ offer). § 8 is not released until he answers.
 
 **Not done here**: the whole suite, Storybook, the watch; no test email; no client but Chrome; nothing deployed, merged or
 pinned.
+
+### 8.2 The Advisor's rulings on § 8's open items (2026-10-27). CONTRACT, before any code
+
+Put to him with their consequences (`AskUserQuestion`, answered `ts=2026-10-27T15:04:57.804Z`):
+
+1. **The marketing consent line returns, in the footer** (*"Footer line"*): its words and link exactly as before § 8
+   (*"You asked to hear about Fit AF menus and offers. Yes, keep me posted"*, the link to `SITE_URL/confirm/<token>`),
+   shown only when the box was ticked (a `token`, as before), as **one small line in the dark footer, above** *"You're
+   getting this email because you saved an offer at eatfitaf.com"*, its link drawn as the footer's link is. The text
+   part carries it in the same place. § 8 item 7's removal of it is withdrawn; `consent/DRAFT.md` § 3 says so. Its
+   colour pairs are declared and measured.
+2. **An ended offer's button reads `See my offer`** (*"See my offer"*), as § 8 item 4 built it; no longer open.
+3. **The lede's blue accent is kept** (*"Keep the blue"*): `--lean` on `--ink` for *"Never frozen."* (Lc −51.3 against
+   body text's 75; 6.3:1 by WCAG 2) is an **approved exception**, recorded on that one pair in `src/contrast-pairs.json`
+   with this ruling's `ts`, so `npm run contrast` and M20 pass it and say so. ⛔ The exception is that pair's alone: any
+   other pair under its role still fails, and an exception without a ruling's `ts` is refused (a case and a mutant).
+4. **Cases**, written first and run red: the footer line present with a token and absent without, in both parts, in
+   its place, its link; M21 as amended; the exception passing that pair, another failing pair still failing, and an
+   exception without a `ts` refused. Then the goldens it moves.
