@@ -5,6 +5,8 @@
 // gives); an unknown fragment opens the start, and one whose size is known but whose answers are not opens that size
 // alone, as today's `#lean-9` does. The two cases that press or read Q4 build from their own data with snacks shown
 // (ms-harness SNACKS_SHOWN, § 11), never the committed flags.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26): the card shows no price a meal, so today's fragments
+// compare its total, its links and the week's lines with the golden (whose `per_meal` stays as recorded at 985f777).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -22,8 +24,8 @@ test("MS-4: today's fragments open as today (the result card and the week's link
     const r = resultOf(page);
     const s = card(page);
     assert.deepEqual(
-      { total: r.total, perMeal: r.perMeal, cta: s.chooseHref, checkout: s.checkout, own: s.ownHref, meals: s.meals, accent: page.el("result").getAttribute("data-accent") },
-      { total: was.total, perMeal: was.per_meal, cta: was.result_cta, checkout: was.cc_checkout, own: was.cc_own, meals: was.meals, accent: was.accent },
+      { total: r.total, cta: s.chooseHref, checkout: s.checkout, own: s.ownHref, meals: s.meals, accent: page.el("result").getAttribute("data-accent") },
+      { total: was.total, cta: was.result_cta, checkout: was.cc_checkout, own: was.cc_own, meals: was.meals, accent: was.accent },
       hash,
     );
     const q = questionsOf(page);

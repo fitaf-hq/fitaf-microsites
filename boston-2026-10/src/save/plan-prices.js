@@ -31,4 +31,25 @@
     total.appendChild(document.createTextNode(" "));
     total.appendChild(now);
   }
+  // SPEC-ui-and-copy-pass § 7 (the Advisor, 2026-10-26: "Let's do B2 and drop the meal count please"): while the same
+  // offer is current, the result card's price carries, on a line of its own above the store's, its weekly total before
+  // the offer's share, struck through (#result-struck, hidden as built). Its figure is the build's (save-data's
+  // offers[].struck_result, by the card's plan, #result's data-accent, and its answer set, data-selection without its
+  // snacks mark); this script only shows it, on the page and on each hashchange, after app.js has drawn the card (its
+  // listener runs first).
+  var result = document.getElementById("result");
+  var line = document.getElementById("result-struck");
+  var figure = document.getElementById("result-struck-total");
+  var byPlan = offer.struck_result;
+  var has = function (o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); };
+  if (!result || !line || !figure || !byPlan) return;
+  function showStruck() {
+    var plan = result.getAttribute("data-accent");
+    var key = (result.getAttribute("data-selection") || "").replace(/-s$/, "");
+    var value = !result.hidden && has(byPlan, plan) && has(byPlan[plan], key) ? byPlan[plan][key] : "";
+    figure.textContent = value;
+    line.hidden = !value;
+  }
+  window.addEventListener("hashchange", showStruck);
+  showStruck();
 })();

@@ -24,7 +24,9 @@ const fill = (phrase, values) => phrase.replace(/\{([a-z]+)\}/g, (whole, k) => (
 /** MS-1: each answer set's card, at every size, shows its plan's meals, price and weekly total, and the rounded line.
  *  ⚠ AMENDED by SPEC-ui-and-copy-pass § 1.2 item 1 (the Advisor, 2026-10-23: "yes please fix this math"): the card's count
  *  is the meals it lists (the row's `meals`) and its weekly total that count at the plan's price a meal, as the store
- *  charges it (five on Lean 4 at $13.00, $65.00); the price a meal, the link and the rounded line its plan's, as before. */
+ *  charges it (five on Lean 4 at $13.00, $65.00); the price a meal, the link and the rounded line its plan's, as before.
+ *  ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26): the card shows no meals a week and no price a meal, so the
+ *  plan is held by its weekly total and its link alone. */
 export function rowProblems(html) {
   const problems = [];
   for (const goal of GOALS) {
@@ -34,8 +36,6 @@ export function rowProblems(html) {
       const want = {
         shown: true,
         selection: row.key,
-        meals: String(row.meals),
-        perMeal: dollars(centsOf(goal, row.plan)),
         total: dollars(row.meals * centsOf(goal, row.plan)),
         // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 2 (2026-10-26: "Please drop "15 meals go through as our 14-meal plan
         // for now." and other variants"): no row prints the rounded line.

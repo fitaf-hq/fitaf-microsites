@@ -4,6 +4,9 @@
 // 15-meal cart on the 14 plan by the same rule; a row whose meals equal its plan's count unchanged. On the production
 // page (production false: the card is in it) and the development page, every size. Worked out here from
 // data/plans.json's cents and selection rows, on their own.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26, the Advisor: "drop the meal count please"): the card's price
+// is its weekly total alone (no price a meal, no meal count: #result-per-meal and #result-meals are gone), so the rule is
+// held by that total; the struck line above it while an offer is current is RP1's.
 import test from "node:test";
 import assert from "node:assert/strict";
 import plans from "../data/plans.json" with { type: "json" };
@@ -21,12 +24,12 @@ const pages = async () => [
   ["the development page", await devPage()],
 ];
 
-/** The card at `hash` as drawn: its weekly total, its price a meal, its meals a week. */
+/** The card at `hash` as drawn: its weekly total. */
 function cardAt(html, hash) {
   const page = openPlanPage(html, { hash, now: NOW });
   const text = (id) => page.el(id).textContent.trim();
   assert.equal(page.el("result").hasAttribute("hidden"), false, `${hash}: control: the card is shown`);
-  return { total: text("result-total"), perMeal: text("result-per-meal"), meals: text("result-meals") };
+  return { total: text("result-total") };
 }
 
 test("UC6 (control): the selection sends 5 meals through the 4 plan and 15 through the 14, and no other row above its plan", () => {
@@ -42,12 +45,12 @@ test("UC6: a 5-meal and a 15-meal row — the meals it lists, at the plan's pric
         const cents = centsOf(goal, row.plan);
         assert.deepEqual(
           cardAt(html, hash),
-          { total: dollars(cents * row.meals), perMeal: dollars(cents), meals: String(row.meals) },
+          { total: dollars(cents * row.meals) },
           `${name}, ${hash}: ${row.meals} meals at the ${row.plan} plan's ${dollars(cents)}`,
         );
       }
     }
-    assert.deepEqual(cardAt(html, "#lean-or-5d"), { total: "$65.00", perMeal: "$13.00", meals: "5" }, `${name}: the Advisor's example`);
+    assert.deepEqual(cardAt(html, "#lean-or-5d"), { total: "$65.00" }, `${name}: the Advisor's example`);
   }
 });
 
@@ -57,7 +60,7 @@ test("UC6: a row whose meals equal its plan's count is unchanged", async () => {
       for (const row of plans.selection.filter((r) => r.meals === r.plan)) {
         const hash = `#${goal}-${answerKey(row)}`;
         const cents = centsOf(goal, row.plan);
-        assert.deepEqual(cardAt(html, hash), { total: dollars(cents * row.plan), perMeal: dollars(cents), meals: String(row.plan) }, `${name}, ${hash}`);
+        assert.deepEqual(cardAt(html, hash), { total: dollars(cents * row.plan) }, `${name}, ${hash}`);
       }
     }
   }
