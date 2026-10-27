@@ -1165,7 +1165,8 @@ code at `0ef1455`, the goldens and bases it moves at `f2fcf80`, this section aft
   result, and nothing read of the page's address. On every other page (the plan page) it runs as before, and `open`
   carries `via`: `w.location.hash == "#from-email" ? "email" : ""`, read once, beside `qr`.
 - `src/worker/beacon.js`: `EVENTS` and `FIELDS` gain `offer` (`qr`, the QR check `open` uses; `kind`, one of
-  `OFFER_KINDS`: `saved`, `welcome`, `current`, `ended`); `open` gains `via` (`VIAS`: `""`, `email`); `BLOBS` gains `kind`
+  `OFFER_KINDS`: `saved`, `welcome`, `current`, `ended`); `open` gains `via` (`VIAS`: `""`, `email`) when the body carries
+  it (item 5, as amended at the merge review); `BLOBS` gains `kind`
   and `via`, blob13 and blob14, appended. `qr` keeps its place, blob6.
 - `src/worker/pages.js`: `page(title, body, { offer })` ends the page's column with `#offer-data` (`scriptJson({ kind, qr
   })`, nothing else) and the plan page's analytics script, `src/worker/page-script.json`'s `html`. No other page passes
@@ -1204,10 +1205,13 @@ code at `0ef1455`, the goldens and bases it moves at `f2fcf80`, this section aft
    `qr` `""` (item 1's *"`current` (an unknown code)"* and *"`ended` (no offer current)"* both describe it; *"which page it
    is"* decides). A malformed code is an unknown one. The rate limit's page (`/o`'s 429, *Please wait*) is not one of the
    four and carries no script: an opening refused by the limit is not counted.
-5. **`via` is required on `open`**, as every event carries exactly its fields (§ 3): an `open` without it is refused
-   (EM-A3). The plan page is served `no-cache` (`site.js`), so a browser asks again and gets the new page; a page
-   restored from the back-forward cache runs no script. `a-harness.mjs`'s `VALID.open` carries `via: ""`, so A3, A4, A5,
-   A6, IX1, IX2, N3 and N4 post it.
+5. **An `open` without `via` is accepted, its blob14 `""`; a `via` that is present is `email` or `""`, anything else
+   refused** (as amended at the merge review, 2026-10-27, the coordinator; it was built first as *required*, an `open`
+   without it refused). The reason: every page loaded before the release (an open tab, a cached copy, a phone resuming
+   last night's tab) sends `open` without `via`, and refusing it drops that visit's `open`, so the visit lands in *Not
+   known* and falls out of the funnel. Each event still carries exactly its fields: an `open` without `via` carrying any
+   other field is refused. `a-harness.mjs`'s `VALID.open` carries `via: ""`, as the page now sends it, so A3, A4, A5, A6,
+   IX1, IX2, N3 and N4 post it.
 6. **The report's two queries are appended** (`offers`, `email`: ten requests, A11's names), and the visitors query alone
    gains a condition (`blob1 != 'offer'`): the other seven read no `offer` row already (each names its event, or, the
    steps query, groups by event and the document reads no `offer` step). `email_visits` counts `count(DISTINCT blob2)`
@@ -1265,7 +1269,7 @@ exactly one offer`; its sender: `0 analytics scripts, not 1`, `0 #offer-data ele
 not found. EM-A2: `prod, opened at /#from-email: the open carries via undefined, not "email"` (every opening, both
 targets), and the script alone `read location.hash 0 time(s), not once`. EM-A3: `site: offer saved, qr "boston": 204 and
 0 data point(s), not 204 and 1`, every open with a via the same, `12 blobs, not 14`, and `an open without its via:
-written (1 data point(s))`. EM-A4: `control: the offer pages
+written (1 data point(s))` (that expectation reversed at the merge review, below). EM-A4: `control: the offer pages
 sent 0 offers, not one of each kind`. EM-A5: `2026-10-26: visitors 4, not 2`, `visits 6, not 2`, no `offer_pages` or
 `email_visits`, and `the text prints 0 of § 16's lines`; its control (the base counting every row) passed. The mutants'
 control and the three mutants: their anchors not yet in `src/analytics.js` and `scripts/analytics.mjs`. Of the existing
@@ -1363,6 +1367,26 @@ same.
 - **The team's dashboard** (Fit AF `analytics-worker.spec.md` § 12) must leave the `offer` rows out of its visits before
   production, as item 6 says; it was not touched here. Rows written before § 16 hold no blob13 or blob14.
 - The offer page carries the plan page's whole script (3,149 bytes), of which it runs the head; the price of one text.
+
+**Amended at the merge review (2026-10-27, the coordinator): an `open` without `via` accepted.** Item 5 above. The case
+at `65dc5be`: EM-A3 posts, beside its bodies, the `open` `bc4ea03`'s own page sends (`em-a-checks.mjs` `openOfPage`:
+that commit's tree by `git archive`, its production page built as `a-harness.mjs`'s `builtPage` builds it and opened in
+its stub; never written in the case): `{"event":"open","s":<16 hex>,"viewport":"<400","load_ms":400,"qr":""}`, its
+control that it carries no `via`. It must be a 204 and one data point, blob14 `""` and blobs 1–12 in their places. The
+refusal *an open without its via* is gone; *an open without its via, with a kind* is refused. The code at `9411139`:
+`beacon.js`'s `FIELDS.open` names `via` only when the body carries it. CC-8's map and SP3's base at `a6ec600`: `beacon.js`
+`3baf5e54…` → `f4d76a8b…`, the one entry (`workerFiles` over `8f8fa4d`'s tree reproduces the committed map, 36 files);
+`LATER` gains `65dc5be`..`9411139` over `src/worker/beacon.js`, every hunk taken, the patched base's `beacon.js`
+`9411139`'s byte for byte. No page moves: S20, PV5 and U4 are unchanged.
+
+| | before | after |
+|---|---|---|
+| `test/em-a3-worker.test.mjs` | `65dc5be` (`8f8fa4d`'s code): `# tests 1` `# pass 0` `# fail 1`: `site: open from bc4ea03's page (no via): 204 and 0 data point(s), not 204 and 1` (`index` the same) | in the next row's run |
+| `test/a*.test.mjs test/n-*.test.mjs test/sv*.test.mjs test/ix*.test.mjs test/em-a*.test.mjs` | `65dc5be`: `# tests 98` `# pass 97` `# fail 1` (EM-A3) | `9411139`: `# tests 98` `# pass 98` `# fail 0` |
+| the same with `beacon.js`'s other readers (CC-8, MS-9, PR-10, SP3) | | the tree committed as `a6ec600`: `# tests 111` `# pass 111` `# fail 0` |
+
+The readers were not run between the code and the golden's move; the recorder's control and its one moved entry say
+what CC-8b, CC-8c, MS-9, PR-10 and SP3's CC-8b would have read.
 
 **Not done here**: the whole site suite, Storybook (its `wp-chrome` case opens two offer pages in Chrome; their beacon now
 goes to its own Worker's `/a`, same origin, which its request check allows) and the watch; `npm run contrast` (no colour
