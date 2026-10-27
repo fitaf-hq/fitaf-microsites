@@ -2198,3 +2198,9 @@ name the live `0eb98fe` text until the paste. `storefront/watch-baseline.json` i
 once (W29 then judged on the store's own block); `accept --footer` (and the release `main-WMT2MEGW.js`'s own accept, a
 separate matter); F2's eight new literals found in that release's files at its next run; ⬜ the merge-to-paste W11
 flag (item 9 above); ⬜ the Cart Total with additions carted (item 3); the live bar's height at 390 (item 4).
+
+**The site's last chunks** (each `nice -n 15`, `--test-timeout=400000`, at `5ad3f2b`'s tree, whose site files are
+`793df5c`'s: the commits between touch only the watch package and this file), 2026-10-27 11:47 → 11:51 PDT: Q29 and Q5
+alone (`q29-pass-three`, `q5-nothing-committed`) `# tests 7`, `# pass 7`, `# fail 0`; `[tuw]*` `# tests 209`, `# pass 209`;
+`[rs]*` `# tests 481`, `# pass 481`. Over the five chunks, 1,322 tests: 1,320 passed in their chunk, and the two that did
+not (above) passed run alone.
