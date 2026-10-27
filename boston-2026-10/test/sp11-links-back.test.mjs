@@ -3,7 +3,9 @@
 // the Worker serves with 200 (production serves the page at `/` alone), carrying the save's event in `?e=` (which the page
 // reads with qrEvent, § 9 item 2) and `#from-email` (Flow 1 collapsed to its one line, SPEC-rung4 § 2b item 4). And E1's
 // *See my offer* and *Yes, keep me posted*, E-X's *Yes, tell me*, the /confirm page's form and its *See my offer*, and
-// `/o`'s other page's link, each answered 200 by the same Worker. Each Worker runs in Miniflare with that build's own pages
+// `/o`'s other page's link, each answered 200 by the same Worker. ⚠ Since SPEC-ui-and-copy-pass § 8 E1's links are *Claim
+// my offer* (/o/<code>) and its footer's *eatfitaf.com* (SITE_URL/), and since its § 8.2 item 1 a ticked save's *Yes, keep
+// me posted* again, in the footer above them. Each Worker runs in Miniflare with that build's own pages
 // as its assets (production: the approved fixtures' build, `/` and `/privacy/`; development: `/`, each `/<event-id>/` and
 // `/privacy/`), mail captured by a stubbed Resend (no request leaves the machine).
 import test from "node:test";
@@ -69,12 +71,16 @@ async function assertLinksBack({ worker, assets, siteUrl, bindings = {} }) {
     const linksOf = (text) => [...text.matchAll(/^(.*?): (https?:\/\/\S+)$/gm)].map((m) => [m[1].trim(), m[2]]);
     const e1 = Object.fromEntries(linksOf(mail[E1_SUBJECT]).map(([label, link]) => [label.split(". ").at(-1), onSite(link, siteUrl)]));
     const ex = Object.fromEntries(linksOf(mail[EX_SUBJECT]).map(([label, link]) => [label.split(". ").at(-1), onSite(link, siteUrl)]));
-    assert.deepEqual(Object.keys(e1).sort(), ["See my offer", "Yes, keep me posted"], "control: E1's two links");
+    assert.deepEqual(Object.keys(e1), ["Claim my offer", "Yes, keep me posted", "You're getting this email because you saved an offer at eatfitaf.com"], "control: E1's three links (a ticked save)");
     assert.deepEqual(Object.keys(ex), ["Yes, tell me"], "control: E-X's one link");
 
-    // E1's See my offer: /o/<code>, 200; its Build my plan: /?e=<event>#from-email, a page the Worker serves with 200.
-    const o = await get(e1["See my offer"]);
-    assert.equal(o.status, 200, `E1's See my offer ${e1["See my offer"].pathname}: 200`);
+    // E1's footer's eatfitaf.com: SITE_URL/, the plan page, 200.
+    const home = await get(e1["You're getting this email because you saved an offer at eatfitaf.com"]);
+    assert.equal(e1["You're getting this email because you saved an offer at eatfitaf.com"].pathname, "/", "the footer's link: the site's root");
+    assert.equal(home.status, 200, "E1's eatfitaf.com: 200");
+    // E1's Claim my offer: /o/<code>, 200; its Build my plan: /?e=<event>#from-email, a page the Worker serves with 200.
+    const o = await get(e1["Claim my offer"]);
+    assert.equal(o.status, 200, `E1's Claim my offer ${e1["Claim my offer"].pathname}: 200`);
     const back = /<a href="([^"]+)">Build my plan →<\/a>/.exec(o.text)?.[1]?.replaceAll("&amp;", "&");
     assert.equal(back, BACK, "/o's Build my plan: the page at /, the save's event in ?e=, #from-email");
     const backUrl = onSite(back, siteUrl);

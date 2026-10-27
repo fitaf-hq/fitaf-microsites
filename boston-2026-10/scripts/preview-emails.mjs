@@ -3,7 +3,9 @@
 // HTML parts are rendered by src/worker/messages.js from the data files as they stand (the offer
 // placeholders included), a sample code and token, and the dev environment's SITE_URL (so the logo and the
 // links point at the dev Worker, as a sent email's would). E1 has the marketing box ticked, so every line
-// shows. `npm run build:dev` empties dist-dev/, so run this after it (SPEC-rung5 § 9).
+// shows. `npm run build:dev` empties dist-dev/, so run this after it (SPEC-rung5 § 9). Since SPEC-ui-and-copy-pass § 8 E1
+// draws its band, its images (SITE_URL/assets/email/, which the dev build writes) and, when src/worker/email-photos.json
+// names one, its slideshow, exactly as the Worker would; `photos` (a manifest's copy) renders it with another, for a check.
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,7 +22,7 @@ const SAMPLE_TO = "delivered@resend.dev";
 const SAMPLE_ZIP = "03101"; // out of the official area (SPEC-save-offer-production § 10), in the near ring
 
 /** The two previews, as { name: html }, and the values they were rendered from. */
-export async function previews({ nowMs = Date.now() } = {}) {
+export async function previews({ nowMs = Date.now(), photos } = {}) {
   const save = await loadJson(SAVE_PATH);
   const [event] = await loadJson(EVENTS_PATH);
   const siteUrl = (await devConfig()).vars.SITE_URL;
@@ -30,7 +32,7 @@ export async function previews({ nowMs = Date.now() } = {}) {
   const offer = live ?? [...(await loadJson(OFFERS_PATH)).offers].sort((a, b) => a.valid_to.localeCompare(b.valid_to)).at(-1);
   const token = SAMPLE_TOKEN;
   const html = {
-    "e1.html": e1({ to: SAMPLE_TO, code: SAMPLE_CODE, offer, event, siteUrl, token, ended: !live }).html,
+    "e1.html": e1({ to: SAMPLE_TO, code: SAMPLE_CODE, offer, event, siteUrl, token, ended: !live, photos }).html,
     "ex.html": ex({ to: SAMPLE_TO, zip: SAMPLE_ZIP, siteUrl, token, unconfirmedDays: save.unconfirmed_expansion_days }).html,
   };
   return { html, used: { siteUrl, event: event.name, offer: offer.id, valid_to: offer.valid_to, code: SAMPLE_CODE, zip: SAMPLE_ZIP } };

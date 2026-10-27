@@ -715,5 +715,12 @@
         }
       }
     }
+  },
+  "email_slideshow": {
+    "file": "email-slideshow.gif",
+    "width": 600,
+    "height": 400,
+    "frames": 5,
+    "frame_ms": 2500
   }
 }

@@ -65,11 +65,25 @@ export function layoutRows(html) {
   return rows;
 }
 
-/** Each line of the message as the HTML shows it: one layout row per line; the logo's row has no text. */
-export const lineTexts = (html) => layoutRows(html).map(visibleText).filter((t) => t !== "");
+/** Each line of the message as the HTML shows it: one layout row per line; the logo's row has no text. Since
+ *  SPEC-ui-and-copy-pass § 8 a row may hold several lines (E1's band: the headline's lines and the lede; its footer's two
+ *  lines), and the renderer ends each of them but the row's last with a newline in the source, after the `<br>` or the
+ *  block that breaks it; a row with no newline is one line, as before (E-X's rows, and E1's before § 8). */
+export const lineTexts = (html) =>
+  layoutRows(html)
+    .flatMap((row) => visibleText(row).split("\n"))
+    .filter((t) => t !== "");
 
 /** The <a href> values, in order, decoded. */
 export const hrefsOf = (html) => tagsOf(bodyOf(html)).filter((t) => t.name === "a").map((t) => t.attrs.href);
+
+/** Every image the body loads, in order: each <img>'s src and each cell's `background` attribute (SPEC-ui-and-copy-pass
+ *  § 8: the halftone, a tile drawn as a cell's background image), with the tag that names it. */
+export const imagesOf = (html) =>
+  tagsOf(bodyOf(html)).flatMap((t) => [
+    ...(t.name === "img" ? [{ url: t.attrs.src, tag: t, kind: "img" }] : []),
+    ...(t.attrs.background !== undefined ? [{ url: t.attrs.background, tag: t, kind: "background" }] : []),
+  ]);
 
 /** A text part's wording: each link's ": URL" removed (renderText writes a button as "label: href"). */
 export const wordingOf = (text) => text.replace(/: https?:\/\/\S+/g, "");

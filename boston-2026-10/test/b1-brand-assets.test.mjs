@@ -19,9 +19,13 @@ test("B1: every file the page loads is copied beside it, and nothing else is", a
     const written = (await copyStatic(out)).map((f) => f.slice(out.length + 1)).sort();
     const photos = await loadPhotos();
     const weekSheets = Object.values(photos.chefs_choice ?? {}).map((s) => photos.base + s.file);
+    // Since SPEC-ui-and-copy-pass.md § 8 item 2 the manifest may name E1's slideshow, which E1 loads from the Worker's
+    // assets as the page loads its sheets, so the build copies it beside them (S20, SP3 and PV5 hold the sheets' directory
+    // whole); the page itself never loads it.
+    const emailSheets = [photos.email_slideshow].filter(Boolean).map((s) => photos.base + s.file);
     // Since SPEC-why-fit-af.md § 2 item 2 the page loads the /why/ page in a frame: a directory's URL is its index.html.
     const files = loadedUrls(html).filter((u) => !u.startsWith("data:")).map((u) => (u.endsWith("/") ? `${u}index.html` : u));
-    const referenced = [...new Set([...files, ...weekSheets])].sort();
+    const referenced = [...new Set([...files, ...weekSheets, ...emailSheets])].sort();
     assert.deepEqual(written, referenced);
   } finally {
     await rm(out, { recursive: true, force: true });

@@ -52,6 +52,11 @@
 // index.html, demo/, boston/ and seminar/, +224 bytes each, those lines alone; every other file byte-identical; the
 // recorder at 1c8cf8a (its cases, the code before) reproduces f60e19c's (recorded_at apart), and at f60e19c its record
 // byte for byte.
+// And at ac0ec8c (`--commit ac0ec8c --release-a`), SPEC-ui-and-copy-pass.md § 8 (E1 in the flyers' language): the
+// development build gains E1's three images, assets/email/fitaf-logo-reversed.png, halftone-cta.png and halftone-ink.png
+// (the builds whose Worker sends E1); every other file of both builds byte-identical, production's (production false here,
+// whose Worker sends nothing) entirely; the recorder at 7961725 (its cases, the code before) reproduces 63e243b's
+// (recorded_at apart).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

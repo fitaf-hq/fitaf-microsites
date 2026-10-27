@@ -2,7 +2,9 @@
 // code it was opened with when that code names an entry of data/events.json, read by the same function the analytics
 // beacon reads it with (one reading, never two), and the page's own event otherwise: the first event on `/` and on the
 // one production page (a development /<event-id>/ page keeps its own, SPEC § 9.1). In both builds. And E1 (a recording
-// sender) reads "at Fit AF's Boston event" and "at eatfitaf.com": data/events.json's new names. The page assertion is
+// sender) read "at Fit AF's Boston event" and "at eatfitaf.com": data/events.json's new names. ⚠ Since
+// SPEC-ui-and-copy-pass § 8 item 7 (2026-10-26) E1 has no such line ("You saved this offer at [event] yesterday" is
+// removed), so the case holds the event each save stores, and E1 naming neither. The page assertion is
 // sp-fixture.mjs's, so sp-mutants.test.mjs runs it on a page that sends the first event whatever the code.
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
@@ -57,14 +59,21 @@ test("SP10: one reading — the page reads ?e= in one function, which the beacon
 const { mf, db } = await startWorker();
 after(() => mf.dispose());
 
-test("SP10: E1 (a recording sender) reads \"at Fit AF's Boston event\" and \"at eatfitaf.com\"", async () => {
+test("SP10: each save stores its event (boston, demo); E1 (a recording sender) names neither (SPEC-ui-and-copy-pass § 8 item 7)", async () => {
   for (const [email, event_id] of [["dummy-sp10-boston@example.com", "boston"], ["dummy-sp10-demo@example.com", "demo"]]) {
     assert.deepEqual((await postSave(mf, validSave({ email, event_id }))).json, { ok: true });
   }
   const latest = Math.max(...(await rows(db, "SELECT send_at FROM saves")).map((r) => Date.parse(r.send_at)));
   const sender = new RecordingSender();
   await runSendDue(db, { nowMs: latest + 60_000, sender, redemptions: new FixedRedemptions() });
-  const lines = Object.fromEntries(sender.messages.map((m) => [m.to, m.text.split("\n")[0]]));
-  assert.equal(lines["dummy-sp10-boston@example.com"], "You saved this offer at Fit AF's Boston event yesterday — here it is.");
-  assert.equal(lines["dummy-sp10-demo@example.com"], "You saved this offer at eatfitaf.com yesterday — here it is.");
+  const stored = Object.fromEntries(
+    (await rows(db, "SELECT c.email, s.event_id FROM saves s JOIN save_contacts c USING (save_id)")).map((r) => [r.email, r.event_id]),
+  );
+  assert.deepEqual(stored, { "dummy-sp10-boston@example.com": "boston", "dummy-sp10-demo@example.com": "demo" }, "each save's event");
+  assert.equal(sender.messages.length, 2, "control: both E1s went");
+  for (const m of sender.messages) {
+    for (const part of [m.text, m.html]) {
+      assert.doesNotMatch(part, /You saved this offer|Fit AF's Boston event|yesterday/, `${m.to}: no event named`);
+    }
+  }
 });

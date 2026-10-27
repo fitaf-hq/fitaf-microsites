@@ -12,8 +12,9 @@ const FORBIDDEN = [
   [/url\(/i, "a url() (a web font or a background image)"],
   [/<(form|input|button|select|textarea|iframe)\b/i, "a form control"],
 ];
-/** The elements that draw something: each must carry its own style attribute. */
-const DRAWING = new Set(["body", "table", "td", "p", "a", "strong", "img"]);
+/** The elements that draw something: each must carry its own style attribute. Since SPEC-ui-and-copy-pass § 8 also E1's
+ *  headline (h1), its accents (span) and the band's wrappers (div). */
+const DRAWING = new Set(["body", "table", "td", "p", "a", "strong", "img", "h1", "span", "div"]);
 
 test("M15: the HTML part is email-safe — no script, no external or embedded CSS, no web font, no form; every drawing element styled inline", () => {
   for (const [name, message] of Object.entries(sampleMessages())) {

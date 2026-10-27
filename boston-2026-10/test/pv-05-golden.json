@@ -1,6 +1,6 @@
 {
   "about": "PV5's before (SPEC-preview-sites § 4): the SHA-256 of every file the production and the development build write (build() with target prod, then dev, each into an empty directory), over recorded_at's own tree, the contract's commit before any of the preview build's code (test/pv-05-record.mjs, which wrote this file). Re-record only by running the recorder; never by hand.",
-  "recorded_at": "0ef1455",
+  "recorded_at": "0ef1455+ac0ec8c",
   "built_as": "release (a): production false, its wording (--release-a)",
   "files": {
     "prod": {
@@ -25,6 +25,9 @@
       "why/index.html": "35945d6a3dd76789b95200b4a7cc9eeef3dfadc49d94c9a5aa2229da6afc4d35"
     },
     "dev": {
+      "assets/email/fitaf-logo-reversed.png": "afdce1e155f5836b42d8e4b303067967668e030ea5ad3fbe2074d2dbcb5ac7f7",
+      "assets/email/halftone-cta.png": "9ed7841a0ec432070733a60fd083bc12bc099091b0fa179c7018acf0209b6a94",
+      "assets/email/halftone-ink.png": "0775dd317def581231104230255a18626b7e9463b5e43828e35b3c81f8000afc",
       "assets/fitaf-logo.png": "e51500f85fee09c3a5762e82cd3812ac824fa81378478035a94ab91e5de94ef0",
       "assets/photo-sheets/carousel.jpg": "8e974fe0d1922022ca61baeac3e70fb1135b3f8d5c07314f6bcb453db6b4432d",
       "assets/photo-sheets/chefs-choice-2026-10-04.jpg": "294cda6875cc4942179764be358e1714af8935cff769a09f57271833d4324f57",

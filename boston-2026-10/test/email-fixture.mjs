@@ -5,6 +5,8 @@ import { readFile } from "node:fs/promises";
 import { DEFAULTS, tokensOf } from "../scripts/contrast.mjs";
 import { e1, ex } from "../src/worker/messages.js";
 
+const RENDERERS = { e1, ex };
+
 export const SAMPLE = {
   siteUrl: "https://email-sample.example.test",
   to: "delivered@resend.dev",
@@ -16,21 +18,37 @@ export const SAMPLE = {
   event: { name: "the sample event" },
   zip: "01602",
   unconfirmedDays: 7,
+  // SPEC-ui-and-copy-pass § 8 item 2: E1's photo row is the photo manifest's `email_slideshow` (data/photo-sheets.json,
+  // Fit AF's emitter's). Each sample names its own manifest, so no case depends on what the emitter has committed: none
+  // (every photograph removed, README's rule), or a fixture entry naming a GIF no case ever loads.
+  noPhotos: { base: null },
+  photos: {
+    base: "assets/photo-sheets/",
+    email_slideshow: { file: "email-slideshow.gif", width: 600, height: 400, frames: 5, frame_ms: 2500 },
+  },
 };
 
 /** E1 with the box ticked, E1 without it, the same two for an offer without a code (SPEC-save-offer-production § 10), and
- *  E-X, as messages.js renders them. */
-export function sampleMessages(s = SAMPLE) {
-  const offerInputs = { to: s.to, code: s.code, offer: s.offer, event: s.event, siteUrl: s.siteUrl };
+ *  E-X, as messages.js renders them. Since SPEC-ui-and-copy-pass § 8 also E1 sent after its offer's last day (§ 8 item 4)
+ *  and E1 with the slideshow (item 2); every other E1 has no photo row. `fns` are the renderers (another tree's, for the
+ *  recorder, test/el-record.mjs). */
+export function sampleMessages(s = SAMPLE, { e1, ex } = RENDERERS) {
+  const offerInputs = { to: s.to, code: s.code, offer: s.offer, event: s.event, siteUrl: s.siteUrl, photos: s.noPhotos };
   const heldInputs = { ...offerInputs, offer: s.heldOffer };
   return {
     e1_ticked: e1({ ...offerInputs, token: s.token }),
     e1_unticked: e1({ ...offerInputs, token: null }),
     e1_held_ticked: e1({ ...heldInputs, token: s.token }),
     e1_held_unticked: e1({ ...heldInputs, token: null }),
+    e1_held_ended: e1({ ...heldInputs, token: null, ended: true }),
+    e1_held_slideshow: e1({ ...heldInputs, token: null, photos: s.photos }),
     ex: ex({ to: s.to, zip: s.zip, siteUrl: s.siteUrl, token: s.token, unconfirmedDays: s.unconfirmedDays }),
   };
 }
+
+/** The E1 samples alone. */
+export const sampleE1s = (s = SAMPLE, fns = RENDERERS) =>
+  Object.fromEntries(Object.entries(sampleMessages(s, fns)).filter(([name]) => name.startsWith("e1_")));
 
 /**
  * The page's tokens, read here from src/template.html's own :root — independently of the email's copy

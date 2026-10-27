@@ -64,17 +64,31 @@ const FORMS = [
 export const keepForm = (codeMode, ended = false) => (line) => FORMS.every(([marker, keep]) => !line.startsWith(marker) || keep(codeMode, ended));
 export const dropForm = (line) => FORMS.reduce((l, [marker]) => (l.startsWith(marker) ? l.slice(marker.length) : l), line);
 
+/** SPEC-ui-and-copy-pass § 8 item 1: DRAFT § 3's E1 opens with the band, which it names and does not copy (the flyer
+ *  front's headline and lede are read from data/flyer-front.json, the one source): its marked line stands for them. */
+const BAND_MARKER = "*(the band:";
+
+/** The band's lines as a reader reads them: the flyer front's headline, a line each, then its lede (asterisks gone). */
+async function bandLines() {
+  const front = JSON.parse(await readFile(join(ROOT, "data", "flyer-front.json"), "utf8"));
+  const lede = typeof front.lede === "string" ? [front.lede] : front.lede;
+  return [...front.headline, ...lede].map((l) => l.replaceAll("*", ""));
+}
+
 /** DRAFT § 3's message as lines of plain text: emphasis, the "(only if…)" note and button brackets removed; for E1, the
- *  form of its second line for `codeMode` (the offer's code_mode). */
+ *  form of its second line for `codeMode` (the offer's code_mode), and since SPEC-ui-and-copy-pass § 8 its band's marked
+ *  line replaced by the band's lines. */
 export async function draftMessage(heading, { codeMode } = {}) {
   const md = await readFile(join(ROOT, "consent", "DRAFT.md"), "utf8");
   const part = md.split("## 3. The emails")[1].split("## 4.")[0].split(heading)[1].split(/\n\*\*E|\n## /)[0];
   const subject = /Subject: \*([^*]+)\*/.exec(part)[1];
+  const band = await bandLines();
   const lines = part
     .split("\n")
     .filter((l) => l.startsWith("> "))
     .map((l) => l.slice(2))
     .filter(keepForm(codeMode))
+    .flatMap((l) => (l.startsWith(BAND_MARKER) ? band : [l]))
     .map((l) =>
       dropForm(l)
         .replace(/\*\(only if the box was ticked\)\*\s*/, "")
@@ -195,7 +209,7 @@ export async function assertOneRequestWhileInFlight(sendDue, { mf, db }) {
 /**
  * M10's assertions: a message's first attempt meets a 500 and its second is accepted; the two requests carry
  * byte-identical bodies and the same Idempotency-Key — for a ticked E1 and an E-X, both of which carry a
- * /confirm token. Throws AssertionError if not.
+ * /confirm token (E1's in its footer since SPEC-ui-and-copy-pass § 8.2 item 1). Throws AssertionError if not.
  */
 export async function assertIdenticalAttempts(confirmTokenModule, { mf, db }) {
   const { sendDue } = await import("../src/worker/send-due.js");
