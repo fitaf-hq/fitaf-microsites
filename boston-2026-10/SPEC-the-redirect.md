@@ -276,3 +276,23 @@ the recorder's control first reproducing the committed record):
 through `worker-harness.mjs`, which drops the var) and the watch; `npm run contrast` (no colour or style changed); the
 SQL against Cloudflare; dev and production (§ 8's `curl -sI` and the data point read back are the orchestrator's);
 fitaf-infra's var; nothing deployed, no `wrangler`, no merge, no pin.
+
+## 10. Amendment, 2026-10-27: two follow-ups from § 9. CONTRACT, before any code
+
+The Advisor (`AskUserQuestion`, `ts=2026-10-27T23:02:56.802Z`) chose both of § 9's open items to be done now:
+
+1. **The offer page's logo names the email.** § 9 item 2 found that the logo (`src/worker/pages.js`'s `LOGO`, on every
+   Worker page) links to `/` without `via=email`, so a press of it on the offer page is counted `direct`. On the offer
+   page `/o/<code>` (each of its four kinds) the logo's link is `/?via=email`, as § 4's links are; every other Worker
+   page (`/confirm/…`, the too-many page) keeps `/`. Nothing else changes: the logo's image, size, alt text and place.
+2. **A Cubot phone is a person.** § 9 item 5 found that § 3's program list matches `bot` inside *CUBOT*, a phone
+   maker's user agent (`… Android 11; CUBOT X30 …`). The list keeps every program it named, and no longer matches a
+   phone's name that merely contains the letters: the rule is the builder's (for instance `bot` not preceded by `cu`),
+   stated in § 10.1 with the samples it was tested on. ⛔ The list stays one closed list kept once in the code.
+3. **Cases**, written first and run red: **RD7b** the offer page's logo `/?via=email` for each kind, and `/` on the
+   confirm page; **RD4b** a Cubot phone's user agent (two real-shaped samples) counted, and each named program still
+   not counted (Googlebot, bingbot, Slackbot, Twitterbot, facebookexternalhit, curl, a headless Chrome). **Mutant**:
+   the list back to `bot` (RD4b).
+4. **When**: on `boston/redirect-followups` from the release line `2bbc066`; the whole site suite; dev (`curl -s` of an
+   unknown code's offer page, its logo's `href` read; a Cubot-agent GET read back from the dev dataset), then
+   production on the Advisor's word.
