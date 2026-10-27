@@ -3,9 +3,8 @@ import assert from "node:assert/strict";
 import events from "../data/events.json" with { type: "json" };
 import { longDate, offerById } from "../src/worker/offers.js";
 import { displayCode } from "../src/worker/messages.js";
-import { tokenMinter } from "../src/worker/confirm-token.js";
 import { tokenHash, TOKEN_RE } from "../src/worker/token.js";
-import { FixedRedemptions, linkIn, NEAR_ZIP, postSave, RecordingSender, rows, runSendDue, startWorker, TEST_CONFIRM_TOKEN_KEY, validSave } from "./worker-harness.mjs";
+import { FixedRedemptions, linkIn, NEAR_ZIP, postSave, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
 import { draftMessage } from "./rung5-fixture.mjs";
 
 const { mf, db, vars } = await startWorker();
@@ -53,21 +52,19 @@ test("S13: the cron with RecordingSender and one redeemed code -> that one suppr
     E1 = await draftMessage("**E1 — the next morning, to a saved offer.**", { codeMode: offer.code_mode });
     assert.equal(m.template, "E1");
     assert.equal(m.subject, E1.subject);
-    const expected = E1.lines.map((l) =>
-      l.replace("[event]", events[0].name).replace("XXXX-XXXX", displayCode(row.offer_code)).replace("[date]", longDate(offer.valid_to)),
-    );
+    const expected = E1.lines
+      .map((l) => l.replace("[event]", events[0].name).replace("XXXX-XXXX", displayCode(row.offer_code)).replace("[date]", longDate(offer.valid_to)))
+      .filter((l) => who === "ticked" || !l.startsWith("You asked to hear about"));
     for (const line of expected) assert.ok(m.text.includes(line), `${who} E1 lacks: ${line}\n---\n${m.text}`);
     assert.equal(linkIn(m.text, "/o/"), row.offer_code, "Claim my offer -> /o/<code>");
     assert.ok(m.text.includes(`${vars.SITE_URL}/o/${row.offer_code}`));
-    // SPEC-ui-and-copy-pass § 8 item 7: no confirmation link in E1, ticked or not; the send path is unchanged, so a ticked
-    // save's token is still derived and only its hash stored.
-    assert.equal(linkIn(m.text, "/confirm/"), null, "no confirmation link in E1");
-    assert.ok(!m.text.includes("You asked to hear about"));
+    const token = linkIn(m.text, "/confirm/");
     if (who === "ticked") {
-      const token = await tokenMinter(TEST_CONFIRM_TOKEN_KEY)(row.save_id);
       assert.match(token, TOKEN_RE);
       assert.equal(row.confirm_token_hash, await tokenHash(token), "only the token's hash is stored");
     } else {
+      assert.equal(token, null, "no confirmation link without the box");
+      assert.ok(!m.text.includes("You asked to hear about"));
       assert.equal(row.confirm_token_hash, null);
     }
     assert.equal(row.message_state, "sent");

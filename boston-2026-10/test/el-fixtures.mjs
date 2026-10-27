@@ -33,6 +33,12 @@ export const SEE = "See my offer";
 export const ENDED = "This offer has ended";
 export const ALREADY = "Already ordered? Enjoy your meals!";
 export const FOOTER_LINE = "You're getting this email because you saved an offer at eatfitaf.com";
+/** § 8.2 item 1: the marketing consent's line, its words and link exactly as before § 8, back in the footer above
+ *  FOOTER_LINE, only with a token (the box ticked). */
+export const CONSENT_LINE = "You asked to hear about Fit AF menus and offers. Yes, keep me posted";
+export const CONSENT_LABEL = "Yes, keep me posted";
+/** The E1 samples of test/email-fixture.mjs rendered with a token. */
+export const TICKED = new Set(["e1_ticked", "e1_held_ticked"]);
 export const POSTAL = "Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.";
 /** Each E1 sample of test/email-fixture.mjs: the line under its button (§ 8 item 4). */
 export const SAVED_LINES = {
@@ -44,8 +50,18 @@ export const SAVED_LINES = {
   e1_held_slideshow: "Your pricing is held until October 29, 2026",
 };
 /** § 8's E1, top to bottom, as a reader reads its lines: the band's, the button's label, the line under it, Already
- *  ordered?, the footer's two. (The slideshow has no words.) */
-export const expectedLines = (name, band) => [...band.lines, name === "e1_held_ended" ? SEE : CLAIM, SAVED_LINES[name], ALREADY, FOOTER_LINE, POSTAL];
+ *  ordered?, the footer's (since § 8.2 the consent line first when ticked). (The slideshow has no words.) */
+export const expectedLines = (name, band) => [
+  ...band.lines,
+  name === "e1_held_ended" ? SEE : CLAIM,
+  SAVED_LINES[name],
+  ALREADY,
+  ...(TICKED.has(name) ? [CONSENT_LINE] : []),
+  FOOTER_LINE,
+  POSTAL,
+];
+/** Each E1 sample's links, in order: the button, the consent's when ticked (§ 8.2), the footer's. */
+export const expectedLinks = (name, s) => [`${s.siteUrl}/o/${s.code}`, ...(TICKED.has(name) ? [`${s.siteUrl}/confirm/${s.token}`] : []), `${s.siteUrl}/`];
 
 /** The words between asterisks of a line, and the line as a reader reads it (the asterisks gone). */
 export const accentWords = (line) => line.split("*").filter((_, i) => i % 2 === 1);

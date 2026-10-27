@@ -2,7 +2,6 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import worker from "../src/worker/index.js";
 import { chooseSender } from "../src/worker/choose-sender.js";
-import { tokenMinter } from "../src/worker/confirm-token.js";
 import { runSchedule } from "../src/worker/scheduled.js";
 import { NullRedemptions } from "../src/worker/senders.js";
 import { NEAR_ZIP, postSave, rows, startWorker, TEST_CONFIRM_TOKEN_KEY, validSave } from "./worker-harness.mjs";
@@ -79,13 +78,8 @@ test("M7: logs and the handler's return -> counts only: no address, token, code 
   );
   assertCountsOnly(returned);
 
-  // Since SPEC-ui-and-copy-pass § 8 item 7 E1 carries no /confirm link: E-X's requests carry their token, and every ticked
-  // offer save's token is still derived at the send (the send path unchanged), so both are forbidden in a log line.
-  const carried = requests.flatMap((r) => [...r.body.text.matchAll(/\/confirm\/([A-Za-z0-9_-]+)/g)].map((m) => m[1]));
-  assert.equal(carried.length, requests.filter((r) => r.body.subject.startsWith("Confirm")).length, "control: E-X's request carried its token, and no E1 one");
-  const saveIds = (await rows(db, "SELECT save_id FROM saves WHERE kind = 'offer'")).map((r) => r.save_id);
-  const tokens = [...carried, ...(await Promise.all(saveIds.map((id) => tokenMinter(TEST_CONFIRM_TOKEN_KEY)(id))))];
-  assert.equal(tokens.length, 5, "control: E-X's token and the four offer saves' derived tokens");
+  const tokens = requests.flatMap((r) => [...r.body.text.matchAll(/\/confirm\/([A-Za-z0-9_-]+)/g)].map((m) => m[1]));
+  assert.equal(tokens.length, requests.length, "control: every request carried a minted token");
   const codes = (await rows(db, "SELECT offer_code FROM saves WHERE offer_code IS NOT NULL")).map((r) => r.offer_code);
   const addresses = (await rows(db, "SELECT email FROM save_contacts")).map((r) => r.email);
   const secrets = [DUMMY_KEY, TEST_CONFIRM_TOKEN_KEY, ...tokens, ...codes, ...codes.map((c) => `${c.slice(0, 4)}-${c.slice(4)}`), ...addresses];

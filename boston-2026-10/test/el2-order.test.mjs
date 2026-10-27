@@ -6,11 +6,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { layoutRows, lineTexts, linksOfText, visibleText, wordingOf } from "./email-html.mjs";
 import { SAMPLE, sampleE1s } from "./email-fixture.mjs";
-import { bandExpected, expectedLines } from "./el-fixtures.mjs";
+import { bandExpected, expectedLines, expectedLinks } from "./el-fixtures.mjs";
 
 const band = await bandExpected();
-const OFFER_URL = `${SAMPLE.siteUrl}/o/${SAMPLE.code}`;
-const SITE = `${SAMPLE.siteUrl}/`;
 
 test("EL2: each E1's HTML part shows § 8's lines in § 8's order", () => {
   assert.ok(band.lines.length >= 2, "control: the flyer front's headline and lede were read");
@@ -31,10 +29,10 @@ test("EL2: each E1's rows: the band, the slideshow (with the manifest's), the bu
   }
 });
 
-test("EL2: each E1's text part is the same lines in the same order, its links the button's and the footer's", () => {
+test("EL2: each E1's text part is the same lines in the same order, its links the button's, the consent's when ticked (§ 8.2), the footer's", () => {
   for (const [name, m] of Object.entries(sampleE1s())) {
     assert.deepEqual(wordingOf(m.text).split("\n").filter(Boolean), expectedLines(name, band), `${name}: the text part's lines`);
-    assert.deepEqual(linksOfText(m.text), [OFFER_URL, SITE], `${name}: the button's link, then the footer's`);
+    assert.deepEqual(linksOfText(m.text), expectedLinks(name, SAMPLE), `${name}: the button's link, then the footer's`);
     assert.ok(m.text.endsWith("\n") && !m.text.endsWith("\n\n"), `${name}: one line each, the last ended`);
   }
 });

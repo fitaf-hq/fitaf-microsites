@@ -15,13 +15,12 @@ import saveConfig from "../data/save.json" with { type: "json" };
 import { ROOT } from "../build.mjs";
 import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
 import { handleConfirm } from "../src/worker/confirm.js";
-import { tokenMinter } from "../src/worker/confirm-token.js";
 import { validateSave } from "../src/worker/validate-save.js";
 import { zonedTimeToInstant } from "../src/worker/zoned-time.js";
 import { hiddenInTree, openPlanPage } from "./cc-harness.mjs";
 import { pageText } from "./sp-production.mjs";
 import { approvedWeekPage, weekPage } from "./uc-harness.mjs";
-import { FixedRedemptions, linkIn, postSave, RecordingSender, rows, runSendDue, startWorker, TEST_CONFIRM_TOKEN_KEY, validSave } from "./worker-harness.mjs";
+import { FixedRedemptions, linkIn, postSave, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
 
 const ZONE = saveConfig.send_time_zone;
 const at = (ymd, hour) => zonedTimeToInstant(ymd, hour, ZONE);
@@ -81,13 +80,11 @@ test("SP17: the 10-29 save's /o page on 2026-10-30 is the held offer (until Octo
   }
 });
 
-// ⚠ Since SPEC-ui-and-copy-pass § 8 item 7 E1 carries no /confirm link: the token is the one the send step derived and
-// whose hash it stored (SPEC-rung5 § 8), the send path unchanged.
-test("SP17: the 10-29 save's /confirm token works on 2026-10-30, and is gone on 2026-10-31", async () => {
-  const { mf, db, row, message } = await saveAndSend(at(LAST_DAY, 15), { consent_marketing: true });
+test("SP17: the 10-29 save's E1 link to /confirm works on 2026-10-30, and is gone on 2026-10-31", async () => {
+  const { mf, db, message } = await saveAndSend(at(LAST_DAY, 15), { consent_marketing: true });
   try {
-    assert.equal(linkIn(message.text, "/confirm/"), null, "E1 carries no /confirm link");
-    const token = await tokenMinter(TEST_CONFIRM_TOKEN_KEY)(row.save_id);
+    const token = linkIn(message.text, "/confirm/");
+    assert.ok(token, "control: the ticked E1 carries the link");
     const status = async (day) =>
       (await handleConfirm(new Request(`http://localhost/confirm/${token}`), { DB: db }, token, { now: iso(at(day, 12)), today: day })).status;
     assert.equal(await status(NEXT), 200, "the morning it arrives");
@@ -132,9 +129,9 @@ test("SP17: DRAFT.md carries § 10.9 item 2's words; the confirmation page says 
     "Menus and offers by email, weekly.",
   ]) assert.ok(flat.includes(words), `DRAFT.md: ${words}`);
   assert.doesNotMatch(flat, /about once a week/i, "no 'about once a week' left");
-  const { mf, db, row } = await saveAndSend(at("2026-10-24", 12), { consent_marketing: true });
+  const { mf, db, message } = await saveAndSend(at("2026-10-24", 12), { consent_marketing: true });
   try {
-    const token = await tokenMinter(TEST_CONFIRM_TOKEN_KEY)(row.save_id);
+    const token = linkIn(message.text, "/confirm/");
     const res = await handleConfirm(new Request(`http://localhost/confirm/${token}`), { DB: db }, token, { now: iso(at("2026-10-25", 12)), today: "2026-10-25" });
     assert.ok(pageText(await res.text()).includes("Menus and offers by email, weekly."), "the confirmation page");
   } finally {

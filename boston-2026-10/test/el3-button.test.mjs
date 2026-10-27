@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { bodyOf, declarations, linksOf, tagsOf } from "./email-html.mjs";
 import { inlineStack, pageTokens, SAMPLE, sampleE1s } from "./email-fixture.mjs";
-import { CLAIM, EMAIL_IMAGE_PATHS, SEE } from "./el-fixtures.mjs";
+import { CLAIM, EMAIL_IMAGE_PATHS, expectedLinks, SEE } from "./el-fixtures.mjs";
 
 const { colours, all } = await pageTokens();
 const OFFER_URL = `${SAMPLE.siteUrl}/o/${SAMPLE.code}`;
@@ -53,10 +53,10 @@ test("EL3: each E1 has one button, the whole panel one link to /o/<code>, its la
   }
 });
 
-test("EL3: each E1's links are the button and the footer's eatfitaf.com, in that order, and nothing else", () => {
+test("EL3: each E1's links are the button, the consent's when ticked (§ 8.2), and the footer's eatfitaf.com, in that order", () => {
   for (const [name, m] of Object.entries(sampleE1s())) {
     const links = tagsOf(bodyOf(m.html)).filter((t) => t.name === "a");
-    assert.deepEqual(links.map((t) => t.attrs.href), [OFFER_URL, `${SAMPLE.siteUrl}/`], `${name}: two links`);
+    assert.deepEqual(links.map((t) => t.attrs.href), expectedLinks(name, SAMPLE), `${name}: its links`);
     assert.ok(m.text.split("\n").includes(`${name === "e1_held_ended" ? SEE : CLAIM}: ${OFFER_URL}`), `${name}: the text part's button line`);
   }
 });
