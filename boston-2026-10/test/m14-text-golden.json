@@ -1,5 +1,5 @@
 {
-  "about": "The plain-text part of E1 (ticked, unticked) and E-X, rendered by src/worker/messages.js from test/email-fixture.mjs's SAMPLE inputs at recorded_from, BEFORE the branding amendment (SPEC-rung5 § 9). M14 renders them again and compares byte for byte. The text part is the draft's wording: regenerate only when the WORDING is meant to change, and say so in the commit. Since SPEC-save-offer-production § 10 (2026-10-22: a WORDING change, E1's line for an offer without a code, \"Your pricing is held until [date]\") it also holds e1_held_ticked and e1_held_unticked, rendered from inputs.heldOffer at recorded_held_from; the three recorded from recorded_from are unchanged, byte for byte. Since SPEC-ui-and-copy-pass.md § 1 item 4 (2026-10-23, the Advisor: \"Let's harmonize on 'held until'\") a code's line reads \"· held until\" (it read \"· good until\"): e1_ticked's and e1_unticked's one line each, re-recorded from ede2e07's own tree; nothing else moved.",
+  "about": "The plain-text part of E1 (ticked, unticked) and E-X, rendered by src/worker/messages.js from test/email-fixture.mjs's SAMPLE inputs at recorded_from, BEFORE the branding amendment (SPEC-rung5 § 9). M14 renders them again and compares byte for byte. The text part is the draft's wording: regenerate only when the WORDING is meant to change, and say so in the commit. Since SPEC-save-offer-production § 10 (2026-10-22: a WORDING change, E1's line for an offer without a code, \"Your pricing is held until [date]\") it also holds e1_held_ticked and e1_held_unticked, rendered from inputs.heldOffer at recorded_held_from; the three recorded from recorded_from are unchanged, byte for byte. Since SPEC-ui-and-copy-pass.md § 1 item 4 (2026-10-23, the Advisor: \"Let's harmonize on 'held until'\") a code's line reads \"· held until\" (it read \"· good until\"): e1_ticked's and e1_unticked's one line each, re-recorded from ede2e07's own tree; nothing else moved. Since SPEC-ui-and-copy-pass.md § 8 (2026-10-26, a WORDING change: E1 in the flyers' language, the band's words read from data/flyer-front.json, Claim my offer, the footer's new words, item 7's two lines removed) every E1 entry moved and two were added (e1_held_ended, e1_held_slideshow), and inputs gained noPhotos and photos (each sample names its own photo manifest): re-recorded from ac0ec8c's own tree (git archive), the recorder at 7961725 (the code before) first reproducing every committed entry byte for byte; ex unchanged, byte for byte.",
   "recorded_from": "4ddd5c4",
   "recorded_held_from": "a593811",
   "inputs": {
@@ -18,13 +18,29 @@
       "name": "the sample event"
     },
     "zip": "01602",
-    "unconfirmedDays": 7
+    "unconfirmedDays": 7,
+    "noPhotos": {
+      "base": null
+    },
+    "photos": {
+      "base": "assets/photo-sheets/",
+      "email_slideshow": {
+        "file": "email-slideshow.gif",
+        "width": 600,
+        "height": 400,
+        "frames": 5,
+        "frame_ms": 2500
+      }
+    }
   },
   "text": {
-    "e1_ticked": "You saved this offer at the sample event yesterday — here it is.\nYour code: SAMP-LE23 · held until November 30, 2026\nSee my offer: https://email-sample.example.test/o/SAMPLE23\nYou asked to hear about Fit AF menus and offers. Yes, keep me posted: https://email-sample.example.test/confirm/SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPL\nAlready ordered? Enjoy your meals!\nYou're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
-    "e1_unticked": "You saved this offer at the sample event yesterday — here it is.\nYour code: SAMP-LE23 · held until November 30, 2026\nSee my offer: https://email-sample.example.test/o/SAMPLE23\nAlready ordered? Enjoy your meals!\nYou're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
-    "ex": "You asked us to tell you when Fit AF delivers near 01602. Yes, tell me: https://email-sample.example.test/confirm/SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPL\nIf this wasn't you, ignore this email — we'll delete your details within 7 days.\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
-    "e1_held_ticked": "You saved this offer at the sample event yesterday — here it is.\nYour pricing is held until October 29, 2026\nSee my offer: https://email-sample.example.test/o/SAMPLE23\nYou asked to hear about Fit AF menus and offers. Yes, keep me posted: https://email-sample.example.test/confirm/SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPL\nAlready ordered? Enjoy your meals!\nYou're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
-    "e1_held_unticked": "You saved this offer at the sample event yesterday — here it is.\nYour pricing is held until October 29, 2026\nSee my offer: https://email-sample.example.test/o/SAMPLE23\nAlready ordered? Enjoy your meals!\nYou're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n"
-  }
+    "e1_ticked": "FRESH MEAL PREP\nFOR PEOPLE WHO\nLIKE FOOD.\nAlways fresh. Never frozen. Delivered weekly to you.\nClaim my offer: https://email-sample.example.test/o/SAMPLE23\nYour code: SAMP-LE23 · held until November 30, 2026\nAlready ordered? Enjoy your meals!\nYou're getting this email because you saved an offer at eatfitaf.com: https://email-sample.example.test/\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
+    "e1_unticked": "FRESH MEAL PREP\nFOR PEOPLE WHO\nLIKE FOOD.\nAlways fresh. Never frozen. Delivered weekly to you.\nClaim my offer: https://email-sample.example.test/o/SAMPLE23\nYour code: SAMP-LE23 · held until November 30, 2026\nAlready ordered? Enjoy your meals!\nYou're getting this email because you saved an offer at eatfitaf.com: https://email-sample.example.test/\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
+    "e1_held_ticked": "FRESH MEAL PREP\nFOR PEOPLE WHO\nLIKE FOOD.\nAlways fresh. Never frozen. Delivered weekly to you.\nClaim my offer: https://email-sample.example.test/o/SAMPLE23\nYour pricing is held until October 29, 2026\nAlready ordered? Enjoy your meals!\nYou're getting this email because you saved an offer at eatfitaf.com: https://email-sample.example.test/\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
+    "e1_held_unticked": "FRESH MEAL PREP\nFOR PEOPLE WHO\nLIKE FOOD.\nAlways fresh. Never frozen. Delivered weekly to you.\nClaim my offer: https://email-sample.example.test/o/SAMPLE23\nYour pricing is held until October 29, 2026\nAlready ordered? Enjoy your meals!\nYou're getting this email because you saved an offer at eatfitaf.com: https://email-sample.example.test/\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
+    "e1_held_ended": "FRESH MEAL PREP\nFOR PEOPLE WHO\nLIKE FOOD.\nAlways fresh. Never frozen. Delivered weekly to you.\nSee my offer: https://email-sample.example.test/o/SAMPLE23\nThis offer has ended\nAlready ordered? Enjoy your meals!\nYou're getting this email because you saved an offer at eatfitaf.com: https://email-sample.example.test/\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
+    "e1_held_slideshow": "FRESH MEAL PREP\nFOR PEOPLE WHO\nLIKE FOOD.\nAlways fresh. Never frozen. Delivered weekly to you.\nClaim my offer: https://email-sample.example.test/o/SAMPLE23\nYour pricing is held until October 29, 2026\nAlready ordered? Enjoy your meals!\nYou're getting this email because you saved an offer at eatfitaf.com: https://email-sample.example.test/\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n",
+    "ex": "You asked us to tell you when Fit AF delivers near 01602. Yes, tell me: https://email-sample.example.test/confirm/SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPLE-TOKEN-SAMPL\nIf this wasn't you, ignore this email — we'll delete your details within 7 days.\nFit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.\n"
+  },
+  "recorded_e1_from": "ac0ec8c"
 }

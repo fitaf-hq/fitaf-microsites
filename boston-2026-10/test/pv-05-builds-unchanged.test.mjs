@@ -41,6 +41,11 @@
 // #save: flow1.js's lines): the development build's index.html, demo/, boston/ and seminar/ alone, +1,117 bytes each;
 // production's (production false here, no save step) and every other file byte-identical; the recorder at 1a63f41 (its
 // cases, the code before) reproduces 3f40698's (recorded_at apart), and at 3f40698 its record byte for byte.
+// And at ac0ec8c (`--commit ac0ec8c --release-a`), SPEC-ui-and-copy-pass.md § 8 (E1 in the flyers' language): the
+// development build gains E1's three images, assets/email/fitaf-logo-reversed.png, halftone-cta.png and halftone-ink.png
+// (the builds whose Worker sends E1); every other file of both builds byte-identical, production's (production false here,
+// whose Worker sends nothing) entirely; the recorder at 7961725 (its cases, the code before) reproduces 63e243b's
+// (recorded_at apart).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
