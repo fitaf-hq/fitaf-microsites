@@ -1770,3 +1770,32 @@ as zero's, beside a second row with its own remove control, the stand-in's new `
 link: the width passes, ABSENT). **Red on the unchanged watch (`6af3f91`): 7 run, 0 pass, 7 fail**, the stand-in's
 W11 reason word for word the live one (its control drawn `x`); green after the change: 7 of 7, and the other files
 naming W11 (W10–W13, W14, W16, W20) with § 33's `r2-z33`: 47 of 47.
+
+**Rehearsed on the live store, 2026-10-27T00:50:35Z → 00:51:18Z (17:50 PDT), with the amended watch** (§ 29's way:
+headless, a fresh profile per width, the block pasted in the console as a person would, any block of ours on the page
+held off, the checkout reached by the link alone; nothing typed, nothing submitted, no admin). The block built at this
+branch's tip `f66367c`: its text `86a83551…`, byte for byte the Footer block file's fragment but for the version line's
+commit (`f66367c` for `dbcf88d`). `npm --prefix boston-2026-10/tools/storefront-watch run smoke -- --script
+boston-2026-10/dist-storefront/fitaf-handoff.html`: **PASS at 1280 and 390, no flag.**
+
+- `fill C, mpid 21` · **`zero: applied`** · `done: /checkout` at both widths (the first 390 run of § 33.1 had logged
+  `zero: not found`; not seen here).
+- **The total $87.50** at both (7 order lines, *"7 items"*), the pay button displayed at step 3 (*"Pay now - $87.50"*
+  at 1280, *"PAY NOW"* at 390); the extras pop-up not opened; CHECKOUT to `/checkout` in 3.4 s and 2.9 s.
+- W11: 62 controls in `app-checkout` at 1280, 45 hidden by the style, all allowed; 66 and 49 at 390. W12, W14, W18, W19:
+  every target found hidden or reported absent (H2's `.app-hmp-credit`, H6, and H8 at 1280); the Total displayed;
+  one-time. W16 the logo on the screen and the checkout. W17 0 of 7 slides (the smoke builds its own link, as § 29).
+  W18 7 lines, 56 px each. W20: step 1 the lines, step 2 by Continue, Continue refused at step 2 (the smoke types
+  nothing), step 3 by the class, the Total at each.
+- **W28: *"once, "Contact customer service", https://fitafnutrition.com/contact, 14 px, displayed, in
+  app-checkout"*** at both widths.
+- **The sign hidden**, by a second run of the same smoke at 00:52:00Z → 00:52:37Z with a read-only page hook (a scratch
+  script, not committed, as § 33.1's; nothing typed): at every frame while the checkout was on the page, the elements
+  naming `zero` and the discount rows. At both widths one row appeared, *"× Coupon ZERO -$0.00"*, carrying `fitaf-zero`,
+  and **no element naming `zero` was displayed at any frame**; W11 listed its `button.summary__remove "×"` hidden and
+  allowed at each of the three steps; both widths PASS again.
+
+**The six watch cases that timed out under load in § 33.1's run, each run alone** (`nice -n 15 node --test
+--test-name-pattern <id> <file>`, 2026-10-26 17:52–17:55 PDT): FC-6c 2 of 2 (`fc-06c-stop-screen`), P3b 1 of 1
+(`p3-fixture-holds`), PS2 1 of 1 (`r2-31-2-page-still`), R2-45 2 of 2 with R2-45b (`r2-45-payment-untouched`), FC2 4 of 4
+(`fc2-probe-counts`), and P1 in both files that name it, 3 of 3 (`p1-visit-plumbing`) and 2 of 2 (`r2-p30-placeholder`).
