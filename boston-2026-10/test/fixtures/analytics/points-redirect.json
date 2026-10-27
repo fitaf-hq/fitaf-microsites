@@ -1,0 +1,25 @@
+{
+  "about": "RD9's fixture (SPEC-the-redirect.md § 5 and § 7), invented: data points as Analytics Engine holds them, each written by its fields' names (rd-checks.mjs redirectPoints puts each in its column by the contract's layout) and its instant with its own offset. 2026-10-26: visitor a1 makes a plan-page visit (open to click and leave); r1 is redirected from Boston's QR code (qr boston), b2 opens the offer page and is redirected from its link (qr boston, via email), r3 types the address on a desktop (direct). One plan-page visitor, one visit; redirects 3: boston 1, email 1, direct 1; phone 2, desktop 1. 2026-10-27: redirects alone: r5 direct on a phone, r6 the seminar's code on a tablet, r7 from the email for a demo save on a phone: no plan-page visit; redirects 3: seminar 1, email 1, direct 1; phone 2, tablet 1. 2026-10-28: a plan-page visit alone (f6), no redirect. Outside the range: a redirect at 2026-10-25 23:59 and one at 2026-10-29 00:00:30, New York time.",
+  "points": [
+    { "at": "2026-10-25T23:59:00-04:00", "event": "redirect", "s": "2000000000000000", "v": "c0c0c0c0c0c0c0c0", "country": "US", "device": "phone", "qr": "boston", "via": "" },
+
+    { "at": "2026-10-26T10:00:00-04:00", "event": "open", "s": "2000000000000001", "v": "a1a1a1a1a1a1a1a1", "country": "US", "device": "phone", "viewport": "<400", "qr": "boston", "via": "", "load_ms": 700 },
+    { "at": "2026-10-26T10:01:00-04:00", "event": "answer", "s": "2000000000000001", "v": "a1a1a1a1a1a1a1a1", "country": "US", "device": "phone", "question": "who", "answer": "individual" },
+    { "at": "2026-10-26T10:02:00-04:00", "event": "result", "s": "2000000000000001", "v": "a1a1a1a1a1a1a1a1", "country": "US", "device": "phone", "key": "or-7d", "mpid": 21 },
+    { "at": "2026-10-26T10:03:00-04:00", "event": "click", "s": "2000000000000001", "v": "a1a1a1a1a1a1a1a1", "country": "US", "device": "phone", "link": "order", "mpid": 21 },
+    { "at": "2026-10-26T10:04:00-04:00", "event": "leave", "s": "2000000000000001", "v": "a1a1a1a1a1a1a1a1", "country": "US", "device": "phone", "step": "click", "length_ms": 240000 },
+    { "at": "2026-10-26T19:30:00-04:00", "event": "redirect", "s": "2000000000000002", "v": "c1c1c1c1c1c1c1c1", "country": "US", "device": "phone", "qr": "boston", "via": "" },
+    { "at": "2026-10-26T09:00:00-04:00", "event": "offer", "s": "2000000000000003", "v": "b2b2b2b2b2b2b2b2", "country": "US", "device": "phone", "qr": "boston", "kind": "saved" },
+    { "at": "2026-10-26T09:00:20-04:00", "event": "redirect", "s": "2000000000000004", "v": "b2b2b2b2b2b2b2b2", "country": "US", "device": "phone", "qr": "boston", "via": "email" },
+    { "at": "2026-10-26T21:00:00-04:00", "event": "redirect", "s": "2000000000000005", "v": "c3c3c3c3c3c3c3c3", "country": "CA", "device": "desktop", "qr": "", "via": "" },
+
+    { "at": "2026-10-27T08:00:00-04:00", "event": "redirect", "s": "2000000000000006", "v": "c5c5c5c5c5c5c5c5", "country": "US", "device": "phone", "qr": "", "via": "" },
+    { "at": "2026-10-27T12:00:00-04:00", "event": "redirect", "s": "2000000000000007", "v": "c6c6c6c6c6c6c6c6", "country": "US", "device": "tablet", "qr": "seminar", "via": "" },
+    { "at": "2026-10-27T23:30:00-04:00", "event": "redirect", "s": "2000000000000008", "v": "c7c7c7c7c7c7c7c7", "country": "GB", "device": "phone", "qr": "demo", "via": "email" },
+
+    { "at": "2026-10-28T13:00:00-04:00", "event": "open", "s": "2000000000000009", "v": "f6f6f6f6f6f6f6f6", "country": "CA", "device": "desktop", "viewport": ">=1200", "qr": "", "via": "", "load_ms": 1500 },
+    { "at": "2026-10-28T13:00:10-04:00", "event": "leave", "s": "2000000000000009", "v": "f6f6f6f6f6f6f6f6", "country": "CA", "device": "desktop", "step": "open", "length_ms": 5000 },
+
+    { "at": "2026-10-29T00:00:30-04:00", "event": "redirect", "s": "200000000000000a", "v": "c8c8c8c8c8c8c8c8", "country": "US", "device": "phone", "qr": "", "via": "" }
+  ]
+}

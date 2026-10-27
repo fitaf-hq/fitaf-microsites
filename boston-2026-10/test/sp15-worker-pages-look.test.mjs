@@ -62,7 +62,7 @@ test("SP15: the saved offer's one action is the orange button; every other page 
   const action = /<p class="action"><a href="([^"]+)">([^<]+)<\/a><\/p>/g;
   const original = [...pages.original.html.matchAll(action)];
   assert.equal(original.length, 1, "the saved offer: one action");
-  assert.equal(original[0][1], "/?e=boston#from-email", "the link back to the page, as § 9.2 ruled");
+  assert.equal(original[0][1], "/?e=boston&amp;via=email#from-email", "the link back to the page, as § 9.2 ruled, via=email since SPEC-the-redirect.md § 4");
   for (const [name, { html }] of Object.entries(pages)) {
     if (name !== "original") assert.doesNotMatch(html, /class="action"/, `${name}: no orange button`);
   }

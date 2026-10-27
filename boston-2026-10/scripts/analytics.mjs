@@ -20,13 +20,19 @@
 // (the plan-page visits whose `open` has `via` "email") and the offer pages opened, by kind, each opening counted (a
 // repeat opening too: nothing ties two to one person), a line each after the saves, from two queries of their own. A
 // day with offer pages alone is a day with data, its plan-page figures those of no visit.
+// Since SPEC-the-redirect.md § 5 (2026-10-27: the home page a redirect to the store) the Worker's own `redirect` is
+// counted apart the same way: a visit whose only event is `redirect` is not a plan-page visit, so the visitors and
+// visits leave its rows out and every figure above is exactly as before. A day with redirects gains one member and one
+// line after the offer pages', `redirects`: their count, by source (each QR id, `email`, `direct`) and by device, from
+// a query of its own; a day without one has neither, so a window with no redirect row reads exactly as before. A day
+// with redirects alone is a day with data, its plan-page figures those of no visit.
 // A day with nothing recorded says so. `--json` (§ 11) prints the same figures as one JSON document instead of the text:
 // reportData computes them, once, and the text (reportText) is a formatting of that document, so the two cannot
 // disagree. Exit 0; 1 when the SQL API refuses or answers what this cannot read; 2 for a refused command line or a
 // missing variable, before any request; nothing on stdout but the report.
 // ⛔ Read-only: it sends SELECTs and nothing else, and never prints the token.
 import { fileURLToPath } from "node:url";
-import { ANALYTICS_ZONE, BLOBS, DOUBLES, LINKS, OFFER_KINDS, QUESTIONS, VIEWPORTS } from "../src/worker/beacon.js";
+import { ANALYTICS_ZONE, BLOBS, DEVICES, DOUBLES, LINKS, OFFER_KINDS, QR_IDS, QUESTIONS, REDIRECT_EVENT, VIEWPORTS } from "../src/worker/beacon.js";
 
 /** The datasets (SPEC-analytics.md § 6; the infrastructure's Amendment 1.8). */
 export const DATASETS = { prod: "fitaf_microsite_analytics_prod", dev: "fitaf_microsite_analytics_dev" };
@@ -39,6 +45,11 @@ const DAY_MS = 86_400_000;
  *  step after `goal`. Its line has no change figure, and the step after it is compared with the step before it. */
 const BRANCHES = ["answer: family"];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+/** SPEC-the-redirect.md § 5: a redirect's source, in this order: each QR id (data/events.json's), then the offer email,
+ *  then anything else. */
+const EMAIL_SOURCE = "email";
+const DIRECT_SOURCE = "direct";
+const REDIRECT_SOURCES = [...QR_IDS, EMAIL_SOURCE, DIRECT_SOURCE];
 
 /** A field's column (beacon.js's layout): blobN, doubleN. */
 const col = (name) => {
@@ -69,7 +80,8 @@ export function queries({ dataset, from, to }) {
   const visitors = `count(DISTINCT if(${col("v")} = '', index1, ${col("v")}))`;
   // § 16 item 3: a visit whose only event is `offer` (the offer page's, which sends nothing else) is not a plan-page
   // visit: the visitors and visits leave the offer pages' rows out, exactly as before § 16.
-  const planPage = `${col("event")} != 'offer'`;
+  // SPEC-the-redirect.md § 5: and the Worker's own `redirect` (a visit of its own, the redirect alone), likewise.
+  const planPage = `${col("event")} != 'offer' AND ${col("event")} != '${REDIRECT_EVENT}'`;
   const quartiles = (field) =>
     [0.25, 0.5, 0.75]
       .map((q, i) => `quantileExactWeighted(${q})(${col(field)}, _sample_interval) AS ${["q1", "median", "q3"][i]}`)
@@ -88,6 +100,8 @@ export function queries({ dataset, from, to }) {
     // § 16 item 3: the offer pages opened, by kind (each a visit of its own), and the plan-page visits from the offer email.
     offers: `SELECT ${day} AS day, ${col("kind")} AS kind, ${visits} AS visits FROM ${dataset} ${where("offer")} GROUP BY day, kind ORDER BY day FORMAT JSON`,
     email: `SELECT ${day} AS day, ${visits} AS visits FROM ${dataset} ${where("open")} AND ${col("via")} = 'email' GROUP BY day ORDER BY day FORMAT JSON`,
+    // SPEC-the-redirect.md § 5: the home page's redirects, each a visit of its own, by its QR id, via and device.
+    redirects: `SELECT ${day} AS day, ${col("qr")} AS qr, ${col("via")} AS via, ${col("device")} AS device, ${visits} AS visits FROM ${dataset} ${where(REDIRECT_EVENT)} GROUP BY day, qr, via, device ORDER BY day FORMAT JSON`,
   };
 }
 
@@ -153,6 +167,16 @@ function splitCounts(rows, field, order = null) {
   return Object.fromEntries(ordered([...counts].filter(([, n]) => n > 0), order));
 }
 
+/** SPEC-the-redirect.md § 5: a day's redirects from its rows, { count, source, device }: the source "email" for a
+ *  redirect from the offer email, else its QR id, else "direct", in REDIRECT_SOURCES' order; the device in DEVICES'.
+ *  null when there is none. */
+function redirectCounts(rows) {
+  const sourced = (rows ?? []).map((r) => ({ ...r, source: r.via === EMAIL_SOURCE ? EMAIL_SOURCE : r.qr || DIRECT_SOURCE }));
+  const count = sourced.reduce((n, r) => n + num(r.visits), 0);
+  if (!count) return null;
+  return { count, source: splitCounts(sourced, "source", REDIRECT_SOURCES), device: splitCounts(sourced, "device", DEVICES) };
+}
+
 /** A length's or load's quartiles, { q1, median, q3, n }; null with no visits. */
 function quartilesOf(row) {
   return row && num(row.n) ? { q1: num(row.q1), median: num(row.median), q3: num(row.q3), n: num(row.n) } : null;
@@ -170,7 +194,9 @@ export function reportData({ dataset, from, to }, rows) {
     // § 16 item 3: a day of offer pages alone has data; its plan-page figures are those of no visit.
     const visitors = days.visitors.get(day)?.[0];
     const offers = days.offers.get(day);
-    if (!visitors && !offers) {
+    // SPEC-the-redirect.md § 5: a day of redirects alone has data too.
+    const redirects = redirectCounts(days.redirects?.get(day));
+    if (!visitors && !offers && !redirects) {
       doc.days.push({ day, data: false });
       continue;
     }
@@ -192,6 +218,7 @@ export function reportData({ dataset, from, to }, rows) {
       saves: visitsOf("save"),
       offer_pages: splitCounts(offers, "kind", OFFER_KINDS),
       email_visits: num(days.email.get(day)?.[0]?.visits),
+      ...(redirects ? { redirects } : {}),
       visit_length_ms: quartilesOf(days.length.get(day)?.[0]),
       load_ms: quartilesOf(days.load.get(day)?.[0]),
       device: splitCounts(days.devices.get(day), "value"),
@@ -233,6 +260,10 @@ export function reportText(doc) {
     lines.push(`  saved an offer ${d.saves}`);
     lines.push(`  visits from the offer email ${d.email_visits}`);
     lines.push(`  offer pages opened (a repeat opening counted again): ${splitLine(d.offer_pages, OFFER_KINDS) || "none"}`);
+    if (d.redirects) {
+      const { count, source, device } = d.redirects;
+      lines.push(`  redirects to the store ${count} (by source: ${splitLine(source, REDIRECT_SOURCES)}; by device: ${splitLine(device, DEVICES)})`);
+    }
     for (const [q, label, what] of [[d.visit_length_ms, "visit length", "leave"], [d.load_ms, "load time", "open"]]) {
       lines.push(
         q

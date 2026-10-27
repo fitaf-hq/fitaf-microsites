@@ -351,6 +351,12 @@ export const LATER = [
   // loaded before the release), moves the Worker alone (src/worker/beacon.js's FIELDS.open), from 65dc5be (its case) to
   // 9411139 (its code, one commit); every hunk is taken.
   ["65dc5be", "9411139", ["src/worker/beacon.js"]],
+  // SPEC-the-redirect.md (2026-10-27: the home page a 302 to the store while REDIRECT_TO is set) moves the Worker's
+  // beacon.js alone of the base's files (writeEvent factored from the beacon's record and exported with visitorOf, randomId
+  // and REDIRECT_EVENT; POST /a's behaviour unchanged), from 275a481 (its cases, on its contract's code) to 7b8f4fd (its
+  // code, one commit); every hunk is taken. Its other files are the development Worker's, which sp3's MOVED_WORKER_FILES
+  // names (site.js, index.js, redeem.js, and the new redirect.js and src/qr-event.js).
+  ["275a481", "7b8f4fd", ["src/worker/beacon.js"]],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */

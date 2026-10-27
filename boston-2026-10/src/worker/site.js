@@ -29,6 +29,11 @@
 //    cleared. POST /a carrying the cookie at "1" is the 204 every beacon gets, and nothing else: no data point, the salt
 //    neither read nor written. The page is unchanged; nothing else reads the cookie (the save step, /o, /confirm and the
 //    cron are index.js's, before serveSite).
+// 6. The home page as a way into the store (SPEC-the-redirect.md, the Advisor's pivot, 2026-10-27), on both Workers: while
+//    the var REDIRECT_TO is an https URL with no fragment, a GET or HEAD of exactly "/" (any query; after 5.'s switch) is
+//    a 302 to it with the marker (src/worker/redirect.js), and a counted one (not 5.'s cookie at "1", not a HEAD, not a
+//    program's user agent) writes one `redirect` data point after the answer (ctx.waitUntil). Every other path, and "/"
+//    with the var absent or not such a URL, is answered as before: /index.html, the event pages, /assets/ above all.
 //
 // Freshness (§ 4.4): a write to the bucket is what the next request gets. The page is asked of the assets WITHOUT the
 // visitor's conditional headers (so the assets never answer 304 for a page whose week may have changed under the same
@@ -39,6 +44,7 @@
 import saveConfig from "../../data/save.json" with { type: "json" };
 import development from "./index.js";
 import { BEACON_PATH, serveBeacon } from "./beacon.js";
+import { HOME_PATH, isProgram, markedLocation, markerOf, recordRedirect, REDIRECT_VAR, REDIRECTED_METHODS, redirectResponse, redirectTarget } from "./redirect.js";
 import { scriptJson } from "./script-json.js";
 
 /** SPEC-week-content § 1, the interface with fitaf-infra: the binding is WEEK, and these are its objects. */
@@ -199,14 +205,31 @@ export async function serveSheet(request, env) {
   return object.body ? new Response(object.body, { headers }) : new Response(null, { status: 304, headers });
 }
 
-/** The three behaviours (with § 12's switch, 5. above), and the assets for everything else: production's whole script,
- *  and the development Worker's last step once its own routes have not matched. */
-export async function serveSite(request, env) {
+/** SPEC-the-redirect.md (6. above): a GET or HEAD of exactly "/" while REDIRECT_TO is an https URL without a fragment is
+ *  the 302 to it with the marker; a counted one's `redirect` data point is written after the answer (ctx.waitUntil), so
+ *  the visitor never waits on the salt or the dataset. null for any other request, or the var absent or anything else:
+ *  the page, as before. */
+function redirectHome(request, env, ctx) {
+  const url = new URL(request.url);
+  if (url.pathname !== HOME_PATH || !REDIRECTED_METHODS.includes(request.method)) return null;
+  const target = redirectTarget(env[REDIRECT_VAR]);
+  if (!target) return null;
+  const marker = markerOf(url.search);
+  if (request.method === "GET" && !carriesNoTracking(request) && !isProgram(request.headers.get("user-agent") ?? "")) {
+    const writing = recordRedirect(request, env, marker);
+    ctx?.waitUntil(writing);
+  }
+  return redirectResponse(markedLocation(target, marker));
+}
+
+/** The three behaviours (with § 12's switch, 5. above, and the home page's redirect, 6.), and the assets for everything
+ *  else: production's whole script, and the development Worker's last step once its own routes have not matched. */
+export async function serveSite(request, env, ctx) {
   const { pathname } = new URL(request.url);
   if (pathname === BEACON_PATH && request.method === "POST") return carriesNoTracking(request) ? uncounted() : serveBeacon(request, env);
   if (pathname.startsWith(SHEETS_PATH)) return serveSheet(request, env);
-  if (request.method === "GET") return switchTracking(request) ?? servePage(request, env);
-  return env.ASSETS.fetch(request);
+  if (request.method === "GET") return switchTracking(request) ?? redirectHome(request, env, ctx) ?? servePage(request, env);
+  return redirectHome(request, env, ctx) ?? env.ASSETS.fetch(request);
 }
 
 /** § 4 item 2: production with the save step, the development Worker's own handler (rung 4's routes and the cron). */

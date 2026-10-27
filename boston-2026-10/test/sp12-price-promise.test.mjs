@@ -94,7 +94,7 @@ test("SP12: a save on every date before valid_to — E1 and /o say it is held un
         assert.ok(words.includes(line), `${where}, /o on ${today}: says ${line}`);
         assertNoCodeText(words, code, `${where}, /o on ${today}`);
         assert.ok(!page.html.includes(code), `${where}, /o on ${today}: the page never prints its token`);
-        assert.match(page.html, /href="\/\?e=demo#from-email">Build my plan →/, `${where}, /o on ${today}: the link back to the page`);
+        assert.match(page.html, /href="\/\?e=demo&amp;via=email#from-email">Build my plan →/, `${where}, /o on ${today}: the link back to the page (via=email since SPEC-the-redirect.md § 4)`);
       }
     }
   } finally {

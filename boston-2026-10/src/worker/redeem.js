@@ -8,6 +8,9 @@
 // its kind the page drawn (saved: the save's offer live; welcome: ended, the current offer shown; current: an unknown
 // code; ended: no offer current, for a known code or an unknown one) and `qr` the save's event id, as its link names it
 // ("" for an unknown code). ⛔ Never the code, the path or anything else of the save's row.
+// SPEC-the-redirect.md § 4 (2026-10-27): every link of the page to the home page names the email in its query, via=email,
+// before any fragment, so the home page's redirect marks the visit utm_medium=email (with the page served, the page
+// ignores it: its open's via is the fragment's). The logo (pages.js's, on every Worker page) is not one of these links.
 import saveConfig from "../../data/save.json" with { type: "json" };
 import { currentGeneral, heldUntilOfSave, longDate, offerById } from "./offers.js";
 import { OFFER_CODE_ALPHABET, newOfferCode } from "./offer-code.js";
@@ -37,6 +40,9 @@ async function reissue(db, original, offer, now) {
 }
 
 const planLink = (href) => `<p><a href="${esc(href)}">Build my plan →</a></p>`;
+/** SPEC-the-redirect.md § 4: the home page, from the offer email: the save's event in ?e= when there is one, then via=email,
+ *  then the fragment, if any. */
+const homeFromEmail = (eventId, fragment = "") => `/?${eventId ? `e=${eventId}&` : ""}via=email${fragment}`;
 /** § 10.7: no offer follows the last one's end, so an ended offer's page, and an unknown code's, is the lapse: the offer
  *  has ended, and the link to the plans (the quieter style). */
 const ENDED = "This offer has ended";
@@ -63,11 +69,11 @@ function currentLine(current, newCode) {
 /** An unknown code's page: no save, so no event (`qr` ""). */
 function currentPage(today) {
   const offer = currentGeneral(today);
-  if (!offer) return endedPage("/", "");
+  if (!offer) return endedPage(homeFromEmail(""), "");
   return page(
     "Our current offer",
     `<h1>Our current offer</h1>\n<p><strong>${esc(offer.label)}</strong></p>\n` +
-      `<p>Held until ${esc(longDate(offer.valid_to))}</p>\n${planLink("/")}`,
+      `<p>Held until ${esc(longDate(offer.valid_to))}</p>\n${planLink(homeFromEmail(""))}`,
     { offer: { kind: "current", qr: "" } },
   );
 }
@@ -79,7 +85,7 @@ export async function handleOffer(env, rawCode, { now, today }) {
 
   // SPEC-save-offer-production § 9.2: the page at / (production serves no other), the save's event in ?e= (read by the page's
   // qrEvent), Flow 1 collapsed (#from-email). The event id is one of data/events.json's (validate-save.js), [a-z0-9-].
-  const backTo = `/?e=${row.event_id}#from-email`;
+  const backTo = homeFromEmail(row.event_id, "#from-email");
   const back = planLink(backTo);
   const offer = offerById(row.offer_id);
   // § 10.9: a save is held from its offer's first day through its held date (its offer's last day, or its E1's day).
@@ -93,7 +99,7 @@ export async function handleOffer(env, rawCode, { now, today }) {
     );
   }
   const current = currentGeneral(today);
-  if (!current) return htmlResponse(200, endedPage(`/?e=${row.event_id}`, row.event_id));
+  if (!current) return htmlResponse(200, endedPage(homeFromEmail(row.event_id), row.event_id));
   const newCode = current.code_mode === "unique" ? await reissue(env.DB, row, current, now) : null;
   const line = currentLine(current, newCode);
   return htmlResponse(

@@ -23,7 +23,8 @@ import { productionBuild } from "./sp-production.mjs";
 import { fetchPage, NEAR_ZIP, postSave, rows, startWorker, TEST_CONFIRM_TOKEN_KEY, validSave } from "./worker-harness.mjs";
 
 const EVENT = "boston";
-const BACK = `/?e=${EVENT}#from-email`;
+// SPEC-the-redirect.md § 4 (2026-10-27): the link names the email in its query, before the fragment.
+const BACK = `/?e=${EVENT}&via=email#from-email`;
 
 /** The development build's pages, by the path the assets serve each at. */
 async function devAssets() {

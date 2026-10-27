@@ -65,6 +65,9 @@ const MOVED_WORKER_FILES = [
   "data/flyer-front.json",
   "data/offers.json",
   "data/save.json",
+  // SPEC-the-redirect.md (2026-10-27): the page's one reading of ?e= (src/qr-event.js, already the page's), now also read
+  // by the Worker's redirect (src/worker/redirect.js, new), which site.js imports.
+  "src/qr-event.js",
   "src/worker/choose-sender.js",
   "src/worker/confirm.js",
   "src/worker/email-band.js",
@@ -80,6 +83,7 @@ const MOVED_WORKER_FILES = [
   "src/worker/page-style.json",
   "src/worker/pages.js",
   "src/worker/redeem.js",
+  "src/worker/redirect.js",
   "src/worker/save-store.js",
   "src/worker/scheduled.js",
   "src/worker/send-due.js",
