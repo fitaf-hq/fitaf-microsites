@@ -32,6 +32,10 @@ hashes and a few literal strings of the store's public bundle, never its code or
   (its *Select Options*, Size, count and "+", the plan's counts, its line and group on `/checkout` and the hide rules
   that touch them; [`../SPEC-snacks-in-the-cart.md`](../SPEC-snacks-in-the-cart.md) § 1), one dated directory per
   batch, written by the watch package's `probe-snacks`. Nothing reads them; the contract quotes them.
+- **[`probe-prices/`](probe-prices/README.md)** is **not an input** either: measurements of how the live store draws
+  its prices on the meal plans page, a plan's order page, its cart summary and `/checkout`, and whether it keeps a landing
+  query ([`../SPEC-rung2-progress-and-checkout.md`](../SPEC-rung2-progress-and-checkout.md) § 36 item 7), one dated
+  directory per batch, written by the watch package's `probe-prices`. Nothing reads them; the contract quotes them.
 - **[`smoke-snacks/`](smoke-snacks/README.md)** is **not an input** either: the live proof of snacks in the cart
   ([`../SPEC-snacks-in-the-cart.md`](../SPEC-snacks-in-the-cart.md) § 6), the watch's smoke with a built console file and
   links carrying snacks, its reports one dated directory per batch. Pictures beside them are never committed.
