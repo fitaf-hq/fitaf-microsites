@@ -53,7 +53,7 @@ const MARK = "fitaf_struck";
  */
 const TARGETS = [".meal-plan__fit-af-price>strong", "app-cart .segment-price", ".mobile-cart-summary__stat-value", ".summary__plan-total-value", ".meal-plan__fit-af-meal-options button>span", ".product__content-price", ".product-card-mobile__price", "app-extra-products-dialog .popular-card__price", "app-cart-product-card .product__price-original", ".summary__item-price-current"];
 const UNITS = ".summary__item-price-unit";
-const TOTALS = ".summary__total-preview,.summary__total-value";
+const TOTALS = ".summary__total-preview,.summary__total-value,.summary__stat-value";
 const MEAL_PRICES = ".product__content-price,.product-card-mobile__price";
 const cents = (t) => {
   const m = /^\$(\d+)\.(\d\d)$/.exec(t);
@@ -467,14 +467,15 @@ async function st13(text) {
       await cart(v.page);
       await checkout(v.page);
       const k = await v.at();
-      const totals = k.prices.filter((p) => p.kind === "total");
+      // The header's total and the Total row (§ 38's bar total is ST15's; judge() holds it too).
+      const totals = k.prices.filter((p) => p.kind === "total" && p.cls !== "summary__stat-value");
       assert.deepEqual(totals.map((p) => [p.cls, p.text, p.sub]), [["summary__total-preview", total, "$87.50"], ["summary__total-value", total, "$87.50"]], "fixture control: the header's total and the Total row");
       for (const p of totals) assert.equal(p.struck, struck, `${p.cls} ${p.text} with shipping ${shippingCents}: the total + (the struck Subtotal - the Subtotal) = ${struck}`);
       judge(k, { expectStruck: true });
       // No Subtotal on the page (the store drawing its summary without it): the totals get nothing.
       await v.page.evaluate(() => document.querySelector("[data-fixture=subtotal]").parentNode.remove());
       const none = await v.at();
-      assert.deepEqual(none.prices.filter((p) => p.kind === "total").map((p) => p.struck), [null, null], "no Subtotal: no struck total");
+      assert.deepEqual(none.prices.filter((p) => p.kind === "total").map((p) => p.struck), [null, null, null, null], "no Subtotal: no struck total (the bar's two stats included)");
     } finally {
       await v.close();
     }
@@ -498,6 +499,42 @@ test("ST14: shipping, tax, tip, a discount and the pay buttons never struck", { 
     assert.ok((await v.page.evaluate(() => document.querySelectorAll(".summary__row").length)) >= 5, "fixture control: Subtotal, shipping, tax, tip and the discount row drawn");
   } finally {
     await v.close();
+  }
+});
+
+// ── § 38: ST15 ──────────────────────────────────────────────────────────────────────────────────────────────────────
+
+test("ST15: the phone bar's total struck at 390 by the totals' rule, with a fee and without; the pay button untouched; none displayed at 1280", { skip }, async () => {
+  for (const [width, shippingCents, total, struck] of [[390, 500, "$92.50", "$121.67"], [390, 0, "$87.50", "$116.67"], [1280, 500, "$92.50", "$121.67"]]) {
+    const v = await open({ path: "/order?mpid=21", width, cfg: { storeLines: true, shippingCents, taxCents: 0 } });
+    try {
+      await cart(v.page);
+      await checkout(v.page);
+      const k = await v.at();
+      judge(k, { expectStruck: true });
+      const bar = await v.page.evaluate(() => {
+        const b = document.querySelector(".summary__mobile-bar");
+        const value = [...b.querySelectorAll(".summary__stat-value")].find((e) => e.textContent.includes("$"));
+        const s = value.previousElementSibling;
+        const pay = [...document.querySelectorAll(".summary__pay-button, .checkout__submit")];
+        return {
+          shown: b.getClientRects().length > 0,
+          value: value.textContent.trim(),
+          struck: s && s.matches(".fitaf-was") ? s.textContent : null,
+          struckShown: Boolean(s && s.matches(".fitaf-was") && s.getClientRects().length),
+          payStruck: pay.filter((e) => e.querySelector(".fitaf-was")).length,
+          payText: pay.map((e) => e.textContent.replace(/\s+/g, " ").trim()),
+        };
+      });
+      assert.equal(bar.value, total, `fixture control: the bar's total at ${width}`);
+      assert.equal(bar.struck, struck, `${width}, shipping ${shippingCents}: the bar's total + (the struck Subtotal - the Subtotal) = ${struck}`);
+      assert.equal(bar.payStruck, 0, "the pay button never struck");
+      assert.deepEqual(bar.payText, ["Place order", "PAY NOW"], "the pay buttons' words unchanged");
+      if (width === 1280) assert.deepEqual([bar.shown, bar.struckShown], [false, false], "at 1280 the bar is not displayed, nor its figure");
+      else assert.deepEqual([bar.shown, bar.struckShown], [true, true], "at 390 the bar and its figure displayed");
+    } finally {
+      await v.close();
+    }
   }
 });
 

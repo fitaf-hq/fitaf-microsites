@@ -186,7 +186,7 @@ ${cfg.discountRow === "live" ? '<div class="summary__row summary__row--discount"
     : cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Discount (OFFER)</span><span>-$5.00</span></div>' : ""}
 <div class="summary__total"><span class="summary__total-label">Total</span><span class="summary__total-value"${cfg.prices ? ' data-fixture="total"' : ""}>$87.50</span></div>
 <div class="summary__totals"></div>
-<div class="summary__mobile-bar"><div class="summary__bar-row"><span class="summary__stat">Order total</span>
+<div class="summary__mobile-bar"><div class="summary__bar-row">${cfg.prices ? '<div class="summary__stats summary__stats--compact"><div class="summary__stat"><span class="summary__stat-label">Items</span><span class="summary__stat-value" data-fixture="count">0</span></div><div class="summary__stat"><span class="summary__stat-label">Total</span><span class="summary__stat-value" data-fixture="total">$0.00</span></div></div>' : '<span class="summary__stat">Order total</span>'}
 <app-button class="summary__pay-button"><button type="button" class="checkout__pay-mobile"> PAY NOW </button></app-button></div></div>
 </div></aside>
 </div></app-checkout>`;
@@ -291,6 +291,9 @@ function appHtml(cfg) {
   .summary__header-right { display: flex; align-items: center; gap: 8px; }
   .summary__row, .summary__total { display: flex; justify-content: space-between; }
   .summary__item-price-unit { font-size: 11px; }
+  .summary__stats { display: flex; gap: 10px; }
+  .summary__stat { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .summary__stat-value { font-size: 13px; font-weight: 700; }
   @media (max-width: 1024px) {
     .checkout__submit { display: none; }
     .summary__mobile-bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; background: #fff; }
@@ -665,6 +668,8 @@ function appHtml(cfg) {
       var grand = total + (cfg.shippingCents || 0) + (cfg.taxCents || 0) + (cfg.tipCents || 0) - (cfg.discountRow ? 500 : 0);
       root.querySelectorAll("[data-fixture=subtotal]").forEach(function (e) { e.textContent = money(total); });
       root.querySelectorAll("[data-fixture=total]").forEach(function (e) { e.textContent = money(grand); });
+      // § 38: the phone bar's stats, as measured (storefront/probe-prices/2026-10-27/run-20261027T230514Z-390.json).
+      root.querySelectorAll("[data-fixture=count]").forEach(function (e) { e.textContent = String(n); });
     }
     root.querySelector(".checkout__pay").onclick = pay;
     root.querySelector(".checkout__pay-mobile").onclick = pay;
