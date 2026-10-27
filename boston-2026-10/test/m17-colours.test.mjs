@@ -50,9 +50,10 @@ test("M17: every colour in the HTML is the value of one of the page's :root toke
   for (const [name, message] of Object.entries(sampleMessages())) {
     assert.deepEqual(colourProblems(message.html, tokenValues), [], `${name}: colours that are not tokens`);
     const drawn = new Set(coloursOf(message.html).map((c) => c.value.toLowerCase()));
-    // Since SPEC-ui-and-copy-pass § 8 E1 draws the band's colours and no --muted footer (its footer is on --ink).
+    // Since SPEC-ui-and-copy-pass § 8 E1 draws the band's colours and no --muted footer (its footer is on --ink); its navy is
+    // the date held or the code, which an E1 sent after its offer's end does not print.
     const expected = name.startsWith("e1_")
-      ? ["--navy", "--white", "--ink", "--line", "--cta", "--on-cta", "--signature"]
+      ? [...(name === "e1_held_ended" ? [] : ["--navy"]), "--white", "--ink", "--line", "--cta", "--on-cta", "--signature"]
       : ["--navy", "--white", "--ink", "--muted", "--line", "--cta", "--on-cta"];
     for (const t of expected) {
       assert.ok(drawn.has(colours[t]), `control: ${name} draws ${t} (${colours[t]})`);

@@ -16,7 +16,6 @@ import { LOGO_FILE_PX, PRINT_CSS_PATH } from "./el-fixtures.mjs";
 
 const { PNG } = createRequire(import.meta.url)("pngjs");
 const { colours } = await pageTokens();
-const tokenOf = Object.fromEntries(Object.entries(colours).map(([name, hex]) => [hex, name]));
 const pairs = JSON.parse(await readFile(DEFAULTS.pairs, "utf8"));
 const EMAIL_DIR = join(ROOT, "src", "assets", "email");
 /** The package's roles, strictest first (src/contrast-pairs.json): body text, large text, a large heading. */
@@ -27,7 +26,8 @@ function loosestRole(sizePx, weight) {
   return "body";
 }
 
-/** Each coloured run of text in a row: its colour token, its ground, its size and weight (a <span> takes its block's). */
+/** Each coloured run of text in a row: its colour (a token's value: two tokens may share one, --white and --on-cta), its
+ *  ground, its size and weight (a <span> takes its block's). */
 function textRuns(row, ground) {
   const runs = [];
   const blocks = [...row.matchAll(/<(h1|p|a)\b[^>]*style="([^"]*)"[^>]*>([\s\S]*?)<\/\1>/g)];
@@ -35,10 +35,10 @@ function textRuns(row, ground) {
     const d = declarations(style);
     const size = Number.parseFloat(d["font-size"]);
     const weight = Number(d["font-weight"] ?? 400);
-    if (d.color) runs.push({ fg: tokenOf[d.color], bg: ground, size, weight });
+    if (d.color) runs.push({ fgHex: d.color, bg: ground, size, weight });
     for (const t of tagsOf(inner).filter((x) => declarations(x.attrs.style).color)) {
       const s = declarations(t.attrs.style);
-      runs.push({ fg: tokenOf[s.color], bg: ground, size: Number.parseFloat(s["font-size"] ?? size), weight: Number(s["font-weight"] ?? weight) });
+      runs.push({ fgHex: s.color, bg: ground, size: Number.parseFloat(s["font-size"] ?? size), weight: Number(s["font-weight"] ?? weight) });
     }
   }
   return runs;
@@ -53,10 +53,10 @@ test("EL9: every text colour on the band, the button and the footer is a declare
     const runs = [...textRuns(rows[0], "--ink"), ...textRuns(panel, "--cta"), ...textRuns(rows.at(-1), "--ink")];
     assert.ok(runs.length >= 6, `control: ${name}'s runs were read (${runs.length})`);
     for (const r of runs) {
-      assert.ok(r.fg, `${name}: a text colour that is a token`);
+      assert.ok(Object.values(colours).includes(r.fgHex), `${name}: a text colour that is a token's value (${r.fgHex})`);
       const allowed = ROLE_ORDER.slice(0, ROLE_ORDER.indexOf(loosestRole(r.size, r.weight)) + 1);
-      const pair = declared.find((p) => p.fg === r.fg && p.bg === r.bg && allowed.includes(p.role));
-      assert.ok(pair, `${name}: ${r.fg} on ${r.bg} at ${r.size}px/${r.weight} is declared as ${allowed.join(" or ")}`);
+      const pair = declared.find((p) => colours[p.fg] === r.fgHex && p.bg === r.bg && allowed.includes(p.role));
+      assert.ok(pair, `${name}: ${r.fgHex} on ${r.bg} at ${r.size}px/${r.weight} is declared as ${allowed.join(" or ")}`);
     }
   }
 });
@@ -84,10 +84,12 @@ test("EL9: src/assets/email/ is exactly what `npm run email:images` makes, pixel
 
 test("EL9: each tile is its ground with dots between it and the dots' token; the logo is 240 x 104, opaque, on --ink", async () => {
   const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  // A pixel is ground + t x (dot - ground) for one t in [0, 1], each channel rounded (within 1 of it).
   const onSegment = (px, a, b) => {
     const [ga, gb] = [hex(a), hex(b)];
-    const t = [0, 1, 2].map((k) => (ga[k] === gb[k] ? null : (px[k] - ga[k]) / (gb[k] - ga[k]))).filter((x) => x !== null);
-    return t.every((x) => x >= -0.01 && x <= 1.01 && Math.abs(x - t[0]) <= 0.02) && [0, 1, 2].every((k) => ga[k] !== gb[k] || px[k] === ga[k]);
+    const k0 = [0, 1, 2].reduce((m, k) => (Math.abs(gb[k] - ga[k]) > Math.abs(gb[m] - ga[m]) ? k : m), 0);
+    const t = (px[k0] - ga[k0]) / (gb[k0] - ga[k0]);
+    return t >= 0 && t <= 1 && [0, 1, 2].every((k) => Math.abs(px[k] - (ga[k] + (gb[k] - ga[k]) * t)) <= 1);
   };
   for (const [file, ground, dot] of [["halftone-ink.png", "--ink", "--muted"], ["halftone-cta.png", "--cta", "--cta-hover"]]) {
     const png = PNG.sync.read(await readFile(join(EMAIL_DIR, file)));
