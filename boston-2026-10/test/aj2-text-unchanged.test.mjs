@@ -13,6 +13,10 @@
 // from f9273c0 to 1fb4831, § 14's code commit: each day's "saved an offer N" after the funnel. f9273c0's text over the same
 // fixture (which gained a save row a day with § 14's cases, 9cdf963) is this tree's at 9cdf963, byte for byte (AJ2 passed
 // there), and prints no saved line.
+// ⚠ AND AGAIN with SPEC-analytics.md § 15 item 3 ("AJ2's base moves with this section"), from 1fb4831 to 3f40698, § 15's
+// code commit: the visitors query reads either layout (count(DISTINCT if(blob12 = '', index1, blob12))). The text does
+// not move for the same answers: 1fb4831's text over the fixture is 3f40698's, byte for byte (AJ2 passed at 3f40698
+// against 1fb4831 before this move).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -23,7 +27,7 @@ import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { fixtureAnswers, runAt, runs } from "./aj-checks.mjs";
 
-const BASE = "1fb4831";
+const BASE = "3f40698";
 
 function run(cmd, args, { input } = {}) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 64 * 1024 * 1024 });

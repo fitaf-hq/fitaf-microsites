@@ -33,6 +33,10 @@
 // script's listener for fitaf:saved, and on the development pages the save step's dispatch of it): the same five pages
 // (production's +70 bytes, development's four +484); every other file byte-identical; the recorder at 9cdf963 (its cases,
 // the code before) reproduces 4b77513's (recorded_at apart), and at 4b77513 its record byte for byte.
+// And at 3f40698 (`--commit 3f40698 --release-a`), SPEC-analytics.md § 15 item 4 (the analytics script's read of the result
+// card on DOMContentLoaded): the same five pages, +48 bytes each, that one line; every other file byte-identical; the
+// recorder at 5a129e0 (its cases, the code before) reproduces 1fb4831's (recorded_at apart), and at 1fb4831 its record
+// byte for byte.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
