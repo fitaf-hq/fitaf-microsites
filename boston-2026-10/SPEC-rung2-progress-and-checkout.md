@@ -2206,3 +2206,44 @@ alone (`q29-pass-three`, `q5-nothing-committed`) `# tests 7`, `# pass 7`, `# fai
 not (above) passed run alone.
 
 **The watch at the branch's tip** (`npm --prefix boston-2026-10/tools/storefront-watch test`, `nice -n 15`, at `e4c005b`, 11:51 → 11:56 PDT): `# tests 275`, `# pass 275`, `# fail 0`, `# cancelled 0` (the 272 above and PP1–PP3).
+
+## 37. Amendment, 2026-10-27: more struck prices — the plan's size picker, extras, and the order summary. CONTRACT, before any code
+
+**The Advisor, looking at § 36's block live**, `ts=2026-10-27T19:12:07.003Z`, with three screenshots: the plan page's
+*"HOW MANY MEALS DELIVERED PER WEEK?"* picker (4 · 7 · 10 · 14 · 21, each *"$14.25/meal"*): *"can we please add a struck
+price here as well?"*; the extras pop-up (*"Wait, don't forget these extras!"*, each extra's *"$9.00"*): *"how hard is
+it to add struck prices for this modal?"*; the checkout's *Order Summary* (the header's total, the line's price and its
+*"7 × $14.00"*, the Plan Total already struck, Subtotal, Shipping, Tax): *"what can we strike through here?"*. His
+rulings (`AskUserQuestion`, `ts=2026-10-27T19:17:06.106Z`): extras struck in **the pop-up and the order page's
+Additions**; on the summary **Subtotal, the line's price and the header total**: *"This is a "more is more" situation –
+we're trying to address the Owner's concern that people might not be 100% aware that they're getting a discount."*
+
+§ 36 holds except where this section widens it. Every rule of § 36 (the marker, the dates, the figure's rule, the look,
+one per price, kept true, the store's elements untouched) applies to each new surface.
+
+1. **The plan's size picker** (image 14): each size's per-meal price (*"$14.25/meal"*) struck, as the meal plans page's
+   *"As low as"* price is (§ 36 item 4 (a)).
+2. **Extras** (§ 36 item 4's *"never an add-on's"* is withdrawn for extras): each extra's price in the store's extras
+   pop-up (`app-extra-products-dialog`, the CDK overlay), and each item's price in the order page's **Additions**
+   section, struck by item 3's rule. ⛔ Still never an *upcharge* (a `+$` figure) or a price that is not one plain price.
+3. **The order summary** (the cart's and the checkout's): **Subtotal**; **each line's price** and its unit price (the
+   *"N × $X"* text: only the `$X` struck, *"7 × ~~$18.67~~ $14.00"*); **the header's total** (*"Order Summary $98.00"*).
+4. **A total is marked up for the food alone** (the orchestrator's rule, so that no fee is overstated): a total that
+   may hold shipping, tax, a tip or a discount (the header's total; and, in the same spirit, the checkout's **Total**
+   row, § 36's exclusion of it withdrawn) is struck as **the total + (the struck Subtotal − the Subtotal)**, the Subtotal
+   read from the same summary at the same moment; with no Subtotal on the page, or one that is not one plain price, the
+   total gets nothing. With no fee (today's case) it equals item 3's rule on the total: $98.00 → $130.67. ⛔ Shipping,
+   tax, tip, a discount, a gift card, the pay button: never struck.
+5. **Measured first**: the probe (`probe-prices`, extended) reads the plan page with the size picker (reached from the
+   meal plans page by the store's own link), the extras pop-up (opened by the store's own CHECKOUT press on the order
+   page, as it opens for a visitor; never pressed beyond showing it), the Additions section, and the summary's every
+   figure at 1280 and 390; ⛔ as § 36 item 7: nothing typed, never the payment, never a UTM visit. The findings in
+   `storefront/probe-prices/2026-10-27/` beside § 36's.
+6. **Cases** (ST10–ST14, as § 36's): ST10 the size picker's prices struck; ST11 the pop-up's and the Additions' prices
+   struck, an upcharge not; ST12 Subtotal, each line and its unit price; ST13 the header total and the Total with a fee
+   (shipping $5.00: total $103.00, Subtotal $98.00 → struck $135.67) and without (→ $130.67), and none without a
+   Subtotal; ST14 shipping, tax, tip, discount and the pay button never struck. **Mutant**: a total marked up whole
+   (÷ 0.75 with a fee: ST13). F2 gains the new literals; W29 reads the new surfaces the smoke reaches.
+7. **The block**: rebuilt, `storefront/footer-block/2026-10-27-fitaf-handoff-<commit>.md`; rehearsed live by the
+   orchestrator (`probe-prices --script`, `smoke --script`); pasted by the Advisor before tonight's event (Boston,
+   19:20 Eastern); the live smoke at once; accepted.
