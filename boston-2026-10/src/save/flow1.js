@@ -55,6 +55,12 @@
   // beside the checkout is its link, Not ready? (the card's last thing); the dialog closes if the checkout goes (a
   // visitor's back, the dialog open), so no empty dialog stays open.
   var ANCHOR = "save-end";
+  // SPEC-ui-and-copy-pass § 6 (the Advisor, 2026-10-26: a save my offer call to action on the store's checkout, a link
+  // here): a page opened at #save exactly opens this flow's dialog once the page's scripts have run, as Not ready? opens
+  // it (pressed here, so app.js's modal() opens it, as it opens every dialog of the page), at OFFER, the page behind at its
+  // start (app.js reads #save as no fragment). `linked`: the dialog so opened and not yet closed, the step drawn in it
+  // with no checkout beside it.
+  var OPENED_BY_LINK = location.hash === "#save";
   function besideCheckout() {
     var checkout = el("cc-checkout");
     return !!checkout && !el("result").hidden && !el("cc-list").hidden && !checkout.hidden;
@@ -63,7 +69,7 @@
   // name: OFFER · EDITING · CHECKING · OUT_OF_AREA · EXPANSION_SAVED · VERIFYING · SENDING · ERROR · SAVED
   //       · PLAN · MENU.  kind: what is being saved ("offer" | "expansion"); error: ERROR's kind.
   //       beside: whether the card's checkout button is shown, so this flow with it.
-  var state = { name: "OFFER", kind: "offer", error: null, zip: "", email: "", beside: false };
+  var state = { name: "OFFER", kind: "offer", error: null, zip: "", email: "", beside: false, linked: false };
 
   // § 1 item 3: a field's error under the field, the field marked (aria-invalid, and aria-describedby naming the error).
   function fieldError(field, words) {
@@ -83,9 +89,10 @@
   function render(s) {
     var section = el("save");
     var later = !offer.live; // § 1.2 item 3: after the last offer's end, the step with no offer
-    section.hidden = !s.beside;
+    var drawn = s.beside || s.linked;
+    section.hidden = !drawn;
     el("not-ready").hidden = !s.beside;
-    if (!s.beside && el("save-dialog").open) el("save-dialog").close();
+    if (!drawn && el("save-dialog").open) el("save-dialog").close();
     el("offer-box").hidden = !offer.live;
     if (s.beside && section.parentNode !== el(ANCHOR)) el(ANCHOR).appendChild(section);
     var collapsed = s.name === "PLAN" || s.name === "MENU";
@@ -137,7 +144,8 @@
     render(state);
   }
   function withName(name, extra) {
-    var next = { name: name, kind: state.kind, error: null, zip: state.zip, email: state.email, beside: state.beside };
+    var next = { name: name, kind: state.kind, error: null, zip: state.zip, email: state.email, beside: state.beside,
+      linked: state.linked };
     for (var k in extra || {}) next[k] = extra[k];
     return next;
   }
@@ -151,6 +159,13 @@
   // email's link (#from-email) alone.
   function seeMenu() { go(withName("MENU")); } // no menu input exists yet, so no link calls this
   function reopen() { go(withName("EDITING", { kind: "offer" })); }
+  // § 6: the state as it is, opened by the link or no longer.
+  function withLinked(linked) {
+    var next = {};
+    for (var k in state) next[k] = state[k];
+    next.linked = linked;
+    return next;
+  }
   // Flow 2 moved on (a plan chosen or changed, Family, back): this flow follows it, its own state unchanged.
   function choiceChanged() {
     var next = {};
@@ -235,6 +250,13 @@
   var menu = el("save-skip-menu");
   if (menu) menu.addEventListener("click", seeMenu);
   window.addEventListener("hashchange", choiceChanged);
+  el("save-dialog").addEventListener("close", function () { if (state.linked) go(withLinked(false)); });
+  if (OPENED_BY_LINK) {
+    document.addEventListener("DOMContentLoaded", function () {
+      go(withLinked(true));
+      el("not-ready").click();
+    });
+  }
 
   // Every visit opens at Flow 2 (§ 2b item 1); a visit from the email's link has this flow collapsed to one line.
   go(withName(location.hash === "#from-email" ? "PLAN" : "OFFER", { beside: besideCheckout() }));
