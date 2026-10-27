@@ -180,7 +180,8 @@ ${sub.tail}<div class="summary__discounts"><div class="checkout-discounts">${dis
 <div class="summary__row"><span>Subtotal</span><span>$87.50</span></div>
 <div class="summary__row"><span>Shipping</span><span>$0.00</span></div>
 <div class="summary__row"><span>Tax</span><span>$0.00</span></div>
-${cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Discount (OFFER)</span><span>-$5.00</span></div>' : ""}
+${cfg.discountRow === "live" ? '<div class="summary__row summary__row--discount"><span><button type="button" class="summary__remove">x</button> Coupon OFFER </span><span>-$5.00</span></div>'
+    : cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Discount (OFFER)</span><span>-$5.00</span></div>' : ""}
 <div class="summary__total"><span class="summary__total-label">Total</span><span class="summary__total-value">$87.50</span></div>
 <div class="summary__totals"></div>
 <div class="summary__mobile-bar"><div class="summary__bar-row"><span class="summary__stat">Order total</span>
@@ -214,7 +215,9 @@ function shellParts(cfg) {
  * as the store's own overlays are: a manual popover), hangAtStart (the page's setTimeout runs nothing from the moment
  * the Footer text is placed: a hang planted before the first press), routeHeld (CHECKOUT's route waits for
  * window.__fixtureRoute()). § 10: tip ("section", the default; "bare"; "none"), tipChosen,
- * discountRow, banner (the app banner and its reserved margin), extrasOpenMs (the store fetching its extras before it
+ * discountRow (a second discount row, "Discount (OFFER)"; since § 33.2, "live" draws it as the live store draws a
+ * code's row, its own remove control first: "x Coupon OFFER -$5.00"), banner (the app banner and its reserved margin),
+ * extrasOpenMs (the store fetching its extras before it
  * opens the dialog), continueDelayMs (its CONTINUE disabled that long), continueNever (disabled for good). § 12:
  * honoursKey (as the store: the order page clears sessionStorage's ecc_additions_prompt_handled when it starts, CHECKOUT
  * skips the extras dialog when the key is "true", and the dialog's CONTINUE sets it; otherwise the key is ignored, as a
