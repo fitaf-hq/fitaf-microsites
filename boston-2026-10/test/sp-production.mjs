@@ -319,6 +319,14 @@ export const LATER = [
   // and the Worker by its data point (src/worker/beacon.js: each point's own index, `v` as blob12), from 23e7653 (its
   // contract) to 3f40698 (its code, one commit); every hunk is taken.
   ["23e7653", "3f40698", ["src/analytics.js", "src/worker/beacon.js"]],
+  // SPEC-ui-and-copy-pass § 7 (2026-10-26: the result's price, the week's price alone with its full value struck above it
+  // while an offer is current) moves the production page with `production` false by the template's price block (its
+  // rules; the struck line, hidden on this page, which carries no offer; the price a meal and the meals a week gone) and
+  // app.js's lines writing them, from bc39ee0 (its cases) to f60e19c (its code, one commit). Its other files make no part
+  // of this page (build.mjs's struck figures are save-data's, the pages carrying the offer; its slots and words check drop
+  // only what the template no longer names; data/messages.json's two removed phrases were printed only by those slots), so
+  // the base keeps its own of them.
+  ["bc39ee0", "f60e19c", ["src/template.html", "src/app.js"]],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */

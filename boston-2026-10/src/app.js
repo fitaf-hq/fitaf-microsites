@@ -170,28 +170,27 @@
     result.setAttribute("data-selection", shown ? shown.selection : "");
     $("#all-link").hidden = s.who === "family"; // § 4.2 item 4: the foot shows at the start too
     if (shown) {
-      $("#result-per-meal").textContent = shown.per_meal;
       $("#result-total").textContent = shown.total;
-      $("#result-meals").textContent = String(shown.meals);
       $("#result-cta").href = data.base + "?mpid=" + shown.mpid;
     }
   }
-  // What the result card shows for an individual plan: SPEC-ui-and-copy-pass § 1.2 item 1, the meals the card lists and its
-  // weekly total those meals at the plan's price a meal (the build's, for an answer set above its plan); a set of the
-  // plan's own count shows the plan's total. null until the goal and Q1 are answered.
+  // What the result card shows for an individual plan: SPEC-ui-and-copy-pass § 1.2 item 1, its weekly total the meals the
+  // card lists at the plan's price a meal (the build's, for an answer set above its plan); a set of the plan's own count
+  // shows the plan's total. Since § 7 that total alone (the struck line above it is plan-prices.js's). null until the goal
+  // and Q1 are answered.
   function individualResult(s) {
     var plan = s.goal && findGoal(s.goal);
     var row = plan && s.ld && data.answers[answerKey(s)];
     var cell = row && plan.cells[row.plan];
     if (!cell) return null;
     var total = row.meals === row.plan ? cell.total : plan.totals[answerKey(s)];
-    return { selection: answerPart(s), per_meal: cell.per_meal, total: total, meals: row.meals, mpid: cell.mpid };
+    return { selection: answerPart(s), total: total, mpid: cell.mpid };
   }
   // § 2.2: Family's, once its one question is answered: its meals a week at its price a meal, and the answer set whose cart
   // the Chef's Choice card shows for it (the card's checkout link is that cart's to Family's mpid, when the week has one).
   function familyResult(s) {
     var f = s.fld && data.family[s.fld];
-    return f ? { selection: f.key, per_meal: f.per_meal, total: f.total, meals: f.meals, mpid: f.mpid } : null;
+    return f ? { selection: f.key, total: f.total, mpid: f.mpid } : null;
   }
 
   $$("[data-goal]").forEach(function (b) {

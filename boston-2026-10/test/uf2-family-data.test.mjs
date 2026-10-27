@@ -5,6 +5,8 @@
 // weekly total N × $38.00, its price a meal and its meals a week, from the data (a copy with another price moves them),
 // and its plain link the store's Family order page. Before an answer, no result. The build refuses a mapping that does
 // not hold, naming it. Copies only; no file in the repository is edited.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26): the card shows its weekly total alone (no price a meal, no
+// meals a week), so the data's figures are held there: N × $38.00, and a copy at $40.00 a meal moves it.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PLANS } from "./cc-harness.mjs";
@@ -37,8 +39,8 @@ test("UF2: or → 5 and and → 10 family meals a week at $38.00 a meal; the pla
       const page = open(html, `#family-${ld}`);
       const r = resultOf(page);
       assert.deepEqual(
-        { shown: r.shown, total: r.total, perMeal: r.perMeal, meals: r.meals, rounded: r.rounded, cta: r.cta },
-        { shown: true, total: dollars(n * FAMILY_CENTS), perMeal: dollars(FAMILY_CENTS), meals: String(n), rounded: null, cta: `${PLANS.order_base_url}?mpid=${FAMILY_MPID}` },
+        { shown: r.shown, total: r.total, rounded: r.rounded, cta: r.cta },
+        { shown: true, total: dollars(n * FAMILY_CENTS), rounded: null, cta: `${PLANS.order_base_url}?mpid=${FAMILY_MPID}` },
         `${build}, #family-${ld}`,
       );
       assert.equal(page.el("result").getAttribute("data-accent"), "family", `${build}, #family-${ld}: the card's accent Family's`);
@@ -51,7 +53,7 @@ test("UF2: the figures are the data's: a copy of data/plans.json with Family at 
   const other = await plansCopy((p) => p.family.counts.forEach((c) => (c.price_per_meal_cents = 4000)));
   try {
     const r = resultOf(open(await pageOf({ plansPath: other.path }), "#family-and"));
-    assert.deepEqual([r.total, r.perMeal], [dollars(10 * 4000), dollars(4000)]);
+    assert.deepEqual([r.total], [dollars(10 * 4000)]);
   } finally {
     await other.done();
   }

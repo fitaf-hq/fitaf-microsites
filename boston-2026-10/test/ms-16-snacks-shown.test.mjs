@@ -9,6 +9,8 @@
 // days): carted, *Add snacks* shows the list under its heading and NO not-carted line (the phrase is not on the page);
 // the plan's figures do not move; *Choose your meals* and *Choose my own meals* stay No snacks' (only Continue to
 // checkout carries the snacks: MS-7's carted half).
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26): the plan's figures on the card are its weekly total alone
+// (no meals a week, no price a meal), so "do not move" is held over the total (and the rounded line, which is none).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mealLine, MESSAGES } from "./cc-harness.mjs";
@@ -31,7 +33,7 @@ test("MS-16: Add snacks shows the week's list and the not-carted line; every lin
       const where = fragmentOf(goal, row, true);
       assert.deepEqual([b.chooseHref, b.checkout, b.ownHref], [a.chooseHref, a.checkout, a.ownHref], `${where}: the links are No snacks'`);
       const [ra, rb] = [resultOf(without), resultOf(withSnacks)];
-      assert.deepEqual([rb.total, rb.perMeal, rb.meals, rb.rounded], [ra.total, ra.perMeal, ra.meals, ra.rounded], `${where}: the plan's figures`);
+      assert.deepEqual([rb.total, rb.rounded], [ra.total, ra.rounded], `${where}: the plan's figures`);
       assert.equal(a.snacks, false, `${fragmentOf(goal, row)}: No snacks shows no snacks`);
       const list = V2_SNACKS[row.weekends ? "7" : "5"];
       assert.deepEqual(
@@ -58,7 +60,7 @@ test("MS-16 (carted): Add snacks shows the week's list under its heading, no not
         assert.deepEqual([b.chooseHref, b.ownHref], [a.chooseHref, a.ownHref], `${where}: Choose your meals and Choose my own meals are No snacks'`);
         assert.notEqual(b.checkout, a.checkout, `${where}: Continue to checkout carries the snacks`);
         const [ra, rb] = [resultOf(without), resultOf(withSnacks)];
-        assert.deepEqual([rb.total, rb.perMeal, rb.meals, rb.rounded], [ra.total, ra.perMeal, ra.meals, ra.rounded], `${where}: the plan's figures`);
+        assert.deepEqual([rb.total, rb.rounded], [ra.total, ra.rounded], `${where}: the plan's figures`);
         const list = row.weekends ? V2_SNACKS["7"] : V2_SNACKS_FIVE;
         assert.deepEqual(
           { shown: b.snacks, heading: b.snackHeading, lines: b.snackLines, note: b.snackNote },

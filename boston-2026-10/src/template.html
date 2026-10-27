@@ -136,15 +136,17 @@ main.wrap { padding-top: 20px; }
 .figures div { background: var(--ice); border-radius: 4px; padding: 10px 12px; }
 .figures dt { font-size: 13px; color: var(--muted); }
 .figures dd { margin: 0; font: 700 24px/1.25 var(--head); color: var(--navy); font-variant-numeric: tabular-nums; }
-/* The result's price (§ 2 item 4, § 8 item 5): one block, no panel, no label; the lead figure first and larger, the
-   other below it, smaller, each with its unit */
+/* The result's price (§ 2 item 4, § 8 item 5): one block, no panel, no label. Since SPEC-ui-and-copy-pass § 7 (the
+   Advisor, 2026-10-26: "Let's do B2 and drop the meal count please") the week's price alone, with its unit: while an
+   offer with a share is current, its weekly total before the share struck through, on a line of its own (shown by
+   plan-prices.js), then the lead, the weekly total as the store charges it. No price a meal, no meal count */
 .price { display: flex; flex-direction: column; gap: 2px; margin: 0 0 18px; }
 .price .fig { font: 700 var(--figure-size)/1.15 var(--head); color: var(--navy); font-variant-numeric: tabular-nums; }
 .price .unit { font: 400 15px var(--body); color: var(--muted); }
-/* ⭐ Which figure leads: the order and the sizes, here and nowhere else. To swap them, swap these lines. */
-.price .fig-total { order: 1; --figure-size: 34px; }
-.price .fig-per-meal { order: 2; --figure-size: 18px; }
-.price .fig-meals { order: 3; --figure-size: 18px; }
+/* ⭐ The order and the sizes, here and nowhere else. The struck line in the grid's struck look (.cell small s: --muted,
+   the browser's line-through), smaller than the lead, at the mock's proportion to it (17 px beside 30: 19 beside 34) */
+.price .fig-struck { order: 1; font: 600 19px/1.2 var(--head); color: var(--muted); font-variant-numeric: tabular-nums; }
+.price .fig-total { order: 2; --figure-size: 34px; }
 /* The store's button — orange, square-ish, bold uppercase — darkened so white text passes APCA */
 .cta {
   display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -261,9 +263,8 @@ main.wrap { padding-top: 20px; }
       <div aria-live="polite">
         <div class="result" id="result" hidden>{{PICKS_CARD}}
           <p class="price">
+            <s class="fig-struck" id="result-struck" aria-hidden="true" hidden><span id="result-struck-total"></span>{{TOTAL_UNIT}}</s>
             <span class="fig-total"><span class="fig" id="result-total"></span><span class="unit">{{TOTAL_UNIT}}</span></span>
-            <span class="fig-per-meal"><span class="fig" id="result-per-meal"></span><span class="unit">{{PER_MEAL_UNIT}}</span></span>
-            <span class="fig-meals"><span class="fig" id="result-meals"></span> <span class="unit">{{MEALS_UNIT}}</span></span>
           </p>
           <a class="cta" id="result-cta">Choose your meals</a>{{PICKS_CHECKOUT}}{{NOT_READY}}
         </div>

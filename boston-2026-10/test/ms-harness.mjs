@@ -93,7 +93,10 @@ export async function pageOf({ root = ROOT, target = "prod", picks, plansPath, m
 /** The page at `hash`, its clock inside the fixture weeks' window (S − 5 of 2026-10-04). */
 export const open = (html, hash = "") => openPlanPage(html, { hash, now: midday(DAYS["S-5"]) });
 
-/** What a visitor reads off the result card: shown or not, its figures, the rounded line, and its links. */
+/** What a visitor reads off the result card: shown or not, its figures, the rounded line, and its links.
+ *  ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26: "drop the meal count"): its figure is the weekly total
+ *  alone; #result-per-meal and #result-meals are gone, and with them `perMeal` and `meals` here (the struck line above
+ *  the total is RP1–RP4's, test/rp-checks.mjs). */
 export function resultOf(page) {
   const { document } = page;
   const el = (id) => document.getElementById(id);
@@ -106,8 +109,6 @@ export function resultOf(page) {
     shown: shown("result"),
     selection: el("result")?.getAttribute("data-selection") ?? null,
     total: text("result-total"),
-    perMeal: text("result-per-meal"),
-    meals: text("result-meals"),
     rounded: shown("result-rounded") ? text("result-rounded") : null,
     cta: el("result-cta")?.getAttribute("href") ?? null,
     ctaShown: shown("result-cta"),
