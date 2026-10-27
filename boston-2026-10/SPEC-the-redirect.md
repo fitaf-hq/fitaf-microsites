@@ -296,3 +296,86 @@ The Advisor (`AskUserQuestion`, `ts=2026-10-27T23:02:56.802Z`) chose both of § 
 4. **When**: on `boston/redirect-followups` from the release line `2bbc066`; the whole site suite; dev (`curl -s` of an
    unknown code's offer page, its logo's `href` read; a Cubot-agent GET read back from the dev dataset), then
    production on the Advisor's word.
+
+### 10.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 10 is unchanged. On `boston/redirect-followups` (from `3dbfc51`, the contract on the release line `2bbc066`): the cases
+at `1c11516` (on `3dbfc51`'s code, red), the code at `63e8721`, the golden it moves at `f9d28e4`, the mutant at
+`f9fef56`, this section after them.
+
+**What was built**
+
+- `src/worker/pages.js`: `logo(href)`, the one element; `LOGO` its link to `/`, `OFFER_LOGO` its link to `/?via=email`.
+  `page()` takes `OFFER_LOGO` when it is given an `offer`, which `redeem.js`'s four pages alone give (saved, welcome,
+  current, ended, a known code's and an unknown one's); every other Worker page (the confirmation's landing pages,
+  confirmed, declined, GONE, TOO_MANY) keeps `/`. The image, its size, its alt text and its place are unchanged.
+- `src/worker/redirect.js`: `PROGRAM_AGENT`, still the one closed list kept once, its `bot` now `(?<!cu)bot`.
+
+**The rule** (§ 10 item 2, the builder's): **`bot` not preceded by `cu`**, case-insensitive, as a lookbehind in the same
+regular expression: `/(?<!cu)bot|crawl|spider|slurp|preview|facebookexternalhit|curl|wget|python|go-http-client|headless/i`.
+Every other alternative is § 3's, as written. Tested on:
+
+| | user agent | before § 10 | after |
+|---|---|---|---|
+| RD4b | `Mozilla/5.0 (Linux; Android 11; CUBOT X30) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5993.111 Mobile Safari/537.36` | program | **person**, counted, a phone |
+| RD4b | `Mozilla/5.0 (Linux; Android 13; CUBOT KINGKONG 9 Build/TP1A.220624.014) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.144 Mobile Safari/537.36` | program | **person**, counted, a phone |
+| RD4b | Googlebot `Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)` | program | program |
+| RD4b | bingbot `Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)` | program | program |
+| RD4b | Slackbot `Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)` | program | program |
+| RD4b | Twitterbot `Twitterbot/1.0` | program | program |
+| RD4b | `facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)` | program | program |
+| RD4b | `curl/8.4.0` | program | program |
+| RD4b | a headless Chrome, `… HeadlessChrome/120.0.0.0 Safari/537.36` | program | program |
+| RD4b (RD4's) | one sample each of `crawl`, `spider`, `slurp`, `preview`, `wget`, `python`, `go-http-client` | program | program |
+| scratch | `… Android 10; CUBOT_NOTE_20) …`, `… Android 12; Cubot P60) …` | program | person |
+| scratch | Applebot, AhrefsBot, YandexBot, DuckDuckBot, Discordbot, `TelegramBot (like TwitterBot)` | program | program |
+
+The scratch rows were read from `PROGRAM_AGENT` itself by a scratch script, not by a case. RD4b's rows run through both
+Workers in Miniflare (the 302 every time; one data point, device `phone`, for each Cubot; none, SALTS untouched, for each
+program).
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named; the whole suite as
+`nice -n 15 npm --prefix boston-2026-10 test`)
+
+| | before the code (`1c11516`, `3dbfc51`'s code) | after |
+|---|---|---|
+| `test/rd4b-cubot.test.mjs test/rd7b-offer-logo.test.mjs test/sp15-worker-pages-look.test.mjs test/n-05-unchanged.test.mjs "test/rd[0-9]-*.test.mjs"` | `# tests 24` `# pass 21` `# fail 3` (RD4b, RD7b, SP15's logo) | in the next row's run |
+| `"test/rd*.test.mjs"`, SP15, N5, `"test/em-a*.test.mjs"`, S11, SP11, SP12, SP16, CC-8, MS-9, PR-10, SP3 | | `63e8721`: `# tests 71` `# pass 66` `# fail 5` (CC-8b, CC-8c, MS-9 twice, PR-10: CC-8's map alone) |
+| CC-8, MS-9, PR-10, SP3 (the golden's readers) | | `f9d28e4`'s tree: `# tests 13` `# pass 13` `# fail 0` |
+| `test/rd-mutants.test.mjs` | | `f9fef56`: `# tests 7` `# pass 7` `# fail 0` |
+| the whole suite | | `f9fef56`: `# tests 1394` `# pass 1394` `# fail 0` (its first run there: § 9's 1,391, RD4b, RD7b and the list's mutant) |
+
+Red for the right reasons. RD4b: `site a Cubot phone (Mozilla/5.0 (Linux; Android 11; CUBOT X30) …): 0 data point(s), not 1
+(a person's phone, counted)`, both samples on both Workers, every named program already uncounted. RD7b: `a save from
+demo, its offer live, the code (saved): logo ["<a class=\"logo\" href=\"/\">…"], not ["<a class=\"logo\"
+href=\"/?via=email\">…"]`, on every offer page of every kind (and the Worker pages `original`, `ended`, `current`), the
+other Worker pages already `/`. SP15: `original: the logo, a link to /?via=email`. N5 passed before and after: its
+removal of `via=email` from this tree's `/o/…` links (§ 9 item 14) takes the logo back to `/` too.
+
+**The mutant** (`test/rd-mutants.test.mjs`, in a mirror through RD4b's own check; the tracked tree untouched, `git
+status` clean after the run): the control (the unchanged mirror) passes RD1, RD2, RD4, RD4b, RD5 and RD9. The list back
+to `bot` (`redirect.js`: `(?<!cu)bot` → `bot`): RD4b red, 4 problems, `<entry> a Cubot phone (…): 0 data point(s), not 1
+(a person's phone, counted)` for both samples on both Workers; every named program still uncounted. The five mutants of
+§ 7 still die on their cases.
+
+**The golden moved** (from `63e8721`'s own tree, `git archive`; the recorder over `1c11516`'s tree first reproducing the
+committed map, 41 files): CC-8 (CC-8b, CC-8c, MS-9, PR-10), `src/worker/pages.js` `6b8173ed…` → `69156378…` and
+`src/worker/redirect.js` `49f28617…` → `02010f64…`, none added or removed. Not moved: SP3 (both files named in
+`MOVED_WORKER_FILES` already), and every built page (no page the builds write changed).
+
+**Cases changed with § 10** (in the cases' commit): SP15's logo check (the offer pages' `original`, `ended` and `current`
+to `/?via=email`, the rest to `/`); N5's note only.
+
+**Found, not ruled**
+
+- ⚠ **`(?<!cu)bot` also counts a program whose name ends in `cubot`**, should one exist; none was found among the samples.
+- ⚠ **The list misses some link previews**: WhatsApp's fetcher (`WhatsApp/2.23.20.0 A`) names no word of the list, so a
+  link shared in WhatsApp and previewed is counted as a visit, before § 10 and after. The list is § 3's; adding a word is
+  its own amendment.
+- The offer page's logo now leads to `/?via=email`, so a press of it in redirect mode goes to the store marked
+  `utm_medium=email` without a campaign (the logo carries no `e`); with the page served, the page ignores the query's
+  `via`, as for § 4's links.
+
+**Not done here**: Storybook (`wp-chrome` opens two offer pages, whose logo now links to `/?via=email`) and the watch;
+`npm run contrast` (no colour or style changed); dev and production (§ 10 item 4's `curl -s` and the dataset read are the
+orchestrator's); nothing deployed, no `wrangler`, no merge, no pin.
