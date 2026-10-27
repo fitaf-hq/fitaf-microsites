@@ -1,0 +1,27 @@
+{
+  "meta": [
+    {
+      "name": "day",
+      "type": "String"
+    },
+    {
+      "name": "qr",
+      "type": "String"
+    },
+    {
+      "name": "via",
+      "type": "String"
+    },
+    {
+      "name": "device",
+      "type": "String"
+    },
+    {
+      "name": "visits",
+      "type": "UInt64"
+    }
+  ],
+  "data": [],
+  "rows": 0,
+  "rows_before_limit_at_least": 0
+}

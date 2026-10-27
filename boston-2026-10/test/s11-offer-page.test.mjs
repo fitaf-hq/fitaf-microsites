@@ -29,8 +29,9 @@ test("S11: /o/<code> ORIGINAL — a known code whose offer is live shows that of
       assert.equal(codeOnPage(res.text), code);
     }
     // SPEC-save-offer-production § 9.2 (ruled 2026-10-21): the page at /, the save's event in ?e=, #from-email (production
-    // serves the page at / alone; /<event-id>/ is the development build's).
-    assert.match(res.text, new RegExp(`href="/\\?e=${event_id}#from-email">Build my plan →`));
+    // serves the page at / alone; /<event-id>/ is the development build's). Since SPEC-the-redirect.md § 4 (2026-10-27) the
+    // link names the email in its query, via=email, before the fragment (the page writes "&" as "&amp;").
+    assert.match(res.text, new RegExp(`href="/\\?e=${event_id}&amp;via=email#from-email">Build my plan →`));
     assert.equal(res.headers["cache-control"], "no-store");
   }
 });

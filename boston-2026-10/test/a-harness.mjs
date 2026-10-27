@@ -11,8 +11,15 @@
 //   Miniflare's own local bindings), and that sets the Worker's clock (`Date.now`) to the `x-a-clock` header a case
 //   sends (removed before the Worker sees the request). The wrapper answers one path of its own, /__a/log. `cf: false`:
 //   Miniflare's fallback `request.cf`, never the network's (a case gives the country per request).
+//   Since SPEC-the-redirect.md § 1 item 6 (a data point written AFTER the answer, ctx.waitUntil): the wrapper hands the
+//   Worker a ctx whose waitUntil it also keeps, and /__a/log waits for every promise kept before it reads the log, so a
+//   point written after its answer is in the next log; `answered` holds, for each request answered, how many points
+//   were written by the time its answer was returned. And a request carrying `x-a-fail-write: 1` (removed before the
+//   Worker sees it) gets a dataset whose writeDataPoint throws (RD8).
 // - `configuredSite()` runs the Worker as wrangler.jsonc configures it, through wrangler's own translation, as
-//   wc-harness's `configured()` does, but with `cf: false`.
+//   wc-harness's `configured()` does, but with `cf: false`. Since SPEC-the-redirect.md § 1 item 2 ("every existing case
+//   of the page runs with REDIRECT_TO absent") wrangler.jsonc's REDIRECT_TO is removed from the vars unless a case asks for
+//   it (`redirectTo`).
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -309,7 +316,8 @@ export function wholeVisit(html) {
 
 const WRAPPER = (entry) => `
 import worker from ${JSON.stringify(entry)};
-const log = { points: [], puts: [], gets: [] };
+const log = { points: [], puts: [], gets: [], answered: [] };
+const pending = [];
 const realNow = Date.now;
 const salts = (kv) => ({
   get(key, options) { log.gets.push(key); return kv.get(key, options); },
@@ -317,25 +325,31 @@ const salts = (kv) => ({
   list(options) { return kv.list(options); },
   delete(key) { return kv.delete(key); },
 });
-const dataset = (ae) => ({ writeDataPoint(point) { log.points.push(point); return ae.writeDataPoint(point); } });
+const dataset = (ae, fail) => ({ writeDataPoint(point) { if (fail) throw new Error("x-a-fail-write"); log.points.push(point); return ae.writeDataPoint(point); } });
 export default {
   async fetch(request, env, ctx) {
     const { pathname } = new URL(request.url);
     if (pathname === "/__a/log") {
+      await Promise.allSettled(pending.splice(0));
       const out = JSON.stringify({ ...log, keys: env.SALTS ? (await env.SALTS.list()).keys : [] });
-      log.points = []; log.puts = []; log.gets = [];
+      log.points = []; log.puts = []; log.gets = []; log.answered = [];
       return new Response(out, { headers: { "content-type": "application/json" } });
     }
     const clock = request.headers.get("x-a-clock");
+    const fail = request.headers.get("x-a-fail-write") === "1";
     const headers = new Headers(request.headers);
     headers.delete("x-a-clock");
+    headers.delete("x-a-fail-write");
     const forwarded = new Request(request, { headers });
     Date.now = clock ? () => Number(clock) : realNow;
     try {
       const wrapped = { ...env };
       if (env.SALTS) wrapped.SALTS = salts(env.SALTS);
-      if (env.ANALYTICS) wrapped.ANALYTICS = dataset(env.ANALYTICS);
-      return await worker.fetch(forwarded, wrapped, ctx);
+      if (env.ANALYTICS) wrapped.ANALYTICS = dataset(env.ANALYTICS, fail);
+      const kept = { waitUntil(promise) { pending.push(promise); return ctx.waitUntil(promise); }, passThroughOnException() { return ctx.passThroughOnException(); } };
+      const answer = await worker.fetch(forwarded, wrapped, kept);
+      log.answered.push(log.points.length);
+      return answer;
     } finally {
       Date.now = realNow;
     }
@@ -359,10 +373,13 @@ function handle(mf, assetRequests) {
   return {
     mf,
     assetRequests,
-    /** POST `body` (an object is sent as JSON) to `path` (§ 4's /a), from `ip` with `ua`, in `country`, at `clock`. */
-    async post(body, { path = BEACON, ip = TEST_IP, ua = TEST_UA, country = "US", clock, host = "eatfitaf.com", method = "POST" } = {}) {
-      const headers = { "cf-connecting-ip": ip, "user-agent": ua, "content-type": "text/plain;charset=UTF-8" };
+    /** POST `body` (an object is sent as JSON) to `path` (§ 4's /a), from `ip` with `ua`, in `country`, at `clock`;
+     *  since SPEC-the-redirect.md also any `method` (a GET or HEAD sends no body) with `headers` added (a Cookie, a
+     *  Referer), and `failWrite` (the dataset's writeDataPoint throws for this request). */
+    async post(body, { path = BEACON, ip = TEST_IP, ua = TEST_UA, country = "US", clock, host = "eatfitaf.com", method = "POST", headers: more = {}, failWrite = false } = {}) {
+      const headers = { "cf-connecting-ip": ip, "user-agent": ua, "content-type": "text/plain;charset=UTF-8", ...more };
       if (clock !== undefined) headers["x-a-clock"] = String(clock);
+      if (failWrite) headers["x-a-fail-write"] = "1";
       const res = await mf.dispatchFetch(`https://${host}${path}`, {
         method,
         headers,
@@ -383,13 +400,14 @@ function handle(mf, assetRequests) {
 /**
  * The Worker `entry` ("site": production's; "index": the development Worker) of the package at `root`, with SALTS (a
  * local KV namespace), ANALYTICS (a local dataset), WEEK (an empty local bucket) and a fake ASSETS answering 404.
- * `bindings: false` starts it with none of SALTS and ANALYTICS.
+ * `bindings: false` starts it with none of SALTS and ANALYTICS. Since SPEC-the-redirect.md: `vars`, the Worker's vars (its
+ * REDIRECT_TO); `assets`, a function of the Request answering for the fake ASSETS (each request still recorded).
  */
-export async function startBeacon({ root = ROOT, entry = "site", bindings = true } = {}) {
+export async function startBeacon({ root = ROOT, entry = "site", bindings = true, vars = {}, assets: answer = null } = {}) {
   const assetRequests = [];
   const assets = async (request) => {
     assetRequests.push({ method: request.method, path: new URL(request.url).pathname });
-    return new Response("assets: not found", { status: 404 });
+    return answer ? answer(request) : new Response("assets: not found", { status: 404 });
   };
   const mf = new Miniflare(
     convertV4MiniflareOptions({
@@ -402,6 +420,7 @@ export async function startBeacon({ root = ROOT, entry = "site", bindings = true
           compatibilityDate: "2026-09-26",
           serviceBindings: { ASSETS: assets },
           r2Buckets: { WEEK: "a-week" },
+          bindings: vars,
           ...(bindings ? { kvNamespaces: { SALTS: "a-salts" }, analyticsEngineDatasets: { ANALYTICS: { dataset: "a_test" } } } : {}),
         },
       ],
@@ -410,12 +429,21 @@ export async function startBeacon({ root = ROOT, entry = "site", bindings = true
   return handle(mf, assetRequests);
 }
 
-/** The Worker as wrangler.jsonc configures it for `env` (undefined: production), its assets a build in `distDir`. */
-export async function configuredSite({ env, distDir, root = ROOT }) {
+/** wrangler.jsonc's vars without REDIRECT_TO (SPEC-the-redirect.md § 1 item 2: every existing case of the page runs with
+ *  it absent), or with it set to `redirectTo` when a case gives one. */
+export function withRedirectTo(vars = {}, redirectTo) {
+  const { REDIRECT_TO: _configured, ...rest } = vars;
+  return redirectTo === undefined ? rest : { ...rest, REDIRECT_TO: redirectTo };
+}
+
+/** The Worker as wrangler.jsonc configures it for `env` (undefined: production), its assets a build in `distDir`; its
+ *  REDIRECT_TO removed unless `redirectTo` names one (withRedirectTo). */
+export async function configuredSite({ env, distDir, root = ROOT, redirectTo }) {
   process.env.WRANGLER_SEND_METRICS = "false";
   const { unstable_getMiniflareWorkerOptions, unstable_readConfig } = await import("wrangler");
   const cfg = unstable_readConfig({ config: join(root, "wrangler.jsonc"), env }, { hideWarnings: true });
   cfg.assets = { ...cfg.assets, directory: distDir };
+  cfg.vars = withRedirectTo(cfg.vars, redirectTo);
   const { workerOptions } = unstable_getMiniflareWorkerOptions(cfg, env);
   const options = { ...workerOptions, name: `a-${env ?? "prod"}`, modules: true, script: await bundle(cfg.main) };
   delete options.modulesRules;

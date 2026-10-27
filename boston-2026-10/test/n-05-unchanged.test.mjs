@@ -83,12 +83,17 @@ const CLOCK_HEADER = "date";
 /** ⚠ SPEC-analytics.md § 16 item 1 (2026-10-27) changes one answer of these lists by design: the offer page (/o/…, a 200)
  *  carries at the end of its column its data (#offer-data, its kind and the save's event id) and the page's analytics
  *  script, which today's page did not. Those two elements are removed from this tree's page (and must be there, the
- *  control), and the rest is today's byte for byte: the narrowest change to N5, rather than moving TODAY. */
+ *  control), and the rest is today's byte for byte: the narrowest change to N5, rather than moving TODAY.
+ *  ⚠ And SPEC-the-redirect.md § 4 (2026-10-27) changes the same answer's link to the home page: it names the email in its
+ *  query, `via=email` (`/?via=email` for an unknown code's page, `&amp;via=email` after `?e=<event>`). That parameter is
+ *  removed from this tree's links (and must be there, the control), the rest compared as before. */
 const OFFER_ANALYTICS = /<script type="application\/json" id="offer-data">[^<]*<\/script>\n<script>\n[\s\S]*?\n<\/script>\n(?=<\/main>)/;
+const VIA_EMAIL_LINK = /href="\/\?(?:via=email"|(e=[a-z0-9-]+)&amp;via=email(?=["#]))/g;
 function withoutOfferAnalytics(response, where) {
   const text = response.body.toString("utf8");
   assert.match(text, OFFER_ANALYTICS, `${where}: the offer page carries its data and the analytics script (§ 16 item 1)`);
-  const body = Buffer.from(text.replace(OFFER_ANALYTICS, ""));
+  assert.match(text, new RegExp(VIA_EMAIL_LINK.source), `${where}: the offer page's link to the home page names the email (SPEC-the-redirect.md § 4)`);
+  const body = Buffer.from(text.replace(OFFER_ANALYTICS, "").replace(VIA_EMAIL_LINK, (_m, e) => (e ? `href="/?${e}` : 'href="/"')));
   const headers = { ...response.headers };
   if ("content-length" in headers) headers["content-length"] = String(body.length);
   return { ...response, headers, body };

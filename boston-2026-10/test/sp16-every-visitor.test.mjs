@@ -130,7 +130,7 @@ test("SP16: after the offer's end, the saved offer's page and an unknown code's 
       const html = await res.text();
       assert.equal(res.status, 200, path);
       assert.match(html, new RegExp(`<h1>${ENDED}</h1>`), `${path}: ${ENDED}`);
-      assert.match(html, /<a href="\/(\?e=demo)?">Build my plan →<\/a>/, `${path}: the link to the plans`);
+      assert.match(html, /<a href="\/\?(e=demo&amp;)?via=email">Build my plan →<\/a>/, `${path}: the link to the plans (via=email since SPEC-the-redirect.md § 4)`);
       assert.doesNotMatch(html, /class="action"/, `${path}: no orange button`);
       assertNoCodeText(pageText(html), code, path);
     }

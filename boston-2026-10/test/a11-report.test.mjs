@@ -6,7 +6,9 @@
 // first and the goal last, then Family's own question, which branches off who and has no change figure: the step after
 // it is compared with the goal's; since § 14 item 3 a day's visits with a save, "saved an offer N", after the funnel; since
 // § 16 item 3 two lines after it, the day's visits from the offer email and its offer pages by kind, from two queries of
-// their own, offers.json and email.json, a repeat opening of an offer page counted again).
+// their own, offers.json and email.json, a repeat opening of an offer page counted again; since SPEC-the-redirect.md § 5 an
+// eleventh query, redirects.json, which holds no row here: a day without a redirect prints no redirect line, so the text
+// below is as before; RD9 holds the line and its figures).
 // Every query asks for aggregates only: a visit's id (`s`) and a visitor's (`v`) are
 // read only inside count(DISTINCT …). And the program's refusals, run as a program: no token, no account, a bad date,
 // --from after --to, an unknown argument; each exits 2 before any request.
@@ -18,7 +20,7 @@ import { join } from "node:path";
 import { ROOT } from "../build.mjs";
 
 const FIXTURES = join(ROOT, "test", "fixtures", "analytics");
-const NAMES = ["visitors", "steps", "clicks", "length", "load", "devices", "viewports", "countries", "offers", "email"];
+const NAMES = ["visitors", "steps", "clicks", "length", "load", "devices", "viewports", "countries", "offers", "email", "redirects"];
 const ENV = { CLOUDFLARE_ANALYTICS_TOKEN: "test-token", CLOUDFLARE_ACCOUNT_ID: "test-account" };
 const SQL_URL = "https://api.cloudflare.com/client/v4/accounts/test-account/analytics_engine/sql";
 
