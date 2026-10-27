@@ -1929,6 +1929,20 @@ and 390, no flag.**
   the empty live form at either width (no displayed `iframe` in `.checkout__section.payment`), so the card-field half of
   SO4 is the stand-in's alone.
 
-**Left**: the full site suite at the end (below); merged into the dev line before the paste; the page half
+**Gates** (each `nice -n 15`, one at a time, 2026-10-26 between 18:45 and 19:32 PDT):
+
+- **The site** (`npm --prefix boston-2026-10 test`, at `202fa16`, 19:21 → 19:32, 670 s): **1313 tests, 1313 pass,
+  0 fail** (§ 33.2's 1307 and the site's 6 SO cases).
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`): **261 tests, 261 pass** on `ff38fee`'s
+  tree (before its commit, 263 s); at `202fa16`, beside another full suite on this machine, 261 run, 260 pass, 1 fail,
+  CT-1 (*"Target.setAutoAttach timed out"*: Chrome's start under load, as § 29 records), which passed run alone, 1 of 1.
+- **Storybook**, the four files that read the block (SM-4, SM-5–8 with SM-10 and SM-11's Hand-off stories, SM-7, SM-9),
+  at `202fa16`: 21 of 21. The full Storybook suite was not run here.
+- **The block's own site cases** (R2-11, R2-12, R2-29, R2-31–R2-33, R2-42, R2-50, R2-54, R2-58, R2-70, R2-71, R2-77,
+  R2-78/79, R2-81, R2-91, R2-92/93, PR-10, CC-8, B2 and SO) at `0eb98fe`: 64 of 64; the rest of the block's family
+  (R2-01–R2-28, R2-30, R2-40–R2-44, R2-52, R2-59–R2-69, R2-72–R2-76, R2-82, FC-1–FC-8, SN-1–SN-6) at `202fa16`: 301 of
+  301.
+
+**Left**: merged into the dev line before the paste; the page half
 (SPEC-ui-and-copy-pass § 6, `https://eatfitaf.com/#save`) live, then the Advisor's paste, then the live smoke at once;
 ⬜ the words, his to edit.
