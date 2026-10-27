@@ -28,8 +28,10 @@ export const VIA_EMAIL = "email";
 /** § 2's mediums: the offer email's link, a QR code's event, anything else. */
 export const MEDIUMS = { email: "email", qr: "qr", direct: "direct" };
 /** § 3: a user agent naming a program rather than a person (a crawler, a link preview, a scanner, a script): its redirect
- *  is not counted, since a redirect, unlike the page's beacon, needs no script to run. The one closed list, kept here. */
-export const PROGRAM_AGENT = /bot|crawl|spider|slurp|preview|facebookexternalhit|curl|wget|python|go-http-client|headless/i;
+ *  is not counted, since a redirect, unlike the page's beacon, needs no script to run. The one closed list, kept here.
+ *  § 10 item 2 (2026-10-27): `bot` not preceded by `cu`, so a Cubot phone (`… Android 11; CUBOT X30 …`), a person, is
+ *  counted, and every program the list names still is not (Googlebot, bingbot, Slackbot, Twitterbot, …). */
+export const PROGRAM_AGENT = /(?<!cu)bot|crawl|spider|slurp|preview|facebookexternalhit|curl|wget|python|go-http-client|headless/i;
 
 /** § 1 item 1: the var's URL when it parses as an absolute URL whose protocol is https: and that names no fragment (not
  *  even an empty "#"); null for anything else (absent, empty, http:, not a URL), and the page is served as before. */
