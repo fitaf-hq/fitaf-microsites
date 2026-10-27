@@ -1391,3 +1391,13 @@ what CC-8b, CC-8c, MS-9, PR-10 and SP3's CC-8b would have read.
 **Not done here**: the whole site suite, Storybook (its `wp-chrome` case opens two offer pages in Chrome; their beacon now
 goes to its own Worker's `/a`, same origin, which its request check allows) and the watch; `npm run contrast` (no colour
 or style changed); the SQL against Cloudflare; nothing deployed, no `wrangler`, no merge, no pin.
+
+## 17. Amendment, 2026-10-27: `redirect`, the first event the Worker writes itself. CONTRACT, before any code
+
+The Advisor's pivot (`ts=2026-10-27T15:12:46.204Z`): the home page an instant, server-side redirect to the store that
+*"needs to fire off an analytics event"*. The contract is [`SPEC-the-redirect.md`](SPEC-the-redirect.md) § 3: § 3's
+closed list gains `redirect` (`s` made by the Worker, `qr`, `via`; the Worker's `v`, country and device as for every
+event; the existing layout, no new blob), written by the Worker as it answers the 302, not posted to `/a`, and not
+counted for § 12's cookie, a `HEAD`, or a user agent naming a program; the report keeps redirect-only visits out of
+every earlier figure (§ 5 there). § 1's bar holds: nothing from the query, the path, the referrer, the IP or the user
+agent in any field. The privacy notice is unchanged.
