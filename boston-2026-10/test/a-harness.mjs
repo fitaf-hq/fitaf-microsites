@@ -37,10 +37,11 @@ export const ORDER = "https://fitafnutrition.com/order";
 export const VISIT_ID = /^[0-9a-f]{16}$/;
 
 /** One valid body of each § 3 event, written from the contract's table (the vocabulary of data/plans.json and app.js);
- *  since § 14 (a saved offer counted) also `save`, which carries `s` alone. */
+ *  since § 14 (a saved offer counted) also `save`, which carries `s` alone; since § 16 item 2 `open` carries `via`, ""
+ *  for a visit that did not start at #from-email. */
 export const S1 = "0123456789abcdef";
 export const VALID = {
-  open: { event: "open", s: S1, viewport: "<400", load_ms: 812, qr: "" },
+  open: { event: "open", s: S1, viewport: "<400", load_ms: 812, qr: "", via: "" },
   answer: { event: "answer", s: S1, question: "goal", answer: "lean" },
   result: { event: "result", s: S1, key: "or-7d", mpid: 21 },
   click: { event: "click", s: S1, link: "chefs-choice", mpid: 21 },
@@ -88,12 +89,16 @@ const STORAGE = ["localStorage", "sessionStorage", "indexedDB"];
  * dispatched at the document (and the window, where it bubbles) once every inline script has run, as a browser does; and
  * `yieldBetweenScripts` lets the page's timers run after each inline script, before the next: the parser paused between
  * two scripts, where a browser may run a timer the first one set (the analytics script's, before app.js has drawn).
+ * Since SPEC-analytics.md § 16 item 1 (the offer page's script "does not read `location`"): `watchLocation` records, in
+ * the visit's `reads`, every read of the window's `location` (each property, by name) and of the document's own
+ * addresses (`location`, `URL`, `documentURI`, `referrer`, `baseURI`); without it the stub is as before.
  */
-export function openVisit(html, { hash = "", search = "", width = 390, clock = 0, date, globals = {}, yieldBetweenScripts = false } = {}) {
+export function openVisit(html, { hash = "", search = "", width = 390, clock = 0, date, globals = {}, yieldBetweenScripts = false, watchLocation = false } = {}) {
   const { document, Event } = parseHTML(html);
   const beacons = [];
   const touched = [];
   const errors = [];
+  const reads = [];
   const listeners = {};
   const timers = [];
   let now = clock;
@@ -145,6 +150,22 @@ export function openVisit(html, { hash = "", search = "", width = 390, clock = 0
   };
   Object.assign(g, globals);
   g.window = g;
+  if (watchLocation) {
+    g.location = new Proxy(location, {
+      get(target, name, receiver) {
+        reads.push(`location.${String(name)}`);
+        return Reflect.get(target, name, receiver);
+      },
+    });
+    for (const name of ["location", "URL", "documentURI", "referrer", "baseURI"]) {
+      Object.defineProperty(document, name, {
+        get() {
+          reads.push(`document.${name}`);
+          return "";
+        },
+      });
+    }
+  }
   if (date !== undefined) g.Date = clockAt(date);
   for (const name of STORAGE) {
     Object.defineProperty(g, name, {
@@ -194,6 +215,7 @@ export function openVisit(html, { hash = "", search = "", width = 390, clock = 0
     beacons,
     touched,
     errors,
+    reads,
     el,
     hash: () => current,
     at(ms) {

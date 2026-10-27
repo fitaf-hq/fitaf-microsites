@@ -129,8 +129,11 @@ export async function storedSaveProblems(root = ROOT) {
 }
 
 /** § 3's data point layout (§ 10's table), written here: blob1–blob11 event, s, country, device, viewport, qr, question,
- *  answer, key, link, step, and since § 15 item 2 blob12 the visitor `v`; double1–double3 load_ms, length_ms, mpid. */
-const BLOB_COUNT = 12;
+ *  answer, key, link, step, and since § 15 item 2 blob12 the visitor `v`; ⚠ since § 16 (2026-10-27) blob13 an offer
+ *  page's kind and blob14 an open's via, "" on a save; double1–double3 load_ms, length_ms, mpid. */
+const BLOB_COUNT = 14;
+/** blob12, the visitor, by its place. */
+const V_AT = 11;
 const DOUBLE_COUNT = 3;
 
 /** SV1, the Worker's half (§ 14 item 1: "the data point's layout is unchanged"): a `save` posted to production's Worker
@@ -152,8 +155,8 @@ export async function saveDataPointProblems(root = ROOT) {
       }
       const [point] = points;
       // The harness's user agent is an iPhone's (a-harness TEST_UA): the device class `phone`.
-      const v = point.blobs?.[BLOB_COUNT - 1];
-      const blobs = [SAVE, S1, "US", "phone", ...Array(BLOB_COUNT - 5).fill(""), /^[0-9a-f]{16}$/.test(String(v)) ? v : "<a v>"];
+      const v = point.blobs?.[V_AT];
+      const blobs = [SAVE, S1, "US", "phone", ...Array(V_AT - 4).fill(""), /^[0-9a-f]{16}$/.test(String(v)) ? v : "<a v>", ...Array(BLOB_COUNT - V_AT - 1).fill("")];
       if (!isDeepStrictEqual(point.blobs, blobs)) problems.push(`${entry}: blobs ${JSON.stringify(point.blobs)}, not ${JSON.stringify(blobs)}`);
       if (!isDeepStrictEqual(point.doubles, Array(DOUBLE_COUNT).fill(0))) problems.push(`${entry}: doubles ${JSON.stringify(point.doubles)}, not all 0`);
       if (point.indexes?.length !== 1 || !/^[0-9a-f]{16}$/.test(point.indexes[0])) problems.push(`${entry}: indexes ${JSON.stringify(point.indexes)}, not one of 16 hex digits`);

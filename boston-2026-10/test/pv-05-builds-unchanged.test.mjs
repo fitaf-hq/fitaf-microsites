@@ -47,6 +47,11 @@
 // index.html, demo/, boston/ and seminar/ (those, plan-prices.js's lines and save-data's struck_result); every other file
 // byte-identical; the recorder at bc39ee0 (its cases, the code before) reproduces 63e243b's (recorded_at apart), and at
 // 63e243b its record byte for byte.
+// And at 0ef1455 (`--commit 0ef1455 --release-a`), SPEC-analytics.md § 16 items 1 and 2 (the analytics script's branch
+// for the offer page, which no built page takes, and the open's via): production's index.html and the development build's
+// index.html, demo/, boston/ and seminar/, +224 bytes each, those lines alone; every other file byte-identical; the
+// recorder at 1c8cf8a (its cases, the code before) reproduces f60e19c's (recorded_at apart), and at f60e19c its record
+// byte for byte.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";

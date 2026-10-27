@@ -4,8 +4,14 @@
 // the template), and Fit AF's logo first in one column, linking to /. Every pair it draws is in src/contrast-pairs.json
 // ("build": "worker"). Marked DRAFT like the dev page while the wording is a draft (§ 3 item 2: the draft tag never in
 // production, whose build refuses a draft wording; one rule for both Workers, which share this module and data/save.json).
+// SPEC-analytics.md § 16 item 1 (2026-10-27): the offer page (/o/<code>) counts its own opening. Its column ends with its
+// data (#offer-data: the page's kind and the save's event id, nothing else) and the plan page's own analytics script
+// (src/worker/page-script.json, DERIVED by `npm run worker:script` from the build's slot), which reads the data and sends
+// one `offer` to /a. Every other page carries neither.
 import saveConfig from "../../data/save.json" with { type: "json" };
+import pageScript from "./page-script.json" with { type: "json" };
 import pageStyle from "./page-style.json" with { type: "json" };
+import { scriptJson } from "./script-json.js";
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 export const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ESCAPES[ch]);
@@ -18,15 +24,21 @@ const DRAFT_MARK = /draft/i.test(saveConfig.wording_version)
   ? `<p class="draft">DRAFT — not for use · wording ${esc(saveConfig.wording_version)}</p>\n`
   : "";
 
-/** `bodyHtml` is trusted markup built by the callers from escaped values. */
-export function page(title, bodyHtml) {
+/** § 16 item 1: an offer page's analytics, its data then the script: `kind` and `qr` given to the script, never read by
+ *  it from the page's address. */
+const offerAnalytics = ({ kind, qr }) =>
+  `<script type="application/json" id="offer-data">${scriptJson({ kind, qr })}</script>\n${pageScript.html}\n`;
+
+/** `bodyHtml` is trusted markup built by the callers from escaped values. `offer` (an offer page's: { kind, qr }) adds its
+ *  analytics at the end of the column. */
+export function page(title, bodyHtml, { offer } = {}) {
   return (
     '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
     '<meta name="robots" content="noindex">\n' +
     `<title>Fit AF — ${esc(title)}</title>\n<style>\n${pageStyle.css}\n</style>\n</head>\n<body>\n<main class="worker-page">\n` +
     DRAFT_MARK +
-    `${LOGO}\n${bodyHtml}\n</main>\n</body>\n</html>\n`
+    `${LOGO}\n${bodyHtml}\n${offer ? offerAnalytics(offer) : ""}</main>\n</body>\n</html>\n`
   );
 }
 

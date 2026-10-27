@@ -67,6 +67,9 @@ const MOVED_WORKER_FILES = [
   "src/worker/lapse.js",
   "src/worker/messages.js",
   "src/worker/offers.js",
+  // SPEC-analytics.md § 16 item 1 (2026-10-27): the offer page's copy of the analytics script (new, derived), which the
+  // Worker reaches only through pages.js (named here since § 3); the base's pages.js imports no such file.
+  "src/worker/page-script.json",
   "src/worker/page-style.json",
   "src/worker/pages.js",
   "src/worker/redeem.js",
