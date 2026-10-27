@@ -10,6 +10,7 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { insertRows, saveRows } from "../scripts/dummy-saves.mjs";
 import { handleConfirm } from "../src/worker/confirm.js";
+import { tokenMinter } from "../src/worker/confirm-token.js";
 import { e1 } from "../src/worker/messages.js";
 import { longDate, offerById } from "../src/worker/offers.js";
 import { handleOffer } from "../src/worker/redeem.js";
@@ -21,7 +22,7 @@ import saveConfig from "../data/save.json" with { type: "json" };
 import { hrefsOf, lineTexts } from "./email-html.mjs";
 import { pageText } from "./sp-production.mjs";
 import { assertE1Promise, assertNoCodeText, BOSTON_OFFER_ID, draftHeldLine, HELD_LINE, HELD_UNTIL, workerTreeWith } from "./sp-promise.mjs";
-import { d1Adapter, FixedRedemptions, linkIn, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
+import { d1Adapter, FixedRedemptions, linkIn, RecordingSender, rows, runSendDue, startWorker, TEST_CONFIRM_TOKEN_KEY, validSave } from "./worker-harness.mjs";
 
 const BOSTON = offerById(BOSTON_OFFER_ID);
 const ZONE = saveConfig.send_time_zone;
@@ -83,8 +84,8 @@ test("SP12: a save on every date before valid_to — E1 and /o say it is held un
       const link = `${vars.SITE_URL}/o/${code}`;
       assertNoCodeText(m.text, code, `${where}, E1's text`, { link });
       assertNoCodeText(lineTexts(m.html).join("\n"), code, `${where}, E1's HTML`);
-      assert.equal(linkIn(m.text, "/o/"), code, `${where}: See my offer -> /o/<token>`);
-      assert.equal(hrefsOf(m.html)[0], link, `${where}: the HTML's first link, See my offer`);
+      assert.equal(linkIn(m.text, "/o/"), code, `${where}: the button (Claim my offer since SPEC-ui-and-copy-pass § 8) -> /o/<token>`);
+      assert.equal(hrefsOf(m.html)[0], link, `${where}: the HTML's first link, the button`);
 
       for (const today of [addDays(d, 1), BOSTON.valid_to]) {
         const page = await offerPage(db, code, today);
@@ -110,8 +111,11 @@ test("SP12: after valid_to, the lapse path — /o says the offer ended, the /con
     await insertRows(db, [saved]);
     const sender = new RecordingSender();
     await runSendDue(db, { nowMs: nineOn("2026-10-25"), sender, redemptions: new FixedRedemptions() });
-    const token = linkIn(sender.messages[0].text, "/confirm/");
-    assert.ok(token, "control: the ticked E1 carries a /confirm link");
+    // SPEC-ui-and-copy-pass § 8 item 7: E1 carries no /confirm link; the send step still derives the ticked save's token
+    // and stores its hash, and that token's page is what this case holds.
+    assert.equal(linkIn(sender.messages[0].text, "/confirm/"), null, "E1 carries no /confirm link");
+    const token = await tokenMinter(TEST_CONFIRM_TOKEN_KEY)(saved.saveRow.save_id);
+    assert.ok((await rows(db, "SELECT confirm_token_hash FROM save_contacts WHERE save_id = ?", saved.saveRow.save_id))[0].confirm_token_hash, "control: its hash was stored at the send");
     const code = saved.saveRow.offer_code;
 
     const last = await offerPage(db, code, BOSTON.valid_to);

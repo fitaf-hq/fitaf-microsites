@@ -1,32 +1,18 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import events from "../data/events.json" with { type: "json" };
-import { ROOT } from "../build.mjs";
 import { longDate, offerById } from "../src/worker/offers.js";
 import { displayCode } from "../src/worker/messages.js";
+import { tokenMinter } from "../src/worker/confirm-token.js";
 import { tokenHash, TOKEN_RE } from "../src/worker/token.js";
-import { FixedRedemptions, linkIn, NEAR_ZIP, postSave, RecordingSender, rows, runSendDue, startWorker, validSave } from "./worker-harness.mjs";
-import { dropForm, keepForm } from "./rung5-fixture.mjs";
+import { FixedRedemptions, linkIn, NEAR_ZIP, postSave, RecordingSender, rows, runSendDue, startWorker, TEST_CONFIRM_TOKEN_KEY, validSave } from "./worker-harness.mjs";
+import { draftMessage } from "./rung5-fixture.mjs";
 
 const { mf, db, vars } = await startWorker();
 after(() => mf.dispose());
 
-/** DRAFT § 3's message as lines of plain text: emphasis, the "(only if…)" note and button brackets removed; for E1, the
- *  form of its second line for `codeMode` (SPEC-save-offer-production § 10: an offer without a code says the date held). */
-async function draftMessage(heading, { codeMode } = {}) {
-  const md = await readFile(join(ROOT, "consent", "DRAFT.md"), "utf8");
-  const part = md.split("## 3. The emails")[1].split("## 4.")[0].split(heading)[1].split(/\n\*\*E|\n## /)[0];
-  const subject = /Subject: \*([^*]+)\*/.exec(part)[1];
-  const lines = part
-    .split("\n")
-    .filter((l) => l.startsWith("> "))
-    .map((l) => l.slice(2))
-    .filter(keepForm(codeMode))
-    .map((l) => dropForm(l).replace(/\*\(only if the box was ticked\)\*\s*/, "").replace(/\[ ([^\]]+) \]/g, "$1").replace(/\*+/g, "").trim());
-  return { subject, lines };
-}
+// DRAFT § 3's messages are read by rung5-fixture.mjs's draftMessage (since SPEC-ui-and-copy-pass § 8 it also puts E1's band,
+// which the draft names and does not copy, in its marked line's place): this case kept a copy of it until then.
 
 test("S13: the cron with RecordingSender and one redeemed code -> that one suppressed; the rest captured, content per DRAFT § 3", async () => {
   const people = {
@@ -67,19 +53,21 @@ test("S13: the cron with RecordingSender and one redeemed code -> that one suppr
     E1 = await draftMessage("**E1 — the next morning, to a saved offer.**", { codeMode: offer.code_mode });
     assert.equal(m.template, "E1");
     assert.equal(m.subject, E1.subject);
-    const expected = E1.lines
-      .map((l) => l.replace("[event]", events[0].name).replace("XXXX-XXXX", displayCode(row.offer_code)).replace("[date]", longDate(offer.valid_to)))
-      .filter((l) => who === "ticked" || !l.startsWith("You asked to hear about"));
+    const expected = E1.lines.map((l) =>
+      l.replace("[event]", events[0].name).replace("XXXX-XXXX", displayCode(row.offer_code)).replace("[date]", longDate(offer.valid_to)),
+    );
     for (const line of expected) assert.ok(m.text.includes(line), `${who} E1 lacks: ${line}\n---\n${m.text}`);
-    assert.equal(linkIn(m.text, "/o/"), row.offer_code, "See my offer -> /o/<code>");
+    assert.equal(linkIn(m.text, "/o/"), row.offer_code, "Claim my offer -> /o/<code>");
     assert.ok(m.text.includes(`${vars.SITE_URL}/o/${row.offer_code}`));
-    const token = linkIn(m.text, "/confirm/");
+    // SPEC-ui-and-copy-pass § 8 item 7: no confirmation link in E1, ticked or not; the send path is unchanged, so a ticked
+    // save's token is still derived and only its hash stored.
+    assert.equal(linkIn(m.text, "/confirm/"), null, "no confirmation link in E1");
+    assert.ok(!m.text.includes("You asked to hear about"));
     if (who === "ticked") {
+      const token = await tokenMinter(TEST_CONFIRM_TOKEN_KEY)(row.save_id);
       assert.match(token, TOKEN_RE);
       assert.equal(row.confirm_token_hash, await tokenHash(token), "only the token's hash is stored");
     } else {
-      assert.equal(token, null, "no confirmation link without the box");
-      assert.ok(!m.text.includes("You asked to hear about"));
       assert.equal(row.confirm_token_hash, null);
     }
     assert.equal(row.message_state, "sent");
@@ -90,7 +78,7 @@ test("S13: the cron with RecordingSender and one redeemed code -> that one suppr
   assert.equal(x.subject, EX.subject);
   for (const line of EX.lines.map((l) => l.replace("[ZIP]", NEAR_ZIP))) assert.ok(x.text.includes(line), `E-X lacks: ${line}`);
   assert.match(linkIn(x.text, "/confirm/"), TOKEN_RE);
-  assert.ok(E1.lines.length >= 6 && EX.lines.length >= 3, "control: the draft's messages were read");
+  assert.ok(E1.lines.length >= 8 && EX.lines.length >= 3, "control: the draft's messages were read");
 
   const again = await runSendDue(db, { nowMs: latest + 2000, sender, redemptions });
   assert.equal(again.due, 0, "a message goes once");

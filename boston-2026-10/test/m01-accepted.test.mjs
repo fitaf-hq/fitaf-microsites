@@ -2,6 +2,7 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { offerById } from "../src/worker/offers.js";
 import { RESEND_URL, USER_AGENT } from "../src/worker/resend-sender.js";
+import { tokenMinter } from "../src/worker/confirm-token.js";
 import { tokenHash } from "../src/worker/token.js";
 import { linkIn, startWorker, TEST_CONFIRM_TOKEN_KEY } from "./worker-harness.mjs";
 import { DELIVERED, DUMMY_KEY, MAIL_FROM, MINUTE_MS, saveOffers, saveRow } from "./rung5-fixture.mjs";
@@ -50,9 +51,12 @@ test("M1: accepted -> `sent`, provider_message_id stored; the request carries fr
   assert.equal(row.send_attempts, 1);
   assert.equal(row.send_lease_until, null);
   assert.equal(row.state, "messaged");
-  const token = linkIn(body.text, "/confirm/");
+  // SPEC-ui-and-copy-pass § 8 item 7: E1 carries no /confirm link; the send path is unchanged, so a ticked save's token is
+  // still derived (SPEC-rung5 § 8) and its hash stored once the message is accepted.
+  assert.equal(linkIn(body.text, "/confirm/"), null, "E1's text part carries no /confirm link");
+  assert.ok(!body.html.includes("/confirm/"), "nor its HTML part");
+  const token = await tokenMinter(TEST_CONFIRM_TOKEN_KEY)(before.save_id);
   assert.equal(row.confirm_token_hash, await tokenHash(token), "the token's hash is stored once accepted");
-  assert.equal(linkIn(body.html, "/confirm/").replace(/".*$/, ""), token, "the HTML part carries the same token");
 
   await worker.scheduled({ cron: "*/5 * * * *", scheduledTime: new Date(nowMs + 10 * MINUTE_MS) });
   assert.equal(resendRequests.length, 1, "a sent message is not requested again");

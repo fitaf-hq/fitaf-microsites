@@ -1,8 +1,9 @@
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { sendDue } from "../src/worker/send-due.js";
+import { tokenMinter } from "../src/worker/confirm-token.js";
 import { tokenHash } from "../src/worker/token.js";
-import { linkIn, startWorker } from "./worker-harness.mjs";
+import { linkIn, startWorker, TEST_CONFIRM_TOKEN_KEY } from "./worker-harness.mjs";
 import { callSendDue, DELIVERED, idempotentResend, MINUTE_MS, resendSender, saveOffers, saveRow } from "./rung5-fixture.mjs";
 import { SEND_LEASE_MS } from "../src/worker/send-due.js";
 
@@ -48,6 +49,8 @@ test("M11: an accepted send whose database write is lost, then a retry -> the re
   const row = await saveRow(db, to);
   assert.equal(row.message_state, "sent");
   assert.equal(row.provider_message_id, "m11-1", "the FIRST request's id, replayed");
-  const token = linkIn(resend.calls[0].body.text, "/confirm/");
-  assert.equal(row.confirm_token_hash, await tokenHash(token), "the delivered email's link works: its token's hash is stored");
+  // SPEC-ui-and-copy-pass § 8 item 7: E1 carries no /confirm link; its token is still derived and its hash stored.
+  assert.equal(linkIn(resend.calls[0].body.text, "/confirm/"), null, "the delivered E1 carries no /confirm link");
+  const token = await tokenMinter(TEST_CONFIRM_TOKEN_KEY)(row.save_id);
+  assert.equal(row.confirm_token_hash, await tokenHash(token), "the token's hash is stored, after the lost write");
 });
