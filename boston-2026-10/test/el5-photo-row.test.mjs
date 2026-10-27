@@ -72,6 +72,15 @@ test("EL5: src/worker/email-photos.json is the manifest's slideshow, as `npm run
 test("EL5: a mirror whose manifest gains a slideshow: the derived copy differs until derived, then E1 (its default) has the row", async () => {
   const { emailPhotos, serialise } = await import("../scripts/email-photos.mjs");
   const mirror = await workerMirror(async (dir) => {
+    // The mirror starts as a package before any slideshow (whatever the committed manifest holds): no entry, and the
+    // copy derived from that; then the emitter adds one.
+    await editJson(join(dir, "data", "photo-sheets.json"), (m) => {
+      const bare = { ...m };
+      delete bare.email_slideshow;
+      return bare;
+    });
+    const bare = JSON.parse(await readFile(join(dir, "data", "photo-sheets.json"), "utf8"));
+    await writeFile(join(dir, "src", "worker", "email-photos.json"), serialise(emailPhotos(bare)));
     await editJson(join(dir, "data", "photo-sheets.json"), (m) => ({ ...m, email_slideshow: SAMPLE.photos.email_slideshow }));
   });
   try {
