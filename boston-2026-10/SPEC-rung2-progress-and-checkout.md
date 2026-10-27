@@ -2204,3 +2204,5 @@ flag (item 9 above); ⬜ the Cart Total with additions carted (item 3); the live
 alone (`q29-pass-three`, `q5-nothing-committed`) `# tests 7`, `# pass 7`, `# fail 0`; `[tuw]*` `# tests 209`, `# pass 209`;
 `[rs]*` `# tests 481`, `# pass 481`. Over the five chunks, 1,322 tests: 1,320 passed in their chunk, and the two that did
 not (above) passed run alone.
+
+**The watch at the branch's tip** (`npm --prefix boston-2026-10/tools/storefront-watch test`, `nice -n 15`, at `e4c005b`, 11:51 → 11:56 PDT): `# tests 275`, `# pass 275`, `# fail 0`, `# cancelled 0` (the 272 above and PP1–PP3).
