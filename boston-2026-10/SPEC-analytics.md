@@ -936,3 +936,47 @@ T5's ceiling is 61,440 bytes gzip; the largest page is 35,857.
 
 **Not done here**: the whole suite, Storybook, the watch and contrast (no colour or style changed); nothing deployed, no
 merge, no pin.
+
+## 15. Amendment, 2026-10-26: no data point thinned (each its own index), and a result read after the page's first draw. CONTRACT, before any code
+
+**Why.** Measured the evening of Boston's first event (Fit AF's decision record `2026-10-17-…` § 7u item 26): since
+2026-10-26 00:00 Eastern, 9 of 52 `result` rows, 26 of 149 `answer` rows and 4 of 60 `open` rows carry
+`_sample_interval` 2, each standing for a point Analytics Engine did not keep. Cloudflare's sampling page: *"At write
+time, we sample if data points are written too quickly into one index"*, and the index is § 4's `v`. A visit's `result`
+goes 4–16 ms after its meal-size `answer`, into the same index, and a venue's Wi-Fi gives every phone of one iOS
+version the same `v`. So 3 of 7 plans reached that evening had no `result`. A reproduction on the release line
+(Chrome and WebKit, throttled; the Worker in Miniflare) sent and wrote every one: the page and the Worker are right, and
+the store thins what they write. The Advisor: *"We are all clear for updates now that the event is over"*, *"Please
+merge as needed"* (2026-10-26).
+
+1. **Each data point its own index.** `dataPoint` (§ 4) writes `indexes: [<16 random hex digits, new for each point>]`
+   (`crypto.getRandomValues`), never the same value twice by design, so no index is ever written to twice and write-time
+   sampling has nothing to thin at this page's volume. The index identifies nothing: it is not stored anywhere else and
+   is never read by the report.
+2. **The visitor moves to a blob.** `BLOBS` gains `v` as **`blob12`**, appended: blobs 1–11 keep their places, so every
+   query of § 5 and § 11 reads what it read. `v` itself is unchanged (§ 2: the salted hash, its salt per New York day).
+   ⛔ Still no IP and no user agent in any field (A4 reads the new blob too).
+3. **The report** (`scripts/analytics.mjs`): `visitors` counts `count(DISTINCT if(blob12 = '', index1, blob12))`, so a
+   window holding rows of both layouts (before and after this release) counts each row's visitor where it is. Nothing
+   else in its queries changes. AJ1–AJ4 hold; AJ2's base moves with this section.
+4. **A plan shown at load is read after the page's first draw.** `src/analytics.js`'s `result()` also runs once on
+   `DOMContentLoaded` (after every inline script, `app.js` included, has run), besides its `setTimeout(result, 0)` and
+   `hashchange`. Today a page opened at a fragment carrying a whole answer set (a reload, a restored tab, Back from the
+   store without the page cache, a shared link) shows the plan and sends no `result`: the timer runs while the parser is
+   paused between the analytics script and `app.js`, before `app.js` has drawn it. `shown` still keeps one `result` per
+   plan shown.
+5. **Cases**, written first and run red:
+   - **IX1**: through the Worker (`a-harness.mjs`'s `startBeacon`, both entries), a visit's seven events give seven
+     data points with seven different indexes, each 16 hex digits, and `blob12` the visit's `v` on every one (the same
+     `v` A5 computes today).
+   - **IX2**: A4's search for the IP and the user agent covers `blob12` and the index.
+   - **IX3**: the report's `visitors` over a fixture holding rows of both layouts counts each visitor once.
+   - **IX4**: the page opened at `#lean-and-7d` (the whole answer set) sends `result` (`and-7d`, its mpid) with no tap,
+     in the stub where the analytics script runs before `app.js` as on the built page; and the plan shown, then a tap
+     elsewhere that changes nothing, sends no second `result`.
+   - A5 and A6 move from `index1` to `blob12` (their meaning unchanged: one visitor a day, a salt's expiry).
+   **Mutants**, each in a mirror and killed by its own case: the index written as `v` (IX1); `blob12` left empty (IX1);
+   the `DOMContentLoaded` read dropped (IX4).
+6. **When.** Built on `boston/analytics-index` (from the release line `a5d3ae2`), merged into `boston/release-c`, the
+   full site suite and Storybook, then dev, then production. ⛔ No Footer block moves; the week's content is not re-run.
+   The team's dashboard (Fit AF `scripts/analytics-tool/`) reads `v` the same way in its own contract (§ 10).
