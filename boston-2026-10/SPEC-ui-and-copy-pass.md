@@ -1362,3 +1362,29 @@ Built on `boston/round-2-changeset-2` from `b70ece4` (§ 5), each case one file 
 10. **The descriptions arrive** (2026-10-26): `data/picks/2026-11-01.json` replaced by Fit AF's emitter's output
     (`85d8ed3`, 25 of 26 meals described); it moves UC8 alone (a row's words now hold the description under the name;
     amended in `eec5c4c`) and no golden.
+
+## 6. The save dialog opened by a link, `#save` (2026-10-26). CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-26: *"add a "save my offer" call to action on the final step of the HMP checkout (where
+customers enter their credit card)"*; then, to the plan for tomorrow evening's slate, *"let's do the slate for tomorrow
+evening first"*. The store's page sends nothing to us (SPEC-analytics § 1 item 3; the hand-off's *"⛔ Never … a
+request"*), so its call to action is a **link** to this page, which opens the save step. A save needs no plan: it holds
+the offer's pricing against an email and a ZIP (SPEC-rung4 §§ 3–4), so the link carries no answers. Its Footer block half
+is SPEC-rung2-progress-and-checkout § 35.
+
+1. **At `#save`** (the page's address's fragment exactly that), once the page's scripts have run, the plan page opens
+   the save dialog (`#save-dialog`) as pressing *Not ready?* opens it (§ 4 B), the save step at its first state
+   (`OFFER`), and the page behind it at its start (`#save` carries no answer, so `app.js` reads it as no fragment).
+   Closing the dialog (its button, Esc, the backdrop) leaves the page at its start; the fragment is not rewritten by
+   the opening. A page without the save step (production `false`, `/why/`, `/privacy/`) does nothing with `#save`.
+2. **What it records**: the save's event is the page's own (`qrEvent(location.search)`, else `save.json`'s
+   `event_id`), as for every save; the link from the store carries no `?e=`, so such a save names the default event and
+   its E1 reads *"at eatfitaf.com"* (the Advisor's, ⬜ to confirm; carrying the event through the hand-off is later
+   work). The analytics: the visit's `open` as any; a stored save sends `save` (SPEC-analytics § 14).
+3. **Unchanged**: every other fragment, the dialog's contents and words, *Not ready?* itself.
+4. **Cases**, written first and run red: **SL1** the page opened at `#save` has the dialog open after load, at the
+   save step's `OFFER`, on both targets with the save step; **SL2** closed, the page is at its start and no answer is
+   pressed; **SL3** the page opened at `#lean-and-7d`, `#from-email` or no fragment opens no dialog; **SL4** production
+   `false`: `#save` opens nothing. **Mutant**: the opening on any fragment (SL3).
+5. **When.** Built on `boston/save-link` (from the release line `5fbe44f`), merged into the release line, the full
+   suites, dev, then production, **before** the Footer block of § 35 is pasted (its link must lead somewhere live).
