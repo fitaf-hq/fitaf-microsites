@@ -18,7 +18,7 @@ import { loadInputs, MOCKUPS_DIR, renderMockups } from "../mockups/build-mockups
 import { buildStorefront } from "../scripts/build-storefront.mjs";
 import { MESSAGES, PLANS, workerFiles } from "./cc-harness.mjs";
 
-const FOOTER_TEXT_SHA256 = "dd54dfc9deb834c461def83815dd200fdd936e81bf8d1d25cd98c669d3bce2c0"; // § 36 (2026-10-27): was 75e18ffa… (§ 35, pasted as 0eb98fe)
+const FOOTER_TEXT_SHA256 = "57f816dbc4623e7b28d9b613c726018ef25f922b5eb9fe5bed5ca74402b2725a"; // § 36 (2026-10-27): was 75e18ffa… (§ 35, pasted as 0eb98fe)
 const VERSION_LINE = /^\/\* fitaf-handoff \S+ sha256:[0-9a-f]{64} \*\/\n/;
 const golden = JSON.parse(await readFile(new URL("./cc-08-unchanged-golden.json", import.meta.url), "utf8"));
 

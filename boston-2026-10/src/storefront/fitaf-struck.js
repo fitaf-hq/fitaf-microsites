@@ -12,7 +12,7 @@
 // the non-discounted price"): the store's price is the price paid, and the struck one is the higher.
 (function () {
 "use strict";
-var w = window, d = w.document, KEY = "fitaf_struck", on, u, share, M, O, T, MUTED = "/*MUTED*/";
+var w = window, KEY = "fitaf_struck", on, u, d, share, M, O, T, MUTED = "/*MUTED*/";
 // § 36 item 2: data/offers.json's general offers that carry percent_off, each [share, valid_from, valid_to] (calendar
 // dates in America/New_York, inclusive), inlined by the build: never a figure or a date typed here. The dates move only
 // with a rebuild and a paste.
@@ -45,6 +45,7 @@ if (!current()) return;
 // (a rehearsal holds the live block off with this mark), must not keep a second set of figures. A marked visitor only.
 if (w.__fitafStruck) return;
 w.__fitafStruck = true;
+d = w.document;
 // § 36 item 3: the figure, from the price's own text each time it is drawn: one plain price, "$", dollars (with or
 // without thousands commas), a point and two digits, and not zero; anything else (a sign before it, a range, "From",
 // "Free", empty) gets nothing. Its price x 100 / (100 - the share), rounded to the cent, in integer cents ($87.50 ->

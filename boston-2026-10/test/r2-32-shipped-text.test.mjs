@@ -47,7 +47,7 @@ import { buildStorefront, STOREFRONT_SOURCE, STRUCK_SOURCE } from "../scripts/bu
  *  ef5697aa… (round 2 alone, not pasted), 04e43ac0… (the hand-off alone, not pasted), b68257d5…, a8a5970d…, 0a6e9ef1…,
  *  6d36d4bf… (none pasted), efcbc570… (the extra meal, SPEC-rung2-fill-c § 8; pasted, 8b11e54), ad25f93d… (snacks;
  *  pasted, 17c5693), 76871ff9… (§ 27, pasted), b65fb47f… (§ 25), 1e3802b8… (fill C). */
-const SHIPPED_SHA256 = "dd54dfc9deb834c461def83815dd200fdd936e81bf8d1d25cd98c669d3bce2c0";
+const SHIPPED_SHA256 = "57f816dbc4623e7b28d9b613c726018ef25f922b5eb9fe5bed5ca74402b2725a";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
