@@ -1,0 +1,14 @@
+{
+  "about": "IX3's fixture (SPEC-analytics.md § 15 item 3), invented: data points as Analytics Engine holds them, the columns the visitors query reads (day, blob2 the visit, blob12 the visitor since § 15, index1), in both layouts. Before § 15 (blob12 never written, read as \"\"): index1 is the visitor. After it: blob12 is the visitor and index1 each point's own random index. On 2026-10-26 visitor a1 is seen before only, b2 before and after (the same v, a second visit), c3 after only: three visitors, four visits. On 2026-10-27 visitor d4 writes three points of one visit: one visitor.",
+  "rows": [
+    { "day": "2026-10-26", "blob1": "open", "blob2": "1111111111111111", "blob12": "", "index1": "a1a1a1a1a1a1a1a1" },
+    { "day": "2026-10-26", "blob1": "result", "blob2": "1111111111111111", "blob12": "", "index1": "a1a1a1a1a1a1a1a1" },
+    { "day": "2026-10-26", "blob1": "open", "blob2": "2222222222222222", "blob12": "", "index1": "b2b2b2b2b2b2b2b2" },
+    { "day": "2026-10-26", "blob1": "open", "blob2": "3333333333333333", "blob12": "b2b2b2b2b2b2b2b2", "index1": "e0e0e0e0e0e0e001" },
+    { "day": "2026-10-26", "blob1": "answer", "blob2": "3333333333333333", "blob12": "b2b2b2b2b2b2b2b2", "index1": "e0e0e0e0e0e0e002" },
+    { "day": "2026-10-26", "blob1": "open", "blob2": "4444444444444444", "blob12": "c3c3c3c3c3c3c3c3", "index1": "e0e0e0e0e0e0e003" },
+    { "day": "2026-10-27", "blob1": "open", "blob2": "5555555555555555", "blob12": "d4d4d4d4d4d4d4d4", "index1": "e0e0e0e0e0e0e004" },
+    { "day": "2026-10-27", "blob1": "answer", "blob2": "5555555555555555", "blob12": "d4d4d4d4d4d4d4d4", "index1": "e0e0e0e0e0e0e005" },
+    { "day": "2026-10-27", "blob1": "leave", "blob2": "5555555555555555", "blob12": "d4d4d4d4d4d4d4d4", "index1": "e0e0e0e0e0e0e006" }
+  ]
+}

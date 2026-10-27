@@ -1,5 +1,6 @@
 // A5 (SPEC-analytics.md § 2, § 7): the same IP and user agent, one day then the next: the same `v` within a day, a
-// different `v` the next. `v` is the data point's index. The day is America/New_York's (§ 2 as amended 2026-10-13, the
+// different `v` the next. `v` is the data point's blob12 (SPEC-analytics.md § 15 item 2; it was the index, which § 15 item 1
+// makes each point's own). The day is America/New_York's (§ 2 as amended 2026-10-13, the
 // orchestrator's ruling: a UTC day ends at 20:00 in Boston, so an evening visit would count twice): 19:59 and 20:01 New
 // York time are one visitor; 23:59 and 00:01 the next day are two. Across both of 2026–27's DST changes, the New York
 // day is 25 and 23 hours long, which a fixed offset would get wrong. Every instant is written here with its own
@@ -9,7 +10,7 @@
 // one `v`.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { startBeacon, TEST_IP, utc, VALID } from "./a-harness.mjs";
+import { startBeacon, TEST_IP, utc, VALID, visitorOf } from "./a-harness.mjs";
 
 const at = (iso) => Date.parse(iso);
 
@@ -17,7 +18,9 @@ const vOf = async (site, options) => {
   await site.post(VALID.open, options);
   const { points } = await site.log();
   assert.equal(points.length, 1, "control: one data point");
-  return points[0].indexes[0];
+  const v = visitorOf(points[0]);
+  assert.match(String(v), /^[0-9a-f]{16}$/, "control: the data point's v (blob12)");
+  return v;
 };
 
 /** The v of the same visitor at each instant, in order. */
@@ -37,7 +40,7 @@ test("A5: the same visitor at 19:59 and 20:01 New York time is one v; at 23:59 a
       "2026-10-23T23:59:00-04:00",
       "2026-10-24T00:01:00-04:00",
     ]);
-    assert.match(evening, /^[0-9a-f]{16}$/);
+    assert.match(String(evening), /^[0-9a-f]{16}$/, "control: a v (blob12)");
     assert.equal(after8, evening, "19:59 and 20:01 in New York: the same v");
     assert.equal(lastMinute, evening, "23:59 in New York: still the same day");
     assert.notEqual(nextDay, evening, "00:01 the next day in New York: a different v");
@@ -77,7 +80,8 @@ test("A5: twenty first events of a day at once, in one isolate, make one salt an
     const log = await site.log();
     assert.equal(log.points.length, 20, "control: all twenty written");
     assert.equal(log.puts.length, 1, `one salt written (${log.puts.length})`);
-    assert.equal(new Set(log.points.map((p) => p.indexes[0])).size, 1, "one v");
+    assert.equal(new Set(log.points.map(visitorOf)).size, 1, "one v");
+    assert.match(String(visitorOf(log.points[0])), /^[0-9a-f]{16}$/, "control: a v");
   } finally {
     await site.dispose();
   }

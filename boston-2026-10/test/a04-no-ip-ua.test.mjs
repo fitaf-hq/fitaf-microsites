@@ -6,7 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { ipUaProblems } from "./a-checks.mjs";
-import { startBeacon, TEST_IP, TEST_UA, VALID } from "./a-harness.mjs";
+import { startBeacon, TEST_IP, TEST_UA, VALID, visitorOf } from "./a-harness.mjs";
 
 test("A4: no written field contains the IP address or the user agent", async () => {
   assert.deepEqual(await ipUaProblems(), []);
@@ -27,7 +27,9 @@ test("A4 (control): the country is the platform's and the device class is derive
     assert.ok(blobs[1].includes("tablet"), "an iPad is a tablet");
     assert.ok(blobs[2].includes("tablet"), "Android without Mobile is a tablet");
     assert.ok(blobs[3].includes("desktop"), "a Mac is a desktop");
-    for (const p of points) assert.match(p.indexes[0], /^[0-9a-f]{16}$/, "v: 16 hex digits");
+    // SPEC-analytics.md § 15 item 2: the visitor `v` is blob12; the index (item 1) each point's own, 16 hex digits too.
+    for (const p of points) assert.match(String(visitorOf(p)), /^[0-9a-f]{16}$/, "v (blob12): 16 hex digits");
+    for (const p of points) assert.match(String(p.indexes[0]), /^[0-9a-f]{16}$/, "the index: 16 hex digits");
   } finally {
     await site.dispose();
   }

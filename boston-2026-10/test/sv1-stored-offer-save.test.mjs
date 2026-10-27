@@ -4,7 +4,7 @@
 // visit's other events are those of the same visit with no save, the `leave`'s step among them (a save is not a step of
 // the funnel). On both targets, each with the fixture week (the step is drawn beside a week's checkout alone). And the
 // Worker's half: a `save` posted to either Worker is one data point in the layout of § 10 (blob1 the event, blob2 the
-// visit). The checks are sv-checks.mjs's, which the mutant "the Worker's FIELDS without save" (sv-mutants.test.mjs) runs
+// visit; since § 15 blob12 the visitor). The checks are sv-checks.mjs's, which the mutant "the Worker's FIELDS without save" (sv-mutants.test.mjs) runs
 // on a mirror. Nothing is requested.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -14,6 +14,6 @@ test("SV1: a visit whose offer save is stored sends save, s only, before its lea
   assert.deepEqual(await storedSaveProblems(), []);
 });
 
-test("SV1: either Worker writes a save as one data point, blob1 the event and blob2 the visit, nothing else", async () => {
+test("SV1: either Worker writes a save as one data point, blob1 the event, blob2 the visit, blob12 the visitor, nothing else", async () => {
   assert.deepEqual(await saveDataPointProblems(), []);
 });

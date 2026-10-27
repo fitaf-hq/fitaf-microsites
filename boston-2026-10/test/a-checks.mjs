@@ -110,8 +110,14 @@ export async function refusalProblems(root = ROOT, entry = "site") {
   return problems;
 }
 
-/** Every field of a written data point, as text. */
+/** Every field of a written data point, as text: every blob (since SPEC-analytics.md § 15, blob12 the visitor among them),
+ *  the index (since § 15 the point's own random one) and every double. */
 const fieldsOf = (point) => [...(point.blobs ?? []), ...(point.indexes ?? []), ...(point.doubles ?? [])].map((f) => String(f));
+/** What A4 searches every written field for: the IP, the user agent, its token, and their telling parts. */
+const NEEDLES = [TEST_IP, TEST_UA, TEST_UA_TOKEN, "203.0.113", "Mozilla/5.0"];
+
+/** A4's search over one data point: each [needle, field] where a field carries a needle (IX2, § 15, reads it too). */
+export const needlesIn = (point) => fieldsOf(point).flatMap((field) => NEEDLES.filter((n) => field.includes(n)).map((n) => [n, field]));
 
 /** A4: every event of § 3, sent with a known IP and user agent: no field written (blob, index, double) and no salt
  *  key or value contains either (nor the user agent's own token); the control: the events were written. */
@@ -123,14 +129,11 @@ export async function ipUaProblems(root = ROOT) {
     for (const body of Object.values(VALID)) await site.post(body, { ip: TEST_IP, ua: TEST_UA, country: "DE" });
     const log = await site.log();
     if (log.points.length !== Object.keys(VALID).length) problems.push(`control: ${log.points.length} data points, not ${Object.keys(VALID).length}`);
-    const needles = [TEST_IP, TEST_UA, TEST_UA_TOKEN, "203.0.113", "Mozilla/5.0"];
     for (const [i, point] of log.points.entries()) {
-      for (const field of fieldsOf(point)) {
-        for (const needle of needles) if (field.includes(needle)) problems.push(`data point ${i + 1} carries ${JSON.stringify(needle)}: ${JSON.stringify(field)}`);
-      }
+      for (const [needle, field] of needlesIn(point)) problems.push(`data point ${i + 1} carries ${JSON.stringify(needle)}: ${JSON.stringify(field)}`);
     }
     for (const put of log.puts) {
-      for (const needle of needles) {
+      for (const needle of NEEDLES) {
         if (String(put.key).includes(needle) || String(put.value).includes(needle)) problems.push(`the salt store holds ${JSON.stringify(needle)}`);
       }
     }
