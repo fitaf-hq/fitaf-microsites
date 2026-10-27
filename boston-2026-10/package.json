@@ -19,6 +19,8 @@
     "test": "node --test \"test/*.test.mjs\"",
     "contrast": "node scripts/contrast.mjs",
     "email:tokens": "node scripts/email-tokens.mjs",
+    "email:images": "node scripts/email-images.mjs",
+    "email:photos": "node scripts/email-photos.mjs",
     "worker:style": "node scripts/worker-style.mjs",
     "preview:emails": "node scripts/preview-emails.mjs",
     "render:flows": "npm --prefix tools/render-flows run render",

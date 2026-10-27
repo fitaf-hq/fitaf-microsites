@@ -1,0 +1,5 @@
+{
+  "about": "DERIVED: do not edit. data/photo-sheets.json's base and email_slideshow (Fit AF's emitter's), copied by `npm run email:photos` so the Worker draws E1's slideshow (SPEC-ui-and-copy-pass § 8 item 2) without importing the whole manifest. No email_slideshow, or a null base: E1 has no photo row. Test EL5 fails when this file differs from the manifest.",
+  "source": "data/photo-sheets.json",
+  "base": "assets/photo-sheets/"
+}

@@ -57,6 +57,9 @@ export const PICKS_DIR = join(ROOT, "data", "picks");
  *  Every photo URL the page carries is built from the manifest's `base`. Without the manifest the page has no photograph. */
 export const PHOTOS_PATH = join(ROOT, "data", "photo-sheets.json");
 export const PHOTO_SHEETS_DIR = join(ROOT, "src", "assets", "photo-sheets");
+/** E1's own images (SPEC-ui-and-copy-pass § 8: the halftone tiles and the reversed logo, made by `npm run email:images`),
+ *  copied to <out>/assets/email/ by the builds whose Worker sends E1 (copyEmailImages). */
+export const EMAIL_IMAGES_DIR = join(ROOT, "src", "assets", "email");
 export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
 /** The page's analytics (SPEC-analytics.md § 4): one inline script, inlined before app.js. */
 export const ANALYTICS_PATH = join(ROOT, "src", "analytics.js");
@@ -269,10 +272,11 @@ export function sheetUrl(photos, sheet, assetPrefix = "") {
   return (ABSOLUTE_URL.test(photos.base) ? "" : assetPrefix) + photos.base + sheet.file;
 }
 
-/** The sheets a relative base copies beside the page: every sheet the manifest names. None for a CDN or for null. */
+/** The sheets a relative base copies beside the page: every sheet the manifest names (since SPEC-ui-and-copy-pass § 8 also
+ *  its `email_slideshow`, E1's GIF, served from the Workers' assets as the sheets are). None for a CDN or for null. */
 export function sheetsToCopy(photos) {
   if (photos?.base == null || ABSOLUTE_URL.test(photos.base)) return [];
-  return [photos.carousel, ...Object.values(photos.chefs_choice ?? {})].filter(Boolean);
+  return [photos.carousel, ...Object.values(photos.chefs_choice ?? {}), photos.email_slideshow].filter(Boolean);
 }
 
 /** A percentage for an inline style, without float noise. */
@@ -710,6 +714,20 @@ export async function copyStatic(outDir, photos = undefined, sheetsDir = PHOTO_S
   return written;
 }
 
+/** SPEC-ui-and-copy-pass § 8: E1's own images into <out>/assets/email/, for the build of a Worker that sends E1 (the
+ *  development build always; the production build with `production` true). The production build with `production` false
+ *  sends nothing and gets none, so it stays the build before rung 4 (S20). */
+export async function copyEmailImages(outDir, dir = EMAIL_IMAGES_DIR) {
+  const to = join(outDir, "assets", "email");
+  await mkdir(to, { recursive: true });
+  const written = [];
+  for (const name of (await readdir(dir)).filter((n) => /\.png$/.test(n)).sort()) {
+    await copyFile(join(dir, name), join(to, name));
+    written.push(join(to, name));
+  }
+  return written;
+}
+
 export async function writeQrCodes(events, outDir) {
   const qrDir = join(outDir, "qr");
   await mkdir(qrDir, { recursive: true });
@@ -1063,6 +1081,8 @@ export async function build({
     pages = [{ path, bytes: Buffer.byteLength(html) }];
   }
   const files = await copyStatic(outDir, photos, sheetsDir, preview ? PREVIEW_STATIC_DIRS : STATIC_DIRS); // § 8: a preview, no why/
+  // SPEC-ui-and-copy-pass § 8: E1's images beside the logo, in the assets of each Worker that sends E1.
+  if (target === "dev" || (target === "prod" && save.production === true)) files.push(...(await copyEmailImages(outDir)));
   // § 9 item 1: /privacy/, a static page beside the plan pages (as /why/): the development build always, marked as the
   // step is; the production build with `production` true, or with DRAFT § 6 approved (SPEC-ui-and-copy-pass § 1.3); the
   // preview build never (it has no save step).
