@@ -15,7 +15,7 @@
 // - THE PLAN PAGE is the package's own build (a-harness builtPage), run in the same stub.
 // - THE WORKER's POST /a is a-harness's startBeacon (both entries, SALTS and ANALYTICS recorded).
 import { spawnSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, symlink } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
@@ -386,8 +386,10 @@ export function refusedOfferBodies() {
     ["an open whose via is the fragment", { ...open, via: FROM_EMAIL }],
     ["an open whose via is a number", { ...open, via: 1 }],
     ["an open whose via is null", { ...open, via: null }],
-    ["an open without its via", without(open, "via")],
+    // ⚠ Amended at the merge review (2026-10-27): an `open` WITHOUT `via` is accepted (a page loaded before the release
+    // sends one; EM-A3's `before`), so it is not here; one without `via` that carries another field still is.
     ["an open with a kind", { ...open, kind: "saved" }],
+    ["an open without its via, with a kind", { ...without(open, "via"), kind: "saved" }],
     ["an answer with a via", { event: "answer", s: S1, question: "goal", answer: "lean", via: EMAIL }],
   ];
 }
@@ -399,15 +401,21 @@ export function refusedOfferBodies() {
  * a 16-hex `v`, the same on every point of the one sender), its doubles DOUBLE_LAYOUT's; no field carries the IP or the
  * user agent (A4's search, a-checks needlesIn). Each of refusedOfferBodies() is a 204 with nothing written and SALTS
  * untouched.
+ * ⚠ Amended at the merge review (2026-10-27, the coordinator): `before`, each [label, body] an `open` exactly as a page
+ * built before § 16 sends it (openOfPage: no `via`), is accepted the same way, blob14 "": a page loaded before the release
+ * (an open tab, a cached copy, a tab resumed) keeps its `open`. Control: such a body carries no `via`.
  */
-export async function workerProblems(root = ROOT) {
+export async function workerProblems(root = ROOT, { before = [] } = {}) {
   const problems = [];
+  for (const [label, body] of before) {
+    if (body?.event !== "open" || Object.hasOwn(body, "via")) problems.push(`control: ${label}: ${JSON.stringify(body)}, not an open without via`);
+  }
   for (const entry of ENTRIES) {
     const site = await startBeacon({ root, entry });
     try {
       await site.log();
       const visitors = new Set();
-      for (const [label, body] of acceptedBodies()) {
+      for (const [label, body] of [...acceptedBodies(), ...before]) {
         const at = `${entry}: ${label}`;
         const res = await site.post(body);
         const { points } = await site.log();
@@ -728,9 +736,9 @@ export async function reportProblems(root = ROOT, base) {
   return problems;
 }
 
-/** The package of `commit` (its scripts/, src/worker/, data/ and package.json, AJ2's way), extracted by `git archive`
- *  into `dir` (read only). Returns its path. */
-export function extractBase(commit, dir) {
+/** The package of `commit` (its scripts/, src/worker/, data/ and package.json, AJ2's way; or `paths`), extracted by `git
+ *  archive` into `dir` (read only). Returns its path. */
+export function extractBase(commit, dir, paths = ["scripts", join("src", "worker"), "data", "package.json"]) {
   const run = (cmd, args, input) => {
     const r = spawnSync(cmd, args, { input, maxBuffer: 64 * 1024 * 1024 });
     if (r.status !== 0) throw new Error(`${cmd} ${args.join(" ")}: exit ${r.status}: ${r.stderr}`);
@@ -738,7 +746,16 @@ export function extractBase(commit, dir) {
   };
   const top = run("git", ["-C", ROOT, "rev-parse", "--show-toplevel"]).toString("utf8").trim();
   const prefix = relative(top, ROOT);
-  const paths = ["scripts", join("src", "worker"), "data", "package.json"].map((p) => join(prefix, p));
-  run("tar", ["-x", "-C", dir], run("git", ["-C", top, "archive", "--format=tar", commit, ...paths]));
+  run("tar", ["-x", "-C", dir], run("git", ["-C", top, "archive", "--format=tar", commit, ...paths.map((p) => join(prefix, p))]));
   return join(dir, prefix);
+}
+
+/** The `open` the page of `commit` sends: its package's build inputs (cc-harness mirror()'s list) extracted by `git
+ *  archive` into `dir`, this package's node_modules linked in, its production page built as a-harness builtPage builds it
+ *  (no week), and opened in a-harness's stub. The page's own payload, never written here. */
+export async function openOfPage(commit, dir) {
+  const pkg = extractBase(commit, dir, ["build.mjs", "package.json", "wrangler.jsonc", "data", "scripts", "src", "consent"]);
+  await symlink(join(ROOT, "node_modules"), join(pkg, "node_modules"));
+  const html = await builtPage({ root: pkg });
+  return openVisit(html, { clock: 400 }).beacons.map((b) => b.body).find((b) => b.event === "open") ?? null;
 }
