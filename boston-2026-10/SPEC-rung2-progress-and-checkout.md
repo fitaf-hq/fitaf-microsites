@@ -2370,3 +2370,18 @@ five mutants still killed). The whole watch suite and Storybook were not re-run 
 line `fitaf-handoff ab1d4d7 sha256:0e259ec17206722b308dff3f7f34fae916c14cf8eff03e1f0a8a28250447b23d`, fragment 25,678
 bytes, SHA-256 `7db1dd2149b431ebbfcd1bd78fb87c93e74c61bc8f2a84a3ee8571c652488fec`, the admin's measure on it 0. Pins
 (R2-32, PR-10, CC-8) `d278789f…` → `0e259ec1…`. `10833c1`'s block file is kept as the record of the refused build.
+
+## 38. Amendment, 2026-10-27: the phone checkout's bar total struck too. CONTRACT, before any code
+
+§ 37.1 left the phone checkout's bottom bar (beside **PAY NOW**, below 1025 px) unstruck: the contract had not named it.
+The Advisor chose it (`AskUserQuestion`, `ts=2026-10-27T23:02:56.802Z`). § 37's rules hold whole for it: it is a total,
+so it is marked up for the food alone (the total + the struck Subtotal − the Subtotal, the Subtotal read from the same
+page; none without one); the look, the marker, the dates, one per price, kept true. ⛔ The pay button itself, its label
+and its own figure (*"Pay now - $87.50"* at 1280) are never struck or changed.
+
+1. **Measured first**: `probe-prices` at 390 reads the bar's figure on `/checkout` (its element, class, text and box);
+   nothing typed, never the payment, never a UTM visit; one run, its time recorded.
+2. **Cases**: **ST15** the bar's total struck at 390 by item 4's rule, with a fee and without; the pay button untouched;
+   none at 1280 when the bar is not displayed. W29 reads it where the smoke reaches it.
+3. **The block** rebuilt (`storefront/footer-block/2026-10-27-fitaf-handoff-<commit>.md`), R2-94 green (no `name = "…"`
+   whose value holds `<` or `>`); rehearsed live by the orchestrator; pasted by the Advisor; the live smoke at once.
