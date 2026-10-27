@@ -41,6 +41,10 @@ function current() {
   return s;
 }
 if (!current()) return;
+// Once per load, as the hand-off's __fitafHandoff: a second copy of this block, or a console paste on a page that has it
+// (a rehearsal holds the live block off with this mark), must not keep a second set of figures. A marked visitor only.
+if (w.__fitafStruck) return;
+w.__fitafStruck = true;
 // § 36 item 3: the figure, from the price's own text each time it is drawn: one plain price, "$", dollars (with or
 // without thousands commas), a point and two digits, and not zero; anything else (a sign before it, a range, "From",
 // "Free", empty) gets nothing. Its price x 100 / (100 - the share), rounded to the cent, in integer cents ($87.50 ->

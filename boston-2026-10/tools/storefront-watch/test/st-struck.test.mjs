@@ -11,7 +11,8 @@
 //   ST2  unmarked: none, no MutationObserver made, one read of sessionStorage fitaf_struck per page and no write.
 //   ST3  marked on landing (?utm_source=eatfitaf&...), a later page without it: still struck; not for a near miss.
 //   ST4  a date before valid_from and after valid_to (America/New_York): none; the last minute of valid_to: struck.
-//   ST5  a redraw (a price's text changed, its element replaced, the list re-ordered): one each, correct.
+//   ST5  a redraw (a price's text changed, its element replaced, the list re-ordered): one each, correct; and a second
+//        copy of the block run on the same page (a paste beside the Footer's): one each.
 //   ST6  the excluded figures (the additions' prices, an add-on "+$2.00", the Add to Cart button's price, a fee, tax,
 //        a discount, the lines, the Total, the pay button): none.
 //   ST7  each struck figure aria-hidden, no attribute but class, aria-hidden and style, no element inside, no text but
@@ -296,6 +297,9 @@ async function st5(text) {
     await cart(v.page);
     r = await v.at();
     judge(r, { expectStruck: true });
+    await v.page.evaluate(text);
+    await v.page.evaluate(() => window.__fixturePrices.text(".products__section .product__content-price", 2, "$14.00"));
+    judge(await v.at(), { expectStruck: true });
   } finally {
     await v.close();
   }
