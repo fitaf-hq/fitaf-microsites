@@ -34,10 +34,12 @@ import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
+import { buildStorefront, STOREFRONT_SOURCE, STRUCK_SOURCE } from "../scripts/build-storefront.mjs";
 
 /** Fill C's text SHA-256 since SPEC-rung2-progress-and-checkout § 35 (2026-10-26: Save my offer on the Payment step),
- *  on boston/footer-save-offer. Was 86a83551… (§ 33, 2026-10-26: zero's discount row hidden, the link to customer
+ *  on boston/footer-save-offer; then, since SPEC-rung2-progress-and-checkout § 36 (2026-10-27, boston/footer-struck),
+ *  the hand-off's text without § 35's save link, followed by the struck prices' own text (src/storefront/fitaf-struck.js,
+ *  data/offers.json's offer inlined). Was 75e18ffa… (§ 35, pasted 2026-10-26, 0eb98fe), 86a83551… (§ 33, 2026-10-26: zero's discount row hidden, the link to customer
  *  service; boston/footer-zero-and-contact, not pasted), 3efc8112… (pasted, c31603d), the release line's
  *  (boston/release-c, 2026-10-25): SPEC-rung2-progress-and-checkout §§ 30–31.2
  *  (the photograph's box, the code zero, a coded link without it, the store's page held still) and SPEC-ui-and-copy-pass
@@ -45,7 +47,7 @@ import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.
  *  ef5697aa… (round 2 alone, not pasted), 04e43ac0… (the hand-off alone, not pasted), b68257d5…, a8a5970d…, 0a6e9ef1…,
  *  6d36d4bf… (none pasted), efcbc570… (the extra meal, SPEC-rung2-fill-c § 8; pasted, 8b11e54), ad25f93d… (snacks;
  *  pasted, 17c5693), 76871ff9… (§ 27, pasted), b65fb47f… (§ 25), 1e3802b8… (fill C). */
-const SHIPPED_SHA256 = "75e18ffa2af086dee435fc72c29c37c32110a9bcc8294352c87947dde7158d07";
+const SHIPPED_SHA256 = "c408fb448f35b92332a79fc2466b95a105db312a968c1095bb6f22d1e8fc2b62";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;
@@ -62,11 +64,15 @@ function unwrap(footer) {
   return footer.slice("<script>\n".length, -"</script>\n".length);
 }
 
-/** R2-32's check over the build of `sourcePath`: each file's text hash, recomputed and as its version line declares. */
+/**
+ * R2-32's check over the build of `sourcePath`: each file's text hash, recomputed and as its version line declares. Since
+ * SPEC-rung2-progress-and-checkout § 36 the shipped text is the hand-off's followed by the struck prices' (the build adds
+ * them to its own source only), so a copy is built with them too: the case is about the hand-off's bytes.
+ */
 async function shippedTextCase(sourcePath) {
   const out = await mkdtemp(join(tmpdir(), "boston-storefront-r2-32-"));
   try {
-    await buildStorefront({ outDir: out, sourcePath, commit: COMMIT });
+    await buildStorefront({ outDir: out, sourcePath, struckPath: STRUCK_SOURCE, commit: COMMIT });
     const read = (name) => readFile(join(out, name), "utf8");
     for (const [name, script] of [
       [CONSOLE, await read(CONSOLE)],

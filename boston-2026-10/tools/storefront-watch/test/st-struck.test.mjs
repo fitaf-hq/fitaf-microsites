@@ -464,7 +464,7 @@ const MUTANTS = {
   times075: [["c * 100 / (100 - share)", "c * 0.75"]],
   noMarker: [["if (!on) return;", "on = 1;"]],
   afterEnd: [["o[2] >= day", "true"]],
-  twice: [["s = M.get(p)", "s = null"], ["sweep();", ""]],
+  twice: [["s = M.get(p)", "s = null"], ["sweep(keep);", ""]],
 };
 
 test("ST mutant: the figure as price x 0.75 — ST1 fails", { skip }, async () => {
