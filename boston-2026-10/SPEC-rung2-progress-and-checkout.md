@@ -1946,3 +1946,78 @@ and 390, no flag.**
 **Left**: merged into the dev line before the paste; the page half
 (SPEC-ui-and-copy-pass § 6, `https://eatfitaf.com/#save`) live, then the Advisor's paste, then the live smoke at once;
 ⬜ the words, his to edit.
+
+## 36. Amendment, 2026-10-27: the full price struck beside the store's, for visitors from eatfitaf.com; § 35's link removed. CONTRACT, before any code
+
+**The Advisor**, `ts=2026-10-27T15:12:46.204Z`: *"Turn eatfitaf.com into a redirect to the existing site … Then use the
+redirect to trigger a footer script that adds struck-through pricing next to the actual HMP pricing. This should be
+rather lightweight and purely cosmetic."* His answers (`AskUserQuestion`, `ts=2026-10-27T15:20:48.053Z`): the struck
+price on **the meal plans page, the order page's meal prices, the cart summary and the checkout's Plan Total**; the
+Footer's *Save my offer* link goes. The redirect and its marker are `SPEC-the-redirect.md` (branch `boston/redirect`,
+`d59aec4`): eatfitaf.com's home page answers a 302 to `https://fitafnutrition.com/` with
+`utm_source=eatfitaf&utm_medium=<qr|email|direct>[&utm_campaign=<event>]`. The rule for the figure is the plan page's
+own, `SPEC-ui-and-copy-pass.md` § 1.2 item 2 (*"It is currently \*impossible\* to pay the non-discounted price"*): the
+store's price is the price paid, and the struck one is the higher.
+
+1. **Who sees it.** A visitor whose landing address carries `utm_source=eatfitaf` exactly: the document's navigation
+   entry (`performance.getEntriesByType("navigation")[0].name`, the address the document was loaded at, which the
+   store's router cannot rewrite), or `location.href` where there is none. The block then writes `sessionStorage`
+   **`fitaf_struck`** = `"1"`, and on every later page of the tab reads it, so the struck prices follow the visitor
+   through the store's own navigation, reloads included, for the tab's life. A storage that throws: this page load
+   only. **Nobody else sees anything**: an ordinary visit costs one read of the address and one of `sessionStorage`; no
+   observer, no listener, no timer, no request, no log.
+2. **When.** Only while an offer is current. The build inlines `data/offers.json`'s general offers that carry
+   `percent_off` (each its share, `valid_from`, `valid_to`), never a hand-typed figure or date; the block shows nothing on
+   a date (America/New_York, by `Intl`, never a fixed offset) outside them. The dates move only with a rebuild and a
+   paste: after 2026-10-29 the block as pasted shows nothing, and an extension of the offer is a new block.
+3. **The figure.** For each price item 4 names, as the store draws it: **its price × 100 ÷ (100 − the share), rounded
+   to the cent**, in integer cents (Lean 7: $87.50 → $116.67; a meal at $12.50 → $16.67), written as the store writes
+   its own price (its sign, separators and two decimals, as item 7 measures). Read from the price's own text each time
+   it is drawn. A text that is not one plain price (a sign before it, a range, *Free*, empty) gets nothing.
+4. **Where**, the Advisor's four: **(a)** the meal plans page, each plan's price; **(b)** a plan's order page
+   (`/order?mpid=N`), each meal's price on its card; **(c)** the cart summary (the order page's sidebar at 1025 px and
+   wider, its bar below), the meals' figure; **(d)** the checkout (`/checkout`), the **Plan Total** row's figure.
+   ⛔ Never a delivery fee, tax, tip, discount, gift card, the checkout's **Total** (it holds fees and tax), an add-on's
+   or an upcharge's figure. The elements are those item 7 measures, named in `dependencies.json` (F2) by their literals.
+5. **How it looks.** One `<s class="fitaf-was" aria-hidden="true">` per price, beside it (before it on its line, or
+   above it where item 7 measures the line too narrow at 390), smaller than the price and muted (the block's own
+   `--muted` token), the browser's line-through. ⛔ **No words**: no *was*, no *save*, nothing read aloud. The store's
+   own elements are never changed, moved, hidden or restyled; only ours is inserted, and the layout around it does not
+   jump (item 11's ST9).
+6. **Kept true.** The store redraws itself. One `MutationObserver` on the document, for a marked visitor only, its work
+   done at most once per animation frame: it adds a missing struck figure, corrects one whose price changed, and removes
+   one whose price went. Exactly one per price, never duplicated by a redraw.
+7. **Measured first, before any code** (the store's markup, read only): a probe in the watch package, as
+   `probe-counts` and `probe-snacks` are, headless, at 1280 and 390, on the live store: the four surfaces, each price
+   element's tag, class list, text, box and its parent's; the cart filled by the store's own *Add to Cart* presses on a
+   plan's order page, as `probe-counts` did, then the store's own CHECKOUT; ⛔ nothing typed, nothing submitted, never
+   the payment, never the admin. The marker is set by the probe's init script writing `fitaf_struck` (⛔ **never a
+   UTM-tagged visit**: the watch's visits must not count in the store's Google Analytics as ours). Also measured, with
+   a query that is not a UTM (`?fitaf_probe=1`): whether the store's app keeps a landing query (`location.search` at the
+   Footer's injection and after the app settles), so the Advisor knows whether Google Analytics sees the marker.
+   Committed as `storefront/probe-prices/<date>/`, its README the findings; nothing reads it.
+8. **§ 35's link goes.** `a#fitaf-save` and its words (`handoff.save`) are removed: its target, `eatfitaf.com/#save`,
+   would now be redirected to the store. § 33's hidden row and its contact link, `zero`, fill C and every other rule
+   are unchanged.
+9. **One paste.** The struck prices are their own source file (`src/storefront/fitaf-struck.js`, its own function),
+   shipped in the same Footer block after the hand-off's script, so one paste carries both; the hand-off's first line
+   (*"An ordinary visit costs this one read of location.hash"*) stays true of the hand-off.
+10. **The watch.** W11's save-link clause goes (step 3's controls as before § 35); W28 reports the save link ABSENT;
+    F2 gains the price elements' literals; a new **W29**, a pass rule: with `fitaf_struck` set by the smoke's init
+    script (never a UTM), each surface the smoke reaches shows each of its prices' struck figure exactly once, equal to
+    item 3's rule while the offer is current (the smoke's own date), and none outside it. The build states which of
+    the four the smoke reaches (the deep-carted checkout hides the Plan Total row, H15).
+11. **Cases**, in the watch package's stand-in store and the site's block cases, written first and run red: **ST1**
+    marked: each stand-in surface's prices struck, each figure item 3's; **ST2** unmarked: none, and no observer made;
+    **ST3** marked on landing, a later page without the parameter: still struck; **ST4** a date before `valid_from` and
+    after `valid_to`: none; **ST5** a redraw (the price's text changed, its element replaced, the list re-ordered): one
+    each, correct; **ST6** the excluded figures (a fee, tax, tip, discount, the Total, `+$2.00`): none; **ST7**
+    `aria-hidden` and no text but the figure; **ST8** step 3 without the save link; **ST9** at 390 and 1280 the struck
+    figure overlaps nothing of the store's and nothing of the store's moves after it appears (beyond the line it sits
+    on). **Mutants**, each in a mirror and killed by its own case: the figure as price × 0.75 (ST1); shown without the
+    marker (ST2); shown after `valid_to` (ST4); added twice on a redraw (ST5).
+12. **Bytes**: within § 32's 50,000 characters; before and after stated.
+13. **The block** `storefront/footer-block/2026-10-27-fitaf-handoff-<commit>.md`, built from this branch; merged into
+    the dev line; rehearsed live by the orchestrator (headless, the marker by init script, nothing submitted, § 29's
+    way); pasted by the Advisor; the live smoke at once; then `accept --footer`. It can be pasted before or after the
+    redirect is live: without the marker it does nothing.
