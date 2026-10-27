@@ -2247,3 +2247,101 @@ one per price, kept true, the store's elements untouched) applies to each new su
 7. **The block**: rebuilt, `storefront/footer-block/2026-10-27-fitaf-handoff-<commit>.md`; rehearsed live by the
    orchestrator (`probe-prices --script`, `smoke --script`); pasted by the Advisor before tonight's event (Boston,
    19:20 Eastern); the live smoke at once; accepted.
+
+### 37.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 37 above is unchanged. The probe and the cases at `c143468`, red on the unchanged block; the code at `10833c1`; the watch
+at `fc2748b`; the Footer block file `storefront/footer-block/2026-10-27-fitaf-handoff-10833c1.md` (*built, not pasted*)
+at `fa1514c`; the rehearsal probe's expected figure by § 37's kinds at `8d83a0a`.
+
+**Measured first (item 5)**: `npm --prefix boston-2026-10/tools/storefront-watch run probe-prices`, once per width, on the
+live store, 2026-10-27T19:21:36Z → 19:22:37Z (12:21–12:22 PDT), release **`main-MWPYUGIN.js`** (again a new one), Lean 7,
+the marker by init script, no `utm_` address, nothing typed, nothing pressed in the pop-up or on `/checkout`:
+`storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json` and `run-20261027T192207Z-390.json`. The probe now
+presses the first plan card's own *Choose* on `/meal-plans`, fills the cart as a visitor would (the first meal six times,
+its Add to Cart and then its "+", and a second once), reads the extras pop-up its CHECKOUT opens and presses nothing in
+it, then loads `/checkout` by its address (the cart was kept).
+
+- **The size picker is on `/meal-plans` itself**: *Choose Lean* moved nothing. Each size is a `button` (a grid, centred)
+  in `div.meal-plan__fit-af-meal-options` (a desktop and a phone `section.meal-plan__fit-af-meals`, one hidden),
+  holding its count and a `span` *"$13.00/meal"* (12 px, one text node).
+- **The extras pop-up**: `app-extra-products-dialog`, 29 extras, each `span.popular-card__price` (15 px at 1280, 13 at
+  390) in `div.popular-card__info` (a column), one *"$0.00"*.
+- **The Additions**: `span.product__content-price` on the desktop card, plain (*"$9.00"*); the phone card's
+  `span.product-card-mobile__price` reads *"From $9.00"* on most.
+- **The summary**: a line's `span.summary__item-price-current` (*"$75.00"*) and, above one, `span.summary__item-price-unit`
+  *"6 × $12.50"* (11 px, **one text node**), both in `div.summary__item-price` (a column, right-aligned); the cart's
+  `span.product__price-original` (*"$75.00"*, 10 px); the Subtotal the first `.summary__row` (*"Subtotal | 7 items"*,
+  *"$87.50"*, a space-between row); Shipping *"—"*, Tax *"$0.00"*; the header's `span.summary__total-preview` (in
+  `div.summary__header-right`); the Total's `span.summary__total-value`.
+- **§ 36's block was live and striking** for the probe's marked visit: the meal plans page's four, the order page's
+  meals, the cart's figures, the Plan Total, each its item 3 figure (`equal`).
+
+**As built** (`src/storefront/fitaf-struck.js`): `cents()` reads one plain price or a `$X/meal`; `up()` is item 3's rule;
+the targets are each an element and its figure's function: plain (`.meal-plan__fit-af-price>strong`,
+`.meal-plan__fit-af-meal-options button>:not(.fitaf-was)`, `.product__content-price`, `.product-card-mobile__price`,
+`app-cart .segment-price`, `app-cart-product-card .product__price-original`, `.mobile-cart-summary__stat-value`,
+`app-extra-products-dialog .popular-card__price`, `.summary__item-price-current`, `.summary__plan-total-value`, and each
+`.summary`'s Subtotal: the `.summary__row` whose label starts *Subtotal*, its last child), `unit` (`.summary__item-price-unit`:
+`N × $X`, its `$X`'s figure) and `tot` (`.summary__total-preview`, `.summary__total-value`: `t + up(b) - b`, `b` the
+Subtotal of the same `.summary`; no Subtotal, or not one plain price: nothing). A figure in a row spread by
+`space-between` (the Subtotal and Total rows, the card's meta row) takes the free width, right-aligned, by the parent's
+computed style.
+
+**What § 37 was silent on, and what was built** (stated, not ruled):
+
+1. **The unit price is one text node**, so *"7 × ~~$18.67~~ $14.00"* cannot be drawn without changing the store's
+   element. The `$X`'s struck figure is the line above *"N × $X"* in the line's price column (below the line's own struck
+   price and price): *"~~$100.00~~ / $75.00 / ~~$16.67~~ / 6 × $12.50"*.
+2. **The size's figure is inside the size's button**, a grid row above *"$13.00/meal"* (inserted; the button and its
+   children untouched); its text the `$X` alone.
+3. **"Each line's price" of the cart's summary** read as the order page's sidebar lines too (`product__price-original`,
+   10 px, the figure 8 px).
+4. **Not struck, not named**: the checkout's phone bar *"Total"* (`.summary__stat-value`, a total); the order page's
+   cart figures keep § 36's rule (that page has no Subtotal and no fee).
+5. **The totals' Subtotal is the closest `.summary`'s**; the header's total and the Total row are in one `.summary` on the
+   live checkout.
+6. **The free extra (*"$0.00"*), a *"From"* price and an add-on's *"+$"***: nothing, as item 3 reads them.
+7. **W29 reaches** the order page's cards (meals and Additions) and the cart under the progress screen, and on the
+   deep-carted checkout the lines, unit prices and Subtotal (in the page, hidden by H11 and H9), the Plan Total (hidden,
+   H15) and the totals (the Total row displayed); never the size picker (the smoke never visits `/meal-plans`) nor the
+   pop-up (the hand-off's key skips it).
+8. **Case readings § 37 made stale, amended**: ST1's and the site's ST1/ST4's counts (the five sizes, the Additions'
+   plain prices); ST6 (§ 37 withdraws the Additions' exclusion: now the order page's add-on, *From* and button prices);
+   ST7's count; ST9's overlap (a store element holding a figure, the size's button, is its container); the one-figure
+   check is the run right before a price (a line's price and its unit share a column); W29b; PP1, PP2.
+9. **The rehearsal probe's `expected`** follows the kinds (a unit's `$X`, a total's rule), found when the watch's suite
+   failed PP1 and PP2 at `fa1514c` (fixed at `8d83a0a`).
+
+**Red, then green** (each `nice -n 15`):
+
+| | command | red (`c143468`, the block unchanged) | green |
+|---|---|---|---|
+| the site's ST | `node --test boston-2026-10/test/r2-st-struck.test.mjs` | `# tests 8`, `# pass 5`, `# fail 3` | with `r2-04-no-fragment`: `# tests 36`, `# pass 36`, `# fail 0` (`10833c1`'s tree) |
+| the watch's ST | `node --test boston-2026-10/tools/storefront-watch/test/st-struck.test.mjs` | `# tests 21`, `# pass 6`, `# fail 15` | `# tests 21`, `# pass 21`, `# fail 0` |
+
+The five mutants, each in a mirror built by its own build, all killed: **§ 37's, a total marked up whole**
+(`t + up(b) - b` → `up(t)`: ST13 fails, *"with shipping 500: the total + (the struck Subtotal - the Subtotal)"*), and
+§ 36's four. ST13 and the site's ST12/ST13 hold the contract's figures: with shipping $5.00, $103.00 → $135.67; without,
+$98.00 → $130.67; the Subtotal $98.00 → $130.67; *"7 × $14.00"* → $18.67; no Subtotal, no struck total.
+
+**Gates** (each `nice -n 15`, one at a time, 2026-10-27):
+
+- **The block's site family** (`r2-*`, `fc-*`, `sn-*`, CC-8, PR-10, MS-9, B2), at `10833c1`'s tree, 12:33 PDT:
+  `# tests 378`, `# pass 378`, `# fail 0`.
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`): at `fa1514c`, `# tests 281`, `# pass 279`,
+  `# fail 2` (PP1, PP2: item 9 above); at `8d83a0a`, 12:46 → 12:52 PDT, `# tests 281`, `# pass 280`, `# fail 1` (P1:
+  *"Target.setAutoAttach timed out"*, Chrome's start under load); P1 alone `# tests 3`, `# pass 3`. `w29-struck` 4 of 4;
+  `probe-prices-script` 3 of 3.
+- **Storybook**, the four files that read the block, at `8d83a0a`'s tree: `# tests 21`, `# pass 21`, `# fail 0`.
+- Not run: the whole site suite (§ 37 touches only the storefront code; its files outside the family are unchanged since
+  § 36.1's run); the live smoke and the `--script` rehearsal (the orchestrator's); F2 against the live release's files.
+
+**The size, the pins.** The Footer block **24,589 → 25,697** bytes (`91b875e` → `10833c1`), the console file **24,570 →
+25,678**; the cap 50,000. Text SHA-256 `57f816db…` → `d278789f9eb39cec94c42877bdda64f5bd7e4e4e5ada233f1bd677b22ddf712e`;
+the Footer block's SHA-256 `b2799bf000a26bf455772781913ceed8d6304a018cdb631fdbb51b9d590dc1ad`. R2-32, PR-10 and CC-8's
+`footer_text_sha256` moved. F2 gains nine literals read by the probe (§ 37's surfaces), not yet in the release's files.
+
+**Left**: the orchestrator's rehearsal (`npm --prefix boston-2026-10/tools/storefront-watch run probe-prices -- --script
+boston-2026-10/storefront/footer-block/2026-10-27-fitaf-handoff-10833c1.md --out <a directory>`, and `smoke --script`);
+the Advisor's paste before 19:20 Eastern; the live smoke at once; `accept`.
