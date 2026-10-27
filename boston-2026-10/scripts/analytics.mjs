@@ -2,7 +2,8 @@
 // page's analytics, per day of America/New_York (§ 2's day, the salt's: ruled 2026-10-13), read from Workers Analytics Engine's SQL API.
 // The dates are New York dates; the SQL reads them in that zone (formatDateTime's and toDateTime's time-zone argument,
 // the engine's own zone arithmetic, so a day across a DST change is 23 or 25 hours). Aggregates only, never a row per visit: every query groups
-// by day, and a visit's id (`s`, blob2) and a visitor's (`v`, index1) are read only inside count(DISTINCT …).
+// by day, and a visit's id (`s`, blob2) and a visitor's (`v`: since § 15 blob12, index1 on the rows written before it) are
+// read only inside count(DISTINCT …).
 //
 //   CLOUDFLARE_ANALYTICS_TOKEN   a read-only token ("Account Analytics Read"), the operator's, never in this repository
 //   CLOUDFLARE_ACCOUNT_ID        the account (as for wrangler); never committed
@@ -57,6 +58,9 @@ export function queries({ dataset, from, to }) {
   const range = `timestamp >= toDateTime('${from} 00:00:00', ${zone}) AND timestamp < toDateTime('${nextDay(to)} 00:00:00', ${zone})`;
   const where = (event) => `WHERE ${range}${event ? ` AND ${col("event")} = '${event}'` : ""}`;
   const visits = `count(DISTINCT ${col("s")})`;
+  // § 15 item 3: a row's visitor is blob12 since § 15, else (a row written before it, blob12 never written) index1, so a
+  // window holding both layouts counts each visitor where it is.
+  const visitors = `count(DISTINCT if(${col("v")} = '', index1, ${col("v")}))`;
   const quartiles = (field) =>
     [0.25, 0.5, 0.75]
       .map((q, i) => `quantileExactWeighted(${q})(${col(field)}, _sample_interval) AS ${["q1", "median", "q3"][i]}`)
@@ -64,7 +68,7 @@ export function queries({ dataset, from, to }) {
   const split = (field) =>
     `SELECT ${day} AS day, ${col(field)} AS value, sum(_sample_interval) AS visits FROM ${dataset} ${where("open")} GROUP BY day, value ORDER BY day FORMAT JSON`;
   return {
-    visitors: `SELECT ${day} AS day, count(DISTINCT index1) AS visitors, ${visits} AS visits FROM ${dataset} ${where()} GROUP BY day ORDER BY day FORMAT JSON`,
+    visitors: `SELECT ${day} AS day, ${visitors} AS visitors, ${visits} AS visits FROM ${dataset} ${where()} GROUP BY day ORDER BY day FORMAT JSON`,
     steps: `SELECT ${day} AS day, ${col("event")} AS event, ${col("question")} AS question, ${visits} AS visits FROM ${dataset} ${where()} GROUP BY day, event, question ORDER BY day FORMAT JSON`,
     clicks: `SELECT ${day} AS day, ${col("link")} AS link, ${visits} AS visits FROM ${dataset} ${where("click")} GROUP BY day, link ORDER BY day FORMAT JSON`,
     length: `SELECT ${day} AS day, ${quartiles("length_ms")}, sum(_sample_interval) AS n FROM ${dataset} ${where("leave")} GROUP BY day ORDER BY day FORMAT JSON`,

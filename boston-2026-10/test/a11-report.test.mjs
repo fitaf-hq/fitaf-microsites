@@ -70,6 +70,23 @@ const EXPECTED = `Fit AF microsite analytics: fitaf_microsite_analytics_prod, 20
   no data
 `;
 
+/** `sql` without each count(DISTINCT …), its argument read to its closing parenthesis (nested ones included). */
+function withoutDistinctCounts(sql) {
+  let out = "";
+  let i = 0;
+  for (let at; (at = sql.indexOf("count(DISTINCT ", i)) >= 0; ) {
+    out += sql.slice(i, at);
+    let depth = 0;
+    let j = at + "count".length;
+    for (; j < sql.length; j++) {
+      if (sql[j] === "(") depth++;
+      else if (sql[j] === ")" && --depth === 0) break;
+    }
+    i = j + 1;
+  }
+  return out + sql.slice(i);
+}
+
 async function fixtures() {
   return Object.fromEntries(await Promise.all(NAMES.map(async (n) => [n, await readFile(join(FIXTURES, `${n}.json`), "utf8")])));
 }
@@ -109,8 +126,10 @@ test("A11: the per-day report from a fixture SQL response, aggregates only", asy
     assert.match(r.body, /formatDateTime\(timestamp, '%Y-%m-%d', 'America\/New_York'\) AS day/, "grouped by the New York date");
     assert.doesNotMatch(r.body.replace(/'America\/New_York'/g, ""), /toDateTime\('[^']*'\)|formatDateTime\(timestamp, '[^']*'\)/, "no date read in UTC");
     assert.match(r.body, /\bGROUP BY\b/, "aggregated");
-    const outside = r.body.replace(/count\(DISTINCT (blob2|index1)\)/g, "");
-    assert.doesNotMatch(outside, /\b(blob2|index1)\b/, `s and v only inside count(DISTINCT …): ${r.body}`);
+    // Since SPEC-analytics.md § 15 item 3 the visitor is blob12 (index1 for the rows written before it): every
+    // count(DISTINCT …) removed, its argument with its own parentheses, none of the three is left.
+    const outside = withoutDistinctCounts(r.body);
+    assert.doesNotMatch(outside, /\b(blob2|blob12|index1)\b/, `s and v only inside count(DISTINCT …): ${r.body}`);
   }
   assert.doesNotMatch(out, /\b[0-9a-f]{16}\b/, "no visit or visitor id in the report");
 });

@@ -49,6 +49,12 @@ export const VALID = {
   save: { event: "save", s: S1 },
 };
 
+/** SPEC-analytics.md § 15 item 2: the visitor `v` is a data point's blob12 (it was index1, which is now the point's own
+ *  random index): the twelfth blob, its place in § 10's layout written here. */
+export const V_BLOB = 11;
+/** A written data point's visitor (§ 15 item 2: its blob12). */
+export const visitorOf = (point) => point.blobs?.[V_BLOB];
+
 /** The page `npm run build` (or `build:dev`, target "dev") writes, of the package at `root`; with `week`, the fixture
  *  week's content in its #picks-data as the Workers put it (cc-harness pageWithPicks). */
 export async function builtPage({ root = ROOT, target = "prod", week = false, savePath } = {}) {
@@ -78,8 +84,12 @@ const STORAGE = ["localStorage", "sessionStorage", "indexedDB"];
  * (Date.now and new Date, cc-harness clockAt; omitted, the real one), on which the step chooses its offer; `globals`, the
  * browser's own objects a case stands in for (uc-harness saveStubs' Turnstile and fetch), as cc-harness openPlanPage
  * takes them; and the window's `Event`, linkedom's, as a browser's window has one.
+ * Since SPEC-analytics.md § 15 item 4 (a plan shown at load read after the page's first draw): `DOMContentLoaded` is
+ * dispatched at the document (and the window, where it bubbles) once every inline script has run, as a browser does; and
+ * `yieldBetweenScripts` lets the page's timers run after each inline script, before the next: the parser paused between
+ * two scripts, where a browser may run a timer the first one set (the analytics script's, before app.js has drawn).
  */
-export function openVisit(html, { hash = "", search = "", width = 390, clock = 0, date, globals = {} } = {}) {
+export function openVisit(html, { hash = "", search = "", width = 390, clock = 0, date, globals = {}, yieldBetweenScripts = false } = {}) {
   const { document, Event } = parseHTML(html);
   const beacons = [];
   const touched = [];
@@ -169,7 +179,10 @@ export function openVisit(html, { hash = "", search = "", width = 390, clock = 0
     } catch (error) {
       report(error);
     }
+    if (yieldBetweenScripts) flush();
   }
+  document.dispatchEvent(new Event("DOMContentLoaded", { bubbles: true }));
+  fire("DOMContentLoaded", { type: "DOMContentLoaded" });
   flush();
   const el = (id) => {
     const found = typeof id === "string" ? document.getElementById(id) : id;

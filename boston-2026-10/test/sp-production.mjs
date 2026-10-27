@@ -314,6 +314,11 @@ export const LATER = [
   // pages carrying the step, which this page is not) and the Worker by its vocabulary (src/worker/beacon.js: `save`), from
   // e1dda21 (its contract) to 1fb4831 (its code, one commit); every hunk is taken.
   ["e1dda21", "1fb4831", ["src/analytics.js", "src/worker/beacon.js"]],
+  // SPEC-analytics.md § 15 (2026-10-26: no data point thinned, and a plan shown at load read after the page's first draw)
+  // moves the production page with `production` false by the analytics script's DOMContentLoaded read (src/analytics.js)
+  // and the Worker by its data point (src/worker/beacon.js: each point's own index, `v` as blob12), from 23e7653 (its
+  // contract) to 3f40698 (its code, one commit); every hunk is taken.
+  ["23e7653", "3f40698", ["src/analytics.js", "src/worker/beacon.js"]],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */

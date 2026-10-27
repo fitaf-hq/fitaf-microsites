@@ -129,13 +129,14 @@ export async function storedSaveProblems(root = ROOT) {
 }
 
 /** § 3's data point layout (§ 10's table), written here: blob1–blob11 event, s, country, device, viewport, qr, question,
- *  answer, key, link, step; double1–double3 load_ms, length_ms, mpid. */
-const BLOB_COUNT = 11;
+ *  answer, key, link, step, and since § 15 item 2 blob12 the visitor `v`; double1–double3 load_ms, length_ms, mpid. */
+const BLOB_COUNT = 12;
 const DOUBLE_COUNT = 3;
 
 /** SV1, the Worker's half (§ 14 item 1: "the data point's layout is unchanged"): a `save` posted to production's Worker
  *  and the development Worker is a 204 and one data point, blob1 the event, blob2 the visit, the country and device the
- *  Worker's, every other blob "" and every double 0, its index a visitor `v`. */
+ *  Worker's, blob12 a visitor `v` (§ 15 item 2), every other blob "" and every double 0, its index 16 hex digits (§ 15
+ *  item 1: the point's own). */
 export async function saveDataPointProblems(root = ROOT) {
   const problems = [];
   for (const entry of ["site", "index"]) {
@@ -151,10 +152,11 @@ export async function saveDataPointProblems(root = ROOT) {
       }
       const [point] = points;
       // The harness's user agent is an iPhone's (a-harness TEST_UA): the device class `phone`.
-      const blobs = [SAVE, S1, "US", "phone", ...Array(BLOB_COUNT - 4).fill("")];
+      const v = point.blobs?.[BLOB_COUNT - 1];
+      const blobs = [SAVE, S1, "US", "phone", ...Array(BLOB_COUNT - 5).fill(""), /^[0-9a-f]{16}$/.test(String(v)) ? v : "<a v>"];
       if (!isDeepStrictEqual(point.blobs, blobs)) problems.push(`${entry}: blobs ${JSON.stringify(point.blobs)}, not ${JSON.stringify(blobs)}`);
       if (!isDeepStrictEqual(point.doubles, Array(DOUBLE_COUNT).fill(0))) problems.push(`${entry}: doubles ${JSON.stringify(point.doubles)}, not all 0`);
-      if (point.indexes?.length !== 1 || !/^[0-9a-f]{16}$/.test(point.indexes[0])) problems.push(`${entry}: indexes ${JSON.stringify(point.indexes)}, not one v`);
+      if (point.indexes?.length !== 1 || !/^[0-9a-f]{16}$/.test(point.indexes[0])) problems.push(`${entry}: indexes ${JSON.stringify(point.indexes)}, not one of 16 hex digits`);
     } finally {
       await site.dispose();
     }

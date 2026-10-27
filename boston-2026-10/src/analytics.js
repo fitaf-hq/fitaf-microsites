@@ -85,6 +85,9 @@ var QR_IDS = /*QR_IDS*/[];
   }
   w.addEventListener("hashchange", function () { w.setTimeout(result, 0); });
   w.setTimeout(result, 0);
+  // § 15 item 4: once more after every inline script has run, app.js included. A page opened at a whole answer set shows
+  // its plan as app.js runs, and the timer above can run before that, while the parser is paused before app.js.
+  d.addEventListener("DOMContentLoaded", result);
   // `save` (§ 14): the save step (src/save/flow1.js) tells this script, by `fitaf:saved` on document with no detail, that
   // its Worker answered an offer save as stored. `s` only; not a step of the funnel, so `leave`'s deepest is unchanged.
   d.addEventListener("fitaf:saved", function () {

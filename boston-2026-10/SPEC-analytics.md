@@ -936,3 +936,165 @@ T5's ceiling is 61,440 bytes gzip; the largest page is 35,857.
 
 **Not done here**: the whole suite, Storybook, the watch and contrast (no colour or style changed); nothing deployed, no
 merge, no pin.
+
+## 15. Amendment, 2026-10-26: no data point thinned (each its own index), and a result read after the page's first draw. CONTRACT, before any code
+
+**Why.** Measured the evening of Boston's first event (Fit AF's decision record `2026-10-17-…` § 7u item 26): since
+2026-10-26 00:00 Eastern, 9 of 52 `result` rows, 26 of 149 `answer` rows and 4 of 60 `open` rows carry
+`_sample_interval` 2, each standing for a point Analytics Engine did not keep. Cloudflare's sampling page: *"At write
+time, we sample if data points are written too quickly into one index"*, and the index is § 4's `v`. A visit's `result`
+goes 4–16 ms after its meal-size `answer`, into the same index, and a venue's Wi-Fi gives every phone of one iOS
+version the same `v`. So 3 of 7 plans reached that evening had no `result`. A reproduction on the release line
+(Chrome and WebKit, throttled; the Worker in Miniflare) sent and wrote every one: the page and the Worker are right, and
+the store thins what they write. The Advisor: *"We are all clear for updates now that the event is over"*, *"Please
+merge as needed"* (2026-10-26).
+
+1. **Each data point its own index.** `dataPoint` (§ 4) writes `indexes: [<16 random hex digits, new for each point>]`
+   (`crypto.getRandomValues`), never the same value twice by design, so no index is ever written to twice and write-time
+   sampling has nothing to thin at this page's volume. The index identifies nothing: it is not stored anywhere else and
+   is never read by the report.
+2. **The visitor moves to a blob.** `BLOBS` gains `v` as **`blob12`**, appended: blobs 1–11 keep their places, so every
+   query of § 5 and § 11 reads what it read. `v` itself is unchanged (§ 2: the salted hash, its salt per New York day).
+   ⛔ Still no IP and no user agent in any field (A4 reads the new blob too).
+3. **The report** (`scripts/analytics.mjs`): `visitors` counts `count(DISTINCT if(blob12 = '', index1, blob12))`, so a
+   window holding rows of both layouts (before and after this release) counts each row's visitor where it is. Nothing
+   else in its queries changes. AJ1–AJ4 hold; AJ2's base moves with this section.
+4. **A plan shown at load is read after the page's first draw.** `src/analytics.js`'s `result()` also runs once on
+   `DOMContentLoaded` (after every inline script, `app.js` included, has run), besides its `setTimeout(result, 0)` and
+   `hashchange`. Today a page opened at a fragment carrying a whole answer set (a reload, a restored tab, Back from the
+   store without the page cache, a shared link) shows the plan and sends no `result`: the timer runs while the parser is
+   paused between the analytics script and `app.js`, before `app.js` has drawn it. `shown` still keeps one `result` per
+   plan shown.
+5. **Cases**, written first and run red:
+   - **IX1**: through the Worker (`a-harness.mjs`'s `startBeacon`, both entries), a visit's seven events give seven
+     data points with seven different indexes, each 16 hex digits, and `blob12` the visit's `v` on every one (the same
+     `v` A5 computes today).
+   - **IX2**: A4's search for the IP and the user agent covers `blob12` and the index.
+   - **IX3**: the report's `visitors` over a fixture holding rows of both layouts counts each visitor once.
+   - **IX4**: the page opened at `#lean-and-7d` (the whole answer set) sends `result` (`and-7d`, its mpid) with no tap,
+     in the stub where the analytics script runs before `app.js` as on the built page; and the plan shown, then a tap
+     elsewhere that changes nothing, sends no second `result`.
+   - A5 and A6 move from `index1` to `blob12` (their meaning unchanged: one visitor a day, a salt's expiry).
+   **Mutants**, each in a mirror and killed by its own case: the index written as `v` (IX1); `blob12` left empty (IX1);
+   the `DOMContentLoaded` read dropped (IX4).
+6. **When.** Built on `boston/analytics-index` (from the release line `a5d3ae2`), merged into `boston/release-c`, the
+   full site suite and Storybook, then dev, then production. ⛔ No Footer block moves; the week's content is not re-run.
+   The team's dashboard (Fit AF `scripts/analytics-tool/`) reads `v` the same way in its own contract (§ 10).
+
+### 15.1 Built (2026-10-26)
+
+§ 15 is unchanged. On `boston/analytics-index`: the cases at `5a129e0` (on `23e7653`'s code, red), the code at `3f40698`,
+the goldens and bases it moves at `dc2f3c7`, this section after them.
+
+**What was built**: `src/worker/beacon.js`'s `dataPoint` writes `indexes: [pointIndex()]`, 16 random hex digits from
+`crypto.getRandomValues`, new for each point, and `BLOBS` gains `v` as blob12, appended. `scripts/analytics.mjs`'s
+`visitors` query counts `count(DISTINCT if(blob12 = '', index1, blob12))`; nothing else in its queries changes, and its
+text and JSON are unchanged for the same answers. `src/analytics.js` adds `d.addEventListener("DOMContentLoaded", result)`
+beside its timer and `hashchange`; `shown` is unchanged.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named; the whole suite was not run, as the
+orchestrator asked: it runs once on the merged release line):
+
+| | before | after |
+|---|---|---|
+| `test/ix*.test.mjs` (IX1–IX4, the mutants and their control) | `5a129e0`: `# tests 8` `# pass 0` `# fail 8` | `3f40698`: all eight pass, within the next row's run; `dc2f3c7`: `# tests 8` `# pass 8` `# fail 0` |
+| `test/a*.test.mjs test/n*.test.mjs test/sv*.test.mjs test/ix*.test.mjs` | `23e7653` (without `ix*`): `# tests 80` `# pass 80` `# fail 0`; `5a129e0`: `# tests 88` `# pass 72` `# fail 16` | `3f40698`: `# tests 88` `# pass 88` `# fail 0`; `dc2f3c7`: `# tests 88` `# pass 88` `# fail 0` |
+| the goldens' readers (CC-8, MS-9, PR-10, S20, CC-4, PV5, SP3, U4, and WC-8, WC-9, QE15, T5, S18, the budget, SP5) | `23e7653`: `# tests 42` `# pass 42` `# fail 0` | `3f40698`: `# tests 42` `# pass 29` `# fail 13` (every reader of S20, CC-8, PV5, U4 and SP3's base); `dc2f3c7`: `# tests 42` `# pass 42` `# fail 0` |
+| the last run, once, on the tree committed as `dc2f3c7` | | 132 files (`test/a*`, `n*`, `sv*`, `ix*`, `s[0-9]*`, `sp*`, `uc*`, `uf*`, `uq*`, and CC-4, CC-8, EM5, MS-9, MS-10, MS-20, PR-10, PV5, U4, W4, WC-8, WC-9, QE15, T5, the budget, P1): `# tests 445` `# pass 445` `# fail 0` |
+
+Red for the right reasons. IX1: `site: 7 data points share 1 index(es)`, `its index is the visitor's v`, `11 blobs, not 12`,
+`blob12 undefined, not the visit's v` (`index` the same). The `v` the case computes from § 2 was the old index1 on
+every point, so "the same `v` A5 computes today" was measured, not assumed. IX2, on its control: `data point 1: 11 blobs and 1
+index(es), not 12 and 1 (control: the fields A4 reads)`; its four planted searches found each needle. IX3: `2026-10-26: the
+report's visitors, count(DISTINCT index1), over the fixture`, 5, not 3. IX4: `prod, #lean-and-7d, the timer run between the
+scripts: sent no result with no tap, not result and-7d 23` (dev the same). Where the timer ran after every script it
+sent one. The mutants' control on IX1 and IX4, and the three mutants on their anchors. Of the existing cases, by § 15
+item 2: A4's control (`v (blob12): 16 hex digits`), A5 three times (`control: the data point's v (blob12)`), A6 three
+times (`control: the first event's v`) and SV1's Worker half (eleven blobs, not twelve). A11 and AJ2 passed before the
+code and after it, as they should.
+
+**The mutants** (`test/ix-mutants.test.mjs`, each in a mirror through THE SAME check its case runs, `test/ix-checks.mjs`;
+the tracked tree untouched, `git status` clean after every run): the control (the unchanged mirror) passes IX1 and IX4, 0
+problems (IX2 too, 0, measured in the same mirror by a scratch run, not asserted by the file). The index written as `v`
+fails IX1, 16 problems: `site: 7 data points share 1 index(es)` and `data point N (…): its index is the visitor's v` for
+each of the seven (`index` the same). `blob12` left empty fails IX1, 14 problems: `site: data point N (…): blob12 "", not
+the visit's v <v>` for each of the seven (`index` the same). The `DOMContentLoaded` read dropped fails IX4, 2 problems:
+`prod, #lean-and-7d, the timer run between the scripts: sent no result with no tap, not result and-7d 23` (dev the same).
+
+**The goldens and bases moved** (each re-recorded once from `3f40698`'s own tree, `git archive`, the package's
+`node_modules` linked in; each recorder's control first reproducing the committed record):
+
+- CC-8 (CC-8b, CC-8c, MS-9, PR-10): one entry, `src/worker/beacon.js` `a5331c5d…` → `b21f8e51…`; none added or removed.
+  `cc-harness` `workerFiles` over `5a129e0`'s tree reproduces the committed map (35 files).
+- S20 (and CC-4; SP3's S20 case): `index.html` alone, `5270858d…` → `2dc1bbd4…`, 80,046 → 80,094 bytes (production
+  false), by the one line. Built as S20 builds it, `5a129e0`'s tree reproduces `5270858d…`.
+- PV5 (`pv-05-record.mjs --commit 3f40698 --release-a`; at `1fb4831` it reproduces the committed record byte for byte, at
+  `5a129e0` the same record but `recorded_at`): the same five pages, +48 bytes each.
+- U4 (`u-04-record.mjs --commit 3f40698 --release-a --without-snack-cells`; with both flags at `1fb4831` it reproduces the
+  committed record byte for byte, at `5a129e0` the same record but `recorded_at`): the six pages, +48 bytes each; all six
+  contents and every visible page byte-identical.
+- SP3's base (`sp-production.mjs` `LATER`): `23e7653`..`3f40698` over `src/analytics.js` and `src/worker/beacon.js`.
+  `patch --dry-run --verbose` over the base before the entry exits 0 with no fuzz: `analytics.js`'s hunk lands at an
+  offset of −2 lines, `beacon.js`'s three exactly. The patched base's `analytics.js` is `3f40698`'s but for § 9 item 2's
+  lines, and its `beacon.js` is `3f40698`'s.
+- AJ2's base: `1fb4831` → `3f40698`, as § 15 item 3 says. The text did not move: AJ2 passed at `3f40698` against
+  `1fb4831` before the base moved.
+- Not moved: WC-8, WC-9, QE15, T5, S18, the budget, MS-20, W4, EM5; the preview build (built at both trees: byte-identical).
+
+**The page's bytes** (every page the builds write, `test/page-budget.mjs`'s gzip; `5a129e0`, `23e7653`'s code →
+`3f40698`): each page that carries the analytics slot gains 48 bytes raw. The build keeps the `DOMContentLoaded` line and
+removes its comments and indentation. Both trees' pages were compared line by line: that line alone, no visible word.
+privacy/ and why/ are unchanged.
+
+| build | page | raw | gzip |
+|---|---|---|---|
+| production (as committed, `production` true) | `index.html` | 115,703 → 115,751 | 33,971 → 33,986 |
+| production with `production` false | `index.html` | 80,046 → 80,094 | 23,836 → 23,852 |
+| development | `index.html`, `demo/` | 122,572 → 122,620 | 35,855 → 35,871 |
+| development | `boston/` | 122,574 → 122,622 | 35,852 → 35,869 |
+| development | `seminar/` | 122,575 → 122,623 | 35,857 → 35,873 |
+
+T5's ceiling is 61,440 bytes gzip; the largest page is 35,873.
+
+**What § 15 was silent on, and what was built** (stated, not ruled)
+
+1. **The case files are `ix1`–`ix4`**, with `ix-checks.mjs` and `ix-mutants.test.mjs`; `test/a*.test.mjs` does not take
+   them, so the brief's set names `test/ix*.test.mjs` beside it.
+2. **IX1's `v`** is computed in the case from § 2 and § 10 item 8. It takes the salt the Worker wrote (the harness records
+   the write), the request's IP, user agent and host, joined by a newline, and the first 16 hex digits of SHA-256 over
+   them. IX1 also refuses an index equal to `v`, so "seven different indexes" cannot hold of a Worker that writes `v`
+   seven times.
+3. **"Never the same value twice by design"** is 64 random bits per point from Web Crypto in the Worker. A repeat is
+   possible by chance (about one pair in 2^64), not by construction. The index is stored nowhere else and read by nothing.
+4. **The visitor reaches the blobs as `dataPoint`'s field `v`** (`BLOBS`' name). A beacon cannot carry a `v` of its own:
+   `checkedEvent` takes exactly an event's fields, and `v` is none of them. So blob12 is always the Worker's.
+5. **IX2 reads A4's search, factored as `a-checks.mjs` `needlesIn`** (the same needles; A4's messages unchanged). Its
+   control is the layout the search reads (twelve blobs, one index), and its four plants show that it reads those fields.
+6. **IX3 cannot run ClickHouse.** The case takes the report's own `visitors` query, reads its two `count(DISTINCT …)`
+   arguments and evaluates them over invented raw rows. It understands two forms: a column, and `if(column = 'text', a,
+   b)`. Any other form fails the case, naming it. That a blob never written reads as `""` is the contract's reading of
+   Analytics Engine, not a measurement, and the SQL was not run against Cloudflare.
+7. **IX4's stub.** `yieldBetweenScripts` runs the page's timers after each inline script, a model of the parser's pause
+   between scripts. `DOMContentLoaded` is now dispatched on every `openVisit`, after the scripts. No page script listened
+   for it before § 15, and every existing case passed with it at `5a129e0`. Every other case still runs its timers after
+   every script, as before.
+8. **IX4's "a tap elsewhere that changes nothing"** is two taps: on the result card (no link) and on the answer already
+   pressed (lunch and dinner), which sends its `answer` and no `result`. "No second result" is shown chiefly where the
+   timer runs after every script: there both reads find the plan, and `shown` keeps one. Its mpid, 23, is read from
+   `data/plans.json` (and-7d's row, plan 14, Lean's 14-meal mpid).
+9. **AJ2's base moved by § 15 item 3's word** though its text did not move.
+10. **A11's aggregates-only check** now removes every `count(DISTINCT …)` argument whole, nested parentheses included, and
+    looks for `blob12` too.
+11. **SV1's Worker half (§ 14's) moved with item 2**: twelve blobs, blob12 a `v`.
+
+**Found, not ruled**
+
+- The stub's `yieldBetweenScripts` is a model. Whether a browser runs the analytics script's timer before `app.js` depends
+  on how its parser yields, and the evidence that it happens is the coordinator's reproduction in Chrome and WebKit. IX4
+  holds the page to one `result` under both orders.
+- Points written before the release keep their layout (index1 the visitor, no blob12). A report window across the
+  release counts both through the `if`. The team's dashboard (Fit AF `scripts/analytics-tool/`) reads `v` by its own
+  contract's § 10 and was not touched here.
+
+**Not done here**: the whole suite, Storybook, the watch and contrast (no colour or style changed); nothing deployed, no
+merge, no pin.
