@@ -1739,3 +1739,63 @@ Put to him with their consequences (`AskUserQuestion`, answered `ts=2026-10-27T1
 4. **Cases**, written first and run red: the footer line present with a token and absent without, in both parts, in
    its place, its link; M21 as amended; the exception passing that pair, another failing pair still failing, and an
    exception without a `ts` refused. Then the goldens it moves.
+
+#### 8.2.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 8.2 is unchanged. On `boston/e1-look`, over the coordinator's `c572ce1` (the emitter's slideshow) and `f48f38e` (EL5's
+mirror): the cases at `a3dc524` (red on `065b216`'s code), the code at `78a677a`, the goldens at `05cc7ac`, B1's
+correction at `c3641d3`, this section after them.
+
+**What was built**
+- `src/worker/messages.js` and `email-style.js`: with a token, E1's footer opens with the consent line, its words and
+  link as before § 8, one `<p>` at the footer's 13px, 8px above its words, its link styled as `eatfitaf.com` is. The text
+  part carries it after *Already ordered?*. Without a token, E1 is § 8's.
+- `scripts/contrast.mjs`: a pair may carry `exception: { ts, ruled }`.
+  - With a ts that is an instant in UTC, that pair alone passes. Its row reads `pass*`, and it is listed under the table
+    with its ts.
+  - Without one, a problem names the pair, and the pair fails.
+  - The same colours declared again are measured strictly.
+- `src/contrast-pairs.json`: the exception, `ts=2026-10-27T15:04:57.804Z`, on `--lean` on `--ink` (*Never frozen.*); the
+  footer's pairs name the consent line.
+- `consent/DRAFT.md` § 3: the line, marked *(only if the box was ticked)*, between *Already ordered?* and the footer's
+  words; item 7's other removal withdrawn and item 4 ruled, both stated.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, run from the package; the whole suite and
+Storybook not run):
+
+| | before | after |
+|---|---|---|
+| the email set: EL1–EL12, M1–M21, S3, S13, SP10–SP12, SP16, SP17, UC4, the SP mutants, B2 | `065b216`'s code with `a3dc524`'s cases: `# tests 119` `# pass 88` `# fail 31` | `78a677a`: `# tests 119` `# pass 117` `# fail 2` (EL1, M14: their records); `05cc7ac`: `# tests 119` `# pass 119` `# fail 0` |
+| the goldens', builds' and contrast table's readers (B1, CC-8, CC-9, EM5, MS-9, P3, P4, P5, PR-3, PR-10, PV5, Q7, QE14, S20, SP2, SP3, SP15, UC13, W4, WC-6, WC-9, WC-10) | `05cc7ac`: `# tests 96` `# pass 95` `# fail 1` (B1, below) | `c3641d3`: `# tests 96` `# pass 96` `# fail 0` |
+| `npm run contrast` | `065b216`: `97 pairs, 96 pass, 1 fail; 0 problem(s).` | `97 pairs, 97 pass, 0 fail; 0 problem(s).`, the pair marked `pass*` and listed with its ts |
+
+Red for the right reasons: no consent line, no exception rule, the lede's pair failing. M8 and S13 failed on a type
+error, `assert.match` given `null`, because the link they read the token from was absent.
+
+**The goldens moved** (from `78a677a`'s own tree, each recorder's control first reproducing the committed record):
+- EL `after` and M14: `e1_ticked` and `e1_held_ticked`. `a3dc524` reproduced both records.
+- CC-8: `messages.js` and `email-style.js`, by this code. And `src/worker/email-photos.json`, changed by `c572ce1` and not
+  recorded there, so CC-8b, CC-8c, MS-9 and PR-10 had failed since that commit. `ac0ec8c` reproduced the committed map.
+- Not moved: PV5, S20, SP3, U4, WC-9.
+
+**The preview** (`npm run build:dev`, `npm run preview:emails`, a local copy whose images are the dev build's files, the
+emitter's GIF among them; nothing loaded from a host): E1's HTML part is 5,099 bytes ticked and 4,673 unticked, both with
+the slideshow. Rendered at 600 and in a 390 px frame.
+
+**What § 8.2 was silent on, and what was built** (stated, not ruled)
+1. **"One small line"**: the footer's own 13px, as its own paragraph, 8px above the footer's words. At 600 it is one
+   line. At 390 it wraps to three lines in the words' column, beside the logo's.
+2. **The exception's rule takes an instant in UTC** (as the archive records a `ts`). A date alone is refused, as no ts is.
+   An exception on a pair that passes anyway is not refused. Not built.
+3. **The ruling's record is the pair's own `exception` object** (`ts`, and `ruled`, its words); the `where` names it too.
+4. **The token** is the one the send step derived all along (`send-due.js` unchanged), now printed again. So the cases
+   that had derived it read it from E1's link again: M1, M7, M11, S3 and SP17 exactly as at `6e0d86f`, and M8, M10, S13,
+   SP11 and SP12's hunks.
+
+**Found at the build, not ruled**
+- ⚠ **B1 had failed since `c572ce1`.** § 8's code copies the manifest's slideshow beside the sheets, as item 2 and S20,
+  SP3 and PV5 require. B1 allowed only what the page loads, and the week's sheets. It was vacuous until the emitter's
+  entry landed: `9af81ba`: `# tests 4` `# pass 4`; `c572ce1`: `# pass 3` `# fail 1`. B1 now names E1's slideshow
+  (`c3641d3`).
+- ⚠ **At § 8.1 two readers of the contrast table were red, not run and not reported**: B2 and SP2, on the lede's pair
+  (`9af81ba`: `# tests 11` `# pass 9` `# fail 2`). Both pass now, by the exception.
