@@ -205,9 +205,14 @@ export function clockAt(now) {
  * page's script starts the carousel's timer: `timers` records each setInterval (none fires by itself; `tick()` fires
  * them) and `reducedMotion` is what matchMedia answers for prefers-reduced-motion. `globals` (SPEC-ui-and-copy-pass § 1,
  * the save step's states) adds the browser's own objects a case stands in for, as page-sim.mjs does: `turnstile`, `fetch`.
+ * Since SPEC-ui-and-copy-pass § 6 (the save dialog opened by a link, `#save`, "once the page's scripts have run"):
+ * `DOMContentLoaded` is dispatched at the document (and the window, where it bubbles) once every inline script has run,
+ * as a browser does; and `before(document)` runs before the first script, for a case standing in for a part of the
+ * browser a script uses at load (uc11-harness openWithDialogs: the dialogs' showModal and close).
  */
-export function openPlanPage(html, { hash = "", now, reducedMotion = false, globals = {} } = {}) {
-  const { document } = parseHTML(html);
+export function openPlanPage(html, { hash = "", now, reducedMotion = false, globals = {}, before } = {}) {
+  const { document, Event } = parseHTML(html);
+  if (before) before(document);
   const listeners = {};
   let current = hash;
   const location = {
@@ -243,6 +248,8 @@ export function openPlanPage(html, { hash = "", now, reducedMotion = false, glob
   if (now !== undefined) g.Date = clockAt(now);
   const context = vm.createContext(g);
   for (const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) vm.runInContext(m[1], context);
+  document.dispatchEvent(new Event("DOMContentLoaded", { bubbles: true }));
+  for (const fn of listeners.DOMContentLoaded ?? []) fn({ type: "DOMContentLoaded" });
   const el = (id) => {
     const found = document.getElementById(id);
     assert.ok(found, `the page has an element #${id}`);
