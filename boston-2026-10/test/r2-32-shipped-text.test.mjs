@@ -40,7 +40,7 @@ import { buildStorefront, STOREFRONT_SOURCE, STRUCK_SOURCE } from "../scripts/bu
  *  on boston/footer-save-offer; then, since SPEC-rung2-progress-and-checkout § 36 (2026-10-27, boston/footer-struck),
  *  the hand-off's text without § 35's save link, followed by the struck prices' own text (src/storefront/fitaf-struck.js,
  *  data/offers.json's offer inlined); since § 37 the struck prices widened (the size picker, extras, the order summary).
- *  Was 57f816db… (§ 36, 91b875e), 75e18ffa… (§ 35, pasted 2026-10-26, 0eb98fe), 86a83551… (§ 33, 2026-10-26: zero's discount row hidden, the link to customer
+ *  Was d278789f… (§ 37, 10833c1, refused by the admin: § 37.2), 57f816db… (§ 36, 91b875e), 75e18ffa… (§ 35, pasted 2026-10-26, 0eb98fe), 86a83551… (§ 33, 2026-10-26: zero's discount row hidden, the link to customer
  *  service; boston/footer-zero-and-contact, not pasted), 3efc8112… (pasted, c31603d), the release line's
  *  (boston/release-c, 2026-10-25): SPEC-rung2-progress-and-checkout §§ 30–31.2
  *  (the photograph's box, the code zero, a coded link without it, the store's page held still) and SPEC-ui-and-copy-pass
@@ -48,7 +48,7 @@ import { buildStorefront, STOREFRONT_SOURCE, STRUCK_SOURCE } from "../scripts/bu
  *  ef5697aa… (round 2 alone, not pasted), 04e43ac0… (the hand-off alone, not pasted), b68257d5…, a8a5970d…, 0a6e9ef1…,
  *  6d36d4bf… (none pasted), efcbc570… (the extra meal, SPEC-rung2-fill-c § 8; pasted, 8b11e54), ad25f93d… (snacks;
  *  pasted, 17c5693), 76871ff9… (§ 27, pasted), b65fb47f… (§ 25), 1e3802b8… (fill C). */
-const SHIPPED_SHA256 = "d278789f9eb39cec94c42877bdda64f5bd7e4e4e5ada233f1bd677b22ddf712e";
+const SHIPPED_SHA256 = "0e259ec17206722b308dff3f7f34fae916c14cf8eff03e1f0a8a28250447b23d";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;

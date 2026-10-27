@@ -95,10 +95,11 @@ function text(e) { return e.textContent.replace(/\s+/g, " ").trim(); }
 // the Total (span.summary__total-value), by `tot`. ⛔ Still never shipping, tax, a tip, a discount, a gift card or the pay
 // button: no row but the Subtotal's is read. The Add to Cart button's own price is still not struck.
 // Each [element, its figure's function]; never one of ours.
-var PLAIN = ".meal-plan__fit-af-price>strong,.meal-plan__fit-af-meal-options button>:not(.fitaf-was),.product__content-price,.product-card-mobile__price,app-cart .segment-price,app-cart-product-card .product__price-original,.mobile-cart-summary__stat-value,app-extra-products-dialog .popular-card__price,.summary__item-price-current,.summary__plan-total-value";
+// § 37.2: the selector is querySelectorAll's argument, never a `name = "..."`: the store's admin reads that as an HTML
+// attribute and refuses a value holding < or > ("Attribute values can't contain < or >", 10833c1's paste; R2-94).
 function prices() {
   var out = [];
-  [].forEach.call(d.querySelectorAll(PLAIN), function (p) { out.push([p, fig]); });
+  [].forEach.call(d.querySelectorAll(".meal-plan__fit-af-price>strong,.meal-plan__fit-af-meal-options button>:not(.fitaf-was),.product__content-price,.product-card-mobile__price,app-cart .segment-price,app-cart-product-card .product__price-original,.mobile-cart-summary__stat-value,app-extra-products-dialog .popular-card__price,.summary__item-price-current,.summary__plan-total-value"), function (p) { out.push([p, fig]); });
   [].forEach.call(d.querySelectorAll(".summary"), function (r) { var e = sub(r.firstElementChild || r); if (e) out.push([e, fig]); });
   [].forEach.call(d.querySelectorAll(".summary__item-price-unit"), function (p) { out.push([p, unit]); });
   [].forEach.call(d.querySelectorAll(".summary__total-preview,.summary__total-value"), function (p) { out.push([p, tot]); });
