@@ -189,13 +189,30 @@ function readPrices(arg) {
     });
   }
   // § 36 item 3's figure for a price's text, written again here (not the block's code): "$87.50" -> "$116.67" at 25 %.
-  const rule = (t) => {
-    const m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)$/.exec(t);
-    if (!m || !share) return null;
-    const c0 = Number(m[1].replace(/,/g, "")) * 100 + Number(m[2]);
-    if (!c0) return null;
-    const c = Math.round((c0 * 100) / (100 - share));
-    return `$${String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",")}.${String(c % 100).padStart(2, "0")}`;
+  // § 37: by the price's kind: "$X" or "$X/meal" item 3's rule; a unit price "N x $X" its $X's; a total (the summary's
+  // header total, its Total) the total + (the struck Subtotal - the Subtotal), the same .summary's, else none.
+  const cents = (t) => {
+    const m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)(\/meal)?$/.exec(t);
+    return m ? Number(m[1].replace(/,/g, "")) * 100 + Number(m[2]) : 0;
+  };
+  const up = (c) => Math.round((c * 100) / (100 - share));
+  const money = (c) => `$${String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",")}.${String(c % 100).padStart(2, "0")}`;
+  const subOf = (root) => {
+    const row = [...(root?.querySelectorAll(".summary__row") ?? [])].find((r) => r.firstElementChild && /^subtotal\b/i.test(norm(r.firstElementChild.textContent)));
+    return row && row.lastElementChild !== row.firstElementChild ? row.lastElementChild : null;
+  };
+  const rule = (t, el) => {
+    if (!share) return null;
+    if (el?.matches(".summary__item-price-unit")) {
+      const m = /^\d+ \u00d7 (\$\S+)$/.exec(t);
+      return m && cents(m[1]) ? money(up(cents(m[1]))) : null;
+    }
+    if (el?.matches(".summary__total-preview,.summary__total-value")) {
+      const sub = subOf(el.closest(".summary"));
+      const b = sub && cents(norm(sub.textContent));
+      return b && cents(t) ? money(cents(t) + up(b) - b) : null;
+    }
+    return cents(t) ? money(up(cents(t))) : null;
   };
   const CONTROLS = "button,a[href],input,select,textarea,iframe,[role=button],[role=switch],[role=radio]";
   const meet = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)) > 0.5;
@@ -204,7 +221,7 @@ function readPrices(arg) {
     const p = w.nextElementSibling;
     const wb = box(w);
     const priceText = p ? norm(p.textContent) : null;
-    const expected = p ? rule(priceText) : null;
+    const expected = p ? rule(priceText, p) : null;
     return {
       text: w.textContent,
       ariaHidden: w.getAttribute("aria-hidden"),
