@@ -14,7 +14,7 @@ hashes and a few literal strings of the store's public bundle, never its code or
   five (`SPEC-rung2-fill-c.md` § 1.1, § 1.4): the card's counter (`counter__value`, `counter__button`, its *"Increase
   value"*) and the plan's own count (`cart__items-count`, `mobile-cart-summary__stat-value`), 51 literals since
   2026-10-01, each found in release `main-N64VDY4M.js`'s files; since SPEC-rung2-progress-and-checkout § 36, the struck
-  prices' price elements (eight more, read from the live page by `probe-prices/2026-10-27/`, not yet by F2). **Edited by a person**, when the hand-off comes to depend on something
+  prices' price elements (eight more, read from the live page by `probe-prices/2026-10-27/`, not yet by F2), and § 37's nine. **Edited by a person**, when the hand-off comes to depend on something
   new, or a release renames something it depends on (and the hand-off is changed to match).
 - **`watch-baseline.json`** (§§ 2, 3, 5): the release the watch compares with: the order page's script list, the
   entry bundle's name, its imports, every JS file reachable from it with its SHA-256, and `expectedFooter`, the

@@ -57,13 +57,15 @@ test("PP1: --script, every surface's struck figures recorded before their prices
     assert.deepEqual(r.pastes, ["/", "/meal-plans", "/order"], `${width}: one paste per document`);
     assert.deepEqual(r.reads.front.struck, [], "the front page: none");
     const at = (k) => r.reads[k].struck;
-    assert.deepEqual(at("mealPlans").map((w) => [w.price.tag, w.price.text, w.text]), [["strong", "$11.50", "$15.33"], ["strong", "$13.00", "$17.33"], ["strong", "$14.00", "$18.67"], ["strong", "$38.00", "$50.67"]]);
+    // § 37: the four plans' prices and Lean's five sizes ("$X/meal"); the order page's every card price (the Additions' plain
+    // ones too: the stand-in's $12.50 and $4.50, twice each); the checkout's Subtotal and totals.
+    assert.deepEqual(at("mealPlans").map((w) => [w.price.tag, w.price.text, w.text]), [["strong", "$11.50", "$15.33"], ["span", "$13.00/meal", "$17.33"], ["span", "$12.50/meal", "$16.67"], ["span", "$12.25/meal", "$16.33"], ["span", "$12.00/meal", "$16.00"], ["span", "$11.50/meal", "$15.33"], ["strong", "$13.00", "$17.33"], ["strong", "$14.00", "$18.67"], ["strong", "$38.00", "$50.67"]]);
     const meals = at("order");
-    assert.equal(meals.length, 18, `${width}: each meal's two cards (${meals.length})`);
-    assert.ok(meals.every((w) => /^(product__content-price|product-card-mobile__price)$/.test(w.price.classes.join(" ")) && w.price.text === "$12.50" && w.text === "$16.67"), JSON.stringify(meals[0]));
+    assert.equal(meals.length, 22, `${width}: each meal's two cards and the Additions' four plain prices (${meals.length})`);
+    assert.ok(meals.every((w) => /^(product__content-price|product-card-mobile__price)$/.test(w.price.classes.join(" "))), JSON.stringify(meals[0]));
     const cart = at("cart").filter((w) => w.price.text === "$87.50");
     assert.deepEqual(cart.map((w) => [w.price.classes.join(" "), w.text]).sort(), [["mobile-cart-summary__stat-value", "$116.67"], ["segment-price", "$116.67"]]);
-    assert.deepEqual(at("checkout").map((w) => [w.price.classes.join(" "), w.price.text, w.text]), [["summary__plan-total-value", "$87.50", "$116.67"]]);
+    assert.deepEqual(at("checkout").map((w) => [w.price.classes.join(" "), w.price.text, w.text]), [["summary__total-preview", "$93.72", "$122.89"], ["", "$87.50", "$116.67"], ["summary__total-value", "$93.72", "$122.89"], ["summary__plan-total-value", "$87.50", "$116.67"]], "§ 37: the header total and the Total ($87.50 + shipping $4.99 + tax $1.23, marked up for the food alone), the Plan Total, the Subtotal");
     for (const k of ["mealPlans", "order", "cart", "checkout"]) {
       for (const w of at(k)) {
         assert.equal(w.equal, true, `${width} ${k}: ${w.text} is item 3's figure for ${w.price.text} (${w.expected})`);
@@ -82,7 +84,7 @@ test("PP2: without --script, nothing pasted and no struck figure recorded", { sk
   assert.equal(r.error, null, r.error);
   assert.deepEqual(r.pastes, []);
   for (const [k, read] of Object.entries(r.reads)) assert.deepEqual(read.struck, [], `${k}: none`);
-  assert.ok(r.reads.mealPlans.prices.length === 4 && r.reads.checkout.prices.length > 0, "fixture control: the priced surfaces read");
+  assert.ok(r.reads.mealPlans.prices.length === 9 && r.reads.checkout.prices.length > 0, "fixture control: the priced surfaces read (§ 37: and Lean's five sizes)");
 });
 
 test("PP3: --script's file reader: a block .md file's fragment, checked against its hash; a console file as it is", async () => {

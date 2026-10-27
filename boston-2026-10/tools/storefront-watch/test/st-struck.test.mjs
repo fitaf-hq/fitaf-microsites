@@ -46,15 +46,39 @@ const LAST_MINUTE = Date.parse(`${OFFER.valid_to}T23:59:00-04:00`);
 const AFTER_END = Date.parse(`${OFFER.valid_to}T23:59:00-04:00`) + 120_000;
 const MARK = "fitaf_struck";
 /** The four surfaces' price elements, by the store's own names (the probe's), read here independently of the block. */
-const TARGETS = [".meal-plan__fit-af-price>strong", "app-cart .segment-price", ".mobile-cart-summary__stat-value", ".summary__plan-total-value"];
+/**
+ * The surfaces' price elements, by the store's own names (the probes', storefront/probe-prices/2026-10-27/), read here
+ * independently of the block, each with its kind: a plain price (§ 36 item 3; § 37's size picker's "$X/meal" too), a
+ * unit price ("N x $X", only $X struck: § 37 item 3) or a total (§ 37 item 4). Since § 37 every section's card prices.
+ */
+const TARGETS = [".meal-plan__fit-af-price>strong", "app-cart .segment-price", ".mobile-cart-summary__stat-value", ".summary__plan-total-value", ".meal-plan__fit-af-meal-options button>span", ".product__content-price", ".product-card-mobile__price", "app-extra-products-dialog .popular-card__price", "app-cart-product-card .product__price-original", ".summary__item-price-current"];
+const UNITS = ".summary__item-price-unit";
+const TOTALS = ".summary__total-preview,.summary__total-value";
 const MEAL_PRICES = ".product__content-price,.product-card-mobile__price";
+const cents = (t) => {
+  const m = /^\$(\d+)\.(\d\d)$/.exec(t);
+  return m ? Number(m[1]) * 100 + Number(m[2]) : null;
+};
+const dollars = (c) => `$${Math.floor(c / 100)}.${String(c % 100).padStart(2, "0")}`;
 
-/** Item 3's rule, here written again: "$12.50" -> "$16.67" at 25 %. */
+/** Item 3's rule, here written again: "$12.50" (or § 37's "$12.50/meal") -> "$16.67" at 25 %. */
 function figure(text, share = OFFER.percent_off) {
-  const m = /^\$(\d+)\.(\d\d)$/.exec(text);
-  if (!m || !Number(m[1] + m[2])) return null;
-  const c = Math.round((Number(m[1]) * 100 + Number(m[2])) * 100 / (100 - share));
-  return `$${Math.floor(c / 100)}.${String(c % 100).padStart(2, "0")}`;
+  const c = cents(String(text).replace(/\/meal$/, ""));
+  return c ? dollars(Math.round((c * 100) / (100 - share))) : null;
+}
+
+/** § 37: what a price element should be struck as, by its kind; null for none. */
+function expected(p) {
+  if (p.kind === "unit") {
+    const m = /^\d+ \u00d7 (\$\d+\.\d\d)$/.exec(p.text);
+    return m ? figure(m[1]) : null;
+  }
+  if (p.kind === "total") {
+    const t = cents(p.text);
+    const sub = cents(p.sub ?? "");
+    return t !== null && sub ? dollars(t + cents(figure(p.sub)) - sub) : null;
+  }
+  return figure(p.text);
 }
 
 let store;
@@ -107,20 +131,29 @@ function init({ mark, now, key }) {
 }
 
 /** In the page: every struck figure, and every target price with the figure right before it (if any). */
-function read({ targets, meals }) {
+function read({ targets, units, totals }) {
   const norm = (t) => t.replace(/\s+/g, " ").trim();
   const shown = (e) => e.getClientRects().length > 0;
-  const prices = [...document.querySelectorAll(targets.join(","))];
-  for (const sec of document.querySelectorAll(".products__section")) {
-    if (/meals/i.test(sec.querySelector(".products__section-title")?.textContent ?? "")) prices.push(...sec.querySelectorAll(meals));
+  const kinds = [];
+  for (const p of document.querySelectorAll(targets.join(","))) if (!p.matches(".fitaf-was")) kinds.push([p, "plain"]);
+  for (const p of document.querySelectorAll(units)) kinds.push([p, "unit"]);
+  for (const p of document.querySelectorAll(totals)) kinds.push([p, "total"]);
+  // § 37: the Subtotal's figure, in the row whose label names it; and for a total, the same summary's Subtotal.
+  const subOf = (root) => [...(root?.querySelectorAll(".summary__row") ?? [])].find((r) => /^subtotal\b/i.test(norm(r.firstElementChild?.textContent ?? "")));
+  for (const r of document.querySelectorAll(".summary")) {
+    const row = subOf(r);
+    if (row && row.lastElementChild && row.lastElementChild !== row.firstElementChild) kinds.push([row.lastElementChild, "plain"]);
   }
   const was = [...document.querySelectorAll(".fitaf-was")];
   return {
     path: location.pathname,
-    prices: prices.map((p) => {
+    prices: kinds.map(([p, kind]) => {
       const prev = p.previousElementSibling;
-      const before = [...p.parentNode.children].filter((c) => c.matches(".fitaf-was"));
-      return { cls: p.className || p.localName, text: norm(p.textContent), struck: prev && prev.matches(".fitaf-was") ? prev.textContent : null, siblings: before.length, shown: shown(p) };
+      // The run of struck figures right before it (§ 37: a line's price and its unit price share one column).
+      const before = [];
+      for (let e = p.previousElementSibling; e && e.matches(".fitaf-was"); e = e.previousElementSibling) before.push(e);
+      const sub = kind === "total" ? subOf(p.closest(".summary"))?.lastElementChild : null;
+      return { kind, cls: p.className || p.localName, text: norm(p.textContent), sub: sub ? norm(sub.textContent) : null, struck: prev && prev.matches(".fitaf-was") ? prev.textContent : null, siblings: before.length, shown: shown(p) };
     }),
     was: was.map((s) => ({
       tag: s.localName,
@@ -148,20 +181,21 @@ async function open({ path, width = 1280, mark = true, now = INSIDE, text = site
   await sleep(700);
   const at = async () => {
     await sleep(150);
-    return page.evaluate(read, { targets: TARGETS, meals: MEAL_PRICES });
+    return page.evaluate(read, { targets: TARGETS, units: UNITS, totals: TOTALS });
   };
   return { page, at, close: () => context.close() };
 }
 
-/** Each price shown with a figure has exactly one, right before it, equal to item 3's rule; none else. */
+/** Each price with a figure (its kind's, `expected`) has exactly one, right before it, equal to it; none else. */
 function judge(r, { expectStruck }) {
-  const priced = r.prices.filter((p) => figure(p.text));
+  const priced = r.prices.filter((p) => expected(p));
   for (const p of r.prices) {
-    if (!expectStruck || !figure(p.text)) {
+    const want = expected(p);
+    if (!expectStruck || !want) {
       assert.equal(p.struck, null, `${r.path}: ${p.cls} "${p.text}" carries no struck figure`);
       continue;
     }
-    assert.equal(p.struck, figure(p.text), `${r.path}: ${p.cls} "${p.text}" struck as ${figure(p.text)}`);
+    assert.equal(p.struck, want, `${r.path}: ${p.cls} "${p.text}" struck as ${want}`);
     assert.equal(p.siblings, 1, `${r.path}: ${p.cls} "${p.text}": exactly one struck figure beside it`);
   }
   assert.equal(r.was.length, expectStruck ? priced.length : 0, `${r.path}: ${expectStruck ? "one struck figure per price" : "no struck figure"} (${r.was.length})`);
@@ -188,7 +222,7 @@ async function st1(text, width = 1280) {
   const plans = await open({ path: "/meal-plans", width, text });
   try {
     const r = await plans.at();
-    assert.equal(r.prices.length, 4, "fixture control: the meal plans page's four prices");
+    assert.equal(r.prices.length, 9, "fixture control: the meal plans page's four prices and (§ 37) Lean's five sizes");
     judge(r, { expectStruck: true });
   } finally {
     await plans.close();
@@ -196,7 +230,7 @@ async function st1(text, width = 1280) {
   const order = await open({ path: "/order?mpid=21", width, text });
   try {
     const r = await order.at();
-    assert.equal(r.prices.filter((p) => /content-price|card-mobile__price/.test(p.cls)).length, MEALS.length * 2, "fixture control: each meal's two cards");
+    assert.equal(r.prices.filter((p) => /content-price|card-mobile__price/.test(p.cls)).length, (MEALS.length + 3) * 2, "fixture control: each meal's and (§ 37) each addition's two cards");
     judge(r, { expectStruck: true });
     assert.ok(r.prices.some((p) => p.text === "$12.50" && p.struck === "$16.67"), "a meal at $12.50 struck as $16.67");
     await cart(order.page);
@@ -307,24 +341,17 @@ async function st5(text) {
 
 test("ST5: a redraw — the text changed, the element replaced, the list re-ordered — one each, correct", { skip }, async () => st5(site.text));
 
-test("ST6: the excluded figures — additions, an add-on, the button, a fee, tax, a discount, the lines, the Total — none", { skip }, async () => {
-  const v = await open({ path: "/order?mpid=21", cfg: { discountRow: "live", storeLines: true } });
+// ST6 as § 37 amends it (item 2 withdraws "never an add-on's" for extras; items 3 and 4 strike the summary's lines,
+// Subtotal and totals): an add-on's "+$2.00", a "From" price and the Add to Cart button's own price are still none; the
+// checkout's fees are ST14's.
+test("ST6: the excluded figures of the order page — an add-on, a From price, the button's price — none", { skip }, async () => {
+  const v = await open({ path: "/order?mpid=21" });
   try {
-    const nextOf = () => v.page.evaluate(() => [...document.querySelectorAll(".fitaf-was")].map((s) => s.nextElementSibling?.className));
-    const allowed = new Set(["product__content-price", "product-card-mobile__price", "segment-price", "mobile-cart-summary__stat-value", "summary__plan-total-value"]);
-    const additions = await v.page.evaluate(() => [...document.querySelectorAll(".products__section")].slice(1).flatMap((s) => [...s.querySelectorAll(".fitaf-was")]).length);
-    assert.equal(additions, 0, "no struck figure in the Additions (their $12.50 included)");
-    assert.equal(await v.page.evaluate(() => document.querySelectorAll("button .fitaf-was, .dropdown__value-text + .fitaf-was").length), 0, "none in a button, none by the add-on");
-    await cart(v.page);
-    await checkout(v.page);
-    const k = await v.at();
-    assert.equal(k.path, "/checkout");
-    for (const n of await nextOf()) assert.ok(allowed.has(n), `a struck figure only beside a priced surface's figure, not ${n}`);
-    const bad = await v.page.evaluate(() =>
-      [".summary__row", ".summary__total", ".summary__item", ".checkout__submit", ".summary__mobile-bar", ".checkout-discounts"].filter((q) => [...document.querySelectorAll(q)].some((e) => e.querySelector(".fitaf-was"))),
-    );
-    assert.deepEqual(bad, [], "no struck figure in a fee, tax, discount, line, Total or pay button");
-    assert.equal(k.was.length, 1, "on the checkout, the Plan Total's alone");
+    judge(await v.at(), { expectStruck: true });
+    const bad = await v.page.evaluate(() => [...document.querySelectorAll(".fitaf-was")].filter((s) => s.closest("button") || /^(From |\+)/.test(s.nextElementSibling?.textContent.trim() ?? "")).length);
+    assert.equal(bad, 0, "none in a button, none by a From price or an add-on");
+    const fromPrice = await v.page.evaluate(() => [...document.querySelectorAll(".product__content-price")].find((p) => p.textContent.trim() === "From $9.00")?.previousElementSibling?.className ?? null);
+    assert.notEqual(fromPrice, "fitaf-was", "the From price none");
   } finally {
     await v.close();
   }
@@ -334,7 +361,7 @@ test("ST7: each struck figure aria-hidden, no words, an s smaller than its price
   const v = await open({ path: "/meal-plans" });
   try {
     const r = await v.at();
-    assert.equal(r.was.length, 4);
+    assert.equal(r.was.length, 9, "the four plans' prices and (§ 37) Lean's five sizes");
     for (const s of r.was) {
       assert.equal(s.tag, "s");
       assert.equal(s.aria, "true");
@@ -365,10 +392,120 @@ test("ST8: the deep-carted checkout's steps 1, 2 and 3: no save link", { skip },
   }
 });
 
+// ── § 37: ST10–ST14 ─────────────────────────────────────────────────────────────────────────────────────────────────
+
+test("ST10: the size picker's per-meal prices struck ($13.00/meal -> $17.33), at 1280 and 390", { skip }, async () => {
+  for (const width of [1280, 390]) {
+    const v = await open({ path: "/meal-plans", width });
+    try {
+      const r = await v.at();
+      judge(r, { expectStruck: true });
+      const sizes = r.prices.filter((p) => /\/meal$/.test(p.text));
+      assert.deepEqual(sizes.map((p) => [p.text, p.struck]), [["$13.00/meal", "$17.33"], ["$12.50/meal", "$16.67"], ["$12.25/meal", "$16.33"], ["$12.00/meal", "$16.00"], ["$11.50/meal", "$15.33"]]);
+    } finally {
+      await v.close();
+    }
+  }
+});
+
+test("ST11: the extras pop-up's and the Additions' prices struck; a free extra, a From price and an upcharge not", { skip }, async () => {
+  const v = await open({ path: "/order?mpid=21", cfg: { extrasDialog: true } });
+  try {
+    const order = await v.at();
+    judge(order, { expectStruck: true });
+    assert.deepEqual(order.prices.filter((p) => p.cls === "product__content-price" && p.text !== "$12.50" || (p.cls === "product__content-price" && p.struck && false)).map((p) => [p.text, p.struck]), [["From $9.00", null], ["$4.50", "$6.00"]]);
+    await cart(v.page);
+    await v.page.evaluate(() => [...document.querySelectorAll(".checkout-control")].find((b) => b.getClientRects().length).click());
+    await v.page.waitForFunction(() => document.querySelector("app-extra-products-dialog .popular-card__price"), { timeout: 5000 });
+    const pop = await v.at();
+    judge(pop, { expectStruck: true });
+    assert.deepEqual(pop.prices.filter((p) => p.cls === "popular-card__price").map((p) => [p.text, p.struck]), [["$9.00", "$12.00"], ["$4.50", "$6.00"], ["$0.00", null], ["+$2.00", null]]);
+  } finally {
+    await v.close();
+  }
+});
+
+/** The cart as ST12 and ST13 fill it: the first meal six times (its Add to Cart, then its "+") and the second once. */
+async function sixAndOne(page) {
+  const press = (n, plus) =>
+    page.evaluate(
+      (name, p) => {
+        const card = [...document.querySelectorAll("app-product-card")].find((c) => c.querySelector(".product__content-title").textContent.trim() === name);
+        (p ? card.querySelector('.product__actions .counter__button[aria-label="Increase value"]') : card.querySelector(".product__actions button")).click();
+      },
+      n,
+      plus,
+    );
+  for (let k = 0; k < 6; k++) {
+    await press(MEALS[0], k > 0);
+    await sleep(60);
+  }
+  await press(MEALS[1], false);
+  await sleep(60);
+}
+
+test("ST12: the summary's Subtotal, each line's price and its unit price struck", { skip }, async () => {
+  const v = await open({ path: "/order?mpid=21", cfg: { storeLines: true } });
+  try {
+    await sixAndOne(v.page);
+    await checkout(v.page);
+    const k = await v.at();
+    judge(k, { expectStruck: true });
+    const of = (cls) => k.prices.filter((p) => p.cls === cls).map((p) => [p.text, p.struck]);
+    assert.deepEqual(of("summary__item-price-current"), [["$75.00", "$100.00"], ["$12.50", "$16.67"]]);
+    assert.deepEqual(of("summary__item-price-unit"), [["6 \u00d7 $12.50", "$16.67"]], "only the unit's $X, as its own struck figure");
+    assert.deepEqual(k.prices.filter((p) => p.kind === "plain" && p.cls === "span").map((p) => [p.text, p.struck]), [["$87.50", "$116.67"]], "the Subtotal");
+  } finally {
+    await v.close();
+  }
+});
+
+async function st13(text) {
+  for (const [shippingCents, taxCents, total, struck] of [[500, 0, "$92.50", "$121.67"], [0, 0, "$87.50", "$116.67"]]) {
+    const v = await open({ path: "/order?mpid=21", text, cfg: { storeLines: true, shippingCents, taxCents } });
+    try {
+      await cart(v.page);
+      await checkout(v.page);
+      const k = await v.at();
+      const totals = k.prices.filter((p) => p.kind === "total");
+      assert.deepEqual(totals.map((p) => [p.cls, p.text, p.sub]), [["summary__total-preview", total, "$87.50"], ["summary__total-value", total, "$87.50"]], "fixture control: the header's total and the Total row");
+      for (const p of totals) assert.equal(p.struck, struck, `${p.cls} ${p.text} with shipping ${shippingCents}: the total + (the struck Subtotal - the Subtotal) = ${struck}`);
+      judge(k, { expectStruck: true });
+      // No Subtotal on the page (the store drawing its summary without it): the totals get nothing.
+      await v.page.evaluate(() => document.querySelector("[data-fixture=subtotal]").parentNode.remove());
+      const none = await v.at();
+      assert.deepEqual(none.prices.filter((p) => p.kind === "total").map((p) => p.struck), [null, null], "no Subtotal: no struck total");
+    } finally {
+      await v.close();
+    }
+  }
+}
+
+test("ST13: the header total and the Total, with a fee ($92.50 -> $121.67) and without ($87.50 -> $116.67); none without a Subtotal", { skip }, async () => st13(site.text));
+
+test("ST14: shipping, tax, tip, a discount and the pay buttons never struck", { skip }, async () => {
+  const v = await open({ path: "/order?mpid=21", cfg: { storeLines: true, shippingCents: 500, taxCents: 123, tipCents: 300, discountRow: "live" } });
+  try {
+    await cart(v.page);
+    await checkout(v.page);
+    const k = await v.at();
+    judge(k, { expectStruck: true });
+    const bad = await v.page.evaluate(() => {
+      const rows = [...document.querySelectorAll(".summary__row")].filter((r) => !/^subtotal\b/i.test(r.firstElementChild?.textContent.trim() ?? ""));
+      return [...rows, ...document.querySelectorAll(".checkout__submit, .summary__pay-button, .summary__mobile-bar, .checkout-discounts")].filter((e) => e.querySelector(".fitaf-was")).map((e) => e.textContent.replace(/\s+/g, " ").trim().slice(0, 40));
+    });
+    assert.deepEqual(bad, [], "no struck figure in shipping, tax, tip, a discount or a pay button");
+    assert.ok((await v.page.evaluate(() => document.querySelectorAll(".summary__row").length)) >= 5, "fixture control: Subtotal, shipping, tax, tip and the discount row drawn");
+  } finally {
+    await v.close();
+  }
+});
+
 /** In the page, from before its scripts: after every paint, each target price shown and whether its figure is beside it, and the store's leaves' boxes. */
 function frames({ targets, meals }) {
   const leaves = () =>
-    [...document.querySelectorAll("main *, .bar *, .side *")].filter((e) => !e.closest(".fitaf-was") && !e.matches(".fitaf-was") && e.getClientRects().length && (!e.children.length || e.matches("img,button,input,select")));
+    [...document.querySelectorAll("main *, .bar *, .side *")].filter((e) => !e.closest(".fitaf-was") && !e.matches(".fitaf-was") && !e.querySelector(".fitaf-was") && e.getClientRects().length && (!e.children.length || e.matches("img,button,input,select")));
+  // (§ 37: a store element that HOLDS a figure, the size's button, is its container, not something it overlaps.)
   window.__frames = [];
   window.__leaves = leaves;
   const tick = () => {
@@ -469,6 +606,7 @@ const MUTANTS = {
   noMarker: [["if (!on) return;", "on = 1;"]],
   afterEnd: [["o[2] >= day", "true"]],
   twice: [["s = M.get(p)", "s = null"], ["sweep(keep);", ""]],
+  totalWhole: [["t + up(b) - b", "up(t)"]],
 };
 
 test("ST mutant: the figure as price x 0.75 — ST1 fails", { skip }, async () => {
@@ -479,6 +617,9 @@ test("ST mutant: shown without the marker — ST2 fails", { skip }, async () => 
 });
 test("ST mutant: shown after valid_to — ST4 fails", { skip }, async () => {
   await assert.rejects(st4(await mutantText(MUTANTS.afterEnd)), /after valid_to ends in New York: none/);
+});
+test("ST mutant (§ 37): a total marked up whole — ST13 fails", { skip }, async () => {
+  await assert.rejects(st13(await mutantText(MUTANTS.totalWhole)), /with shipping 500: the total \+ \(the struck Subtotal - the Subtotal\)/);
 });
 test("ST mutant: added twice on a redraw — ST5 fails", { skip }, async () => {
   await assert.rejects(st5(await mutantText(MUTANTS.twice)), /exactly one struck figure|one struck figure per price/);

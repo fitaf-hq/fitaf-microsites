@@ -28,6 +28,12 @@
 // element it sits before (tag, classes, text, box), item 3's figure for that price's text (`share`, data/offers.json on
 // the probe's date in New York) and whether it is equal, and every displayed control of the store's whose box overlaps
 // it. Without `script` nothing is pasted, and on a store whose own block carries no struck prices none is recorded.
+// § 37 item 5 (the second batch): also the plan page with its size picker ("HOW MANY MEALS DELIVERED PER WEEK?"), reached
+// from /meal-plans by the store's own link (the first plan card's Choose button), read as `planPage`; the cart filled as
+// a visitor fills it with one meal several times (its Add to Cart, then its counter's "+": the plan's count less one)
+// and one more meal, so a line shows its "N x $X"; after the store's CHECKOUT, its extras pop-up
+// (app-extra-products-dialog) read as `extras` and NOTHING pressed in it: /checkout is then reached by loading its address,
+// as a visitor may (a new document), and read; and the skeletons of the picker, the pop-up and the summary's parts.
 // ⛔ It types NOTHING anywhere, presses nothing on /checkout, never the payment, never the admin, and presses on the
 // order page only each chosen meal's Add to Cart, the store's CHECKOUT and the extras dialog's CONTINUE TO CHECKOUT.
 // The profile is discarded. Not a check: nothing reads its files (storefront/probe-prices/).
@@ -138,12 +144,15 @@ function readPrices(arg) {
     else if (depth > 0) node.children = [...el.children].slice(0, 12).map((c) => skeleton(c, depth - 1));
     return node;
   };
-  const SKELETONS = [".meal-plan__fit-af-card", ".products__section", "app-product-card .product__content", "app-product-card-mobile .product-card-mobile__body", "app-cart .cart__order-type", "app-cart-product-card", ".mobile-cart-summary__bar", ".summary__plan-total", ".summary__mobile-bar"];
+  const SKELETONS = [".meal-plan__fit-af-card", ".products__section", "app-product-card .product__content", "app-product-card-mobile .product-card-mobile__body", "app-cart .cart__order-type", "app-cart-product-card", ".mobile-cart-summary__bar", ".summary__plan-total", ".summary__mobile-bar", "app-extra-products-dialog", ".summary__header", ".summary__item", ".summary__breakdown", ".summary__total", "app-cart"];
   const skeletons = {};
   for (const q of SKELETONS) {
     const shownOne = [...document.querySelectorAll(q)].find(shown) ?? document.querySelector(q);
-    if (shownOne) skeletons[q] = skeleton(shownOne, q === ".products__section" ? 1 : 5);
+    if (shownOne) skeletons[q] = skeleton(shownOne, q === ".products__section" ? 1 : q === "app-extra-products-dialog" || q === "app-cart" ? 7 : 5);
   }
+  // § 37: the size picker, by its heading's words (its classes unknown until read): the heading's grandparent.
+  const pickerHead = [...document.querySelectorAll("body *")].find((e) => !e.children.length && /meals delivered per week/i.test(e.textContent));
+  if (pickerHead) skeletons.picker = skeleton(pickerHead.parentElement?.parentElement ?? pickerHead, 7);
   const sections = [...document.querySelectorAll(".products__section")].map((sec, index) => {
     const h = sec.querySelector("h1,h2,h3,h4,[class*=title],[class*=heading],[class*=header]");
     return { index, heading: h ? norm(h.textContent).slice(0, 120) : null, desktopCards: sec.querySelectorAll("app-product-card").length, mobileCards: sec.querySelectorAll("app-product-card-mobile").length };
@@ -180,13 +189,30 @@ function readPrices(arg) {
     });
   }
   // § 36 item 3's figure for a price's text, written again here (not the block's code): "$87.50" -> "$116.67" at 25 %.
-  const rule = (t) => {
-    const m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)$/.exec(t);
-    if (!m || !share) return null;
-    const c0 = Number(m[1].replace(/,/g, "")) * 100 + Number(m[2]);
-    if (!c0) return null;
-    const c = Math.round((c0 * 100) / (100 - share));
-    return `$${String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",")}.${String(c % 100).padStart(2, "0")}`;
+  // § 37: by the price's kind: "$X" or "$X/meal" item 3's rule; a unit price "N x $X" its $X's; a total (the summary's
+  // header total, its Total) the total + (the struck Subtotal - the Subtotal), the same .summary's, else none.
+  const cents = (t) => {
+    const m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)(\/meal)?$/.exec(t);
+    return m ? Number(m[1].replace(/,/g, "")) * 100 + Number(m[2]) : 0;
+  };
+  const up = (c) => Math.round((c * 100) / (100 - share));
+  const money = (c) => `$${String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",")}.${String(c % 100).padStart(2, "0")}`;
+  const subOf = (root) => {
+    const row = [...(root?.querySelectorAll(".summary__row") ?? [])].find((r) => r.firstElementChild && /^subtotal\b/i.test(norm(r.firstElementChild.textContent)));
+    return row && row.lastElementChild !== row.firstElementChild ? row.lastElementChild : null;
+  };
+  const rule = (t, el) => {
+    if (!share) return null;
+    if (el?.matches(".summary__item-price-unit")) {
+      const m = /^\d+ \u00d7 (\$\S+)$/.exec(t);
+      return m && cents(m[1]) ? money(up(cents(m[1]))) : null;
+    }
+    if (el?.matches(".summary__total-preview,.summary__total-value")) {
+      const sub = subOf(el.closest(".summary"));
+      const b = sub && cents(norm(sub.textContent));
+      return b && cents(t) ? money(cents(t) + up(b) - b) : null;
+    }
+    return cents(t) ? money(up(cents(t))) : null;
   };
   const CONTROLS = "button,a[href],input,select,textarea,iframe,[role=button],[role=switch],[role=radio]";
   const meet = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)) > 0.5;
@@ -195,7 +221,7 @@ function readPrices(arg) {
     const p = w.nextElementSibling;
     const wb = box(w);
     const priceText = p ? norm(p.textContent) : null;
-    const expected = p ? rule(priceText) : null;
+    const expected = p ? rule(priceText, p) : null;
     return {
       text: w.textContent,
       ariaHidden: w.getAttribute("aria-hidden"),
@@ -251,15 +277,23 @@ function chooseMeals({ need, sel }) {
   return { chosen, cards: cards.length, release: entry ? entry.slice(entry.lastIndexOf("/") + 1) : null };
 }
 
-/** In the page: press meal `name`'s own Add to Cart, as fill C does (a real click on the store's button). */
-function pressMeal({ name, sel }) {
+/** In the page: press meal `name`'s own Add to Cart, or (`plus`) its counter's "+", as fill C does (a real click). */
+function pressMeal({ name, sel, plus = false }) {
   const text = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : "");
   if (location.pathname !== "/order") return { pressed: false, reason: `the page left /order: ${location.pathname}` };
   const card = [...document.querySelectorAll(sel.card)].find((c) => text(c.querySelector(sel.cardTitle)) === name);
-  const b = card && [...card.querySelectorAll(`${sel.cardActions} button`)].find((x) => text(x).includes(sel.addLabel));
-  if (!b) return { pressed: false, reason: "no Add to Cart on the card" };
+  const b = card && (plus ? card.querySelector(`${sel.cardActions} .counter__button[aria-label="Increase value"]`) : [...card.querySelectorAll(`${sel.cardActions} button`)].find((x) => text(x).includes(sel.addLabel)));
+  if (!b) return { pressed: false, reason: plus ? "no + on the card" : "no Add to Cart on the card" };
   b.click();
   return { pressed: true };
+}
+
+/** In the page (§ 37 item 5): press the first plan card's own Choose button on /meal-plans; its label, or null. */
+function choosePlan() {
+  const b = [...document.querySelectorAll("button.meal-plan__fit-af-select")].find((x) => x.getClientRects().length);
+  if (!b) return null;
+  b.click();
+  return b.textContent.replace(/\s+/g, " ").trim();
 }
 
 /** In the page: meal `name`'s count on its card (0 with no counter). */
@@ -384,6 +418,14 @@ export async function probePricesRun({ origin, width, mpid, need, executablePath
       record.reads[key] = await read(waitFor);
       step(key, { path });
     }
+    // § 37 item 5: the plan page's size picker, reached by the store's own link from /meal-plans.
+    const chose = await page.evaluate(choosePlan);
+    step("choose a plan", { label: chose });
+    if (chose) {
+      const PICKER = () => /meals delivered per week/i.test(document.body?.textContent ?? "");
+      record.reads.planPage = await read(PICKER);
+      step("planPage", { path: await page.evaluate(() => location.pathname + location.search) });
+    }
 
     // 2. The order page, then the meals' own Add to Cart, then the cart summary.
     const orderPath = `/order?mpid=${mpid}`;
@@ -394,12 +436,17 @@ export async function probePricesRun({ origin, width, mpid, need, executablePath
     record.reads.order = await read();
     step("order", { path: orderPath, cards: menu?.cards ?? 0 });
     if (record.chosen.length < need) throw new Error(`only ${record.chosen.length} of ${need} meals with an enabled Add to Cart`);
-    for (const name of record.chosen) {
-      const p = await page.evaluate(pressMeal, { name, sel: SELECTORS });
-      if (!p.pressed) throw new Error(`${name}: ${p.reason}`);
-      const n = await poll(page, countOf, { name, sel: SELECTORS }, (c) => c > 0, { timeoutMs: ACK_MS, everyMs: 100 });
-      record.counted.push(n ?? 0);
-      await sleep(300);
+    // § 37: the first chosen meal the plan's count less one times (its Add to Cart, then its "+"), and the second once,
+    // so the summary shows a line of several ("N x $X") and a line of one.
+    const units = [[record.chosen[0], need - 1], [record.chosen[1], 1]];
+    for (const [name, times] of units) {
+      for (let k = 0; k < times; k++) {
+        const p = await page.evaluate(pressMeal, { name, sel: SELECTORS, plus: k > 0 });
+        if (!p.pressed) throw new Error(`${name}: ${p.reason}`);
+        const n = await poll(page, countOf, { name, sel: SELECTORS }, (c) => c > k, { timeoutMs: ACK_MS, everyMs: 100 });
+        record.counted.push(n ?? 0);
+        await sleep(300);
+      }
     }
     step("pressed", { counted: record.counted });
     record.reads.cart = await read();
@@ -412,9 +459,11 @@ export async function probePricesRun({ origin, width, mpid, need, executablePath
     step("CHECKOUT", { label });
     const where = await poll(page, () => (location.pathname === "/checkout" ? "checkout" : document.querySelector("app-extra-products-dialog") ? "extras" : null), undefined, Boolean, { timeoutMs: AFTER_CHECKOUT_MS, everyMs: 200 });
     if (where === "extras") {
-      const pressed = await poll(page, control, { source: "^continue to checkout$", press: true }, Boolean, { timeoutMs: 5000, everyMs: 200 });
-      step("CONTINUE TO CHECKOUT", { pressed: !!pressed });
-      await poll(page, () => location.pathname === "/checkout", undefined, Boolean, { timeoutMs: AFTER_CHECKOUT_MS, everyMs: 200 });
+      // § 37 item 5: the pop-up read as it shows, nothing pressed in it; then /checkout by its address (a new document).
+      record.reads.extras = await read(() => /\$\s?\d/.test(document.querySelector("app-extra-products-dialog")?.textContent ?? ""));
+      step("extras", { path: await page.evaluate(() => location.pathname) });
+      await page.goto(`${origin}/checkout`, { waitUntil: "load", timeout: NAV_MS });
+      step("/checkout loaded");
     }
     if ((await page.evaluate(() => location.pathname)) !== "/checkout") throw new Error("/checkout not reached");
     record.reads.checkout = await read(() => !!document.querySelector(".summary__total"));

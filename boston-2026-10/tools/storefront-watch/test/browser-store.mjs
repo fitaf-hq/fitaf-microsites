@@ -173,16 +173,18 @@ ${tipHtml(cfg)}
 <div class="checkout__submit"><span class="checkout__submit-target"><button type="button" class="checkout__pay"> Place order </button></span></div>
 </form>
 <aside class="checkout__summary"><div class="summary">
+${cfg.prices ? '<div class="summary__header"><h3 class="summary__title">Order Summary</h3><div class="summary__header-right"><span class="summary__total-preview" data-fixture="total">$0.00</span></div></div>' : ""}
 <div class="summary__plan-group"><div class="summary__plan-group-header"><div class="summary__plan-group-label">Lean Plan 7 Meals</div>
 <button type="button" aria-label="Remove plan">Remove plan</button><svg class="summary__plan-group-chevron" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></div>${sub.head}${sub.controls}
 <a class="summary__plan-return" href="/order?mpid=21">← Return to Lean Plan 7 Meals</a><div class="summary__items"></div></div>
 ${sub.tail}<div class="summary__discounts"><div class="checkout-discounts">${discounts("summary", cfg)}</div></div>
-<div class="summary__row"><span>Subtotal</span><span>$87.50</span></div>
-<div class="summary__row"><span>Shipping</span><span>${cfg.prices ? "$4.99" : "$0.00"}</span></div>
-<div class="summary__row"><span>Tax</span><span>${cfg.prices ? "$1.23" : "$0.00"}</span></div>
+<div class="summary__row"><span>Subtotal</span><span${cfg.prices ? ' data-fixture="subtotal"' : ""}>$87.50</span></div>
+<div class="summary__row"><span>Shipping</span><span>${cfg.prices ? (cfg.shippingCents ? "$" + (cfg.shippingCents / 100).toFixed(2) : "\u2014") : "$0.00"}</span></div>
+<div class="summary__row"><span>Tax</span><span>${cfg.prices ? "$" + (cfg.taxCents / 100).toFixed(2) : "$0.00"}</span></div>
+${cfg.prices && cfg.tipCents ? '<div class="summary__row"><span>Tip</span><span>$' + (cfg.tipCents / 100).toFixed(2) + "</span></div>" : ""}
 ${cfg.discountRow === "live" ? '<div class="summary__row summary__row--discount"><span><button type="button" class="summary__remove">x</button> Coupon OFFER </span><span>-$5.00</span></div>'
     : cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Discount (OFFER)</span><span>-$5.00</span></div>' : ""}
-<div class="summary__total"><span class="summary__total-label">Total</span><span class="summary__total-value">$87.50</span></div>
+<div class="summary__total"><span class="summary__total-label">Total</span><span class="summary__total-value"${cfg.prices ? ' data-fixture="total"' : ""}>$87.50</span></div>
 <div class="summary__totals"></div>
 <div class="summary__mobile-bar"><div class="summary__bar-row"><span class="summary__stat">Order total</span>
 <app-button class="summary__pay-button"><button type="button" class="checkout__pay-mobile"> PAY NOW </button></app-button></div></div>
@@ -281,6 +283,14 @@ function appHtml(cfg) {
   .mobile-cart-summary__stat { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
   .summary__plan-total { display: flex; justify-content: space-between; align-items: center; }
   .summary__plan-total-prices { display: flex; align-items: center; gap: 6px; }
+  .meal-plan__fit-af-meal-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .meal-plan__fit-af-meal-options button { display: grid; justify-content: center; gap: 2px; width: 120px; }
+  .meal-plan__fit-af-meal-options button span { font-size: 12px; font-weight: 900; }
+  .popular-card__info { display: flex; flex-direction: column; gap: 4px; }
+  .summary__header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .summary__header-right { display: flex; align-items: center; gap: 8px; }
+  .summary__row, .summary__total { display: flex; justify-content: space-between; }
+  .summary__item-price-unit { font-size: 11px; }
   @media (max-width: 1024px) {
     .checkout__submit { display: none; }
     .summary__mobile-bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; background: #fff; }
@@ -461,6 +471,17 @@ function appHtml(cfg) {
       var d = el("app-extra-products-dialog", "extras");
       d.setAttribute("role", "dialog");
       d.appendChild(el("p", null, "Add a drink? (synthetic)"));
+      // § 37 (cfg.prices): each extra's price as measured, span.popular-card__price in div.popular-card__info (a column);
+      // one free, one an upcharge (never struck).
+      if (cfg.prices) {
+        var list = el("div", "extra-products__list");
+        [["Protein Bites", "$9.00"], ["Cold Brew", "$4.50"], ["Water", "$0.00"], ["Large Cold Brew", "+$2.00"]].forEach(function (x) {
+          var c = el("app-popular-product-card"), card = el("div", "popular-card"), info = el("div", "popular-card__info");
+          info.appendChild(el("span", "popular-card__name", x[0])); info.appendChild(el("span", "popular-card__price", x[1]));
+          card.appendChild(info); c.appendChild(card); list.appendChild(c);
+        });
+        d.appendChild(list);
+      }
       var b = el("button", null, " CONTINUE TO CHECKOUT ");
       b.disabled = Boolean(cfg.continueDelayMs || cfg.continueNever);
       if (cfg.continueDelayMs && !cfg.continueNever) setTimeout(function () { b.disabled = false; }, cfg.continueDelayMs);
@@ -512,7 +533,17 @@ function appHtml(cfg) {
       var card = el("article", "meal-plan__fit-af-card"), copy = el("div", "meal-plan__fit-af-card-copy"), price = el("div", "meal-plan__fit-af-price");
       copy.appendChild(el("h2", null, p[0]));
       price.appendChild(el("span", null, "As low as")); price.appendChild(el("strong", null, money(p[1]))); price.appendChild(el("small", null, "/meal"));
-      copy.appendChild(price); card.appendChild(copy); root.appendChild(card);
+      copy.appendChild(price); card.appendChild(copy);
+      // § 37: the size picker, as measured on /meal-plans: div.meal-plan__fit-af-meal-options, a grid button per size, its
+      // count and its "$X/meal" span (Lean's sizes, the first card's).
+      if (p[0] === "Lean") {
+        var meals = el("section", "meal-plan__fit-af-meals"), options = el("div", "meal-plan__fit-af-meal-options");
+        [[4, 1300], [7, 1250], [10, 1225], [14, 1200], [21, 1150]].forEach(function (o) {
+          var b = el("button"); b.type = "button"; b.appendChild(el("strong", null, String(o[0]))); b.appendChild(el("span", null, money(o[1]) + "/meal")); options.appendChild(b);
+        });
+        meals.appendChild(options); card.appendChild(meals);
+      }
+      root.appendChild(card);
     });
   }
   // § 36, ST5: the store drawing its prices again, as Angular does: a price's text changed, its element replaced by a
@@ -612,7 +643,11 @@ function appHtml(cfg) {
       });
       var remove = el("button", "summary__item-remove", "x"); remove.type = "button"; remove.setAttribute("aria-label", "Remove item"); qty.appendChild(remove);
       info.appendChild(qty); line.appendChild(info);
-      var price = el("div", "summary__item-price"); price.appendChild(el("span", "summary__item-price-current", money(${PRICE_CENTS}))); line.appendChild(price);
+      // § 37 (cfg.prices): a line's price is its quantity's, and above one its unit price "N \u00d7 $X" in one span, as measured.
+      var q = cfg.prices ? pending.filter(function (x) { return x === name; }).length : 1;
+      var price = el("div", "summary__item-price"); price.appendChild(el("span", "summary__item-price-current", money(q * ${PRICE_CENTS})));
+      if (q > 1) price.appendChild(el("span", "summary__item-price-unit", q + " \u00d7 " + money(${PRICE_CENTS})));
+      line.appendChild(price);
       items.appendChild(line);
     });
     var plan = el("div", cfg.storeLines || cfg.prices ? "summary__plan-total" : "plan-total");
@@ -624,6 +659,13 @@ function appHtml(cfg) {
     var sub = el("div", "subtotal");
     sub.appendChild(el("span", null, "Subtotal | " + n + " items")); sub.appendChild(el("span", null, money(total)));
     totals.appendChild(sub);
+    // § 37 (cfg.prices): the summary's Subtotal, and its totals (the header's and the Total row): Subtotal + shipping + tax
+    // + tip, less the discount row's $5.00.
+    if (cfg.prices) {
+      var grand = total + (cfg.shippingCents || 0) + (cfg.taxCents || 0) + (cfg.tipCents || 0) - (cfg.discountRow ? 500 : 0);
+      root.querySelectorAll("[data-fixture=subtotal]").forEach(function (e) { e.textContent = money(total); });
+      root.querySelectorAll("[data-fixture=total]").forEach(function (e) { e.textContent = money(grand); });
+    }
     root.querySelector(".checkout__pay").onclick = pay;
     root.querySelector(".checkout__pay-mobile").onclick = pay;
     codeFields();
@@ -733,6 +775,9 @@ const DEFAULTS = {
   footerOnCheckout: false,
   orderAfterMs: 400,
   prices: false,
+  shippingCents: 499,
+  taxCents: 123,
+  tipCents: 0,
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */

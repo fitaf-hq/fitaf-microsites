@@ -2206,3 +2206,167 @@ alone (`q29-pass-three`, `q5-nothing-committed`) `# tests 7`, `# pass 7`, `# fai
 not (above) passed run alone.
 
 **The watch at the branch's tip** (`npm --prefix boston-2026-10/tools/storefront-watch test`, `nice -n 15`, at `e4c005b`, 11:51 → 11:56 PDT): `# tests 275`, `# pass 275`, `# fail 0`, `# cancelled 0` (the 272 above and PP1–PP3).
+
+## 37. Amendment, 2026-10-27: more struck prices — the plan's size picker, extras, and the order summary. CONTRACT, before any code
+
+**The Advisor, looking at § 36's block live**, `ts=2026-10-27T19:12:07.003Z`, with three screenshots: the plan page's
+*"HOW MANY MEALS DELIVERED PER WEEK?"* picker (4 · 7 · 10 · 14 · 21, each *"$14.25/meal"*): *"can we please add a struck
+price here as well?"*; the extras pop-up (*"Wait, don't forget these extras!"*, each extra's *"$9.00"*): *"how hard is
+it to add struck prices for this modal?"*; the checkout's *Order Summary* (the header's total, the line's price and its
+*"7 × $14.00"*, the Plan Total already struck, Subtotal, Shipping, Tax): *"what can we strike through here?"*. His
+rulings (`AskUserQuestion`, `ts=2026-10-27T19:17:06.106Z`): extras struck in **the pop-up and the order page's
+Additions**; on the summary **Subtotal, the line's price and the header total**: *"This is a "more is more" situation –
+we're trying to address the Owner's concern that people might not be 100% aware that they're getting a discount."*
+
+§ 36 holds except where this section widens it. Every rule of § 36 (the marker, the dates, the figure's rule, the look,
+one per price, kept true, the store's elements untouched) applies to each new surface.
+
+1. **The plan's size picker** (image 14): each size's per-meal price (*"$14.25/meal"*) struck, as the meal plans page's
+   *"As low as"* price is (§ 36 item 4 (a)).
+2. **Extras** (§ 36 item 4's *"never an add-on's"* is withdrawn for extras): each extra's price in the store's extras
+   pop-up (`app-extra-products-dialog`, the CDK overlay), and each item's price in the order page's **Additions**
+   section, struck by item 3's rule. ⛔ Still never an *upcharge* (a `+$` figure) or a price that is not one plain price.
+3. **The order summary** (the cart's and the checkout's): **Subtotal**; **each line's price** and its unit price (the
+   *"N × $X"* text: only the `$X` struck, *"7 × ~~$18.67~~ $14.00"*); **the header's total** (*"Order Summary $98.00"*).
+4. **A total is marked up for the food alone** (the orchestrator's rule, so that no fee is overstated): a total that
+   may hold shipping, tax, a tip or a discount (the header's total; and, in the same spirit, the checkout's **Total**
+   row, § 36's exclusion of it withdrawn) is struck as **the total + (the struck Subtotal − the Subtotal)**, the Subtotal
+   read from the same summary at the same moment; with no Subtotal on the page, or one that is not one plain price, the
+   total gets nothing. With no fee (today's case) it equals item 3's rule on the total: $98.00 → $130.67. ⛔ Shipping,
+   tax, tip, a discount, a gift card, the pay button: never struck.
+5. **Measured first**: the probe (`probe-prices`, extended) reads the plan page with the size picker (reached from the
+   meal plans page by the store's own link), the extras pop-up (opened by the store's own CHECKOUT press on the order
+   page, as it opens for a visitor; never pressed beyond showing it), the Additions section, and the summary's every
+   figure at 1280 and 390; ⛔ as § 36 item 7: nothing typed, never the payment, never a UTM visit. The findings in
+   `storefront/probe-prices/2026-10-27/` beside § 36's.
+6. **Cases** (ST10–ST14, as § 36's): ST10 the size picker's prices struck; ST11 the pop-up's and the Additions' prices
+   struck, an upcharge not; ST12 Subtotal, each line and its unit price; ST13 the header total and the Total with a fee
+   (shipping $5.00: total $103.00, Subtotal $98.00 → struck $135.67) and without (→ $130.67), and none without a
+   Subtotal; ST14 shipping, tax, tip, discount and the pay button never struck. **Mutant**: a total marked up whole
+   (÷ 0.75 with a fee: ST13). F2 gains the new literals; W29 reads the new surfaces the smoke reaches.
+7. **The block**: rebuilt, `storefront/footer-block/2026-10-27-fitaf-handoff-<commit>.md`; rehearsed live by the
+   orchestrator (`probe-prices --script`, `smoke --script`); pasted by the Advisor before tonight's event (Boston,
+   19:20 Eastern); the live smoke at once; accepted.
+
+### 37.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 37 above is unchanged. The probe and the cases at `c143468`, red on the unchanged block; the code at `10833c1`; the watch
+at `fc2748b`; the Footer block file `storefront/footer-block/2026-10-27-fitaf-handoff-10833c1.md` (*built, not pasted*)
+at `fa1514c`; the rehearsal probe's expected figure by § 37's kinds at `8d83a0a`.
+
+**Measured first (item 5)**: `npm --prefix boston-2026-10/tools/storefront-watch run probe-prices`, once per width, on the
+live store, 2026-10-27T19:21:36Z → 19:22:37Z (12:21–12:22 PDT), release **`main-MWPYUGIN.js`** (again a new one), Lean 7,
+the marker by init script, no `utm_` address, nothing typed, nothing pressed in the pop-up or on `/checkout`:
+`storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json` and `run-20261027T192207Z-390.json`. The probe now
+presses the first plan card's own *Choose* on `/meal-plans`, fills the cart as a visitor would (the first meal six times,
+its Add to Cart and then its "+", and a second once), reads the extras pop-up its CHECKOUT opens and presses nothing in
+it, then loads `/checkout` by its address (the cart was kept).
+
+- **The size picker is on `/meal-plans` itself**: *Choose Lean* moved nothing. Each size is a `button` (a grid, centred)
+  in `div.meal-plan__fit-af-meal-options` (a desktop and a phone `section.meal-plan__fit-af-meals`, one hidden),
+  holding its count and a `span` *"$13.00/meal"* (12 px, one text node).
+- **The extras pop-up**: `app-extra-products-dialog`, 29 extras, each `span.popular-card__price` (15 px at 1280, 13 at
+  390) in `div.popular-card__info` (a column), one *"$0.00"*.
+- **The Additions**: `span.product__content-price` on the desktop card, plain (*"$9.00"*); the phone card's
+  `span.product-card-mobile__price` reads *"From $9.00"* on most.
+- **The summary**: a line's `span.summary__item-price-current` (*"$75.00"*) and, above one, `span.summary__item-price-unit`
+  *"6 × $12.50"* (11 px, **one text node**), both in `div.summary__item-price` (a column, right-aligned); the cart's
+  `span.product__price-original` (*"$75.00"*, 10 px); the Subtotal the first `.summary__row` (*"Subtotal | 7 items"*,
+  *"$87.50"*, a space-between row); Shipping *"—"*, Tax *"$0.00"*; the header's `span.summary__total-preview` (in
+  `div.summary__header-right`); the Total's `span.summary__total-value`.
+- **§ 36's block was live and striking** for the probe's marked visit: the meal plans page's four, the order page's
+  meals, the cart's figures, the Plan Total, each its item 3 figure (`equal`).
+
+**As built** (`src/storefront/fitaf-struck.js`): `cents()` reads one plain price or a `$X/meal`; `up()` is item 3's rule;
+the targets are each an element and its figure's function: plain (`.meal-plan__fit-af-price>strong`,
+`.meal-plan__fit-af-meal-options button>:not(.fitaf-was)`, `.product__content-price`, `.product-card-mobile__price`,
+`app-cart .segment-price`, `app-cart-product-card .product__price-original`, `.mobile-cart-summary__stat-value`,
+`app-extra-products-dialog .popular-card__price`, `.summary__item-price-current`, `.summary__plan-total-value`, and each
+`.summary`'s Subtotal: the `.summary__row` whose label starts *Subtotal*, its last child), `unit` (`.summary__item-price-unit`:
+`N × $X`, its `$X`'s figure) and `tot` (`.summary__total-preview`, `.summary__total-value`: `t + up(b) - b`, `b` the
+Subtotal of the same `.summary`; no Subtotal, or not one plain price: nothing). A figure in a row spread by
+`space-between` (the Subtotal and Total rows, the card's meta row) takes the free width, right-aligned, by the parent's
+computed style.
+
+**What § 37 was silent on, and what was built** (stated, not ruled):
+
+1. **The unit price is one text node**, so *"7 × ~~$18.67~~ $14.00"* cannot be drawn without changing the store's
+   element. The `$X`'s struck figure is the line above *"N × $X"* in the line's price column (below the line's own struck
+   price and price): *"~~$100.00~~ / $75.00 / ~~$16.67~~ / 6 × $12.50"*.
+2. **The size's figure is inside the size's button**, a grid row above *"$13.00/meal"* (inserted; the button and its
+   children untouched); its text the `$X` alone.
+3. **"Each line's price" of the cart's summary** read as the order page's sidebar lines too (`product__price-original`,
+   10 px, the figure 8 px).
+4. **Not struck, not named**: the checkout's phone bar *"Total"* (`.summary__stat-value`, a total); the order page's
+   cart figures keep § 36's rule (that page has no Subtotal and no fee).
+5. **The totals' Subtotal is the closest `.summary`'s**; the header's total and the Total row are in one `.summary` on the
+   live checkout.
+6. **The free extra (*"$0.00"*), a *"From"* price and an add-on's *"+$"***: nothing, as item 3 reads them.
+7. **W29 reaches** the order page's cards (meals and Additions) and the cart under the progress screen, and on the
+   deep-carted checkout the lines, unit prices and Subtotal (in the page, hidden by H11 and H9), the Plan Total (hidden,
+   H15) and the totals (the Total row displayed); never the size picker (the smoke never visits `/meal-plans`) nor the
+   pop-up (the hand-off's key skips it).
+8. **Case readings § 37 made stale, amended**: ST1's and the site's ST1/ST4's counts (the five sizes, the Additions'
+   plain prices); ST6 (§ 37 withdraws the Additions' exclusion: now the order page's add-on, *From* and button prices);
+   ST7's count; ST9's overlap (a store element holding a figure, the size's button, is its container); the one-figure
+   check is the run right before a price (a line's price and its unit share a column); W29b; PP1, PP2.
+9. **The rehearsal probe's `expected`** follows the kinds (a unit's `$X`, a total's rule), found when the watch's suite
+   failed PP1 and PP2 at `fa1514c` (fixed at `8d83a0a`).
+
+**Red, then green** (each `nice -n 15`):
+
+| | command | red (`c143468`, the block unchanged) | green |
+|---|---|---|---|
+| the site's ST | `node --test boston-2026-10/test/r2-st-struck.test.mjs` | `# tests 8`, `# pass 5`, `# fail 3` | with `r2-04-no-fragment`: `# tests 36`, `# pass 36`, `# fail 0` (`10833c1`'s tree) |
+| the watch's ST | `node --test boston-2026-10/tools/storefront-watch/test/st-struck.test.mjs` | `# tests 21`, `# pass 6`, `# fail 15` | `# tests 21`, `# pass 21`, `# fail 0` |
+
+The five mutants, each in a mirror built by its own build, all killed: **§ 37's, a total marked up whole**
+(`t + up(b) - b` → `up(t)`: ST13 fails, *"with shipping 500: the total + (the struck Subtotal - the Subtotal)"*), and
+§ 36's four. ST13 and the site's ST12/ST13 hold the contract's figures: with shipping $5.00, $103.00 → $135.67; without,
+$98.00 → $130.67; the Subtotal $98.00 → $130.67; *"7 × $14.00"* → $18.67; no Subtotal, no struck total.
+
+**Gates** (each `nice -n 15`, one at a time, 2026-10-27):
+
+- **The block's site family** (`r2-*`, `fc-*`, `sn-*`, CC-8, PR-10, MS-9, B2), at `10833c1`'s tree, 12:33 PDT:
+  `# tests 378`, `# pass 378`, `# fail 0`.
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`): at `fa1514c`, `# tests 281`, `# pass 279`,
+  `# fail 2` (PP1, PP2: item 9 above); at `8d83a0a`, 12:46 → 12:52 PDT, `# tests 281`, `# pass 280`, `# fail 1` (P1:
+  *"Target.setAutoAttach timed out"*, Chrome's start under load); P1 alone `# tests 3`, `# pass 3`. `w29-struck` 4 of 4;
+  `probe-prices-script` 3 of 3.
+- **Storybook**, the four files that read the block, at `8d83a0a`'s tree: `# tests 21`, `# pass 21`, `# fail 0`.
+- Not run: the whole site suite (§ 37 touches only the storefront code; its files outside the family are unchanged since
+  § 36.1's run); the live smoke and the `--script` rehearsal (the orchestrator's); F2 against the live release's files.
+
+**The size, the pins.** The Footer block **24,589 → 25,697** bytes (`91b875e` → `10833c1`), the console file **24,570 →
+25,678**; the cap 50,000. Text SHA-256 `57f816db…` → `d278789f9eb39cec94c42877bdda64f5bd7e4e4e5ada233f1bd677b22ddf712e`;
+the Footer block's SHA-256 `b2799bf000a26bf455772781913ceed8d6304a018cdb631fdbb51b9d590dc1ad`. R2-32, PR-10 and CC-8's
+`footer_text_sha256` moved. F2 gains nine literals read by the probe (§ 37's surfaces), not yet in the release's files.
+
+**Left**: the orchestrator's rehearsal (`npm --prefix boston-2026-10/tools/storefront-watch run probe-prices -- --script
+boston-2026-10/storefront/footer-block/2026-10-27-fitaf-handoff-10833c1.md --out <a directory>`, and `smoke --script`);
+the Advisor's paste before 19:20 Eastern; the live smoke at once; `accept`.
+
+### 37.2 The admin refused 10833c1's block; fixed (2026-10-27)
+
+**The refusal**: the store's admin (Custom Scripts, Footer) refused the paste of `10833c1`'s block with *"Attribute values
+can't contain < or >."*; `91b875e`'s block, the same `<script>` wrapper and 38 `>`, pasted fine. **Measured by the
+orchestrator** on both shipped fragments with `[\w\-:.]+\s*=\s*("[^"\n]*"|'[^'\n]*')`, counting the matches whose quoted
+value holds `<` or `>`: `91b875e` 0, `10833c1` exactly 1, `fitaf-struck.js`'s `var PLAIN = ".meal-plan__fit-af-price>strong,
+.meal-plan__fit-af-meal-options button>:not(.fitaf-was),…"`. The admin reads `name = "value"` as an HTML attribute.
+
+**The fix** (`ab1d4d7`): the selector string is `querySelectorAll`'s argument, as § 36's `prices()` had it; no `var`
+holds it. No behaviour changed. **R2-94** (`test/r2-94-no-attribute-angle.test.mjs`, beside R2-58 and R2-77): the Footer block
+and the console file hold zero such matches; its control plants `var X = "a>b"` and `var Y='a<b'` and both are caught,
+and `d.querySelectorAll(".a>b")` is not. Red on `10833c1`'s text (`nice -n 15 node --test
+boston-2026-10/test/r2-94-no-attribute-angle.test.mjs`, committed at `985b828`): `# tests 2`, `# pass 1`, `# fail 1` (the one
+match, `PLAIN = "…"`); green at `ab1d4d7`: `# tests 2`, `# pass 2`, `# fail 0`.
+
+**Gates** (each `nice -n 15`, at `ab1d4d7`'s tree): the block's site family (`r2-*`, `fc-*`, `sn-*`, CC-8, PR-10, MS-9, B2)
+`# tests 380`, `# pass 380`, `# fail 0`; the watch's `st-struck` and `w29-struck` `# tests 25`, `# pass 25`, `# fail 0` (the
+five mutants still killed). The whole watch suite and Storybook were not re-run (no watch or Storybook file changed;
+§ 37.1's runs stand for them).
+
+**The block**: `storefront/footer-block/2026-10-27-fitaf-handoff-ab1d4d7.md` (*built, not pasted*, at `c25a847`), version
+line `fitaf-handoff ab1d4d7 sha256:0e259ec17206722b308dff3f7f34fae916c14cf8eff03e1f0a8a28250447b23d`, fragment 25,678
+bytes, SHA-256 `7db1dd2149b431ebbfcd1bd78fb87c93e74c61bc8f2a84a3ee8571c652488fec`, the admin's measure on it 0. Pins
+(R2-32, PR-10, CC-8) `d278789f…` → `0e259ec1…`. `10833c1`'s block file is kept as the record of the refused build.

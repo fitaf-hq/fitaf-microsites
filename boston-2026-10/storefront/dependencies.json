@@ -440,6 +440,60 @@
       "literal": "\"summary__plan-total-value\"",
       "use": "§ 36 item 4 (d): the checkout's Plan Total figure, struck (H15 hides its row on the deep-carted checkout); read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
       "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
+    },
+    {
+      "id": "struck-size-picker",
+      "literal": "\"meal-plan__fit-af-meal-options\"",
+      "use": "§ 37 item 1: the size picker's options, each size's button holding its count and its \"$X/meal\" span, struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
+    },
+    {
+      "id": "struck-extra-price",
+      "literal": "\"popular-card__price\"",
+      "use": "§ 37 item 2: an extra's price in the store's extras pop-up (app-extra-products-dialog), struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
+    },
+    {
+      "id": "struck-cart-line",
+      "literal": "\"product__price-original\"",
+      "use": "§ 37 item 3: a cart line's price in the order page's sidebar (app-cart-product-card), struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
+    },
+    {
+      "id": "struck-cart-line-card",
+      "literal": "\"app-cart-product-card\"",
+      "use": "§ 37 item 3: the order page's cart line, where its price is; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
+    },
+    {
+      "id": "struck-line-price",
+      "literal": "\"summary__item-price-current\"",
+      "use": "§ 37 item 3: a summary line's price, struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
+    },
+    {
+      "id": "struck-unit-price",
+      "literal": "\"summary__item-price-unit\"",
+      "use": "§ 37 item 3: a summary line's unit price (\"N x $X\"), its $X struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
+    },
+    {
+      "id": "struck-summary",
+      "literal": "\"summary\"",
+      "use": "§ 37 item 4: the summary a total and its Subtotal are read in together; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
+    },
+    {
+      "id": "struck-header-total",
+      "literal": "\"summary__total-preview\"",
+      "use": "§ 37 items 3 and 4: the summary header's total, struck by the totals' rule; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
+    },
+    {
+      "id": "struck-total",
+      "literal": "\"summary__total-value\"",
+      "use": "§ 37 item 4: the Total row's figure, struck by the totals' rule; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/run-20261027T192136Z-1280.json and -390, release main-MWPYUGIN.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 37; W29"
     }
   ]
 }

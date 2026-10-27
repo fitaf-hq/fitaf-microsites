@@ -131,7 +131,9 @@ refused (both before any visit) or a visit that failed; it writes nothing unless
   the surfaces it reaches shows its struck figure exactly once, right before it, equal to price x 100 / (100 - the share)
   to the cent, and none outside the offer; a fault counts when two samples in a row show it. The smoke reaches the order
   page's meals and the cart summary (under the progress screen) and the deep-carted checkout's Plan Total, in the page
-  and hidden by H15; never the meal plans page. A block without the struck prices is not judged (a report line). In paste
+  and hidden by H15; never the meal plans page. Since § 37 also every section's card prices, the size picker, the extras
+  pop-up, the summary's lines, unit prices, Subtotal and totals (each total struck as the total + (the struck Subtotal −
+  the Subtotal)); the smoke's deep-carted checkout holds the lines and the Subtotal hidden (H11, H9) and the Total displayed. A block without the struck prices is not judged (a report line). In paste
   mode the struck prices of a block of ours already on the page are held off (`__fitafStruck`), as its hand-off is. By § 12 it reports (W15, not a pass rule) whether the store's extras pop-up opened
   (expected: not) and the seconds from fill B's press of CHECKOUT to `/checkout`. By § 15 it requires the Fit AF logo
   (W16): seen on the progress screen, and a child `img[alt="Fit AF"]` of `app-checkout` displayed; absent fails the
