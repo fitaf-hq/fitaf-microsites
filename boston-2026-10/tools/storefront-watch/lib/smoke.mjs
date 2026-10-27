@@ -34,6 +34,7 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
 import { LOG_PREFIX, MPID, SITE_DIR, STORE_ORIGIN, VIEWPORTS, WIDTHS } from "./config.mjs";
 import { extrasReport, facesVerdict, LOGO, logoVerdict, readCheckoutFaces, readRecorded, recordFaces, SCREEN_ID, STYLE_ID } from "./faces.mjs";
+import { carriesStruck, MEAL_PRICES, MEAL_SECTION, newYorkDate, offerOn, readStruck, recordStruck, STRUCK_KEY, STRUCK_SURFACES, struckVerdict } from "./struck.mjs";
 import { parseBlock } from "./footer-check.mjs";
 import { siteCode } from "./site-code.mjs";
 import { DONE_LINE, smokeVerdict } from "./smoke-verdict.mjs";
@@ -308,11 +309,13 @@ export async function scriptMode({ liveBlocks = [], scriptFile = null, code, why
   }
 }
 
-export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, executablePath, link = null, onPage = null, shots = null }) {
+export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, executablePath, link = null, onPage = null, shots = null, struckDate = newYorkDate() }) {
   const mpid = link ? Number(new URL(link).searchParams.get("mpid")) : MPID;
   // The meals the run checks out: a given link's own (SPEC-rung2-fill-c § 8: 5 on the 4 plan), else the plan's count.
   const need = (link && linkMeals(link)) || code.planCounts.get(mpid);
-  const outcome = { width, need, menu: 0, menuNames: [], chosen: [], snacks: [], link: null, console: [], errors: [], checkout: null, faces: null, evidence: null, shot: null };
+  const outcome = { width, need, menu: 0, menuNames: [], chosen: [], snacks: [], link: null, console: [], errors: [], checkout: null, faces: null, evidence: null, shot: null, struck: null, struckMeta: null };
+  // W29 (SPEC-rung2-progress-and-checkout § 36 item 10): the offer's share on the smoke's own date in New York.
+  const share = offerOn(struckDate);
   const { browser, close } = await freshBrowser({ executablePath });
   try {
     const menuContext = await browser.createBrowserContext();
@@ -355,9 +358,13 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
       page.on("console", (m) => outcome.console.push(m.text()));
       page.on("pageerror", (e) => outcome.errors.push(String(e?.message ?? e)));
       await page.evaluateOnNewDocument(recordFaces, { screen: SCREEN_ID, style: STYLE_ID, logo: LOGO, hosts: code.photoHosts ?? [] });
+      // W29: the block's mark (fitaf_struck, never a UTM) and the struck prices' recorder, from before the page's scripts.
+      await page.evaluateOnNewDocument(recordStruck, { key: STRUCK_KEY, share, surfaces: STRUCK_SURFACES, meals: MEAL_PRICES, section: MEAL_SECTION });
       if (mode.kind === "paste") {
+        // Any block of ours on the page held off, its struck prices too (§ 36's own once-per-load mark).
         await page.evaluateOnNewDocument(() => {
           window.__fitafHandoff = true;
+          window.__fitafStruck = true;
         });
       }
       await page.goto(outcome.link, { waitUntil: "load", timeout: NAV_MS });
@@ -365,6 +372,7 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
         await poll(page, () => document.querySelectorAll("app-product-card").length, null, (n) => n > 0, { timeoutMs: MENU_MS });
         await page.evaluate(() => {
           delete window.__fitafHandoff;
+          delete window.__fitafStruck;
         });
         try {
           await page.evaluate(mode.text);
@@ -382,6 +390,12 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
       // photographs: the directory is never one git tracks (§ 6; P1).
       if (shots && outcome.checkout?.path === "/checkout") outcome.shot = await shotOf(page, shots, width);
       outcome.faces = await facesOf(page, outcome);
+      try {
+        outcome.struck = await page.evaluate(readStruck);
+      } catch {
+        outcome.struck = null;
+      }
+      outcome.struckMeta = { carries: mode.kind === "paste" ? carriesStruck(mode.text) : Boolean(outcome.struck?.blockSeen), share, date: struckDate };
       outcome.evidence = await evidenceOf(page, "the page the link ended on", outcome.console, outcome.errors);
       await context.close();
     }
@@ -397,7 +411,9 @@ export async function smokeRun({ origin = STORE_ORIGIN, width, mode, code, execu
   });
   // W10–W14 and W16 (lib/faces.mjs), when the link was run; a width that never ran it has already failed on the rule above.
   const faces = outcome.faces ? [...facesVerdict(outcome.faces).reasons, ...logoVerdict(outcome.faces).reasons] : [];
-  const reasons = [...base.reasons, ...faces];
+  // W29, a pass rule for a block that carries the struck prices (lib/struck.mjs).
+  const struck = outcome.struckMeta ? struckVerdict(outcome.struck, outcome.struckMeta).reasons : [];
+  const reasons = [...base.reasons, ...faces, ...struck];
   return { width, verdict: { pass: reasons.length === 0, reasons }, outcome };
 }
 

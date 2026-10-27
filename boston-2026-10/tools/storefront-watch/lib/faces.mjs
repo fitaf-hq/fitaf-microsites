@@ -46,8 +46,8 @@
 //        how many, its words, its href, its computed font size, displayed or not, inside app-checkout or not. A block
 //        from before § 33 has none: ABSENT, never a failure, so the hourly smoke of the live block is unchanged.
 //        § 35: and the save link, a#fitaf-save, read at every step of the walk (saveLine: once, its words, address, target
-//        and rel, size, the steps it is displayed at, above the contact link); W11 counts it among another step's
-//        controls at steps 1 and 2, where the block's style hides it by design.
+//        and rel, size, the steps it is displayed at, above the contact link). § 36 item 8 removed the link: the line
+//        says ABSENT for § 36's block, and W11 no longer counts it among step 3's controls (§ 36 item 10).
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -244,14 +244,13 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
     // § 25 (W20): at a step, the controls of the steps not shown are hidden by design (the form at step 1; at step 2
     // the form but step 2's sections, and the lines; at step 3 step 2's sections and the lines), and so is the pay
     // button before step 3. With no step (a block from before § 25), none.
-    // § 35: the save link is step 3's alone, hidden at steps 1 and 2 by design.
+    // § 36 item 10: § 35's clause for the save link (step 3's alone, hidden at steps 1 and 2) is gone with the link.
     const offStep = (el) => {
       const form = el.closest(".checkout__form");
       const two = step2.length && el.closest(step2.join(","));
       const lines = el.closest(line);
-      const three = Boolean(save && el.closest(`[id="${save}"]`));
-      if (step === 1) return Boolean(form || isPay(el) || three);
-      if (step === 2) return Boolean((form && !two) || lines || isPay(el) || three);
+      if (step === 1) return Boolean(form || isPay(el));
+      if (step === 2) return Boolean((form && !two) || lines || isPay(el));
       if (step === 3) return Boolean(two || lines);
       return false;
     };

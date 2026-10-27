@@ -306,7 +306,7 @@
     {
       "id": "plan-items-stat",
       "literal": "\"mobile-cart-summary__stat-value\"",
-      "use": "the cart bar's \"Items\" value (below 1025 px; its other value, the cart's total, is a price and is not read): the plan's own count there",
+      "use": "the cart bar's \"Items\" value (below 1025 px; its other value, the cart's total, is a price and is not read): the plan's own count there; and since SPEC-rung2-progress-and-checkout § 36 item 4 (c), the bar's Cart Total (the same class as its count), struck",
       "spec": "SPEC-rung2-fill-c.md § 1.4; § 2a"
     },
     {
@@ -392,6 +392,54 @@
       "literal": "\"aria-expanded\"",
       "use": "SPEC-snacks-in-the-cart § 3.3: the block presses a snack's Select Options only while its aria-expanded is not \"true\", so it never closes an expansion (the store binds it to isAddonsExpanded(); main-UMGPHR2R.js, chunk-IWW3GX6Q.js, 2026-10-08)",
       "spec": "SPEC-snacks-in-the-cart.md § 3.3; SN-2"
+    },
+    {
+      "id": "struck-plans-price",
+      "literal": "\"meal-plan__fit-af-price\"",
+      "use": "§ 36 item 4 (a): the meal plans page's price per plan, the strong in div.meal-plan__fit-af-price, struck for a marked visitor; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
+    },
+    {
+      "id": "struck-section",
+      "literal": "\"products__section\"",
+      "use": "§ 36 item 4 (b): the order page's sections; only a meals section's prices are struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
+    },
+    {
+      "id": "struck-section-title",
+      "literal": "\"products__section-title\"",
+      "use": "§ 36 item 4 (b): a section's heading, read for meals (\"All Meals\"; never \"Additions\"); read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
+    },
+    {
+      "id": "struck-meal-price",
+      "literal": "\"product__content-price\"",
+      "use": "§ 36 item 4 (b): a meal's price on its desktop card, struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
+    },
+    {
+      "id": "struck-meal-price-mobile",
+      "literal": "\"product-card-mobile__price\"",
+      "use": "§ 36 item 4 (b): a meal's price on its phone card, struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
+    },
+    {
+      "id": "struck-cart",
+      "literal": "\"app-cart\"",
+      "use": "§ 36 item 4 (c): the order page's cart sidebar (1025 px and wider), where the plan's figure is; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
+    },
+    {
+      "id": "struck-cart-price",
+      "literal": "\"segment-price\"",
+      "use": "§ 36 item 4 (c): the sidebar's figure for the meals (\"$87.50 One Time Order\"), struck; read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
+    },
+    {
+      "id": "struck-plan-total",
+      "literal": "\"summary__plan-total-value\"",
+      "use": "§ 36 item 4 (d): the checkout's Plan Total figure, struck (H15 hides its row on the deep-carted checkout); read from the live page's markup by the price probe (storefront/probe-prices/2026-10-27/, release main-WMT2MEGW.js); not yet found in the release's files by F2 (no request made at the build)",
+      "spec": "SPEC-rung2-progress-and-checkout.md § 36 item 4, item 10; W29"
     }
   ]
 }

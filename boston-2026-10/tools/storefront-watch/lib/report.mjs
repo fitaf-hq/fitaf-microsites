@@ -2,6 +2,7 @@
 // the smoke's own report (bin/smoke.mjs). It quotes file names, the dependency literals and our own console lines, and,
 // for a smoke width that FAILED, the page as text (§ 7 item 2): never the store's code or config, never a screenshot.
 import { extrasLine, facesSummary, helpLine, linesLine, logoLine, saveLine, sheetLine, stepsLine } from "./faces.mjs";
+import { struckLine } from "./struck.mjs";
 import { basename } from "node:path";
 import { cutLine, redact } from "./redact.mjs";
 
@@ -135,6 +136,7 @@ function smokeRun(run) {
   if (o.faces) out.push(`- ${redact(stepsLine(o.faces))} (SPEC-rung2-progress-and-checkout § 25)`);
   if (o.faces) out.push(`- ${redact(helpLine(o.faces))} (SPEC-rung2-progress-and-checkout § 33)`);
   if (o.faces) out.push(`- ${redact(saveLine(o.faces))} (SPEC-rung2-progress-and-checkout § 35)`);
+  if (o.struckMeta) out.push(`- ${redact(struckLine(o.struck, o.struckMeta))} (SPEC-rung2-progress-and-checkout § 36)`);
   if (o.errors.length) out.push(`- page errors: ${o.errors.slice(0, 5).map((e) => `\`${cutLine(e)}\``).join(" · ")}`);
   if (!run.verdict.pass) out.push(...evidenceLines(o.evidence));
   return out;
