@@ -1,7 +1,10 @@
-// The page's analytics (SPEC-analytics.md §§ 1–4): six events from a closed list, each one beacon to the page's own
-// /a. The build inlines this text BEFORE app.js (so the error listener is there first), with its whole-line `//`
+// The page's analytics (SPEC-analytics.md §§ 1–4): eight events from a closed list (since § 14, `save`; since § 16, the
+// offer page's `offer`), each one beacon to the page's own /a. The build inlines this text BEFORE app.js (so the error listener is there first), with its whole-line `//`
 // comments, its blank lines and each line's indentation removed (build.mjs analyticsSlot: the dev page is near T5's
 // 60 KB), and data/events.json's ids written into QR_IDS below.
+// Since § 16 (2026-10-27) the same text is the offer page's (/o/<code>, src/worker/redeem.js) too: the Worker cannot read
+// this file, so it inlines src/worker/page-script.json, which `npm run worker:script` derives from the build's own slot
+// (EM-A1 fails when the two differ). One sender, one call site, on both pages.
 //
 // ⛔ Nothing is stored on the device (§ 1.1): no cookie, no storage API. The visit id `s` is made here, in memory, at
 // load (crypto.getRandomValues), and is gone with the page; a reload is a new visit (§ 2).
@@ -49,17 +52,31 @@ var QR_IDS = /*QR_IDS*/[];
       navigator.sendBeacon("/a", JSON.stringify(body));
     } catch (e) {}
   }
+  // § 16 item 1: the offer page. Its Worker gives this script the page's `kind` and the save's event id (`qr`) as data,
+  // #offer-data; the script sends one `offer` with them and nothing else (no leave, no error), and reads nothing of the
+  // page's address: never the code, the path, the query or the referrer. A page without it is the plan page.
+  var offer = d.getElementById("offer-data");
+  if (offer) {
+    try {
+      var o = JSON.parse(offer.textContent);
+      send("offer", { qr: o.qr, kind: o.kind });
+    } catch (e) {}
+    return;
+  }
   // `error`: the first uncaught script error, `s` only (§ 3).
   w.addEventListener("error", function () {
     if (!failed) send("error", {});
     failed = 1;
   });
-  // `open`: the viewport's band (§ 1.4), the load time, the QR event if the URL names one data/events.json has (§ 9).
+  // `open`: the viewport's band (§ 1.4), the load time, the QR event if the URL names one data/events.json has (§ 9), and
+  // since § 16 item 2 `via`: "email" when the page starts at #from-email exactly (the offer page's link), read here once,
+  // from the fragment alone, which is not rewritten by it; else "".
   var x = w.innerWidth || 0;
   send("open", {
     viewport: x < 400 ? "<400" : x < 768 ? "400-767" : x < 1200 ? "768-1199" : ">=1200",
     load_ms: ms(),
-    qr: qrEvent(w.location.search, QR_IDS)
+    qr: qrEvent(w.location.search, QR_IDS),
+    via: w.location.hash == "#from-email" ? "email" : ""
   });
   // `answer` and `click`, read off the pressed element (in the capture phase, before the page's own handlers). Since § 13
   // the first question (`who`, its data-who) and Family's own (`family`, its data-family) are answers as the others are.
@@ -85,6 +102,14 @@ var QR_IDS = /*QR_IDS*/[];
   }
   w.addEventListener("hashchange", function () { w.setTimeout(result, 0); });
   w.setTimeout(result, 0);
+  // § 15 item 4: once more after every inline script has run, app.js included. A page opened at a whole answer set shows
+  // its plan as app.js runs, and the timer above can run before that, while the parser is paused before app.js.
+  d.addEventListener("DOMContentLoaded", result);
+  // `save` (§ 14): the save step (src/save/flow1.js) tells this script, by `fitaf:saved` on document with no detail, that
+  // its Worker answered an offer save as stored. `s` only; not a step of the funnel, so `leave`'s deepest is unchanged.
+  d.addEventListener("fitaf:saved", function () {
+    send("save", {});
+  });
   // `leave`, once: the page hidden or left, whichever is first.
   function leave() {
     send("leave", { length_ms: ms(), step: STEPS[deepest] });

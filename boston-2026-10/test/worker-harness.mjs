@@ -8,6 +8,8 @@
 // (true unless given), the Turnstile secret the test key (production's is a secret, never in the config), and an ASSETS
 // binding that answers 404 and records each request. Each production Worker started is appended to the file
 // BOSTON_SAVE_WORKER_LOG names, if set, so SP6 can see the cases ran against it.
+// SPEC-the-redirect.md § 1 item 2 (every existing case of the page runs with it absent): the config's REDIRECT_TO is not
+// among the vars the Worker is given unless a case passes it in `bindings`.
 import assert from "node:assert/strict";
 import { appendFile, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -17,6 +19,7 @@ import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import events from "../data/events.json" with { type: "json" };
 import saveConfig from "../data/save.json" with { type: "json" };
 import { devConfig, ROOT } from "../build.mjs";
+import { withRedirectTo } from "./a-harness.mjs";
 import { tokenMinter } from "../src/worker/confirm-token.js";
 import { d1Adapter } from "../src/worker/d1-adapter.js";
 import offersFile from "../data/offers.json" with { type: "json" };
@@ -139,7 +142,7 @@ export async function startWorker({ bindings = {}, resend, worker: which = proce
     ratelimits: Object.fromEntries(
       cfg.ratelimits.map((r) => [r.name, { namespace_id: r.namespace_id, simple: r.simple }]),
     ),
-    bindings: { ...cfg.vars, ...(isProduction ? { TURNSTILE_SECRET_KEY: TEST_TURNSTILE_SECRET } : {}), ...bindings },
+    bindings: { ...withRedirectTo(cfg.vars), ...(isProduction ? { TURNSTILE_SECRET_KEY: TEST_TURNSTILE_SECRET } : {}), ...bindings },
     ...(isProduction || assets
       ? {
           serviceBindings: {

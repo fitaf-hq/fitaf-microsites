@@ -11,8 +11,15 @@
 //   Miniflare's own local bindings), and that sets the Worker's clock (`Date.now`) to the `x-a-clock` header a case
 //   sends (removed before the Worker sees the request). The wrapper answers one path of its own, /__a/log. `cf: false`:
 //   Miniflare's fallback `request.cf`, never the network's (a case gives the country per request).
+//   Since SPEC-the-redirect.md § 1 item 6 (a data point written AFTER the answer, ctx.waitUntil): the wrapper hands the
+//   Worker a ctx whose waitUntil it also keeps, and /__a/log waits for every promise kept before it reads the log, so a
+//   point written after its answer is in the next log; `answered` holds, for each request answered, how many points
+//   were written by the time its answer was returned. And a request carrying `x-a-fail-write: 1` (removed before the
+//   Worker sees it) gets a dataset whose writeDataPoint throws (RD8).
 // - `configuredSite()` runs the Worker as wrangler.jsonc configures it, through wrangler's own translation, as
-//   wc-harness's `configured()` does, but with `cf: false`.
+//   wc-harness's `configured()` does, but with `cf: false`. Since SPEC-the-redirect.md § 1 item 2 ("every existing case
+//   of the page runs with REDIRECT_TO absent") wrangler.jsonc's REDIRECT_TO is removed from the vars unless a case asks for
+//   it (`redirectTo`).
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -24,7 +31,7 @@ import { build as esbuild } from "esbuild";
 import { parseHTML } from "linkedom";
 import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { ROOT } from "../build.mjs";
-import { FIXTURE_DIR, pageWithPicks } from "./cc-harness.mjs";
+import { clockAt, FIXTURE_DIR, pageWithPicks } from "./cc-harness.mjs";
 
 /** A documentation address (RFC 5737, TEST-NET-3) and an invented user agent: what A4 must find in no written field. */
 export const TEST_IP = "203.0.113.7";
@@ -36,16 +43,25 @@ export const ORDER = "https://fitafnutrition.com/order";
 /** A visit id as § 2 makes it: 16 hex digits. */
 export const VISIT_ID = /^[0-9a-f]{16}$/;
 
-/** One valid body of each § 3 event, written from the contract's table (the vocabulary of data/plans.json and app.js). */
+/** One valid body of each § 3 event, written from the contract's table (the vocabulary of data/plans.json and app.js);
+ *  since § 14 (a saved offer counted) also `save`, which carries `s` alone; since § 16 item 2 `open` carries `via`, ""
+ *  for a visit that did not start at #from-email. */
 export const S1 = "0123456789abcdef";
 export const VALID = {
-  open: { event: "open", s: S1, viewport: "<400", load_ms: 812, qr: "" },
+  open: { event: "open", s: S1, viewport: "<400", load_ms: 812, qr: "", via: "" },
   answer: { event: "answer", s: S1, question: "goal", answer: "lean" },
   result: { event: "result", s: S1, key: "or-7d", mpid: 21 },
   click: { event: "click", s: S1, link: "chefs-choice", mpid: 21 },
   leave: { event: "leave", s: S1, length_ms: 64000, step: "click" },
   error: { event: "error", s: S1 },
+  save: { event: "save", s: S1 },
 };
+
+/** SPEC-analytics.md § 15 item 2: the visitor `v` is a data point's blob12 (it was index1, which is now the point's own
+ *  random index): the twelfth blob, its place in § 10's layout written here. */
+export const V_BLOB = 11;
+/** A written data point's visitor (§ 15 item 2: its blob12). */
+export const visitorOf = (point) => point.blobs?.[V_BLOB];
 
 /** The page `npm run build` (or `build:dev`, target "dev") writes, of the package at `root`; with `week`, the fixture
  *  week's content in its #picks-data as the Workers put it (cc-harness pageWithPicks). */
@@ -72,12 +88,24 @@ const STORAGE = ["localStorage", "sessionStorage", "indexedDB"];
  * `beacons` (each { url, data, body }), `touched` (storage APIs touched), `errors` (scripts that threw), `press(id or
  * element)`, `go(hash)`, `at(ms)` (the clock), `hide()` (visibilitychange to hidden), `pagehide()`, `fail(error)` (an
  * uncaught error reported to the window), `el(id)`, `document`.
+ * Since SPEC-analytics.md § 14 (a saved offer counted), for a visit through the save step: `date`, the browser's clock
+ * (Date.now and new Date, cc-harness clockAt; omitted, the real one), on which the step chooses its offer; `globals`, the
+ * browser's own objects a case stands in for (uc-harness saveStubs' Turnstile and fetch), as cc-harness openPlanPage
+ * takes them; and the window's `Event`, linkedom's, as a browser's window has one.
+ * Since SPEC-analytics.md § 15 item 4 (a plan shown at load read after the page's first draw): `DOMContentLoaded` is
+ * dispatched at the document (and the window, where it bubbles) once every inline script has run, as a browser does; and
+ * `yieldBetweenScripts` lets the page's timers run after each inline script, before the next: the parser paused between
+ * two scripts, where a browser may run a timer the first one set (the analytics script's, before app.js has drawn).
+ * Since SPEC-analytics.md § 16 item 1 (the offer page's script "does not read `location`"): `watchLocation` records, in
+ * the visit's `reads`, every read of the window's `location` (each property, by name) and of the document's own
+ * addresses (`location`, `URL`, `documentURI`, `referrer`, `baseURI`); without it the stub is as before.
  */
-export function openVisit(html, { hash = "", search = "", width = 390, clock = 0 } = {}) {
+export function openVisit(html, { hash = "", search = "", width = 390, clock = 0, date, globals = {}, yieldBetweenScripts = false, watchLocation = false } = {}) {
   const { document, Event } = parseHTML(html);
   const beacons = [];
   const touched = [];
   const errors = [];
+  const reads = [];
   const listeners = {};
   const timers = [];
   let now = clock;
@@ -125,8 +153,27 @@ export function openVisit(html, { hash = "", search = "", width = 390, clock = 0
       return timers.length;
     },
     clearTimeout() {},
+    Event,
   };
+  Object.assign(g, globals);
   g.window = g;
+  if (watchLocation) {
+    g.location = new Proxy(location, {
+      get(target, name, receiver) {
+        reads.push(`location.${String(name)}`);
+        return Reflect.get(target, name, receiver);
+      },
+    });
+    for (const name of ["location", "URL", "documentURI", "referrer", "baseURI"]) {
+      Object.defineProperty(document, name, {
+        get() {
+          reads.push(`document.${name}`);
+          return "";
+        },
+      });
+    }
+  }
+  if (date !== undefined) g.Date = clockAt(date);
   for (const name of STORAGE) {
     Object.defineProperty(g, name, {
       get() {
@@ -160,7 +207,10 @@ export function openVisit(html, { hash = "", search = "", width = 390, clock = 0
     } catch (error) {
       report(error);
     }
+    if (yieldBetweenScripts) flush();
   }
+  document.dispatchEvent(new Event("DOMContentLoaded", { bubbles: true }));
+  fire("DOMContentLoaded", { type: "DOMContentLoaded" });
   flush();
   const el = (id) => {
     const found = typeof id === "string" ? document.getElementById(id) : id;
@@ -172,6 +222,7 @@ export function openVisit(html, { hash = "", search = "", width = 390, clock = 0
     beacons,
     touched,
     errors,
+    reads,
     el,
     hash: () => current,
     at(ms) {
@@ -265,7 +316,8 @@ export function wholeVisit(html) {
 
 const WRAPPER = (entry) => `
 import worker from ${JSON.stringify(entry)};
-const log = { points: [], puts: [], gets: [] };
+const log = { points: [], puts: [], gets: [], answered: [] };
+const pending = [];
 const realNow = Date.now;
 const salts = (kv) => ({
   get(key, options) { log.gets.push(key); return kv.get(key, options); },
@@ -273,25 +325,31 @@ const salts = (kv) => ({
   list(options) { return kv.list(options); },
   delete(key) { return kv.delete(key); },
 });
-const dataset = (ae) => ({ writeDataPoint(point) { log.points.push(point); return ae.writeDataPoint(point); } });
+const dataset = (ae, fail) => ({ writeDataPoint(point) { if (fail) throw new Error("x-a-fail-write"); log.points.push(point); return ae.writeDataPoint(point); } });
 export default {
   async fetch(request, env, ctx) {
     const { pathname } = new URL(request.url);
     if (pathname === "/__a/log") {
+      await Promise.allSettled(pending.splice(0));
       const out = JSON.stringify({ ...log, keys: env.SALTS ? (await env.SALTS.list()).keys : [] });
-      log.points = []; log.puts = []; log.gets = [];
+      log.points = []; log.puts = []; log.gets = []; log.answered = [];
       return new Response(out, { headers: { "content-type": "application/json" } });
     }
     const clock = request.headers.get("x-a-clock");
+    const fail = request.headers.get("x-a-fail-write") === "1";
     const headers = new Headers(request.headers);
     headers.delete("x-a-clock");
+    headers.delete("x-a-fail-write");
     const forwarded = new Request(request, { headers });
     Date.now = clock ? () => Number(clock) : realNow;
     try {
       const wrapped = { ...env };
       if (env.SALTS) wrapped.SALTS = salts(env.SALTS);
-      if (env.ANALYTICS) wrapped.ANALYTICS = dataset(env.ANALYTICS);
-      return await worker.fetch(forwarded, wrapped, ctx);
+      if (env.ANALYTICS) wrapped.ANALYTICS = dataset(env.ANALYTICS, fail);
+      const kept = { waitUntil(promise) { pending.push(promise); return ctx.waitUntil(promise); }, passThroughOnException() { return ctx.passThroughOnException(); } };
+      const answer = await worker.fetch(forwarded, wrapped, kept);
+      log.answered.push(log.points.length);
+      return answer;
     } finally {
       Date.now = realNow;
     }
@@ -315,10 +373,13 @@ function handle(mf, assetRequests) {
   return {
     mf,
     assetRequests,
-    /** POST `body` (an object is sent as JSON) to `path` (§ 4's /a), from `ip` with `ua`, in `country`, at `clock`. */
-    async post(body, { path = BEACON, ip = TEST_IP, ua = TEST_UA, country = "US", clock, host = "eatfitaf.com", method = "POST" } = {}) {
-      const headers = { "cf-connecting-ip": ip, "user-agent": ua, "content-type": "text/plain;charset=UTF-8" };
+    /** POST `body` (an object is sent as JSON) to `path` (§ 4's /a), from `ip` with `ua`, in `country`, at `clock`;
+     *  since SPEC-the-redirect.md also any `method` (a GET or HEAD sends no body) with `headers` added (a Cookie, a
+     *  Referer), and `failWrite` (the dataset's writeDataPoint throws for this request). */
+    async post(body, { path = BEACON, ip = TEST_IP, ua = TEST_UA, country = "US", clock, host = "eatfitaf.com", method = "POST", headers: more = {}, failWrite = false } = {}) {
+      const headers = { "cf-connecting-ip": ip, "user-agent": ua, "content-type": "text/plain;charset=UTF-8", ...more };
       if (clock !== undefined) headers["x-a-clock"] = String(clock);
+      if (failWrite) headers["x-a-fail-write"] = "1";
       const res = await mf.dispatchFetch(`https://${host}${path}`, {
         method,
         headers,
@@ -339,13 +400,14 @@ function handle(mf, assetRequests) {
 /**
  * The Worker `entry` ("site": production's; "index": the development Worker) of the package at `root`, with SALTS (a
  * local KV namespace), ANALYTICS (a local dataset), WEEK (an empty local bucket) and a fake ASSETS answering 404.
- * `bindings: false` starts it with none of SALTS and ANALYTICS.
+ * `bindings: false` starts it with none of SALTS and ANALYTICS. Since SPEC-the-redirect.md: `vars`, the Worker's vars (its
+ * REDIRECT_TO); `assets`, a function of the Request answering for the fake ASSETS (each request still recorded).
  */
-export async function startBeacon({ root = ROOT, entry = "site", bindings = true } = {}) {
+export async function startBeacon({ root = ROOT, entry = "site", bindings = true, vars = {}, assets: answer = null } = {}) {
   const assetRequests = [];
   const assets = async (request) => {
     assetRequests.push({ method: request.method, path: new URL(request.url).pathname });
-    return new Response("assets: not found", { status: 404 });
+    return answer ? answer(request) : new Response("assets: not found", { status: 404 });
   };
   const mf = new Miniflare(
     convertV4MiniflareOptions({
@@ -358,6 +420,7 @@ export async function startBeacon({ root = ROOT, entry = "site", bindings = true
           compatibilityDate: "2026-09-26",
           serviceBindings: { ASSETS: assets },
           r2Buckets: { WEEK: "a-week" },
+          bindings: vars,
           ...(bindings ? { kvNamespaces: { SALTS: "a-salts" }, analyticsEngineDatasets: { ANALYTICS: { dataset: "a_test" } } } : {}),
         },
       ],
@@ -366,12 +429,21 @@ export async function startBeacon({ root = ROOT, entry = "site", bindings = true
   return handle(mf, assetRequests);
 }
 
-/** The Worker as wrangler.jsonc configures it for `env` (undefined: production), its assets a build in `distDir`. */
-export async function configuredSite({ env, distDir, root = ROOT }) {
+/** wrangler.jsonc's vars without REDIRECT_TO (SPEC-the-redirect.md § 1 item 2: every existing case of the page runs with
+ *  it absent), or with it set to `redirectTo` when a case gives one. */
+export function withRedirectTo(vars = {}, redirectTo) {
+  const { REDIRECT_TO: _configured, ...rest } = vars;
+  return redirectTo === undefined ? rest : { ...rest, REDIRECT_TO: redirectTo };
+}
+
+/** The Worker as wrangler.jsonc configures it for `env` (undefined: production), its assets a build in `distDir`; its
+ *  REDIRECT_TO removed unless `redirectTo` names one (withRedirectTo). */
+export async function configuredSite({ env, distDir, root = ROOT, redirectTo }) {
   process.env.WRANGLER_SEND_METRICS = "false";
   const { unstable_getMiniflareWorkerOptions, unstable_readConfig } = await import("wrangler");
   const cfg = unstable_readConfig({ config: join(root, "wrangler.jsonc"), env }, { hideWarnings: true });
   cfg.assets = { ...cfg.assets, directory: distDir };
+  cfg.vars = withRedirectTo(cfg.vars, redirectTo);
   const { workerOptions } = unstable_getMiniflareWorkerOptions(cfg, env);
   const options = { ...workerOptions, name: `a-${env ?? "prod"}`, modules: true, script: await bundle(cfg.main) };
   delete options.modulesRules;

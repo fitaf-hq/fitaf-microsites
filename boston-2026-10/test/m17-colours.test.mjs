@@ -8,8 +8,9 @@ import { EMAIL_TOKENS, serialise, tokensFile } from "../scripts/email-tokens.mjs
 import { declarations, tagsOf } from "./email-html.mjs";
 import { pageTokens, sampleMessages } from "./email-fixture.mjs";
 
-/** The email's renderer: the only files that decide how the email looks. */
-const RENDERER = ["messages.js", "email-style.js"].map((f) => join(ROOT, "src", "worker", f));
+/** The email's renderer: the only files that decide how the email looks (since SPEC-ui-and-copy-pass § 8 also
+ *  email-band.js, E1's band read from data/flyer-front.json). */
+const RENDERER = ["messages.js", "email-style.js", "email-band.js"].map((f) => join(ROOT, "src", "worker", f));
 const COLOUR_PROPERTY = /^(color|background|background-color|border(-(top|right|bottom|left))?(-color)?|outline(-color)?)$/;
 const NOT_A_COLOUR = /^(\d+(\.\d+)?(px|em|%)?|solid|dashed|dotted|double|none)$/i;
 const HEX = /^#[0-9a-f]{3}([0-9a-f]{3})?$/i;
@@ -49,7 +50,12 @@ test("M17: every colour in the HTML is the value of one of the page's :root toke
   for (const [name, message] of Object.entries(sampleMessages())) {
     assert.deepEqual(colourProblems(message.html, tokenValues), [], `${name}: colours that are not tokens`);
     const drawn = new Set(coloursOf(message.html).map((c) => c.value.toLowerCase()));
-    for (const t of ["--navy", "--white", "--ink", "--muted", "--line", "--cta", "--on-cta"]) {
+    // Since SPEC-ui-and-copy-pass § 8 E1 draws the band's colours and no --muted footer (its footer is on --ink); its navy is
+    // the date held or the code, which an E1 sent after its offer's end does not print.
+    const expected = name.startsWith("e1_")
+      ? [...(name === "e1_held_ended" ? [] : ["--navy"]), "--white", "--ink", "--line", "--cta", "--on-cta", "--signature"]
+      : ["--navy", "--white", "--ink", "--muted", "--line", "--cta", "--on-cta"];
+    for (const t of expected) {
       assert.ok(drawn.has(colours[t]), `control: ${name} draws ${t} (${colours[t]})`);
     }
   }

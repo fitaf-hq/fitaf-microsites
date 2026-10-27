@@ -83,8 +83,8 @@ test("SP12: a save on every date before valid_to — E1 and /o say it is held un
       const link = `${vars.SITE_URL}/o/${code}`;
       assertNoCodeText(m.text, code, `${where}, E1's text`, { link });
       assertNoCodeText(lineTexts(m.html).join("\n"), code, `${where}, E1's HTML`);
-      assert.equal(linkIn(m.text, "/o/"), code, `${where}: See my offer -> /o/<token>`);
-      assert.equal(hrefsOf(m.html)[0], link, `${where}: the HTML's first link, See my offer`);
+      assert.equal(linkIn(m.text, "/o/"), code, `${where}: the button (Claim my offer since SPEC-ui-and-copy-pass § 8) -> /o/<token>`);
+      assert.equal(hrefsOf(m.html)[0], link, `${where}: the HTML's first link, the button`);
 
       for (const today of [addDays(d, 1), BOSTON.valid_to]) {
         const page = await offerPage(db, code, today);
@@ -94,7 +94,7 @@ test("SP12: a save on every date before valid_to — E1 and /o say it is held un
         assert.ok(words.includes(line), `${where}, /o on ${today}: says ${line}`);
         assertNoCodeText(words, code, `${where}, /o on ${today}`);
         assert.ok(!page.html.includes(code), `${where}, /o on ${today}: the page never prints its token`);
-        assert.match(page.html, /href="\/\?e=demo#from-email">Build my plan →/, `${where}, /o on ${today}: the link back to the page`);
+        assert.match(page.html, /href="\/\?e=demo&amp;via=email#from-email">Build my plan →/, `${where}, /o on ${today}: the link back to the page (via=email since SPEC-the-redirect.md § 4)`);
       }
     }
   } finally {
@@ -111,7 +111,7 @@ test("SP12: after valid_to, the lapse path — /o says the offer ended, the /con
     const sender = new RecordingSender();
     await runSendDue(db, { nowMs: nineOn("2026-10-25"), sender, redemptions: new FixedRedemptions() });
     const token = linkIn(sender.messages[0].text, "/confirm/");
-    assert.ok(token, "control: the ticked E1 carries a /confirm link");
+    assert.ok(token, "control: the ticked E1 carries a /confirm link (in its footer, SPEC-ui-and-copy-pass § 8.2 item 1)");
     const code = saved.saveRow.offer_code;
 
     const last = await offerPage(db, code, BOSTON.valid_to);

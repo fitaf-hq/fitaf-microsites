@@ -185,8 +185,9 @@ export const mealLine = ({ display, qty }, messages = MESSAGES) => {
   return qty > 1 ? fill(words(messages).meal_qty, { meal: shown, n: qty }) : shown;
 };
 
-/** A Date whose clock reads `now` (ms since the epoch), as page-sim.mjs's. */
-function clockAt(now) {
+/** A Date whose clock reads `now` (ms since the epoch), as page-sim.mjs's. Exported for a-harness.mjs's openVisit
+ *  (SPEC-analytics.md § 14: the save step's offer is chosen on the page's clock). */
+export function clockAt(now) {
   return class extends Date {
     constructor(...args) {
       super(...(args.length ? args : [now]));
@@ -204,9 +205,14 @@ function clockAt(now) {
  * page's script starts the carousel's timer: `timers` records each setInterval (none fires by itself; `tick()` fires
  * them) and `reducedMotion` is what matchMedia answers for prefers-reduced-motion. `globals` (SPEC-ui-and-copy-pass § 1,
  * the save step's states) adds the browser's own objects a case stands in for, as page-sim.mjs does: `turnstile`, `fetch`.
+ * Since SPEC-ui-and-copy-pass § 6 (the save dialog opened by a link, `#save`, "once the page's scripts have run"):
+ * `DOMContentLoaded` is dispatched at the document (and the window, where it bubbles) once every inline script has run,
+ * as a browser does; and `before(document)` runs before the first script, for a case standing in for a part of the
+ * browser a script uses at load (uc11-harness openWithDialogs: the dialogs' showModal and close).
  */
-export function openPlanPage(html, { hash = "", now, reducedMotion = false, globals = {} } = {}) {
-  const { document } = parseHTML(html);
+export function openPlanPage(html, { hash = "", now, reducedMotion = false, globals = {}, before } = {}) {
+  const { document, Event } = parseHTML(html);
+  if (before) before(document);
   const listeners = {};
   let current = hash;
   const location = {
@@ -242,6 +248,8 @@ export function openPlanPage(html, { hash = "", now, reducedMotion = false, glob
   if (now !== undefined) g.Date = clockAt(now);
   const context = vm.createContext(g);
   for (const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) vm.runInContext(m[1], context);
+  document.dispatchEvent(new Event("DOMContentLoaded", { bubbles: true }));
+  for (const fn of listeners.DOMContentLoaded ?? []) fn({ type: "DOMContentLoaded" });
   const el = (id) => {
     const found = document.getElementById(id);
     assert.ok(found, `the page has an element #${id}`);

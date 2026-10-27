@@ -23,8 +23,12 @@ const FLOW_DIAGRAMS = (await flowBlocks()).map((b) => `${PACKAGE}/flows/rendered
  * producer is held); and the photo-sheet cases' FIXTURE sheets, generated flat colours, each named by the fixture's own
  * manifest. Still one by one: a sheet no manifest names, or a photograph anywhere else, is flagged.
  */
+// SPEC-ui-and-copy-pass § 8 item 2: E1's slideshow is one more sheet the manifest names (`email_slideshow`, written by Fit
+// AF's emitter, emit_microsite_photos.spec.md § 14), so it is allowed exactly as the carousel is: by the manifest's name.
 const sheetsOf = (manifest, dir) =>
-  [manifest.carousel, ...Object.values(manifest.chefs_choice ?? {})].filter(Boolean).map((s) => `${PACKAGE}/${dir}/${s.file}`);
+  [manifest.carousel, ...Object.values(manifest.chefs_choice ?? {}), manifest.email_slideshow]
+    .filter(Boolean)
+    .map((s) => `${PACKAGE}/${dir}/${s.file}`);
 const PHOTO_SHEETS = [
   ...sheetsOf(await loadPhotos(), "src/assets/photo-sheets"),
   ...sheetsOf(await loadPhotos(join(ROOT, "test", "fixtures", "photo-sheets", "photo-sheets.json")), "test/fixtures/photo-sheets"),
@@ -35,7 +39,13 @@ const PHOTO_SHEETS = [
  * recoloured for the band (print/assets/README.md).
  */
 const REVERSED_LOGOS = [`${PACKAGE}/print/assets/fitaf-logo-reversed.png`, `${PACKAGE}/print/assets/fitaf-logo-reversed-white.png`];
-const ALLOWED_IMAGES = [`${PACKAGE}/src/assets/fitaf-logo.png`, ...REVERSED_LOGOS, ...FLOW_DIAGRAMS, ...PHOTO_SHEETS];
+/**
+ * SPEC-ui-and-copy-pass § 8 (E1 in the flyers' language): the email's three graphics, named one by one, none a
+ * photograph: the reversed logo at the email's size and the band's and the button's halftone tiles, each derived by
+ * `npm run email:images` (scripts/email-images.mjs) from the print reversed logo and the page's tokens (§ 8.1).
+ */
+const EMAIL_IMAGES = ["fitaf-logo-reversed.png", "halftone-cta.png", "halftone-ink.png"].map((f) => `${PACKAGE}/src/assets/email/${f}`);
+const ALLOWED_IMAGES = [`${PACKAGE}/src/assets/fitaf-logo.png`, ...REVERSED_LOGOS, ...FLOW_DIAGRAMS, ...PHOTO_SHEETS, ...EMAIL_IMAGES];
 
 const git = (...args) => spawnSync("git", ["-C", REPO, ...args], { encoding: "utf8" });
 
@@ -70,6 +80,11 @@ test("P1 control: a JPEG in the photo sheets' directory that no manifest names i
   assert.ok(PHOTO_SHEETS.length > 0, "a manifest names sheets (control)");
   const stray = `${PACKAGE}/src/assets/photo-sheets/stray.jpg`;
   assert.deepEqual(trackedPhotos([...PHOTO_SHEETS, stray, `${PACKAGE}/src/assets/carousel.jpg`]), [stray, `${PACKAGE}/src/assets/carousel.jpg`]);
+});
+
+test("P1 control: beside the email's three graphics, any other image in their folder is flagged", () => {
+  const listing = [...EMAIL_IMAGES, `${PACKAGE}/src/assets/email/hero.jpg`, `${PACKAGE}/src/assets/email/slideshow.gif`];
+  assert.deepEqual(trackedPhotos(listing), listing.slice(EMAIL_IMAGES.length));
 });
 
 test("P1 control: beside the flow diagrams, a photograph or an SVG no flow block names is still flagged", () => {

@@ -17,6 +17,20 @@
 // Since § 13 (2026-10-25: Family counted, and the first question) also the first question, `who`, its answers build.mjs's
 // WHO (copied too), and Family's own question, `family`, its answers data/plans.json's family.selection; and a result's
 // mpids Family's as well as the individual plans'. F1 holds every question of the page equal to this one's.
+// Since § 14 (2026-10-26: a saved offer counted) one more event, `save`, sent when the save step's Worker answered an offer
+// save as stored: `s` alone (nothing the visitor typed), the data point's layout unchanged, and not a step of STEPS.
+// Since § 15 (2026-10-26: no data point thinned) each data point is written with its own index, random and new for each
+// point, so Analytics Engine's write-time sampling (of points written too quickly into one index) has nothing to thin; the
+// visitor `v` is appended as blob12, blobs 1–11 in their places. The index identifies nothing and nothing reads it.
+// Since § 16 (2026-10-27: the offer email's clicks, and its visitors as their own source) one more event, `offer`, sent
+// by the offer page's script (/o/<code>) once a page load: `qr`, the save's event id ("" for an unknown code), and
+// `kind`, which page it is (OFFER_KINDS), blob13, appended; never the code, the path or the query. And `open` carries
+// `via`, "email" when the plan page started at #from-email (the offer page's link), else "": blob14, appended (an `open`
+// without it, from a page loaded before § 16, is accepted, its blob14 ""). Blobs 1–12 keep their places.
+// Since SPEC-the-redirect.md § 3 (2026-10-27: the home page a redirect to the store) one event more, `redirect`, the first
+// not sent by a page: the Worker writes it itself as it answers the redirect (src/worker/redirect.js), through writeEvent
+// below, the same path as a beacon's (the salt, `v`, the country, the device; no new blob): `s` the Worker's own
+// (randomId), `qr` blob6, `via` blob14. It is not in EVENTS: POST /a refuses it, so no page can send one.
 import plans from "../../data/plans.json" with { type: "json" };
 import events from "../../data/events.json" with { type: "json" };
 import { ANSWER_SETS, answerKey } from "../../scripts/selection.mjs";
@@ -41,8 +55,15 @@ const VISIT_ID = /^[0-9a-f]{16}$/;
 const COUNTRY = /^[A-Z][A-Z0-9]$/;
 
 /** § 3's vocabulary. */
-export const EVENTS = ["open", "answer", "result", "click", "leave", "error"];
+export const EVENTS = ["open", "answer", "result", "click", "leave", "error", "save", "offer"];
 export const VIEWPORTS = ["<400", "400-767", "768-1199", ">=1200"];
+/** § 16 item 1: which offer page it is: the save's offer live, ended with the current offer shown, an unknown code, no
+ *  offer current (src/worker/redeem.js draws each). The report lists them in this order. */
+export const OFFER_KINDS = ["saved", "welcome", "current", "ended"];
+/** SPEC-the-redirect.md § 3: the event the Worker writes itself when it redirects the home page; never a beacon's. */
+export const REDIRECT_EVENT = "redirect";
+/** § 16 item 2: an `open`'s `via`: "email" for a visit from the offer page's link (#from-email), else "". */
+export const VIAS = ["", "email"];
 /** Each question by the page's own id for it, and its answers, in the page's order since SPEC-ui-and-copy-pass § 2 (who
  *  it is for first, the goal last, then Family's own question, shown for Family alone): the report's funnel reads this
  *  order (§ 13 item 3). `who` is the button's data-who (build.mjs's WHO), `family` its data-family. */
@@ -68,9 +89,11 @@ export const STEPS = ["open", "answer", "result", "click"];
 export const QR_IDS = events.map((e) => e.id);
 export const DEVICES = ["phone", "tablet", "desktop"];
 
-/** The data point's layout (§ 4): blob N is BLOBS[N - 1], double N is DOUBLES[N - 1], index1 is `v`. A field an event
- *  does not carry is "" (a blob) or 0 (a double). The report (scripts/analytics.mjs) reads its columns from these. */
-export const BLOBS = ["event", "s", "country", "device", "viewport", "qr", "question", "answer", "key", "link", "step"];
+/** The data point's layout (§ 4): blob N is BLOBS[N - 1], double N is DOUBLES[N - 1]; index1 the point's own (§ 15
+ *  item 1; it was `v`, which is blob12 since § 15 item 2); since § 16 blob13 the offer page's `kind` and blob14 an
+ *  open's `via` (the team's dashboard reads them by these numbers). A field an event does not carry is "" (a blob) or 0
+ *  (a double). The report (scripts/analytics.mjs) reads its columns from these. */
+export const BLOBS = ["event", "s", "country", "device", "viewport", "qr", "question", "answer", "key", "link", "step", "v", "kind", "via"];
 export const DOUBLES = ["load_ms", "length_ms", "mpid"];
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -78,14 +101,21 @@ const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 const oneOf = (list) => (v) => list.includes(v);
 const isMs = (v) => Number.isInteger(v) && v >= 0 && v <= MAX_MS;
 
-/** Each event's fields beyond `event` and `s`, each with its check (§ 3). */
+/** A QR event's id: one of data/events.json's, or "" (§ 9; since § 16 also the save's event, on an offer page). */
+const isQr = (v) => v === "" || QR_IDS.includes(v);
+
+/** Each event's fields beyond `event` and `s`, each with its check (§ 3). § 16 item 2's `via` is an `open`'s field when
+ *  the body carries it (then "email" or "" only); an `open` without it is a page loaded before § 16 (an open tab, a cached
+ *  copy, a resumed tab) and is accepted, its blob14 "" (the merge review, 2026-10-27): exactly its fields either way. */
 const FIELDS = {
-  open: () => ({ viewport: oneOf(VIEWPORTS), load_ms: isMs, qr: (v) => v === "" || QR_IDS.includes(v) }),
+  open: (b) => ({ viewport: oneOf(VIEWPORTS), load_ms: isMs, qr: isQr, ...(has(b, "via") ? { via: oneOf(VIAS) } : {}) }),
   answer: (b) => ({ question: oneOf(Object.keys(QUESTIONS)), answer: oneOf(has(QUESTIONS, b.question) ? QUESTIONS[b.question] : []) }),
   result: () => ({ key: oneOf(ANSWER_KEYS), mpid: oneOf(RESULT_MPIDS) }),
   click: (b) => (b.link === "all-plans" ? { link: oneOf(LINKS) } : { link: oneOf(LINKS), mpid: oneOf(ORDER_MPIDS) }),
   leave: () => ({ length_ms: isMs, step: oneOf(STEPS) }),
   error: () => ({}),
+  save: () => ({}),
+  offer: () => ({ qr: isQr, kind: oneOf(OFFER_KINDS) }),
 };
 
 /** The body as one event of § 3, exactly its fields and each from its vocabulary, or null. */
@@ -113,13 +143,20 @@ export function countryOf(request) {
   return typeof country === "string" && COUNTRY.test(country) ? country : "";
 }
 
-/** The data point for a checked event (§ 4). */
+/** 16 random hex digits (64 bits of Web Crypto), new at each call: § 15 item 1's index, new for each data point, and (SPEC-the-
+ *  redirect.md § 3) the `s` of the event the Worker writes itself, one request one visit. */
+const RANDOM_ID_BYTES = 8;
+export const randomId = () => hex(crypto.getRandomValues(new Uint8Array(RANDOM_ID_BYTES)));
+const pointIndex = randomId;
+
+/** The data point for a checked event (§ 4): its fields, the country, the device and (§ 15 item 2) the visitor `v` as
+ *  blobs; its numbers as doubles; its own index (§ 15 item 1). */
 export function dataPoint(event, { v, country, device }) {
-  const all = { ...event, country, device };
+  const all = { ...event, country, device, v };
   return {
     blobs: BLOBS.map((n) => (has(all, n) ? String(all[n]) : "")),
     doubles: DOUBLES.map((n) => (has(all, n) ? all[n] : 0)),
-    indexes: [v],
+    indexes: [pointIndex()],
   };
 }
 
@@ -159,7 +196,7 @@ export async function saltOf(salts, now) {
 }
 
 /** § 2: `v`, the visitor of this request on this day. */
-async function visitorOf(request, env, now) {
+export async function visitorOf(request, env, now) {
   const salt = await saltOf(env.SALTS, now);
   const ip = request.headers.get("cf-connecting-ip") ?? "";
   const ua = request.headers.get("user-agent") ?? "";
@@ -206,6 +243,13 @@ async function record(request, env) {
   }
   const event = checkedEvent(body);
   if (!event) return;
+  await writeEvent(request, env, event);
+}
+
+/** One event's data point, written: `v` of this request's sender on this day, its country and device, then the IP and
+ *  the user agent dropped with the request (§§ 1.4, 2). A beacon's checked event, and since SPEC-the-redirect.md § 3 the
+ *  Worker's own `redirect`. Throws when SALTS or ANALYTICS is unbound or fails; its callers catch. */
+export async function writeEvent(request, env, event) {
   const now = Date.now();
   const v = await visitorOf(request, env, now);
   const point = dataPoint(event, {

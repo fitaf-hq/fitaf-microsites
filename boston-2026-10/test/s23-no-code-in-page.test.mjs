@@ -2,6 +2,8 @@
 // no code of any kind — never shared_code, never code_mode. ⚠ AMENDED by SPEC-ui-and-copy-pass § 1 item 1 (2026-10-23):
 // and an offer's headline, the words the box prints, when it has one; and since its item 7, for an offer with a
 // share (`percent_off`, § 1.2 item 2), `struck`, See all plans' struck prices, which the build computes (UC7 holds them).
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 3 (2026-10-26): and beside it `struck_result`, the result card's struck
+// figures, every one the build's (RP1 and RP4 hold them).
 import test from "node:test";
 import assert from "node:assert/strict";
 import offersFile from "../data/offers.json" with { type: "json" };
@@ -29,7 +31,7 @@ for (const [name, file] of [
     const html = await devPage({ offers: file });
     const data = saveData(html);
     assert.deepEqual(
-      data.offers.map(({ struck, ...o }) => o),
+      data.offers.map(({ struck, struck_result, ...o }) => o),
       file.offers.map((o) => Object.fromEntries(OFFER_FIELDS.filter((k) => k in o).map((k) => [k, o[k]]))),
       "each offer's id, label, headline (when it has one), applies_to, valid_from, valid_to — nothing more, in the file's order",
     );

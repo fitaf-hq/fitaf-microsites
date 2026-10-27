@@ -7,6 +7,8 @@
 // day* and `#<size>-14` *and, every day*, their card byte-identical to the page before the meal selection
 // (test/ms-golden.json, recorded at 985f777), and a fragment naming its days is read as written. Q4 is asserted, so the
 // first case builds from its own data with snacks shown (ms-harness SNACKS_SHOWN, § 11), never the committed flags.
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26): the card shows its weekly total alone (no meals a week, no
+// price a meal), so the plan's figures are its total and its link, and today's fragments compare those with the golden.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -43,8 +45,8 @@ test("MS-3 (§ 12): Q1 alone gives or, weekdays and and, weekdays: their fragmen
       assert.equal(r.selection, key, `#${goal}, ${ld}: the card's answer set`);
       // SPEC-ui-and-copy-pass § 1.2 item 1 (2026-10-23): the meals the card lists, at the plan's price a meal.
       assert.deepEqual(
-        [r.meals, r.perMeal, r.total, r.cta],
-        [String(meals), dollars(centsOf(goal, plan)), dollars(meals * centsOf(goal, plan)), `${PLANS.order_base_url}?mpid=${mpidOf(goal, plan)}`],
+        [r.total, r.cta],
+        [dollars(meals * centsOf(goal, plan)), `${PLANS.order_base_url}?mpid=${mpidOf(goal, plan)}`],
         `#${goal}, ${ld}: ${meals} meals through the ${plan}-meal plan`,
       );
       // ⚠ AMENDED by SPEC-ui-and-copy-pass § 5 item 2 (2026-10-26): the rounded line is never printed.
@@ -81,8 +83,8 @@ test("MS-3 (§ 12 item 2): today's fragments keep their meaning; a fragment nami
       const s = card(page);
       const was = golden.cards[`#${goal}-${n}`];
       assert.deepEqual(
-        { total: r.total, perMeal: r.perMeal, cta: s.chooseHref, checkout: s.checkout, own: s.ownHref, meals: s.meals },
-        { total: was.total, perMeal: was.per_meal, cta: was.result_cta, checkout: was.cc_checkout, own: was.cc_own, meals: was.meals },
+        { total: r.total, cta: s.chooseHref, checkout: s.checkout, own: s.ownHref, meals: s.meals },
+        { total: was.total, cta: was.result_cta, checkout: was.cc_checkout, own: was.cc_own, meals: was.meals },
         `#${goal}-${n}: today's ${n}, byte for byte`,
       );
     }

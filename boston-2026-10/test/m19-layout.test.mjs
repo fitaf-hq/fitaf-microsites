@@ -35,6 +35,9 @@ test("M19: one centred layout table, at most 600 px, and nothing wider", () => {
   }
 });
 
+// ⚠ Since SPEC-ui-and-copy-pass § 8 item 3 E1's button is its whole orange panel: the colour on the cell (bgcolor) and the
+// padding on the link as before, but the link a block that fills the cell and draws no colour of its own, so the cell's
+// halftone shows through (EL3 holds the rest). E-X's is the button as it was.
 test("M19: each button-styled link is a bulletproof button on --cta (the colour on its table cell, the padding on the link)", () => {
   for (const [name, message] of Object.entries(sampleMessages())) {
     const buttons = linksOf(message.html).filter((l) => l.buttonStyled);
@@ -44,6 +47,14 @@ test("M19: each button-styled link is a bulletproof button on --cta (the colour 
       assert.equal(cell.attrs.bgcolor, colours["--cta"], `${name}: the cell's bgcolor is --cta (Outlook draws it)`);
       assert.equal(declarations(cell.attrs.style)["background-color"], colours["--cta"]);
       const style = declarations(a.attrs.style);
+      if (name.startsWith("e1_")) {
+        assert.equal(style.display, "block", `${name}: the panel is the link`);
+        assert.equal(style["background-color"], undefined, `${name}: the cell's halftone shows through`);
+        assert.equal(style.color, colours["--on-cta"], `${name}: the label is --on-cta`);
+        assert.match(style.padding ?? "", /px/, `${name}: padded`);
+        assert.equal(style["text-decoration"], "none");
+        continue;
+      }
       assert.equal(style["background-color"], colours["--cta"]);
       assert.equal(style.color, colours["--on-cta"], `${name}: the label is --on-cta`);
       assert.equal(style.display, "inline-block", `${name}: the whole button is the link`);
@@ -53,6 +64,8 @@ test("M19: each button-styled link is a bulletproof button on --cta (the colour 
   }
 });
 
+// ⚠ Since SPEC-ui-and-copy-pass § 8 item 1 E1's headline (its <h1>) is in --head too; a text link inside a sentence takes
+// its sentence's font (no font-family of its own).
 test("M19: the font stacks are the page's --head (buttons) and --body (text), system fallbacks included", () => {
   const head = inlineStack(all["--head"]);
   const body = inlineStack(all["--body"]);
@@ -61,6 +74,6 @@ test("M19: the font stacks are the page's --head (buttons) and --body (text), sy
     const tags = tagsOf(bodyOf(message.html));
     const fonts = tags.map((t) => [t.name, declarations(t.attrs.style)["font-family"]]).filter(([, f]) => f);
     assert.ok(fonts.some(([n]) => n === "p") && fonts.some(([n]) => n === "a"), `control: ${name} sets its fonts`);
-    for (const [tag, font] of fonts) assert.equal(font, tag === "a" ? head : body, `${name}: <${tag}> font-family`);
+    for (const [tag, font] of fonts) assert.equal(font, tag === "a" || tag === "h1" ? head : body, `${name}: <${tag}> font-family`);
   }
 });

@@ -4,6 +4,8 @@
 // Updated again (SPEC-meal-selection § 1, § 7 and § 9 item 2, ruled "Words only"): the two buttons are Q1, *or* / *and*,
 // and lose their numeral and unit (the meals a week change with Q2 and Q3); their words are
 // `plan_page.questions.lunch_dinner`, and the result card carries the meals a week instead (`plan_page.meals_unit`, MS-1).
+// ⚠ AMENDED by SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26): the card's meals a week are gone, and `plan_page.meals_unit`
+// with them; "meals/week" is still typed in none of the page's sources.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -26,8 +28,8 @@ test("PR-5: two buttons with § 2 item 3's words from data/messages.json, or / a
   }
   const words = MESSAGES.plan_page;
   assert.deepEqual(
-    [words.questions.lunch_dinner.or, words.questions.lunch_dinner.and, words.meals_unit],
-    ["Lunch *or* dinner", "Lunch *and* dinner", "meals/week"],
+    [words.questions.lunch_dinner.or, words.questions.lunch_dinner.and],
+    ["Lunch *or* dinner", "Lunch *and* dinner"],
     "the words are data's",
   );
   for (const file of ["src/template.html", "build.mjs", "src/app.js"]) {

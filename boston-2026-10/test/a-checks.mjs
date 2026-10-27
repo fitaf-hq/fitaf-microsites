@@ -67,6 +67,12 @@ export function refusedBodies() {
     ["a load time as text", { ...VALID.open, load_ms: "812" }],
     ["an error carrying a message", { ...VALID.error, message: "TypeError: x is undefined" }],
     ["an error carrying a stack", { ...VALID.error, stack: "at app.js:1:1" }],
+    // § 14 item 1: a save carries `s` alone, nothing the visitor typed, no code, no ZIP, no consent.
+    ["a save carrying an address", { ...VALID.save, email: "dummy-sv@example.com" }],
+    ["a save carrying a ZIP code", { ...VALID.save, zip: "02118" }],
+    ["a save carrying its kind", { ...VALID.save, kind: "offer" }],
+    ["a save carrying a consent", { ...VALID.save, consent_marketing: true }],
+    ["a save without s", { event: "save" }],
     ["not JSON", "event=open"],
     ["JSON null", "null"],
     ["a JSON list of a valid event", JSON.stringify([VALID.open])],
@@ -104,8 +110,14 @@ export async function refusalProblems(root = ROOT, entry = "site") {
   return problems;
 }
 
-/** Every field of a written data point, as text. */
+/** Every field of a written data point, as text: every blob (since SPEC-analytics.md § 15, blob12 the visitor among them),
+ *  the index (since § 15 the point's own random one) and every double. */
 const fieldsOf = (point) => [...(point.blobs ?? []), ...(point.indexes ?? []), ...(point.doubles ?? [])].map((f) => String(f));
+/** What A4 searches every written field for: the IP, the user agent, its token, and their telling parts. */
+const NEEDLES = [TEST_IP, TEST_UA, TEST_UA_TOKEN, "203.0.113", "Mozilla/5.0"];
+
+/** A4's search over one data point: each [needle, field] where a field carries a needle (IX2, § 15, reads it too). */
+export const needlesIn = (point) => fieldsOf(point).flatMap((field) => NEEDLES.filter((n) => field.includes(n)).map((n) => [n, field]));
 
 /** A4: every event of § 3, sent with a known IP and user agent: no field written (blob, index, double) and no salt
  *  key or value contains either (nor the user agent's own token); the control: the events were written. */
@@ -117,14 +129,11 @@ export async function ipUaProblems(root = ROOT) {
     for (const body of Object.values(VALID)) await site.post(body, { ip: TEST_IP, ua: TEST_UA, country: "DE" });
     const log = await site.log();
     if (log.points.length !== Object.keys(VALID).length) problems.push(`control: ${log.points.length} data points, not ${Object.keys(VALID).length}`);
-    const needles = [TEST_IP, TEST_UA, TEST_UA_TOKEN, "203.0.113", "Mozilla/5.0"];
     for (const [i, point] of log.points.entries()) {
-      for (const field of fieldsOf(point)) {
-        for (const needle of needles) if (field.includes(needle)) problems.push(`data point ${i + 1} carries ${JSON.stringify(needle)}: ${JSON.stringify(field)}`);
-      }
+      for (const [needle, field] of needlesIn(point)) problems.push(`data point ${i + 1} carries ${JSON.stringify(needle)}: ${JSON.stringify(field)}`);
     }
     for (const put of log.puts) {
-      for (const needle of needles) {
+      for (const needle of NEEDLES) {
         if (String(put.key).includes(needle) || String(put.value).includes(needle)) problems.push(`the salt store holds ${JSON.stringify(needle)}`);
       }
     }

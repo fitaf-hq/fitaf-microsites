@@ -309,6 +309,54 @@ export const LATER = [
   // SPEC-why-fit-af § 7 (2026-10-26, the Advisor's draft 3): the Why page's words and its two contact links, which S20's
   // golden carries as why/index.html, from eec5c4c to 4b77513 (src/why/index.html, one commit).
   ["eec5c4c", "4b77513"],
+  // SPEC-analytics.md § 14 (2026-10-26: a saved offer counted) moves the production page with `production` false by the
+  // analytics script's listener for `fitaf:saved` (src/analytics.js; the save step's dispatch, src/save/flow1.js, is the
+  // pages carrying the step, which this page is not) and the Worker by its vocabulary (src/worker/beacon.js: `save`), from
+  // e1dda21 (its contract) to 1fb4831 (its code, one commit); every hunk is taken.
+  ["e1dda21", "1fb4831", ["src/analytics.js", "src/worker/beacon.js"]],
+  // SPEC-analytics.md § 15 (2026-10-26: no data point thinned, and a plan shown at load read after the page's first draw)
+  // moves the production page with `production` false by the analytics script's DOMContentLoaded read (src/analytics.js)
+  // and the Worker by its data point (src/worker/beacon.js: each point's own index, `v` as blob12), from 23e7653 (its
+  // contract) to 3f40698 (its code, one commit); every hunk is taken.
+  ["23e7653", "3f40698", ["src/analytics.js", "src/worker/beacon.js"]],
+  // SPEC-ui-and-copy-pass § 7 (2026-10-26: the result's price, the week's price alone with its full value struck above it
+  // while an offer is current) moves the production page with `production` false by the template's price block (its
+  // rules; the struck line, hidden on this page, which carries no offer; the price a meal and the meals a week gone) and
+  // app.js's lines writing them, from bc39ee0 (its cases) to f60e19c (its code, one commit). Its other files make no part
+  // of this page (build.mjs's struck figures are save-data's, the pages carrying the offer; its slots and words check drop
+  // only what the template no longer names; data/messages.json's two removed phrases were printed only by those slots), so
+  // the base keeps its own of them.
+  ["bc39ee0", "f60e19c", ["src/template.html", "src/app.js"]],
+  // SPEC-analytics.md § 16 (2026-10-27: the offer email's clicks, and its visitors as their own source) moves the
+  // production page with `production` false by the analytics script's lines (src/analytics.js: the offer page's branch,
+  // which this page never takes, and the open's via) and the Worker by its vocabulary and layout (src/worker/beacon.js:
+  // `offer`, `via`, blob13 and blob14), from 1c8cf8a (its cases, on its contract's code) to 0ef1455 (its code, one
+  // commit). The base's `open` predates § 9 item 2's reading (`var x = …, qr = …` and its own `qr:` line), which the two
+  // hunks of the open's `via` name as context, so the diff is taken with one line of context (as § 13's entry), those two
+  // hunks are left out (the one line `via` added and the comment above `var x`), and the `via` line is put after the
+  // base's own `qr:` line (`insertAfter`), which § 9 item 2's transform in SP3 then rewrites as this tree's. The offer
+  // page's own files (src/worker/pages.js, redeem.js and the new page-script.json) are the development Worker's, which
+  // sp3's MOVED_WORKER_FILES names.
+  [
+    "1c8cf8a",
+    "0ef1455",
+    ["src/analytics.js", "src/worker/beacon.js"],
+    {
+      context: 1,
+      dropHunks: /^\+\s+(?:\/\/ since § 16 item 2 `via`|via: w\.location\.hash)/m,
+      insertAfter: [["src/analytics.js", '    qr: qr && QR_IDS.indexOf(qr[1]) >= 0 ? qr[1] : ""', ',\n    via: w.location.hash == "#from-email" ? "email" : ""']],
+    },
+  ],
+  // § 16's change at the merge review (2026-10-27, the coordinator): an `open` without `via` accepted, blob14 "" (a page
+  // loaded before the release), moves the Worker alone (src/worker/beacon.js's FIELDS.open), from 65dc5be (its case) to
+  // 9411139 (its code, one commit); every hunk is taken.
+  ["65dc5be", "9411139", ["src/worker/beacon.js"]],
+  // SPEC-the-redirect.md (2026-10-27: the home page a 302 to the store while REDIRECT_TO is set) moves the Worker's
+  // beacon.js alone of the base's files (writeEvent factored from the beacon's record and exported with visitorOf, randomId
+  // and REDIRECT_EVENT; POST /a's behaviour unchanged), from 275a481 (its cases, on its contract's code) to 7b8f4fd (its
+  // code, one commit); every hunk is taken. Its other files are the development Worker's, which sp3's MOVED_WORKER_FILES
+  // names (site.js, index.js, redeem.js, and the new redirect.js and src/qr-event.js).
+  ["275a481", "7b8f4fd", ["src/worker/beacon.js"]],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */

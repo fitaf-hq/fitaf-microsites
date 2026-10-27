@@ -13,7 +13,10 @@ import { isDeepStrictEqual } from "node:util";
 import { ROOT } from "../build.mjs";
 
 const FIXTURES = join(ROOT, "test", "fixtures", "analytics");
-export const NAMES = ["visitors", "steps", "clicks", "length", "load", "devices", "viewports", "countries"];
+// § 16 item 3: two queries more, the offer pages by kind and the visits from the offer email (offers.json, email.json).
+// SPEC-the-redirect.md § 5: one more, the redirects by source and device (redirects.json, no row: the fixture's days have
+// none, so every figure here is as before; RD9 holds the redirects' own).
+export const NAMES = ["visitors", "steps", "clicks", "length", "load", "devices", "viewports", "countries", "offers", "email", "redirects"];
 export const ENV = { CLOUDFLARE_ANALYTICS_TOKEN: "test-token", CLOUDFLARE_ACCOUNT_ID: "test-account" };
 const SQL_URL = "https://api.cloudflare.com/client/v4/accounts/test-account/analytics_engine/sql";
 /** § 6, § 10: the two datasets. */
@@ -158,6 +161,14 @@ export function parseText(text) {
       Object.assign(day, { data: true, visitors: Number(m[1]), visits: Number(m[2]), funnel: [], clicks: {} });
     } else if (line === "  funnel (visits)") continue;
     else if ((m = /^ {4}click by link: (.+)$/.exec(line))) day.clicks = splitOf(m[1]);
+    else if ((m = /^ {2}saved an offer (\d+)$/.exec(line))) day.saves = Number(m[1]);
+    // § 16 item 3: the visits from the offer email, and the offer pages by kind (each opening, a repeat counted again).
+    else if ((m = /^ {2}visits from the offer email (\d+)$/.exec(line))) day.email_visits = Number(m[1]);
+    else if ((m = /^ {2}offer pages opened \(a repeat opening counted again\): (.+)$/.exec(line))) day.offer_pages = m[1] === "none" ? {} : splitOf(m[1]);
+    // SPEC-the-redirect.md § 5: a day with redirects, their count by source and by device.
+    else if ((m = /^ {2}redirects to the store (\d+) \(by source: (.+); by device: (.+)\)$/.exec(line))) {
+      day.redirects = { count: Number(m[1]), source: splitOf(m[2]), device: splitOf(m[3]) };
+    }
     else if ((m = /^ {4}(\S.*?) +(\d+)(?: {3}\S.*)?$/.exec(line))) day.funnel.push({ step: m[1], visits: Number(m[2]) });
     else if ((m = /^ {2}(visit length|load time): (?:median (.+) · quartiles (.+) to (.+) \((\d+) visits\)|no (?:leave|open) recorded)$/.exec(line))) {
       day[m[1] === "visit length" ? "visit_length_ms" : "load_ms"] = m[2]
@@ -174,7 +185,9 @@ export function parseText(text) {
 // ── AJ1 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** AJ1's document for the fixture, 2026-10-23..25, written by hand from test/fixtures/analytics/ (§ 11 item 1's shape;
- *  since § 13 item 3 the funnel's answer steps in the page's order since round 2, Family's own question last). */
+ *  since § 13 item 3 the funnel's answer steps in the page's order since round 2, Family's own question last; since § 14
+ *  item 3 a day's `saves`, its visits with a save, from the fixture's save rows; since § 16 item 3 its `offer_pages` by
+ *  kind and its `email_visits`, from offers.json and email.json). */
 export const FIXTURE_DOCUMENT = {
   dataset: "fitaf_microsite_analytics_prod",
   from: "2026-10-23",
@@ -199,6 +212,9 @@ export const FIXTURE_DOCUMENT = {
         { step: "click", visits: 4 },
       ],
       clicks: { order: 3, "chefs-choice": 1, "all-plans": 2 },
+      saves: 2,
+      offer_pages: { saved: 3, welcome: 1 },
+      email_visits: 2,
       visit_length_ms: { q1: 25000, median: 72000, q3: 160000, n: 13 },
       load_ms: { q1: 400, median: 820, q3: 1200, n: 15 },
       device: { phone: 10, desktop: 4, tablet: 1 },
@@ -224,6 +240,9 @@ export const FIXTURE_DOCUMENT = {
         { step: "click", visits: 1 },
       ],
       clicks: { "chefs-choice": 1 },
+      saves: 1,
+      offer_pages: { ended: 1 },
+      email_visits: 0,
       visit_length_ms: { q1: 8000, median: 15500, q3: 40000, n: 4 },
       load_ms: { q1: 510, median: 640, q3: 900, n: 4 },
       device: { phone: 4 },
@@ -254,7 +273,7 @@ function figureDifferences(label, t, doc) {
     if (!dd) continue;
     if (dd.data !== td.data) out.push(`${at}: data: the text's ${td.data}, the document's ${dd.data}`);
     if (!td.data) continue;
-    for (const key of ["visitors", "visits", "errors"]) {
+    for (const key of ["visitors", "visits", "errors", "saves", "email_visits"]) {
       if (dd[key] !== td[key]) out.push(`${at}: ${key}: the text's ${td[key]}, the document's ${JSON.stringify(dd[key])}`);
     }
     const funnel = Array.isArray(dd.funnel) ? dd.funnel : [];
@@ -265,7 +284,7 @@ function figureDifferences(label, t, doc) {
         out.push(`${at}: the funnel's step ${i + 1}: the text's ${show(a)}, the document's ${show(b)}`);
       }
     }
-    for (const key of ["clicks", "device", "viewport", "country"]) {
+    for (const key of ["clicks", "offer_pages", "device", "viewport", "country"]) {
       if (!isDeepStrictEqual(sortedEntries(dd[key]), sortedEntries(td[key]))) {
         out.push(`${at}: ${key}: the text's ${JSON.stringify(td[key])}, the document's ${JSON.stringify(dd[key])}`);
       }
@@ -370,14 +389,27 @@ export async function noDataProblems(root = ROOT) {
 
 /** § 11 item 1's shape, written from the contract (the vocabulary from § 10's table). */
 const TOP_KEYS = ["dataset", "from", "to", "zone", "days"];
-const DAY_KEYS = ["day", "data", "visitors", "visits", "funnel", "clicks", "visit_length_ms", "load_ms", "device", "viewport", "country", "errors"];
+// § 14 item 3: one more member of a day with data, `saves` (its visits with a save); § 16 item 3 two more, `offer_pages`
+// (the offer pages by kind) and `email_visits` (the plan-page visits whose open has via email).
+const DAY_KEYS = ["day", "data", "visitors", "visits", "funnel", "clicks", "saves", "offer_pages", "email_visits", "visit_length_ms", "load_ms", "device", "viewport", "country", "errors"];
 const NO_DATA_KEYS = ["day", "data"];
+/** SPEC-the-redirect.md § 5: a day with redirects carries one more member, `redirects`, after `email_visits` (a day without
+ *  one carries none, so a window without a redirect reads as before): its count, by source (each QR id, `email`,
+ *  `direct`) and by device. */
+const REDIRECTS = "redirects";
+const REDIRECT_KEYS = ["count", "source", "device"];
+const REDIRECT_SPLITS = {
+  source: (k) => ["demo", "boston", "seminar", "email", "direct"].includes(k),
+  device: (k) => ["phone", "tablet", "desktop"].includes(k),
+};
 const STEP_KEYS = ["step", "visits"];
 const QUARTILE_KEYS = ["q1", "median", "q3", "n"];
 // § 13 item 3: two more answer steps, who it is for and Family's own question.
 const STEP_NAMES = ["open", "answer: who", "answer: lunch_dinner", "answer: weekends", "answer: breakfast", "answer: snacks", "answer: goal", "answer: family", "result", "click"];
 const SPLIT_KEYS = {
   clicks: (k) => ["order", "chefs-choice", "all-plans"].includes(k),
+  // § 16 item 1: the offer page's four kinds.
+  offer_pages: (k) => ["saved", "welcome", "current", "ended"].includes(k),
   device: (k) => ["phone", "tablet", "desktop"].includes(k),
   viewport: (k) => ["<400", "400-767", "768-1199", ">=1200"].includes(k),
   country: (k) => /^(?:[A-Z0-9]{2})?$/.test(k),
@@ -409,8 +441,23 @@ export function walkProblems(doc) {
     if (typeof d.day !== "string" || !DATE.test(d.day)) out.push(`${at}.day: not a date: ${JSON.stringify(d.day)}`);
     if (d.data === false) return out.push(...keysProblems(at, d, NO_DATA_KEYS));
     if (d.data !== true) return out.push(`${at}.data: ${JSON.stringify(d.data)}, not true or false`);
-    out.push(...keysProblems(at, d, DAY_KEYS));
-    for (const k of ["visitors", "visits", "errors"]) if (!isCount(d[k])) out.push(`${at}.${k}: not a count: ${JSON.stringify(d[k])}`);
+    out.push(...keysProblems(at, d, Object.hasOwn(d, REDIRECTS) ? [...DAY_KEYS, REDIRECTS] : DAY_KEYS));
+    if (Object.hasOwn(d, REDIRECTS)) {
+      const r = d[REDIRECTS];
+      out.push(...keysProblems(`${at}.${REDIRECTS}`, r, REDIRECT_KEYS));
+      if (!isCount(r?.count) || r?.count === 0) out.push(`${at}.${REDIRECTS}.count: ${JSON.stringify(r?.count)} (a day without one has no member)`);
+      for (const [k, allowed] of Object.entries(REDIRECT_SPLITS)) {
+        if (!isObject(r?.[k])) {
+          out.push(`${at}.${REDIRECTS}.${k}: not an object: ${JSON.stringify(r?.[k])}`);
+          continue;
+        }
+        for (const [key, n] of Object.entries(r[k])) {
+          if (!allowed(key)) out.push(`${at}.${REDIRECTS}.${k}: a key outside its vocabulary: ${JSON.stringify(key)}`);
+          if (!isCount(n)) out.push(`${at}.${REDIRECTS}.${k}[${JSON.stringify(key)}]: not a count: ${JSON.stringify(n)}`);
+        }
+      }
+    }
+    for (const k of ["visitors", "visits", "errors", "saves", "email_visits"]) if (!isCount(d[k])) out.push(`${at}.${k}: not a count: ${JSON.stringify(d[k])}`);
     if (!Array.isArray(d.funnel)) out.push(`${at}.funnel: not a list: ${JSON.stringify(d.funnel)}`);
     else {
       d.funnel.forEach((s, j) => {

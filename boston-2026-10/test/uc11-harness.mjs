@@ -86,8 +86,11 @@ export function tap(page, id, a) {
  * browser's, `open` set and removed, and `close` fired on closing an open one. Every element's focus, scrollIntoView
  * and scrollTo recorded too (the page's script moving focus or the scroll). Returns the records, in order.
  */
-export function browserParts(page) {
-  const calls = [];
+export const browserParts = (page) => browserPartsOf(page.document);
+
+/** browserParts over a `document`, the records pushed to `calls` (since § 6: installed before the page's scripts run). */
+export function browserPartsOf(document, calls = []) {
+  const page = { document };
   for (const d of page.document.querySelectorAll("dialog")) {
     d.showModal = () => {
       calls.push(`showModal #${d.id}`);
@@ -111,6 +114,14 @@ export function browserParts(page) {
     n.scrollTo = () => calls.push(`scrollTo ${name}`);
   }
   return calls;
+}
+
+/** SPEC-ui-and-copy-pass § 6 (a dialog opened at load, by `#save`): the page at `hash` as `open` opens it, the dialogs
+ *  and focus stood in for (browserPartsOf) BEFORE its scripts run. Returns the page and the records, `calls`. */
+export function openWithDialogs(html, hash = "", globals = {}) {
+  const calls = [];
+  const page = openPlanPage(html, { hash, now: NOW, globals, before: (document) => browserPartsOf(document, calls) });
+  return { page, calls };
 }
 
 /** A visitor's click on `node`, as the browser dispatches it (bubbling, its target the node). */

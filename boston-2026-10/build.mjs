@@ -57,6 +57,9 @@ export const PICKS_DIR = join(ROOT, "data", "picks");
  *  Every photo URL the page carries is built from the manifest's `base`. Without the manifest the page has no photograph. */
 export const PHOTOS_PATH = join(ROOT, "data", "photo-sheets.json");
 export const PHOTO_SHEETS_DIR = join(ROOT, "src", "assets", "photo-sheets");
+/** E1's own images (SPEC-ui-and-copy-pass § 8: the halftone tiles and the reversed logo, made by `npm run email:images`),
+ *  copied to <out>/assets/email/ by the builds whose Worker sends E1 (copyEmailImages). */
+export const EMAIL_IMAGES_DIR = join(ROOT, "src", "assets", "email");
 export const WRANGLER_CONFIG = join(ROOT, "wrangler.jsonc");
 /** The page's analytics (SPEC-analytics.md § 4): one inline script, inlined before app.js. */
 export const ANALYTICS_PATH = join(ROOT, "src", "analytics.js");
@@ -195,8 +198,9 @@ export function planPageWords(messages) {
     for (const key of ["heading", ...answers]) need(phrase(words.questions?.[q]?.[key]), `questions.${q}.${key}`);
   }
   // SPEC-ui-and-copy-pass § 2.1 (the Advisor, 2026-10-25): `family_serves`, the Family section's line naming the family it
-  // serves, its numbers data/plans.json's `family.servings`.
-  const PHRASES = [["meals_unit", []], ["rounded", ["{meals}", "{plan}"]], ["total_unit", []], ["per_meal_unit", []], ["prices_as_of", ["{date}"]], ["family_serves", ["{min}", "{max}"]]];
+  // serves, its numbers data/plans.json's `family.servings`. Since § 7 the result's one unit, `total_unit` (its meals a
+  // week and its price a meal went, and their units, `meals_unit` and `per_meal_unit`, with them).
+  const PHRASES = [["rounded", ["{meals}", "{plan}"]], ["total_unit", []], ["prices_as_of", ["{date}"]], ["family_serves", ["{min}", "{max}"]]];
   for (const [key, placeholders] of PHRASES) {
     need(phrase(words[key]) && placeholders.every((p) => words[key].includes(p)), `${key}${placeholders.length ? ` (with ${placeholders.join(" and ")})` : ""}`);
   }
@@ -269,10 +273,11 @@ export function sheetUrl(photos, sheet, assetPrefix = "") {
   return (ABSOLUTE_URL.test(photos.base) ? "" : assetPrefix) + photos.base + sheet.file;
 }
 
-/** The sheets a relative base copies beside the page: every sheet the manifest names. None for a CDN or for null. */
+/** The sheets a relative base copies beside the page: every sheet the manifest names (since SPEC-ui-and-copy-pass § 8 also
+ *  its `email_slideshow`, E1's GIF, served from the Workers' assets as the sheets are). None for a CDN or for null. */
 export function sheetsToCopy(photos) {
   if (photos?.base == null || ABSOLUTE_URL.test(photos.base)) return [];
-  return [photos.carousel, ...Object.values(photos.chefs_choice ?? {})].filter(Boolean);
+  return [photos.carousel, ...Object.values(photos.chefs_choice ?? {}), photos.email_slideshow].filter(Boolean);
 }
 
 /** A percentage for an inline style, without float noise. */
@@ -458,10 +463,25 @@ const PERCENT_OFF = { least: 1, most: 99 };
 const PERCENT = 100;
 const NAMED_PERCENT = /(\d+)\s*%/;
 
+/** SPEC-ui-and-copy-pass § 7 item 3: every weekly total the result card can show, in cents, by the result's plan (#result's
+ *  data-accent: a size's id, or Family's) and its answer set (#result's data-selection without its snacks mark): a size's
+ *  at every answer set, the meals it comes to at its plan's price a meal (§ 1.2 item 1: five on Lean 4, 5 × $13.00), and
+ *  each Family answer, its meals at Family's price a meal. [plan, [{ key, total_cents }]] per plan. */
+function resultTotals(plans) {
+  const { rows } = checkSelection(plans);
+  const sizes = plans.individual.map((plan) => [plan.id, [...rows].map(([key, r]) => ({ key, total_cents: cellFor(plan, r.plan).price_per_meal_cents * r.meals }))]);
+  const family = [plans.family.id, [...checkFamily(plans).values()].map((r) => ({ key: r.key, total_cents: r.cents * r.meals }))];
+  return [...sizes, family];
+}
+
 /** § 1 item 7, as § 1.2 item 2 corrects it (the Advisor, 2026-10-23: "The HMP storefront *effectively* has the discount
- *  applied. The microsite shows the un-discounted price struck through"): for an offer with `percent_off`, each grid
- *  cell's struck price, its weekly total as the store charges it ÷ (1 − the share), as the cell writes its total
- *  (`$116.67/wk` for $87.50), by the cell's data-cell; rounded to the cent, never below the list. Money is the build's. */
+ *  applied. The microsite shows the un-discounted price struck through"): for an offer with `percent_off`, `struck`, each
+ *  grid cell's struck price, its weekly total as the store charges it ÷ (1 − the share), as the cell writes its total
+ *  (`$116.67/wk` for $87.50), by the cell's data-cell; rounded to the cent, never below the list. And since § 7 (the
+ *  Advisor, 2026-10-26: "Let's do B2 and drop the meal count please"), `struck_result`, the same for every total the result
+ *  card can show (resultTotals), the money alone (`$116.67`; the card's unit is the template's), by its plan and answer
+ *  set. One line computes every struck price, so the result and the grid agree for the same plan and count. Money is the
+ *  build's. */
 function pricesStruck(plans, offer) {
   const p = offer.percent_off;
   if (!Number.isInteger(p) || p < PERCENT_OFF.least || p > PERCENT_OFF.most) {
@@ -471,13 +491,18 @@ function pricesStruck(plans, offer) {
     const named = NAMED_PERCENT.exec(offer[field] ?? "");
     if (named && Number(named[1]) !== p) throw new Error(`data/offers.json: offer ${offer.id}'s ${field} names ${named[1]}%, its percent_off is ${p}`);
   }
-  return Object.fromEntries(gridCells(plans).map((c) => [`${c.plan}-${c.count}`, `${money(Math.round((c.total_cents * PERCENT) / (PERCENT - p)))}/wk`]));
+  const struckOf = (c) => money(Math.round((c.total_cents * PERCENT) / (PERCENT - p)));
+  return {
+    struck: Object.fromEntries(gridCells(plans).map((c) => [`${c.plan}-${c.count}`, `${struckOf(c)}/wk`])),
+    struck_result: Object.fromEntries(resultTotals(plans).map(([plan, totals]) => [plan, Object.fromEntries(totals.map((t) => [t.key, struckOf(t)]))])),
+  };
 }
 
 /** What the development page's scripts read: the save endpoint, the ZIP list (official; its near ring a mock), the sizes,
  *  and (§ 2a) what the offer box needs to choose as the Worker does; since SPEC-ui-and-copy-pass § 1 item 1 an offer's
  *  `headline`, the words the box prints, when it has one, and since its item 7 (as § 1.2 item 2 corrects it) `struck`,
- *  See all plans' struck prices (pricesStruck), when it has a `percent_off`. ⛔ Never a code: no shared_code, no code_mode. */
+ *  See all plans' struck prices, and since its § 7 `struck_result`, the result card's (pricesStruck), when it has a
+ *  `percent_off`. ⛔ Never a code: no shared_code, no code_mode. */
 export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) {
   const prefixesOnly = (list) => (list ?? []).map((z) => (z.zip ? { zip: z.zip } : { prefix: z.prefix }));
   return {
@@ -496,7 +521,7 @@ export function saveClientData(plans, { save, zips, siteKey, eventId, offers }) 
       applies_to: o.applies_to,
       valid_from: o.valid_from,
       valid_to: o.valid_to,
-      ...(o.percent_off !== undefined ? { struck: pricesStruck(plans, o) } : {}),
+      ...(o.percent_off !== undefined ? pricesStruck(plans, o) : {}),
     })),
   };
 }
@@ -655,8 +680,6 @@ export async function renderPage(plans, dev = PROD_SLOTS, messages = null, picks
     ...messageSlots(messages),
     CAROUSEL: carouselHtml(photos, dev.ASSET_PREFIX ?? PROD_SLOTS.ASSET_PREFIX),
     TOTAL_UNIT: esc(words.total_unit),
-    MEALS_UNIT: esc(words.meals_unit),
-    PER_MEAL_UNIT: esc(words.per_meal_unit),
     FOOTNOTE: esc(fillPhrase(words.prices_as_of, { date: plans.read_on })),
     GOALS: plans.individual.map(goalButton).join("\n"),
     WHO_QUESTION: whoQuestion(words),
@@ -706,6 +729,20 @@ export async function copyStatic(outDir, photos = undefined, sheetsDir = PHOTO_S
     await mkdir(dirname(to), { recursive: true });
     await copyFile(from, to);
     written.push(to);
+  }
+  return written;
+}
+
+/** SPEC-ui-and-copy-pass § 8: E1's own images into <out>/assets/email/, for the build of a Worker that sends E1 (the
+ *  development build always; the production build with `production` true). The production build with `production` false
+ *  sends nothing and gets none, so it stays the build before rung 4 (S20). */
+export async function copyEmailImages(outDir, dir = EMAIL_IMAGES_DIR) {
+  const to = join(outDir, "assets", "email");
+  await mkdir(to, { recursive: true });
+  const written = [];
+  for (const name of (await readdir(dir)).filter((n) => /\.png$/.test(n)).sort()) {
+    await copyFile(join(dir, name), join(to, name));
+    written.push(join(to, name));
   }
   return written;
 }
@@ -1063,6 +1100,8 @@ export async function build({
     pages = [{ path, bytes: Buffer.byteLength(html) }];
   }
   const files = await copyStatic(outDir, photos, sheetsDir, preview ? PREVIEW_STATIC_DIRS : STATIC_DIRS); // § 8: a preview, no why/
+  // SPEC-ui-and-copy-pass § 8: E1's images beside the logo, in the assets of each Worker that sends E1.
+  if (target === "dev" || (target === "prod" && save.production === true)) files.push(...(await copyEmailImages(outDir)));
   // § 9 item 1: /privacy/, a static page beside the plan pages (as /why/): the development build always, marked as the
   // step is; the production build with `production` true, or with DRAFT § 6 approved (SPEC-ui-and-copy-pass § 1.3); the
   // preview build never (it has no save step).

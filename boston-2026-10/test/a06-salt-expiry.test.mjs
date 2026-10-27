@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { saltExpiryProblems, MAX_SALT_TTL_S } from "./a-checks.mjs";
-import { startBeacon, VALID } from "./a-harness.mjs";
+import { startBeacon, VALID, visitorOf } from "./a-harness.mjs";
 
 test("A6: the salt is written with an expiry of at most 172,800 s", async () => {
   assert.deepEqual(await saltExpiryProblems(), []);
@@ -33,7 +33,9 @@ for (const [label, first, last, hours] of DAYS) {
       await site.post(VALID.open, { clock: Date.parse(last) });
       const later = await site.log();
       assert.equal(later.puts.length, 0, "the day's last minute made no new salt");
-      assert.equal(later.points[0].indexes[0], made.points[0].indexes[0], "and the same v");
+      // SPEC-analytics.md § 15 item 2: the visitor is blob12.
+      assert.match(String(visitorOf(made.points[0])), /^[0-9a-f]{16}$/, "control: the first event's v");
+      assert.equal(visitorOf(later.points[0]), visitorOf(made.points[0]), "and the same v");
     } finally {
       await site.dispose();
     }

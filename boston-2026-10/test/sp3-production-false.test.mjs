@@ -55,21 +55,35 @@ test.after(() => base.dispose());
 // § 1.2 item 3 (a save after the last offer's end kept with no offer, nothing due, 30 days): src/worker/lapse.js (its rule),
 // src/worker/save-store.js (no message state when nothing is due), src/worker/scheduled.js (its cut-off), and index.js
 // and data/save.json again. (SPEC-ui-and-copy-pass § 2 item 5's data/plans.json, its read_on, is not here: the base takes
-// § 2's diff, sp-production.mjs LATER, so the two files are alike.)
+// § 2's diff, sp-production.mjs LATER, so the two files are alike.) Since SPEC-ui-and-copy-pass § 8 (E1 in the flyers'
+// language): src/worker/messages.js and src/worker/email-style.js (E1's new layout; E-X's bytes unchanged, EL1), and three
+// files the development Worker newly reaches: src/worker/email-band.js (the band, read from data/flyer-front.json, which it
+// imports) and src/worker/email-photos.json (the photo manifest's slideshow, derived by `npm run email:photos`).
 const MOVED_WORKER_FILES = [
   "data/delivery-zips.json",
   "data/events.json",
+  "data/flyer-front.json",
   "data/offers.json",
   "data/save.json",
+  // SPEC-the-redirect.md (2026-10-27): the page's one reading of ?e= (src/qr-event.js, already the page's), now also read
+  // by the Worker's redirect (src/worker/redirect.js, new), which site.js imports.
+  "src/qr-event.js",
   "src/worker/choose-sender.js",
   "src/worker/confirm.js",
+  "src/worker/email-band.js",
+  "src/worker/email-photos.json",
+  "src/worker/email-style.js",
   "src/worker/index.js",
   "src/worker/lapse.js",
   "src/worker/messages.js",
   "src/worker/offers.js",
+  // SPEC-analytics.md § 16 item 1 (2026-10-27): the offer page's copy of the analytics script (new, derived), which the
+  // Worker reaches only through pages.js (named here since § 3); the base's pages.js imports no such file.
+  "src/worker/page-script.json",
   "src/worker/page-style.json",
   "src/worker/pages.js",
   "src/worker/redeem.js",
+  "src/worker/redirect.js",
   "src/worker/save-store.js",
   "src/worker/scheduled.js",
   "src/worker/send-due.js",

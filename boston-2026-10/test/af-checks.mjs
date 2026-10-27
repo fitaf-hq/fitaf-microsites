@@ -47,10 +47,11 @@ export async function everyQuestionProblems(root = ROOT) {
   return problems;
 }
 
-/** A beacon as the cases compare it: its event and the contract's fields (§ 3), never `s` or a time. */
+/** A beacon as the cases compare it: its event and the contract's fields (§ 3), never `s` or a time (exported for
+ *  sv-checks.mjs, § 14). */
 const COMPARED = ["question", "answer", "key", "link", "mpid", "step"];
-const compared = (body) => Object.fromEntries([["event", body.event], ...COMPARED.filter((k) => k in body).map((k) => [k, body[k]])]);
-const show = (body) => [body.event, ...COMPARED.filter((k) => k in body).map((k) => body[k])].join(" ");
+export const compared = (body) => Object.fromEntries([["event", body.event], ...COMPARED.filter((k) => k in body).map((k) => [k, body[k]])]);
+export const show = (body) => [body.event, ...COMPARED.filter((k) => k in body).map((k) => body[k])].join(" ");
 
 /** A visit on the page `html`: opened, each of `presses` (a selector) pressed in turn, the result card's order link
  *  pressed, the page left. Returns the visit. */

@@ -12,6 +12,11 @@
 // ruling), so the page is the build's and the week is the content command's (`--picks` the fixture), in its
 // #picks-data. Before that contract these cases built --on 2026-09-30 from data/picks/ and the browser chose a week by
 // the real clock, so what they read moved with the day they ran.
+// ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 7 (2026-10-26, the Advisor: "Let's do B2 and drop the meal count
+// please"): the price a meal and the meals a week are gone; the block's lines are the weekly total and, while an offer with
+// a share is current, the struck line above it (the weekly total before the share). So PR-6 and PR-16 hold the total the
+// block's largest line, and the struck line the only one above it. The page's clock here is the real one, so the struck
+// line is drawn on a day of the offer and not after it: both hold either way (RP5 fixes the clock).
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
@@ -49,21 +54,30 @@ async function withPage({ width, hash }, fn) {
   }
 }
 
-test("PR-6: the weekly total comes first and its font is larger than the price per meal's (Chrome, 390)", { timeout: TIMEOUT_MS }, async () => {
-  const read = await withPage({ width: VIEWPORTS.w390.width, hash: "#lean-7" }, (page) =>
-    page.evaluate(() => {
-      const box = (id) => {
-        const el = document.getElementById(id);
-        const r = el.getBoundingClientRect();
-        return { top: r.top, left: r.left, size: parseFloat(getComputedStyle(el).fontSize), text: el.textContent };
-      };
-      return { total: box("result-total"), perMeal: box("result-per-meal") };
-    }),
-  );
-  assert.ok(read.total.text && read.perMeal.text, `control: both figures shown (${read.total.text}, ${read.perMeal.text})`);
-  const first = read.total.top < read.perMeal.top || (read.total.top === read.perMeal.top && read.total.left < read.perMeal.left);
-  assert.ok(first, `the total first: ${JSON.stringify(read)}`);
-  assert.ok(read.total.size > read.perMeal.size, `the total larger: ${read.total.size}px against ${read.perMeal.size}px`);
+/** Runs in the page: the price block's drawn lines, each its words, its top, its font size (the total's figure for the
+ *  total's line), whether it is the total's and whether it is struck through (an `<s>`). */
+function priceLines() {
+  const total = document.getElementById("result-total");
+  return [...total.closest(".price").children]
+    .filter((n) => n.checkVisibility())
+    .map((n) => ({
+      lead: n.contains(total),
+      struck: n.localName === "s",
+      top: n.getBoundingClientRect().top,
+      size: parseFloat(getComputedStyle(n.contains(total) ? total : n).fontSize),
+      text: n.textContent.trim(),
+    }));
+}
+
+test("PR-6: the weekly total is the price's largest line, and only the struck line is above it (Chrome, 390)", { timeout: TIMEOUT_MS }, async () => {
+  const lines = await withPage({ width: VIEWPORTS.w390.width, hash: "#lean-7" }, (page) => page.evaluate(priceLines));
+  const lead = lines.find((l) => l.lead);
+  assert.ok(lead?.text, `control: the total shown (${JSON.stringify(lines)})`);
+  for (const l of lines.filter((x) => !x.lead)) {
+    assert.equal(l.struck, true, `only the struck line beside the total: ${JSON.stringify(l)}`);
+    assert.ok(l.top < lead.top, `the struck line above the total: ${JSON.stringify(lines)}`);
+    assert.ok(lead.size > l.size, `the total larger: ${lead.size}px against ${l.size}px`);
+  }
 });
 
 test("PR-4: the three goals in one row at 390 and at 1280 (Chrome)", { timeout: TIMEOUT_MS }, async () => {
@@ -147,21 +161,24 @@ test("PR-14: the question headings are centred (Chrome, 390 and 1280)", { timeou
   }
 });
 
-test("PR-16: the price is one untinted block, the weekly total first and larger; no title (Chrome, 390)", { timeout: TIMEOUT_MS }, async () => {
-  const read = await withPage({ width: VIEWPORTS.w390.width, hash: "#lean-7" }, (page) =>
-    page.evaluate(() => {
-      const t = document.getElementById("result-total"), m = document.getElementById("result-per-meal");
+test("PR-16: the price is one untinted block, the weekly total its largest line, only the struck line above it; no title (Chrome, 390)", { timeout: TIMEOUT_MS }, async () => {
+  const read = await withPage({ width: VIEWPORTS.w390.width, hash: "#lean-7" }, async (page) => ({
+    lines: await page.evaluate(priceLines),
+    ...(await page.evaluate(() => {
+      const t = document.getElementById("result-total");
       const block = t.closest(".price");
       const tinted = [block, ...block.querySelectorAll("*")].filter((el) => getComputedStyle(el).backgroundColor !== "rgba(0, 0, 0, 0)").length;
       return {
-        sameBlock: block !== null && block === m.closest(".price"),
+        sameBlock: block !== null && block === document.getElementById("result-struck")?.closest(".price"),
         tinted,
-        totalFirst: t.getBoundingClientRect().top < m.getBoundingClientRect().top,
-        sizes: [parseFloat(getComputedStyle(t).fontSize), parseFloat(getComputedStyle(m).fontSize)],
         title: document.querySelectorAll("#result .result-title").length,
       };
-    }),
-  );
-  assert.deepEqual([read.sameBlock, read.tinted, read.totalFirst, read.title], [true, 0, true, 0], JSON.stringify(read));
-  assert.ok(read.sizes[0] > read.sizes[1], `the total larger: ${read.sizes}`);
+    })),
+  }));
+  assert.deepEqual([read.sameBlock, read.tinted, read.title], [true, 0, 0], JSON.stringify(read));
+  const lead = read.lines.find((l) => l.lead);
+  assert.ok(lead?.text, `control: the total shown (${JSON.stringify(read.lines)})`);
+  for (const l of read.lines.filter((x) => !x.lead)) {
+    assert.ok(l.struck && l.top < lead.top && lead.size > l.size, `only the struck line, above the total and smaller: ${JSON.stringify(read.lines)}`);
+  }
 });

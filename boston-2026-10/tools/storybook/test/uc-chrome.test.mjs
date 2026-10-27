@@ -385,16 +385,19 @@ test("The save step's states and See all plans, in Chrome at 390 (items 2, 3, 7)
     );
     await render(page, "#save-dialog", "uc9-step-after-the-offer-390");
   });
+  // ⚠ AMENDED by the site's SPEC-ui-and-copy-pass § 7 item 4 (2026-10-26): the card's price is its weekly price alone (no
+  // price a meal, no meal count; its struck line above it is RP5's, rp5-chrome.test.mjs), so its five meals are the list's.
   await withPage({ dir: devWeekOut, hash: "#lean-or-5d", width }, async (page) => {
     await page.waitForSelector("#cc-list:not([hidden])");
     const card = await page.evaluate(() => ({
       meals: document.querySelectorAll("#cc-meals > li").length,
-      figures: ["result-total", "result-per-meal", "result-meals"].map((id) => document.getElementById(id).textContent.trim()),
+      total: document.getElementById("result-total").textContent.trim(),
+      gone: ["result-per-meal", "result-meals"].filter((id) => document.getElementById(id)),
     }));
     assert.equal(card.meals, 5, "control: a row of five meals on the 4 plan");
     const lean4 = plansData.individual.find((p) => p.id === "lean").counts.find((c) => c.meals_per_week === 4).price_per_meal_cents;
-    assert.deepEqual(card.figures.slice(1), [`$${(lean4 / 100).toFixed(2)}`, "5"], "the plan's price a meal; the five meals it lists");
-    assert.equal(card.figures[0], `$${((lean4 * 5) / 100).toFixed(2)}`, "its weekly price, five at the plan's price a meal (§ 1.2 item 1)");
+    assert.deepEqual(card.gone, [], "no price a meal, no meal count (§ 7 item 4)");
+    assert.equal(card.total, `$${((lean4 * 5) / 100).toFixed(2)}`, "its weekly price, five at the plan's price a meal (§ 1.2 item 1)");
     await render(page, "#result", "uc6-card-5-meals-390");
   });
 });

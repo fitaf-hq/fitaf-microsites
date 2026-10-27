@@ -1362,3 +1362,587 @@ Built on `boston/round-2-changeset-2` from `b70ece4` (§ 5), each case one file 
 10. **The descriptions arrive** (2026-10-26): `data/picks/2026-11-01.json` replaced by Fit AF's emitter's output
     (`85d8ed3`, 25 of 26 meals described); it moves UC8 alone (a row's words now hold the description under the name;
     amended in `eec5c4c`) and no golden.
+
+## 6. The save dialog opened by a link, `#save` (2026-10-26). CONTRACT, before any code
+
+**Why.** The Advisor, 2026-10-26: *"add a "save my offer" call to action on the final step of the HMP checkout (where
+customers enter their credit card)"*; then, to the plan for tomorrow evening's slate, *"let's do the slate for tomorrow
+evening first"*. The store's page sends nothing to us (SPEC-analytics § 1 item 3; the hand-off's *"⛔ Never … a
+request"*), so its call to action is a **link** to this page, which opens the save step. A save needs no plan: it holds
+the offer's pricing against an email and a ZIP (SPEC-rung4 §§ 3–4), so the link carries no answers. Its Footer block half
+is SPEC-rung2-progress-and-checkout § 35.
+
+1. **At `#save`** (the page's address's fragment exactly that), once the page's scripts have run, the plan page opens
+   the save dialog (`#save-dialog`) as pressing *Not ready?* opens it (§ 4 B), the save step at its first state
+   (`OFFER`), and the page behind it at its start (`#save` carries no answer, so `app.js` reads it as no fragment).
+   Closing the dialog (its button, Esc, the backdrop) leaves the page at its start; the fragment is not rewritten by
+   the opening. A page without the save step (production `false`, `/why/`, `/privacy/`) does nothing with `#save`.
+2. **What it records**: the save's event is the page's own (`qrEvent(location.search)`, else `save.json`'s
+   `event_id`), as for every save; the link from the store carries no `?e=`, so such a save names the default event and
+   its E1 reads *"at eatfitaf.com"* (the Advisor's, ⬜ to confirm; carrying the event through the hand-off is later
+   work). The analytics: the visit's `open` as any; a stored save sends `save` (SPEC-analytics § 14).
+3. **Unchanged**: every other fragment, the dialog's contents and words, *Not ready?* itself.
+4. **Cases**, written first and run red: **SL1** the page opened at `#save` has the dialog open after load, at the
+   save step's `OFFER`, on both targets with the save step; **SL2** closed, the page is at its start and no answer is
+   pressed; **SL3** the page opened at `#lean-and-7d`, `#from-email` or no fragment opens no dialog; **SL4** production
+   `false`: `#save` opens nothing. **Mutant**: the opening on any fragment (SL3).
+5. **When.** Built on `boston/save-link` (from the release line `5fbe44f`), merged into the release line, the full
+   suites, dev, then production, **before** the Footer block of § 35 is pasted (its link must lead somewhere live).
+
+### 6.1 Built (2026-10-26)
+
+§ 6 is unchanged. On `boston/save-link`: the cases at `1a63f41` (on `b480a94`'s code, red), the code at `63e243b`, the
+goldens it moves at `5ea010c`, this section after them.
+
+**What was built**, all of it in `src/save/flow1.js`:
+- `OPENED_BY_LINK` is true when the page's fragment at load is exactly `#save`.
+- On `DOMContentLoaded` (once the page's scripts have run), the step goes to `linked` and presses *Not ready?*. So
+  `app.js`'s `modal()` opens `#save-dialog` exactly as it does for a visitor's press.
+- `linked` draws the step in its dialog with no checkout beside it, and every transition of the step carries it
+  (`withName`). The dialog's `close` clears it (`withLinked`, the rest of the state as it was).
+- The step's first state is OFFER, as at any fragment but `#from-email`. `app.js` reads `#save` as no fragment, so the
+  page behind is at its start, and nothing rewrites the fragment.
+- *Not ready?* is still shown only beside a checkout. A page without the save step has no `flow1.js`.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, each named as its literal path in the
+command; the whole suite was not run, as the orchestrator asked: it runs once on the merged release line):
+
+| | before | after |
+|---|---|---|
+| `test/sl*.test.mjs` (SL1 twice, SL2, SL3, SL4 twice, the mutant and its control) | `1a63f41`: `# tests 8` `# pass 3` `# fail 5` | `63e243b`: all eight pass, within the next row's run |
+| `test/sl*`, `a*`, `n*`, `sv*`, `ix*`, `uc*` | `b480a94` (without `sl*`): `a*` `n*` `sv*` `ix*` `# tests 88` `# pass 88` `# fail 0`, `uc*` `# tests 90` `# pass 90` `# fail 0`; `1a63f41`: `# tests 186` `# pass 181` `# fail 5` | `63e243b`: `# tests 186` `# pass 186` `# fail 0` |
+| every case driven by `openPlanPage`, its harnesses or `page-sim` | `1a63f41` (the 78 driven by `openPlanPage` and its harnesses, the harness change on the old code): `# tests 388` `# pass 388` `# fail 0` | `63e243b` (87 files): `# tests 426` `# pass 426` `# fail 0` |
+| the goldens' readers (CC-8, MS-9, PR-10, S20, CC-4, PV5, SP3, U4, WC-8, WC-9, QE15, T5, S18, the budget, SP5) | `b480a94`: `# tests 42` `# pass 42` `# fail 0` | `63e243b`: `# tests 42` `# pass 40` `# fail 2` (PV5 dev, U4) |
+| the last runs, at `5ea010c` | | the brief's set, 66 files (`sl*`, PV5, U4, `a*`, `af*`, `aj*`, `n-*`, `sv*`, `ix*`, `uc*`, T5, S18, the budget): `# tests 200` `# pass 200` `# fail 0`; the other cases the harness and the step reach, 102 files (`cc-*`, `em-*`, `ms-*`, `pr-*`, S5, S17, S19–S31, SP1–SP5, SP9, SP10, SP16, SP17, `uf*`, `uq*`, W1, W4, W5, `wc-*`, QE15, P1): `# tests 434` `# pass 434` `# fail 0` |
+
+Red for the right reasons:
+- **SL1:** `development, #save: the dialog opened 0 time(s) by its showModal, not once`, `the dialog is not open` and
+  `#save not shown (OFFER)` (production the same). Its save: `after the save, its done line not shown` and `after the
+  save, the dialog closed` on both builds. The two requests were already equal.
+- **SL2**, on its control: `development, #save: control: the dialog is not open before closing`, for each way of
+  closing, on both builds.
+- **The mutant:** its control on SL1; the mutant itself on its anchor.
+- **SL3 and SL4** passed there, as guards; the mutant is SL3's test.
+
+**The mutant** (`test/sl-mutants.test.mjs`, in a mirror through THE SAME check SL3 runs, `test/sl-checks.mjs`; the tracked
+tree untouched, `git status` clean after the runs):
+- The control (the unchanged mirror) passes SL1 and SL3, 0 problems. SL2 and SL4 are also 0 in the same mirror, from a
+  scratch run the file does not assert.
+- The opening on any fragment (`OPENED_BY_LINK` true) fails SL3, 10 problems, one per fragment and build:
+  `development, #lean-and-7d: a dialog opened (showModal #save-dialog)`, and the same for `#from-email`, no fragment,
+  `#lean-7` and `#save-offer` on both builds.
+
+**The goldens moved** (each re-recorded once from `63e243b`'s own tree, `git archive`, the package's `node_modules` linked
+in; each recorder's control first reproducing the committed record):
+
+- PV5 (`pv-05-record.mjs --commit 63e243b --release-a`). At `3f40698` it reproduces the committed record byte for byte, and
+  at `1a63f41` the same record but `recorded_at`. Moved: the development build's `index.html`, `demo/`, `boston/` and
+  `seminar/` alone, +1,117 bytes each. Production's page (`production` false in this record, no save step) and every
+  other file are byte-identical.
+- U4 (`u-04-record.mjs --commit 63e243b --release-a --without-snack-cells`). With both flags at `3f40698` it reproduces the
+  committed record byte for byte, and at `1a63f41` the same record but `recorded_at`. Moved: development's three pages,
+  +1,117 bytes each. All six contents, production's three pages and every visible page are byte-identical.
+- Not moved: S20, CC-4 and SP3's base (the production page with `production` false carries no save step); CC-8 (no
+  Worker file moves); WC-8, WC-9, QE15, T5, S18, the budget.
+
+**The page's bytes** (every page the builds write, `test/page-budget.mjs`'s gzip; `1a63f41`, `b480a94`'s code →
+`63e243b`): each page that carries the save step gains 1,117 bytes raw. These are `flow1.js`'s lines, which the build
+inlines with their comments. Both trees' pages were compared line by line: those lines alone, the same on each page,
+no visible word. The production page with `production` false, privacy/ and why/ are unchanged.
+
+| build | page | raw | gzip |
+|---|---|---|---|
+| production (as committed, `production` true) | `index.html` | 115,751 → 116,868 | 33,986 → 34,329 |
+| production with `production` false | `index.html` | 80,094 (unchanged) | 23,852 |
+| development | `index.html`, `demo/` | 122,620 → 123,737 | 35,871 → 36,215 |
+| development | `boston/` | 122,622 → 123,739 | 35,869 → 36,213 |
+| development | `seminar/` | 122,623 → 123,740 | 35,873 → 36,217 |
+
+T5's ceiling is 61,440 bytes gzip; the largest page is 36,217.
+
+**What § 6 was silent on, and what was built** (stated, not ruled)
+
+1. **The case files are `sl1`–`sl4`**, with `sl-checks.mjs` and `sl-mutants.test.mjs`. The pages are the package's own
+   builds with the fixture week (`a-harness.mjs`'s `builtPage`), so the mutant's mirror builds its own.
+2. **"Once the page's scripts have run"** is read as `DOMContentLoaded`: the step's script is the fifth of the page's
+   seven inline scripts.
+3. ⚠ **"As pressing *Not ready?* opens it"** is read as pressing it. The step calls `#not-ready`'s `click()`, which a
+   hidden button still dispatches. So `app.js`'s `modal()` opens the dialog with `showModal`, as for a visitor's press,
+   and on closing returns focus to *Not ready?*. *Not ready?* is hidden then; where the focus goes in a browser was not
+   measured.
+   - **Found at the build:** the first code called the dialog's `showModal` from the step, and SP4 refused it (`Flow 1's
+     script opens no dialog, popover or modal`). That is S29's rule as § 4 B left it: the page's `modal()` opens every
+     dialog. The rule is kept unchanged.
+   - If it is read as forbidding the step's press too, the other way is `app.js` reading `#save`, a second reading of the
+     fragment beside the step's own. Not built.
+4. **`linked`** is a state field every transition carries. The step is drawn while `linked` or beside a checkout. The
+   rule that the dialog closes if the checkout goes (§ 4.1 item 11) still holds for a dialog *Not ready?* opened. It does
+   not close the link's dialog, which never had a checkout beside it, until that dialog is closed.
+5. **At load only.** A fragment changed to `#save` later (the address bar, a link within the page) opens nothing, and
+   `app.js` reads it as the start.
+6. **After closing, the fragment stays `#save`** (item 1: not rewritten), so a reload opens the dialog again. A return by
+   Back from the store restores the page from the browser's cache as it was left, which the cases do not model.
+7. **Esc** is, in the stub, the browser's own `close()` of a modal dialog, as UC12 has it. Esc itself, in Chrome, was not
+   run.
+8. **`cc-harness.mjs`'s `openPlanPage` now dispatches `DOMContentLoaded`** after its scripts on every case, and takes
+   `before(document)`.
+   - No script there listened for `DOMContentLoaded` before. The analytics' `result()` does since SPEC-analytics § 15,
+     but the analytics is off in that harness: it has no Web Crypto.
+   - The 78 files it drives passed with it on the old code, 388 of 388.
+   - `uc11-harness.mjs` gains `browserPartsOf` and `openWithDialogs`: the dialogs stood in for before the scripts run,
+     since one now opens at load.
+9. **The event of a save through the link** is the page's default (`?e=` absent). SL1 holds the request equal to one
+   through *Not ready?* on the same build rather than naming an event (item 2's ⬜ is the Advisor's).
+10. **SL4's /why/ and /privacy/** carry no script on either build, so nothing on them reads `#save`.
+11. **Analytics**: nothing new is sent. *Not ready?* is not one of the elements the analytics' listener reads, and a
+    stored save sends `save` as before. This was not measured in the SL cases, which run with the analytics off.
+
+**Found, not ruled**
+
+- 585 of the 1,117 bytes are the step's six new comment lines (`flow1.js` is inlined with them; measured over both trees'
+  development pages); well within the budget.
+
+**Not done here**: the whole suite, Storybook (the dialog opened at load in Chrome: its top layer, the focus, Esc), the
+watch and contrast; nothing deployed, no merge, no pin.
+
+## 7. The result's price: the week's price alone, its full value struck above it (2026-10-26). CONTRACT, before any code
+
+**Why.** The Advisor, `ts=2026-10-27T04:21:18.535Z`: *"For the price, we \*just\* want to show price per week (with the
+strikethrough showing the full retail value) with the number of meals per week. We \*might\* try something like "X
+meals for $YY.YY" as a single line."* Shown three layouts (the orchestrator's discussion mock: A, the struck price beside
+the week's, then the meal count; B, one line, *"5 meals for ~~$95.00~~ $71.25/week"*; B2, the struck price on a line of
+its own above *"5 meals for $71.25/week"*), `ts=2026-10-27T05:08:30.647Z`: *"Let's do B2 and drop the meal count
+please. I think that will really clean it up."* B2 without its meal count is the struck price above the week's price.
+
+1. **The result card's price** (`.price`, in both panels' results: an individual plan's and Family's) shows, in order:
+   1. while an offer with `percent_off` is current (the offer *See all plans* uses, chosen the same way:
+      `offerForSave` on today's date in `send_time_zone`), **the weekly total before the offer's share, struck
+      through, with its unit**: `$95.00/week` for $71.25 at 25 percent (the total ÷ (1 − the share), rounded to the
+      cent: § 1.2 item 2's rule, the one `pricesStruck` applies to the grid);
+   2. **the weekly total as the store charges it, with its unit**: `$71.25/week`, the lead figure at `.fig-total`'s
+      size and weight.
+
+   **Nothing else**: no price a meal, no meal count, no other words. With no such offer current (after its `valid_to`,
+   or an offer without `percent_off`), the first line is absent and the price is the second alone.
+2. **The struck line** is smaller than the lead and muted, as the grid's (`.cell small s`): `--muted`, the browser's
+   line-through, on a line of its own directly above the lead; the mock had it at 17px beside a 30px lead, and the lead
+   keeps its 34px here, so the builder states the size chosen. Its colour pair is declared in `src/contrast-pairs.json`
+   and measured by `npm run contrast`. Neither line wraps at 390 or 1280.
+3. **Money in one place.** Every struck figure the result can show is the build's, as the grid's are, for **every total
+   the result can show**: each plan at its own count (the grid's cells), each answer set above its plan's count (the
+   plans' `totals`) and each Family answer. The page's script only chooses whether to show it. The result and *See all
+   plans* show the same struck figure for the same plan and count.
+4. **Removed**: `#result-per-meal`, `#result-meals` and the units only they use; any case that reads them changes in the
+   same commit, named.
+5. **Unchanged**: *See all plans*, the card's meal list, the call to action and every link, the analytics, the save
+   step, `#from-email`, `#save`.
+6. **Cases**, written first and run red: **RP1** an individual answer set at its plan's count, one above it (5 meals on
+   the 4-meal plan) and a Family answer each show exactly the struck `$X/week` then `$Y/week` on a clock inside the
+   offer's dates, `Y` the store's total and `X` = round(`Y` ÷ (1 − the share)); **RP2** on a clock after `valid_to`,
+   `$Y/week` alone; **RP3** no price a meal and no meal count in `.price`; **RP4** the result's struck figure equals the
+   grid's for the same plan and count; **RP5** in Chrome at 390 and 1280, the struck line above the lead and neither
+   wrapped. **Mutant**: the struck figure from the price a meal × the plan's count (wrong for an answer set above its
+   count) fails RP1.
+7. **When.** Built on `boston/result-price` from the release line `3b275fa`; a preview for the Advisor (the result at
+   390 and 1280, an individual plan's and Family's, while the offer is current); merged into the release line; the site
+   suite, Storybook and contrast on the merged line; dev; production on his word.
+
+### 7.1 Built — found at the build, not ruled (2026-10-26)
+
+§ 7 is unchanged. On `boston/result-price` from `6e0d86f` (`3b275fa` and § 7's text): the cases at `bc39ee0` (on
+`6e0d86f`'s code, red), the code at `f60e19c`, the goldens it moves at `e0753d6`, this section after them.
+
+**What was built**
+- The template's `.price` holds two lines. First `#result-struck`, an `<s>` (`.fig-struck`, hidden as built,
+  `aria-hidden`): its figure `#result-struck-total`, then the result's one unit (`TOTAL_UNIT`). Then the lead,
+  `.fig-total` as before (`#result-total` at 34 px, with its unit). `#result-per-meal`, `#result-meals`, their slots and
+  their two words are gone.
+- `app.js` writes the total and the link alone.
+- `build.mjs`: `resultTotals` gives, in cents, every total the result can show: each size at every answer set (the meals
+  it comes to at its plan's price a meal) and each Family answer. `pricesStruck` gives save-data's offer `struck` (the
+  grid's, byte-identical) and `struck_result` (the result's). Both go through one line, `struckOf`, the only place a
+  struck price is computed.
+- `plan-prices.js`, which already chooses the offer See all plans uses, shows the result's line on load and on each
+  `hashchange`, after `app.js` has drawn the card. It takes the figure of `struck_result` at `#result`'s `data-accent` and
+  `data-selection` (without its snacks mark); with none, the line stays hidden.
+- The colour pair, `--muted` on `--white` (body), declared for the struck line.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, each named as its literal path in the
+command; the whole site suite and the whole Storybook suite were not run, as the orchestrator asked):
+
+| | before | after |
+|---|---|---|
+| `test/rp1-*`, `rp2-*`, `rp3-*`, `rp4-*`, `rp-mutants` (RP1 three, RP2 two, RP3, RP4 two, the mutant and its control) | `bc39ee0`: `# tests 10` `# pass 2` `# fail 8` (the two controls pass) | `f60e19c`: `# tests 10` `# pass 10` `# fail 0` |
+| `tools/storybook/test/rp5-chrome.test.mjs` (RP5 on both builds, and after `valid_to`) | `bc39ee0`: `# tests 3` `# pass 0` `# fail 3` | `f60e19c`: `# tests 3` `# pass 3` `# fail 0` |
+| the 48 files that read `.price`, `#result-*`, the result card, save-data's struck prices, the result's words or a golden this may move | `bc39ee0`: `# tests 177` `# pass 177` `# fail 0` | `f60e19c`, before the amendments: `# tests 177` `# pass 151` `# fail 26`; with them: `# tests 176` `# pass 167` `# fail 9` (the goldens' readers); `e0753d6`: `# tests 176` `# pass 176` `# fail 0` |
+| Storybook: `pr-chrome`, `uc-chrome`, `uc14-16-chrome`, `uf-chrome`, `rp5-chrome` | not run | `f60e19c`: `# tests 21` `# pass 21` `# fail 0` |
+| `npm run contrast` | not run | `f60e19c`: `95 pairs, 95 pass, 0 fail; 0 problem(s).` (the new pair Lc 83.5) |
+
+177 became 176 because MS-8's refusal of a missing `plan_page.meals_unit` went with the word.
+
+Red for the right reasons:
+- **RP1:** every result on both builds, e.g. `development, #lean-or-5d: 3 line(s) shown, not 2:
+  [{"text":"$65.00/week",…},{"text":"$13.00/meal",…},{"text":"5 meals/week",…}]`.
+- **RP2:** the same three lines after `valid_to`, on production false and with the fixture's offers (`not 1`).
+- **RP3:** `"/meal" in the price`, `"meals/week" in the price`, `the price a meal, $13.00, in the price`, `the meal count, 5,
+  in the price`, `the page still carries #result-per-meal`.
+- **RP4:** `the result's struck figure null, See all plans' "$116.67" (lean-7)`.
+- **RP5:** `production, 390, #lean-or-7d: two lines drawn, the struck one first` (drawn: `lead`, `fig-per-meal`,
+  `fig-meals`); after `valid_to`, `#lean-or-5d: the lead alone`.
+- **The mutant:** its anchor not yet in `build.mjs` (`the mutation anchor is in build.mjs once`); its control fails as RP1
+  does.
+
+**The mutant** (`test/rp-mutants.test.mjs`, in a mirror through THE SAME check RP1 runs, `test/rp-checks.mjs`; the tracked
+tree untouched, `git status` clean after the runs):
+- The control (the unchanged mirror) passes RP1, 0 problems.
+- The struck figure from the price a meal × the plan's count fails RP1, 12 problems: one per answer set above its plan's
+  count (`or-5d`, `and-5d-b`) per size and build, each on the struck line alone. For example `development, #signature-or-5d:
+  line 1 reads {"text":"$76.00/week",…}, not {"text":"$95.00/week",…}` (the Advisor's example, $95.00 above $71.25).
+  Nothing at a plan's own count and nothing on Family.
+
+**Cases changed with the code** (in `f60e19c`, each for the removed figures or their words):
+- `ms-harness.mjs`'s `resultOf` and `ms-checks.mjs`'s `rowProblems`: no `perMeal`, no `meals`.
+- MS-1: its second case inverted (the meals a week and `meals_unit` gone).
+- MS-3 and MS-4: `per_meal` no longer compared with `ms-golden.json`, which stays as recorded at `985f777`.
+- MS-10's rounding-up mutant: MS-1 sees it in the total, `$62.50`, not `$65.00`.
+- MS-16, UF2, UC6.
+- MS-8: the meals a week are no added part; `meals_unit` is no phrase and no refusal.
+- PR-5. PR-16: one block, the struck line and the total.
+- S23: `struck_result` beside `struck`.
+- In Storybook, PR-6 and PR-16 (`pr-chrome`): the total the block's largest line, with only the struck line above it.
+  Their page runs on the real clock, so both hold on either side of `valid_to`.
+- In Storybook, the 5-meal card (`uc-chrome`).
+
+**The goldens moved** (each re-recorded once from `f60e19c`'s own tree, `git archive`, the package's `node_modules` linked
+in; each recorder's control first reproducing the committed record):
+- PV5 (`pv-05-record.mjs --commit f60e19c --release-a`). At `63e243b` it reproduces the committed record byte for byte,
+  and at `bc39ee0` the same record but `recorded_at`. Moved: production's `index.html` (`production` false) and the
+  development build's `index.html`, `demo/`, `boston/` and `seminar/`.
+- U4 (`u-04-record.mjs --commit f60e19c --release-a --without-snack-cells`), with the same two controls. Moved: every
+  page (production's three +185 bytes, development's three +2,115) and every visible page read. All six contents are
+  byte-identical. Its pin moved to `f60e19c`.
+- WC-9 (`wc-09-record.mjs --commit 409b805 --on 2026-10-11 --visible-at f60e19c --release-a --without-snack-cells`). At
+  `27cc0df` it reproduces the committed record byte for byte, and at `bc39ee0` the same record but `visible_at`. Moved:
+  the 18 visible pages with a result. `""`, `#family`, the content, the page's hash and the sheet are `409b805`'s. Its pin
+  moved.
+- S20, which CC-4 reads too. There is no recorder, so each tree was built as S20 builds it, by a script outside the
+  repository. `bc39ee0`'s tree reproduces `2dc1bbd4…`; `f60e19c`'s moves `index.html` alone, `2dc1bbd4…` → `f70002b5…`,
+  80,094 → 80,279 bytes. Both trees' production-false pages were compared line by line: 15 lines out and 15 in, all in the
+  price block's rules and comments, its markup (the struck line in place of the two figures) and `app.js`'s lines.
+  `#plan-data` is unchanged.
+- WC-8's reference (`renderPage` with no picks, the analytics slot removed): `bc39ee0`'s tree gives `84f2f8f3…`,
+  `f60e19c`'s `4c940100…`.
+- SP3's base: one LATER entry, `bc39ee0`..`f60e19c` over `src/template.html` and `src/app.js`, the two files that move the
+  production page with `production` false.
+- Not moved: CC-8 (no Worker file moves), MS-9, PR-10, QE15, T5, S18, SP5, the budget.
+
+**The pages' bytes** (every page the builds write, `test/page-budget.mjs`'s gzip, each tree's own build):
+
+| build | page | raw | gzip |
+|---|---|---|---|
+| production (as committed, `production` true) | `index.html` | 116,868 → 118,983 | 34,329 → 35,004 |
+| production with `production` false | `index.html` | 80,094 → 80,279 | 23,852 → 23,995 |
+| development | `index.html`, `demo/` | 123,737 → 125,852 | 36,215 → 36,864 |
+| development | `boston/` | 123,739 → 125,854 | 36,213 → 36,862 |
+| development | `seminar/` | 123,740 → 125,855 | 36,217 → 36,866 |
+
+T5's ceiling is 61,440 bytes gzip; the largest page is 36,866.
+
+**What § 7 was silent on, and what was built** (stated, not ruled)
+
+1. **The struck line's size**: 19 px, Poppins at 600, line-height 1.2, `--muted`. It is an `<s>`, so the line-through is
+   the browser's, in the text's colour. The mock's proportion is kept: 17 px beside a 30 px lead is 19.3 beside 34. The
+   whole line is struck, its unit included, at one size (`$95.00/week`, as item 1 writes it); the lead's unit stays 15 px.
+2. **The data shape**: save-data's offer gains `struck_result`, `{ <the plan: a size's id, or "family">: { <the answer
+   set, as data-selection without -s>: "$X.XX" } }`. It holds the money alone; the template's unit follows it. The Boston
+   offer has 26 figures (three sizes × eight answer sets, and Family's two). They are keyed by what `#result` already
+   carries, so the script reads nothing else.
+3. **Where the struck line is drawn**: by `plan-prices.js`, because it already chooses the offer See all plans uses. A
+   page without the save step (production false, a preview) has no offer at all, so the line stays hidden there, as See
+   all plans shows no struck price there. It follows `app.js` on load and on each `hashchange`, as `flow1.js` and the
+   Chef's Choice card do. Every change of the card's plan or answer set changes the fragment.
+4. ⚠ **Hidden from assistive technology** (`aria-hidden="true"`). The card is in a polite live region: two prices with
+   no word saying which is paid would be read out, and no word may be added. The grid's struck prices are likewise
+   outside their cells' accessible names, since each cell's `aria-label` names the price paid. To have it read, remove the
+   attribute; words telling the two apart would be the Advisor's.
+5. **The words**: `plan_page.meals_unit` and `per_meal_unit` are removed from `data/messages.json` and from the build's
+   check, as item 4's "the units only they use". § 5 item 2 had kept `rounded`, but this item says removed. `#plan-data`
+   keeps `per_meal` (each size's cells, Family's) and each answer's `meals`. No script draws `per_meal` now, and `meals`
+   still decides a total; removing `per_meal` would move every page's bytes and nothing anyone sees.
+6. **No `white-space: nowrap`**: "neither wraps" is measured, not forced. RP5 holds each line's pieces in one line box at
+   390 and 1280, the widest $506.67/week and $380.00/week. A forced line would overflow where it would otherwise wrap.
+7. **RP4 compares money**: the grid writes `/wk` and the result `/week`, both as built before.
+8. **Storybook**: no story changed. A story shows the site's build, so a story with a result shows the struck line on a
+   date inside the offer and the lead alone after it. By `microsite/dates.mjs` (read, not run) that puts *today*, the
+   week's Thursday (2026-10-29) and the fixtures' 2026-10-01 inside it, and *No picks* (2026-10-30) after it. RP5 is a
+   case, not a story.
+9. **The preview for the Advisor**: the production build as committed (`node build.mjs --out DIR`, `production` true),
+   with the week delivered 2026-11-01 put in its `#picks-data` as production's Worker does (Storybook's `siteBuild`). It
+   was served on 127.0.0.1 and shot in headless Chrome, with photographs refused, `sendBeacon` a no-op and `/a` refused. It
+   ran on the real clock (22:49 PDT, 2026-10-27 in New York), and at 1280 also on a clock after `valid_to`.
+
+**Found, not ruled**
+
+- ⚠ **SPEC-plan-page-refinement § 8 item 5's "the weekly total first"** (PR-6, PR-16) no longer holds as written: § 7
+  puts the struck line above the lead. PR-6 and PR-16 now hold the total as the block's largest line, with only the struck
+  line above it.
+- **Item 3's "each plan at its own count (the grid's cells)"**: the grid shows 7 and 14, but a plan at its own count is
+  also 10 and 21 (*and, weekdays*; *or, weekdays, breakfast*; *and, every day, breakfast*), which only the result shows.
+  Their struck figures are the build's too (every answer set's), and RP4 can compare 7 and 14 alone.
+- **After the offer**, the card's *Not ready to checkout? Save your offer now.* still says "offer". This was seen in the
+  preview after `valid_to`; § 7 item 5 keeps the save step unchanged.
+
+**Not done here**: the whole site suite, the whole Storybook suite, the watch. Nothing merged, deployed or pinned.
+
+## 8. E1 in the flyers' language (2026-10-26). CONTRACT, before any code
+
+**Why.** The Advisor, `ts=2026-10-27T04:21:18.535Z`: *"For the email, we want to add some of the graphic design and
+photography (pick a new photo from the approved set please) based on the flyer / raffle tout / table tent."* Shown the
+orchestrator's discussion mock (the flyer front's dark band, headline and lede with the reversed logo; one photograph
+from the glam set's rung 1 used on no printed piece and not in the page's carousel; an orange offer panel; a dark
+footer), `ts=2026-10-27T05:08:30.647Z`: *"This is great! The top part of the email is approved."* Then, of the rest:
+*"Drop "You saved this offer at eatfitaf.com" line · Make the entire orange thing area (basically) a giant button to
+"Claim my offer". · Make "Pricing held until" text underneath the offer claim button · Drop "You asked to hear" line ·
+Drop "eatfitaf.com" as a standalone line in the footer. · Change the footer to "You're getting this email because you
+saved an offer at \_eatfitaf.com\_" (which can be a link) · Put the business name and address on its own line"*; and
+*"Can [you] generate an animated slideshow image for the email?"*
+
+**E1's HTML part, top to bottom** (600 px wide as now, `LAYOUT_WIDTH_PX`; fluid below it, down to 320 px):
+
+1. **The band** (approved): `--ink` with the flyer's halftone, drawn the email-safe way (a small committed PNG tile, a
+   graphic and not a photograph, as the cell's background image, with the solid `--ink` wherever a client draws none).
+   In it **the flyer front's headline and lede, read from `data/flyer-front.json`** (the one source; never copied; its
+   asterisked words in their accents: the headline's `--signature`, the lede's its `ledeAccent`, `blue` being
+   `--lean`), the headline uppercase in the heading stack at 700, the lede in the body stack at 600; and **the reversed
+   logo** (`print/assets/fitaf-logo-reversed.png`'s drawing, served as a site asset at twice its displayed width) at the
+   top right.
+2. **The slideshow**: one animated GIF, 600 × 400 (3:2), its first frame the approved photograph, the band's jagged
+   edge baked into the top of every frame in `--ink`, then four more photographs (the glam set's approved rung-5
+   array that holds no photograph used elsewhere, its fish photograph replaced by the approved one, which is of the same
+   meal-format group), 2.5 s a frame, looping. `alt=""` (decorative: no new words). A client that does not animate
+   (Outlook on Windows) shows the first frame. It is served from the Worker's assets as the page's photo sheets are,
+   **written by Fit AF's own emitter and never by hand here** (`data/photo-sheets.json` names it; Fit AF's
+   `emit_microsite_photos.spec.md` holds its rule). **With no slideshow in the manifest** (every photograph removed,
+   README's rule) E1 has no photo row.
+3. **The offer button**: the whole orange panel is one link, **`Claim my offer`** (his words), to `SITE_URL/o/<code>`:
+   `--cta` with the halftone, white heading-stack type at 700, uppercase, large and centred; the colour on the cell
+   (`bgcolor`, for Outlook) and the padding on the link, so the panel's whole area is the link.
+4. **Under it, centred, the save's line as now** (`savedLine`: *"Your pricing is held until **October 29, 2026**"*; a
+   coded offer's *"Your code: … · held until …"*). ⬜ **An E1 sent after its offer's last day** keeps *"This offer has
+   ended"* there, and its button reads *`See my offer`* (the draft's words), since *Claim* would be false: the
+   orchestrator's default, put to the Advisor.
+5. *"Already ordered? Enjoy your meals!"*, centred (unchanged; he did not name it).
+6. **The footer**: `--ink` with the halftone; *"You're getting this email because you saved an offer at
+   eatfitaf.com"*, `eatfitaf.com` a link to `SITE_URL/` (its label the literal `eatfitaf.com`), then on a line of its
+   own *"Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407."* (`POSTAL_ADDRESS`); the reversed logo at the right.
+   No standalone `eatfitaf.com` line.
+7. **Removed**: *"You saved this offer at [event] yesterday — here it is."* and *"You asked to hear about Fit AF menus and
+   offers. Yes, keep me posted"*. ⚠ **The second is the only link that confirms a ticked marketing box**
+   (`consent/DRAFT.md` §§ 3–5: unconfirmed, a save is kept 30 days after its offer ends; no other page builds a save's
+   `/confirm/<token>`). Built as he wrote; ⬜ the consequence put to him, and **not released until he answers**. The
+   `/confirm/` route and the stored tick are untouched.
+
+**The text part** carries every word the HTML part shows, in the same order, from the same list (`messages.js`'s rule:
+the two parts cannot say different things), the links as *"label: href"*. **Unchanged**: the subject, E-X (its HTML and
+text byte-identical), the send path, the `/o/` page. **`consent/DRAFT.md` § 3** is rewritten to E1's new words and
+order, citing this section, since the cases read it.
+
+**Email-safe**: inline styles only, layout tables, `bgcolor` on coloured cells, every image with its width and height,
+the page's font stacks with no web font loaded, `color-scheme: light` as now; the HTML part under Gmail's 102 KB clip;
+the GIF at most 800 KB (measured on the orchestrator's prototype: 724 KB at 600 px, 1.57 MB at 900 px, so 1× only).
+Every colour pair is declared with `"build": "email"` and measured by `npm run contrast`.
+
+**Cases**, written first and run red: the E1 goldens (HTML and text) moved, named; the order of rows; the button's one
+link and its words; the ended form; no photo row without the manifest's slideshow; a word changed in a mirror of
+`data/flyer-front.json` changes E1's band; E-X byte-identical; no line removed above anywhere in either part; the colour
+pairs. **A render for the Advisor**: `npm run preview:emails`, E1 at 600 and 390 in Chrome, with the GIF.
+
+**When.** Built on `boston/e1-look` from the release line `3b275fa`, beside Fit AF's emitter change (the slideshow);
+merged into the release line; the site suite, Storybook and contrast on the merged line; dev (a test E1 only on his
+word); production on his word, after item 7's answer. E1 is rendered when it is sent, so every E1 sent after the release
+has the new look, those already waiting too.
+
+### 8.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 8 is unchanged. On `boston/e1-look`: the cases at `3f0643c` (on `6e0d86f`'s code, red), three corrections to them found at
+the code at `7961725` (red there too), the code and DRAFT § 3 at `ac0ec8c`, the goldens it moves at `5d40e48`, this
+section after them.
+
+**What was built**
+- `src/worker/messages.js`: E1 from one list of lines, both parts. The band, the slideshow when the photo manifest has one,
+  the panel's one link, the save's line under it, *Already ordered?*, the footer's two lines. E-X's renderer is unchanged
+  and shares the document function; its bytes are EL1's.
+- `src/worker/email-band.js` reads `data/flyer-front.json` (a JSON import, as `data/offers.json` is).
+- `src/worker/email-photos.json`, written by `npm run email:photos`: the manifest's `base` and `email_slideshow` alone.
+- `src/assets/email/`, written by `npm run email:images`: two halftone tiles and the reversed logo.
+- `build.mjs`: the slideshow is among the sheets every build copies. E1's own images go to `assets/email/` of the
+  development build, and of the production build with `production` true.
+- `src/contrast-pairs.json`: E1's pairs; the consent link's pair removed; the halftone's dots declared.
+- `consent/DRAFT.md` § 3: E1's words and order. The band is named and not copied, and item 7's removal is stated with its
+  open question.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, each named as its literal path, run from the
+package; the whole suite and Storybook were not run, as the orchestrator asked):
+
+| | before | after |
+|---|---|---|
+| `test/el*.test.mjs` (EL1–EL10) | `6e0d86f`'s code (`3f0643c`): `# tests 31` `# pass 4` `# fail 27` | `5d40e48`: all 31 pass, within the next row's run |
+| `el*` and every case reading E1 (M1–M21, S3, S13, SP10, SP11, SP12, SP16, SP17, UC4, the SP mutants) | `3f0643c`, without `el*`: `# tests 73` `# pass 55` `# fail 18` | `5d40e48`: `# tests 104` `# pass 103` `# fail 1` (M20: item 1's lede accent, below) |
+| the corrections of `7961725` (EL9, M7, M17), laid over `git archive 3f0643c` | `# tests 9` `# pass 2` `# fail 7` | within the rows above |
+| the goldens' and builds' readers (B1, CC-8, CC-9, EM5, MS-9, P3, P4, PR-3, PR-10, PV5, QE14, S20, SP3, W4, WC-6, WC-9, WC-10) | `3f0643c` (SP3, CC-8, PV5, S20 alone): `# tests 12` `# pass 11` `# fail 1` (SP3's list); `ac0ec8c`: `# tests 61` `# pass 55` `# fail 6` (CC-8b, CC-8c, MS-9 twice, PR-10: CC-8's map; PV5 dev) | `5d40e48`: `# tests 61` `# pass 61` `# fail 0` |
+| `npm run contrast` | `6e0d86f`'s pairs: `94 pairs, 94 pass, 0 fail; 0 problem(s).` | `97 pairs, 96 pass, 1 fail; 0 problem(s).` (the same pair) |
+
+Red for the right reasons: E1 had none of the band, the panel, the footer or the photo row; it still said item 7's two
+lines and carried `/confirm`; the images, `npm run email:photos` and `npm run email:images` did not exist. EL1's E-X
+half, EL5's GIF rule, EL8's first case and EL10's clip passed there, as guards.
+
+**The goldens moved** (each re-recorded once from `ac0ec8c`'s own tree, `git archive`, the package's `node_modules` linked
+in; each recorder's control first reproducing the committed record):
+- EL (`test/el-golden.json`, new): `before` recorded at `6e0d86f` in the cases commit, and reproduced there byte for byte
+  at the goldens. `after` recorded at `ac0ec8c`.
+- M14: every E1 entry moved and two were added; `ex` is byte-identical. `7961725`'s tree reproduces the five committed
+  entries.
+- CC-8's Worker map (MS-9 and PR-10 read it too): `data/flyer-front.json`, `src/worker/email-band.js` and
+  `src/worker/email-photos.json` are new; `email-style.js` and `messages.js` changed. `7961725` reproduces the committed map.
+- PV5: the development build gains the three images. Production's build (`production` false) and every other file are
+  byte-identical. The recorder at `7961725` reproduces `63e243b`'s, `recorded_at` apart.
+- Not moved: S20, SP3's base, U4, WC-9.
+
+**The preview** (`npm run build:dev`, then `npm run preview:emails`; rendered in headless Chrome from a scratch copy whose
+images are the dev build's local files, nothing loaded from a host). E1's HTML part is 4,409 bytes, and 4,673 with a slideshow
+entry; E-X's is 2,560. Gmail clips at 104,448. The slideshow in the render is the orchestrator's prototype, in the
+git-ignored `dist-dev/email-preview/`. ⚠ Chrome's desktop window is never narrower than 500 px, so `--window-size=390`
+lays the page out at 500 and crops it. The 390 renders are a 390 px frame's.
+
+**What § 8 was silent on, and what was built** (stated, not ruled)
+
+1. **The case files are `el1`–`el10`**, with `el-fixtures.mjs`, the recorder `el-record.mjs` and `el-golden.json`. Every
+   GIF in them is generated, flat colours.
+2. **The halftone is drawn as a cell's `background` attribute**, beside its `bgcolor`. It is not a CSS `url()`, which M15
+   refuses.
+   - The tile is the flyer's grid: 9 px, one dot of the flyer's own colour (`--muted`, print.css `.fb-dots`) at 1 px
+     radius, about the approved mock's weight.
+   - It is 1×, so a high-density screen draws the dots soft.
+   - The panel's dot is `--cta-hover`, not the flyer foot's `--orange`. The white label crosses the dots, and white on
+     `--orange` is Lc −48.1, under large text's 60.
+3. ⚠ **The words over the halftone are measured on its ground.** The mock draws dots behind them. The dots are declared as
+   a texture (`not_measured`, with the figures). Over a dot's core: `--white` −88.5, the headline's `--signature` −43.2
+   (under its 45), the lede's `--lean` −34.7, the footer's `--line` −69.9.
+4. **The logo**: `print/assets/fitaf-logo-reversed.png`'s drawing on the band's own `--ink`, as print.css's `.fb-logo-rev`
+   draws it. Its file is 240 × 104 (1600 × 690 area-averaged; 0.5 % taller than true). It is drawn at 120 × 52 in the band
+   and 90 × 39 in the footer, with `alt=""` there.
+5. **Sizes**: the headline 34/37 px, the mock's, at the flyer's −0.01em. The file's `size` (36) is the printed piece's and
+   is not used. The lede is 16/22 at 600; the label 34/38 at 700; the footer 13/20.
+6. **Narrow widths**: the band's top is a right-to-left row of two inline blocks.
+   - At 600 the logo's column (120) and the headline's (432) fill the 552 between the gutters exactly.
+   - Narrower, the headline drops under the logo with its lines as given (390 shown).
+   - A client without inline blocks (Outlook on Windows) stacks them the same way. Not seen.
+7. **The footer's words are `--line`** on `--ink`; the mock's grey is no token. Its link is `--white`, underlined.
+8. **The slideshow's address** is the manifest's `base` + file, as every sheet's; an absolute base is used as written.
+   The Worker reads the derived copy, since importing the manifest would move the Worker's files every week (CC-8b) and
+   fail its bundle once the manifest is deleted (the README's way to remove the photographs).
+   - ⚠ **After the emitter writes the slideshow here, run `npm run email:photos` and commit the copy**: EL5 fails until then.
+9. **The GIF is copied by every build**, since S20, SP3 and PV5 hold the sheets' directory whole. E1's own images go only
+   to the builds whose Worker sends E1.
+10. **A ticked save's token is still derived, and its hash stored**, at the send (`send-due.js` unchanged). The cases that
+    reached `/confirm` through E1's link derive the token from the save id: M1, M7, M11, S3, S13, SP11, SP12, SP17. M10
+    holds E1's two attempts identical without it (the token's half is E-X's, through which M12's mutant still fails it).
+    SP10's E1 half now holds the stored event, since E1 names none.
+11. **DRAFT's status line and `wording_version` are untouched** (v1, approved 2026-10-25) though § 3's words changed:
+    the Advisor's to move.
+12. **The production gate** prints E1's text, the band's words with it, and finds no bracket. It does not read
+    `data/flyer-front.json`'s `approved`. Not built.
+
+**Open, built as § 8 says** (⬜ put to the Advisor): item 4's *See my offer* once the offer has ended; item 7's removal of
+*Yes, keep me posted*, after which no visitor can confirm a ticked box (unconfirmed, a save lapses 30 days after its
+offer). § 8 is not released until he answers.
+
+**Found, not ruled: the contract asks for two things that cannot both hold.**
+- ⚠ The lede's accent, `--lean` on `--ink` at 16px/600, is Lc −51.3: under body's 75, and under large text's 60 too.
+- No token passes body on `--ink` but `--white`, `--line` and `--ice`; `--teal` is −66.8.
+- The pair is declared as what it is, so `npm run contrast` exits 1 and M20 fails on that one pair alone.
+- The flyer has the same pair at 17px, unmeasured (`npm run contrast` does not read print.css).
+- His to rule, among: the accent drawn white; a pair he accepts below its role, stated; or the lede at 30px/700, a large
+  heading.
+
+**Not done here**: the whole suite, Storybook, the watch; no test email; no client but Chrome; nothing deployed, merged or
+pinned.
+
+### 8.2 The Advisor's rulings on § 8's open items (2026-10-27). CONTRACT, before any code
+
+Put to him with their consequences (`AskUserQuestion`, answered `ts=2026-10-27T15:04:57.804Z`):
+
+1. **The marketing consent line returns, in the footer** (*"Footer line"*): its words and link exactly as before § 8
+   (*"You asked to hear about Fit AF menus and offers. Yes, keep me posted"*, the link to `SITE_URL/confirm/<token>`),
+   shown only when the box was ticked (a `token`, as before), as **one small line in the dark footer, above** *"You're
+   getting this email because you saved an offer at eatfitaf.com"*, its link drawn as the footer's link is. The text
+   part carries it in the same place. § 8 item 7's removal of it is withdrawn; `consent/DRAFT.md` § 3 says so. Its
+   colour pairs are declared and measured.
+2. **An ended offer's button reads `See my offer`** (*"See my offer"*), as § 8 item 4 built it; no longer open.
+3. **The lede's blue accent is kept** (*"Keep the blue"*): `--lean` on `--ink` for *"Never frozen."* (Lc −51.3 against
+   body text's 75; 6.3:1 by WCAG 2) is an **approved exception**, recorded on that one pair in `src/contrast-pairs.json`
+   with this ruling's `ts`, so `npm run contrast` and M20 pass it and say so. ⛔ The exception is that pair's alone: any
+   other pair under its role still fails, and an exception without a ruling's `ts` is refused (a case and a mutant).
+4. **Cases**, written first and run red: the footer line present with a token and absent without, in both parts, in
+   its place, its link; M21 as amended; the exception passing that pair, another failing pair still failing, and an
+   exception without a `ts` refused. Then the goldens it moves.
+
+#### 8.2.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 8.2 is unchanged. On `boston/e1-look`, over the coordinator's `c572ce1` (the emitter's slideshow) and `f48f38e` (EL5's
+mirror): the cases at `a3dc524` (red on `065b216`'s code), the code at `78a677a`, the goldens at `05cc7ac`, B1's
+correction at `c3641d3`, this section after them.
+
+**What was built**
+- `src/worker/messages.js` and `email-style.js`: with a token, E1's footer opens with the consent line, its words and
+  link as before § 8, one `<p>` at the footer's 13px, 8px above its words, its link styled as `eatfitaf.com` is. The text
+  part carries it after *Already ordered?*. Without a token, E1 is § 8's.
+- `scripts/contrast.mjs`: a pair may carry `exception: { ts, ruled }`.
+  - With a ts that is an instant in UTC, that pair alone passes. Its row reads `pass*`, and it is listed under the table
+    with its ts.
+  - Without one, a problem names the pair, and the pair fails.
+  - The same colours declared again are measured strictly.
+- `src/contrast-pairs.json`: the exception, `ts=2026-10-27T15:04:57.804Z`, on `--lean` on `--ink` (*Never frozen.*); the
+  footer's pairs name the consent line.
+- `consent/DRAFT.md` § 3: the line, marked *(only if the box was ticked)*, between *Already ordered?* and the footer's
+  words; item 7's other removal withdrawn and item 4 ruled, both stated.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, run from the package; the whole suite and
+Storybook not run):
+
+| | before | after |
+|---|---|---|
+| the email set: EL1–EL12, M1–M21, S3, S13, SP10–SP12, SP16, SP17, UC4, the SP mutants, B2 | `065b216`'s code with `a3dc524`'s cases: `# tests 119` `# pass 88` `# fail 31` | `78a677a`: `# tests 119` `# pass 117` `# fail 2` (EL1, M14: their records); `05cc7ac`: `# tests 119` `# pass 119` `# fail 0` |
+| the goldens', builds' and contrast table's readers (B1, CC-8, CC-9, EM5, MS-9, P3, P4, P5, PR-3, PR-10, PV5, Q7, QE14, S20, SP2, SP3, SP15, UC13, W4, WC-6, WC-9, WC-10) | `05cc7ac`: `# tests 96` `# pass 95` `# fail 1` (B1, below) | `c3641d3`: `# tests 96` `# pass 96` `# fail 0` |
+| `npm run contrast` | `065b216`: `97 pairs, 96 pass, 1 fail; 0 problem(s).` | `97 pairs, 97 pass, 0 fail; 0 problem(s).`, the pair marked `pass*` and listed with its ts |
+
+Red for the right reasons: no consent line, no exception rule, the lede's pair failing. M8 and S13 failed on a type
+error, `assert.match` given `null`, because the link they read the token from was absent.
+
+**The goldens moved** (from `78a677a`'s own tree, each recorder's control first reproducing the committed record):
+- EL `after` and M14: `e1_ticked` and `e1_held_ticked`. `a3dc524` reproduced both records.
+- CC-8: `messages.js` and `email-style.js`, by this code. And `src/worker/email-photos.json`, changed by `c572ce1` and not
+  recorded there, so CC-8b, CC-8c, MS-9 and PR-10 had failed since that commit. `ac0ec8c` reproduced the committed map.
+- Not moved: PV5, S20, SP3, U4, WC-9.
+
+**The preview** (`npm run build:dev`, `npm run preview:emails`, a local copy whose images are the dev build's files, the
+emitter's GIF among them; nothing loaded from a host): E1's HTML part is 5,099 bytes ticked and 4,673 unticked, both with
+the slideshow. Rendered at 600 and in a 390 px frame.
+
+**What § 8.2 was silent on, and what was built** (stated, not ruled)
+1. **"One small line"**: the footer's own 13px, as its own paragraph, 8px above the footer's words. At 600 it is one
+   line. At 390 it wraps to three lines in the words' column, beside the logo's.
+2. **The exception's rule takes an instant in UTC** (as the archive records a `ts`). A date alone is refused, as no ts is.
+   An exception on a pair that passes anyway is not refused. Not built.
+3. **The ruling's record is the pair's own `exception` object** (`ts`, and `ruled`, its words); the `where` names it too.
+4. **The token** is the one the send step derived all along (`send-due.js` unchanged), now printed again. So the cases
+   that had derived it read it from E1's link again: M1, M7, M11, S3 and SP17 exactly as at `6e0d86f`, and M8, M10, S13,
+   SP11 and SP12's hunks.
+
+**Found at the build, not ruled**
+- ⚠ **B1 had failed since `c572ce1`.** § 8's code copies the manifest's slideshow beside the sheets, as item 2 and S20,
+  SP3 and PV5 require. B1 allowed only what the page loads, and the week's sheets. It was vacuous until the emitter's
+  entry landed: `9af81ba`: `# tests 4` `# pass 4`; `c572ce1`: `# pass 3` `# fail 1`. B1 now names E1's slideshow
+  (`c3641d3`).
+- ⚠ **At § 8.1 two readers of the contrast table were red, not run and not reported**: B2 and SP2, on the lede's pair
+  (`9af81ba`: `# tests 11` `# pass 9` `# fail 2`). Both pass now, by the exception.

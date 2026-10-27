@@ -9,7 +9,9 @@
 //   table (path -> response) or a function. A fake WEEK: Miniflare's in-memory R2 bucket, filled by the case.
 // - `configured()` runs the Worker as wrangler.jsonc configures it, through wrangler's OWN translation of the file
 //   (unstable_readConfig, unstable_getMiniflareWorkerOptions): its `main`, its bindings, and the real asset router with
-//   `run_worker_first`, over a directory a case built. Only the assets directory is replaced (a temporary build).
+//   `run_worker_first`, over a directory a case built. Only the assets directory is replaced (a temporary build), and
+//   (SPEC-the-redirect.md § 1 item 2: every existing case of the page runs with it absent) the var REDIRECT_TO removed
+//   unless a case gives one (`redirectTo`).
 // - The content is made by the package's own scripts/week-content.mjs (imported from `root`, so a mirror's own code).
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -20,6 +22,7 @@ import { pathToFileURL } from "node:url";
 import { build as esbuild } from "esbuild";
 import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { ROOT } from "../build.mjs";
+import { withRedirectTo } from "./a-harness.mjs";
 import { hiddenInTree, openPlanPage } from "./cc-harness.mjs";
 
 export const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -161,9 +164,10 @@ function handle(mf, assetRequests) {
 /**
  * The Worker `entry` ("site": src/worker/site.js, production's; "index": the development Worker) of the package at
  * `root`, with a fake ASSETS answering from `assets` (a path -> { status, headers, body } table, or a function of the
- * Request) and a WEEK bucket holding `objects`; `week: false` starts it with no WEEK binding at all.
+ * Request) and a WEEK bucket holding `objects`; `week: false` starts it with no WEEK binding at all. `vars`: the Worker's
+ * vars (SPEC-the-redirect.md: its REDIRECT_TO), none unless given.
  */
-export async function startSite({ root = ROOT, entry = "site", assets = {}, objects = {}, week = true } = {}) {
+export async function startSite({ root = ROOT, entry = "site", assets = {}, objects = {}, week = true, vars = {} } = {}) {
   const assetRequests = [];
   const answer = async (request) => {
     const { pathname } = new URL(request.url);
@@ -184,6 +188,7 @@ export async function startSite({ root = ROOT, entry = "site", assets = {}, obje
           script: await bundle(join(root, "src", "worker", `${entry}.js`)),
           compatibilityDate: "2026-09-26",
           serviceBindings: { ASSETS: answer },
+          bindings: vars,
           ...(week ? { r2Buckets: { WEEK: "wc-week" } } : {}),
         },
       ],
@@ -214,15 +219,17 @@ export async function wranglerConfig(env, root = ROOT) {
 /**
  * The Worker as wrangler.jsonc configures it for `env`, through wrangler's own translation, with its assets directory
  * replaced by `distDir` (a build a case made) and its bucket holding `objects`. The script is the config's `main`, under
- * the recording wrapper; the router (run_worker_first) is the real one.
+ * the recording wrapper; the router (run_worker_first) is the real one. Its REDIRECT_TO removed unless `redirectTo` names
+ * one (a-harness withRedirectTo).
  */
-export async function configured({ env, distDir, objects = {}, root = ROOT }) {
+export async function configured({ env, distDir, objects = {}, root = ROOT, redirectTo }) {
   process.env.WRANGLER_SEND_METRICS = "false";
   const { unstable_getMiniflareWorkerOptions } = await import("wrangler");
   const cfg = await wranglerConfig(env, root);
   assert.ok(cfg.main, `wrangler.jsonc gives ${env ?? "production"} a main module`);
   const main = cfg.main;
   cfg.assets = { ...cfg.assets, directory: distDir };
+  cfg.vars = withRedirectTo(cfg.vars, redirectTo);
   const { workerOptions } = unstable_getMiniflareWorkerOptions(cfg, env);
   const options = { ...workerOptions, name: `wc-${env ?? "prod"}`, modules: true, script: await bundle(main) };
   delete options.modulesRules;

@@ -74,18 +74,31 @@ No offer code is issued for an out-of-area ZIP. ⬜ The 12 months is proposed.
 
 **E1 — the next morning, to a saved offer.** Subject: *Your Fit AF offer, as promised*
 
-> You saved this offer at **[event]** yesterday — here it is.
+> *(the band: the flyer front's headline, a line each, then its lede, as `data/flyer-front.json` holds them)*
+> **[ Claim my offer ]**
 > *(an offer without a code)* Your pricing is held until **[date]**
 > *(an offer with a code)* **Your code: XXXX-XXXX** · held until **[date]**
 > *(sent after the offer's last day)* This offer has ended
-> **[ See my offer ]**
-> *(only if the box was ticked)* You asked to hear about Fit AF menus and offers. **[ Yes, keep me posted ]**
 > Already ordered? Enjoy your meals!
-> You're getting this one email because you saved an offer. Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.
+> *(only if the box was ticked)* You asked to hear about Fit AF menus and offers. **[ Yes, keep me posted ]**
+> You're getting this email because you saved an offer at **[ eatfitaf.com ]**
+> Fit AF Nutrition, 10 Enterprise, Carbondale, PA 18407.
+
+Since `SPEC-ui-and-copy-pass.md` § 8 (2026-10-26, the Advisor's words of `ts=2026-10-27T05:08:30.647Z`) E1 is in the
+printed flyers' language, its lines in the order above. Its first lines are the flyer front's headline and lede, which
+are **read from `data/flyer-front.json`**, the one source, and not copied here; then the slideshow (no words) when the
+photo manifest has one. *Claim my offer* is the whole orange panel, a link to the saved offer. *(sent after the offer's
+last day)* its button reads **[ See my offer ]** instead, since *Claim* would be false (§ 8 item 4; ruled by the Advisor,
+§ 8.2 item 2). The footer's **[ eatfitaf.com ]** is a link to the site; the address is on a line of its own. **Removed by
+§ 8 item 7**: *"You saved this offer at [event] yesterday — here it is."* Its other removal, the marketing consent's line,
+is **withdrawn by § 8.2 item 1** (the Advisor, `ts=2026-10-27T15:04:57.804Z`): the line is back, its words and link as
+before § 8, as one small line of the dark footer above *"You're getting this email…"*, only if the box was ticked. It is
+the only link that confirms a ticked box (§§ 4–5).
 
 Since `SPEC-save-offer-production.md` § 10 (2026-10-22) the Boston offer is a price promise with no code
-(`code_mode: "none"`): its E1 has the first of the marked lines, *[date]* the offer's last day. The second is for an
-offer that carries a code. Since § 10.7 an E1 that goes after its offer's last day (a save made on that day) has the third.
+(`code_mode: "none"`): its E1 has the first of the marked lines under the button, *[date]* the offer's last day. The
+second is for an offer that carries a code. Since § 10.7 an E1 that goes after its offer's last day (a save made on that
+day) has the third.
 
 **E-X — at once, to an out-of-area request.** Subject: *Confirm: we'll tell you when Fit AF delivers near you*
 

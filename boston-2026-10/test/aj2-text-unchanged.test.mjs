@@ -9,6 +9,19 @@
 // new code"), from 2ceb05a to f9273c0, § 13's code commit: the funnel's answer steps in the page's order since round 2,
 // and `answer: family`, a branch, printed with no change figure. 2ceb05a's text over the same fixture (which gained who and
 // family rows with § 13's cases, 133994b) is this tree's at 133994b, byte for byte, and lists neither question.
+// ⚠ AND AGAIN with SPEC-analytics.md § 14 item 3 ("AJ2's base moves with this section, recorded once from the new code"),
+// from f9273c0 to 1fb4831, § 14's code commit: each day's "saved an offer N" after the funnel. f9273c0's text over the same
+// fixture (which gained a save row a day with § 14's cases, 9cdf963) is this tree's at 9cdf963, byte for byte (AJ2 passed
+// there), and prints no saved line.
+// ⚠ AND AGAIN with SPEC-analytics.md § 15 item 3 ("AJ2's base moves with this section"), from 1fb4831 to 3f40698, § 15's
+// code commit: the visitors query reads either layout (count(DISTINCT if(blob12 = '', index1, blob12))). The text does
+// not move for the same answers: 1fb4831's text over the fixture is 3f40698's, byte for byte (AJ2 passed at 3f40698
+// against 1fb4831 before this move).
+// ⚠ AND AGAIN with SPEC-analytics.md § 16 item 3 ("AJ2's base moves once"), from 3f40698 to 0ef1455, § 16's code commit:
+// each day's "visits from the offer email N" and "offer pages opened (a repeat opening counted again): …" after the saved
+// line, and the visitors and visits without the offer pages' rows. 3f40698's text over the same fixture (which gained the
+// offers and email answers with § 16's cases, 1c8cf8a) is this tree's at 1c8cf8a, byte for byte (AJ2 passed there), and
+// prints neither line. That every earlier line is still 3f40698's is EM-A5's, against bc4ea03's report (§ 15's).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -19,7 +32,7 @@ import { pathToFileURL } from "node:url";
 import { ROOT } from "../build.mjs";
 import { fixtureAnswers, runAt, runs } from "./aj-checks.mjs";
 
-const BASE = "f9273c0";
+const BASE = "0ef1455";
 
 function run(cmd, args, { input } = {}) {
   const r = spawnSync(cmd, args, { input, maxBuffer: 64 * 1024 * 1024 });

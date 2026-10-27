@@ -166,7 +166,34 @@
 // And at 8f36711 (the same flags), § 5 item 6 (the scroll stops live from the first rested scroll with the result shown):
 // the recorder at 4578c46 reproduces 27cc0df's record (recorded_at apart); all six contents byte-identical; every page
 // +1,280 bytes (the template's rules, app.js's listener); no visible page moved.
-// From here the reference is 8f36711's tree.
+// ⚠ RE-RECORDED at 1fb4831 (`--commit 1fb4831 --release-a --without-snack-cells`): SPEC-analytics.md § 14 item 2 (a saved
+// offer counted: the analytics script's listener for fitaf:saved, and on the development pages the save step's dispatch
+// of it). Controls: the recorder with both flags at 8f36711 reproduces 8f36711's record byte for byte, and at 9cdf963 (its
+// cases, the code before) its record is 8f36711's (recorded_at apart). Against it: all six contents and every visible page
+// byte-identical; production's three pages +70 bytes each, development's three +484, by those lines alone.
+// ⚠ RE-RECORDED at 3f40698 (`--commit 3f40698 --release-a --without-snack-cells`): SPEC-analytics.md § 15 item 4 (the
+// analytics script reads the result card once more on DOMContentLoaded). Controls: the recorder with both flags at 1fb4831
+// reproduces 1fb4831's record byte for byte, and at 5a129e0 (its cases, the code before) its record is 1fb4831's
+// (recorded_at apart). Against it: all six contents and every visible page byte-identical; the six pages +48 bytes each,
+// that one line.
+// ⚠ RE-RECORDED at 63e243b (`--commit 63e243b --release-a --without-snack-cells`): SPEC-ui-and-copy-pass.md § 6 (the
+// save dialog opened by a link, #save: flow1.js's lines). Controls: the recorder with both flags at 3f40698 reproduces
+// 3f40698's record byte for byte, and at 1a63f41 (its cases, the code before) its record is 3f40698's (recorded_at
+// apart). Against it: all six contents, production's three pages (production false, no save step) and every visible page
+// byte-identical; development's three pages +1,117 bytes each, those lines alone.
+// ⚠ RE-RECORDED at f60e19c (`--commit f60e19c --release-a --without-snack-cells`): SPEC-ui-and-copy-pass.md § 7 (the
+// result's price: the week's price alone, its full value struck above it while an offer with a share is current; no price
+// a meal, no meal count). Controls: the recorder with both flags at 63e243b reproduces 63e243b's record byte for byte, and
+// at bc39ee0 (its cases, the code before) its record is 63e243b's (recorded_at apart). Against it: all six contents
+// byte-identical; production's three pages +185 bytes each (the price block's rules and markup, app.js's lines: on these
+// pages, production false, the struck line is hidden) and development's three +2,115 (those, plan-prices.js's lines and
+// save-data's struck_result); every visible page (each fragment read has a result: its price a meal and meals a week gone).
+// From here the reference is f60e19c's tree.
+// ⚠ RE-RECORDED at 0ef1455 (`--commit 0ef1455 --release-a --without-snack-cells`): SPEC-analytics.md § 16 items 1 and 2
+// (the offer email's clicks: the analytics script's branch for the offer page, which these pages never take, and the
+// open's via). Controls: the recorder with both flags at f60e19c reproduces f60e19c's record byte for byte, and at 1c8cf8a
+// (its cases, the code before) its record is f60e19c's (recorded_at apart). Against it: all six contents and every visible
+// page byte-identical; the six pages +224 bytes each, the script's lines alone. From here the reference is 0ef1455's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -177,8 +204,8 @@ import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to 8f36711's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "8f36711");
+test("U4: a normal week, the content and the page as served, byte-identical to 0ef1455's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "0ef1455");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
   // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs

@@ -21,6 +21,11 @@ test("M20: every pair the email draws is declared in contrast-pairs.json (build 
   const emailRows = rows.filter((r) => r.build === EMAIL);
   assert.equal(emailRows.length, declared.length);
   for (const r of emailRows) assert.ok(r.pass, `${r.fg} on ${r.bg}: Lc ${r.lc.toFixed(1)} under ${r.min} (${r.where})`);
+  // SPEC-ui-and-copy-pass § 8.2 item 3 (ts=2026-10-27T15:04:57.804Z, "Keep the blue"): one pair passes by an approved
+  // exception, the lede accent's, and says so; every other pair passes on its own Lc.
+  const excepted = emailRows.filter((r) => r.exception);
+  assert.deepEqual(excepted.map((r) => [r.fg, r.bg, r.role, r.exception.ts]), [["--lean", "--ink", "body", "2026-10-27T15:04:57.804Z"]], "one exception, the ruling's");
+  for (const r of emailRows.filter((x) => !x.exception)) assert.ok(Math.abs(r.lc) >= r.min, `${r.fg} on ${r.bg} passes on its own`);
 });
 
 test("M20: each text colour in the HTML is the foreground of a declared text pair", async () => {

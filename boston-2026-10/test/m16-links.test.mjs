@@ -9,10 +9,11 @@ import { SAMPLE, sampleMessages } from "./email-fixture.mjs";
 
 const LOGO_PATH = "assets/fitaf-logo.png";
 
-test("M16: every href and src is absolute on SITE_URL; the hrefs are the text part's links, in order", () => {
+// ⚠ Since SPEC-ui-and-copy-pass § 8 a cell's `background` (E1's halftone) is an address too, and is held to the same rule.
+test("M16: every href, src and background is absolute on SITE_URL; the hrefs are the text part's links, in order", () => {
   for (const [name, message] of Object.entries(sampleMessages())) {
     const tags = tagsOf(bodyOf(message.html));
-    const urls = tags.flatMap((t) => [t.attrs.href, t.attrs.src].filter((u) => u !== undefined));
+    const urls = tags.flatMap((t) => [t.attrs.href, t.attrs.src, t.attrs.background].filter((u) => u !== undefined));
     assert.ok(urls.length >= 2, `control: ${name} has a link and the logo`);
     for (const url of urls) {
       assert.match(url, /^https:\/\//, `${name}: absolute: ${url}`);
@@ -24,8 +25,12 @@ test("M16: every href and src is absolute on SITE_URL; the hrefs are the text pa
   }
 });
 
-test("M16: the logo is the page's own file, served from the Worker's assets: SITE_URL/assets/fitaf-logo.png, 88x56, alt \"Fit AF\"", async () => {
+// ⚠ Since SPEC-ui-and-copy-pass § 8 this is E-X's logo alone: E1 draws the reversed logo in its band and its footer, and
+// its images are EL6, EL7 and EL10's (each a file the build writes into the Worker's assets). No logo in either is a link.
+test("M16: E-X's logo is the page's own file, served from the Worker's assets: SITE_URL/assets/fitaf-logo.png, 88x56, alt \"Fit AF\"", async () => {
   for (const [name, message] of Object.entries(sampleMessages())) {
+    assert.ok(!/<a\b[^>]*>\s*<img/.test(message.html), `${name}: no image is a link (the text part has no such link)`);
+    if (name !== "ex") continue;
     const imgs = tagsOf(bodyOf(message.html)).filter((t) => t.name === "img");
     assert.equal(imgs.length, 1, `${name}: one image, the logo`);
     const [logo] = imgs;

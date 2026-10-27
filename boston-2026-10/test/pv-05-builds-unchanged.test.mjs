@@ -29,6 +29,34 @@
 // scroll stops' rules): the same five pages; the recorder at 4578c46 reproduces 27cc0df's (recorded_at apart). And at
 // 4b77513, SPEC-why-fit-af § 7 (the Why page's draft 3): why/index.html alone, in both builds; the recorder at eec5c4c
 // reproduces 8f36711's (recorded_at apart).
+// And at 1fb4831 (`--commit 1fb4831 --release-a`), SPEC-analytics.md § 14 item 2 (a saved offer counted: the analytics
+// script's listener for fitaf:saved, and on the development pages the save step's dispatch of it): the same five pages
+// (production's +70 bytes, development's four +484); every other file byte-identical; the recorder at 9cdf963 (its cases,
+// the code before) reproduces 4b77513's (recorded_at apart), and at 4b77513 its record byte for byte.
+// And at 3f40698 (`--commit 3f40698 --release-a`), SPEC-analytics.md § 15 item 4 (the analytics script's read of the result
+// card on DOMContentLoaded): the same five pages, +48 bytes each, that one line; every other file byte-identical; the
+// recorder at 5a129e0 (its cases, the code before) reproduces 1fb4831's (recorded_at apart), and at 1fb4831 its record
+// byte for byte.
+// And at 63e243b (`--commit 63e243b --release-a`), SPEC-ui-and-copy-pass.md § 6 (the save dialog opened by a link,
+// #save: flow1.js's lines): the development build's index.html, demo/, boston/ and seminar/ alone, +1,117 bytes each;
+// production's (production false here, no save step) and every other file byte-identical; the recorder at 1a63f41 (its
+// cases, the code before) reproduces 3f40698's (recorded_at apart), and at 3f40698 its record byte for byte.
+// And at f60e19c (`--commit f60e19c --release-a`), SPEC-ui-and-copy-pass.md § 7 (the result's price: the week's price
+// alone, its full value struck above it while an offer with a share is current): production's index.html (production false
+// here: the price block's rules and markup, the struck line hidden, and app.js's lines) and the development build's
+// index.html, demo/, boston/ and seminar/ (those, plan-prices.js's lines and save-data's struck_result); every other file
+// byte-identical; the recorder at bc39ee0 (its cases, the code before) reproduces 63e243b's (recorded_at apart), and at
+// 63e243b its record byte for byte.
+// And at 0ef1455 (`--commit 0ef1455 --release-a`), SPEC-analytics.md § 16 items 1 and 2 (the analytics script's branch
+// for the offer page, which no built page takes, and the open's via): production's index.html and the development build's
+// index.html, demo/, boston/ and seminar/, +224 bytes each, those lines alone; every other file byte-identical; the
+// recorder at 1c8cf8a (its cases, the code before) reproduces f60e19c's (recorded_at apart), and at f60e19c its record
+// byte for byte.
+// And at ac0ec8c (`--commit ac0ec8c --release-a`), SPEC-ui-and-copy-pass.md § 8 (E1 in the flyers' language): the
+// development build gains E1's three images, assets/email/fitaf-logo-reversed.png, halftone-cta.png and halftone-ink.png
+// (the builds whose Worker sends E1); every other file of both builds byte-identical, production's (production false here,
+// whose Worker sends nothing) entirely; the recorder at 7961725 (its cases, the code before) reproduces 63e243b's
+// (recorded_at apart).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
