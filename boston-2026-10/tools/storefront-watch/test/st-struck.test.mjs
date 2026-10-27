@@ -493,9 +493,9 @@ test("ST14: shipping, tax, tip, a discount and the pay buttons never struck", { 
     judge(k, { expectStruck: true });
     const bad = await v.page.evaluate(() => {
       const rows = [...document.querySelectorAll(".summary__row")].filter((r) => !/^subtotal\b/i.test(r.firstElementChild?.textContent.trim() ?? ""));
-      return [...rows, ...document.querySelectorAll(".checkout__submit, .summary__pay-button, .summary__mobile-bar, .checkout-discounts")].filter((e) => e.querySelector(".fitaf-was")).map((e) => e.textContent.replace(/\s+/g, " ").trim().slice(0, 40));
+      return [...rows, ...document.querySelectorAll(".checkout__submit, .summary__pay-button, .checkout-discounts")].filter((e) => e.querySelector(".fitaf-was")).map((e) => e.textContent.replace(/\s+/g, " ").trim().slice(0, 40));
     });
-    assert.deepEqual(bad, [], "no struck figure in shipping, tax, tip, a discount or a pay button");
+    assert.deepEqual(bad, [], "no struck figure in shipping, tax, tip, a discount or a pay button (§ 38: the phone bar's total is struck, its pay button never)");
     assert.ok((await v.page.evaluate(() => document.querySelectorAll(".summary__row").length)) >= 5, "fixture control: Subtotal, shipping, tax, tip and the discount row drawn");
   } finally {
     await v.close();
@@ -565,15 +565,20 @@ async function st9(width) {
         const b = e.getBoundingClientRect();
         return [b.left + scrollX, b.top + scrollY, b.width, b.height].map((n) => Math.round(n * 10) / 10);
       };
-      const was = [...document.querySelectorAll(".fitaf-was")].filter((s) => s.getClientRects().length).map((s) => ({ s: s.textContent, box: r(s) }));
-      const leaves = window.__leaves().map((e) => ({ e: e.localName + "." + e.className, box: r(e) }));
+      // § 38: a figure in the phone bar (position: fixed, over the page by design) is compared with its own layer only.
+      const layer = (e) => {
+        for (let a = e; a; a = a.parentElement) if (getComputedStyle(a).position === "fixed") return a.className || a.localName;
+        return "page";
+      };
+      const was = [...document.querySelectorAll(".fitaf-was")].filter((s) => s.getClientRects().length).map((s) => ({ s: s.textContent, box: r(s), layer: layer(s) }));
+      const leaves = window.__leaves().map((e) => ({ e: e.localName + "." + e.className, box: r(e), layer: layer(e) }));
       return { was, leaves };
     });
   const overlap = (a, b) => Math.max(0, Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1])) > 0.5;
   const check = async (where) => {
     const first = await boxes();
     assert.ok(first.was.length > 0, `${where}: struck figures displayed`);
-    for (const w of first.was) for (const l of first.leaves) assert.ok(!overlap(w.box, l.box), `${where}: ${w.s} overlaps ${l.e} ${JSON.stringify([w.box, l.box])}`);
+    for (const w of first.was) for (const l of first.leaves.filter((x) => x.layer === w.layer)) assert.ok(!overlap(w.box, l.box), `${where}: ${w.s} overlaps ${l.e} ${JSON.stringify([w.box, l.box])}`);
     await sleep(1000);
     const later = await boxes();
     assert.deepEqual(later.leaves, first.leaves, `${where}: nothing of the store's moved after the figures appeared`);
