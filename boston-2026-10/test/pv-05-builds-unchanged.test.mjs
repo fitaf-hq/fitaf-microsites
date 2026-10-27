@@ -37,6 +37,10 @@
 // card on DOMContentLoaded): the same five pages, +48 bytes each, that one line; every other file byte-identical; the
 // recorder at 5a129e0 (its cases, the code before) reproduces 1fb4831's (recorded_at apart), and at 1fb4831 its record
 // byte for byte.
+// And at 63e243b (`--commit 63e243b --release-a`), SPEC-ui-and-copy-pass.md § 6 (the save dialog opened by a link,
+// #save: flow1.js's lines): the development build's index.html, demo/, boston/ and seminar/ alone, +1,117 bytes each;
+// production's (production false here, no save step) and every other file byte-identical; the recorder at 1a63f41 (its
+// cases, the code before) reproduces 3f40698's (recorded_at apart), and at 3f40698 its record byte for byte.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
