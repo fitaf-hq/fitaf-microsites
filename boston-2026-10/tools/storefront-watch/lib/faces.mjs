@@ -38,6 +38,13 @@
 //        The hide list (W12, W14, W18, W19) is judged over every step (a target displayed at any step fails), the lines
 //        (W18) and the logo (W16) at step 1. A block from before § 25 (no foot): one reading at done, as before, and
 //        W20 says so; a report, not a failure, so the hourly smoke of the live block before the paste is unchanged.
+//   W11  as amended by § 33.2: also allows ONE control more to be hidden, § 33 item 2's: the store's remove control
+//        (button.summary__remove, "×") in zero's own discount row, which the block hides with its row (ZERO_SIGN: the
+//        row carries the block's class fitaf-zero AND its text names zero). Every other hidden control is still flagged,
+//        and the lists are compared with their repeats (minus): two coupons' remove controls read alike.
+//   W28  (§ 33.2, a report, not a pass rule) § 33 item 3's link to customer service, a#fitaf-help, read at the checkout:
+//        how many, its words, its href, its computed font size, displayed or not, inside app-checkout or not. A block
+//        from before § 33 has none: ABSENT, never a failure, so the hourly smoke of the live block is unchanged.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -130,6 +137,15 @@ export const STEPS = [
 ];
 /** How long the walk waits for a press of the block's Continue to show the next step. */
 export const STEP_MS = 2_000;
+/**
+ * § 33 item 2 (W11 as amended, § 33.2): zero's sign, the one discount row the block hides on purpose (measured live,
+ * § 33.1: "× Coupon ZERO -$0.00", its remove control first), and the one control in it. W11 allows exactly that control
+ * to be hidden: a `control` inside a `row` (the block's hush() class on the store's discount row) whose text names zero
+ * (`names`, the word, any case: hush()'s own rule, read again here, so a row the block marked wrongly is not allowed).
+ */
+export const ZERO_SIGN = { row: ".summary__row--discount.fitaf-zero", control: "button.summary__remove", names: "\\bzero\\b" };
+/** § 33 item 3 (W28, a report): the block's link to customer service, by its id. */
+export const HELP_ID = "fitaf-help";
 
 /**
  * In the page, from before its own scripts (page.evaluateOnNewDocument): record, in order, the screen arriving, each
@@ -192,7 +208,7 @@ export function readRecorded(screen) {
  * and label, so a report can name it; the sets are compared by element. The style is disabled only for W11's second
  * reading, and enabled again before anything else is read.
  */
-export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo, line = ".summary__item", step = null, step2 = [], sections = [] }) {
+export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo, line = ".summary__item", step = null, step2 = [], sections = [], zero = null, help = null }) {
   const style = document.getElementById(styleId);
   const checkout = document.querySelector("app-checkout");
   const shown = (el) => el.getClientRects().length > 0;
@@ -229,7 +245,12 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
       if (step === 3) return Boolean(two || lines);
       return false;
     };
-    const allowed = without.filter((el) => inside.some((sel) => el.matches(sel) || el.closest(sel)) || offStep(el));
+    // § 33.2 (W11 as amended): zero's row's own remove control, hidden with its row, and only in a row naming zero.
+    const zeroSign = (el) => {
+      const row = zero && el.matches(zero.control) ? el.closest(zero.row) : null;
+      return Boolean(row) && new RegExp(zero.names, "i").test(row.textContent);
+    };
+    const allowed = without.filter((el) => inside.some((sel) => el.matches(sel) || el.closest(sel)) || offStep(el) || zeroSign(el));
     const hideCounts = hide.flatMap((h) => h.selectors.map((selector) => ({ id: h.id, selector, found: document.querySelectorAll(selector).length })));
     style.disabled = false;
     out.payment = {
@@ -258,6 +279,22 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
   // so an image of the store's own inside the checkout, whatever its alt, is never read as ours.
   const logos = checkout ? [...checkout.querySelectorAll(`:scope > ${logo}`)] : [];
   out.logo = { found: logos.length, displayed: logos.filter(shown).length };
+  // W28 (§ 33.2, a report): the link to customer service, every element with its id counted (a duplicate included).
+  if (help) {
+    const links = [...document.querySelectorAll(`[id="${help}"]`)];
+    const a = links[0];
+    out.help = a
+      ? {
+          count: links.length,
+          tag: a.localName,
+          text: a.textContent.replace(/\s+/g, " ").trim(),
+          href: a.getAttribute("href"),
+          fontPx: parseFloat(getComputedStyle(a).fontSize),
+          displayed: shown(a),
+          inCheckout: Boolean(checkout && checkout.contains(a)),
+        }
+      : { count: 0 };
+  }
   const scope = checkout || document.body;
   const renews = [];
   const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
@@ -272,6 +309,21 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
   return out;
 }
 
+/**
+ * W11's comparison (§ 33.2): `a` without `b`, as lists with repeats: each entry of `b` takes away one equal entry of `a`.
+ * The controls are described (tag, class, label), and two can read alike (two coupons' remove controls, "×"): compared
+ * as sets, a second one hidden would hide behind the first one allowed.
+ */
+export function minus(a, b) {
+  const left = [...b];
+  return a.filter((x) => {
+    const i = left.indexOf(x);
+    if (i < 0) return true;
+    left.splice(i, 1);
+    return false;
+  });
+}
+
 const REQUIRED_FOUND = (faces) => faces.hide.every((h) => h.found > 0 || CONDITIONAL.includes(h.selector));
 
 /**
@@ -280,7 +332,7 @@ const REQUIRED_FOUND = (faces) => faces.hide.every((h) => h.found > 0 || CONDITI
  * the walk (walkSteps) reads each step, and the readings are merged (mergeSteps); else the one reading, `steps: null`.
  */
 export async function readCheckoutFaces(page, poll) {
-  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO, line: LINE, step2: STEP2, sections: STEPS.flatMap((s) => s.shows) };
+  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO, line: LINE, step2: STEP2, sections: STEPS.flatMap((s) => s.shows), zero: ZERO_SIGN, help: HELP_ID };
   const first = await poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f) && f.total?.found > 0, { timeoutMs: FACES_MS, everyMs: 500 });
   if (!first?.payment || !(await page.evaluate((id) => Boolean(document.getElementById(id)), STEP_NAV))) return first && { ...first, steps: null };
   const steps = await walkSteps(page, poll, arg);
@@ -378,8 +430,8 @@ export function facesVerdict(faces) {
   const p = c.payment;
   if (c.style && !p) reasons.push("W11: no app-checkout on /checkout to measure");
   if (p) {
-    const extra = p.hidden.filter((x) => !p.allowed.includes(x));
-    const kept = p.allowed.filter((x) => !p.hidden.includes(x));
+    const extra = minus(p.hidden, p.allowed);
+    const kept = minus(p.allowed, p.hidden);
     if (extra.length) reasons.push(`W11: the style hides controls that are not H3, H4 or H6: ${extra.join("; ")}`);
     if (kept.length) reasons.push(`W11: H3, H4 or H6's controls still displayed with the style: ${kept.join("; ")}`);
     if (p.added.length) reasons.push(`W11: controls displayed only with the style: ${p.added.join("; ")}`);
@@ -416,8 +468,8 @@ export function stepReasons(s) {
   const reasons = [];
   const p = s.payment;
   if (p && s.step < 3) {
-    const extra = p.hidden.filter((x) => !p.allowed.includes(x));
-    const kept = p.allowed.filter((x) => !p.hidden.includes(x));
+    const extra = minus(p.hidden, p.allowed);
+    const kept = minus(p.allowed, p.hidden);
     if (extra.length) reasons.push(`W11: the style hides controls that are not H3, H4 or H6, nor another step's (step ${s.step}): ${extra.join("; ")}`);
     if (kept.length) reasons.push(`W11: controls the style should hide at step ${s.step} still displayed: ${kept.join("; ")}`);
     if (p.added.length) reasons.push(`W11: controls displayed only with the style (step ${s.step}): ${p.added.join("; ")}`);
@@ -518,6 +570,23 @@ export function linesLine(faces) {
   const pitch = Math.round(l.height / l.count);
   const fourteen = pitch * FOURTEEN;
   return `W18: ${l.count} order lines in ${l.height} px (${pitch} px each); 14 would take ${fourteen} px of ${PHONE_HEIGHT}: ${fourteen > PHONE_HEIGHT ? "DOES NOT FIT" : "fits"}`;
+}
+
+/**
+ * W28's line (§ 33.2, a report, not a pass rule): the link to customer service as read at the checkout (step 1, at done):
+ * once or how many times, its words, its href, its computed size, displayed or not, in app-checkout or not; ABSENT for a
+ * block from before § 33.
+ */
+export function helpLine(faces) {
+  const c = faces?.checkout;
+  if (!c) return "W28: /checkout not read";
+  const head = "W28: the link to customer service (a#fitaf-help): ";
+  const h = c.help;
+  if (!h) return `${head}not read`;
+  if (!h.count) return `${head}ABSENT`;
+  const times = h.count === 1 ? "once" : `${h.count} TIMES (one expected)`;
+  const tag = h.tag === "a" ? "" : `, a ${h.tag}, NOT a link`;
+  return `${head}${times}, "${h.text}", ${h.href}, ${h.fontPx} px, ${h.displayed ? "displayed" : "NOT displayed"}, ${h.inCheckout ? "in app-checkout" : "NOT in app-checkout"}${tag}`;
 }
 
 /** W15's line for the report. */

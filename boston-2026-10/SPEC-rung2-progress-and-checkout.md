@@ -1732,3 +1732,41 @@ paste.
 **Left**: the rehearsal on the live store (item 6, the orchestrator's: `zero: applied`, the row hidden, the total
 unchanged, the link present), then the Advisor's paste and the live smoke; the 390 `zero: not found` above (§ 31's
 bound); ⬜ the order page's link, if wanted (1 above).
+
+### 33.2 The watch against § 33's block: W11 amended, and the link read (2026-10-26)
+
+§§ 33 and 33.1 above are unchanged. This changes the watch's smoke (`tools/storefront-watch/`), not the block: the
+Footer block `2026-10-26-fitaf-handoff-dbcf88d.md` is byte for byte as built.
+
+**Why.** The orchestrator's live rehearsal of the `dbcf88d` block (§ 29's, 2026-10-26 before 15:41 PDT) flagged one
+thing: W11, *"the style hides controls that are not H3, H4 or H6: button.summary__remove "×""*. That control is the
+store's remove control in `zero`'s own discount row (§ 33.1: *"× Coupon ZERO -$0.00"*), which § 33 item 2 hides on
+purpose with its row (H9 keeps discount rows, so before § 33 W11 never met a hidden one). And the smoke listed buttons,
+never links, so the link of § 33 item 3 was not seen.
+
+1. **W11 now allows exactly one control more** (`lib/faces.mjs` `ZERO_SIGN`): a `button.summary__remove` inside a
+   `.summary__row--discount.fitaf-zero` (the class `hush()` sets) whose text names zero (`/\bzero\b/i`, the block's own
+   rule, read again by the watch, so a row the block marked wrongly is not allowed). Every other hidden control is still
+   flagged. Being allowed, it must also be hidden: zero's row's control displayed with the style fails W11 as an allowed
+   control *"still displayed"*. A block that does not mark the row (the live `c31603d`, a coded link) allows nothing
+   more.
+2. **W11's lists are compared with their repeats** (`minus`), not as sets of descriptions: a control is described by its
+   tag, class and label, and two coupons' remove controls read alike (`button.summary__remove "×"`), so compared as sets
+   a second one hidden would hide behind the first one allowed. No existing case changed.
+3. **W28, a report, not a pass rule**: the smoke reads `#fitaf-help` at the checkout (at done, step 1) and the report
+   says how many, its words, its `href`, its computed font size, whether it is displayed and inside `app-checkout`:
+   *"W28: the link to customer service (a#fitaf-help): once, "Contact customer service",
+   https://fitafnutrition.com/contact, 14 px, displayed, in app-checkout"*. A block from before § 33 (the live one until
+   the Advisor's paste) has none, and the line says ABSENT without failing the width, so the hourly smoke of the live
+   block is unchanged.
+
+**Cases** (`tools/storefront-watch/test/w11-w28-sign-and-link.test.mjs`, written first): W11d (the rule, recorded: two
+alike hidden, one allowed: one flagged; and the allowed one kept), W11e (the smoke on the stand-in's live zero row,
+1280 and 390: pass, `zero: applied`, the control hidden and allowed), W11f (mutant, R2-46's: the email field hidden
+beside it: W11 names the email field and never the zero row's control), W11g (mutant, Z7's: every discount row marked
+as zero's, beside a second row with its own remove control, the stand-in's new `discountRow: "live"`, *"x Coupon OFFER
+-$5.00"*: W11 flags that control; control: the shipped text passes on the same store), W28a (the line, recorded), W28b
+(the link read once, its words, `href`, 14 px, displayed, in `app-checkout`, 1280 and 390), W28c (a text without the
+link: the width passes, ABSENT). **Red on the unchanged watch (`6af3f91`): 7 run, 0 pass, 7 fail**, the stand-in's
+W11 reason word for word the live one (its control drawn `x`); green after the change: 7 of 7, and the other files
+naming W11 (W10–W13, W14, W16, W20) with § 33's `r2-z33`: 47 of 47.
