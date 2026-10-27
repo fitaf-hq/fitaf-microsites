@@ -65,7 +65,7 @@ test("PP1: --script, every surface's struck figures recorded before their prices
     assert.ok(meals.every((w) => /^(product__content-price|product-card-mobile__price)$/.test(w.price.classes.join(" "))), JSON.stringify(meals[0]));
     const cart = at("cart").filter((w) => w.price.text === "$87.50");
     assert.deepEqual(cart.map((w) => [w.price.classes.join(" "), w.text]).sort(), [["mobile-cart-summary__stat-value", "$116.67"], ["segment-price", "$116.67"]]);
-    assert.deepEqual(at("checkout").map((w) => [w.price.classes.join(" "), w.price.text, w.text]), [["summary__total-preview", "$93.72", "$122.89"], ["", "$87.50", "$116.67"], ["summary__total-value", "$93.72", "$122.89"], ["summary__plan-total-value", "$87.50", "$116.67"]], "§ 37: the header total and the Total ($87.50 + shipping $4.99 + tax $1.23, marked up for the food alone), the Plan Total, the Subtotal");
+    assert.deepEqual(at("checkout").map((w) => [w.price.classes.join(" "), w.price.text, w.text]), [["summary__total-preview", "$93.72", "$122.89"], ["", "$87.50", "$116.67"], ["summary__total-value", "$93.72", "$122.89"], ["summary__plan-total-value", "$87.50", "$116.67"], ["summary__stat-value", "$93.72", "$122.89"]], "§ 37: the header total and the Total ($87.50 + shipping $4.99 + tax $1.23, marked up for the food alone), the Plan Total, the Subtotal");
     for (const k of ["mealPlans", "order", "cart", "checkout"]) {
       for (const w of at(k)) {
         assert.equal(w.equal, true, `${width} ${k}: ${w.text} is item 3's figure for ${w.price.text} (${w.expected})`);

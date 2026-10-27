@@ -86,7 +86,9 @@ test("W29b: the smoke on the stand-in's priced surfaces — PASS, each surface's
     assert.deepEqual(s.faults, []);
     // § 37: the order page's cards (the Additions' too), the cart summary, and on the deep-carted checkout the lines, the
     // Subtotal and the Plan Total (in the page, hidden by H11, H9 and H15) and the totals (the Total row displayed).
-    assert.deepEqual(Object.keys(s.surfaces).sort(), ["the Subtotal", "the cart summary", "the checkout's Plan Total", "the checkout's lines", "the order page's cards", "the totals"], `${width}: ${JSON.stringify(s.surfaces)}`);
+    assert.deepEqual(Object.keys(s.surfaces).sort(), ["the Subtotal", "the cart summary", "the checkout's Plan Total", "the checkout's lines", "the order page's cards", "the phone bar's total", "the totals"], `${width}: ${JSON.stringify(s.surfaces)}`);
+    // § 38: the phone bar's total, judged at both widths, displayed below 1025 px only.
+    assert.equal(s.surfaces["the phone bar's total"].displayed, width === 390 ? 1 : 0, `${width}: the phone bar's total ${width === 390 ? "displayed" : "not displayed"}`);
     assert.equal(s.surfaces["the checkout's Plan Total"].displayed, 0, "the deep-carted checkout hides the Plan Total row (H15)");
     assert.equal(s.surfaces["the order page's cards"].displayed, 1);
     assert.equal(s.surfaces["the totals"].displayed, 1, "the Total row displayed, struck by the totals' rule");

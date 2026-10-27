@@ -32,6 +32,9 @@ export const STRUCK_SURFACES = [
   ["the unit prices", ".summary__item-price-unit", "unit"],
   ["the Subtotal", null, "subtotal"],
   ["the totals", ".summary__total-preview,.summary__total-value", "total"],
+  // § 38: the phone checkout's bar total (.summary__stat-value, beside PAY NOW below 1025 px; the bar's count, the same
+  // class, is no price), a total.
+  ["the phone bar's total", ".summary__stat-value", "total"],
   ["the checkout's Plan Total", ".summary__plan-total-value", "plain"],
 ];
 export const MEAL_PRICES = ".product__content-price,.product-card-mobile__price";

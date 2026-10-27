@@ -2370,3 +2370,68 @@ five mutants still killed). The whole watch suite and Storybook were not re-run 
 line `fitaf-handoff ab1d4d7 sha256:0e259ec17206722b308dff3f7f34fae916c14cf8eff03e1f0a8a28250447b23d`, fragment 25,678
 bytes, SHA-256 `7db1dd2149b431ebbfcd1bd78fb87c93e74c61bc8f2a84a3ee8571c652488fec`, the admin's measure on it 0. Pins
 (R2-32, PR-10, CC-8) `d278789f…` → `0e259ec1…`. `10833c1`'s block file is kept as the record of the refused build.
+
+## 38. Amendment, 2026-10-27: the phone checkout's bar total struck too. CONTRACT, before any code
+
+§ 37.1 left the phone checkout's bottom bar (beside **PAY NOW**, below 1025 px) unstruck: the contract had not named it.
+The Advisor chose it (`AskUserQuestion`, `ts=2026-10-27T23:02:56.802Z`). § 37's rules hold whole for it: it is a total,
+so it is marked up for the food alone (the total + the struck Subtotal − the Subtotal, the Subtotal read from the same
+page; none without one); the look, the marker, the dates, one per price, kept true. ⛔ The pay button itself, its label
+and its own figure (*"Pay now - $87.50"* at 1280) are never struck or changed.
+
+1. **Measured first**: `probe-prices` at 390 reads the bar's figure on `/checkout` (its element, class, text and box);
+   nothing typed, never the payment, never a UTM visit; one run, its time recorded.
+2. **Cases**: **ST15** the bar's total struck at 390 by item 4's rule, with a fee and without; the pay button untouched;
+   none at 1280 when the bar is not displayed. W29 reads it where the smoke reaches it.
+3. **The block** rebuilt (`storefront/footer-block/2026-10-27-fitaf-handoff-<commit>.md`), R2-94 green (no `name = "…"`
+   whose value holds `<` or `>`); rehearsed live by the orchestrator; pasted by the Advisor; the live smoke at once.
+
+### 38.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 38 above is unchanged. The probe and the cases at `d336ffa`, red on the unchanged block; the code at `9e6d0b3`; the watch
+at `7f1f2ab`; the Footer block file `storefront/footer-block/2026-10-27-fitaf-handoff-9e6d0b3.md` (*built, not pasted*)
+at `15341b9`.
+
+**Measured first (item 1)**: `npm --prefix boston-2026-10/tools/storefront-watch run probe-prices -- --width 390`, one run
+on the live store, 2026-10-27T23:05:14Z → 23:05:58Z (16:05 PDT), release **`main-U7YAHA6T.js`** (new again); the marker by
+init script, no `utm_` address, nothing typed, nothing pressed in the pop-up or on `/checkout`:
+`storefront/probe-prices/2026-10-27/run-20261027T230514Z-390.json`. The bar's figure is **`span.summary__stat-value`**
+*"$87.50"* (13 px, at x 48, 41 × 16 px) in `div.summary__stat` (a column: *"Total"* above it), the second of two stats in
+`div.summary__stats.summary__stats--compact` (the first, *"Items"*, holds the count in the same class), beside
+`span.summary__pay-button-wrap` in `div.summary__bar-row` of `div.summary__mobile-bar` (`position: fixed`), which is
+inside the checkout's `.summary`. The pay button's own figure is the form's *"Pay now - $87.50"* (displayed at 1280); the
+bar's button reads *PAY NOW*. § 37's block was live and striking every § 37 surface, each `equal`.
+
+**As built**: `.summary__stat-value` joins the totals (`tot`: the total + the struck Subtotal − the Subtotal, the same
+`.summary`'s; none without one); the count, the same class, is no price. Nothing else changed.
+
+**What § 38 was silent on** (stated, not ruled):
+
+1. **"None at 1280 when the bar is not displayed"** read as none displayed: the bar is in the page at every width and
+   hidden at 1025 px and wider, so its figure is made there too, inside the hidden bar, as § 36's phone cards' are (one
+   per price in the page, kept true across a resize without a listener). ST15 holds it not displayed at 1280.
+2. **The figure is the line above the bar's total** (the stat is a column), so the bar is one line taller at 390; whether
+   that moves the live bar's PAY NOW was not measured (the stand-in's ST9b: nothing moves after the figures appear).
+3. **Case readings § 38 made stale, amended**: ST14's never-list names the pay buttons (`.summary__pay-button`,
+   `.checkout__submit`), not the whole phone bar; ST9's overlap compares a figure inside the fixed bar with its own layer
+   (the bar lies over the page by design); ST13's readings take the header's total and the Total row (the bar's are
+   ST15's); PP1's list gains the bar's total.
+4. **W29** names it its own surface, *"the phone bar's total"*: on the deep-carted checkout it is displayed at 390 (the
+   block's Continue stands in the bar beside PAY NOW) and in the page, not displayed, at 1280 (W29b).
+
+**Red, then green** (each `nice -n 15`):
+
+| | command | red (`d336ffa`, the block unchanged) | green (`9e6d0b3`) |
+|---|---|---|---|
+| the watch's ST | `node --test boston-2026-10/tools/storefront-watch/test/st-struck.test.mjs` | `# tests 22`, `# pass 16`, `# fail 6` (ST1, ST1b, ST12–ST15: the bar's total not struck) | `# tests 22`, `# pass 22`, `# fail 0` (the five mutants killed) |
+
+**Gates** (each `nice -n 15`, one at a time, 2026-10-27): the block's site family (`r2-*`, `fc-*`, `sn-*`, CC-8, PR-10,
+MS-9, B2) at `9e6d0b3`'s tree, 16:14 PDT, `# tests 380`, `# pass 380`, `# fail 0` (R2-94 2 of 2); `w29-struck` and
+`probe-prices-script` at `7f1f2ab`'s tree `# tests 7`, `# pass 7`; Storybook's four block files at `15341b9`'s tree
+`# tests 21`, `# pass 21`, `# fail 0`. Not run: the whole watch suite and the whole site suite; the live rehearsal (the
+orchestrator's).
+
+**The size, the pins.** The Footer block **25,678 → 25,699** bytes (`ab1d4d7` → `9e6d0b3`), the console file **25,659 →
+25,680**. Text SHA-256 `0e259ec1…` → `8b5f948728e1d66a8f5a16ee1ae79e8a90572a9e50883f4b26a8840f1df9c422`; the Footer block's
+SHA-256 `cba2d52c6f9ad8845579029ae08ce89b53a311614e8f6bbfdce615bc850b9aaf`; R2-94's measure on it 0. R2-32, PR-10 and CC-8's
+`footer_text_sha256` moved.
