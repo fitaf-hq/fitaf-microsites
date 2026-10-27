@@ -41,6 +41,12 @@
 // #save: flow1.js's lines): the development build's index.html, demo/, boston/ and seminar/ alone, +1,117 bytes each;
 // production's (production false here, no save step) and every other file byte-identical; the recorder at 1a63f41 (its
 // cases, the code before) reproduces 3f40698's (recorded_at apart), and at 3f40698 its record byte for byte.
+// And at f60e19c (`--commit f60e19c --release-a`), SPEC-ui-and-copy-pass.md § 7 (the result's price: the week's price
+// alone, its full value struck above it while an offer with a share is current): production's index.html (production false
+// here: the price block's rules and markup, the struck line hidden, and app.js's lines) and the development build's
+// index.html, demo/, boston/ and seminar/ (those, plan-prices.js's lines and save-data's struck_result); every other file
+// byte-identical; the recorder at bc39ee0 (its cases, the code before) reproduces 63e243b's (recorded_at apart), and at
+// 63e243b its record byte for byte.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
