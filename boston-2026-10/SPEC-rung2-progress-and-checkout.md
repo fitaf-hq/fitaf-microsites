@@ -1809,3 +1809,20 @@ of the listed addresses names it; R2-71 takes its quoted string out of the text 
 alone is still found (R2-71b's planted host name, which adding the URL's readings to the allowed set would have
 blinded: the reader reads a host out of every URL), and R2-71b plants one more address, another page of the same host,
 which fails the comparison. `r2-11-shipped-size`, `r2-71-text` and `r2-77-text`: 6 of 6.
+
+**Gates** (each `nice -n 15`, one at a time, 2026-10-26 between 17:56 and 18:29 PDT):
+
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`, at `5d90470`, 248 s): **251 tests, 251 pass,
+  0 fail, 0 cancelled** (§ 33.1's 244 and the 7 new).
+- **Storybook** (`npm --prefix boston-2026-10/tools/storybook test`, at `5d90470`, 149 s): **101 tests, 101 pass, 0 fail**
+  (SM-5/8/10/11 among them; no time-out).
+- **The site** (`npm --prefix boston-2026-10 test`): at `5d90470` 1307 tests, 1304 pass, 3 fail (above); **at `83c4713`,
+  749 s: 1307 tests, 1307 pass, 0 fail.** `83c4713` changes two site test files and this section from `5d90470`; neither
+  tool package reads them.
+- **The block unchanged**: no commit of § 33.2 touches `src/`, `data/`, `scripts/` or `storefront/`; the Footer block
+  file `storefront/footer-block/2026-10-26-fitaf-handoff-dbcf88d.md` SHA-256 `25a2bbc6…` before and after, its fragment
+  `e16c9024…` (21,320 bytes), the text `86a83551…`.
+
+**Left**: the Advisor's paste, then the live smoke at once (§ 33 item 6), and after it CC-8's `watch_expected_footer`
+and the watch's baseline, as at every paste; the 390 `zero: not found` of § 33.1 (§ 31's bound), not seen in the four
+runs here; ⬜ the order page's link, if wanted (§ 33.1 item 1).
