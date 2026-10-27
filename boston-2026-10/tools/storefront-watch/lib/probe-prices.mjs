@@ -19,12 +19,38 @@
 // its parent's tag, class list, box and layout (display, flex direction, wrap), the path of classes above it, its card
 // (title, buttons, Select Options) and its section of the order page (heading); and a skeleton of each container the
 // struck figure may go in (tags, classes, boxes, layout).
+// With `script` (the CLI's --script <file>: a console file, a Footer block .html, or a storefront/footer-block/ .md, as
+// `smoke --script` takes a build), the probe is a REHEARSAL of the struck prices: any block of ours already on the page
+// is held off (`__fitafHandoff`, `__fitafStruck` set before the page's scripts, as the smoke does) and the build is
+// pasted into each document the probe visits, once its first price is drawn (the front page: once loaded): the front
+// page, /meal-plans, /order?mpid=N (the cart and /checkout are the same document, routed in the app; a new document is
+// pasted into again). Every read then records each s.fitaf-was: its text, aria-hidden, displayed, its box, the price
+// element it sits before (tag, classes, text, box), item 3's figure for that price's text (`share`, data/offers.json on
+// the probe's date in New York) and whether it is equal, and every displayed control of the store's whose box overlaps
+// it. Without `script` nothing is pasted, and on a store whose own block carries no struck prices none is recorded.
 // ⛔ It types NOTHING anywhere, presses nothing on /checkout, never the payment, never the admin, and presses on the
 // order page only each chosen meal's Add to Cart, the store's CHECKOUT and the extras dialog's CONTINUE TO CHECKOUT.
 // The profile is discarded. Not a check: nothing reads its files (storefront/probe-prices/).
+import { createHash } from "node:crypto";
 import { freshBrowser, poll, sleep } from "./browser.mjs";
 import { LOG_PREFIX, VIEWPORTS } from "./config.mjs";
 import { cutLine, redact } from "./redact.mjs";
+import { scriptFromFile } from "./smoke.mjs";
+
+/**
+ * --script's build, from a file's text: a storefront/footer-block/*.md file's fenced fragment (refused unless it hashes to
+ * the file's own fragment_sha256), else the file's text; then a Footer block's <script> tags taken off, as the smoke does.
+ */
+export function scriptOfFile(text) {
+  const fenced = /\n````html\n([\s\S]*)````\n?$/.exec(text);
+  if (fenced) {
+    const want = /^fragment_sha256: ([0-9a-f]{64})$/m.exec(text)?.[1];
+    const got = createHash("sha256").update(fenced[1], "utf8").digest("hex");
+    if (want !== got) throw new Error(`--script: the block file's fragment hashes to ${got}, its front matter says ${want ?? "nothing"}`);
+    return scriptFromFile(fenced[1]);
+  }
+  return scriptFromFile(text);
+}
 
 const NAV_MS = 60_000;
 /** The cards' wait, as the smoke's menu read (lib/smoke.mjs). */
@@ -74,8 +100,9 @@ function initScript(markKey) {
   }).observe(document, { childList: true, subtree: true });
 }
 
-/** In the page: every price element, read only. */
-function readPrices() {
+/** In the page: every price element, and (§ 36) every struck figure with its price, read only. */
+function readPrices(arg) {
+  const share = arg?.share ?? 0;
   const PRICE = /\$\s?\d/;
   const norm = (s) => (s || "").replace(/\s+/g, " ").trim();
   const box = (el) => {
@@ -152,6 +179,36 @@ function readPrices() {
       section: sectionOf(el),
     });
   }
+  // § 36 item 3's figure for a price's text, written again here (not the block's code): "$87.50" -> "$116.67" at 25 %.
+  const rule = (t) => {
+    const m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)$/.exec(t);
+    if (!m || !share) return null;
+    const c0 = Number(m[1].replace(/,/g, "")) * 100 + Number(m[2]);
+    if (!c0) return null;
+    const c = Math.round((c0 * 100) / (100 - share));
+    return `$${String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",")}.${String(c % 100).padStart(2, "0")}`;
+  };
+  const CONTROLS = "button,a[href],input,select,textarea,iframe,[role=button],[role=switch],[role=radio]";
+  const meet = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)) > 0.5;
+  const controls = [...document.querySelectorAll(CONTROLS)].filter(shown);
+  const struck = [...document.querySelectorAll("s.fitaf-was")].map((w) => {
+    const p = w.nextElementSibling;
+    const wb = box(w);
+    const priceText = p ? norm(p.textContent) : null;
+    const expected = p ? rule(priceText) : null;
+    return {
+      text: w.textContent,
+      ariaHidden: w.getAttribute("aria-hidden"),
+      displayed: shown(w),
+      box: wb,
+      fontSize: getComputedStyle(w).fontSize,
+      price: p ? { tag: p.tagName.toLowerCase(), classes: classes(p), text: priceText, box: box(p), displayed: shown(p), fontSize: getComputedStyle(p).fontSize } : null,
+      parent: name(w.parentElement),
+      expected,
+      equal: expected !== null && expected === w.textContent,
+      overlaps: shown(w) ? controls.filter((c) => !c.contains(w) && meet(wb, box(c))).map((c) => `${name(c)} "${norm(c.textContent).slice(0, 40)}" ${JSON.stringify(box(c))}`) : [],
+    };
+  });
   const nav = performance.getEntriesByType("navigation")[0];
   let mark = null;
   try {
@@ -167,6 +224,8 @@ function readPrices() {
     scrollHeight: document.documentElement.scrollHeight,
     sections,
     skeletons,
+    pasted: window.__fitafProbePasted === true,
+    struck,
     prices: found,
   };
 }
@@ -226,11 +285,33 @@ function control({ source, press }) {
   return text(b);
 }
 
-/** Wait for a first price on the page, then SETTLE_MS, then read. */
-async function settledRead(page, waitFor) {
+/**
+ * With a script: paste it into this document unless it already has been (the probe's own mark, window.__fitafProbePasted),
+ * our holds lifted first, as the smoke lifts them before its paste. A paste that throws is recorded, never a stop.
+ */
+async function ensurePasted(page, script, record) {
+  if (!script || (await page.evaluate(() => window.__fitafProbePasted === true))) return;
+  await page.evaluate(() => {
+    delete window.__fitafHandoff;
+    delete window.__fitafStruck;
+  });
+  try {
+    await page.evaluate(script);
+  } catch (err) {
+    record.pageErrors.push(cutLine(`the pasted script threw: ${String(err?.message ?? err)}`));
+  }
+  await page.evaluate(() => {
+    window.__fitafProbePasted = true;
+  });
+  record.pastes.push(await page.evaluate(() => location.pathname));
+}
+
+/** Wait for a first price on the page (or `waitFor`), paste the script if any, then SETTLE_MS, then read. */
+async function settledRead(page, { waitFor = null, script = null, share = 0, record }) {
   await poll(page, waitFor ?? (() => /\$\s?\d/.test(document.body?.textContent ?? "")), undefined, Boolean, { timeoutMs: MENU_MS, everyMs: 250 });
+  await ensurePasted(page, script, record);
   await sleep(SETTLE_MS);
-  return page.evaluate(readPrices);
+  return page.evaluate(readPrices, { share });
 }
 
 /** Every quoted page string redacted (lib/redact.mjs), as the watch's reports are. */
@@ -242,6 +323,7 @@ function redacted(read) {
     if (p.card?.title) p.card.title = redact(p.card.title);
     if (p.card) p.card.buttons = p.card.buttons.map(redact);
   }
+  for (const w of read.struck ?? []) w.overlaps = w.overlaps.map(redact);
   read.skeletons = JSON.parse(redact(JSON.stringify(read.skeletons)));
   return read;
 }
@@ -250,7 +332,7 @@ function redacted(read) {
  * One run at one width. The record is the run's file (bin/probe-prices.mjs writes it); `error` is null unless the run
  * could not be made as asked (the reads made before the error are kept).
  */
-export async function probePricesRun({ origin, width, mpid, need, executablePath, now = () => new Date() }) {
+export async function probePricesRun({ origin, width, mpid, need, executablePath, script = null, scriptLabel = null, share = 0, onPage = null, now = () => new Date() }) {
   const record = {
     probe: "probe-prices (SPEC-rung2-progress-and-checkout § 36 item 7)",
     at: now().toISOString(),
@@ -263,6 +345,9 @@ export async function probePricesRun({ origin, width, mpid, need, executablePath
     probeQuery: PROBE_QUERY,
     settleMs: SETTLE_MS,
     selectors: SELECTORS,
+    script: script ? scriptLabel ?? "a script" : null,
+    share,
+    pastes: [],
     release: null,
     chosen: [],
     counted: [],
@@ -281,12 +366,22 @@ export async function probePricesRun({ origin, width, mpid, need, executablePath
     });
     page.on("pageerror", (e) => record.pageErrors.push(cutLine(String(e?.message ?? e))));
     await page.evaluateOnNewDocument(initScript, MARK_KEY);
+    if (onPage) await onPage(page);
+    if (script) {
+      // Any block of ours already on the page held off, its hand-off and its struck prices (as the smoke's paste mode).
+      await page.evaluateOnNewDocument(() => {
+        window.__fitafHandoff = true;
+        window.__fitafStruck = true;
+      });
+    }
+    const read = (waitFor = null) => settledRead(page, { waitFor, script, share, record }).then(redacted);
     const step = (name, extra = {}) => record.steps.push({ step: name, at: now().toISOString(), ...extra });
 
     // 1. The landing query, and the front page's and the meal plans page's prices.
-    for (const [key, path] of [["front", `/${PROBE_QUERY}`], ["mealPlans", `/meal-plans${PROBE_QUERY}`]]) {
+    // The front page drew no price on 2026-10-27 (probe-prices/2026-10-27/): it is read once loaded, not after a price.
+    for (const [key, path, waitFor] of [["front", `/${PROBE_QUERY}`, () => document.readyState === "complete"], ["mealPlans", `/meal-plans${PROBE_QUERY}`, null]]) {
       await page.goto(`${origin}${path}`, { waitUntil: "load", timeout: NAV_MS });
-      record.reads[key] = redacted(await settledRead(page));
+      record.reads[key] = await read(waitFor);
       step(key, { path });
     }
 
@@ -296,7 +391,7 @@ export async function probePricesRun({ origin, width, mpid, need, executablePath
     const menu = await poll(page, chooseMeals, { need, sel: SELECTORS }, (m) => m.chosen.length >= need, { timeoutMs: MENU_MS, everyMs: 200 });
     record.release = menu?.release ?? null;
     record.chosen = menu?.chosen ?? [];
-    record.reads.order = redacted(await settledRead(page));
+    record.reads.order = await read();
     step("order", { path: orderPath, cards: menu?.cards ?? 0 });
     if (record.chosen.length < need) throw new Error(`only ${record.chosen.length} of ${need} meals with an enabled Add to Cart`);
     for (const name of record.chosen) {
@@ -307,7 +402,7 @@ export async function probePricesRun({ origin, width, mpid, need, executablePath
       await sleep(300);
     }
     step("pressed", { counted: record.counted });
-    record.reads.cart = redacted(await settledRead(page));
+    record.reads.cart = await read();
 
     // 3. CHECKOUT, as the block finds it, once enabled; the extras dialog's CONTINUE TO CHECKOUT if the store opens it.
     const CHECKOUT = "^checkout( now)?$";
@@ -322,7 +417,7 @@ export async function probePricesRun({ origin, width, mpid, need, executablePath
       await poll(page, () => location.pathname === "/checkout", undefined, Boolean, { timeoutMs: AFTER_CHECKOUT_MS, everyMs: 200 });
     }
     if ((await page.evaluate(() => location.pathname)) !== "/checkout") throw new Error("/checkout not reached");
-    record.reads.checkout = redacted(await settledRead(page, () => !!document.querySelector(".summary__total")));
+    record.reads.checkout = await read(() => !!document.querySelector(".summary__total"));
     step("checkout", { path: "/checkout" });
   } catch (err) {
     record.error = `the probe failed: ${String(err?.message ?? err)}`;
