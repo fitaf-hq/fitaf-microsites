@@ -1388,3 +1388,119 @@ is SPEC-rung2-progress-and-checkout § 35.
    `false`: `#save` opens nothing. **Mutant**: the opening on any fragment (SL3).
 5. **When.** Built on `boston/save-link` (from the release line `5fbe44f`), merged into the release line, the full
    suites, dev, then production, **before** the Footer block of § 35 is pasted (its link must lead somewhere live).
+
+### 6.1 Built (2026-10-26)
+
+§ 6 is unchanged. On `boston/save-link`: the cases at `1a63f41` (on `b480a94`'s code, red), the code at `63e243b`, the
+goldens it moves at `5ea010c`, this section after them.
+
+**What was built**, all of it in `src/save/flow1.js`:
+- `OPENED_BY_LINK` is true when the page's fragment at load is exactly `#save`.
+- On `DOMContentLoaded` (once the page's scripts have run), the step goes to `linked` and presses *Not ready?*. So
+  `app.js`'s `modal()` opens `#save-dialog` exactly as it does for a visitor's press.
+- `linked` draws the step in its dialog with no checkout beside it, and every transition of the step carries it
+  (`withName`). The dialog's `close` clears it (`withLinked`, the rest of the state as it was).
+- The step's first state is OFFER, as at any fragment but `#from-email`. `app.js` reads `#save` as no fragment, so the
+  page behind is at its start, and nothing rewrites the fragment.
+- *Not ready?* is still shown only beside a checkout. A page without the save step has no `flow1.js`.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, each named as its literal path in the
+command; the whole suite was not run, as the orchestrator asked: it runs once on the merged release line):
+
+| | before | after |
+|---|---|---|
+| `test/sl*.test.mjs` (SL1 twice, SL2, SL3, SL4 twice, the mutant and its control) | `1a63f41`: `# tests 8` `# pass 3` `# fail 5` | `63e243b`: all eight pass, within the next row's run |
+| `test/sl*`, `a*`, `n*`, `sv*`, `ix*`, `uc*` | `b480a94` (without `sl*`): `a*` `n*` `sv*` `ix*` `# tests 88` `# pass 88` `# fail 0`, `uc*` `# tests 90` `# pass 90` `# fail 0`; `1a63f41`: `# tests 186` `# pass 181` `# fail 5` | `63e243b`: `# tests 186` `# pass 186` `# fail 0` |
+| every case driven by `openPlanPage`, its harnesses or `page-sim` | `1a63f41` (the 78 driven by `openPlanPage` and its harnesses, the harness change on the old code): `# tests 388` `# pass 388` `# fail 0` | `63e243b` (87 files): `# tests 426` `# pass 426` `# fail 0` |
+| the goldens' readers (CC-8, MS-9, PR-10, S20, CC-4, PV5, SP3, U4, WC-8, WC-9, QE15, T5, S18, the budget, SP5) | `b480a94`: `# tests 42` `# pass 42` `# fail 0` | `63e243b`: `# tests 42` `# pass 40` `# fail 2` (PV5 dev, U4) |
+| the last runs, at `5ea010c` | | the brief's set, 66 files (`sl*`, PV5, U4, `a*`, `af*`, `aj*`, `n-*`, `sv*`, `ix*`, `uc*`, T5, S18, the budget): `# tests 200` `# pass 200` `# fail 0`; the other cases the harness and the step reach, 102 files (`cc-*`, `em-*`, `ms-*`, `pr-*`, S5, S17, S19–S31, SP1–SP5, SP9, SP10, SP16, SP17, `uf*`, `uq*`, W1, W4, W5, `wc-*`, QE15, P1): `# tests 434` `# pass 434` `# fail 0` |
+
+Red for the right reasons:
+- **SL1:** `development, #save: the dialog opened 0 time(s) by its showModal, not once`, `the dialog is not open` and
+  `#save not shown (OFFER)` (production the same). Its save: `after the save, its done line not shown` and `after the
+  save, the dialog closed` on both builds. The two requests were already equal.
+- **SL2**, on its control: `development, #save: control: the dialog is not open before closing`, for each way of
+  closing, on both builds.
+- **The mutant:** its control on SL1; the mutant itself on its anchor.
+- **SL3 and SL4** passed there, as guards; the mutant is SL3's test.
+
+**The mutant** (`test/sl-mutants.test.mjs`, in a mirror through THE SAME check SL3 runs, `test/sl-checks.mjs`; the tracked
+tree untouched, `git status` clean after the runs):
+- The control (the unchanged mirror) passes SL1 and SL3, 0 problems. SL2 and SL4 are also 0 in the same mirror, from a
+  scratch run the file does not assert.
+- The opening on any fragment (`OPENED_BY_LINK` true) fails SL3, 10 problems, one per fragment and build:
+  `development, #lean-and-7d: a dialog opened (showModal #save-dialog)`, and the same for `#from-email`, no fragment,
+  `#lean-7` and `#save-offer` on both builds.
+
+**The goldens moved** (each re-recorded once from `63e243b`'s own tree, `git archive`, the package's `node_modules` linked
+in; each recorder's control first reproducing the committed record):
+
+- PV5 (`pv-05-record.mjs --commit 63e243b --release-a`). At `3f40698` it reproduces the committed record byte for byte, and
+  at `1a63f41` the same record but `recorded_at`. Moved: the development build's `index.html`, `demo/`, `boston/` and
+  `seminar/` alone, +1,117 bytes each. Production's page (`production` false in this record, no save step) and every
+  other file are byte-identical.
+- U4 (`u-04-record.mjs --commit 63e243b --release-a --without-snack-cells`). With both flags at `3f40698` it reproduces the
+  committed record byte for byte, and at `1a63f41` the same record but `recorded_at`. Moved: development's three pages,
+  +1,117 bytes each. All six contents, production's three pages and every visible page are byte-identical.
+- Not moved: S20, CC-4 and SP3's base (the production page with `production` false carries no save step); CC-8 (no
+  Worker file moves); WC-8, WC-9, QE15, T5, S18, the budget.
+
+**The page's bytes** (every page the builds write, `test/page-budget.mjs`'s gzip; `1a63f41`, `b480a94`'s code →
+`63e243b`): each page that carries the save step gains 1,117 bytes raw. These are `flow1.js`'s lines, which the build
+inlines with their comments. Both trees' pages were compared line by line: those lines alone, the same on each page,
+no visible word. The production page with `production` false, privacy/ and why/ are unchanged.
+
+| build | page | raw | gzip |
+|---|---|---|---|
+| production (as committed, `production` true) | `index.html` | 115,751 → 116,868 | 33,986 → 34,329 |
+| production with `production` false | `index.html` | 80,094 (unchanged) | 23,852 |
+| development | `index.html`, `demo/` | 122,620 → 123,737 | 35,871 → 36,215 |
+| development | `boston/` | 122,622 → 123,739 | 35,869 → 36,213 |
+| development | `seminar/` | 122,623 → 123,740 | 35,873 → 36,217 |
+
+T5's ceiling is 61,440 bytes gzip; the largest page is 36,217.
+
+**What § 6 was silent on, and what was built** (stated, not ruled)
+
+1. **The case files are `sl1`–`sl4`**, with `sl-checks.mjs` and `sl-mutants.test.mjs`. The pages are the package's own
+   builds with the fixture week (`a-harness.mjs`'s `builtPage`), so the mutant's mirror builds its own.
+2. **"Once the page's scripts have run"** is read as `DOMContentLoaded`: the step's script is the fifth of the page's
+   seven inline scripts.
+3. ⚠ **"As pressing *Not ready?* opens it"** is read as pressing it. The step calls `#not-ready`'s `click()`, which a
+   hidden button still dispatches. So `app.js`'s `modal()` opens the dialog with `showModal`, as for a visitor's press,
+   and on closing returns focus to *Not ready?*. *Not ready?* is hidden then; where the focus goes in a browser was not
+   measured.
+   - **Found at the build:** the first code called the dialog's `showModal` from the step, and SP4 refused it (`Flow 1's
+     script opens no dialog, popover or modal`). That is S29's rule as § 4 B left it: the page's `modal()` opens every
+     dialog. The rule is kept unchanged.
+   - If it is read as forbidding the step's press too, the other way is `app.js` reading `#save`, a second reading of the
+     fragment beside the step's own. Not built.
+4. **`linked`** is a state field every transition carries. The step is drawn while `linked` or beside a checkout. The
+   rule that the dialog closes if the checkout goes (§ 4.1 item 11) still holds for a dialog *Not ready?* opened. It does
+   not close the link's dialog, which never had a checkout beside it, until that dialog is closed.
+5. **At load only.** A fragment changed to `#save` later (the address bar, a link within the page) opens nothing, and
+   `app.js` reads it as the start.
+6. **After closing, the fragment stays `#save`** (item 1: not rewritten), so a reload opens the dialog again. A return by
+   Back from the store restores the page from the browser's cache as it was left, which the cases do not model.
+7. **Esc** is, in the stub, the browser's own `close()` of a modal dialog, as UC12 has it. Esc itself, in Chrome, was not
+   run.
+8. **`cc-harness.mjs`'s `openPlanPage` now dispatches `DOMContentLoaded`** after its scripts on every case, and takes
+   `before(document)`.
+   - No script there listened for `DOMContentLoaded` before. The analytics' `result()` does since SPEC-analytics § 15,
+     but the analytics is off in that harness: it has no Web Crypto.
+   - The 78 files it drives passed with it on the old code, 388 of 388.
+   - `uc11-harness.mjs` gains `browserPartsOf` and `openWithDialogs`: the dialogs stood in for before the scripts run,
+     since one now opens at load.
+9. **The event of a save through the link** is the page's default (`?e=` absent). SL1 holds the request equal to one
+   through *Not ready?* on the same build rather than naming an event (item 2's ⬜ is the Advisor's).
+10. **SL4's /why/ and /privacy/** carry no script on either build, so nothing on them reads `#save`.
+11. **Analytics**: nothing new is sent. *Not ready?* is not one of the elements the analytics' listener reads, and a
+    stored save sends `save` as before. This was not measured in the SL cases, which run with the analytics off.
+
+**Found, not ruled**
+
+- 585 of the 1,117 bytes are the step's six new comment lines (`flow1.js` is inlined with them; measured over both trees'
+  development pages); well within the budget.
+
+**Not done here**: the whole suite, Storybook (the dialog opened at load in Chrome: its top layer, the focus, Esc), the
+watch and contrast; nothing deployed, no merge, no pin.
