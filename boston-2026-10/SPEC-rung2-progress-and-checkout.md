@@ -1856,3 +1856,79 @@ it is **in production before this block is pasted**.
    by the orchestrator (§ 29, headless, nothing submitted; step 3 entered by the block's class as § 33.2's rehearsal
    did, the save link reported); then pasted by the Advisor once the page half is live; then the live smoke at once.
    Merged into the dev line before the paste (the CI watch runs that line's watch code).
+
+### 35.1 Built — found at the build, not ruled (2026-10-26)
+
+§ 35 above is unchanged. The cases at `266fa21`, red on the unchanged block; the code at `0eb98fe`; the watch at
+`ff38fee`; the Footer block file `storefront/footer-block/2026-10-27-fitaf-handoff-0eb98fe.md` (*built, not pasted*).
+
+**As built.**
+
+- **The link (items 1 and 2)**: `save()`, at done, after § 33's `help()` and in its own `ui()`: one `a#fitaf-save`, its
+  words data/messages.json's `handoff.save` (*"Not ready to checkout? Save your offer now."*; R2-50's rule, no phrase in
+  the source; the build's `UI_WORDS` gains `save`), to `https://eatfitaf.com/#save`, `target="_blank"`,
+  `rel="noopener"`, made with `own()` in § 33's type (`font-family: inherit`, 14 px, weight 400, `--muted`, centred,
+  underlined). It goes in the block's own foot (`#fitaf-nav`, given `flex-wrap`), inserted right before
+  `#fitaf-help`, both `order: 1` and the whole width, so it is the line above the contact link at every width.
+- **Step 3 alone**: the checkout's hide list gains one step selector,
+  `:is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) #fitaf-save`, so moving between steps only shows or hides the one
+  link, made once (SO3). Nothing else changes: the steps, Continue, § 33's row and link, the order, the total.
+
+**What § 35 was silent on, and what was built** (stated, not ruled):
+
+1. **No foot, no link.** Without `:has()` the block draws no steps and no foot, so there is no step 3: no save link is
+   made (the contact link is, as § 33.1 places it, at the checkout's end). Case SO1's second half.
+2. **W11 at steps 1 and 2.** The block's style hides the link there by design, so the smoke's W11 flagged it, *"the
+   style hides controls that are not H3, H4 or H6, nor another step's (step 1): a "Not ready to checkout? Save your
+   offer n""*, on the code commit with the old watch. W11 now counts `#fitaf-save` among step 3's own controls
+   (`lib/faces.mjs` `SAVE_ID`), as it counts the form's and the pay button. W28's save line is a report, not a pass
+   rule, as § 33.2's link line is.
+3. **The site's cases.** linkedom does no layout and no `:has()`, so the site's SO1–SO3 (`test/r2-so-save-offer.test.mjs`)
+   run the shipped text in a window that answers `CSS.supports()` as a browser with `:has()` does, and read the step
+   rule from the block's own style; **SO4 is Chrome's alone** (`tools/storefront-watch/test/r2-z35-save.test.mjs`).
+4. **The file's name** follows item 6's date, `2026-10-27`; the build is of 2026-10-26 (Pacific; its `as_of`), where
+   `storefront/footer-block/README.md` names a file by its build's date.
+5. **The words** are the plan page's *Not ready?* words, as item 1 gives them; ⬜ the Advisor's to edit.
+
+**Cases.** The watch's (Chrome, the stand-in with the live zero row): SO1 and SO1b (1280, 390), SO2, SO3, SO4 and SO4b
+(1280, 390), and the two mutants (the link shown in every step: SO2 fails; added twice: SO3 fails); W28d (the save
+line, recorded) and W28e (the smoke on the stand-in: PASS, the link read once at each step, displayed at step 3 alone).
+The site's (linkedom): SO1 (and its no-foot case), SO2, SO3 and the same two mutants. The address rules as item 5 says:
+R2-11b and R2-71 admit `https://eatfitaf.com/#save` only whole (R2-71 takes its quoted string out before its URL
+reader runs, as § 33.2 did for the contact page); R2-71b plants another eatfitaf.com address, `https://eatfitaf.com/#saved`,
+which fails; R2-77 requires it whole. **Red on the unchanged block (`266fa21`)**: the site's 12 run, 6 pass (R2-11a–c,
+R2-71, R2-71b: guards that hold today; SO1's no-foot case), 6 fail (R2-77, SO1, SO2, SO3, both mutants: their site
+absent); the watch's 17 run, 7 pass (§ 33.2's), 10 fail (SO1–SO4 and both mutants, W28d, W28e). **At the code
+(`0eb98fe`)**: the site's 12 of 12; the watch's SO 8 of 8, and W11e, W11g, W28b, W28c, W28e failing on W11 as item 2
+above says (W28d on its absent line). **At the watch (`ff38fee`)**: 17 of 17.
+
+**The size, the pins.** The Footer block **21,320 → 21,952** bytes (`dbcf88d` → `0eb98fe`), the console file
+**21,301 → 21,933**; the cap 50,000 (§ 32). Text SHA-256 `86a83551…` →
+`75e18ffa2af086dee435fc72c29c37c32110a9bcc8294352c87947dde7158d07`; the Footer block's SHA-256
+`607d5f22f257e8b79a6d91b943ac3d145ca238b9436d68a28a6d9c641e51ab80`. R2-32, PR-10 and CC-8's `footer_text_sha256`
+moved to `75e18ffa…`; CC-8's `replaces` and `watch_expected_footer` still name the live `c31603d` text (§ 33's block is
+not pasted either).
+
+**Rehearsed on the live store, 2026-10-27T01:55:46Z → 01:56:34Z (18:55 PDT)**, § 33.2's way (headless, a fresh profile
+per width, the block pasted in the console as a person would, any block of ours on the page held off, the checkout
+reached by the link alone; nothing typed, nothing submitted, no admin; the save link read, ⛔ never followed): the
+Footer block file's own bytes (`dist-storefront/fitaf-handoff.html`, `607d5f22…`, built at `0eb98fe`). **PASS at 1280
+and 390, no flag.**
+
+- `fill C, mpid 21` · `zero: applied` · `done: /checkout` at both widths; the total $87.50 at both, the pay button at
+  step 3 (*"Pay now - $87.50"*, *"PAY NOW"*); the extras pop-up not opened; CHECKOUT to `/checkout` in 3.3 s and 3.1 s.
+- W11: 63 controls in `app-checkout` at 1280 (one more than § 33.2's: the save link), 45 hidden by the style, all
+  allowed; 67 and 49 at 390. The hide list as § 33.2's; the Total displayed; one-time; W16 the logo. W20: step 2 by
+  Continue, Continue refused at step 2 (the smoke types nothing), **step 3 by the block's class**.
+- **W28, the save link: *"once, "Not ready to checkout? Save your offer now.", https://eatfitaf.com/#save, target
+  _blank, rel noopener, 14 px, displayed at step 3, above the contact link"*** at both widths; the contact link's line
+  as § 33.2's.
+- **SO4 on the live page**, by a read-only page hook (a scratch script, not committed, as § 33.2's; nothing typed or
+  pressed): at step 3, scrolled to the page's foot, the save link's box overlaps no pay button, no bottom bar and no
+  control at 1280 (01:57:59Z) or 390 (01:57:24Z), the contact link 20 px below it. ⚠ **No card field was displayed** on
+  the empty live form at either width (no displayed `iframe` in `.checkout__section.payment`), so the card-field half of
+  SO4 is the stand-in's alone.
+
+**Left**: the full site suite at the end (below); merged into the dev line before the paste; the page half
+(SPEC-ui-and-copy-pass § 6, `https://eatfitaf.com/#save`) live, then the Advisor's paste, then the live smoke at once;
+⬜ the words, his to edit.
