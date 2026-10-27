@@ -25,8 +25,8 @@
 // Since § 16 (2026-10-27: the offer email's clicks, and its visitors as their own source) one more event, `offer`, sent
 // by the offer page's script (/o/<code>) once a page load: `qr`, the save's event id ("" for an unknown code), and
 // `kind`, which page it is (OFFER_KINDS), blob13, appended; never the code, the path or the query. And `open` carries
-// `via`, "email" when the plan page started at #from-email (the offer page's link), else "": blob14, appended. Blobs 1–12
-// keep their places.
+// `via`, "email" when the plan page started at #from-email (the offer page's link), else "": blob14, appended (an `open`
+// without it, from a page loaded before § 16, is accepted, its blob14 ""). Blobs 1–12 keep their places.
 import plans from "../../data/plans.json" with { type: "json" };
 import events from "../../data/events.json" with { type: "json" };
 import { ANSWER_SETS, answerKey } from "../../scripts/selection.mjs";
@@ -98,9 +98,11 @@ const isMs = (v) => Number.isInteger(v) && v >= 0 && v <= MAX_MS;
 /** A QR event's id: one of data/events.json's, or "" (§ 9; since § 16 also the save's event, on an offer page). */
 const isQr = (v) => v === "" || QR_IDS.includes(v);
 
-/** Each event's fields beyond `event` and `s`, each with its check (§ 3). */
+/** Each event's fields beyond `event` and `s`, each with its check (§ 3). § 16 item 2's `via` is an `open`'s field when
+ *  the body carries it (then "email" or "" only); an `open` without it is a page loaded before § 16 (an open tab, a cached
+ *  copy, a resumed tab) and is accepted, its blob14 "" (the merge review, 2026-10-27): exactly its fields either way. */
 const FIELDS = {
-  open: () => ({ viewport: oneOf(VIEWPORTS), load_ms: isMs, qr: isQr, via: oneOf(VIAS) }),
+  open: (b) => ({ viewport: oneOf(VIEWPORTS), load_ms: isMs, qr: isQr, ...(has(b, "via") ? { via: oneOf(VIAS) } : {}) }),
   answer: (b) => ({ question: oneOf(Object.keys(QUESTIONS)), answer: oneOf(has(QUESTIONS, b.question) ? QUESTIONS[b.question] : []) }),
   result: () => ({ key: oneOf(ANSWER_KEYS), mpid: oneOf(RESULT_MPIDS) }),
   click: (b) => (b.link === "all-plans" ? { link: oneOf(LINKS) } : { link: oneOf(LINKS), mpid: oneOf(ORDER_MPIDS) }),
