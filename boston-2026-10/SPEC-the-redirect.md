@@ -130,3 +130,149 @@ suite and the watch's site cases on the merged line. Then dev with the var: `cur
 the dev dataset after about 90 s (a 204 proves nothing; a 302 neither). Production on the Advisor's word, with
 fitaf-infra's var, and the dashboard's § 13 live first or in the same hour. **Boston's events run through 2026-10-29;
 tonight's matters.**
+
+## 9. Built — found at the build, not ruled (2026-10-27)
+
+§§ 1–8 are unchanged. On `boston/redirect` (from `d59aec4`): the cases at `275a481` (on `d59aec4`'s code, red), the code
+at `7b8f4fd`, the golden and the base it moves at `4b2450d`, the mutants at `6a4a29f`, this section after them.
+
+**What was built**
+
+- `src/worker/redirect.js` (new): the rules, and nothing that serves a page. `redirectTarget` reads the var (§ 1 item 1);
+  `markerOf` reads the query (`qr` by the page's own `qrEvent` over `data/events.json`'s ids, `via` by
+  `URLSearchParams`) and gives the medium; `markedLocation` appends the marker; `redirectResponse` is the 302
+  (`no-store`, no body, no cookie); `PROGRAM_AGENT` is § 3's closed list, kept here alone; `recordRedirect` writes the
+  event and never throws.
+- `src/worker/site.js`: `serveSite(request, env, ctx)`. A GET is § 12's switch, then `redirectHome`, then the page; a HEAD
+  is `redirectHome`, then the assets; every other method the assets, as before. `redirectHome` answers only a `GET` or
+  `HEAD` of exactly `/` while the var is valid; a GET not carrying § 12's cookie at `1` and not from a program's user
+  agent starts its write, hands it to `ctx.waitUntil` and returns the 302 without waiting. `{ fetch: serveSite }` and
+  `withSaveStep` passed `ctx` already; `src/worker/index.js`'s `fetch(request, env, ctx)` now passes it to its final
+  `serveSite`.
+- `src/worker/beacon.js`: `writeEvent(request, env, event)`, the tail of the beacon's `record` (the salt, `v`, the country,
+  the device, one data point) factored out and called by both; `visitorOf` exported; `randomId`, the 16 random hex digits
+  of § 15's point index, now also the redirect's `s`; `REDIRECT_EVENT`. `redirect` is **not** in `EVENTS`: `POST /a`
+  refuses it (RD4 holds it), so no page and no visitor can write one.
+- `src/worker/redeem.js`: `homeFromEmail(event, fragment)`, the offer page's links to `/` with `via=email` before the
+  fragment.
+- `scripts/analytics.mjs`: the visitors query's condition is `blob1 != 'offer' AND blob1 != 'redirect'`; an eleventh
+  query, `redirects` (`blob6 AS qr`, `blob14 AS via`, `blob4 AS device`, `count(DISTINCT blob2)`, event `redirect`); a day
+  with redirects gains the member `redirects` and one text line; a day of redirects alone has data.
+- `wrangler.jsonc`: `REDIRECT_TO` `https://fitafnutrition.com/` in the top level's vars and `env.dev`'s, each with a
+  comment.
+- README rows: the route table, `src/worker/`, the cases.
+
+**What the contract was silent on, and what was built** (stated, not ruled)
+
+1. **The report's member and line are on a day with redirects alone.** § 5 says each day gains `redirects`, and also that
+   *"a window with no redirect row reads exactly as before"* and *"AJ1–AJ4 hold"* (no base moved, unlike § 16's). Both
+   hold only if a day without a redirect carries neither, so the text and the JSON of a window without one are
+   `d59aec4`'s byte for byte (RD9, over AJ's five answer sets), and AJ2's base did not move. The member,
+   after `email_visits`: `"redirects": { "count": 3, "source": { "boston": 1, "email": 1, "direct": 1 }, "device": {
+   "phone": 2, "desktop": 1 } }`; the line, after the offer pages' line: `  redirects to the store 3 (by source: boston 1
+   · email 1 · direct 1; by device: phone 2 · desktop 1)`. AJ4's walk accepts the member when it is there (its keys and
+   vocabularies), and AJ's text reader reads the line; A11 and AJ answer the new query with no row
+   (`fixtures/analytics/redirects.json`), so their expectations did not move.
+2. **A redirect's source** is `email` when its `via` is `email` (whatever its `qr`), else its QR id, else `direct`: the
+   `utm_medium` rule with the QR id split out. Sources print in `data/events.json`'s order, then `email`, then `direct`;
+   devices in `DEVICES`' order. An email redirect's event is in the dataset (blob6) and not split in the report.
+3. **The count is `count(DISTINCT blob2)`**, each redirect its own `s`: the number of redirects, counted as `visits` is.
+4. **A day of redirects alone is a day with data**, its plan-page figures those of no visit (§ 16.1 item 7's rule).
+5. **`via=email`** is any `via` parameter whose value, decoded, is `email` (`URLSearchParams`' `getAll`); `e` is read by
+   `qrEvent`, the page's rule (the first `e=`, as written). Nothing else of the query is read.
+6. **The var's reading**: a value holding `#` anywhere (an empty fragment too) is refused before it is parsed; otherwise
+   it must parse as a URL whose protocol is `https:` (the parser's own trimming of surrounding spaces kept). The Location
+   is the parsed URL's `href` (a host alone gains its `/`), then `?` (or `&` after a query of its own), then the marker;
+   `utm_campaign` is URL-encoded (the ids are `[a-z0-9-]`, which it leaves alone).
+7. **A HEAD of `/`** is redirected and never counted. § 12's switch is a GET's alone (§ 12.1 item 2), so `HEAD
+   /?no-tracking` gets the store's 302 too. A `POST` or `PUT` of `/` is the assets' as before.
+8. **Without a `ctx`** the write is still started, not handed to `waitUntil`; no caller in the package omits it.
+9. **The harnesses drop `REDIRECT_TO`** from `wrangler.jsonc`'s vars unless a case gives it (`a-harness.mjs`
+   `withRedirectTo`, used by its `configuredSite`, `wc-harness.mjs`'s `configured` and `worker-harness.mjs`'s
+   `startWorker`), by § 1 item 2. Without it every case that starts a Worker with the config's vars (N5, SP11, EM-A1's
+   offer pages, N1 and the WC cases as configured, and the rest) would run in redirect mode once the var was committed.
+   `startBeacon` and `startSite` take the Worker's vars from the case.
+10. **"After the answer" is measured.** `a-harness.mjs`'s wrapper keeps every promise the Worker hands `waitUntil`, waits
+    for them before it reads its log, and records how many points were written when each answer was returned; RD4 holds
+    it at none. The wrapper also makes `writeDataPoint` throw for a request carrying `x-a-fail-write: 1` (RD8).
+11. **RD5 also reads the Location** (`secret` must not reach it), so the mutant "the visitor's query passed through" dies
+    on RD5 as § 7 says; § 7's table names only the written fields.
+12. **RD2 is three checks**: the Worker script itself over each target's build behind a fake ASSETS (every request
+    reaching it, as the development Worker's `/*/` and any path no asset matches do: the one check the mutant "/assets/
+    redirected" can fail, since the real router serves `/assets/` without the script); both Workers as `wrangler.jsonc`
+    configures them over their builds (the real router, the var as configured there, its value checked in both
+    environments); and the save step's routes (`/o`, `/confirm`, `/api/save`) through `worker-harness.mjs`'s Worker (D1,
+    the rate limiters), development's and production's. The event pages are the development Worker's.
+13. **RD7 leaves the logo out** (item "Found" below) and checks the page's other links to `/`: exactly one, § 4's.
+14. **The cases § 4 moves that § 7 did not name**, changed in the cases' commit: S11, SP11, SP12, SP15 and SP16 pin the
+    offer page's link (now with `via=email`, `&amp;` in the markup); N5 compares `/o/…` with `c6dd3a5`'s Worker byte for
+    byte, and now removes `via=email` from this tree's link first (and fails if it is not there), as it removes § 16's
+    two elements. A11 and AJ's query lists gain `redirects`.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, absolute paths; the whole suite as
+`nice -n 15 npm --prefix boston-2026-10 test`)
+
+| | before the code (`275a481`, `d59aec4`'s code) | after |
+|---|---|---|
+| `test/rd*.test.mjs` (RD1 twice, RD2 three times, RD3 twice, RD4–RD9) | `# tests 13` `# pass 4` `# fail 9` | `7b8f4fd`: `# tests 13` `# pass 13` `# fail 0` |
+| the gate set: `test/rd*`, `a*` (A, A11, AJ, AF), `n-*`, `sv*`, `ix*`, `em-a*`, `wc-*`, S11, SP11, SP12, SP15, SP16 | `# tests 175` `# pass 156` `# fail 19` | `7b8f4fd`: `# tests 175` `# pass 175` `# fail 0` |
+| CC-8, MS-9, PR-10, SP3 (the golden's and the base's readers) | | `7b8f4fd`: 6 fail in the whole suite (below); `4b2450d`: `# tests 13` `# pass 13` `# fail 0` |
+| `test/rd-mutants.test.mjs` | | `6a4a29f`: `# tests 6` `# pass 6` `# fail 0` |
+| the whole suite | | `7b8f4fd`: `# tests 1385` `# pass 1379` `# fail 6` (CC-8b, CC-8c, MS-9 twice, PR-10, SP3's CC-8b: the golden and the base alone); `6a4a29f`: `# tests 1391` `# pass 1391` `# fail 0` (its first run there; the 1,385 and the six mutants) |
+
+Red for the right reasons. RD1: `site GET eatfitaf.com/: 200, not 302`, `Location null`, `Cache-Control "no-cache", not
+"no-store"` (each Worker, each host; the rollback the same). RD2 as configured: `production: wrangler.jsonc's
+vars.REDIRECT_TO undefined, not https://fitafnutrition.com/` and the page's 200s. RD4: `site GET /: 200, not 302`, `0
+data point(s), not 1`. RD5: `Location null, not § 2's`, `0 data point(s), not 1 (control)`. RD6: `site GET / carrying the
+cookie: 200, not 302`. RD7: `links to the home page ["/?e=demo#from-email"], not ["/?e=demo&via=email#from-email"]`, and
+`["/"], not ["/?via=email"]` for an unknown code. RD8: `site, ANALYTICS and SALTS unbound, GET /: 200, not 302`. RD9:
+`2026-10-26: visitors 4, not 1`, `visits 4, not 1`, `redirects undefined`. Passed before the code, as guards: RD2's
+script-itself and save-step checks and RD3 twice (a var the old code never read: equal by construction). Of the
+existing cases, by § 4: S11, SP11 twice, SP12, SP15, SP16 (the link), N5 twice (`GET /o/ABCD2345: the offer page's link to
+the home page names the email`); by § 5's eleventh query, A11 twice (`control: the report's queries are the fixture's`).
+AJ1–AJ4 passed before and after, unchanged in their expectations.
+
+**The mutants** (`test/rd-mutants.test.mjs`, each in a mirror through THE SAME check its case runs, `test/rd-checks.mjs`;
+the tracked tree untouched, `git status` clean after every run; the counts measured by a scratch run of the same checks):
+the control (the unchanged mirror) passes RD1, RD2, RD4, RD5 and RD9, 0 problems each. A 301 (`redirect.js`'s status):
+RD1 red, 52 problems, `site GET eatfitaf.com/: 301, not 302`. The visitor's query passed through (`site.js`: the request's
+query appended to the Location): RD1 red, 42 problems, `site GET eatfitaf.com/?e=boston: Location "…&utm_campaign=boston&e=boston"`
+(a request with no query still right), and RD5 red, 4 problems, `site: the Location carries the visitor's query`.
+`/assets/` redirected (`site.js`: a path under `/assets/` redirected as `/` is): RD2 red, 48 problems, `site, the var set
+GET /assets/email/halftone-ink.png: 302 and 0 bytes, not 200 and the built file's` and `302 with the var, 200 without`.
+The cookie ignored (`site.js`: `carriesNoTracking` dropped from the count): RD4 red, 12 problems, `site Cookie
+"fitaf_no_tracking=1": written (1 data point(s))` and the salt read. The report counting redirect-only visits as visits
+(the visitors query without its redirect condition): RD9 red, 7 problems, `2026-10-26: visitors 4, not 1`, `visits 4, not
+1`, `2026-10-27: visits 3, not 0`.
+
+**The golden and the base moved** (each from `7b8f4fd`'s own tree, `git archive`, the package's `node_modules` linked;
+the recorder's control first reproducing the committed record):
+
+- CC-8 (CC-8b, CC-8c, MS-9, PR-10): `cc-harness` `workerFiles` over `275a481`'s tree reproduces the committed map (39
+  files); over `7b8f4fd`'s: `src/worker/site.js` `a769b2eb…` → `311dacc7…`, `index.js` `ddd8e1ab…` → `82e7b35e…`,
+  `beacon.js` `f4d76a8b…` → `8ea4868c…`, `redeem.js` `4f45609c…` → `708ec51a…`, and added `src/worker/redirect.js`
+  (`49f28617…`) and `src/qr-event.js` (`e97c0ae1…`, the page's file, now also the Worker's), 39 → 41 files.
+- SP3's base (`sp-production.mjs` `LATER`): `275a481`..`7b8f4fd` over `src/worker/beacon.js`, every hunk taken; SP3's
+  CC-8b then finds the patched base's `beacon.js` equal to `7b8f4fd`'s. `MOVED_WORKER_FILES` gains `src/qr-event.js` and
+  `src/worker/redirect.js` (`site.js`, `index.js` and `redeem.js` named already).
+- Not moved: S20, PV5, U4, WC-9, CC-4, T5, the budget and every other reader (the whole suite at `7b8f4fd`): no page the
+  builds write changed.
+
+**Found, not ruled**
+
+- ⚠ **The offer page's logo** (`pages.js`'s `LOGO`, on every Worker page) also links to `/`, with no `via`. § 4's list names
+  `redeem.js`'s links alone, so it was left: a press of the logo from the offer page is redirected `utm_medium=direct`.
+  One line in `pages.js` if it should carry `via=email` too.
+- ⚠ **§ 3's program list matches some people's phones**: `/bot/i` matches a model name holding `bot` (a Cubot phone's
+  user agent), whose redirect is then not counted. The list is the contract's, as written.
+- **RD9 evaluates the report's SQL in the case** (`em-a-checks.mjs`'s evaluator); the new query uses only forms it
+  already read. None of it was run against Cloudflare.
+- **The team's dashboard** (Fit AF `analytics-worker.spec.md` § 13) must leave the `redirect` rows out of its visits, as
+  § 16's offer rows; it was not touched here.
+- `HEAD /?no-tracking` and `HEAD /?tracking` are the store's 302 in redirect mode (item 7), so a tester sets the cookie
+  with a GET, as before.
+
+**Not done here**: Storybook (`wp-chrome` opens two offer pages, whose links now carry `via=email`; it starts its Worker
+through `worker-harness.mjs`, which drops the var) and the watch; `npm run contrast` (no colour or style changed); the
+SQL against Cloudflare; dev and production (§ 8's `curl -sI` and the data point read back are the orchestrator's);
+fitaf-infra's var; nothing deployed, no `wrangler`, no merge, no pin.
