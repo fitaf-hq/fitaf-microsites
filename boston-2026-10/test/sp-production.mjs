@@ -347,6 +347,10 @@ export const LATER = [
       insertAfter: [["src/analytics.js", '    qr: qr && QR_IDS.indexOf(qr[1]) >= 0 ? qr[1] : ""', ',\n    via: w.location.hash == "#from-email" ? "email" : ""']],
     },
   ],
+  // § 16's change at the merge review (2026-10-27, the coordinator): an `open` without `via` accepted, blob14 "" (a page
+  // loaded before the release), moves the Worker alone (src/worker/beacon.js's FIELDS.open), from 65dc5be (its case) to
+  // 9411139 (its code, one commit); every hunk is taken.
+  ["65dc5be", "9411139", ["src/worker/beacon.js"]],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
