@@ -1,6 +1,6 @@
 {
   "about": "PV5's before (SPEC-preview-sites § 4): the SHA-256 of every file the production and the development build write (build() with target prod, then dev, each into an empty directory), over recorded_at's own tree, the contract's commit before any of the preview build's code (test/pv-05-record.mjs, which wrote this file). Re-record only by running the recorder; never by hand.",
-  "recorded_at": "f60e19c",
+  "recorded_at": "0ef1455",
   "built_as": "release (a): production false, its wording (--release-a)",
   "files": {
     "prod": {
@@ -15,7 +15,7 @@
       "fonts/open-sans-latin-600-normal.woff2": "a97a6ed7ef9f75c495e9224f5c59b2271d826e4a4345b738b390b0c76cc9f412",
       "fonts/poppins-latin-600-normal.woff2": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
       "fonts/poppins-latin-700-normal.woff2": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
-      "index.html": "f70002b58a01f8a642e7ea104886f61a807385a11bcd8cfa89a37f15b5427bec",
+      "index.html": "0833fde7d3809628375c4bfb1c983c9cda437f9269cd9ac4117a352e2039980b",
       "qr/boston.png": "89b19f224c46c72a3da1fda4d438c62f82184b52e252750c921cb1352b0b7dd2",
       "qr/boston.svg": "43824296e97e3d0c95ce9d94d6c5eca476845d270d0ec2ad9fa3bd87bd6b676c",
       "qr/demo.png": "41c13c7d3960effe439e1ec8baa1f5f2ce2c7c9a57b4902a1c02d46bbddd4222",
@@ -32,15 +32,15 @@
       "assets/photo-sheets/chefs-choice-2026-10-18.jpg": "57a1e5a99cefe5473d6d18b3c58fa005dfc0db69a5eb36e6bd0165dab930beb4",
       "assets/photo-sheets/chefs-choice-2026-10-25.jpg": "efa540346447fdb8e1ef534be780a3beb6f4b618282f117d185c345328fc3d39",
       "assets/photo-sheets/chefs-choice-2026-11-01.jpg": "725b363dc93eae74d959e29ca7546d4f8fe15120a88505feeba33c83677204b4",
-      "boston/index.html": "12eee8ee4741a0a528a9dd339daf7c581ec02b29079a48b668281cbdc2fbfa07",
-      "demo/index.html": "5f8a4a674771c14d2f6cd02dedd0652c002751a5171269a89ca29a88a53e5b73",
+      "boston/index.html": "40dfe3b33004d5fdbb9cfb6b2fcfa2a78848b4de0c436af1f38105f9936b97ee",
+      "demo/index.html": "db41a544a0a08e17a3f77ac281f87d4b06799f51ad7e723b69172e143a7e9220",
       "fonts/open-sans-latin-400-normal.woff2": "0e44026ad31376af1b56593cd4acb4f353f8e8789c51759e18f64578e4ef296a",
       "fonts/open-sans-latin-600-normal.woff2": "a97a6ed7ef9f75c495e9224f5c59b2271d826e4a4345b738b390b0c76cc9f412",
       "fonts/poppins-latin-600-normal.woff2": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
       "fonts/poppins-latin-700-normal.woff2": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
-      "index.html": "5f8a4a674771c14d2f6cd02dedd0652c002751a5171269a89ca29a88a53e5b73",
+      "index.html": "db41a544a0a08e17a3f77ac281f87d4b06799f51ad7e723b69172e143a7e9220",
       "privacy/index.html": "4708034f3a7646d1471ecd33c42d747ca3af9c16dc859aec4871b5ecddac9080",
-      "seminar/index.html": "2fc0e440c7cba73c88dd53caa1153cb2282270a41b684176071e9907d38aaf48",
+      "seminar/index.html": "9e87116e38610b5ef8b7126f162d681eb576628ad4e86ae5d08c34cbdd477116",
       "why/index.html": "35945d6a3dd76789b95200b4a7cc9eeef3dfadc49d94c9a5aa2229da6afc4d35"
     }
   }

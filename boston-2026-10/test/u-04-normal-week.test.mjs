@@ -189,6 +189,11 @@
 // pages, production false, the struck line is hidden) and development's three +2,115 (those, plan-prices.js's lines and
 // save-data's struck_result); every visible page (each fragment read has a result: its price a meal and meals a week gone).
 // From here the reference is f60e19c's tree.
+// ⚠ RE-RECORDED at 0ef1455 (`--commit 0ef1455 --release-a --without-snack-cells`): SPEC-analytics.md § 16 items 1 and 2
+// (the offer email's clicks: the analytics script's branch for the offer page, which these pages never take, and the
+// open's via). Controls: the recorder with both flags at f60e19c reproduces f60e19c's record byte for byte, and at 1c8cf8a
+// (its cases, the code before) its record is f60e19c's (recorded_at apart). Against it: all six contents and every visible
+// page byte-identical; the six pages +224 bytes each, the script's lines alone. From here the reference is 0ef1455's tree.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -199,8 +204,8 @@ import { withoutSnackCells } from "./snack-cells.mjs";
 
 const golden = JSON.parse(await readFile(new URL("./u-04-golden.json", import.meta.url), "utf8"));
 
-test("U4: a normal week, the content and the page as served, byte-identical to f60e19c's (the page's updating lines apart)", async () => {
-  assert.equal(golden.recorded_at, "f60e19c");
+test("U4: a normal week, the content and the page as served, byte-identical to 0ef1455's (the page's updating lines apart)", async () => {
+  assert.equal(golden.recorded_at, "0ef1455");
   // SPEC-save-offer-production § 12: the pages as release (a) made them (its data/save.json), the rollback.
   // ⚠ Amended for SPEC-rung2-progress-and-checkout § 31.2 item 1 (2026-10-25): a snack link's photo part now carries its
   // snacks' cells; the week's data and the page are read with exactly those removed (test/snack-cells.mjs

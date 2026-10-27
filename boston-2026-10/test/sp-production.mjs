@@ -327,6 +327,26 @@ export const LATER = [
   // only what the template no longer names; data/messages.json's two removed phrases were printed only by those slots), so
   // the base keeps its own of them.
   ["bc39ee0", "f60e19c", ["src/template.html", "src/app.js"]],
+  // SPEC-analytics.md § 16 (2026-10-27: the offer email's clicks, and its visitors as their own source) moves the
+  // production page with `production` false by the analytics script's lines (src/analytics.js: the offer page's branch,
+  // which this page never takes, and the open's via) and the Worker by its vocabulary and layout (src/worker/beacon.js:
+  // `offer`, `via`, blob13 and blob14), from 1c8cf8a (its cases, on its contract's code) to 0ef1455 (its code, one
+  // commit). The base's `open` predates § 9 item 2's reading (`var x = …, qr = …` and its own `qr:` line), which the two
+  // hunks of the open's `via` name as context, so the diff is taken with one line of context (as § 13's entry), those two
+  // hunks are left out (the one line `via` added and the comment above `var x`), and the `via` line is put after the
+  // base's own `qr:` line (`insertAfter`), which § 9 item 2's transform in SP3 then rewrites as this tree's. The offer
+  // page's own files (src/worker/pages.js, redeem.js and the new page-script.json) are the development Worker's, which
+  // sp3's MOVED_WORKER_FILES names.
+  [
+    "1c8cf8a",
+    "0ef1455",
+    ["src/analytics.js", "src/worker/beacon.js"],
+    {
+      context: 1,
+      dropHunks: /^\+\s+(?:\/\/ since § 16 item 2 `via`|via: w\.location\.hash)/m,
+      insertAfter: [["src/analytics.js", '    qr: qr && QR_IDS.indexOf(qr[1]) >= 0 ? qr[1] : ""', ',\n    via: w.location.hash == "#from-email" ? "email" : ""']],
+    },
+  ],
 ];
 
 /** A unified diff without its hunks whose every changed line is a comment's (`*`, `//`, `/*` after the +/-). */
