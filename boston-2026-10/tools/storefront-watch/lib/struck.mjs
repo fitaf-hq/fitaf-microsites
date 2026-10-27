@@ -16,12 +16,23 @@ import { join } from "node:path";
 import { SITE_DIR } from "./config.mjs";
 
 export const STRUCK_KEY = "fitaf_struck";
-/** The surfaces, by the store's names: [name, selector]; the order page's meals are read in a section headed for meals. */
+/**
+ * The surfaces, by the store's names: [name, selector, kind]. Since SPEC-rung2-progress-and-checkout § 37 every section's
+ * card prices (the Additions' too), the size picker, the extras pop-up, the summary's lines, unit prices ("N x $X":
+ * `unit`), Subtotal (`subtotal`: the .summary__row whose label names it) and totals (`total`: the total + (the struck
+ * Subtotal - the Subtotal), the same .summary's).
+ */
 export const STRUCK_SURFACES = [
-  ["the meal plans page", ".meal-plan__fit-af-price>strong"],
-  ["the order page's meals", null],
-  ["the cart summary", "app-cart .segment-price,.mobile-cart-summary__stat-value"],
-  ["the checkout's Plan Total", ".summary__plan-total-value"],
+  ["the meal plans page", ".meal-plan__fit-af-price>strong", "plain"],
+  ["the size picker", ".meal-plan__fit-af-meal-options button>:not(.fitaf-was)", "plain"],
+  ["the order page's cards", ".product__content-price,.product-card-mobile__price", "plain"],
+  ["the extras pop-up", "app-extra-products-dialog .popular-card__price", "plain"],
+  ["the cart summary", "app-cart .segment-price,.mobile-cart-summary__stat-value,app-cart-product-card .product__price-original", "plain"],
+  ["the checkout's lines", ".summary__item-price-current", "plain"],
+  ["the unit prices", ".summary__item-price-unit", "unit"],
+  ["the Subtotal", null, "subtotal"],
+  ["the totals", ".summary__total-preview,.summary__total-value", "total"],
+  ["the checkout's Plan Total", ".summary__plan-total-value", "plain"],
 ];
 export const MEAL_PRICES = ".product__content-price,.product-card-mobile__price";
 export const MEAL_SECTION = { section: ".products__section", title: ".products__section-title", names: "\\bmeals\\b" };
@@ -45,21 +56,37 @@ export function recordStruck({ key, share, surfaces, meals, section }) {
     if (R.blockSeen) return;
     for (const m of ms) for (const n of m.addedNodes) if (n.nodeName === "SCRIPT" && (n.textContent || "").includes(key)) R.blockSeen = true;
   }).observe(document, { childList: true, subtree: true });
-  const figure = (t) => {
-    const m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)$/.exec(t);
-    if (!m) return null;
-    const c0 = Number(m[1].replace(/,/g, "")) * 100 + Number(m[2]);
-    if (!c0) return null;
-    const c = Math.round((c0 * 100) / (100 - share));
-    return `$${String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",")}.${String(c % 100).padStart(2, "0")}`;
+  const cents = (t) => {
+    const m = /^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)(\/meal)?$/.exec(t);
+    return m ? Number(m[1].replace(/,/g, "")) * 100 + Number(m[2]) : 0;
   };
+  const up = (c) => Math.round((c * 100) / (100 - share));
+  const money = (c) => `$${String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+$)/g, ",")}.${String(c % 100).padStart(2, "0")}`;
+  const figure = (t) => (cents(t) ? money(up(cents(t))) : null);
   const norm = (e) => e.textContent.replace(/\s+/g, " ").trim();
+  const subOf = (root) => {
+    const row = [...(root?.querySelectorAll(".summary__row") ?? [])].find((r) => r.firstElementChild && /^subtotal\b/i.test(norm(r.firstElementChild)));
+    return row && row.lastElementChild !== row.firstElementChild ? row.lastElementChild : null;
+  };
+  const wantOf = (p, kind) => {
+    if (!share) return null;
+    if (kind === "unit") {
+      const m = /^\d+ \u00d7 (\$\S+)$/.exec(norm(p));
+      return m ? figure(m[1]) : null;
+    }
+    if (kind === "total") {
+      const sub = subOf(p.closest(".summary"));
+      const b = sub && cents(norm(sub));
+      const t = cents(norm(p));
+      return b && t ? money(t + up(b) - b) : null;
+    }
+    return figure(norm(p));
+  };
   const targets = () => {
     const out = [];
-    for (const [name, sel] of surfaces) {
-      let list = sel ? [...document.querySelectorAll(sel)] : [];
-      if (!sel) for (const s of document.querySelectorAll(section.section)) if (new RegExp(section.names, "i").test(norm(s.querySelector(section.title) ?? s).slice(0, 80))) list = list.concat([...s.querySelectorAll(meals)]);
-      for (const p of list) out.push([name, p]);
+    for (const [name, sel, kind] of surfaces) {
+      const list = sel ? [...document.querySelectorAll(sel)] : [...document.querySelectorAll(".summary")].map(subOf).filter(Boolean);
+      for (const p of list) out.push([name, p, kind]);
     }
     return out;
   };
@@ -68,17 +95,19 @@ export function recordStruck({ key, share, surfaces, meals, section }) {
     const was = [...document.querySelectorAll(".fitaf-was")];
     R.seenWas = Math.max(R.seenWas, was.length);
     const all = targets();
-    if (all.some(([, p]) => figure(norm(p)))) R.pricedSeen = true;
+    if (all.some(([, p, kind]) => wantOf(p, kind) || figure(norm(p)))) R.pricedSeen = true;
     if (share && !was.length) return; // before the block runs (a paste comes after the cards), nothing is judged
     R.judged++;
     const faults = new Set();
     const priced = new Set();
     const shownNow = {};
-    for (const [name, p] of all) {
+    for (const [name, p, kind] of all) {
       {
-        const want = share ? figure(norm(p)) : null;
+        const want = wantOf(p, kind);
         const prev = p.previousElementSibling;
-        const beside = [...p.parentNode.children].filter((c) => c.matches(".fitaf-was"));
+        // The run of struck figures right before it (§ 37: a line's price and its unit price share one column).
+        const beside = [];
+        for (let e = prev; e && e.matches(".fitaf-was"); e = e.previousElementSibling) beside.push(e);
         if (!want) {
           if (beside.length && prev && prev.matches(".fitaf-was")) faults.add(`${name}: "${norm(p)}" struck as ${prev.textContent} (expected none)`);
           continue;

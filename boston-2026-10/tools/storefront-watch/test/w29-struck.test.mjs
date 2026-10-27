@@ -84,9 +84,12 @@ test("W29b: the smoke on the stand-in's priced surfaces — PASS, each surface's
     const s = run.outcome.struck;
     assert.ok(s.seenWas > 0 && s.judged > 0, `${width}: figures seen and judged (${JSON.stringify(s)})`);
     assert.deepEqual(s.faults, []);
-    assert.deepEqual(Object.keys(s.surfaces).sort(), ["the cart summary", "the checkout's Plan Total", "the order page's meals"], `${width}: ${JSON.stringify(s.surfaces)}`);
+    // § 37: the order page's cards (the Additions' too), the cart summary, and on the deep-carted checkout the lines, the
+    // Subtotal and the Plan Total (in the page, hidden by H11, H9 and H15) and the totals (the Total row displayed).
+    assert.deepEqual(Object.keys(s.surfaces).sort(), ["the Subtotal", "the cart summary", "the checkout's Plan Total", "the checkout's lines", "the order page's cards", "the totals"], `${width}: ${JSON.stringify(s.surfaces)}`);
     assert.equal(s.surfaces["the checkout's Plan Total"].displayed, 0, "the deep-carted checkout hides the Plan Total row (H15)");
-    assert.equal(s.surfaces["the order page's meals"].displayed, 1);
+    assert.equal(s.surfaces["the order page's cards"].displayed, 1);
+    assert.equal(s.surfaces["the totals"].displayed, 1, "the Total row displayed, struck by the totals' rule");
     const report = renderSmokeReport({ flag: false, script: "fill C", runs: [{ width, ...run }] }, "t");
     assert.match(report, /- W29: the struck prices \(fitaf_struck set by the smoke's init script\): the offer current on .* in New York, 25%; .*the checkout's Plan Total in the page, not displayed.*; each price struck once, item 3's figure \(SPEC-rung2-progress-and-checkout § 36\)/, report);
   }
