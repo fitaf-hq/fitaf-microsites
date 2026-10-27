@@ -7,21 +7,28 @@
 // live text, and read with the same URL reader. The reader is shown to bite (R2-71b): an absolute URL, a
 // protocol-relative one, a data: URI, a root-relative path, an image file and a host name planted in the text are each
 // found, and each fails the comparison. (The '<' rule is R2-58's.)
+// § 33 item 3 (2026-10-26; amended at § 33.2, the case the contract made stale, as R2-77 was at § 33.1): one more
+// address, the store site's contact page, allowed only WHOLE: its quoted string is taken out of the text before the URLs
+// are read, so its host alone (R2-71b's planted host name) or another page of that host (R2-71b) is still found.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MAX_SHIPPED_BYTES, storefrontFiles } from "../scripts/build-storefront.mjs";
 import * as link from "../scripts/handoff-link.mjs";
 import { liveText, urlsIn } from "./r2-live.mjs";
 
+/** § 33 item 3: the contact page, as the text quotes it (R2-77 requires it there, whole). */
+const CONTACT = JSON.stringify("https://fitafnutrition.com/contact");
+
 /** R2-71 over the files as the build composes them: ASCII, within the ceiling, and no URL `live` lacks. */
 function check(files, live) {
-  // § 17.3: R2-71's "no URL the live block lacks" is amended; the only addition is the fixed list of the sheet's hosts.
+  // § 17.3: R2-71's "no URL the live block lacks" is amended; the only addition is the fixed list of the sheet's hosts,
+  // and since § 33 the contact page, whole (its quoted string taken out before the URLs are read).
   const allowed = new Set([...urlsIn(live), ...urlsIn(JSON.stringify(link.PHOTO_HOSTS ?? []))]);
   for (const f of files) {
     const outside = [...f.content].filter((ch) => ch.charCodeAt(0) > 0x7f);
     assert.deepEqual(outside, [], `${f.name}: every character ASCII`);
     assert.ok(f.bytes <= MAX_SHIPPED_BYTES, `${f.name}: ${f.bytes} bytes, at most ${MAX_SHIPPED_BYTES}`);
-    assert.deepEqual(urlsIn(f.content).filter((u) => !allowed.has(u)), [], `${f.name}: no URL the live block lacks`);
+    assert.deepEqual(urlsIn(f.content.split(CONTACT).join('""')).filter((u) => !allowed.has(u)), [], `${f.name}: no URL the live block lacks`);
   }
 }
 
@@ -43,6 +50,8 @@ test("R2-71b: the URL reader bites — each planted address is found, and fails 
     ["a root-relative path", 'i.src = "/assets/fitaf";', "/assets/fitaf"],
     ["an image file", 'i.src = "fitaf-logo.webp";', "fitaf-logo.webp"],
     ["a host name", 'var host = "fitafnutrition.com";', "fitafnutrition.com"],
+    // § 33.2: the contact page is allowed whole, never its host's other pages.
+    ["another page of the contact page's host", 'var page = "https://fitafnutrition.com/account";', "https://fitafnutrition.com/account"],
   ];
   for (const [what, line, url] of planted) {
     assert.ok(urlsIn(`${live}\n${line}`).includes(url), `${what}: found (${url})`);

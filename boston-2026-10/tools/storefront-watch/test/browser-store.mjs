@@ -180,7 +180,8 @@ ${sub.tail}<div class="summary__discounts"><div class="checkout-discounts">${dis
 <div class="summary__row"><span>Subtotal</span><span>$87.50</span></div>
 <div class="summary__row"><span>Shipping</span><span>$0.00</span></div>
 <div class="summary__row"><span>Tax</span><span>$0.00</span></div>
-${cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Discount (OFFER)</span><span>-$5.00</span></div>' : ""}
+${cfg.discountRow === "live" ? '<div class="summary__row summary__row--discount"><span><button type="button" class="summary__remove">x</button> Coupon OFFER </span><span>-$5.00</span></div>'
+    : cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Discount (OFFER)</span><span>-$5.00</span></div>' : ""}
 <div class="summary__total"><span class="summary__total-label">Total</span><span class="summary__total-value">$87.50</span></div>
 <div class="summary__totals"></div>
 <div class="summary__mobile-bar"><div class="summary__bar-row"><span class="summary__stat">Order total</span>
@@ -214,7 +215,9 @@ function shellParts(cfg) {
  * as the store's own overlays are: a manual popover), hangAtStart (the page's setTimeout runs nothing from the moment
  * the Footer text is placed: a hang planted before the first press), routeHeld (CHECKOUT's route waits for
  * window.__fixtureRoute()). § 10: tip ("section", the default; "bare"; "none"), tipChosen,
- * discountRow, banner (the app banner and its reserved margin), extrasOpenMs (the store fetching its extras before it
+ * discountRow (a second discount row, "Discount (OFFER)"; since § 33.2, "live" draws it as the live store draws a
+ * code's row, its own remove control first: "x Coupon OFFER -$5.00"), banner (the app banner and its reserved margin),
+ * extrasOpenMs (the store fetching its extras before it
  * opens the dialog), continueDelayMs (its CONTINUE disabled that long), continueNever (disabled for good). § 12:
  * honoursKey (as the store: the order page clears sessionStorage's ecc_additions_prompt_handled when it starts, CHECKOUT
  * skips the extras dialog when the key is "true", and the dialog's CONTINUE sets it; otherwise the key is ignored, as a
@@ -227,7 +230,9 @@ function shellParts(cfg) {
  * does, 300 ms later as a server's answer would: "apply", the default, accepts the code `zero`, any case, and refuses
  * every other; "refuse" refuses every code; "silent" shows nothing), zeroRow (the sign of an accepted code is a summary
  * row, `.summary__row--discount` "Discount (ZERO)", in place of the default's applied mark beside the field,
- * `.discount__applied`), zeroApplied (the code already applied when the page starts, as a store that kept it), and
+ * `.discount__applied`; since § 33, "live" draws the row as § 33.1 measured it on the live store, after Subtotal:
+ * a remove control and "Coupon ZERO", then "-$0.00"; and window.__fixtureRerender() draws every price row again as new
+ * elements), zeroApplied (the code already applied when the page starts, as a store that kept it), and
  * footerOnCheckout (a /checkout loaded on its own, a reload, places the Footer text too, as the store's Custom Scripts
  * do on every page). An Apply reads the field's own value as its `input` events gave it, not the DOM's, and is disabled
  * while that is empty. Each press is logged ("[fixture] discount pressed: <value>"), then "[fixture] discount applied:
@@ -370,7 +375,14 @@ function appHtml(cfg) {
   // empty; a press is answered 300 ms later by cfg.zero. An accepted code is kept (sessionStorage) and its sign shown.
   function codeApplied(field) {
     var at = field || root.querySelector("input[name^=coupon-]");
-    if (cfg.zeroRow) {
+    if (cfg.zeroRow === "live") {
+      // § 33.1, measured on the live store (2026-10-26, 1280): the row after Subtotal, its remove control and the code's
+      // name in one span, the amount in the other.
+      var live = el("div", "summary__row summary__row--discount"), name = el("span");
+      name.appendChild(el("button", "summary__remove", "x")).type = "button"; name.appendChild(document.createTextNode(" Coupon ZERO "));
+      live.appendChild(name); live.appendChild(el("span", null, "-$0.00"));
+      root.querySelector(".summary__row").after(live);
+    } else if (cfg.zeroRow) {
       var row = el("div", "summary__row summary__row--discount"); row.appendChild(el("span", null, "Discount (ZERO)")); row.appendChild(el("span", null, "-$0.00"));
       var total = root.querySelector(".summary__total"); total.parentNode.insertBefore(row, total);
     } else if (at) at.closest(".checkout-discounts").appendChild(el("span", "discount__applied", "ZERO"));
@@ -535,6 +547,17 @@ function appHtml(cfg) {
     root.querySelector(".checkout__pay").onclick = pay;
     root.querySelector(".checkout__pay-mobile").onclick = pay;
     codeFields();
+    // § 33: the store drawing its summary again, as Angular does when its data changes: every price row replaced by a new
+    // element with the store's own classes and content (no class of the block's kept).
+    window.__fixtureRerender = function () {
+      root.querySelectorAll(".summary__row").forEach(function (r) {
+        var n = document.createElement("div");
+        n.className = [].filter.call(r.classList, function (k) { return k.indexOf("fitaf-") !== 0; }).join(" ");
+        n.innerHTML = r.innerHTML;
+        r.replaceWith(n);
+      });
+      console.log("[fixture] summary re-rendered");
+    };
     if (cfg.validity) {
       root.querySelectorAll("[formcontrolname]").forEach(function (c) {
         c.addEventListener(c.localName === "select" ? "change" : "input", function () { c.__dirty = true; c.__refused = false; ngSync(); });
