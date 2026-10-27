@@ -16,18 +16,27 @@
 // from src/storefront/meal-key.js (§ 11 item 2: the link tool imports the same one); and, for rung 2's two faces
 // (SPEC-rung2-progress-and-checkout § 1), the progress screen's words from data/messages.json (`handoff`) at the UI
 // slot and its colours, the page's own tokens from src/template.html, at the TOKENS slot. R2-32 pins the text's SHA-256.
+// Since SPEC-rung2-progress-and-checkout § 36 (item 9), the text is the hand-off's followed by the struck prices' own
+// source, src/storefront/fitaf-struck.js, built the same way (its full-line comments dropped), data/offers.json's general
+// offers with percent_off inlined at its OFFERS slot and the page's --muted token at its MUTED slot: one block, one paste.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadJson, MESSAGES_PATH, PLANS_PATH, ROOT } from "../build.mjs";
+import { loadJson, MESSAGES_PATH, OFFERS_PATH, PLANS_PATH, ROOT } from "../build.mjs";
 import { mealKey } from "../src/storefront/meal-key.js";
 import { PHOTO_HOSTS } from "../src/storefront/photo-hosts.js";
 import { pageTokens, TEMPLATE_PATH } from "./flow-theme.mjs";
 
 export const STOREFRONT_SOURCE = join(ROOT, "src", "storefront", "fitaf-handoff.js");
 export const DIST_STOREFRONT = join(ROOT, "dist-storefront");
+/** § 36 item 9: the struck prices' own source, shipped after the hand-off's text in the same block. */
+export const STRUCK_SOURCE = join(ROOT, "src", "storefront", "fitaf-struck.js");
+/** § 36 item 2: the slot for the offers, [share, valid_from, valid_to] each; item 5: the slot for the --muted token. */
+const OFFERS_SLOT = "/*OFFERS*/ []";
+const MUTED_SLOT = "/*MUTED*/";
+const OFFER_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /**
  * SPEC-rung2 § 11 item 5: the TARGET; a file above it is built with a warning. Measured over each whole file, tags and
  * version line included, as the ceiling is.
@@ -69,6 +78,8 @@ const HOSTS_SLOT = "/*HOSTS*/ []";
  * Since SPEC-rung2-progress-and-checkout § 25, the three-step checkout's: the bar's names (`steps`), Continue at steps 1
  * and 2 (`to_delivery`, `to_payment`), `back`, and the recap before the Total (`recap`, with {n}). Since
  * SPEC-snacks-in-the-cart § 3.6, the recap with snacks (`recap_snacks`, with {n} and {s}), read only by a source that carts them.
+ * `save` (SPEC-rung2-progress-and-checkout § 35) is read by no source since § 36 item 8 removed the save link (and
+ * data/messages.json no longer has it); it stays listed so the blocks built before § 36 rebuild from their own commits.
  */
 const UI_WORDS = ["title", "step", "checkout", "stopped", "steps", "to_delivery", "to_payment", "back", "recap", "recap_snacks", "contact", "save"];
 /** § 25: the step bar's names are `steps` split at this separator (the block splits it the same way), exactly three. */
@@ -83,7 +94,7 @@ export const SCREEN_TOKENS = ["--navy", "--cta", "--ice", "--white", "--muted"];
 /** A whole line that is only a `//` comment. The script has no template literal, so such a line is always one. */
 const SOURCE_ONLY_COMMENT = /^[ \t]*\/\/.*\n/gm;
 /** A change to any of these changes a text, so any of them uncommitted marks the version line "-dirty". */
-const INPUTS = ["src/storefront", "data/plans.json", "data/messages.json", "src/template.html", "scripts/build-storefront.mjs", "scripts/flow-theme.mjs"];
+const INPUTS = ["src/storefront", "data/plans.json", "data/messages.json", "data/offers.json", "src/template.html", "scripts/build-storefront.mjs", "scripts/flow-theme.mjs"];
 const bytesText = (n) => n.toLocaleString("en-US");
 
 export const sha256 = (text) => createHash("sha256").update(text, "utf8").digest("hex");
@@ -172,6 +183,34 @@ export function screenTokens(templateHtml, used = SCREEN_TOKENS) {
 }
 
 /**
+ * § 36 item 2: data/offers.json's general offers that carry percent_off, as [share, valid_from, valid_to], checked: a share
+ * not a whole number from 1 to 99, or a date not YYYY-MM-DD, or valid_to before valid_from, refuses the build.
+ */
+export function struckOffers(offers) {
+  return (offers.offers ?? [])
+    .filter((o) => o.applies_to === "general" && o.percent_off !== undefined)
+    .map((o) => {
+      if (!Number.isInteger(o.percent_off) || o.percent_off < 1 || o.percent_off > 99) throw new Error(`data/offers.json: offer ${o.id}'s percent_off must be a whole number from 1 to 99`);
+      if (!OFFER_DATE.test(o.valid_from ?? "") || !OFFER_DATE.test(o.valid_to ?? "") || o.valid_to < o.valid_from) throw new Error(`data/offers.json: offer ${o.id}'s valid_from and valid_to must be dates, in order`);
+      return [o.percent_off, o.valid_from, o.valid_to];
+    });
+}
+
+/** § 36: the struck prices' text: its source without its full-line comments, the offers and the --muted token inlined. */
+export async function struckText({ struckPath = STRUCK_SOURCE, offersPath = OFFERS_PATH, templatePath = TEMPLATE_PATH } = {}) {
+  const source = await readFile(struckPath, "utf8");
+  for (const slot of [OFFERS_SLOT, MUTED_SLOT]) {
+    if (source.split(slot).length !== 2) throw new Error(`${struckPath}: expected one ${slot}`);
+  }
+  const muted = screenTokens(await readFile(templatePath, "utf8"), ["--muted"]).split(":")[1];
+  const offers = struckOffers(await loadJson(offersPath));
+  return source
+    .replace(SOURCE_ONLY_COMMENT, "")
+    .replace(OFFERS_SLOT, () => `/* data/offers.json */ ${JSON.stringify(offers)}`)
+    .replace(MUTED_SLOT, () => muted);
+}
+
+/**
  * The shipped text: the source without its full-line `//` comments, the plans' allowed totals inlined at TOTALS (a
  * source from before SPEC-rung2-fill-c § 8: the plans' own counts at COUNTS), the screen's words at UI and its colours
  * at TOKENS, and the meal-key function's own text at KEY (inlined last, so it is exactly the module's). The source's
@@ -182,6 +221,10 @@ export async function storefrontText({
   plansPath = PLANS_PATH,
   messagesPath = MESSAGES_PATH,
   templatePath = TEMPLATE_PATH,
+  offersPath = OFFERS_PATH,
+  // § 36 item 9: the struck prices follow the hand-off's own source; a source from another commit (R2-71 rebuilds the
+  // live block from its own commit) gets none unless asked for.
+  struckPath = sourcePath === STOREFRONT_SOURCE ? STRUCK_SOURCE : null,
 } = {}) {
   const source = await readFile(sourcePath, "utf8");
   const tables = [TOTALS_SLOT, COUNTS_SLOT].filter((slot) => source.includes(slot));
@@ -193,13 +236,14 @@ export async function storefrontText({
   const words = screenWords(await loadJson(messagesPath), UI_WORDS.filter((word) => source.includes(`UI.${word}`)));
   const tokens = screenTokens(await readFile(templatePath, "utf8"), SCREEN_TOKENS.filter((name) => source.includes(`var(${name})`)));
   const table = (rows) => `/* data/plans.json, read_on ${plans.read_on} */ ${JSON.stringify(rows)}`;
-  return source
+  const handoff = source
     .replace(SOURCE_ONLY_COMMENT, "")
     .replace(tables[0], () => table(tables[0] === TOTALS_SLOT ? countTable(plans) : planCounts(plans)))
     .replace(UI_SLOT, () => asciiJson(words))
     .replace(TOKENS_SLOT, () => tokens)
     .replace(HOSTS_SLOT, () => JSON.stringify(PHOTO_HOSTS))
     .replace(KEY_SLOT, () => mealKey.toString());
+  return struckPath ? handoff + (await struckText({ struckPath, offersPath, templatePath })) : handoff;
 }
 
 /** The commit the texts are built from, "-dirty" if any input differs from it: the line never overstates. */
@@ -210,8 +254,8 @@ export function gitCommit() {
 }
 
 /** The two files of one text, as the build writes them, not yet checked or written (R2-58 scans them). */
-export async function storefrontFiles({ sourcePath = STOREFRONT_SOURCE, commit = gitCommit() } = {}) {
-  const text = await storefrontText({ sourcePath });
+export async function storefrontFiles({ sourcePath = STOREFRONT_SOURCE, struckPath = undefined, commit = gitCommit() } = {}) {
+  const text = await storefrontText({ sourcePath, struckPath });
   const consoleFile = versionLine(text, commit) + text;
   return [
     [FOOTER_FILE, `<script>\n${consoleFile}</script>\n`],
@@ -222,8 +266,8 @@ export async function storefrontFiles({ sourcePath = STOREFRONT_SOURCE, commit =
 /** A file's text without the Footer block's own wrapper: what must hold no `<` at all. */
 const unwrapped = (f) => (f.name === FOOTER_FILE ? f.content.slice("<script>\n".length, -"</script>\n".length) : f.content);
 
-export async function buildStorefront({ outDir = DIST_STOREFRONT, sourcePath = STOREFRONT_SOURCE, commit = gitCommit() } = {}) {
-  const files = await storefrontFiles({ sourcePath, commit });
+export async function buildStorefront({ outDir = DIST_STOREFRONT, sourcePath = STOREFRONT_SOURCE, struckPath = undefined, commit = gitCommit() } = {}) {
+  const files = await storefrontFiles({ sourcePath, struckPath, commit });
   // Refuse before writing anything: a `<` in the text (the store's admin would read a tag in it; nor can the text then
   // close its own <script> early), or a file over the limit.
   for (const f of files) {

@@ -3,7 +3,9 @@
 // been dealt with", IMMEDIATELY BEFORE it presses the store's CHECKOUT, and at no other moment; nothing else is ever
 // written or read, in sessionStorage or anywhere. R2-62: an ordinary visit (R2-04's stub already throws on
 // sessionStorage) and every link refused before CHECKOUT touch no storage at all. The store's own use of the key, and
-// what it saves the visitor, is R2-59 in the watch package, in Chrome.
+// what it saves the visitor, is R2-59 in the watch package, in Chrome. Since SPEC-rung2-progress-and-checkout § 36 the
+// shipped text's struck prices read sessionStorage fitaf_struck once on every page (item 1, held by R2-04b): these
+// cases are the hand-off's rule and run the hand-off's own text (handoffScript, item 9).
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -17,8 +19,8 @@ import {
   orderPage,
   PAGE,
   rawFragment,
+  handoffScript as script,
   run,
-  script,
   untouchableStorage,
 } from "./r2-harness.mjs";
 

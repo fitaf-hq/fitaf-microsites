@@ -27,7 +27,8 @@
 //   W28e  the smoke on the stand-in with § 35's block, at 1280 and 390: PASS (W11 allowing the link hidden at steps 1
 //         and 2); a#fitaf-save read once at each step, displayed at step 3 alone, its words handoff.save, its href
 //         https://eatfitaf.com/#save, target _blank, rel noopener, 14 px, above the contact link; the line says so; and
-//         the contact link's line unchanged.
+//         the contact link's line unchanged. § 36 item 10 (2026-10-27): the shipped block has no save link (item 8), so
+//         W28e is now: PASS, the link at no step of the walk, and the line ABSENT (W11's clause for it gone).
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -204,17 +205,15 @@ test("W28c: a text without the link (a block from before § 33) — the smoke st
   assert.ok(report.includes("- W28: the link to customer service (a#fitaf-help): ABSENT"), report);
 });
 
-test("W28e: § 35's block on the stand-in — PASS, W11 allowing the save link hidden at steps 1 and 2; the link read at each step, displayed at step 3 alone (1280, 390)", { skip, timeout: 120_000 }, async () => {
+test("W28e: § 36's block on the stand-in — PASS, the save link at no step of the walk, W28's line ABSENT (1280, 390)", { skip, timeout: 120_000 }, async () => {
   store.set({ zeroRow: "live" });
   for (const width of [1280, 390]) {
     const run = await smoke(width);
     assert.deepEqual(run.verdict, { pass: true, reasons: [] }, `${width}: ${run.verdict.reasons.join("; ")}`);
     const c = run.outcome.faces.checkout;
-    assert.deepEqual(c.steps.map((s) => [s.step, s.save?.count, s.save?.displayed]), [[1, 1, false], [2, 1, false], [3, 1, true]], `${width}: ${JSON.stringify(c.steps.map((s) => s.save))}`);
-    const three = c.steps[2].save;
-    assert.deepEqual(three, { count: 1, tag: "a", text: words.save, href: SAVE, target: "_blank", rel: "noopener", fontPx: 14, displayed: true, inCheckout: true, above: true }, `${width}: ${JSON.stringify(three)}`);
+    assert.deepEqual(c.steps.map((s) => [s.step, s.save?.count]), [[1, 0], [2, 0], [3, 0]], `${width}: ${JSON.stringify(c.steps.map((s) => s.save))}`);
     const report = renderSmokeReport({ flag: false, script: "fill C", runs: [{ width, ...run }] }, "t");
-    assert.ok(report.includes(`- W28: the save link (a#fitaf-save): once, "${words.save}", ${SAVE}, target _blank, rel noopener, 14 px, displayed at step 3, above the contact link`), report);
+    assert.ok(report.includes("- W28: the save link (a#fitaf-save): ABSENT"), report);
     assert.ok(report.includes(`- W28: the link to customer service (a#fitaf-help): once, "${words.contact}", ${HELP}, 14 px, displayed, in app-checkout`), "the contact link's line unchanged");
   }
 });

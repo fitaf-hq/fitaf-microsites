@@ -178,8 +178,8 @@ ${tipHtml(cfg)}
 <a class="summary__plan-return" href="/order?mpid=21">← Return to Lean Plan 7 Meals</a><div class="summary__items"></div></div>
 ${sub.tail}<div class="summary__discounts"><div class="checkout-discounts">${discounts("summary", cfg)}</div></div>
 <div class="summary__row"><span>Subtotal</span><span>$87.50</span></div>
-<div class="summary__row"><span>Shipping</span><span>$0.00</span></div>
-<div class="summary__row"><span>Tax</span><span>$0.00</span></div>
+<div class="summary__row"><span>Shipping</span><span>${cfg.prices ? "$4.99" : "$0.00"}</span></div>
+<div class="summary__row"><span>Tax</span><span>${cfg.prices ? "$1.23" : "$0.00"}</span></div>
 ${cfg.discountRow === "live" ? '<div class="summary__row summary__row--discount"><span><button type="button" class="summary__remove">x</button> Coupon OFFER </span><span>-$5.00</span></div>'
     : cfg.discountRow ? '<div class="summary__row summary__row--discount"><span>Discount (OFFER)</span><span>-$5.00</span></div>' : ""}
 <div class="summary__total"><span class="summary__total-label">Total</span><span class="summary__total-value">$87.50</span></div>
@@ -270,6 +270,17 @@ function appHtml(cfg) {
   .summary__item-addon { font-size: 11px; padding: 2px 6px; background: #eee; }
   .summary__item-quantity-controls { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
   .summary__item-price { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+  .meal-plan__fit-af-price { display: flex; align-items: baseline; gap: 4px; }
+  .meal-plan__fit-af-price strong { font-size: 24px; font-weight: 900; }
+  .product__content-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .product__content-price { margin-left: auto; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .product-card-mobile__price-row { display: flex; align-items: center; }
+  .product-card-mobile__price { font-size: 12px; font-weight: 700; }
+  .order-type__content-single { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .mobile-cart-summary__stats { display: flex; gap: 10px; }
+  .mobile-cart-summary__stat { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .summary__plan-total { display: flex; justify-content: space-between; align-items: center; }
+  .summary__plan-total-prices { display: flex; align-items: center; gap: 6px; }
   @media (max-width: 1024px) {
     .checkout__submit { display: none; }
     .summary__mobile-bar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; background: #fff; }
@@ -313,7 +324,18 @@ function appHtml(cfg) {
       h.replaceChildren();
       if (n) h.appendChild(el("span", "cart__items-count", n + (n === 1 ? " item" : " items")));
     });
-    document.querySelectorAll(".mobile-cart-summary__stat-value").forEach(function (s) { s.textContent = String(n); });
+    document.querySelectorAll(".mobile-cart-summary__stat-value:not([data-fixture-total])").forEach(function (s) { s.textContent = String(n); });
+    // § 36 (cfg.prices): the cart summary's figures, as the probe measured them: the sidebar's span.segment-price above
+    // "One Time Order" (its order type drawn once the plan holds a meal) and the bar's "Cart Total".
+    if (!cfg.prices) return;
+    document.querySelectorAll("[data-fixture-total]").forEach(function (s) { s.textContent = money(n * ${PRICE_CENTS}); });
+    document.querySelectorAll("app-cart").forEach(function (c) {
+      c.replaceChildren();
+      if (!n) return;
+      var t = el("div", "cart__order-type order-type"), o = el("div", "order-type__content"), one = el("div", "order-type__content-single");
+      one.appendChild(el("span", "segment-price", money(n * ${PRICE_CENTS}))); one.appendChild(el("span", "segment-label", "One Time Order"));
+      o.appendChild(one); t.appendChild(o); c.appendChild(t);
+    });
   }
   function save() { localStorage.setItem("hmp_pending_plan_items", JSON.stringify({ "21": pending })); }
   // A press of a meal's Add to Cart or "+": counted as the schedule says, at once when ackMs is 0 (so a planted hang,
@@ -459,13 +481,60 @@ function appHtml(cfg) {
     box.appendChild(img);
     return box;
   }
+  function section(title) {
+    var sec = el("div", "products__section"), list = el("div", "products__section-list");
+    sec.appendChild(el("h2", "products__section-title", title)); sec.appendChild(list); root.appendChild(sec);
+    return list;
+  }
+  // § 36: the Additions, priced as the store prices its own (never struck): a snack whose price is "From $9.00" and
+  // whose card has Select Options, an extra at a meal's own price ($12.50), and one with an add-on pill "+$2.00".
+  var ADDITIONS = [["Protein Bites", "From $9.00", null], ["Side of Rice", money(${PRICE_CENTS}), null], ["Cold Brew", "$4.50", "Large +$2.00"]];
+  function additions() {
+    var list = section("Additions (Additions)");
+    ADDITIONS.forEach(function (a) {
+      var card = el("app-product-card"), meta = el("div", "product__content-meta"), mobile = el("app-product-card-mobile"), row = el("div", "product-card-mobile__price-row");
+      meta.appendChild(el("span", "product__content-price", a[1])); card.appendChild(meta);
+      card.appendChild(el("h2", "product__content-title", " " + a[0] + " "));
+      if (a[2]) card.appendChild(el("span", "dropdown__value-text", a[2]));
+      card.appendChild(el("button", "product__toggle", "Select Options"));
+      row.appendChild(el("span", "product-card-mobile__price", a[1])); mobile.appendChild(row);
+      mobile.appendChild(el("h2", "product-card-mobile__title", a[0]));
+      list.appendChild(card); list.appendChild(mobile);
+    });
+  }
+  // § 36: the meal plans page (/meal-plans), as the probe measured it: one card per plan, its lowest price per meal a
+  // strong in div.meal-plan__fit-af-price ("As low as", the strong, "/meal"). The front page (/) draws no price.
+  var PLANS = [["Lean", 1150], ["Signature", 1300], ["Performance", 1400], ["Family", 3800]];
+  function renderPlans() {
+    root.innerHTML = "";
+    if (location.pathname !== "/meal-plans") return root.appendChild(el("h1", null, "Synthetic store"));
+    PLANS.forEach(function (p) {
+      var card = el("article", "meal-plan__fit-af-card"), copy = el("div", "meal-plan__fit-af-card-copy"), price = el("div", "meal-plan__fit-af-price");
+      copy.appendChild(el("h2", null, p[0]));
+      price.appendChild(el("span", null, "As low as")); price.appendChild(el("strong", null, money(p[1]))); price.appendChild(el("small", null, "/meal"));
+      copy.appendChild(price); card.appendChild(copy); root.appendChild(card);
+    });
+  }
+  // § 36, ST5: the store drawing its prices again, as Angular does: a price's text changed, its element replaced by a
+  // new one of the same class, the meals' list re-ordered.
+  window.__fixturePrices = {
+    text: function (sel, k, t) { document.querySelectorAll(sel)[k].textContent = t; },
+    replace: function (sel, k) { var o = document.querySelectorAll(sel)[k], n = el(o.localName, o.className, o.textContent); o.replaceWith(n); },
+    reverse: function () { var l = document.querySelector(".products__section-list"); [].slice.call(l.children).reverse().forEach(function (c) { l.appendChild(c); }); },
+  };
   function renderOrder() {
     root.innerHTML = "";
     if (cfg.honoursKey) sessionStorage.removeItem(KEY); // as the store's order page does when it starts
+    // § 36 (cfg.prices): the order page's two sections as the probe measured them (storefront/probe-prices/2026-10-27/),
+    // div.products__section headed h2.products__section-title, "All Meals" then "Additions (Additions)"; each card's own
+    // price (span.product__content-price in its meta row; the phone card's span.product-card-mobile__price).
+    var list = root;
+    if (cfg.prices) list = section("All Meals");
     ${JSON.stringify(MEALS)}.forEach(function (name, i) {
       var card = el("app-product-card");
       var pic = photo(name, i);
       if (pic) card.appendChild(pic);
+      if (cfg.prices) { var meta = el("div", "product__content-meta"); meta.appendChild(el("span", "product__content-price", money(${PRICE_CENTS}))); card.appendChild(meta); }
       card.appendChild(el("h2", "product__content-title", " " + name + " "));
       var actions = el("div", "product__actions");
       var b = el("button");
@@ -483,12 +552,14 @@ function appHtml(cfg) {
         // The planted hang: from here on the page's timers run nothing, so fill B's next poll never comes.
         if (cfg.hangAfter && pending.length >= cfg.hangAfter) window.setTimeout = function () { return 0; };
       };
-      actions.appendChild(b); card.appendChild(actions); root.appendChild(card);
+      actions.appendChild(b); card.appendChild(actions); list.appendChild(card);
+      if (cfg.prices) { var row = el("div", "product-card-mobile__price-row"); row.appendChild(el("span", "product-card-mobile__price", money(${PRICE_CENTS}))); mobile.appendChild(row); }
       mobile.appendChild(el("h2", "product-card-mobile__title", name)); // the real store's mobile title class
       // Without cfg.counter, the mobile card's "+" stands alone, as before; with it, the live store's "Add" in its actions.
       if (COUNTER) { mActions.appendChild(mb); mobile.appendChild(mActions); MEAL[name] = { actions: actions, mActions: mActions, b: b, mb: mb }; } else mobile.appendChild(mb);
-      root.appendChild(mobile);
+      list.appendChild(mobile);
     });
+    if (cfg.prices) additions();
     [["bar", " CHECKOUT ", "mobile-cart-summary__checkout-button"], ["side", " CHECKOUT NOW ", "cart__checkout"]].forEach(function (p) {
       var box = el("div", COUNTER ? p[0] + " " + p[2] : p[0]);
       if (COUNTER && p[0] === "side") {
@@ -498,11 +569,18 @@ function appHtml(cfg) {
         box.appendChild(least); box.appendChild(el("div", "cart__items-header"));
       }
       if (COUNTER && p[0] === "bar") {
-        var stat = el("div", "mobile-cart-summary__stat");
+        var stat = el("div", "mobile-cart-summary__stat"), stats = cfg.prices ? el("div", "mobile-cart-summary__stats") : box;
         stat.appendChild(el("span", "mobile-cart-summary__stat-label", "Items"));
         stat.appendChild(el("span", "mobile-cart-summary__stat-value", "0"));
-        box.appendChild(stat);
+        stats.appendChild(stat);
+        if (cfg.prices) {
+          var cart = el("div", "mobile-cart-summary__stat"), v = el("span", "mobile-cart-summary__stat-value", money(0));
+          v.setAttribute("data-fixture-total", "");
+          cart.appendChild(el("span", "mobile-cart-summary__stat-label", "Cart Total")); cart.appendChild(v);
+          stats.appendChild(cart); box.appendChild(stats);
+        }
       }
+      if (cfg.prices && p[0] === "side") box.appendChild(el("app-cart"));
       var b = el("button", "checkout-control");
       b.setAttribute("data-label", p[1]);
       b.onclick = function () { console.log("[fixture] pressed" + p[1].trimEnd()); onCheckout(); };
@@ -537,9 +615,11 @@ function appHtml(cfg) {
       var price = el("div", "summary__item-price"); price.appendChild(el("span", "summary__item-price-current", money(${PRICE_CENTS}))); line.appendChild(price);
       items.appendChild(line);
     });
-    var plan = el("div", cfg.storeLines ? "summary__plan-total" : "plan-total");
-    plan.appendChild(el("span", cfg.storeLines ? "summary__plan-total-label" : null, "Plan Total (" + n + " items)"));
-    var amount = el("span"); amount.appendChild(el("span", null, money(total))); plan.appendChild(amount);
+    var plan = el("div", cfg.storeLines || cfg.prices ? "summary__plan-total" : "plan-total");
+    plan.appendChild(el("span", cfg.storeLines || cfg.prices ? "summary__plan-total-label" : null, "Plan Total (" + n + " items)"));
+    // § 36 (cfg.prices): the Plan Total's figure as the probe measured it, span.summary__plan-total-value alone in
+    // span.summary__plan-total-prices.
+    var amount = el("span", cfg.prices ? "summary__plan-total-prices" : null); amount.appendChild(el("span", cfg.prices ? "summary__plan-total-value" : null, money(total))); plan.appendChild(amount);
     totals.appendChild(plan);
     var sub = el("div", "subtotal");
     sub.appendChild(el("span", null, "Subtotal | " + n + " items")); sub.appendChild(el("span", null, money(total)));
@@ -608,7 +688,7 @@ function appHtml(cfg) {
     if (cfg.hangAtStart) window.setTimeout = function () { return 0; };
     if (cfg.footer !== null) { var s = document.createElement("script"); s.text = cfg.footer; document.body.appendChild(s); }
   }, 150);
-  setTimeout(renderOrder, cfg.orderAfterMs);
+  if (location.pathname !== "/order") renderPlans(); else setTimeout(renderOrder, cfg.orderAfterMs);
 })();
 </script></body></html>
 `;
@@ -652,6 +732,7 @@ const DEFAULTS = {
   zeroApplied: false,
   footerOnCheckout: false,
   orderAfterMs: 400,
+  prices: false,
 };
 
 /** Start the store on an ephemeral port. `store.set(cfg)` changes what the next page load gets. */
@@ -662,7 +743,7 @@ export async function startStore() {
   const server = createServer((req, res) => {
     requests.push(req.url);
     const path = new URL(req.url, "http://127.0.0.1").pathname;
-    if (path === "/order" || path === "/checkout") {
+    if (path === "/order" || path === "/checkout" || path === "/" || path === "/meal-plans") {
       res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
       res.end(appHtml(cfg));
     } else if (path === LOGO_PATH) {

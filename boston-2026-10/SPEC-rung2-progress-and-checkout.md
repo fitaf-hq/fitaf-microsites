@@ -1946,3 +1946,261 @@ and 390, no flag.**
 **Left**: merged into the dev line before the paste; the page half
 (SPEC-ui-and-copy-pass § 6, `https://eatfitaf.com/#save`) live, then the Advisor's paste, then the live smoke at once;
 ⬜ the words, his to edit.
+
+## 36. Amendment, 2026-10-27: the full price struck beside the store's, for visitors from eatfitaf.com; § 35's link removed. CONTRACT, before any code
+
+**The Advisor**, `ts=2026-10-27T15:12:46.204Z`: *"Turn eatfitaf.com into a redirect to the existing site … Then use the
+redirect to trigger a footer script that adds struck-through pricing next to the actual HMP pricing. This should be
+rather lightweight and purely cosmetic."* His answers (`AskUserQuestion`, `ts=2026-10-27T15:20:48.053Z`): the struck
+price on **the meal plans page, the order page's meal prices, the cart summary and the checkout's Plan Total**; the
+Footer's *Save my offer* link goes. The redirect and its marker are `SPEC-the-redirect.md` (branch `boston/redirect`,
+`d59aec4`): eatfitaf.com's home page answers a 302 to `https://fitafnutrition.com/` with
+`utm_source=eatfitaf&utm_medium=<qr|email|direct>[&utm_campaign=<event>]`. The rule for the figure is the plan page's
+own, `SPEC-ui-and-copy-pass.md` § 1.2 item 2 (*"It is currently \*impossible\* to pay the non-discounted price"*): the
+store's price is the price paid, and the struck one is the higher.
+
+1. **Who sees it.** A visitor whose landing address carries `utm_source=eatfitaf` exactly: the document's navigation
+   entry (`performance.getEntriesByType("navigation")[0].name`, the address the document was loaded at, which the
+   store's router cannot rewrite), or `location.href` where there is none. The block then writes `sessionStorage`
+   **`fitaf_struck`** = `"1"`, and on every later page of the tab reads it, so the struck prices follow the visitor
+   through the store's own navigation, reloads included, for the tab's life. A storage that throws: this page load
+   only. **Nobody else sees anything**: an ordinary visit costs one read of the address and one of `sessionStorage`; no
+   observer, no listener, no timer, no request, no log.
+2. **When.** Only while an offer is current. The build inlines `data/offers.json`'s general offers that carry
+   `percent_off` (each its share, `valid_from`, `valid_to`), never a hand-typed figure or date; the block shows nothing on
+   a date (America/New_York, by `Intl`, never a fixed offset) outside them. The dates move only with a rebuild and a
+   paste: after 2026-10-29 the block as pasted shows nothing, and an extension of the offer is a new block.
+3. **The figure.** For each price item 4 names, as the store draws it: **its price × 100 ÷ (100 − the share), rounded
+   to the cent**, in integer cents (Lean 7: $87.50 → $116.67; a meal at $12.50 → $16.67), written as the store writes
+   its own price (its sign, separators and two decimals, as item 7 measures). Read from the price's own text each time
+   it is drawn. A text that is not one plain price (a sign before it, a range, *Free*, empty) gets nothing.
+4. **Where**, the Advisor's four: **(a)** the meal plans page, each plan's price; **(b)** a plan's order page
+   (`/order?mpid=N`), each meal's price on its card; **(c)** the cart summary (the order page's sidebar at 1025 px and
+   wider, its bar below), the meals' figure; **(d)** the checkout (`/checkout`), the **Plan Total** row's figure.
+   ⛔ Never a delivery fee, tax, tip, discount, gift card, the checkout's **Total** (it holds fees and tax), an add-on's
+   or an upcharge's figure. The elements are those item 7 measures, named in `dependencies.json` (F2) by their literals.
+5. **How it looks.** One `<s class="fitaf-was" aria-hidden="true">` per price, beside it (before it on its line, or
+   above it where item 7 measures the line too narrow at 390), smaller than the price and muted (the block's own
+   `--muted` token), the browser's line-through. ⛔ **No words**: no *was*, no *save*, nothing read aloud. The store's
+   own elements are never changed, moved, hidden or restyled; only ours is inserted, and the layout around it does not
+   jump (item 11's ST9).
+6. **Kept true.** The store redraws itself. One `MutationObserver` on the document, for a marked visitor only, its work
+   done at most once per animation frame: it adds a missing struck figure, corrects one whose price changed, and removes
+   one whose price went. Exactly one per price, never duplicated by a redraw.
+7. **Measured first, before any code** (the store's markup, read only): a probe in the watch package, as
+   `probe-counts` and `probe-snacks` are, headless, at 1280 and 390, on the live store: the four surfaces, each price
+   element's tag, class list, text, box and its parent's; the cart filled by the store's own *Add to Cart* presses on a
+   plan's order page, as `probe-counts` did, then the store's own CHECKOUT; ⛔ nothing typed, nothing submitted, never
+   the payment, never the admin. The marker is set by the probe's init script writing `fitaf_struck` (⛔ **never a
+   UTM-tagged visit**: the watch's visits must not count in the store's Google Analytics as ours). Also measured, with
+   a query that is not a UTM (`?fitaf_probe=1`): whether the store's app keeps a landing query (`location.search` at the
+   Footer's injection and after the app settles), so the Advisor knows whether Google Analytics sees the marker.
+   Committed as `storefront/probe-prices/<date>/`, its README the findings; nothing reads it.
+8. **§ 35's link goes.** `a#fitaf-save` and its words (`handoff.save`) are removed: its target, `eatfitaf.com/#save`,
+   would now be redirected to the store. § 33's hidden row and its contact link, `zero`, fill C and every other rule
+   are unchanged.
+9. **One paste.** The struck prices are their own source file (`src/storefront/fitaf-struck.js`, its own function),
+   shipped in the same Footer block after the hand-off's script, so one paste carries both; the hand-off's first line
+   (*"An ordinary visit costs this one read of location.hash"*) stays true of the hand-off.
+10. **The watch.** W11's save-link clause goes (step 3's controls as before § 35); W28 reports the save link ABSENT;
+    F2 gains the price elements' literals; a new **W29**, a pass rule: with `fitaf_struck` set by the smoke's init
+    script (never a UTM), each surface the smoke reaches shows each of its prices' struck figure exactly once, equal to
+    item 3's rule while the offer is current (the smoke's own date), and none outside it. The build states which of
+    the four the smoke reaches (the deep-carted checkout hides the Plan Total row, H15).
+11. **Cases**, in the watch package's stand-in store and the site's block cases, written first and run red: **ST1**
+    marked: each stand-in surface's prices struck, each figure item 3's; **ST2** unmarked: none, and no observer made;
+    **ST3** marked on landing, a later page without the parameter: still struck; **ST4** a date before `valid_from` and
+    after `valid_to`: none; **ST5** a redraw (the price's text changed, its element replaced, the list re-ordered): one
+    each, correct; **ST6** the excluded figures (a fee, tax, tip, discount, the Total, `+$2.00`): none; **ST7**
+    `aria-hidden` and no text but the figure; **ST8** step 3 without the save link; **ST9** at 390 and 1280 the struck
+    figure overlaps nothing of the store's and nothing of the store's moves after it appears (beyond the line it sits
+    on). **Mutants**, each in a mirror and killed by its own case: the figure as price × 0.75 (ST1); shown without the
+    marker (ST2); shown after `valid_to` (ST4); added twice on a redraw (ST5).
+12. **Bytes**: within § 32's 50,000 characters; before and after stated.
+13. **The block** `storefront/footer-block/2026-10-27-fitaf-handoff-<commit>.md`, built from this branch; merged into
+    the dev line; rehearsed live by the orchestrator (headless, the marker by init script, nothing submitted, § 29's
+    way); pasted by the Advisor; the live smoke at once; then `accept --footer`. It can be pasted before or after the
+    redirect is live: without the marker it does nothing.
+
+### 36.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 36 above is unchanged. The probe at `024eb4a`; the cases at `2ece4c8`, red on the unchanged block; the code at `7ed59ab`,
+`ccdd182` and `91b875e`; the watch at `79103b0`; the Footer block file
+`storefront/footer-block/2026-10-27-fitaf-handoff-91b875e.md` (*built, not pasted*) at `793df5c`; the probe's `--script`,
+for the orchestrator's rehearsal, at `0c3a2f4`. A first block file, built from `ccdd182` (`7e1c2de`), was removed at
+`91b875e` before it was handed to anyone: the code changed under it.
+
+**Measured first (item 7)**: `npm --prefix boston-2026-10/tools/storefront-watch run probe-prices` (`bin/probe-prices.mjs`,
+`lib/probe-prices.mjs`), on the live store, 2026-10-27 between 17:04Z and 17:16Z, release **`main-WMT2MEGW.js`** (⚠ not
+the watch baseline's `main-6IYBT337.js`: the store released again after the 04:24Z accept), Lean 7 (`/order?mpid=21`),
+1280 and 390, a fresh profile each; the marker by the init script writing `fitaf_struck` (⛔ no `utm_` visit); nothing
+typed, nothing pressed on `/checkout`, no payment, no admin; the store's own Add to Cart of 7 meals, its CHECKOUT and its
+extras dialog's CONTINUE TO CHECKOUT (it opened every run). Two runs per width: the first reader could not tell the
+plan's meals from the additions (both draw their price in the same element), so the reader gained each price's card and
+section and the containers' skeletons, and ran once more. The findings are `storefront/probe-prices/2026-10-27/README.md`;
+in short:
+
+- **The landing query is kept**: `?fitaf_probe=1` in `location.search` at the document's start, at the Footer's
+  injection (0.4–3.2 s in) and settled, on `/` and `/meal-plans`, at both widths, and in the navigation entry. So the
+  store's Google Analytics can read `utm_source=eatfitaf` on the landing page (inferred: a UTM address was never loaded).
+- **(a)** the meal plans page: one price per plan, a `strong` in `div.meal-plan__fit-af-price` (*"As low as $11.50/meal"*,
+  a flex row): ⚠ **the plan's lowest price per meal**, not a weekly price. The front page draws no price.
+- **(b)** the order page: two `div.products__section`, headed **"All Meals"** (28) and **"Additions (Additions)"** (29:
+  snacks with Select Options, sides and extras at their own prices, none of them $12.50); a meal's price is
+  `span.product__content-price` (desktop card, alone at the right end of its meta row) and
+  `span.product-card-mobile__price` (phone card), every Lean 7 meal $12.50; the desktop Add to Cart repeats it.
+- **(c)** the cart summary: at 1280 the sidebar's `app-cart` `span.segment-price` *"$87.50"* above *"One Time Order"* (a
+  flex column), and each row's `span.product__price-original` (10 px); at 390 the bar's *"Cart Total"*
+  `span.mobile-cart-summary__stat-value` (a flex column 45 px wide; the same class holds the item count).
+- **(d)** the checkout's Plan Total `span.summary__plan-total-value` alone in `span.summary__plan-total-prices` (a flex row
+  at the right of a space-between row).
+- Every price on the four surfaces is one plain price (`$`, dollars, two decimals); no upcharge on a meal, no fee in the
+  cart summary. Nothing contradicted the contract outright.
+
+⚠ **A third, unasked visit**: at 2026-10-27T18:29:52Z → 18:30:54Z (11:29–11:31 PDT), while `--script` (below) was
+being written, a check that its command file loaded imported `bin/probe-prices.mjs`, which runs on import: one more run
+of the committed probe at both widths, on `main-WMT2MEGW.js`, as read-only as the two above (no script, the marker by
+init script, no `utm_` address, nothing typed, nothing pressed on `/checkout`). Its two files were moved out of this
+repository, not committed. The orchestrator had asked for no live run of the probe from here.
+
+**The rehearsal's probe** (the orchestrator, 2026-10-27, after the redirect went live): `probe-prices --script <file>`
+(`0c3a2f4`) pastes a build into each document the probe visits once its first price is drawn (the front page, once
+loaded; the cart and `/checkout` are `/order`'s document, routed in the app; a new document is pasted into again), any
+block of ours held off as `smoke --script` holds it (`__fitafHandoff`, `__fitafStruck` before the page's scripts,
+lifted just before the paste). The file is a console file, a Footer block `.html`, or a `storefront/footer-block/*.md`
+(its fenced fragment, refused unless it hashes to its `fragment_sha256`). Each read records every `s.fitaf-was`: its
+text, `aria-hidden`, displayed, box and size; the price it sits before (tag, classes, text, box); item 3's figure for that
+text (`data/offers.json`'s share on the run's date in New York, written again in the probe) and whether it is equal; and
+each displayed control of the store's whose box overlaps it. The marker, the presses and what is never touched are as
+before. Its cases, `test/probe-prices-script.test.mjs` (the stand-in, the page's clock inside the offer): PP1 the shipped
+text at 1280 and 390, every surface's figures recorded, equal, `aria-hidden`, overlapping no control, one paste per
+document; PP2 without `--script`, nothing pasted and none recorded; PP3 the file reader. `# tests 3`, `# pass 3`. The
+front page is now read once loaded rather than after a first price (it drew none). The command, from the repository's
+root: `npm --prefix boston-2026-10/tools/storefront-watch run probe-prices -- --script
+boston-2026-10/storefront/footer-block/2026-10-27-fitaf-handoff-91b875e.md --out <a directory>`.
+
+**As built.**
+
+- **`src/storefront/fitaf-struck.js`** (item 9), one function, appended by the build after the hand-off's text in the same
+  `<script>`: `scripts/build-storefront.mjs` `struckText` (its full-line comments dropped; `data/offers.json`'s general
+  offers with `percent_off` at its `/*OFFERS*/` slot as `[share, valid_from, valid_to]`, `[[25,"2026-10-01","2026-10-29"]]`
+  today; the page's `--muted` at `/*MUTED*/`); `data/offers.json` joins the inputs that mark a build `-dirty`. The
+  hand-off's source is untouched but for item 8, and its first rule is still true of it.
+- **Who (item 1)**: the navigation entry's `name`, else `location.href`, without its fragment, matching
+  `[?&]utm_source=eatfitaf(&|$)` (exact, case-sensitive); then `sessionStorage` `fitaf_struck` = `"1"`, `on` set before
+  the write (a throwing storage: this load only); else one `getItem`. An unmarked visit: nothing more (R2-04b).
+- **When (item 2)**: the date in New York by `Intl` (`formatToParts`, en-US), compared with the offer's dates as
+  `YYYY-MM-DD` text, at the start and at every redraw. No offer: nothing, no observer.
+- **The figure (item 3)**: `^\$(\d{1,3}(?:,\d{3})+|\d+)\.(\d\d)$` on the price's own text, whitespace collapsed; zero gets
+  nothing; `Math.round(c * 100 / (100 - share))` in cents; written `$`, commas every three digits, two decimals.
+- **Where (item 4)**: `.meal-plan__fit-af-price>strong`; in each `.products__section` whose `.products__section-title`
+  matches `/\bmeals\b/i`, `.product__content-price` and `.product-card-mobile__price`; `app-cart .segment-price`;
+  `.mobile-cart-summary__stat-value` (the count is no price); `.summary__plan-total-value`. Each an F2 literal.
+- **The look (item 5)**: `<s class="fitaf-was" aria-hidden="true">`, inserted right before the price, `color` the
+  `--muted` token (`#5b5b5b`), `font-size` 0.8 of the price's computed size, weight 400, `line-height` 1.2,
+  `line-through`, `nowrap`, `margin-right .3em`; in the desktop card's meta row also `flex-grow:1; text-align:right`, so
+  it sits against the price at the row's end. In a row it is before the price on its line; in a column (the sidebar's
+  figure, the bar's Cart Total) it is the line above.
+- **Kept true (item 6)**: one `MutationObserver` on `<html>` (child list, text, subtree), for a marked visitor with a
+  current offer only; its callback asks one `requestAnimationFrame`, whose `sync()` (with the observer disconnected, so
+  our changes never call it back; a fault leaves the page as it is) makes, moves or corrects each price's one figure
+  (a `WeakMap` from price to figure) and removes every other `s.fitaf-was`. Once per load: `window.__fitafStruck`, set
+  only for a marked visitor with a current offer (a second copy, or a paste beside the Footer's, does nothing).
+- **§ 35's link (item 8)**: `save()`, its call, the step rule `:is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav)
+  #fitaf-save` and `data/messages.json`'s `handoff.save` removed; the build's `UI_WORDS` keeps `save`, so the pasted
+  `0eb98fe` still rebuilds from its own commit (R2-71).
+
+**What § 36 was silent on, and what was built** (stated, not ruled):
+
+1. **The meal plans page's price is per meal** (*"As low as $11.50/meal"*, the 21-meal price): struck as the plan's one
+   plain price, *"As low as ~~$15.33~~ $11.50/meal"*.
+2. **"Each meal's price on its card"**: the card's own price, not the Add to Cart button's repeat of it (a control); and
+   only the meals' section, by its heading, never by its price: the Additions are never struck (the stand-in's carry
+   one at a meal's $12.50, ST6). A heading
+   renamed away from *meals* strikes nothing on that page (the conservative failure).
+3. **"The cart summary … the meals' figure"**: the sidebar's plan figure (`segment-price`) and the bar's Cart Total; not
+   the sidebar rows' 10 px prices. ⚠ The Cart Total is whatever the cart holds: with additions carted it is struck
+   whole. Not measured with additions (the probe carted 7 meals).
+4. **"Above it where the line is too narrow at 390"**: both cart figures are columns at their widths, so the figure is
+   the line above; the sidebar's order type and the bar's stat are one line taller than an unmarked visitor's. ST9
+   holds that nothing moves once the figures are there, and that no painted frame shows a price without its figure (the
+   line lands in the frame the store draws the price); whether the live bar grows at 390 was not measured.
+5. **"Free"** read as zero too: *"$0.00"* (the bar before a press, a $0.00 row) gets nothing.
+6. **The ordinary visit's cost**: exactly `performance.getEntriesByType("navigation")` and
+   `sessionStorage.getItem("fitaf_struck")`. The code at `ccdd182` also read `window.document` first; found by R2-04's
+   stub (below) and moved behind the marker at `91b875e`.
+7. **R2-04, R2-59 and R2-62 are the hand-off's rules** (item 9): they run the hand-off's own text
+   (`r2-harness.mjs` `handoffScript`, `storefrontText({ struckPath: null })`); R2-04b holds the shipped text to item 1 at
+   R2-04's seven hashes, with a mutant (the document read first) that fails it.
+8. **The build adds the struck source only to the hand-off's own source** (`struckPath` defaults to it then, else
+   none): a copy of another commit's source builds the hand-off alone, so R2-71's rebuild of the live block is unchanged;
+   R2-32's copy passes `STRUCK_SOURCE`.
+9. **The watch, between the merge and the paste**: with W11's save clause gone, the hourly smoke of the live `0eb98fe`
+   (`--live`, its own block) will flag W11 at steps 1 and 2 (*"the style hides controls … a "Not ready to checkout? Save
+   your offer n""*, as § 35.1 item 2 recorded before that clause existed) until this block is pasted. ⬜ Merge and paste
+   close together, or expect that flag.
+10. **W29 runs only for a block carrying the struck prices** (paste mode: its text; live mode: the Footer's script naming
+    `fitaf_struck`); the hourly smoke of `0eb98fe` reports *"no struck prices in this block"*. The smoke now writes
+    `fitaf_struck` in every link visit, the hourly live one included; in paste mode it holds a live block's struck prices
+    off with `__fitafStruck`, as it holds the hand-off off.
+11. **Two cases stale before § 36, found by its build**: R2-71b's planted host name, `fitafnutrition.com`, has been in the
+    live text since the baseline accepted `0eb98fe` (`3ab6b76`), so it no longer failed; now `fitafnutrition.net`. CC-8's
+    `watch_expected_footer` still named `c31603d`; now `0eb98fe`, and `replaces` its text `75e18ffa…`.
+12. **The probe's command and files are public**: the run files hold the store's public names, prices and descriptions;
+    a Google key, an `sk_` key, a path or an address: none (checked).
+
+**Cases.** The watch's `st-struck` (Chrome, the stand-in's new `prices`: `/meal-plans`, the two sections, the cards'
+prices, `app-cart`'s segment price, the bar's Cart Total, the live Plan Total, a fee and tax not zero,
+`__fixturePrices`): ST1 and ST1b, ST2, ST3, ST4, ST5 (and a second copy run on the page), ST6, ST7, ST8, ST9 and ST9b;
+the four mutants, each in a mirror of the site package (build.mjs, package.json, wrangler.jsonc, data, scripts, src,
+consent; node_modules linked) built by its own build: × 0.75 (ST1 fails, *"struck as"*), shown without the marker (ST2),
+after `valid_to` (ST4, *"after valid_to ends in New York: none"*), added twice (ST5, *"exactly one struck figure"*). The
+site's `r2-st-struck` (vm and linkedom): STs1, STs2, ST1–ST4, ST8. The site's `r2-so-save-offer` and the watch's
+`r2-z35-save` (§ 35's SO cases) retired with the link; W28e now reads the link ABSENT.
+
+**Red, then green** (each `nice -n 15`):
+
+| | command | red (`2ece4c8`, the block unchanged) | green |
+|---|---|---|---|
+| the site's ST | `node --test boston-2026-10/test/r2-st-struck.test.mjs` | `# tests 7`, `# pass 0`, `# fail 7` | `# tests 7`, `# pass 7`, `# fail 0` (`7ed59ab`) |
+| the watch's ST | `node --test boston-2026-10/tools/storefront-watch/test/st-struck.test.mjs` | `# tests 15`, `# pass 0`, `# fail 15` | `# tests 15`, `# pass 15`, `# fail 0` (`7ed59ab`); with W29, `st-struck` and `w29-struck` `# tests 19`, `# pass 19` (`91b875e`'s tree) |
+| the block's family | `node --test "boston-2026-10/test/r2-*.test.mjs" "boston-2026-10/test/fc-*.test.mjs" "boston-2026-10/test/sn-*.test.mjs"` and `cc-08-unchanged`, `pr-10-unchanged`, `ms-09-unchanged`, `b2-contrast` | at `7e1c2de`'s tree `# tests 369`, `# pass 343`, `# fail 26` (R2-04 7, its 13 mutants, R2-59, R2-62 5: item 6 above) | `# tests 377`, `# pass 377`, `# fail 0` (`91b875e`'s tree) |
+
+The block's own site cases (R2-11, R2-12, R2-29, R2-31–R2-33, R2-42, R2-50, R2-54, R2-58, R2-70, R2-71, R2-77,
+R2-78/79, R2-81, R2-91, R2-92/93, PR-10, CC-8, MS-9, FC-8, B2, ST) at `7ed59ab`: `# tests 93`, `# pass 93`; before the
+pins and the stale cases moved, `# tests 93`, `# pass 84`, `# fail 9` (CC-8a, CC-8c, MS-9 twice, PR-10, R2-32 and its
+mutant: the pin; R2-71b, R2-77: the save link's address).
+
+**Gates** (each `nice -n 15`, one at a time, 2026-10-27):
+
+- **The watch** (`npm --prefix boston-2026-10/tools/storefront-watch test`): at `793df5c`'s tree, 11:04 → 11:09 PDT,
+  `# tests 272`, `# pass 272`, `# fail 0`, `# cancelled 0`. At `79103b0`'s tree, 10:47 → 10:52 PDT, `# tests 272`,
+  `# pass 271`, `# fail 1` (W11g: *"ENOTEMPTY: directory not empty, rmdir …/Default/Cache/No_Vary_Search"*, Chrome's
+  temporary profile removed while its cache was written); W11g alone `# tests 1`, `# pass 1`.
+- **Storybook**, the four files that read the block (`sm-4-no-copy`, `sm-5-8-states-no-request`, `sm-7-no-photograph`,
+  `sm-9-one-source`), `node --test` over them: `# tests 21`, `# pass 21`, `# fail 0` at `7e1c2de`'s tree and again at
+  `793df5c`'s. The full Storybook suite was not run.
+- **The site** (`node --test` over `boston-2026-10/test/`, in chunks by first letter, at `793df5c`'s tree, beside another
+  session's full suite on this machine): `[abcef]*` `# tests 224`, `# pass 224`; `[mn]*` `# tests 174`, `# pass 174`;
+  `[pq]*` (11:13 → 11:46 PDT) `# tests 234`, `# pass 232`, `# fail 2`: `q29-pass-three`, which sat at *"Q29: built, the
+  back's graphics are in the PDF in the file's order"* for 19 minutes at 0 % CPU with no child process and was stopped
+  by hand, and Q5 (*"git status is unchanged by the build"*), whose before and after straddled an edit of this section.
+  Their re-runs and the `[rstuw]*` chunks are in § 36.1's last lines below.
+
+**The size, the pins.** The Footer block **21,952 → 24,589** bytes (`0eb98fe` → `91b875e`), the console file
+**21,933 → 24,570**; the cap 50,000 (§ 32). Text SHA-256 `75e18ffa…` →
+`57f816dbc4623e7b28d9b613c726018ef25f922b5eb9fe5bed5ca74402b2725a`; the Footer block's SHA-256
+`7c1f476380223d78e3571d5aa5ab5114e17e4d0c826b9f595c9b5f533d9eda1a`. R2-32, PR-10 and CC-8's `footer_text_sha256` moved
+with it (through `c408fb44…` at `7ed59ab` and `dd54dfc9…` at `ccdd182`); CC-8's `replaces` and `watch_expected_footer`
+name the live `0eb98fe` text until the paste. `storefront/watch-baseline.json` is untouched.
+
+**Left**: merged into the dev line; rehearsed live by the orchestrator (item 13); the Advisor's paste; the live smoke at
+once (W29 then judged on the store's own block); `accept --footer` (and the release `main-WMT2MEGW.js`'s own accept, a
+separate matter); F2's eight new literals found in that release's files at its next run; ⬜ the merge-to-paste W11
+flag (item 9 above); ⬜ the Cart Total with additions carted (item 3); the live bar's height at 390 (item 4).
+
+**The site's last chunks** (each `nice -n 15`, `--test-timeout=400000`, at `5ad3f2b`'s tree, whose site files are
+`793df5c`'s: the commits between touch only the watch package and this file), 2026-10-27 11:47 → 11:51 PDT: Q29 and Q5
+alone (`q29-pass-three`, `q5-nothing-committed`) `# tests 7`, `# pass 7`, `# fail 0`; `[tuw]*` `# tests 209`, `# pass 209`;
+`[rs]*` `# tests 481`, `# pass 481`. Over the five chunks, 1,322 tests: 1,320 passed in their chunk, and the two that did
+not (above) passed run alone.

@@ -66,6 +66,13 @@ export const script = async (fill = "C") => {
   return storefrontText();
 };
 
+/**
+ * SPEC-rung2-progress-and-checkout § 36 item 9: the hand-off's own text, without the struck prices that the shipped text
+ * carries after it; the cases of a rule that is the hand-off's (R2-04's one read of location.hash, R2-59/R2-62's storage)
+ * run it, and the shipped text's struck part is held to its own cost by R2-04b.
+ */
+export const handoffScript = () => storefrontText({ struckPath: null });
+
 /** Run the text as a page would: its only global is `window`. */
 export function run(text, window) {
   vm.runInContext(text, vm.createContext({ window }));

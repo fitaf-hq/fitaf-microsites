@@ -11,7 +11,11 @@
 // address, the store site's contact page, allowed only WHOLE: its quoted string is taken out of the text before the URLs
 // are read, so its host alone (R2-71b's planted host name) or another page of that host (R2-71b) is still found.
 // § 35 item 5: and the save link's https://eatfitaf.com/#save, whole, the same way; R2-71b plants another eatfitaf.com
-// address, which still fails.
+// address, which still fails. § 36 item 8 removed the save link; the live block (0eb98fe, accepted 2026-10-27) still
+// carries it, so its whole address stays allowed until the block that drops it is the live one.
+// ⚠ Since the live block is 0eb98fe it carries § 33's contact page, so its host, fitafnutrition.com, is a URL the live
+// block HAS: R2-71b's planted host name is now one the live block lacks (found 2026-10-27 at § 36's build; the case had
+// failed since the baseline's accept, 3ab6b76, not because of § 36).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MAX_SHIPPED_BYTES, storefrontFiles } from "../scripts/build-storefront.mjs";
@@ -54,7 +58,7 @@ test("R2-71b: the URL reader bites — each planted address is found, and fails 
     ["a data: URI", 'i.src = "data:image/png;base64,AAAA";', "data:image/png;base64,AAAA"],
     ["a root-relative path", 'i.src = "/assets/fitaf";', "/assets/fitaf"],
     ["an image file", 'i.src = "fitaf-logo.webp";', "fitaf-logo.webp"],
-    ["a host name", 'var host = "fitafnutrition.com";', "fitafnutrition.com"],
+    ["a host name", 'var host = "fitafnutrition.net";', "fitafnutrition.net"],
     // § 33.2: the contact page is allowed whole, never its host's other pages.
     ["another page of the contact page's host", 'var page = "https://fitafnutrition.com/account";', "https://fitafnutrition.com/account"],
     // § 35 item 5: the save link is allowed whole, never another eatfitaf.com address.

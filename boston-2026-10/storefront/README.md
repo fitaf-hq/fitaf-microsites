@@ -13,7 +13,8 @@ hashes and a few literal strings of the store's public bundle, never its code or
   that says so; and § 12's `ecc_additions_prompt_handled`, the store's key the fill sets before CHECKOUT; and fill C's
   five (`SPEC-rung2-fill-c.md` § 1.1, § 1.4): the card's counter (`counter__value`, `counter__button`, its *"Increase
   value"*) and the plan's own count (`cart__items-count`, `mobile-cart-summary__stat-value`), 51 literals since
-  2026-10-01, each found in release `main-N64VDY4M.js`'s files. **Edited by a person**, when the hand-off comes to depend on something
+  2026-10-01, each found in release `main-N64VDY4M.js`'s files; since SPEC-rung2-progress-and-checkout § 36, the struck
+  prices' price elements (eight more, read from the live page by `probe-prices/2026-10-27/`, not yet by F2). **Edited by a person**, when the hand-off comes to depend on something
   new, or a release renames something it depends on (and the hand-off is changed to match).
 - **`watch-baseline.json`** (§§ 2, 3, 5): the release the watch compares with: the order page's script list, the
   entry bundle's name, its imports, every JS file reachable from it with its SHA-256, and `expectedFooter`, the
@@ -32,6 +33,10 @@ hashes and a few literal strings of the store's public bundle, never its code or
   (its *Select Options*, Size, count and "+", the plan's counts, its line and group on `/checkout` and the hide rules
   that touch them; [`../SPEC-snacks-in-the-cart.md`](../SPEC-snacks-in-the-cart.md) § 1), one dated directory per
   batch, written by the watch package's `probe-snacks`. Nothing reads them; the contract quotes them.
+- **[`probe-prices/`](probe-prices/README.md)** is **not an input** either: measurements of how the live store draws
+  its prices on the meal plans page, a plan's order page, its cart summary and `/checkout`, and whether it keeps a landing
+  query ([`../SPEC-rung2-progress-and-checkout.md`](../SPEC-rung2-progress-and-checkout.md) § 36 item 7), one dated
+  directory per batch, written by the watch package's `probe-prices`. Nothing reads them; the contract quotes them.
 - **[`smoke-snacks/`](smoke-snacks/README.md)** is **not an input** either: the live proof of snacks in the cart
   ([`../SPEC-snacks-in-the-cart.md`](../SPEC-snacks-in-the-cart.md) § 6), the watch's smoke with a built console file and
   links carrying snacks, its reports one dated directory per batch. Pictures beside them are never committed.

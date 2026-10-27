@@ -249,7 +249,7 @@ var Q2 = ".checkout__section:is(.contact,.order-type,.delivery-address,.delivery
 var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.app-hmp-credit,app-storefront-popup-host,.smartbanner):not(app-checkout *),a.checkout__guest-signin-banner,a.contact__sign-in,.summary__plan-subscription-controls:has(.summary__subscription-toggle):not(:has(.summary__subscription-toggle--active))," +
 ".checkout-discounts:not(.fitaf-code *),.summary__row:not(.summary__row--discount,:has(.summary__total)),:is(section.checkout__section.tip,app-tip-selector):not(:has(.tip-selector__remove-btn))," +
 ".summary__item-price,.summary__item-addons,.summary__item-quantity-controls,.summary__item-remove,.summary__plan-total,.summary__plan-group-header,.summary__plan-return,.fitaf-zero:not(:has(.summary__total))," +
-":is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) #fitaf-save,.fitaf-step-1:has(#fitaf-nav) .checkout__form,:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item,.fitaf-step-2:has(#fitaf-nav) :is(.checkout__form>:not(" + Q2 + ",:has(" + Q2 + "))," + Q3 + ",.checkout__submit)," +
+".fitaf-step-1:has(#fitaf-nav) .checkout__form,:is(.fitaf-step-2,.fitaf-step-3):has(#fitaf-nav) .summary__item,.fitaf-step-2:has(#fitaf-nav) :is(.checkout__form>:not(" + Q2 + ",:has(" + Q2 + "))," + Q3 + ",.checkout__submit)," +
 ".fitaf-step-3:has(#fitaf-nav) " + Q2 + ",:is(.fitaf-step-1,.fitaf-step-2):has(#fitaf-nav) .summary__pay-button:has(+#fitaf-go)){display:none!important}" +
 "html.fitaf-deep:has(app-checkout)[data-smartbanner-original-margin-top]{margin-top:0!important}" +
 "html.fitaf-deep:has(app-checkout) .summary__item{padding:3px 6px;margin:0 0 2px;gap:8px;align-items:center}html.fitaf-deep:has(app-checkout) .summary__item-image{width:48px;height:48px}" +
@@ -260,8 +260,8 @@ var DEEP = "html.fitaf-deep:has(app-checkout) :is(:is(.sticky-header,.footer,.ap
 // Last, so that nothing it does can keep the mark and the style from being set.
 // § 25: last, the steps (stepper), so that nothing they do can keep the mark, the style or the logo from being set.
 // § 33: then the link to customer service (help) and, unless the link carries a code, zero's sign hidden (hush), each in
-// its own ui(), after the steps, so neither can keep anything before it from being set. § 35: the save link (save), in
-// its own ui(), after the contact link, which it goes above.
+// its own ui(), after the steps, so neither can keep anything before it from being set. (§ 35's save link, made here
+// after the contact link, was removed by § 36 item 8: its target, eatfitaf.com/#save, now redirects to the store.)
 function mark() {
 var d = w.document, s = d.createElement("style"), c, i;
 s.id = "fitaf-deep";
@@ -272,7 +272,6 @@ if (CODE) d.documentElement.classList.add("fitaf-code");
 if ((c = d.querySelector("app-checkout")) && (i = logo("16px auto;height:40px"))) c.prepend(i);
 if (c) ui(function () { stepper(c, i); });
 if (c) ui(function () { help(c); });
-ui(save);
 if (!CODE) ui(hush);
 }
 
@@ -307,26 +306,6 @@ if (n) n.style.flexWrap = "wrap";
 a.href = HELP;
 a.textContent = UI.contact;
 }
-// § 35 (the Advisor, 2026-10-26: "add a "save my offer" call to action on the final step of the HMP checkout (where
-// customers enter their credit card)"): one text link, its words data/messages.json's handoff.save, to SAVE, the plan
-// page's save dialog (SPEC-ui-and-copy-pass § 6, its #save), in a new tab (target _blank, rel noopener), so the checkout
-// stays where the visitor left it. Made once, at done, in the block's own foot (#fitaf-nav), right before § 33's link,
-// so it is the line above it, in the same type (14 px, --muted, centred, underlined: never a button, never orange). Step
-// 3's alone: the style's hide list hides it at steps 1 and 2, so moving between steps only shows or hides the one link.
-// With no foot (no :has(), so no steps and no step 3), none is made.
-var SAVE = "https://eatfitaf.com/#save";
-function save() {
-var d = w.document, n = d.getElementById("fitaf-nav"), a;
-if (!n) return;
-a = own("a", "fitaf-save", "display:block;flex-basis:100%;order:1;margin:8px 0 0;font-family:inherit;font-size:14px;font-weight:400;line-height:1.4;color:var(--muted);text-align:center;text-decoration:underline");
-a.href = SAVE;
-a.target = "_blank";
-a.rel = "noopener";
-a.textContent = UI.save;
-n.style.flexWrap = "wrap";
-n.insertBefore(a, d.getElementById("fitaf-help"));
-}
-
 // § 25, the three-step checkout's own elements, made with the DOM (§ 11: no markup), each with an id and its style
 // inline (the page's tokens, TOK; the store's own type, `font-family: inherit`), so style#fitaf-deep still only hides
 // the store's elements (R2-42b): the step bar (#fitaf-bar, the three names of data/messages.json's `steps`, numbered,
