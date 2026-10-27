@@ -3,7 +3,7 @@ type: storefront-footer-block
 title: "Fit AF cart hand-off: the Footer block built from dbcf88d"
 as_of: 2026-10-26
 target: "the store's admin, Custom Scripts, Footer (pasted by the Advisor; never by an agent)"
-status: built, not pasted
+status: superseded, never pasted (2026-10-27-fitaf-handoff-0eb98fe.md, pasted 2026-10-26 Pacific, carries section 33 too)
 clearance: public
 built_from:
   repository: fitaf-microsites

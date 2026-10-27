@@ -3,7 +3,8 @@ type: storefront-footer-block
 title: "Fit AF cart hand-off: the Footer block built from 0eb98fe"
 as_of: 2026-10-26
 target: "the store's admin, Custom Scripts, Footer (pasted by the Advisor; never by an agent)"
-status: built, not pasted
+status: pasted
+pasted: "2026-10-26 (Pacific) by the Advisor (his message at ts=2026-10-27T04:21:18.535Z: pasted, and it looks good); the watch run --full at 2026-10-27T04:22:10Z on release main-6IYBT337.js: F3 this block, its text intact; F5 the smoke PASS at 1280 and 390 on the store's own block (fill C, zero: applied, $87.50, W28 the save link once at step 3 above the contact link), nothing typed or submitted; after the accept, run --daily green at 2026-10-27T04:24:07Z"
 clearance: public
 built_from:
   repository: fitaf-microsites
