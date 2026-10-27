@@ -4,6 +4,8 @@
 // SPEC-week-content § 4: the same two behaviours as production's Worker, imported from site.js (never copied): the
 // week from the WEEK bucket put into the page's #picks-data (the page's routes reach this script first, by
 // wrangler.jsonc's assets.run_worker_first), and the photo sheets at /week/<file>.jpg. Its own routes come first.
+// SPEC-the-redirect.md (2026-10-27): the request's ctx is passed to serveSite, which writes the home page's redirect event
+// after the answer (ctx.waitUntil); the event pages /<event-id>/ stay pages.
 //
 // ⛔ /api/save returns { ok: true } only — never a code, a stored value or an id, new save or repeat.
 // ⛔ The IP (CF-Connecting-IP) is used as the rate-limit key and nothing else: not stored, not logged,
@@ -84,7 +86,7 @@ async function lookup(request, env, handler) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const { pathname } = new URL(request.url);
     if (pathname === saveConfig.api_path) return handleSave(request, env);
     if (pathname.startsWith("/api/")) return refuse(404, "not_found");
@@ -92,7 +94,7 @@ export default {
     if (confirm) return lookup(request, env, (t) => handleConfirm(request, env, confirm[1], t));
     const offer = /^\/o\/([^/]*)$/.exec(pathname);
     if (offer) return lookup(request, env, (t) => handleOffer(env, offer[1], t));
-    return serveSite(request, env);
+    return serveSite(request, env, ctx);
   },
 
   async scheduled(controller, env, ctx) {

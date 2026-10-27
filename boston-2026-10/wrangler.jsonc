@@ -44,13 +44,17 @@
   // SITE_URL: the address E1's and E-X's links use. MAIL_FROM: the decided sender (SPEC-save-offer-production § 10 item 4;
   // the production build refuses an empty sender or one outside eatfitaf.com). TURNSTILE_SITE_KEY: the production widget's site key (public), fitaf-infra's,
   // created by its release (a) on 2026-10-24 (the production build refuses an empty or test key). SEND_WITHOUT_ALLOWLIST: production sends to
-  // anyone who saved (§ 4 item 4); development never sets it and keeps its allowlist.
+  // anyone who saved (§ 4 item 4); development never sets it and keeps its allowlist. REDIRECT_TO (SPEC-the-redirect.md
+  // § 1, the Advisor's pivot, 2026-10-27): while it is an https URL with no fragment, the home page "/" is a 302 to it with
+  // the marker (src/worker/redirect.js), every other path as before; absent or empty, the page as before. The store's front
+  // page, ruled 2026-10-27 as one setting: /meal-plans is a one-line change. fitaf-infra mirrors it on both Workers.
   // ⛔ RESEND_API_KEY, CONFIRM_TOKEN_KEY and TURNSTILE_SECRET_KEY are Worker SECRETS, set by fitaf-infra, never here.
   "vars": {
     "SITE_URL": "https://eatfitaf.com",
     "MAIL_FROM": "Fit AF <offers@eatfitaf.com>",
     "TURNSTILE_SITE_KEY": "0x4AAAAAAFkrm8IuqXPyKDM7",
-    "SEND_WITHOUT_ALLOWLIST": "true"
+    "SEND_WITHOUT_ALLOWLIST": "true",
+    "REDIRECT_TO": "https://fitafnutrition.com/"
   },
   // Invocation logs would carry request metadata (rung 4 § 7: observability off), as development's.
   "observability": { "enabled": false },
@@ -120,11 +124,14 @@
       // ⛔ RESEND_API_KEY, SEND_ALLOWLIST and CONFIRM_TOKEN_KEY are Worker SECRETS, never here: the
       // infrastructure code sets them (the `secret:*` scripts that did are retired, 2026-09-29).
       // Without the Resend key nothing is sent.
+      // REDIRECT_TO (SPEC-the-redirect.md § 1), as at the top level: the home page "/" a 302 to the store with the marker;
+      // the event pages "/<event-id>/" stay pages.
       "vars": {
         "SITE_URL": "https://fitaf-microsites-dev.fitaf-microsite-boston-2026-10.workers.dev",
         "MAIL_FROM": "Fit AF <offers@eatfitaf.com>",
         "TURNSTILE_SITE_KEY": "1x00000000000000000000BB",
-        "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA"
+        "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA",
+        "REDIRECT_TO": "https://fitafnutrition.com/"
       },
       // Invocation logs would carry request metadata; the IP is used for rate limiting and not kept.
       "observability": { "enabled": false }
