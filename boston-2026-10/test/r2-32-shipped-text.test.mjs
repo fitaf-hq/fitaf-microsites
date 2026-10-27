@@ -36,15 +36,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildStorefront, STOREFRONT_SOURCE } from "../scripts/build-storefront.mjs";
 
-/** Fill C's text SHA-256 since SPEC-rung2-progress-and-checkout § 33 (2026-10-26: zero's discount row hidden, the link to
- *  customer service), on boston/footer-zero-and-contact. Was 3efc8112… (pasted, c31603d), the release line's
+/** Fill C's text SHA-256 since SPEC-rung2-progress-and-checkout § 35 (2026-10-26: Save my offer on the Payment step),
+ *  on boston/footer-save-offer. Was 86a83551… (§ 33, 2026-10-26: zero's discount row hidden, the link to customer
+ *  service; boston/footer-zero-and-contact, not pasted), 3efc8112… (pasted, c31603d), the release line's
  *  (boston/release-c, 2026-10-25): SPEC-rung2-progress-and-checkout §§ 30–31.2
  *  (the photograph's box, the code zero, a coded link without it, the store's page held still) and SPEC-ui-and-copy-pass
  *  § 2 item 5 (the plans table's comment naming read_on 2026-10-25) and § 2.2 (Family's mpid 35 taking 5 or 10). Was
  *  ef5697aa… (round 2 alone, not pasted), 04e43ac0… (the hand-off alone, not pasted), b68257d5…, a8a5970d…, 0a6e9ef1…,
  *  6d36d4bf… (none pasted), efcbc570… (the extra meal, SPEC-rung2-fill-c § 8; pasted, 8b11e54), ad25f93d… (snacks;
  *  pasted, 17c5693), 76871ff9… (§ 27, pasted), b65fb47f… (§ 25), 1e3802b8… (fill C). */
-const SHIPPED_SHA256 = "86a835515a670cbc6e2d0ab68d497d980a9bf669b0aac61b2774e5d7979f45da";
+const SHIPPED_SHA256 = "75e18ffa2af086dee435fc72c29c37c32110a9bcc8294352c87947dde7158d07";
 /** The version line's commit is not part of the text; fixed, so a copy outside the repository builds too. */
 const COMMIT = "0000000";
 const VERSION_LINE = /^\/\* fitaf-handoff (\S+) sha256:([0-9a-f]{64}) \*\/\n/;

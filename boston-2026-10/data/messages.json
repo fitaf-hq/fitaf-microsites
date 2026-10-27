@@ -17,7 +17,8 @@
     "back": "Back",
     "recap": "{n} meals ·",
     "recap_snacks": "{n} meals · {s} snacks ·",
-    "contact": "Contact customer service"
+    "contact": "Contact customer service",
+    "save": "Not ready to checkout? Save your offer now."
   },
   "chefs_choice": {
     "status": "placeholder",

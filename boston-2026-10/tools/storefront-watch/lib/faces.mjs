@@ -45,6 +45,9 @@
 //   W28  (§ 33.2, a report, not a pass rule) § 33 item 3's link to customer service, a#fitaf-help, read at the checkout:
 //        how many, its words, its href, its computed font size, displayed or not, inside app-checkout or not. A block
 //        from before § 33 has none: ABSENT, never a failure, so the hourly smoke of the live block is unchanged.
+//        § 35: and the save link, a#fitaf-save, read at every step of the walk (saveLine: once, its words, address, target
+//        and rel, size, the steps it is displayed at, above the contact link); W11 counts it among another step's
+//        controls at steps 1 and 2, where the block's style hides it by design.
 // Two functions run IN THE PAGE (recordFaces, from before the page's own scripts; readFaces, on /checkout after done);
 // they read, and toggle our own style for W11, and press and type nothing. facesVerdict is the rule, tested on recorded
 // outcomes (W10a–W13a). This is the watch's own reading of the contract: the site's R2 cases in test/r2-*.test.mjs
@@ -146,6 +149,11 @@ export const STEP_MS = 2_000;
 export const ZERO_SIGN = { row: ".summary__row--discount.fitaf-zero", control: "button.summary__remove", names: "\\bzero\\b" };
 /** § 33 item 3 (W28, a report): the block's link to customer service, by its id. */
 export const HELP_ID = "fitaf-help";
+/**
+ * § 35 (W28, a report; W11 at steps 1 and 2): the block's *Save my offer* link, by its id: step 3's alone, so W11 counts
+ * it among another step's controls at steps 1 and 2, where the block's style hides it by design.
+ */
+export const SAVE_ID = "fitaf-save";
 
 /**
  * In the page, from before its own scripts (page.evaluateOnNewDocument): record, in order, the screen arriving, each
@@ -208,7 +216,7 @@ export function readRecorded(screen) {
  * and label, so a report can name it; the sets are compared by element. The style is disabled only for W11's second
  * reading, and enabled again before anything else is read.
  */
-export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo, line = ".summary__item", step = null, step2 = [], sections = [], zero = null, help = null }) {
+export function readFaces({ hide, controls, pay, total: totalSel, style: styleId, logo, line = ".summary__item", step = null, step2 = [], sections = [], zero = null, help = null, save = null }) {
   const style = document.getElementById(styleId);
   const checkout = document.querySelector("app-checkout");
   const shown = (el) => el.getClientRects().length > 0;
@@ -236,12 +244,14 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
     // § 25 (W20): at a step, the controls of the steps not shown are hidden by design (the form at step 1; at step 2
     // the form but step 2's sections, and the lines; at step 3 step 2's sections and the lines), and so is the pay
     // button before step 3. With no step (a block from before § 25), none.
+    // § 35: the save link is step 3's alone, hidden at steps 1 and 2 by design.
     const offStep = (el) => {
       const form = el.closest(".checkout__form");
       const two = step2.length && el.closest(step2.join(","));
       const lines = el.closest(line);
-      if (step === 1) return Boolean(form || isPay(el));
-      if (step === 2) return Boolean((form && !two) || lines || isPay(el));
+      const three = Boolean(save && el.closest(`[id="${save}"]`));
+      if (step === 1) return Boolean(form || isPay(el) || three);
+      if (step === 2) return Boolean((form && !two) || lines || isPay(el) || three);
       if (step === 3) return Boolean(two || lines);
       return false;
     };
@@ -295,6 +305,28 @@ export function readFaces({ hide, controls, pay, total: totalSel, style: styleId
         }
       : { count: 0 };
   }
+  // W28 (§ 35, a report): the save link at this reading (each step of the walk is one): how many, its words, address,
+  // target and rel, its computed size, displayed or not, and above the contact link (before it, and, when both are
+  // displayed, its box above that link's).
+  if (save) {
+    const links = [...document.querySelectorAll(`[id="${save}"]`)];
+    const a = links[0];
+    const h = help ? document.getElementById(help) : null;
+    out.save = a
+      ? {
+          count: links.length,
+          tag: a.localName,
+          text: a.textContent.replace(/\s+/g, " ").trim(),
+          href: a.getAttribute("href"),
+          target: a.getAttribute("target"),
+          rel: a.getAttribute("rel"),
+          fontPx: parseFloat(getComputedStyle(a).fontSize),
+          displayed: shown(a),
+          inCheckout: Boolean(checkout && checkout.contains(a)),
+          above: h ? Boolean(a.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING) && (!(shown(a) && shown(h)) || a.getBoundingClientRect().bottom <= h.getBoundingClientRect().top + 0.5) : null,
+        }
+      : { count: 0 };
+  }
   const scope = checkout || document.body;
   const renews = [];
   const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
@@ -332,7 +364,7 @@ const REQUIRED_FOUND = (faces) => faces.hide.every((h) => h.found > 0 || CONDITI
  * the walk (walkSteps) reads each step, and the readings are merged (mergeSteps); else the one reading, `steps: null`.
  */
 export async function readCheckoutFaces(page, poll) {
-  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO, line: LINE, step2: STEP2, sections: STEPS.flatMap((s) => s.shows), zero: ZERO_SIGN, help: HELP_ID };
+  const arg = { hide: HIDE, controls: CONTROLS, pay: PAY, total: TOTAL, style: STYLE_ID, logo: LOGO, line: LINE, step2: STEP2, sections: STEPS.flatMap((s) => s.shows), zero: ZERO_SIGN, help: HELP_ID, save: SAVE_ID };
   const first = await poll(page, readFaces, arg, (f) => f.payment !== null && REQUIRED_FOUND(f) && f.total?.found > 0, { timeoutMs: FACES_MS, everyMs: 500 });
   if (!first?.payment || !(await page.evaluate((id) => Boolean(document.getElementById(id)), STEP_NAV))) return first && { ...first, steps: null };
   const steps = await walkSteps(page, poll, arg);
@@ -406,7 +438,7 @@ export function mergeSteps(steps) {
     payment: three ? three.payment : first.payment,
     hide,
     total: totals.length ? { found: Math.max(...totals.map((x) => x.found)), displayed: Math.min(...totals.map((x) => x.displayed)) } : first.total,
-    steps: steps.map((s) => (s.error ? s : { step: s.step, reached: s.reached, refused: s.refused ?? null, payment: s.payment, sections: s.sections, total: s.total })),
+    steps: steps.map((s) => (s.error ? s : { step: s.step, reached: s.reached, refused: s.refused ?? null, payment: s.payment, sections: s.sections, total: s.total, save: s.save })),
   };
 }
 
@@ -587,6 +619,31 @@ export function helpLine(faces) {
   const times = h.count === 1 ? "once" : `${h.count} TIMES (one expected)`;
   const tag = h.tag === "a" ? "" : `, a ${h.tag}, NOT a link`;
   return `${head}${times}, "${h.text}", ${h.href}, ${h.fontPx} px, ${h.displayed ? "displayed" : "NOT displayed"}, ${h.inCheckout ? "in app-checkout" : "NOT in app-checkout"}${tag}`;
+}
+
+/**
+ * W28's save line (§ 35, a report, not a pass rule): the save link as read at the checkout: once or how many times, its
+ * words, address, target and rel, its computed size, the steps of the walk it was displayed at (with no steps, displayed
+ * or not), and above the contact link or not (read where it was displayed); ABSENT for a block from before § 35.
+ */
+export function saveLine(faces) {
+  const c = faces?.checkout;
+  if (!c) return "W28: /checkout not read";
+  const head = "W28: the save link (a#fitaf-save): ";
+  const s = c.save;
+  if (!s) return `${head}not read`;
+  if (!s.count) return `${head}ABSENT`;
+  const times = s.count === 1 ? "once" : `${s.count} TIMES (one expected)`;
+  const steps = (c.steps ?? []).filter((x) => !x.error && x.save);
+  const at = steps.filter((x) => x.save.displayed).map((x) => x.step);
+  const where = !c.steps
+    ? `${s.displayed ? "displayed" : "NOT displayed"} (no steps)`
+    : at.length
+      ? `displayed at step${at.length > 1 ? "s" : ""} ${at.join(", ")}`
+      : "displayed at no step";
+  const shownAt = steps.find((x) => x.save.displayed)?.save ?? s;
+  const above = shownAt.above === null ? "no contact link" : shownAt.above ? "above the contact link" : "NOT above the contact link";
+  return `${head}${times}, "${s.text}", ${s.href}, target ${s.target}, rel ${s.rel}, ${s.fontPx} px, ${where}, ${above}`;
 }
 
 /** W15's line for the report. */

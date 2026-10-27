@@ -70,7 +70,7 @@ const HOSTS_SLOT = "/*HOSTS*/ []";
  * and 2 (`to_delivery`, `to_payment`), `back`, and the recap before the Total (`recap`, with {n}). Since
  * SPEC-snacks-in-the-cart § 3.6, the recap with snacks (`recap_snacks`, with {n} and {s}), read only by a source that carts them.
  */
-const UI_WORDS = ["title", "step", "checkout", "stopped", "steps", "to_delivery", "to_payment", "back", "recap", "recap_snacks", "contact"];
+const UI_WORDS = ["title", "step", "checkout", "stopped", "steps", "to_delivery", "to_payment", "back", "recap", "recap_snacks", "contact", "save"];
 /** § 25: the step bar's names are `steps` split at this separator (the block splits it the same way), exactly three. */
 const STEPS_SEPARATOR = " \u00b7 ";
 const STEPS_COUNT = 3;

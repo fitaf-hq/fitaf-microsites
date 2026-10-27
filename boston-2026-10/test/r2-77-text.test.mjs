@@ -4,7 +4,8 @@
 // 15,360 by § 17.3, his ruling for the 2026-10-01 meeting; the 5,120-byte warning stays); every character ASCII;
 // no `<` but the Footer block's own two (§ 11); and the only new URLs, against the live block (914668de…, rebuilt as
 // R2-71 rebuilds it), are § 17.1's fixed list of the sheet's hosts: the production site and the test address; and,
-// since § 33 item 3 (2026-10-26), the store site's contact page, the link to customer service at the checkout's foot.
+// since § 33 item 3 (2026-10-26), the store site's contact page, the link to customer service at the checkout's foot;
+// and since § 35 item 5, the save link's https://eatfitaf.com/#save, whole (its host is the listed production site).
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as storefront from "../scripts/build-storefront.mjs";
@@ -14,13 +15,14 @@ import { HOSTS } from "./r2-photos.mjs";
 const FOOTER = "fitaf-handoff.html";
 
 const CONTACT = "https://fitafnutrition.com/contact";
+const SAVE = "https://eatfitaf.com/#save";
 
-test("R2-77: at most 50,000 bytes, ASCII, two `<`, and the only new URLs the listed hosts and § 33's contact page", async () => {
+test("R2-77: at most 50,000 bytes, ASCII, two `<`, and the only new URLs the listed hosts, § 33's contact page and § 35's save link", async () => {
   assert.equal(storefront.MAX_SHIPPED_BYTES, 50000, "§ 32: the store's cap (20,480 by § 25.7, for the three-step checkout; 15,360 by § 17.3)");
   assert.equal(storefront.TARGET_SHIPPED_BYTES, 5120, "§ 17.3: the warning stays");
   const live = await liveText(PREVIOUS_FOOTER);
   const files = await storefront.storefrontFiles({ commit: "0000000" });
-  const added = new Set([...urlsIn(JSON.stringify(HOSTS)), ...urlsIn(JSON.stringify(CONTACT))]);
+  const added = new Set([...urlsIn(JSON.stringify(HOSTS)), ...urlsIn(JSON.stringify(CONTACT)), ...urlsIn(JSON.stringify(SAVE))]);
   for (const f of files) {
     assert.ok(f.bytes <= 50000, `${f.name}: ${f.bytes} bytes`);
     assert.deepEqual([...f.content].filter((ch) => ch.charCodeAt(0) > 0x7f), [], `${f.name}: ASCII`);
@@ -29,5 +31,6 @@ test("R2-77: at most 50,000 bytes, ASCII, two `<`, and the only new URLs the lis
     assert.deepEqual(fresh.sort(), [...added].sort(), `${f.name}: the new URLs are exactly the listed hosts`);
     for (const host of HOSTS) assert.ok(f.content.includes(JSON.stringify(host)), `${f.name}: the list names ${host}`);
     assert.ok(f.content.includes(JSON.stringify(CONTACT)), `${f.name}: § 33's contact page, whole`);
+    assert.ok(f.content.includes(JSON.stringify(SAVE)), `${f.name}: § 35's save link, whole`);
   }
 });

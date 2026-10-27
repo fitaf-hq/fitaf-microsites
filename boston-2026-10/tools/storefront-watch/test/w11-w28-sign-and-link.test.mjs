@@ -20,6 +20,14 @@
 //         the report's line says so.
 //   W28c  a report, not a pass rule: a text without the link (a block from before § 33, as the live one until the
 //         Advisor's paste) passes, and the line says ABSENT.
+// § 35 item 5 (*Save my offer* on the Payment step): W28's report gains the save link, a#fitaf-save, read at every step
+// of the walk; and W11 counts it among step 3's own controls, hidden by design at steps 1 and 2.
+//   W28d  the save link's line, on recorded outcomes: once (its words, address, target, rel, size), the steps it is
+//         displayed at, above the contact link or not; absent; more than once; displayed at every step (reported).
+//   W28e  the smoke on the stand-in with § 35's block, at 1280 and 390: PASS (W11 allowing the link hidden at steps 1
+//         and 2); a#fitaf-save read once at each step, displayed at step 3 alone, its words handoff.save, its href
+//         https://eatfitaf.com/#save, target _blank, rel noopener, 14 px, above the contact link; the line says so; and
+//         the contact link's line unchanged.
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -35,6 +43,8 @@ import { startStore } from "./browser-store.mjs";
 const SITE = new URL("../../../", import.meta.url);
 const HELP = "https://fitafnutrition.com/contact";
 const ZERO_CONTROL = 'button.summary__remove "x"';
+const SAVE = "https://eatfitaf.com/#save";
+const SAVE_WORDS = "Not ready to checkout? Save your offer now.";
 
 // ── W11d, W28a: the rules, on recorded outcomes ──────────────────────────────────────────────────────────────────────
 
@@ -77,6 +87,30 @@ test("W28a: the link's line: once, absent, more than once, not read", () => {
   const absent = passing();
   absent.checkout.help = { count: 0 };
   assert.deepEqual(why(absent), []);
+});
+
+/** A save link's reading, and a walk whose step N reads it displayed as `shown` says. */
+const saved = (over = {}) => ({ count: 1, tag: "a", text: SAVE_WORDS, href: SAVE, target: "_blank", rel: "noopener", fontPx: 14, displayed: false, inCheckout: true, above: true, ...over });
+const walk = (shown) => ({ checkout: { save: saved(), steps: [1, 2, 3].map((step) => ({ step, save: saved({ displayed: shown.includes(step) }) })) } });
+
+test("W28d: the save link's line: once at step 3 above the contact link; every step; absent; twice; no steps", () => {
+  const line = faces.saveLine;
+  assert.equal(typeof line, "function", "lib/faces.mjs saveLine");
+  const head = "W28: the save link (a#fitaf-save): ";
+  assert.equal(line(walk([3])), `${head}once, "${SAVE_WORDS}", ${SAVE}, target _blank, rel noopener, 14 px, displayed at step 3, above the contact link`);
+  assert.match(line(walk([1, 2, 3])), /, displayed at steps 1, 2, 3, above the contact link$/);
+  assert.match(line(walk([])), /, displayed at no step, above the contact link$/);
+  const below = walk([3]);
+  below.checkout.steps[2].save.above = false;
+  assert.match(line(below), /, displayed at step 3, NOT above the contact link$/);
+  assert.equal(line({ checkout: { save: { count: 0 }, steps: [] } }), `${head}ABSENT`);
+  assert.match(line({ checkout: { ...walk([3]).checkout, save: saved({ count: 2 }) } }), /^W28: the save link \(a#fitaf-save\): 2 TIMES \(one expected\), /);
+  assert.match(line({ checkout: { save: saved({ displayed: true }), steps: null } }), /, displayed \(no steps\), above the contact link$/);
+  assert.equal(line({ checkout: null }), "W28: /checkout not read");
+  // A report, not a pass rule.
+  const shown = passing();
+  shown.checkout.save = saved({ displayed: true });
+  assert.deepEqual(why(shown), []);
 });
 
 // ── W11e–W11g, W28b, W28c: the smoke, in Chrome, on the stand-in ─────────────────────────────────────────────────────
@@ -168,4 +202,19 @@ test("W28c: a text without the link (a block from before § 33) — the smoke st
   assert.equal(run.outcome.faces.checkout.help?.count, 0, JSON.stringify(run.outcome.faces.checkout.help));
   const report = renderSmokeReport({ flag: false, script: "fill C", runs: [{ width: 1280, ...run }] }, "t");
   assert.ok(report.includes("- W28: the link to customer service (a#fitaf-help): ABSENT"), report);
+});
+
+test("W28e: § 35's block on the stand-in — PASS, W11 allowing the save link hidden at steps 1 and 2; the link read at each step, displayed at step 3 alone (1280, 390)", { skip, timeout: 120_000 }, async () => {
+  store.set({ zeroRow: "live" });
+  for (const width of [1280, 390]) {
+    const run = await smoke(width);
+    assert.deepEqual(run.verdict, { pass: true, reasons: [] }, `${width}: ${run.verdict.reasons.join("; ")}`);
+    const c = run.outcome.faces.checkout;
+    assert.deepEqual(c.steps.map((s) => [s.step, s.save?.count, s.save?.displayed]), [[1, 1, false], [2, 1, false], [3, 1, true]], `${width}: ${JSON.stringify(c.steps.map((s) => s.save))}`);
+    const three = c.steps[2].save;
+    assert.deepEqual(three, { count: 1, tag: "a", text: words.save, href: SAVE, target: "_blank", rel: "noopener", fontPx: 14, displayed: true, inCheckout: true, above: true }, `${width}: ${JSON.stringify(three)}`);
+    const report = renderSmokeReport({ flag: false, script: "fill C", runs: [{ width, ...run }] }, "t");
+    assert.ok(report.includes(`- W28: the save link (a#fitaf-save): once, "${words.save}", ${SAVE}, target _blank, rel noopener, 14 px, displayed at step 3, above the contact link`), report);
+    assert.ok(report.includes(`- W28: the link to customer service (a#fitaf-help): once, "${words.contact}", ${HELP}, 14 px, displayed, in app-checkout`), "the contact link's line unchanged");
+  }
 });

@@ -63,8 +63,9 @@ test("R2-11b: each file holds one fill only, is self-contained, and names nothin
       assert.doesNotMatch(text, /\b(fetch|XMLHttpRequest|sendBeacon|WebSocket|EventSource|importScripts)\b/);
       assert.doesNotMatch(text, /\bnew Image\b|createElement\(\s*["']script/, "loads nothing else");
       // § 17.1: the one addition, the fixed list of the sheet's hosts (R2-77); and since § 33 item 3 (amended at § 33.2,
-      // the case the contract made stale), the store site's contact page, whole.
-      assert.doesNotMatch(text.replace(/"https:\/\/eatfitaf\.com"|"https:\/\/fitaf-microsites-dev\.fitaf-microsite-boston-2026-10\.workers\.dev"|"https:\/\/fitafnutrition\.com\/contact"/g, ""), /https?:\/\//, "names no other address");
+      // the case the contract made stale), the store site's contact page, whole; and since § 35 item 5, the save
+      // link's https://eatfitaf.com/#save, whole.
+      assert.doesNotMatch(text.replace(/"https:\/\/eatfitaf\.com"|"https:\/\/fitaf-microsites-dev\.fitaf-microsite-boston-2026-10\.workers\.dev"|"https:\/\/fitafnutrition\.com\/contact"|"https:\/\/eatfitaf\.com\/#save"/g, ""), /https?:\/\//, "names no other address");
       assert.doesNotMatch(text, /<fill [AB]>|^\s*\/\//m, "no source-only line left");
     }
     assert.equal((files.footer.match(/<script>/g) ?? []).length, 1);
