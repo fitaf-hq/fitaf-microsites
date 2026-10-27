@@ -1152,3 +1152,218 @@ that event's QR code (`boston`), mixed with the flyer's.
 6. **When.** Built on `boston/analytics-email` from the release line; merged into it; the full suites; dev, where a
    test of each event is read back from the dataset (a 204 from `/a` proves nothing); production on the Advisor's word,
    **after** the dashboard's § 12 is live, so no card counts an offer page as a visit.
+
+### 16.1 Built — found at the build, not ruled (2026-10-27)
+
+§ 16 is unchanged. On `boston/analytics-email` (from `bc4ea03`): the cases at `1c8cf8a` (on `bc4ea03`'s code, red), the
+code at `0ef1455`, the goldens and bases it moves at `f2fcf80`, this section after them.
+
+**What was built**
+
+- `src/analytics.js`: on a page carrying `#offer-data` (the offer page), the script reads `kind` and `qr` from it, sends
+  one `offer` through its one `send` and returns, before any listener is added: no `leave`, no `error`, no click, no
+  result, and nothing read of the page's address. On every other page (the plan page) it runs as before, and `open`
+  carries `via`: `w.location.hash == "#from-email" ? "email" : ""`, read once, beside `qr`.
+- `src/worker/beacon.js`: `EVENTS` and `FIELDS` gain `offer` (`qr`, the QR check `open` uses; `kind`, one of
+  `OFFER_KINDS`: `saved`, `welcome`, `current`, `ended`); `open` gains `via` (`VIAS`: `""`, `email`); `BLOBS` gains `kind`
+  and `via`, blob13 and blob14, appended. `qr` keeps its place, blob6.
+- `src/worker/pages.js`: `page(title, body, { offer })` ends the page's column with `#offer-data` (`scriptJson({ kind, qr
+  })`, nothing else) and the plan page's analytics script, `src/worker/page-script.json`'s `html`. No other page passes
+  `offer`. `src/worker/redeem.js` passes it on its four pages: the save's offer live (`saved`, its event), the ended
+  offer with the current one shown (`welcome`, its event), an unknown or malformed code (`current`, `""`), and no offer
+  current (`ended`: a known code's event, or `""` for an unknown code).
+- `src/worker/page-script.json`, DERIVED, and `npm run worker:script` (`scripts/worker-script.mjs`), which writes it from
+  `build.mjs`'s own `analyticsSlot` over `data/events.json`.
+- `scripts/analytics.mjs`: the visitors query reads `AND blob1 != 'offer'`; two queries are appended to the eight,
+  `offers` (`blob13 AS kind`, `count(DISTINCT blob2)`, `event` `offer`) and `email` (`count(DISTINCT blob2)`, `event`
+  `open` and `blob14 = 'email'`); each day gains `offer_pages` (by kind, `OFFER_KINDS`' order, only kinds with visits) and
+  `email_visits`, the JSON's members after `saves`, and the text's lines `visits from the offer email N` and `offer pages
+  opened (a repeat opening counted again): saved 3 · welcome 1` (or `none`) after `saved an offer N`.
+- README rows: `src/analytics.js`, `scripts/analytics.mjs`, `src/worker/page-script.json` (new), and the cases.
+
+**What § 16 was silent on, and what was built** (stated, not ruled)
+
+1. **How the offer page gets the script: inlined by the Worker, from a derived copy.** The page's script is the plan
+   page's own, byte for byte: `build.mjs`'s `analyticsSlot` (the `<script>` every built page carries), which `npm run
+   worker:script` writes into `src/worker/page-script.json` and `pages.js` imports. Not an asset: a `<script src>` would
+   be the site's first script loaded from a file, which § 0 and T5 keep off the page (*"this page loads no script from a
+   file"*), and would add a file to both builds (PV5, S20) and to the preview's. The Worker's pages already carry their
+   stylesheet this way (`page-style.json`, `npm run worker:style`, SP15). The cost is the copy: it must be derived again
+   after any change to `src/analytics.js`, `src/qr-event.js` or `data/events.json`, and EM-A1 fails until it is (its
+   second test: the committed file equal to the command's output, and the offer page's script equal to both targets'
+   built pages'). One text, one call site: there is no second `sendBeacon` anywhere in the package's sources.
+2. **The data: `<script type="application/json" id="offer-data">`**, `{"kind":…,"qr":…}` and nothing else, escaped by
+   `script-json.js`'s `scriptJson` (the page's `#plan-data` and `#picks-data` precedent), then the script, both at the end
+   of the page's one column, inside `<main>` (SP15 holds the body to that one element). The script finds it by id; a page
+   without it is the plan page. Nothing on the page changes for a reader (SP15's words compare scripts out).
+3. **The offer branch runs before any listener is added**, after `send` is defined: the offer page registers nothing
+   (no `error`, `pagehide`, `visibilitychange`, click, `hashchange` or timer), so "no `leave`, no `error`" holds by
+   construction, and the plan page's path is unchanged below it. EM-A1 hides the page, leaves it and reports an error,
+   and still counts one beacon.
+4. **`kind` is the page drawn**: an unknown code when no offer is current draws the ended page, so it is `ended` with
+   `qr` `""` (item 1's *"`current` (an unknown code)"* and *"`ended` (no offer current)"* both describe it; *"which page it
+   is"* decides). A malformed code is an unknown one. The rate limit's page (`/o`'s 429, *Please wait*) is not one of the
+   four and carries no script: an opening refused by the limit is not counted.
+5. **`via` is required on `open`**, as every event carries exactly its fields (§ 3): an `open` without it is refused
+   (EM-A3). The plan page is served `no-cache` (`site.js`), so a browser asks again and gets the new page; a page
+   restored from the back-forward cache runs no script. `a-harness.mjs`'s `VALID.open` carries `via: ""`, so A3, A4, A5,
+   A6, IX1, IX2, N3 and N4 post it.
+6. **The report's two queries are appended** (`offers`, `email`: ten requests, A11's names), and the visitors query alone
+   gains a condition (`blob1 != 'offer'`): the other seven read no `offer` row already (each names its event, or, the
+   steps query, groups by event and the document reads no `offer` step). `email_visits` counts `count(DISTINCT blob2)`
+   over `open` rows with `blob14 = 'email'`; rows written before § 16 hold no blob14 and count none.
+7. **A day of offer pages alone is a day with data** (`data: true`): its plan-page figures are those of no visit
+   (visitors 0, visits 0, every step 0, no length or load, empty splits, 0 saves and errors), and its `offer_pages` its
+   own. § 16 item 3 says every earlier figure is *"as before"*, and before § 16 such a day would read *no data*; the
+   alternative, `{ day, data: false, offer_pages }`, breaks § 11's shape for a day of no data (AJ3, AJ4), and dropping
+   the day would lose the offer pages it exists to count.
+8. **The text's two lines follow `saved an offer N`**: `visits from the offer email N` and `offer pages opened (a repeat
+   opening counted again): saved 3 · welcome 1` (each kind with openings, in `OFFER_KINDS`' order; `none` without).
+   The words are the operator's report's, not a visitor's. The JSON's members follow `saves`.
+9. **The case files are `em-a1`–`em-a5`**, with `em-a-checks.mjs` and `em-a-mutants.test.mjs`: every menu's EM cases
+   hold `em-01`–`em-08` and `em-checks.mjs`. `test/em-a*.test.mjs` takes them and nothing else.
+10. **EM-A1's Miniflare** runs the development Worker (`worker-harness.mjs`: D1, the rate limiters, the test clock), its
+    `main` the package's own `index.js` (a mirror's, for the mutant); Miniflare runs the Worker, not a page, so each
+    page's scripts then run in `a-harness.mjs`'s stub, whose new `watchLocation` records every read of `location` (each
+    property by name) and of `document.location`, `URL`, `documentURI`, `referrer` and `baseURI`. Production's Worker with
+    `production` true is the development Worker's handler (`site.js`), so it was not started apart for EM-A1.
+11. **EM-A1's pages**: a save made through the Worker from each QR event (`demo`, `boston`, `seminar`), its code with and
+    without the hyphen (`saved`); `ZZZZ9999`, `ZZZZ-9999` and `abc` (`current`); after the Boston offer's end
+    (2026-10-30) a save of 2026-10-24 and an unknown code (`ended`); a save of an ended offer with a general offer current,
+    S11's fixture offers (`welcome`, whose page prints a reissued code: the payload is searched for both codes).
+12. **EM-A4's beacons** are the ones those twelve pages' scripts send, posted to both Workers with N3's three Cookie
+    headers (all of them first, so SALTS holding no key after them is meaningful), then each once without (the control:
+    one point, its kind in blob13). Production's Worker with `production` false (N3's rollback) has no offer page and was
+    not asked.
+13. **EM-A5 evaluates the report's own SQL** over invented data points (`fixtures/analytics/points-offer-email.json`,
+    written by field name; the case places each in its column by the contract's layout, written in the case). It reads the
+    forms the report uses and fails on any other, naming it: a column (a blob never written `""`, a double `0`),
+    `if(<column> = '<text>', …, …)`, `count(DISTINCT …)`, `sum(_sample_interval)`, `quantileExactWeighted(q)(…,
+    _sample_interval)` (the first value whose running weight reaches ceil(total × q)), the New York date of `timestamp`,
+    a New York day's start as a bound, `=` and `!=`. ⚠ None of it was run against Cloudflare, and `!=` was not checked
+    against Analytics Engine's SQL reference here (it is ClickHouse's).
+14. **"Exactly as before" is held against `bc4ea03`'s own report** (§ 15's; `git archive`, AJ2's way): this tree's text,
+    the two new lines removed, is that report's byte for byte over the points without their `offer` rows and over every
+    answer set AJ's checks run (A11's fixture with its new `offers` and `email` answers). Its control: `bc4ea03`'s report
+    over every row counts the offer pages as visits (4 visitors and 6 visits on 2026-10-26, against 2 and 2).
+15. **The referrer**: the offer page is served with `referrer-policy: no-referrer` (`pages.js` `PAGE_HEADERS`, before
+    § 16), so the beacon the page sends carries no `Referer`, and its address (the code) does not reach `/a` in a header
+    either. Read from the code, not a case.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named; the whole suite was not run, as the
+orchestrator asked: it runs once on the merged line)
+
+| | before | after |
+|---|---|---|
+| `test/em-a*.test.mjs` (EM-A1 twice, EM-A2–EM-A5, the mutants and their control) | `1c8cf8a`: `# tests 10` `# pass 0` `# fail 10` | `f2fcf80`: the ten pass, within the last row's run |
+| `test/a*.test.mjs test/n-*.test.mjs test/sv*.test.mjs test/ix*.test.mjs` (with `em-a*`) | `bc4ea03` (without `em-a*`): `# tests 88` `# pass 88` `# fail 0`; `1c8cf8a`: `# tests 98` `# pass 62` `# fail 36` | `0ef1455`: `# tests 98` `# pass 97` `# fail 1` (AJ2, against `3f40698`) |
+| the goldens' and the Worker pages' readers (`s[0-9]*`, `sp*`, `uc*`, `uf*`, `uq*`, `sl*`, `rp*`, M8, M21, WC-6, WC-8, WC-9, CC-4, CC-8, MS-9, MS-10, MS-20, PR-10, PV5, U4, QE15, T5, the budget, EM5, W4, P1) | | `0ef1455`: `# tests 382` `# pass 369` `# fail 13` (every reader of CC-8, S20, PV5, U4 and SP3's base) |
+| the last run, once, on the tree committed as `f2fcf80` | | 151 files (every row above): `# tests 480` `# pass 480` `# fail 0` |
+
+Red for the right reasons. EM-A1: every page reached and headed as meant (its control), and each `sent nothing, not
+exactly one offer`; its sender: `0 analytics scripts, not 1`, `0 #offer-data elements`, and `scripts/worker-script.mjs`
+not found. EM-A2: `prod, opened at /#from-email: the open carries via undefined, not "email"` (every opening, both
+targets), and the script alone `read location.hash 0 time(s), not once`. EM-A3: `site: offer saved, qr "boston": 204 and
+0 data point(s), not 204 and 1`, every open with a via the same, `12 blobs, not 14`, and `an open without its via:
+written (1 data point(s))`. EM-A4: `control: the offer pages
+sent 0 offers, not one of each kind`. EM-A5: `2026-10-26: visitors 4, not 2`, `visits 6, not 2`, no `offer_pages` or
+`email_visits`, and `the text prints 0 of § 16's lines`; its control (the base counting every row) passed. The mutants'
+control and the three mutants: their anchors not yet in `src/analytics.js` and `scripts/analytics.mjs`. Of the existing
+cases, by `VALID.open`'s `via` (the Worker refusing it): A3 three times, A4 twice, A5 three times, A6 four
+times, the A mutants' control and the salt mutant, IX1, the IX mutants' three, N4; by the fixture's two new answers: A11
+twice (`control: the report's queries are the fixture's`), AJ1, the AJ mutant's control, AJ4 (`days[0]: no
+"offer_pages"`); N5 twice (`GET /o/ABCD2345: the offer page carries its data and the analytics script`). AJ2 passed
+there by construction (this tree's text, `3f40698`'s), the control for its base's move. The first run on the code had
+six red: AJ2; IX1, IX2, the IX mutants' control (`14 blobs, not 12`) and SV1 (its fourteen blobs); SV3 (the day's
+lines). § 16 moves the last five, and they changed in the code's commit (below).
+
+**The mutants** (`test/em-a-mutants.test.mjs`, each in a mirror through THE SAME check its case runs,
+`test/em-a-checks.mjs`; the tracked tree untouched, `git status` clean after every run; the counts measured by a scratch
+run of the same checks): the control (the unchanged mirror) passes EM-A1, EM-A2 and EM-A5, 0 problems each. The offer
+page's script reading `location` (the offer's `qr` read from `?e=` first, then the Worker's copy derived again in the
+mirror, as `npm run worker:script` would): EM-A1 red, 12 problems, one a page, `a save from demo, its offer live, the
+code: the script read the page's address: location.search`; its payloads were right, so the address's read is what kills
+it. `via` read from the query instead of the fragment: EM-A2 red, 10 problems, five a target, `prod, opened at
+/#from-email: the open carries via "", not "email"`, the same at `/?e=boston#from-email`, `prod, opened at /?from-email:
+the open carries via "email", not ""`, and the script alone's two. The report counting offer-only visits as visits (the
+visitors query without its condition): EM-A5 red, 11 problems, `2026-10-26: visitors 4, not 2`, `visits 6, not 2`, the
+same for 2026-10-27 (3 and 5) and 2026-10-28 (1 and 2), each day's earlier figures, and the text unequal to the base's.
+
+**Cases changed with the code** (in `0ef1455`): IX1 and IX2 (`ix-checks.mjs`, `BLOB_COUNT` 12 → 14; IX2 plants in
+blob12 by its place, `V_BLOB`, not the last blob), SV1's Worker half (`sv-checks.mjs`: fourteen blobs, blob13 and blob14
+`""` on a save), SV3 (its day's lines gain the two after the saved line, which is now directly before them, not before the
+visit length). In the cases' commit: `a-harness.mjs` (`VALID.open`'s `via`, `openVisit`'s `watchLocation`), A11 and
+`aj-checks.mjs` (the ten queries, the fixture's `offers.json` and `email.json`, invented; `FIXTURE_DOCUMENT`'s two members
+written by hand from them; `parseText`, the figures compared, the shape), AJ4's control (five more broken documents), N5
+(below).
+
+**N5** compares every request of SP3's and WC-6's lists with `c6dd3a5`'s Workers byte for byte, and § 16 changes one of
+those answers by design: `/o/…`'s 200 now ends its column with `#offer-data` and the script. Rather than moving its
+"today", N5 removes exactly those two elements from this tree's offer page (and fails if they are not there), and the
+rest is `c6dd3a5`'s byte for byte (its `content-length`, when sent, read for the shorter body).
+
+**The goldens and bases moved** (each re-recorded once from `0ef1455`'s own tree, `git archive`, the package's
+`node_modules` linked in; each recorder's control first reproducing the committed record):
+
+- CC-8 (CC-8b, CC-8c, MS-9, PR-10): `src/worker/beacon.js` `b21f8e51…` → `3baf5e54…`, `pages.js` `42be770a…` →
+  `6b8173ed…`, `redeem.js` `279d92f5…` → `4f45609c…`, and `page-script.json` added (`8b2cc015…`), 35 → 36 files.
+  `cc-harness` `workerFiles` over `1c8cf8a`'s tree reproduces the committed map.
+- S20 (and CC-4; SP3's S20 case): `index.html` alone, `f70002b5…` → `0833fde7…`, 80,279 → 80,503 bytes (production
+  false), by the analytics script's lines alone (both trees' pages compared line by line: the offer branch's eight and
+  the open's `via`). Built as S20 builds it, `1c8cf8a`'s tree reproduces `f70002b5…`.
+- PV5 (`pv-05-record.mjs --commit 0ef1455 --release-a`; at `f60e19c` it reproduces the committed record byte for byte, at
+  `1c8cf8a` the same record but `recorded_at`): the same five pages as §§ 13–15's, +224 bytes each.
+- U4 (`u-04-record.mjs --commit 0ef1455 --release-a --without-snack-cells`; at `f60e19c` byte for byte, at `1c8cf8a` the
+  same but `recorded_at`): the six pages, +224 bytes each; all six contents and every visible page byte-identical. U4's
+  case names its golden's commit, now `0ef1455`.
+- SP3's base (`sp-production.mjs` `LATER`): `1c8cf8a`..`0ef1455` over `src/analytics.js` and `src/worker/beacon.js`.
+  ⚠ Not every hunk is taken: the base's `open` predates § 9 item 2's reading (`var x = …, qr = …;` and its own `qr:`
+  line), and with git's three lines of context the offer branch and the open's `via` are one hunk whose context the base
+  does not hold (`patch` exit 1). So the diff is taken with one line of context (§ 13's entry's `context`), the open's two
+  hunks are left out (`dropHunks`: the comment above `var x` and the `via` line), and the `via` line is put after the
+  base's own `qr:` line (`insertAfter`). Measured by a scratch run of `basePackage`: the patched base's `beacon.js` is
+  `0ef1455`'s byte for byte, and its `analytics.js` `0ef1455`'s but for § 9 item 2's lines and that comment. SP3's
+  `MOVED_WORKER_FILES` gains `src/worker/page-script.json` (reached only through `pages.js`, already named).
+- AJ2's base: `3f40698` → `0ef1455`, as § 16 item 3 says. `3f40698`'s text over the fixture with its new answers was
+  `1c8cf8a`'s, byte for byte (AJ2 passed there). That every earlier line is still `3f40698`'s is EM-A5's (item 14 above).
+- Not moved: WC-8 (its pin removes the analytics slot), WC-9 (its visible pages read the markup without its scripts),
+  QE15, T5, S18, the budget, MS-20, W4, EM5, SP15 (the offer page's words compare scripts out; its one `<main>` holds the
+  new elements).
+
+**The page's bytes** (every page the builds write, no week, `test/page-budget.mjs`'s gzip; `1c8cf8a`, `bc4ea03`'s code →
+`0ef1455`): each page that carries the analytics slot gains 224 bytes raw, the offer branch's eight lines and the open's
+`via` once the build has removed their comments and indentation; privacy/ and why/ unchanged.
+
+| build | page | raw | gzip |
+|---|---|---|---|
+| production (as committed, `production` true) | `index.html` | 118,983 → 119,207 | 35,004 → 35,075 |
+| production with `production` false | `index.html` | 80,279 → 80,503 | 23,995 → 24,072 |
+| development | `index.html`, `demo/` | 125,852 → 126,076 | 36,864 → 36,939 |
+| development | `boston/` | 125,854 → 126,078 | 36,862 → 36,937 |
+| development | `seminar/` | 125,855 → 126,079 | 36,866 → 36,941 |
+
+T5's ceiling is 61,440 bytes gzip; the largest page is 36,941.
+
+**The offer page's bytes** (the Worker's own handlers over `sp-worker-pages.mjs`'s fake database, the same definition;
+"before" is the page with § 16's two elements removed): the saved offer 3,111 → 6,349 raw, 1,235 → 2,612 gzip; the
+ended offer 2,987 → 6,225 raw, 1,167 → 2,549 gzip; an unknown code 3,057 → 6,291 raw, 1,207 → 2,592 gzip. The script is
+3,149 bytes of it, the data about 90. T5 governs the built pages; the offer page is under its ceiling by far all the
+same.
+
+**Found, not ruled**
+
+- ⚠ **Item 1's kinds overlap** for an unknown code when no offer is current: built as the page drawn, `ended` (item 4
+  above).
+- ⚠ **Cases § 16 moves that it did not name**: IX1, IX2 and SV1 pin twelve blobs; SV3 pins the saved line directly before
+  the visit length; N5 pins `/o`'s answer to `c6dd3a5`'s; A11 pins the report's eight queries; U4 names its golden's
+  commit; SP3's base needed one line of context and two hunks left out. Each is changed and said above. *"AJ1–AJ4 hold;
+  AJ2's base moves once"* held as written.
+- **A reload is a new visit** (§ 2): a visitor who opens the plan page from the email and reloads it while its address
+  still ends `#from-email` is counted as a second email visit, as a repeat opening of the offer page is counted again.
+- **The team's dashboard** (Fit AF `analytics-worker.spec.md` § 12) must leave the `offer` rows out of its visits before
+  production, as item 6 says; it was not touched here. Rows written before § 16 hold no blob13 or blob14.
+- The offer page carries the plan page's whole script (3,149 bytes), of which it runs the head; the price of one text.
+
+**Not done here**: the whole site suite, Storybook (its `wp-chrome` case opens two offer pages in Chrome; their beacon now
+goes to its own Worker's `/a`, same origin, which its request check allows) and the watch; `npm run contrast` (no colour
+or style changed); the SQL against Cloudflare; nothing deployed, no `wrangler`, no merge, no pin.
