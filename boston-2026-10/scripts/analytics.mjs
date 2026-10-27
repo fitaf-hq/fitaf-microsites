@@ -14,13 +14,19 @@
 // § 14 the visits with a `save` (a stored offer save), the line after the funnel, from the funnel's own query; the
 // visit's length (median and quartiles, from `leave`) and the load time (from `open`); the device, viewport band and
 // country splits (from `open`); the visits with an error.
+// Since § 16 (2026-10-27: the offer email's clicks, and its visitors as their own source) the offer page's `offer` is
+// counted apart: a visit whose only event is `offer` is not a plan-page visit, so the visitors and visits leave the
+// offer pages' rows out and every figure above is exactly as before; each day gains the visits from the offer email
+// (the plan-page visits whose `open` has `via` "email") and the offer pages opened, by kind, each opening counted (a
+// repeat opening too: nothing ties two to one person), a line each after the saves, from two queries of their own. A
+// day with offer pages alone is a day with data, its plan-page figures those of no visit.
 // A day with nothing recorded says so. `--json` (§ 11) prints the same figures as one JSON document instead of the text:
 // reportData computes them, once, and the text (reportText) is a formatting of that document, so the two cannot
 // disagree. Exit 0; 1 when the SQL API refuses or answers what this cannot read; 2 for a refused command line or a
 // missing variable, before any request; nothing on stdout but the report.
 // ⛔ Read-only: it sends SELECTs and nothing else, and never prints the token.
 import { fileURLToPath } from "node:url";
-import { ANALYTICS_ZONE, BLOBS, DOUBLES, LINKS, QUESTIONS, VIEWPORTS } from "../src/worker/beacon.js";
+import { ANALYTICS_ZONE, BLOBS, DOUBLES, LINKS, OFFER_KINDS, QUESTIONS, VIEWPORTS } from "../src/worker/beacon.js";
 
 /** The datasets (SPEC-analytics.md § 6; the infrastructure's Amendment 1.8). */
 export const DATASETS = { prod: "fitaf_microsite_analytics_prod", dev: "fitaf_microsite_analytics_dev" };
@@ -61,6 +67,9 @@ export function queries({ dataset, from, to }) {
   // § 15 item 3: a row's visitor is blob12 since § 15, else (a row written before it, blob12 never written) index1, so a
   // window holding both layouts counts each visitor where it is.
   const visitors = `count(DISTINCT if(${col("v")} = '', index1, ${col("v")}))`;
+  // § 16 item 3: a visit whose only event is `offer` (the offer page's, which sends nothing else) is not a plan-page
+  // visit: the visitors and visits leave the offer pages' rows out, exactly as before § 16.
+  const planPage = `${col("event")} != 'offer'`;
   const quartiles = (field) =>
     [0.25, 0.5, 0.75]
       .map((q, i) => `quantileExactWeighted(${q})(${col(field)}, _sample_interval) AS ${["q1", "median", "q3"][i]}`)
@@ -68,7 +77,7 @@ export function queries({ dataset, from, to }) {
   const split = (field) =>
     `SELECT ${day} AS day, ${col(field)} AS value, sum(_sample_interval) AS visits FROM ${dataset} ${where("open")} GROUP BY day, value ORDER BY day FORMAT JSON`;
   return {
-    visitors: `SELECT ${day} AS day, ${visitors} AS visitors, ${visits} AS visits FROM ${dataset} ${where()} GROUP BY day ORDER BY day FORMAT JSON`,
+    visitors: `SELECT ${day} AS day, ${visitors} AS visitors, ${visits} AS visits FROM ${dataset} ${where()} AND ${planPage} GROUP BY day ORDER BY day FORMAT JSON`,
     steps: `SELECT ${day} AS day, ${col("event")} AS event, ${col("question")} AS question, ${visits} AS visits FROM ${dataset} ${where()} GROUP BY day, event, question ORDER BY day FORMAT JSON`,
     clicks: `SELECT ${day} AS day, ${col("link")} AS link, ${visits} AS visits FROM ${dataset} ${where("click")} GROUP BY day, link ORDER BY day FORMAT JSON`,
     length: `SELECT ${day} AS day, ${quartiles("length_ms")}, sum(_sample_interval) AS n FROM ${dataset} ${where("leave")} GROUP BY day ORDER BY day FORMAT JSON`,
@@ -76,6 +85,9 @@ export function queries({ dataset, from, to }) {
     devices: split("device"),
     viewports: split("viewport"),
     countries: split("country"),
+    // § 16 item 3: the offer pages opened, by kind (each a visit of its own), and the plan-page visits from the offer email.
+    offers: `SELECT ${day} AS day, ${col("kind")} AS kind, ${visits} AS visits FROM ${dataset} ${where("offer")} GROUP BY day, kind ORDER BY day FORMAT JSON`,
+    email: `SELECT ${day} AS day, ${visits} AS visits FROM ${dataset} ${where("open")} AND ${col("via")} = 'email' GROUP BY day ORDER BY day FORMAT JSON`,
   };
 }
 
@@ -155,8 +167,10 @@ export function reportData({ dataset, from, to }, rows) {
   const days = Object.fromEntries(Object.entries(rows).map(([name, list]) => [name, byDay(list)]));
   const doc = { dataset, from, to, zone: ANALYTICS_ZONE, days: [] };
   for (let day = from; day <= to; day = nextDay(day)) {
+    // § 16 item 3: a day of offer pages alone has data; its plan-page figures are those of no visit.
     const visitors = days.visitors.get(day)?.[0];
-    if (!visitors) {
+    const offers = days.offers.get(day);
+    if (!visitors && !offers) {
       doc.days.push({ day, data: false });
       continue;
     }
@@ -166,8 +180,8 @@ export function reportData({ dataset, from, to }, rows) {
     doc.days.push({
       day,
       data: true,
-      visitors: num(visitors.visitors),
-      visits: num(visitors.visits),
+      visitors: num(visitors?.visitors),
+      visits: num(visitors?.visits),
       funnel: [
         { step: "open", visits: visitsOf("open") },
         ...Object.keys(QUESTIONS).map((q) => ({ step: `answer: ${q}`, visits: visitsOf("answer", q) })),
@@ -176,6 +190,8 @@ export function reportData({ dataset, from, to }, rows) {
       ],
       clicks: splitCounts(days.clicks.get(day), "link", LINKS),
       saves: visitsOf("save"),
+      offer_pages: splitCounts(offers, "kind", OFFER_KINDS),
+      email_visits: num(days.email.get(day)?.[0]?.visits),
       visit_length_ms: quartilesOf(days.length.get(day)?.[0]),
       load_ms: quartilesOf(days.load.get(day)?.[0]),
       device: splitCounts(days.devices.get(day), "value"),
@@ -215,6 +231,8 @@ export function reportText(doc) {
     const clicks = splitLine(d.clicks, LINKS);
     if (clicks) lines.push(`    click by link: ${clicks}`);
     lines.push(`  saved an offer ${d.saves}`);
+    lines.push(`  visits from the offer email ${d.email_visits}`);
+    lines.push(`  offer pages opened (a repeat opening counted again): ${splitLine(d.offer_pages, OFFER_KINDS) || "none"}`);
     for (const [q, label, what] of [[d.visit_length_ms, "visit length", "leave"], [d.load_ms, "load time", "open"]]) {
       lines.push(
         q

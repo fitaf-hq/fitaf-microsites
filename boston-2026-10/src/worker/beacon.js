@@ -22,6 +22,11 @@
 // Since § 15 (2026-10-26: no data point thinned) each data point is written with its own index, random and new for each
 // point, so Analytics Engine's write-time sampling (of points written too quickly into one index) has nothing to thin; the
 // visitor `v` is appended as blob12, blobs 1–11 in their places. The index identifies nothing and nothing reads it.
+// Since § 16 (2026-10-27: the offer email's clicks, and its visitors as their own source) one more event, `offer`, sent
+// by the offer page's script (/o/<code>) once a page load: `qr`, the save's event id ("" for an unknown code), and
+// `kind`, which page it is (OFFER_KINDS), blob13, appended; never the code, the path or the query. And `open` carries
+// `via`, "email" when the plan page started at #from-email (the offer page's link), else "": blob14, appended. Blobs 1–12
+// keep their places.
 import plans from "../../data/plans.json" with { type: "json" };
 import events from "../../data/events.json" with { type: "json" };
 import { ANSWER_SETS, answerKey } from "../../scripts/selection.mjs";
@@ -46,8 +51,13 @@ const VISIT_ID = /^[0-9a-f]{16}$/;
 const COUNTRY = /^[A-Z][A-Z0-9]$/;
 
 /** § 3's vocabulary. */
-export const EVENTS = ["open", "answer", "result", "click", "leave", "error", "save"];
+export const EVENTS = ["open", "answer", "result", "click", "leave", "error", "save", "offer"];
 export const VIEWPORTS = ["<400", "400-767", "768-1199", ">=1200"];
+/** § 16 item 1: which offer page it is: the save's offer live, ended with the current offer shown, an unknown code, no
+ *  offer current (src/worker/redeem.js draws each). The report lists them in this order. */
+export const OFFER_KINDS = ["saved", "welcome", "current", "ended"];
+/** § 16 item 2: an `open`'s `via`: "email" for a visit from the offer page's link (#from-email), else "". */
+export const VIAS = ["", "email"];
 /** Each question by the page's own id for it, and its answers, in the page's order since SPEC-ui-and-copy-pass § 2 (who
  *  it is for first, the goal last, then Family's own question, shown for Family alone): the report's funnel reads this
  *  order (§ 13 item 3). `who` is the button's data-who (build.mjs's WHO), `family` its data-family. */
@@ -74,9 +84,10 @@ export const QR_IDS = events.map((e) => e.id);
 export const DEVICES = ["phone", "tablet", "desktop"];
 
 /** The data point's layout (§ 4): blob N is BLOBS[N - 1], double N is DOUBLES[N - 1]; index1 the point's own (§ 15
- *  item 1; it was `v`, which is blob12 since § 15 item 2). A field an event does not carry is "" (a blob) or 0 (a double).
- *  The report (scripts/analytics.mjs) reads its columns from these. */
-export const BLOBS = ["event", "s", "country", "device", "viewport", "qr", "question", "answer", "key", "link", "step", "v"];
+ *  item 1; it was `v`, which is blob12 since § 15 item 2); since § 16 blob13 the offer page's `kind` and blob14 an
+ *  open's `via` (the team's dashboard reads them by these numbers). A field an event does not carry is "" (a blob) or 0
+ *  (a double). The report (scripts/analytics.mjs) reads its columns from these. */
+export const BLOBS = ["event", "s", "country", "device", "viewport", "qr", "question", "answer", "key", "link", "step", "v", "kind", "via"];
 export const DOUBLES = ["load_ms", "length_ms", "mpid"];
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -84,15 +95,19 @@ const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 const oneOf = (list) => (v) => list.includes(v);
 const isMs = (v) => Number.isInteger(v) && v >= 0 && v <= MAX_MS;
 
+/** A QR event's id: one of data/events.json's, or "" (§ 9; since § 16 also the save's event, on an offer page). */
+const isQr = (v) => v === "" || QR_IDS.includes(v);
+
 /** Each event's fields beyond `event` and `s`, each with its check (§ 3). */
 const FIELDS = {
-  open: () => ({ viewport: oneOf(VIEWPORTS), load_ms: isMs, qr: (v) => v === "" || QR_IDS.includes(v) }),
+  open: () => ({ viewport: oneOf(VIEWPORTS), load_ms: isMs, qr: isQr, via: oneOf(VIAS) }),
   answer: (b) => ({ question: oneOf(Object.keys(QUESTIONS)), answer: oneOf(has(QUESTIONS, b.question) ? QUESTIONS[b.question] : []) }),
   result: () => ({ key: oneOf(ANSWER_KEYS), mpid: oneOf(RESULT_MPIDS) }),
   click: (b) => (b.link === "all-plans" ? { link: oneOf(LINKS) } : { link: oneOf(LINKS), mpid: oneOf(ORDER_MPIDS) }),
   leave: () => ({ length_ms: isMs, step: oneOf(STEPS) }),
   error: () => ({}),
   save: () => ({}),
+  offer: () => ({ qr: isQr, kind: oneOf(OFFER_KINDS) }),
 };
 
 /** The body as one event of § 3, exactly its fields and each from its vocabulary, or null. */

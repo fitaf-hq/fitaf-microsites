@@ -11,14 +11,16 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { ROOT } from "../build.mjs";
-import { builtPage, openVisit, startBeacon, TEST_IP, TEST_UA, TEST_UA_TOKEN, VALID, visitorOf } from "./a-harness.mjs";
+import { builtPage, openVisit, startBeacon, TEST_IP, TEST_UA, TEST_UA_TOKEN, V_BLOB, VALID, visitorOf } from "./a-harness.mjs";
 import { needlesIn } from "./a-checks.mjs";
 import { compared, show } from "./af-checks.mjs";
 
 /** § 15 item 1: an index, 16 hex digits; § 2: a visitor `v`, the same. */
 export const HEX16 = /^[0-9a-f]{16}$/;
-/** § 15 item 2: blobs 1–11 keep their places and `v` is appended, the twelfth. */
-export const BLOB_COUNT = 12;
+/** § 15 item 2: blobs 1–11 keep their places and `v` is appended, the twelfth. ⚠ Since SPEC-analytics.md § 16 (2026-10-27)
+ *  two more are appended after it, blob13 an offer page's kind and blob14 an open's via ("" on every other point): a
+ *  point holds fourteen, blob12 still the visitor. */
+export const BLOB_COUNT = 14;
 /** The host a-harness's post sends to. */
 const HOST = "eatfitaf.com";
 /** A day of the Boston events, its afternoon in New York. */
@@ -46,7 +48,7 @@ async function sevenPoints(root, entry) {
 
 /**
  * IX1 (§ 15 items 1, 2 and 5): through either Worker, a visit's seven events give seven data points with seven different
- * indexes, each 16 hex digits and none of them the visitor; twelve blobs each, `blob12` the visit's `v` on every one, the
+ * indexes, each 16 hex digits and none of them the visitor; twelve blobs each (since § 16 fourteen: BLOB_COUNT), `blob12` the visit's `v` on every one, the
  * `v` § 2 makes from the day's salt (the one the Worker wrote) and the request's IP, user agent and host.
  */
 export async function indexProblems(root = ROOT) {
@@ -76,7 +78,7 @@ export async function indexProblems(root = ROOT) {
 /**
  * IX2 (§ 15 item 2: "A4 reads the new blob too"): A4's search (a-checks needlesIn, the one ipUaProblems runs) reads every
  * field a point holds, so over the points a visit writes from a known IP and user agent it finds neither; the fields it
- * read hold blob12 and the index (control: twelve blobs and one index on every point); and it finds the IP and the user
+ * read hold blob12 and the index (control: twelve blobs, since § 16 fourteen, and one index on every point); and it finds the IP and the user
  * agent's token planted in a written point's blob12, and in its index (so a point carrying either in those fields fails A4).
  */
 export async function searchProblems(root = ROOT) {
@@ -92,9 +94,11 @@ export async function searchProblems(root = ROOT) {
   const [first] = points;
   const blobs = [...(first.blobs ?? [])];
   while (blobs.length < BLOB_COUNT) blobs.push("");
+  // blob12 by its place (§ 15 item 2), not the last: since § 16 two blobs follow it.
+  const inBlob12 = (value) => blobs.map((b, i) => (i === V_BLOB ? value : b));
   const planted = [
-    ["the IP in blob12", { ...first, blobs: [...blobs.slice(0, BLOB_COUNT - 1), TEST_IP] }],
-    ["the user agent in blob12", { ...first, blobs: [...blobs.slice(0, BLOB_COUNT - 1), TEST_UA] }],
+    ["the IP in blob12", { ...first, blobs: inBlob12(TEST_IP) }],
+    ["the user agent in blob12", { ...first, blobs: inBlob12(TEST_UA) }],
     ["the IP in the index", { ...first, indexes: [TEST_IP] }],
     ["the user agent's token in the index", { ...first, indexes: [TEST_UA_TOKEN] }],
   ];

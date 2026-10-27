@@ -10,8 +10,10 @@ import { fixtureAnswers, RANGE, runAt } from "./aj-checks.mjs";
 import { ROOT } from "../build.mjs";
 
 /** A day's lines at the day's own level (two spaces in), in order: § 5's, with § 14 item 3's after the funnel. Written
- *  from the contract; the day's date is the line above them, so the save line is the day's tenth. */
-const DAY_LINES = ["unique visitors", "funnel (visits)", "saved an offer", "visit length", "load time", "device", "viewport", "country", "visits with a script error"];
+ *  from the contract; the day's date is the line above them, so the save line is the day's tenth. ⚠ Since SPEC-analytics.md
+ *  § 16 item 3 (2026-10-27) two lines follow it, the visits from the offer email and the offer pages opened, before the
+ *  visit length. */
+const DAY_LINES = ["unique visitors", "funnel (visits)", "saved an offer", "visits from the offer email", "offer pages opened", "visit length", "load time", "device", "viewport", "country", "visits with a script error"];
 
 /** The text's days: { day: [line, …] }, each day's lines up to the blank line that ends it. */
 function textDays(text) {
@@ -52,7 +54,7 @@ async function savesProblems(label, answers, want) {
     assert.deepEqual(own, DAY_LINES, `${label} ${d.day}: the day's lines, the saved line after the funnel`);
     const at = lines.indexOf(saved[0]);
     assert.match(lines[at - 1], /^ {4}\S/, `${label} ${d.day}: directly after the funnel's last line`);
-    assert.match(lines[at + 1], /^ {2}visit length: /, `${label} ${d.day}: directly before the visit length`);
+    assert.match(lines[at + 1], /^ {2}visits from the offer email /, `${label} ${d.day}: directly before § 16's lines (the visit length after them)`);
   }
 }
 
