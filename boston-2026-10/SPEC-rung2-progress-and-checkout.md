@@ -2345,3 +2345,28 @@ the Footer block's SHA-256 `b2799bf000a26bf455772781913ceed8d6304a018cdb631fdbb5
 **Left**: the orchestrator's rehearsal (`npm --prefix boston-2026-10/tools/storefront-watch run probe-prices -- --script
 boston-2026-10/storefront/footer-block/2026-10-27-fitaf-handoff-10833c1.md --out <a directory>`, and `smoke --script`);
 the Advisor's paste before 19:20 Eastern; the live smoke at once; `accept`.
+
+### 37.2 The admin refused 10833c1's block; fixed (2026-10-27)
+
+**The refusal**: the store's admin (Custom Scripts, Footer) refused the paste of `10833c1`'s block with *"Attribute values
+can't contain < or >."*; `91b875e`'s block, the same `<script>` wrapper and 38 `>`, pasted fine. **Measured by the
+orchestrator** on both shipped fragments with `[\w\-:.]+\s*=\s*("[^"\n]*"|'[^'\n]*')`, counting the matches whose quoted
+value holds `<` or `>`: `91b875e` 0, `10833c1` exactly 1, `fitaf-struck.js`'s `var PLAIN = ".meal-plan__fit-af-price>strong,
+.meal-plan__fit-af-meal-options button>:not(.fitaf-was),…"`. The admin reads `name = "value"` as an HTML attribute.
+
+**The fix** (`ab1d4d7`): the selector string is `querySelectorAll`'s argument, as § 36's `prices()` had it; no `var`
+holds it. No behaviour changed. **R2-94** (`test/r2-94-no-attribute-angle.test.mjs`, beside R2-58 and R2-77): the Footer block
+and the console file hold zero such matches; its control plants `var X = "a>b"` and `var Y='a<b'` and both are caught,
+and `d.querySelectorAll(".a>b")` is not. Red on `10833c1`'s text (`nice -n 15 node --test
+boston-2026-10/test/r2-94-no-attribute-angle.test.mjs`, committed at `985b828`): `# tests 2`, `# pass 1`, `# fail 1` (the one
+match, `PLAIN = "…"`); green at `ab1d4d7`: `# tests 2`, `# pass 2`, `# fail 0`.
+
+**Gates** (each `nice -n 15`, at `ab1d4d7`'s tree): the block's site family (`r2-*`, `fc-*`, `sn-*`, CC-8, PR-10, MS-9, B2)
+`# tests 380`, `# pass 380`, `# fail 0`; the watch's `st-struck` and `w29-struck` `# tests 25`, `# pass 25`, `# fail 0` (the
+five mutants still killed). The whole watch suite and Storybook were not re-run (no watch or Storybook file changed;
+§ 37.1's runs stand for them).
+
+**The block**: `storefront/footer-block/2026-10-27-fitaf-handoff-ab1d4d7.md` (*built, not pasted*, at `c25a847`), version
+line `fitaf-handoff ab1d4d7 sha256:0e259ec17206722b308dff3f7f34fae916c14cf8eff03e1f0a8a28250447b23d`, fragment 25,678
+bytes, SHA-256 `7db1dd2149b431ebbfcd1bd78fb87c93e74c61bc8f2a84a3ee8571c652488fec`, the admin's measure on it 0. Pins
+(R2-32, PR-10, CC-8) `d278789f…` → `0e259ec1…`. `10833c1`'s block file is kept as the record of the refused build.
