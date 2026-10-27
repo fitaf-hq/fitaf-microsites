@@ -1547,6 +1547,153 @@ please. I think that will really clean it up."* B2 without its meal count is the
    390 and 1280, an individual plan's and Family's, while the offer is current); merged into the release line; the site
    suite, Storybook and contrast on the merged line; dev; production on his word.
 
+### 7.1 Built — found at the build, not ruled (2026-10-26)
+
+§ 7 is unchanged. On `boston/result-price` from `6e0d86f` (`3b275fa` and § 7's text): the cases at `bc39ee0` (on
+`6e0d86f`'s code, red), the code at `f60e19c`, the goldens it moves at `e0753d6`, this section after them.
+
+**What was built**
+- The template's `.price` holds two lines. First `#result-struck`, an `<s>` (`.fig-struck`, hidden as built,
+  `aria-hidden`): its figure `#result-struck-total`, then the result's one unit (`TOTAL_UNIT`). Then the lead,
+  `.fig-total` as before (`#result-total` at 34 px, with its unit). `#result-per-meal`, `#result-meals`, their slots and
+  their two words are gone.
+- `app.js` writes the total and the link alone.
+- `build.mjs`: `resultTotals` gives, in cents, every total the result can show: each size at every answer set (the meals
+  it comes to at its plan's price a meal) and each Family answer. `pricesStruck` gives save-data's offer `struck` (the
+  grid's, byte-identical) and `struck_result` (the result's). Both go through one line, `struckOf`, the only place a
+  struck price is computed.
+- `plan-prices.js`, which already chooses the offer See all plans uses, shows the result's line on load and on each
+  `hashchange`, after `app.js` has drawn the card. It takes the figure of `struck_result` at `#result`'s `data-accent` and
+  `data-selection` (without its snacks mark); with none, the line stays hidden.
+- The colour pair, `--muted` on `--white` (body), declared for the struck line.
+
+**Cases, before and after** (`nice -n 15 node --test` over the files named, each named as its literal path in the
+command; the whole site suite and the whole Storybook suite were not run, as the orchestrator asked):
+
+| | before | after |
+|---|---|---|
+| `test/rp1-*`, `rp2-*`, `rp3-*`, `rp4-*`, `rp-mutants` (RP1 three, RP2 two, RP3, RP4 two, the mutant and its control) | `bc39ee0`: `# tests 10` `# pass 2` `# fail 8` (the two controls pass) | `f60e19c`: `# tests 10` `# pass 10` `# fail 0` |
+| `tools/storybook/test/rp5-chrome.test.mjs` (RP5 on both builds, and after `valid_to`) | `bc39ee0`: `# tests 3` `# pass 0` `# fail 3` | `f60e19c`: `# tests 3` `# pass 3` `# fail 0` |
+| the 48 files that read `.price`, `#result-*`, the result card, save-data's struck prices, the result's words or a golden this may move | `bc39ee0`: `# tests 177` `# pass 177` `# fail 0` | `f60e19c`, before the amendments: `# tests 177` `# pass 151` `# fail 26`; with them: `# tests 176` `# pass 167` `# fail 9` (the goldens' readers); `e0753d6`: `# tests 176` `# pass 176` `# fail 0` |
+| Storybook: `pr-chrome`, `uc-chrome`, `uc14-16-chrome`, `uf-chrome`, `rp5-chrome` | not run | `f60e19c`: `# tests 21` `# pass 21` `# fail 0` |
+| `npm run contrast` | not run | `f60e19c`: `95 pairs, 95 pass, 0 fail; 0 problem(s).` (the new pair Lc 83.5) |
+
+177 became 176 because MS-8's refusal of a missing `plan_page.meals_unit` went with the word.
+
+Red for the right reasons:
+- **RP1:** every result on both builds, e.g. `development, #lean-or-5d: 3 line(s) shown, not 2:
+  [{"text":"$65.00/week",…},{"text":"$13.00/meal",…},{"text":"5 meals/week",…}]`.
+- **RP2:** the same three lines after `valid_to`, on production false and with the fixture's offers (`not 1`).
+- **RP3:** `"/meal" in the price`, `"meals/week" in the price`, `the price a meal, $13.00, in the price`, `the meal count, 5,
+  in the price`, `the page still carries #result-per-meal`.
+- **RP4:** `the result's struck figure null, See all plans' "$116.67" (lean-7)`.
+- **RP5:** `production, 390, #lean-or-7d: two lines drawn, the struck one first` (drawn: `lead`, `fig-per-meal`,
+  `fig-meals`); after `valid_to`, `#lean-or-5d: the lead alone`.
+- **The mutant:** its anchor not yet in `build.mjs` (`the mutation anchor is in build.mjs once`); its control fails as RP1
+  does.
+
+**The mutant** (`test/rp-mutants.test.mjs`, in a mirror through THE SAME check RP1 runs, `test/rp-checks.mjs`; the tracked
+tree untouched, `git status` clean after the runs):
+- The control (the unchanged mirror) passes RP1, 0 problems.
+- The struck figure from the price a meal × the plan's count fails RP1, 12 problems: one per answer set above its plan's
+  count (`or-5d`, `and-5d-b`) per size and build, each on the struck line alone. For example `development, #signature-or-5d:
+  line 1 reads {"text":"$76.00/week",…}, not {"text":"$95.00/week",…}` (the Advisor's example, $95.00 above $71.25).
+  Nothing at a plan's own count and nothing on Family.
+
+**Cases changed with the code** (in `f60e19c`, each for the removed figures or their words):
+- `ms-harness.mjs`'s `resultOf` and `ms-checks.mjs`'s `rowProblems`: no `perMeal`, no `meals`.
+- MS-1: its second case inverted (the meals a week and `meals_unit` gone).
+- MS-3 and MS-4: `per_meal` no longer compared with `ms-golden.json`, which stays as recorded at `985f777`.
+- MS-10's rounding-up mutant: MS-1 sees it in the total, `$62.50`, not `$65.00`.
+- MS-16, UF2, UC6.
+- MS-8: the meals a week are no added part; `meals_unit` is no phrase and no refusal.
+- PR-5. PR-16: one block, the struck line and the total.
+- S23: `struck_result` beside `struck`.
+- In Storybook, PR-6 and PR-16 (`pr-chrome`): the total the block's largest line, with only the struck line above it.
+  Their page runs on the real clock, so both hold on either side of `valid_to`.
+- In Storybook, the 5-meal card (`uc-chrome`).
+
+**The goldens moved** (each re-recorded once from `f60e19c`'s own tree, `git archive`, the package's `node_modules` linked
+in; each recorder's control first reproducing the committed record):
+- PV5 (`pv-05-record.mjs --commit f60e19c --release-a`). At `63e243b` it reproduces the committed record byte for byte,
+  and at `bc39ee0` the same record but `recorded_at`. Moved: production's `index.html` (`production` false) and the
+  development build's `index.html`, `demo/`, `boston/` and `seminar/`.
+- U4 (`u-04-record.mjs --commit f60e19c --release-a --without-snack-cells`), with the same two controls. Moved: every
+  page (production's three +185 bytes, development's three +2,115) and every visible page read. All six contents are
+  byte-identical. Its pin moved to `f60e19c`.
+- WC-9 (`wc-09-record.mjs --commit 409b805 --on 2026-10-11 --visible-at f60e19c --release-a --without-snack-cells`). At
+  `27cc0df` it reproduces the committed record byte for byte, and at `bc39ee0` the same record but `visible_at`. Moved:
+  the 18 visible pages with a result. `""`, `#family`, the content, the page's hash and the sheet are `409b805`'s. Its pin
+  moved.
+- S20, which CC-4 reads too. There is no recorder, so each tree was built as S20 builds it, by a script outside the
+  repository. `bc39ee0`'s tree reproduces `2dc1bbd4…`; `f60e19c`'s moves `index.html` alone, `2dc1bbd4…` → `f70002b5…`,
+  80,094 → 80,279 bytes. Both trees' production-false pages were compared line by line: 15 lines out and 15 in, all in the
+  price block's rules and comments, its markup (the struck line in place of the two figures) and `app.js`'s lines.
+  `#plan-data` is unchanged.
+- WC-8's reference (`renderPage` with no picks, the analytics slot removed): `bc39ee0`'s tree gives `84f2f8f3…`,
+  `f60e19c`'s `4c940100…`.
+- SP3's base: one LATER entry, `bc39ee0`..`f60e19c` over `src/template.html` and `src/app.js`, the two files that move the
+  production page with `production` false.
+- Not moved: CC-8 (no Worker file moves), MS-9, PR-10, QE15, T5, S18, SP5, the budget.
+
+**The pages' bytes** (every page the builds write, `test/page-budget.mjs`'s gzip, each tree's own build):
+
+| build | page | raw | gzip |
+|---|---|---|---|
+| production (as committed, `production` true) | `index.html` | 116,868 → 118,983 | 34,329 → 35,004 |
+| production with `production` false | `index.html` | 80,094 → 80,279 | 23,852 → 23,995 |
+| development | `index.html`, `demo/` | 123,737 → 125,852 | 36,215 → 36,864 |
+| development | `boston/` | 123,739 → 125,854 | 36,213 → 36,862 |
+| development | `seminar/` | 123,740 → 125,855 | 36,217 → 36,866 |
+
+T5's ceiling is 61,440 bytes gzip; the largest page is 36,866.
+
+**What § 7 was silent on, and what was built** (stated, not ruled)
+
+1. **The struck line's size**: 19 px, Poppins at 600, line-height 1.2, `--muted`. It is an `<s>`, so the line-through is
+   the browser's, in the text's colour. The mock's proportion is kept: 17 px beside a 30 px lead is 19.3 beside 34. The
+   whole line is struck, its unit included, at one size (`$95.00/week`, as item 1 writes it); the lead's unit stays 15 px.
+2. **The data shape**: save-data's offer gains `struck_result`, `{ <the plan: a size's id, or "family">: { <the answer
+   set, as data-selection without -s>: "$X.XX" } }`. It holds the money alone; the template's unit follows it. The Boston
+   offer has 26 figures (three sizes × eight answer sets, and Family's two). They are keyed by what `#result` already
+   carries, so the script reads nothing else.
+3. **Where the struck line is drawn**: by `plan-prices.js`, because it already chooses the offer See all plans uses. A
+   page without the save step (production false, a preview) has no offer at all, so the line stays hidden there, as See
+   all plans shows no struck price there. It follows `app.js` on load and on each `hashchange`, as `flow1.js` and the
+   Chef's Choice card do. Every change of the card's plan or answer set changes the fragment.
+4. ⚠ **Hidden from assistive technology** (`aria-hidden="true"`). The card is in a polite live region: two prices with
+   no word saying which is paid would be read out, and no word may be added. The grid's struck prices are likewise
+   outside their cells' accessible names, since each cell's `aria-label` names the price paid. To have it read, remove the
+   attribute; words telling the two apart would be the Advisor's.
+5. **The words**: `plan_page.meals_unit` and `per_meal_unit` are removed from `data/messages.json` and from the build's
+   check, as item 4's "the units only they use". § 5 item 2 had kept `rounded`, but this item says removed. `#plan-data`
+   keeps `per_meal` (each size's cells, Family's) and each answer's `meals`. No script draws `per_meal` now, and `meals`
+   still decides a total; removing `per_meal` would move every page's bytes and nothing anyone sees.
+6. **No `white-space: nowrap`**: "neither wraps" is measured, not forced. RP5 holds each line's pieces in one line box at
+   390 and 1280, the widest $506.67/week and $380.00/week. A forced line would overflow where it would otherwise wrap.
+7. **RP4 compares money**: the grid writes `/wk` and the result `/week`, both as built before.
+8. **Storybook**: no story changed. A story shows the site's build, so a story with a result shows the struck line on a
+   date inside the offer and the lead alone after it. By `microsite/dates.mjs` (read, not run) that puts *today*, the
+   week's Thursday (2026-10-29) and the fixtures' 2026-10-01 inside it, and *No picks* (2026-10-30) after it. RP5 is a
+   case, not a story.
+9. **The preview for the Advisor**: the production build as committed (`node build.mjs --out DIR`, `production` true),
+   with the week delivered 2026-11-01 put in its `#picks-data` as production's Worker does (Storybook's `siteBuild`). It
+   was served on 127.0.0.1 and shot in headless Chrome, with photographs refused, `sendBeacon` a no-op and `/a` refused. It
+   ran on the real clock (22:49 PDT, 2026-10-27 in New York), and at 1280 also on a clock after `valid_to`.
+
+**Found, not ruled**
+
+- ⚠ **SPEC-plan-page-refinement § 8 item 5's "the weekly total first"** (PR-6, PR-16) no longer holds as written: § 7
+  puts the struck line above the lead. PR-6 and PR-16 now hold the total as the block's largest line, with only the struck
+  line above it.
+- **Item 3's "each plan at its own count (the grid's cells)"**: the grid shows 7 and 14, but a plan at its own count is
+  also 10 and 21 (*and, weekdays*; *or, weekdays, breakfast*; *and, every day, breakfast*), which only the result shows.
+  Their struck figures are the build's too (every answer set's), and RP4 can compare 7 and 14 alone.
+- **After the offer**, the card's *Not ready to checkout? Save your offer now.* still says "offer". This was seen in the
+  preview after `valid_to`; § 7 item 5 keeps the save step unchanged.
+
+**Not done here**: the whole site suite, the whole Storybook suite, the watch. Nothing merged, deployed or pinned.
+
 ## 8. E1 in the flyers' language (2026-10-26). CONTRACT, before any code
 
 **Why.** The Advisor, `ts=2026-10-27T04:21:18.535Z`: *"For the email, we want to add some of the graphic design and
