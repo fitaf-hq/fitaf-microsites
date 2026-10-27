@@ -1799,3 +1799,13 @@ boston-2026-10/dist-storefront/fitaf-handoff.html`: **PASS at 1280 and 390, no f
 --test-name-pattern <id> <file>`, 2026-10-26 17:52–17:55 PDT): FC-6c 2 of 2 (`fc-06c-stop-screen`), P3b 1 of 1
 (`p3-fixture-holds`), PS2 1 of 1 (`r2-31-2-page-still`), R2-45 2 of 2 with R2-45b (`r2-45-payment-untouched`), FC2 4 of 4
 (`fc2-probe-counts`), and P1 in both files that name it, 3 of 3 (`p1-visit-plumbing`) and 2 of 2 (`r2-p30-placeholder`).
+
+**Two more cases the contract made stale, found by the full site suite at `5d90470`** (1307 tests, 1304 pass, 3 fail):
+**R2-11b** (*"names no other address"*) and **R2-71 / R2-71b** (*"no URL the live block lacks"*: `fitafnutrition.com`
+and `https://fitafnutrition.com/contact`), each failing on § 33 item 3's contact page, which § 33.1 amended R2-77 for
+and not these two (its site suite was stopped at 513 results; these are the 709th and the 866th). Not a change of the
+block: they have failed since `dbcf88d`. Amended as R2-77 was, the contact page allowed **only whole**: R2-11b's strip
+of the listed addresses names it; R2-71 takes its quoted string out of the text before its URL reader runs, so the host
+alone is still found (R2-71b's planted host name, which adding the URL's readings to the allowed set would have
+blinded: the reader reads a host out of every URL), and R2-71b plants one more address, another page of the same host,
+which fails the comparison. `r2-11-shipped-size`, `r2-71-text` and `r2-77-text`: 6 of 6.
