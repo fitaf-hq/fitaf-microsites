@@ -207,7 +207,7 @@ function readPrices(arg) {
       const m = /^\d+ \u00d7 (\$\S+)$/.exec(t);
       return m && cents(m[1]) ? money(up(cents(m[1]))) : null;
     }
-    if (el?.matches(".summary__total-preview,.summary__total-value")) {
+    if (el?.matches(".summary__total-preview,.summary__total-value,.summary__stat-value")) {
       const sub = subOf(el.closest(".summary"));
       const b = sub && cents(norm(sub.textContent));
       return b && cents(t) ? money(cents(t) + up(b) - b) : null;

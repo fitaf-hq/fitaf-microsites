@@ -94,6 +94,8 @@ function text(e) { return e.textContent.replace(/\s+/g, " ").trim(); }
 // (span.summary__item-price-unit, `unit`), the Subtotal (`sub`); (4) the header's total (span.summary__total-preview) and
 // the Total (span.summary__total-value), by `tot`. ⛔ Still never shipping, tax, a tip, a discount, a gift card or the pay
 // button: no row but the Subtotal's is read. The Add to Cart button's own price is still not struck.
+// § 38: and the phone checkout's bottom-bar total (span.summary__stat-value beside PAY NOW, below 1025 px, inside the same
+// .summary; the bar's item count, the same class, is no price), a total by `tot`. The pay button is never struck.
 // Each [element, its figure's function]; never one of ours.
 // § 37.2: the selector is querySelectorAll's argument, never a `name = "..."`: the store's admin reads that as an HTML
 // attribute and refuses a value holding < or > ("Attribute values can't contain < or >", 10833c1's paste; R2-94).
@@ -102,7 +104,7 @@ function prices() {
   [].forEach.call(d.querySelectorAll(".meal-plan__fit-af-price>strong,.meal-plan__fit-af-meal-options button>:not(.fitaf-was),.product__content-price,.product-card-mobile__price,app-cart .segment-price,app-cart-product-card .product__price-original,.mobile-cart-summary__stat-value,app-extra-products-dialog .popular-card__price,.summary__item-price-current,.summary__plan-total-value"), function (p) { out.push([p, fig]); });
   [].forEach.call(d.querySelectorAll(".summary"), function (r) { var e = sub(r.firstElementChild || r); if (e) out.push([e, fig]); });
   [].forEach.call(d.querySelectorAll(".summary__item-price-unit"), function (p) { out.push([p, unit]); });
-  [].forEach.call(d.querySelectorAll(".summary__total-preview,.summary__total-value"), function (p) { out.push([p, tot]); });
+  [].forEach.call(d.querySelectorAll(".summary__total-preview,.summary__total-value,.summary__stat-value"), function (p) { out.push([p, tot]); });
   return out;
 }
 // § 36 item 5: one s.fitaf-was, aria-hidden, per price, right before it (on its line in a row; in a column, the store's
