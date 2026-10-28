@@ -276,3 +276,16 @@ the recorder's control first reproducing the committed record):
 through `worker-harness.mjs`, which drops the var) and the watch; `npm run contrast` (no colour or style changed); the
 SQL against Cloudflare; dev and production (§ 8's `curl -sI` and the data point read back are the orchestrator's);
 fitaf-infra's var; nothing deployed, no `wrangler`, no merge, no pin.
+
+### 9.1 Built — found at the build, not ruled (2026-10-27, at the merge into the dev line)
+
+At the merge of `boston/release-c` (`2bbc066`) into the dev line (`boston/merge-release-1027`, `ac2c1c6`), Storybook's
+whole suite (`npm --prefix boston-2026-10/tools/storybook test`, `nice -n 15`, at `a086cd9`, the merge and two commits
+after it, neither touching a Storybook or Worker file) was red on SP15's Chrome half alone, the
+case § 9 left for it: `# tests 104`, `# pass 102`, `# fail 2`, both `SP15 (Chrome): the saved offer's page` at 390 and
+1280, *"back to the page"*, the button's `href` `/?e=demo&via=email#from-email` against `^\/\?e=[a-z0-9-]+#from-email$`.
+Nothing that file reads differs between `2bbc066` and the merged tree (the dev line moved only `src/storefront/` and
+`data/messages.json`'s `handoff`, which the Worker does not reach), so it was red on the release line too, not by the
+merge. `tools/storybook/test/wp-chrome.test.mjs` now expects § 4's form, `^\/\?e=[a-z0-9-]+&via=email#from-email$`, as
+the site's SP15 reads it; nothing else in it changed (the logo's `/` stays, as the first item above). The file alone
+before: `# tests 3`, `# pass 1`, `# fail 2`; after: `# tests 3`, `# pass 3`, `# fail 0`.

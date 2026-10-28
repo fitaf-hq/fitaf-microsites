@@ -10,6 +10,9 @@
 // the site's own helpers; its static files (the fonts, the logo) are answered as its assets would be, from the site's
 // own build (copyStatic), since a Worker's assets are served before it. Nothing else is requested. The page's words and
 // rules are read from the site, never written here (SM-4).
+// SPEC-the-redirect.md § 4 (2026-10-27): the saved offer's link back to the page carries via=email before its fragment,
+// /?e=<event>&via=email#from-email, as the site's SP15 has read it since that contract; this half was left for the
+// Storybook run (its § 9, "Not done here") and amended at the merge into the dev line (its § 9.1).
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -145,7 +148,7 @@ for (const viewport of [VIEWPORTS.w390, VIEWPORTS.w1280]) {
     const [action] = look.actions;
     assert.ok(action.box.height >= TARGET_PX, `${where}: the button ${action.box.height} px tall`);
     assert.equal(action.background, CTA_RGB, `${where}: the store button's orange`);
-    assert.match(action.href, /^\/\?e=[a-z0-9-]+#from-email$/, `${where}: back to the page`);
+    assert.match(action.href, /^\/\?e=[a-z0-9-]+&via=email#from-email$/, `${where}: back to the page, via=email since SPEC-the-redirect.md § 4`);
     if (viewport.width === VIEWPORTS.w390.width) {
       assert.equal(Math.round(look.content.left), GUTTER_PX, `${where}: ${GUTTER_PX} px from the left edge`);
       assert.ok(Math.round(look.innerWidth - look.content.right) >= GUTTER_PX, `${where}: and from the right`);
