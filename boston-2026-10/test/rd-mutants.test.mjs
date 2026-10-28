@@ -10,6 +10,8 @@
 //   the cookie ignored                        (site.js: § 12's cookie no longer keeps a redirect out) fails RD4
 //   the report counting redirect-only visits  (scripts/analytics.mjs: the visitors query without its
 //     as visits                                 redirect condition)                                  fails RD9
+//   the list back to `bot`                    (redirect.js: § 10 item 2's rule undone, a Cubot phone
+//                                               a program again)                                    fails RD4b
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
@@ -17,7 +19,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { mirror } from "./cc-harness.mjs";
 import { extractBase } from "./em-a-checks.mjs";
-import { dataPointProblems, identifyingProblems, locationProblems, otherPathProblems, reportProblems } from "./rd-checks.mjs";
+import { cubotProblems, dataPointProblems, identifyingProblems, locationProblems, otherPathProblems, reportProblems } from "./rd-checks.mjs";
 
 /** RD9's base: SPEC-the-redirect.md's contract commit, § 16's report. */
 const BASE = "d59aec4";
@@ -48,11 +50,12 @@ const REDIRECT_JS = join("src", "worker", "redirect.js");
 const REPORT = join("scripts", "analytics.mjs");
 const ENTRIES = ["site", "index"];
 
-test("RD mutants (control): the unchanged mirror passes RD1, RD2, RD4, RD5 and RD9", async () => {
+test("RD mutants (control): the unchanged mirror passes RD1, RD2, RD4, RD4b, RD5 and RD9", async () => {
   await withMirror(async () => {}, async (dir) => {
     assert.deepEqual(await locationProblems(dir), [], "RD1");
     assert.deepEqual(await otherPathProblems(dir), [], "RD2");
     assert.deepEqual(await dataPointProblems(dir), [], "RD4");
+    assert.deepEqual(await cubotProblems(dir), [], "RD4b");
     assert.deepEqual(await identifyingProblems(dir), [], "RD5");
     assert.deepEqual(await reportProblems(dir, base), [], "RD9");
   });
@@ -114,6 +117,20 @@ test("RD mutant: the report counting redirect-only visits as visits fails RD9", 
       for (const line of ["2026-10-26: visitors 4, not 1", "2026-10-26: visits 4, not 1", "2026-10-27: visits 3, not 0"]) {
         assert.ok(problems.includes(line), `RD9 fails it with ${line}:\n${problems.join("\n")}`);
       }
+    },
+  );
+});
+
+test("RD mutant: the list back to bot fails RD4b (SPEC-the-redirect.md § 10)", async () => {
+  await withMirror(
+    (dir) => edit(dir, REDIRECT_JS, "/(?<!cu)bot|crawl", "/bot|crawl"),
+    async (dir) => {
+      const problems = await cubotProblems(dir);
+      for (const entry of ENTRIES) {
+        const lost = problems.filter((p) => p.startsWith(`${entry} a Cubot phone`) && p.endsWith("0 data point(s), not 1 (a person's phone, counted)"));
+        assert.equal(lost.length, 2, `RD4b fails it on ${entry}, both Cubot phones uncounted:\n${problems.join("\n")}`);
+      }
+      assert.ok(!problems.some((p) => p.includes("written")), `every named program still uncounted:\n${problems.join("\n")}`);
     },
   );
 });

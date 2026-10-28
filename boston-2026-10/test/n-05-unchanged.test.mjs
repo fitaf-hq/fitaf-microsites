@@ -86,7 +86,8 @@ const CLOCK_HEADER = "date";
  *  control), and the rest is today's byte for byte: the narrowest change to N5, rather than moving TODAY.
  *  ⚠ And SPEC-the-redirect.md § 4 (2026-10-27) changes the same answer's link to the home page: it names the email in its
  *  query, `via=email` (`/?via=email` for an unknown code's page, `&amp;via=email` after `?e=<event>`). That parameter is
- *  removed from this tree's links (and must be there, the control), the rest compared as before. */
+ *  removed from this tree's links (and must be there, the control), the rest compared as before. Since its § 10 item 1 the
+ *  offer page's logo links to `/?via=email` too, and the same removal takes it back to today's `/`. */
 const OFFER_ANALYTICS = /<script type="application\/json" id="offer-data">[^<]*<\/script>\n<script>\n[\s\S]*?\n<\/script>\n(?=<\/main>)/;
 const VIA_EMAIL_LINK = /href="\/\?(?:via=email"|(e=[a-z0-9-]+)&amp;via=email(?=["#]))/g;
 function withoutOfferAnalytics(response, where) {

@@ -8,6 +8,8 @@
 // data (#offer-data: the page's kind and the save's event id, nothing else) and the plan page's own analytics script
 // (src/worker/page-script.json, DERIVED by `npm run worker:script` from the build's slot), which reads the data and sends
 // one `offer` to /a. Every other page carries neither.
+// SPEC-the-redirect.md § 10 item 1 (2026-10-27): on the offer page the logo links to /?via=email, as the page's other links
+// to the home page do (redeem.js, § 4), so a press of it is counted as the email's; every other page's logo links to /.
 import saveConfig from "../../data/save.json" with { type: "json" };
 import pageScript from "./page-script.json" with { type: "json" };
 import pageStyle from "./page-style.json" with { type: "json" };
@@ -16,8 +18,11 @@ import { scriptJson } from "./script-json.js";
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 export const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ESCAPES[ch]);
 
-/** Fit AF's logo, the file the build copies into both Workers' assets, linking to the site's page. */
-const LOGO = '<a class="logo" href="/"><img src="/assets/fitaf-logo.png" alt="Fit AF" width="88" height="56"></a>';
+/** Fit AF's logo, the file the build copies into both Workers' assets, linking to the site's page: `href`. */
+const logo = (href) => `<a class="logo" href="${href}"><img src="/assets/fitaf-logo.png" alt="Fit AF" width="88" height="56"></a>`;
+const LOGO = logo("/");
+/** SPEC-the-redirect.md § 10 item 1: the offer page's, naming the email as § 4's links do. */
+const OFFER_LOGO = logo("/?via=email");
 
 /** The DRAFT line, while `wording_version` names a draft. */
 const DRAFT_MARK = /draft/i.test(saveConfig.wording_version)
@@ -38,7 +43,7 @@ export function page(title, bodyHtml, { offer } = {}) {
     '<meta name="robots" content="noindex">\n' +
     `<title>Fit AF — ${esc(title)}</title>\n<style>\n${pageStyle.css}\n</style>\n</head>\n<body>\n<main class="worker-page">\n` +
     DRAFT_MARK +
-    `${LOGO}\n${bodyHtml}\n${offer ? offerAnalytics(offer) : ""}</main>\n</body>\n</html>\n`
+    `${offer ? OFFER_LOGO : LOGO}\n${bodyHtml}\n${offer ? offerAnalytics(offer) : ""}</main>\n</body>\n</html>\n`
   );
 }
 
