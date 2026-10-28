@@ -44,9 +44,9 @@ function hasAtCommit(commit, path) {
 }
 
 /** SPEC-rung2-progress-and-checkout § 36 item 9: the struck prices' source, which a block built since § 36 carries after
- *  the hand-off's text. § 37.3 (2026-10-27): the live block is one of those since the baseline accepted ab1d4d7
- *  (c7edd18), so a commit that has this source is rebuilt with it and its own data/offers.json; a commit without it
- *  built the hand-off alone, and is rebuilt so, as before. */
+ *  the hand-off's text. § 38.2 (2026-10-27; § 37.3 when written): the live block is one of those since the baseline
+ *  accepted ab1d4d7 (c7edd18), and 9e6d0b3 since eb6647a, so a commit that has this source is rebuilt with it and its own
+ *  data/offers.json; a commit without it built the hand-off alone, and is rebuilt so, as before. */
 const STRUCK_PATH = "src/storefront/fitaf-struck.js";
 
 /** The block live before rung 2 § 17's paste (2026-10-01): R2-74b and R2-77 are about it, not about whatever block the

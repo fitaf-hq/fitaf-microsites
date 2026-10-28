@@ -2461,3 +2461,13 @@ version line's commit.
 3. **Q15 under load**: in the whole suite on `ac2c1c6`, headless Chrome exited 2 measuring `flyer-4.html` (*"Teardown
    watchdog expired"*, after 559 s); Q15 alone on the same tree: `# tests 4`, `# pass 4`, `# fail 0`. The merge changed no
    file under `print/` or `mockups/`.
+4. **The forward merges** (2026-10-27, the orchestrator's direction): the dev line's `eb6647a` (§ 38; the Footer block
+   `9e6d0b3` pasted and its baseline accepted) at `7b2cd3b`, then the release line's `438aad5` (SPEC-the-redirect § 10) at
+   `513054a`. This section was § 37.3 until § 38 came before it at `7b2cd3b`, and is renumbered; items 1–3 are as written
+   of `ac2c1c6`. **The block's text is `9e6d0b3`'s**: `npm run build:storefront` on `7b2cd3b` writes `fitaf-handoff
+   7b2cd3b sha256:8b5f9487…`, 25,699 bytes, byte-identical to `9e6d0b3`'s block file's fragment (`cba2d52c…`) but for the
+   version line's commit. CC-8 is re-recorded once from `513054a`'s own tree (`7a437a7`): `watch_expected_footer`
+   `9e6d0b3`'s line (the baseline `eb6647a` accepted; `eb6647a`'s own golden still named `0eb98fe`), the text `8b5f9487…`
+   and the release line's Worker map (41 files) unmoved. Item 2's rebuild holds for `9e6d0b3`, which carries the struck
+   prices too: the four files that rebuild a block, `nice -n 15`, the live block `9e6d0b3`'s: `# tests 10`, `# pass 10`,
+   `# fail 0`.
