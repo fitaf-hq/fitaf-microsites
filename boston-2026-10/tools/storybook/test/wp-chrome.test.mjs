@@ -1,9 +1,10 @@
 // SP15's Chrome half (the site's SPEC-save-offer-production.md § 10.3 item 4), here because this package drives Chrome
 // and the site never installs a driver: the Worker's pages in the site's look, as a visitor's browser draws them.
 //   - The saved offer's page (/o/<token>) at 390 and 1280: the template's body font in use and loaded (its family read
-//     from the template's --body token), the logo drawn and linking to /, the page's one action (the orange button) at
-//     least 64 CSS px tall in the store button's orange (read from the template's --cta token), the content in one
-//     column (16 px from the edge at 390; at most 680 px wide and centred at 1280), and nothing wider than the viewport.
+//     from the template's --body token), the logo drawn and linking to /?via=email (§ 10, below), the page's one action
+//     (the orange button) at least 64 CSS px tall in the store button's orange (read from the template's --cta token),
+//     the content in one column (16 px from the edge at 390; at most 680 px wide and centred at 1280), and nothing wider
+//     than the viewport.
 //   - The confirmation page and the ended offer's page (a lapse page) at 390: the same stylesheet as the saved offer's,
 //     the font loaded and the logo drawn; the ended offer's link back the quieter style (no orange button).
 // The Worker is the site's development Worker in Miniflare with its local D1 (test/worker-harness.mjs), the saves made by
@@ -13,6 +14,9 @@
 // SPEC-the-redirect.md § 4 (2026-10-27): the saved offer's link back to the page carries via=email before its fragment,
 // /?e=<event>&via=email#from-email, as the site's SP15 has read it since that contract; this half was left for the
 // Storybook run (its § 9, "Not done here") and amended at the merge into the dev line (its § 9.1).
+// SPEC-the-redirect.md § 10 item 1 (2026-10-27): on the offer page (/o/<code>, the saved offer's and the ended offer's
+// here) the logo links to /?via=email; every other Worker page's (the confirmation's here) to /, as the site's SP15 reads
+// them since § 10. Left for the Storybook run (its § 10.1, "Not done here"); amended at the merge (its § 10.2).
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -126,13 +130,17 @@ function readLook() {
   };
 }
 
-function assertLook(look, where) {
+/** § 10 item 1: the offer page's logo link, and every other Worker page's. */
+const OFFER_LOGO_HREF = "/?via=email";
+const LOGO_HREF = "/";
+
+function assertLook(look, where, logoHref) {
   assert.equal(firstFamily(look.bodyFamily), BODY_FAMILY, `${where}: the body in the template's --body font`);
   assert.equal(firstFamily(look.headFamily), HEAD_FAMILY, `${where}: the heading in the template's --head font`);
   assert.ok(look.loaded.includes(BODY_FAMILY), `${where}: ${BODY_FAMILY} loaded from the site's /fonts/ (${look.loaded})`);
   assert.ok(look.logo, `${where}: the logo`);
   assert.ok(look.logo.complete && look.logo.natural > 0, `${where}: the logo drawn`);
-  assert.equal(look.logo.href, "/", `${where}: the logo links to /`);
+  assert.equal(look.logo.href, logoHref, `${where}: the logo links to ${logoHref}`);
   assert.ok(look.scrollWidth <= look.innerWidth, `${where}: nothing wider than the viewport`);
 }
 
@@ -143,7 +151,7 @@ for (const viewport of [VIEWPORTS.w390, VIEWPORTS.w1280]) {
       return page.evaluate(readLook);
     });
     const where = `/o at ${viewport.width}`;
-    assertLook(look, where);
+    assertLook(look, where, OFFER_LOGO_HREF);
     assert.equal(look.actions.length, 1, `${where}: one action`);
     const [action] = look.actions;
     assert.ok(action.box.height >= TARGET_PX, `${where}: the button ${action.box.height} px tall`);
@@ -161,12 +169,12 @@ for (const viewport of [VIEWPORTS.w390, VIEWPORTS.w1280]) {
 
 test("SP15 (Chrome): the confirmation page and the ended offer's page at 390 — the same stylesheet, the font, the logo; the ended page's link back the quieter style", { timeout: 120_000 }, async () => {
   const saved = await withPage(PAGES.saved, VIEWPORTS.w390.width, (page) => page.evaluate(readLook));
-  for (const [name, path] of [["the confirmation", PAGES.confirmation], ["the ended offer", PAGES.ended]]) {
+  for (const [name, path, logoHref] of [["the confirmation", PAGES.confirmation, LOGO_HREF], ["the ended offer", PAGES.ended, OFFER_LOGO_HREF]]) {
     const look = await withPage(path, VIEWPORTS.w390.width, async (page, response) => {
       assert.equal(response.status(), 200, `${name}: 200`);
       return page.evaluate(readLook);
     });
-    assertLook(look, name);
+    assertLook(look, name, logoHref);
     assert.equal(look.sheet, saved.sheet, `${name}: the saved offer's stylesheet`);
     assert.equal(look.actions.length, 0, `${name}: no orange button`);
     if (name === "the ended offer") {

@@ -393,3 +393,13 @@ to `/?via=email`, the rest to `/`); N5's note only.
 **Not done here**: Storybook (`wp-chrome` opens two offer pages, whose logo now links to `/?via=email`) and the watch;
 `npm run contrast` (no colour or style changed); dev and production (§ 10 item 4's `curl -s` and the dataset read are the
 orchestrator's); nothing deployed, no `wrangler`, no merge, no pin.
+
+### 10.2 Built — found at the build, not ruled (2026-10-27, at the merge into the dev line)
+
+At the merge of the release line's `438aad5` into `boston/merge-release-1027` (`513054a`, after the dev line's `eb6647a`
+at `7b2cd3b`), SP15's Chrome half, the case § 10.1 left for Storybook, was red on the logo alone (`nice -n 15 node --test
+boston-2026-10/tools/storybook/test/wp-chrome.test.mjs` at `7a437a7`, § 9.1's form of the button's link already in it):
+`# tests 3`, `# pass 0`, `# fail 3`, each *"the logo links to /"*, `'/?via=email' !== '/'`, on the saved offer's page at
+390 and 1280 and on the ended offer's page. `wp-chrome.test.mjs` now expects § 10 item 1's links: `/?via=email` on the
+two offer pages it opens (the saved offer's, `/o/<code>`, and the ended offer's, `/o/<code>` after the last day) and `/`
+on the confirmation page; nothing else in it changed. After: `# tests 3`, `# pass 3`, `# fail 0`.
